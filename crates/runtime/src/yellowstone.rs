@@ -5,6 +5,8 @@ use futures_util::{Sink, Stream};
 use yellowstone_grpc_client::{GeyserGrpcClient, Interceptor};
 use yellowstone_grpc_proto::{prelude::*, tonic::Status};
 
+use crate::{parser_manager::ParserManager, Parser};
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Yellowstone client builder error")]
@@ -30,8 +32,9 @@ pub struct YellowstoneStream<I, T, S> {
     pub(super) stream: S,
 }
 
-pub async fn connect(
+pub async fn connect<P: Parser>(
     opts: YellowstoneOpts,
+    manager: &ParserManager<P>,
 ) -> Result<
     YellowstoneStream<
         impl Interceptor,
@@ -46,6 +49,8 @@ pub async fn connect(
         timeout,
     } = opts;
     let timeout = Duration::from_secs(timeout);
+
+    let filters = manager.filters(); // TODO: convert filters into subscribe request
 
     let req = SubscribeRequest {
         accounts: [].into_iter().collect(),

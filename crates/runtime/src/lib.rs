@@ -2,7 +2,12 @@ use buffer::BufferOpts;
 use yellowstone::YellowstoneOpts;
 
 mod buffer;
+mod parser;
+mod parser_manager;
 mod yellowstone;
+
+pub use parser::{Parser, BoxedParser, DynParser};
+pub use parser_manager::ParserManager;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -23,8 +28,8 @@ pub struct IndexerOpts {
     buffer: BufferOpts,
 }
 
-pub fn run(opts: IndexerOpts) {
-    match try_run(opts) {
+pub fn run<P: Parser + Send + Sync + 'static>(opts: IndexerOpts, manager: ParserManager<P>) {
+    match try_run(opts, manager) {
         Ok(()) => (),
         Err(e) => {
             tracing::error!(err = ?anyhow::Error::new(e), "Fatal error encountered");
@@ -33,14 +38,21 @@ pub fn run(opts: IndexerOpts) {
     }
 }
 
-pub fn try_run(opts: IndexerOpts) -> Result<(), Error> {
-    let IndexerOpts { yellowstone, buffer } = opts;
+pub fn try_run<P: Parser + Send + Sync + 'static>(
+    opts: IndexerOpts,
+    manager: ParserManager<P>,
+) -> Result<(), Error> {
+    let IndexerOpts {
+        yellowstone,
+        buffer,
+    } = opts;
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
-        .build()?.block_on(async move {
-            let client = yellowstone::connect(yellowstone).await?;
-            let buf = buffer::run_yellowstone(buffer, client);
+        .build()?
+        .block_on(async move {
+            let client = yellowstone::connect(yellowstone, &manager).await?;
+            let buf = buffer::run_yellowstone(buffer, client, manager);
 
             Ok(())
         })

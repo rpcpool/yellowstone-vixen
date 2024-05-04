@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -19,5 +19,5 @@ fn main() {
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
-    abk_indexer::run(config);
+    abk_indexer::run(config, abk_indexer::ParserManager::<abk_indexer::BoxedParser>::new(HashMap::new()));
 }

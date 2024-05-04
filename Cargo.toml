@@ -1,3 +1,4 @@
 [workspace]
 members = ["crates/*"]
+exclude = ["crates/test"]
 resolver = "2"

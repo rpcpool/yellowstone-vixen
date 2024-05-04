@@ -1,13 +1,14 @@
-use std::pin::pin;
+use std::{panic::AssertUnwindSafe, pin::pin, sync::Arc};
 
 use futures_util::{Stream, StreamExt};
 use topograph::{
     executor::{Executor, Nonblock, Tokio},
     prelude::*,
 };
+use tracing::error;
 use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
 
-use crate::yellowstone;
+use crate::{parser::Message, parser_manager::ParserManager, yellowstone, Parser};
 
 #[derive(Default, Debug, clap::Args, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -17,16 +18,39 @@ pub struct BufferOpts {
 
 pub struct Buffer(());
 
-pub fn run_yellowstone<I, T, S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static>(
+pub fn run_yellowstone<
+    I,
+    T,
+    S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static,
+    P: Parser + Send + Sync + 'static,
+>(
     opts: BufferOpts,
     client: yellowstone::YellowstoneStream<I, T, S>,
+    manager: ParserManager<P>,
 ) -> Buffer {
     let BufferOpts { jobs } = opts;
 
+    let manager = Arc::new(manager);
     let exec = Executor::builder(Nonblock(Tokio))
         .num_threads(jobs)
-        .build(|j, h| async move {
-            tracing::info!(?j);
+        .build(move |mut update: SubscribeUpdate, handle| {
+            let manager = Arc::clone(&manager);
+            async move {
+                let filters = std::mem::take(&mut update.filters);
+                let parsers = manager.get_parsers(&filters);
+                let msg = match Message::try_from(update) {
+                    Ok(m) => m,
+                    Err(err) => {
+                        error!(%err, "Received unparseable message");
+                        return;
+                    },
+                };
+
+                match msg {
+                    Message::AccountUpdate(ref a) => parsers.run_account(a).await,
+                    Message::TransactionUpdate(ref t) => parsers.run_transaction(t).await,
+                }
+            }
         })
         .unwrap_or_else(|i| match i {});
 
