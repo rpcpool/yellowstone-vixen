@@ -1,4 +1,4 @@
-use std::{panic::AssertUnwindSafe, pin::pin, sync::Arc};
+use std::{pin::pin, sync::Arc};
 
 use futures_util::{Stream, StreamExt};
 use topograph::{
@@ -33,7 +33,7 @@ pub fn run_yellowstone<
     let manager = Arc::new(manager);
     let exec = Executor::builder(Nonblock(Tokio))
         .num_threads(jobs)
-        .build(move |mut update: SubscribeUpdate, handle| {
+        .build(move |mut update: SubscribeUpdate, _| {
             let manager = Arc::clone(&manager);
             async move {
                 let filters = std::mem::take(&mut update.filters);

@@ -6,7 +6,9 @@ edition = "2021"
 license = "AGPL-3.0-or-later"
 
 [dependencies]
-abk-indexer = { path = "../runtime" }
+yellowstone-vixen = { path = "../runtime" }
 clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 toml = "0.8.12"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+spl-token-2022 = "2"
+tracing = "0.1.40"

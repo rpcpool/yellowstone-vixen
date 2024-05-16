@@ -1,8 +1,12 @@
+// TODO
+#![allow(dead_code, unused)]
+
 use buffer::BufferOpts;
+use tokio::task::LocalSet;
 use yellowstone::YellowstoneOpts;
 
 mod buffer;
-mod parser;
+pub mod parser;
 mod parser_manager;
 mod yellowstone;
 
@@ -52,7 +56,14 @@ pub fn try_run<P: Parser + Send + Sync + 'static>(
         .build()?
         .block_on(async move {
             let client = yellowstone::connect(yellowstone, &manager).await?;
-            let buf = buffer::run_yellowstone(buffer, client, manager);
+            let locals = LocalSet::new();
+
+            locals.run_until(async move {
+                let buf = buffer::run_yellowstone(buffer, client, manager);
+
+                // TODO
+                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+            }).await;
 
             Ok(())
         })

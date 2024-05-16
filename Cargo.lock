@@ -13,24 +13,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "abk-indexer"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "clap",
- "futures-channel",
- "futures-util",
- "opentelemetry",
- "serde",
- "thiserror",
- "tokio",
- "topograph",
- "tracing",
- "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -630,6 +612,15 @@ name = "bs58"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
+
+[[package]]
+name = "bs58"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf88ba1141d185c399bee5288d850d63b8369520c1eafc32a0430b5b6c287bf4"
+dependencies = [
+ "tinyvec",
+]
 
 [[package]]
 name = "bumpalo"
@@ -2900,7 +2891,7 @@ dependencies = [
  "Inflector",
  "base64 0.21.7",
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "lazy_static",
  "serde",
@@ -2939,7 +2930,7 @@ dependencies = [
  "ahash 0.8.5",
  "blake3",
  "block-buffer 0.10.4",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "byteorder",
  "cc",
@@ -3024,7 +3015,7 @@ dependencies = [
  "blake3",
  "borsh 0.10.3",
  "borsh 0.9.3",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "bytemuck",
  "cc",
@@ -3101,7 +3092,7 @@ dependencies = [
  "bincode",
  "bitflags 2.5.0",
  "borsh 0.10.3",
- "bs58",
+ "bs58 0.4.0",
  "bytemuck",
  "byteorder",
  "chrono",
@@ -3150,7 +3141,7 @@ version = "1.17.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc5cc46bbda0a5472d8d0a4c846b22941436ac45c31456d3e885a387a5f264f7"
 dependencies = [
- "bs58",
+ "bs58 0.4.0",
  "proc-macro2",
  "quote",
  "rustversion",
@@ -3173,7 +3164,7 @@ dependencies = [
  "base64 0.21.7",
  "bincode",
  "borsh 0.10.3",
- "bs58",
+ "bs58 0.4.0",
  "lazy_static",
  "log",
  "serde",
@@ -4257,6 +4248,26 @@ dependencies = [
  "solana-transaction-status",
  "tonic",
  "tonic-build",
+]
+
+[[package]]
+name = "yellowstone-vixen"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bs58 0.5.1",
+ "clap",
+ "futures-channel",
+ "futures-util",
+ "opentelemetry",
+ "serde",
+ "solana-sdk",
+ "thiserror",
+ "tokio",
+ "topograph",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
 ]
 
 [[package]]

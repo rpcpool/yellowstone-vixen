@@ -1,5 +1,5 @@
 [package]
-name = "abk-indexer"
+name = "yellowstone-vixen"
 # description = "TODO"
 # authors = ["TODO"]
 version = "0.0.0"
@@ -9,11 +9,13 @@ license = "AGPL-3.0-or-later"
 
 [dependencies]
 anyhow = "1.0.82"
+bs58 = "0.5.1"
 clap = { version = "4.5.4", default-features = false, features = ["env", "derive", "std"] }
 futures-channel = { version = "0.3.30", features = ["sink"] }
 futures-util = { version = "0.3.30", features = ["sink"] }
 opentelemetry = "0.22.0"
 serde = "1.0.198"
+solana-sdk = "1.17.31"
 thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["rt-multi-thread"] }
 topograph = { version = "0.4.0", features = ["tokio"], path = "../../../../Rust/topograph" }

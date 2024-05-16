@@ -1,6 +1,7 @@
 use std::{collections::HashSet, fmt, pin::Pin};
 
-use futures_util::Future;
+use futures_util::{Future, TryFutureExt};
+use solana_sdk::pubkey::Pubkey;
 use yellowstone_grpc_proto::geyser::{subscribe_update::UpdateOneof, SubscribeUpdate};
 
 // use std::fmt;
@@ -444,6 +445,8 @@ pub enum ErrorKind {
 //     type Error = MessageError;
 // }
 
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug)]
 pub enum Message {
     AccountUpdate(AccountUpdate),
     TransactionUpdate(TransactionUpdate),
@@ -454,7 +457,7 @@ impl TryFrom<SubscribeUpdate> for Message {
 
     fn try_from(value: SubscribeUpdate) -> Result<Self, Self::Error> {
         let SubscribeUpdate {
-            filters,
+            filters: _,
             update_oneof,
         } = value;
         let update = update_oneof.ok_or(ErrorKind::Missing)?;
@@ -471,17 +474,111 @@ impl TryFrom<SubscribeUpdate> for Message {
 pub type AccountUpdate = yellowstone_grpc_proto::geyser::SubscribeUpdateAccount;
 pub type TransactionUpdate = yellowstone_grpc_proto::geyser::SubscribeUpdateTransaction;
 
-// TODO: get the actual Solana one
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Pubkey(pub [u8; 32]);
+pub struct Prefilter {
+    pub(crate) account: Option<AccountPrefilter>,
+    pub(crate) transaction: Option<TransactionPrefilter>,
+}
 
-struct Prefilter {
-    pub account_owners: HashSet<Pubkey>,
-    pub transaction_programs: HashSet<Pubkey>,
-    pub transaction_input_accounts: HashSet<Pubkey>,
+#[derive(Default, PartialEq)]
+pub(crate) struct AccountPrefilter {
+    pub accounts: HashSet<Pubkey>,
+    pub owners: HashSet<Pubkey>,
+}
+
+#[derive(Default, PartialEq)]
+pub(crate) struct TransactionPrefilter {
+    pub accounts: HashSet<Pubkey>,
+}
+
+impl Prefilter {
+    #[inline]
+    pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum PrefilterError {
+    #[error("Value already given for field {0}")]
+    AlreadySet(&'static str),
+}
+
+#[derive(Debug, Default)]
+pub struct PrefilterBuilder {
+    error: Option<PrefilterError>,
+    accounts: Option<HashSet<Pubkey>>,
+    account_owners: Option<HashSet<Pubkey>>,
+    transaction_accounts: Option<HashSet<Pubkey>>,
+}
+
+fn set_opt<T>(opt: &mut Option<T>, field: &'static str, val: T) -> Result<(), PrefilterError> {
+    if opt.is_some() {
+        return Err(PrefilterError::AlreadySet(field));
+    }
+
+    *opt = Some(val);
+    Ok(())
+}
+
+impl PrefilterBuilder {
+    pub fn build(self) -> Result<Prefilter, PrefilterError> {
+        let PrefilterBuilder {
+            error,
+            accounts,
+            account_owners,
+            transaction_accounts,
+        } = self;
+        if let Some(err) = error {
+            return Err(err);
+        }
+
+        let account = AccountPrefilter {
+            accounts: accounts.unwrap_or_default(),
+            owners: account_owners.unwrap_or_default(),
+        };
+
+        let transaction = TransactionPrefilter {
+            accounts: transaction_accounts.unwrap_or_default(),
+        };
+
+        Ok(Prefilter {
+            account: (account != AccountPrefilter::default()).then_some(account),
+            transaction: (transaction != TransactionPrefilter::default()).then_some(transaction),
+        })
+    }
+
+    fn mutate<F: FnOnce(&mut Self) -> Result<(), PrefilterError>>(mut self, f: F) -> Self {
+        if self.error.is_none() {
+            self.error = f(&mut self).err();
+        }
+
+        self
+    }
+
+    pub fn account_owners<I: IntoIterator>(self, it: I) -> Self
+    where HashSet<Pubkey>: FromIterator<I::Item> {
+        self.mutate(|this| {
+            set_opt(
+                &mut this.account_owners,
+                "account_owners",
+                FromIterator::from_iter(it),
+            )
+        })
+    }
+
+    pub fn transaction_accounts<I: IntoIterator>(self, it: I) -> Self
+    where HashSet<Pubkey>: FromIterator<I::Item> {
+        self.mutate(|this| {
+            set_opt(
+                &mut this.transaction_accounts,
+                "transaction_accounts",
+                FromIterator::from_iter(it),
+            )
+        })
+    }
 }
 
 pub trait Parser {
+    type Error: std::error::Error + 'static;
+
     fn prefilter(&self) -> Prefilter;
 
     fn filter_account(&self, acct: &AccountUpdate) -> bool;
@@ -491,12 +588,12 @@ pub trait Parser {
     fn process_account<'a>(
         &'a self,
         acct: &'a AccountUpdate,
-    ) -> impl Future<Output = ()> + Send + 'a;
+    ) -> impl Future<Output = Result<(), Self::Error>> + Send + 'a;
 
     fn process_transaction<'a>(
         &'a self,
         txn: &'a TransactionUpdate,
-    ) -> impl Future<Output = ()> + Send + 'a;
+    ) -> impl Future<Output = Result<(), Self::Error>> + Send + 'a;
 }
 
 pub trait DynParser: Send + Sync {
@@ -509,38 +606,12 @@ pub trait DynParser: Send + Sync {
     fn process_account<'a>(
         &'a self,
         acct: &'a AccountUpdate,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
+    ) -> Pin<Box<dyn Future<Output = Result<(), BoxedError>> + Send + 'a>>;
 
     fn process_transaction<'a>(
         &'a self,
         txn: &'a TransactionUpdate,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
-}
-
-pub type BoxedParser = Box<dyn DynParser>;
-
-impl Parser for BoxedParser {
-    fn prefilter(&self) -> Prefilter { DynParser::prefilter(self) }
-
-    fn filter_account(&self, acct: &AccountUpdate) -> bool { DynParser::filter_account(self, acct) }
-
-    fn filter_transaction(&self, txn: &TransactionUpdate) -> bool {
-        DynParser::filter_transaction(self, txn)
-    }
-
-    fn process_account<'a>(
-        &'a self,
-        acct: &'a AccountUpdate,
-    ) -> impl Future<Output = ()> + Send + 'a {
-        DynParser::process_account(self, acct)
-    }
-
-    fn process_transaction<'a>(
-        &'a self,
-        txn: &'a TransactionUpdate,
-    ) -> impl Future<Output = ()> + Send + 'a {
-        DynParser::process_transaction(self, txn)
-    }
+    ) -> Pin<Box<dyn Future<Output = Result<(), BoxedError>> + Send + 'a>>;
 }
 
 impl<T: Parser + Send + Sync> DynParser for T {
@@ -559,15 +630,58 @@ impl<T: Parser + Send + Sync> DynParser for T {
     fn process_account<'a>(
         &'a self,
         acct: &'a AccountUpdate,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
-        Box::pin(Parser::process_account(self, acct))
+    ) -> Pin<Box<dyn Future<Output = Result<(), BoxedError>> + Send + 'a>> {
+        Box::pin(Parser::process_account(self, acct).map_err(|e| BoxedError(Box::new(e))))
     }
 
     #[inline]
     fn process_transaction<'a>(
         &'a self,
         txn: &'a TransactionUpdate,
-    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> {
-        Box::pin(Parser::process_transaction(self, txn))
+    ) -> Pin<Box<dyn Future<Output = Result<(), BoxedError>> + Send + 'a>> {
+        Box::pin(Parser::process_transaction(self, txn).map_err(|e| BoxedError(Box::new(e))))
+    }
+}
+
+pub type BoxedParser = Box<dyn DynParser>;
+
+#[derive(Debug)]
+pub struct BoxedError(Box<dyn std::error::Error>);
+
+impl fmt::Display for BoxedError {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { fmt::Display::fmt(&self.0, f) }
+}
+
+impl std::error::Error for BoxedError {
+    #[inline]
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> { self.0.source() }
+}
+
+impl Parser for BoxedParser {
+    type Error = BoxedError;
+
+    fn prefilter(&self) -> Prefilter { DynParser::prefilter(&**self) }
+
+    fn filter_account(&self, acct: &AccountUpdate) -> bool {
+        DynParser::filter_account(&**self, acct)
+    }
+
+    fn filter_transaction(&self, txn: &TransactionUpdate) -> bool {
+        DynParser::filter_transaction(&**self, txn)
+    }
+
+    fn process_account<'a>(
+        &'a self,
+        acct: &'a AccountUpdate,
+    ) -> impl Future<Output = Result<(), Self::Error>> + Send + 'a {
+        DynParser::process_account(&**self, acct)
+    }
+
+    fn process_transaction<'a>(
+        &'a self,
+        txn: &'a TransactionUpdate,
+    ) -> impl Future<Output = Result<(), Self::Error>> + Send + 'a {
+        DynParser::process_transaction(&**self, txn)
     }
 }
