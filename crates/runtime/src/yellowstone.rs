@@ -4,11 +4,9 @@ use futures_channel::mpsc::SendError;
 use futures_util::{Sink, Stream};
 use yellowstone_grpc_client::{GeyserGrpcClient, Interceptor};
 use yellowstone_grpc_proto::{prelude::*, tonic::Status};
+use yellowstone_vixen_core::Filters;
 
-use crate::{
-    parser_manager::{Filters, ParserManager},
-    Parser,
-};
+use crate::HandlerManagers;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -35,9 +33,9 @@ pub struct YellowstoneStream<I, T, S> {
     pub(super) stream: S,
 }
 
-pub async fn connect<P: Parser>(
+pub async fn connect(
     opts: YellowstoneOpts,
-    manager: &ParserManager<P>,
+    filters: Filters<'_>,
 ) -> Result<
     YellowstoneStream<
         impl Interceptor,
@@ -53,50 +51,7 @@ pub async fn connect<P: Parser>(
     } = opts;
     let timeout = Duration::from_secs(timeout);
 
-    let filters = manager.filters();
-
     // TODO: where are the docs on this stuff?
-    let req = SubscribeRequest {
-        accounts: filters
-            .iter()
-            .filter_map(|(k, v)| {
-                let v = v.account.as_ref()?;
-
-                Some((k.to_owned().into(), SubscribeRequestFilterAccounts {
-                    account: v.accounts.iter().map(ToString::to_string).collect(),
-                    owner: v.owners.iter().map(ToString::to_string).collect(),
-                    // TODO: probably a good thing to look into
-                    filters: vec![],
-                }))
-            })
-            .collect(),
-        slots: [].into_iter().collect(),
-        transactions: filters
-            .iter()
-            .filter_map(|(k, v)| {
-                let v = v.transaction.as_ref()?;
-
-                Some((k.to_owned().into(), SubscribeRequestFilterTransactions {
-                    vote: None,
-                    // TODO: make this configurable
-                    failed: Some(false),
-                    signature: None,
-                    // TODO: figure these out
-                    account_include: v.accounts.iter().map(ToString::to_string).collect(),
-                    account_exclude: [].into_iter().collect(),
-                    account_required: [].into_iter().collect(),
-                }))
-            })
-            .collect(),
-        transactions_status: [].into_iter().collect(),
-        blocks: [].into_iter().collect(),
-        blocks_meta: [].into_iter().collect(),
-        entry: [].into_iter().collect(),
-        commitment: None,
-        accounts_data_slice: vec![],
-        ping: None,
-    };
-
     let mut client = GeyserGrpcClient::build_from_shared(endpoint)?
         .x_token(x_token)?
         .connect_timeout(timeout)
@@ -104,7 +59,7 @@ pub async fn connect<P: Parser>(
         .connect()
         .await?;
 
-    let (sub_tx, stream) = client.subscribe_with_request(Some(req)).await?;
+    let (sub_tx, stream) = client.subscribe_with_request(Some(filters.into())).await?;
 
     Ok(YellowstoneStream {
         client,

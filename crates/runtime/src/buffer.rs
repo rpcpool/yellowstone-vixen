@@ -5,10 +5,14 @@ use topograph::{
     executor::{Executor, Nonblock, Tokio},
     prelude::*,
 };
-use tracing::error;
-use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
+use tracing::{error, warn};
+use yellowstone_grpc_proto::{
+    geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},
+    tonic::Status,
+};
+use yellowstone_vixen_core::{AccountUpdate, TransactionUpdate};
 
-use crate::{parser::Message, parser_manager::ParserManager, yellowstone, Parser};
+use crate::{handler::DynHandlerPack, yellowstone, HandlerManagers};
 
 #[derive(Default, Debug, clap::Args, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -22,33 +26,33 @@ pub fn run_yellowstone<
     I,
     T,
     S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static,
-    P: Parser + Send + Sync + 'static,
+    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
+    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
 >(
     opts: BufferOpts,
     client: yellowstone::YellowstoneStream<I, T, S>,
-    manager: ParserManager<P>,
+    manager: HandlerManagers<A, X>,
 ) -> Buffer {
     let BufferOpts { jobs } = opts;
 
     let manager = Arc::new(manager);
     let exec = Executor::builder(Nonblock(Tokio))
         .num_threads(jobs)
-        .build(move |mut update: SubscribeUpdate, _| {
+        .build(move |update, _| {
             let manager = Arc::clone(&manager);
             async move {
-                let filters = std::mem::take(&mut update.filters);
-                let parsers = manager.get_parsers(&filters);
-                let msg = match Message::try_from(update) {
-                    Ok(m) => m,
-                    Err(err) => {
-                        error!(%err, "Received unparseable message");
-                        return;
-                    },
-                };
+                let SubscribeUpdate {
+                    filters,
+                    update_oneof,
+                } = update;
+                let Some(update) = update_oneof else { return };
 
-                match msg {
-                    Message::AccountUpdate(ref a) => parsers.run_account(a).await,
-                    Message::TransactionUpdate(ref t) => parsers.run_transaction(t).await,
+                match update {
+                    UpdateOneof::Account(a) => manager.account.get_handlers(&filters).run(&a).await,
+                    UpdateOneof::Transaction(t) => {
+                        manager.transaction.get_handlers(&filters).run(&t).await
+                    },
+                    var => warn!(?var, "Unknown update variant"),
                 }
             }
         })

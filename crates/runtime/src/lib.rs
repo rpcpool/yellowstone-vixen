@@ -3,15 +3,18 @@
 
 use buffer::BufferOpts;
 use tokio::task::LocalSet;
+use vixen_core::{AccountUpdate, TransactionUpdate};
 use yellowstone::YellowstoneOpts;
 
+pub extern crate yellowstone_vixen_core as vixen_core;
+
 mod buffer;
-pub mod parser;
-mod parser_manager;
+// mod parser;
+// mod parser_manager;
+mod handler;
 mod yellowstone;
 
-pub use parser::{Parser, BoxedParser, DynParser};
-pub use parser_manager::ParserManager;
+pub use handler::{DynHandlerPack, Handler, HandlerManager, HandlerManagers};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -32,7 +35,13 @@ pub struct IndexerOpts {
     buffer: BufferOpts,
 }
 
-pub fn run<P: Parser + Send + Sync + 'static>(opts: IndexerOpts, manager: ParserManager<P>) {
+pub fn run<
+    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
+    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
+>(
+    opts: IndexerOpts,
+    manager: HandlerManagers<A, X>,
+) {
     match try_run(opts, manager) {
         Ok(()) => (),
         Err(e) => {
@@ -42,9 +51,12 @@ pub fn run<P: Parser + Send + Sync + 'static>(opts: IndexerOpts, manager: Parser
     }
 }
 
-pub fn try_run<P: Parser + Send + Sync + 'static>(
+pub fn try_run<
+    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
+    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
+>(
     opts: IndexerOpts,
-    manager: ParserManager<P>,
+    manager: HandlerManagers<A, X>,
 ) -> Result<(), Error> {
     let IndexerOpts {
         yellowstone,
@@ -55,15 +67,17 @@ pub fn try_run<P: Parser + Send + Sync + 'static>(
         .enable_all()
         .build()?
         .block_on(async move {
-            let client = yellowstone::connect(yellowstone, &manager).await?;
+            let client = yellowstone::connect(yellowstone, manager.filters()).await?;
             let locals = LocalSet::new();
 
-            locals.run_until(async move {
-                let buf = buffer::run_yellowstone(buffer, client, manager);
+            locals
+                .run_until(async move {
+                    let buf = buffer::run_yellowstone(buffer, client, manager);
 
-                // TODO
-                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
-            }).await;
+                    // TODO
+                    tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+                })
+                .await;
 
             Ok(())
         })

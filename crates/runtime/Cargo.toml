@@ -7,6 +7,7 @@ edition = "2021"
 license = "AGPL-3.0-or-later"
 # repository = "TODO"
 
+# TODO: pare this down
 [dependencies]
 anyhow = "1.0.82"
 bs58 = "0.5.1"
@@ -22,3 +23,4 @@ topograph = { version = "0.4.0", features = ["tokio"], path = "../../../../Rust/
 tracing = "0.1.40"
 yellowstone-grpc-client = "1.15.0"
 yellowstone-grpc-proto = "1.14.0"
+yellowstone-vixen-core = { version = "0.0.0", path = "../core" }

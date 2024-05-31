@@ -4534,6 +4534,16 @@ dependencies = [
  "tracing",
  "yellowstone-grpc-client",
  "yellowstone-grpc-proto",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
+name = "yellowstone-vixen-core"
+version = "0.0.0"
+dependencies = [
+ "solana-sdk",
+ "thiserror",
+ "yellowstone-grpc-proto",
 ]
 
 [[package]]
