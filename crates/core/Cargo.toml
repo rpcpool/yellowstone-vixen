@@ -1,0 +1,13 @@
+[package]
+name = "yellowstone-vixen-core"
+# description = "TODO"
+# authors = ["TODO"]
+version = "0.0.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+# repository = "TODO"
+
+[dependencies]
+solana-sdk = "1.17.31"
+thiserror = "1.0.59"
+yellowstone-grpc-proto = "1.14.0"
