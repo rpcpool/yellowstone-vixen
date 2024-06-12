@@ -40,16 +40,22 @@ pub enum HandlerPackError {
 
 // TODO: HandlerPack is also a really bad name (see below)
 
-struct HandlerPack<P, H>(P, H);
+pub struct HandlerPack<P, H>(P, H);
 
-impl<P, I> HandlerPack<P, I> {
+impl<P, H> HandlerPack<P, H> {
+    #[inline]
+    #[must_use]
+    pub fn new(parser: P, handlers: H) -> Self { Self(parser, handlers) }
+}
+
+impl<P, I> HandlerPack<P, I>
+where
+    for<'i> &'i I: IntoIterator,
+    P: Parser,
+    for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output>,
+{
     // TODO: figure out how to ditch the Vec at some point - probably just pull in Either
-    async fn handle<'h, T>(&'h self, value: &'h T) -> Result<(), Vec<HandlerPackError>>
-    where
-        for<'i> &'i I: IntoIterator,
-        P: Parser<T>,
-        for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output>,
-    {
+    async fn handle(&self, value: &P::Input) -> Result<(), Vec<HandlerPackError>> {
         let parsed = match self.0.parse(value).await {
             Ok(p) => p,
             Err(ParseError::Filtered) => return Ok(()),
@@ -80,33 +86,48 @@ impl<P, H> From<(P, H)> for HandlerPack<P, H> {
     }
 }
 
-pub trait DynHandlerPack<T> {
+pub trait GetPrefilter {
+    fn prefilter(&self) -> Prefilter;
+}
+
+impl<P: Parser, I> GetPrefilter for HandlerPack<P, I> {
+    fn prefilter(&self) -> Prefilter { self.0.prefilter() }
+}
+
+impl<T> GetPrefilter for Box<dyn DynHandlerPack<T> + Send + Sync + 'static> {
+    #[inline]
+    fn prefilter(&self) -> Prefilter { <dyn DynHandlerPack<T>>::prefilter(&**self) }
+}
+
+pub trait DynHandlerPack<T>: GetPrefilter {
     fn handle<'h>(
         &'h self,
         value: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>>;
 }
 
-impl<P: Parser<T> + Sync, I: Sync, T: Sync> DynHandlerPack<T> for HandlerPack<P, I>
+impl<P: Parser + Sync, I: Sync> DynHandlerPack<P::Input> for HandlerPack<P, I>
 where
     for<'i> &'i I: IntoIterator,
+    P::Input: Sync,
     P::Output: Send + Sync,
     for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output> + Send,
 {
     fn handle<'h>(
         &'h self,
-        value: &'h T,
+        value: &'h P::Input,
     ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>> {
         Box::pin(HandlerPack::handle(self, value))
     }
 }
 
 impl<T> DynHandlerPack<T> for Box<dyn DynHandlerPack<T> + Send + Sync + 'static> {
+    #[inline]
     fn handle<'h>(
         &'h self,
         value: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>> {
-        <dyn DynHandlerPack<T>>::handle(self, value)
+        <dyn DynHandlerPack<T>>::handle(&**self, value)
     }
 }
 
@@ -117,26 +138,43 @@ pub struct HandlerManagers<A, T> {
     pub transaction: HandlerManager<T>,
 }
 
-impl<A, T> HandlerManagers<A, T> {
-    pub fn filters(&self) -> Filters { Filters::new(todo!()) }
+impl<A: GetPrefilter, T: GetPrefilter> HandlerManagers<A, T> {
+    pub fn filters(&self) -> Filters {
+        Filters::new(
+            self.account
+                .0
+                .iter()
+                .map(|(&k, v)| (k, v.prefilter()))
+                .chain(
+                    self.transaction
+                        .0
+                        .iter()
+                        .map(|(&k, v)| (k, v.prefilter())),
+                )
+                .collect(),
+        )
+    }
 }
 
-pub struct HandlerManager<H>(HashMap<String, H>);
+pub struct HandlerManager<H>(HashMap<&'static str, H>);
 
 impl<H> HandlerManager<H> {
     #[inline]
-    pub fn new<T: IntoIterator<Item = (String, I)>, I: Into<H>>(it: T) -> Self {
+    pub fn new<I: IntoIterator>(it: I) -> Self where I::Item: Into<H> {
         Self::from_iter(it)
     }
+
+    #[inline]
+    pub fn empty() -> Self { Self(HashMap::new()) }
 }
 
 impl<H> HandlerManager<H> {
     pub fn get_handlers<I>(&self, it: I) -> Handlers<H, I> { Handlers(self, it) }
 }
 
-impl<H, I: Into<H>> FromIterator<(String, I)> for HandlerManager<H> {
-    fn from_iter<T: IntoIterator<Item = (String, I)>>(iter: T) -> Self {
-        Self(iter.into_iter().map(|(k, v)| (k, v.into())).collect())
+impl<H, I: Into<H>> FromIterator<I> for HandlerManager<H> {
+    fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
+        Self(iter.into_iter().map(|i| (std::any::type_name_of_val(&i), i.into())).collect())
     }
 }
 

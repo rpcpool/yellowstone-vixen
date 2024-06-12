@@ -14,7 +14,9 @@ mod buffer;
 mod handler;
 mod yellowstone;
 
-pub use handler::{DynHandlerPack, Handler, HandlerManager, HandlerManagers};
+pub use handler::{
+    DynHandlerPack, Handler, HandlerManager, HandlerManagers, HandlerPack, HandlerResult,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

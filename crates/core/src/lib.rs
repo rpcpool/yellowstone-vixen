@@ -27,12 +27,13 @@ pub type ParseResult<T> = Result<T, ParseError>;
 pub type AccountUpdate = SubscribeUpdateAccount;
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 
-pub trait Parser<T> {
+pub trait Parser {
+    type Input;
     type Output;
 
     fn prefilter(&self) -> Prefilter;
 
-    fn parse(&self, value: &T) -> impl Future<Output = ParseResult<Self::Output>> + Send;
+    fn parse(&self, value: &Self::Input) -> impl Future<Output = ParseResult<Self::Output>> + Send;
 }
 
 pub struct Prefilter {

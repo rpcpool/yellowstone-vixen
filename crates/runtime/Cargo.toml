@@ -19,7 +19,7 @@ serde = "1.0.198"
 solana-sdk = "1.17.31"
 thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["rt-multi-thread"] }
-topograph = { version = "0.4.0", features = ["tokio"], path = "../../../../Rust/topograph" }
+topograph = { version = "0.4.0", features = ["tokio"], git = "https://github.com/ray-kast/topograph", branch = "v0.4-wip" }
 tracing = "0.1.40"
 yellowstone-grpc-client = "1.15.0"
 yellowstone-grpc-proto = "1.14.0"

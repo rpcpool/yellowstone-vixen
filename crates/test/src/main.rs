@@ -19,7 +19,8 @@ pub struct Opts {
 
 pub struct Parser;
 
-impl vixen_core::Parser<AccountUpdate> for Parser {
+impl vixen_core::Parser for Parser {
+    type Input = AccountUpdate;
     type Output = spl_token_2022::state::Account;
 
     fn prefilter(&self) -> Prefilter {
@@ -43,6 +44,15 @@ impl vixen_core::Parser<AccountUpdate> for Parser {
     }
 }
 
+pub struct Handler;
+
+impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for Handler {
+    async fn handle(&self, value: &H) -> vixen::HandlerResult<()> {
+        tracing::info!(?value);
+        Ok(())
+    }
+}
+
 fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
@@ -56,7 +66,8 @@ fn main() {
         Box<dyn DynHandlerPack<AccountUpdate> + Send + Sync + 'static>,
         Box<dyn DynHandlerPack<TransactionUpdate> + Send + Sync + 'static>,
     >(config, vixen::HandlerManagers {
-        account: todo!(),
-        transaction: todo!(),
+        account: vixen::HandlerManager::new([Box::new(vixen::HandlerPack::new(Parser, [Handler]))
+            as Box<dyn vixen::DynHandlerPack<_> + Send + Sync>]),
+        transaction: vixen::HandlerManager::empty(),
     });
 }
