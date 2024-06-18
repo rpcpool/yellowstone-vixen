@@ -4,8 +4,9 @@ use clap::Parser as _;
 use spl_token_2022::solana_program::{program_error::ProgramError, program_pack::Pack};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::{
-    vixen_core::{self, ParseResult, TransactionUpdate},
-    DynHandlerPack,
+    handler,
+    vixen_core::{self, ParseResult},
+    HandlerManager, HandlerManagers, HandlerPack,
 };
 use vixen_core::{AccountUpdate, Prefilter};
 use yellowstone_vixen as vixen;
@@ -62,12 +63,8 @@ fn main() {
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
-    vixen::run::<
-        Box<dyn DynHandlerPack<AccountUpdate> + Send + Sync + 'static>,
-        Box<dyn DynHandlerPack<TransactionUpdate> + Send + Sync + 'static>,
-    >(config, vixen::HandlerManagers {
-        account: vixen::HandlerManager::new([Box::new(vixen::HandlerPack::new(Parser, [Handler]))
-            as Box<dyn vixen::DynHandlerPack<_> + Send + Sync>]),
-        transaction: vixen::HandlerManager::empty(),
+    vixen::run(config, HandlerManagers {
+        account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(Parser, [Handler]))]),
+        transaction: HandlerManager::empty(),
     });
 }

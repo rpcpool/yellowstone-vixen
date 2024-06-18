@@ -20,6 +20,9 @@ impl<T: Handler<U>, U> Handler<U> for &T {
     }
 }
 
+#[inline]
+pub const fn from_fn<F>(f: F) -> FromFn<F> { FromFn(f) }
+
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FromFn<F>(F);
@@ -46,6 +49,12 @@ impl<P, H> HandlerPack<P, H> {
     #[inline]
     #[must_use]
     pub fn new(parser: P, handlers: H) -> Self { Self(parser, handlers) }
+}
+
+pub fn boxed<'h, P: DynHandlerPack<T> + Send + Sync + 'h, T>(
+    value: P,
+) -> Box<dyn DynHandlerPack<T> + Send + Sync + 'h> {
+    Box::new(value)
 }
 
 impl<P, I> HandlerPack<P, I>
@@ -78,16 +87,12 @@ where
     }
 }
 
-impl<P, H> From<(P, H)> for HandlerPack<P, H> {
-    #[inline]
-    fn from(value: (P, H)) -> Self {
-        let (parser, handlers) = value;
-        Self(parser, handlers)
-    }
-}
-
 pub trait GetPrefilter {
     fn prefilter(&self) -> Prefilter;
+}
+
+impl GetPrefilter for std::convert::Infallible {
+    fn prefilter(&self) -> Prefilter { match *self {} }
 }
 
 impl<P: Parser, I> GetPrefilter for HandlerPack<P, I> {
@@ -104,6 +109,15 @@ pub trait DynHandlerPack<T>: GetPrefilter {
         &'h self,
         value: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>>;
+}
+
+impl<T> DynHandlerPack<T> for std::convert::Infallible {
+    fn handle<'h>(
+        &'h self,
+        value: &'h T,
+    ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>> {
+        match *self {}
+    }
 }
 
 impl<P: Parser + Sync, I: Sync> DynHandlerPack<P::Input> for HandlerPack<P, I>
@@ -145,12 +159,7 @@ impl<A: GetPrefilter, T: GetPrefilter> HandlerManagers<A, T> {
                 .0
                 .iter()
                 .map(|(&k, v)| (k, v.prefilter()))
-                .chain(
-                    self.transaction
-                        .0
-                        .iter()
-                        .map(|(&k, v)| (k, v.prefilter())),
-                )
+                .chain(self.transaction.0.iter().map(|(&k, v)| (k, v.prefilter())))
                 .collect(),
         )
     }
@@ -158,23 +167,27 @@ impl<A: GetPrefilter, T: GetPrefilter> HandlerManagers<A, T> {
 
 pub struct HandlerManager<H>(HashMap<&'static str, H>);
 
-impl<H> HandlerManager<H> {
-    #[inline]
-    pub fn new<I: IntoIterator>(it: I) -> Self where I::Item: Into<H> {
-        Self::from_iter(it)
-    }
-
+impl HandlerManager<std::convert::Infallible> {
     #[inline]
     pub fn empty() -> Self { Self(HashMap::new()) }
+}
+
+impl<H> HandlerManager<H> {
+    #[inline]
+    pub fn new<I: IntoIterator<Item = H>>(it: I) -> Self { Self::from_iter(it) }
 }
 
 impl<H> HandlerManager<H> {
     pub fn get_handlers<I>(&self, it: I) -> Handlers<H, I> { Handlers(self, it) }
 }
 
-impl<H, I: Into<H>> FromIterator<I> for HandlerManager<H> {
-    fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
-        Self(iter.into_iter().map(|i| (std::any::type_name_of_val(&i), i.into())).collect())
+impl<H> FromIterator<H> for HandlerManager<H> {
+    fn from_iter<T: IntoIterator<Item = H>>(iter: T) -> Self {
+        Self(
+            iter.into_iter()
+                .map(|i| (std::any::type_name_of_val(&i), i))
+                .collect(),
+        )
     }
 }
 
@@ -197,8 +210,11 @@ where I::Item: AsRef<str> + Send + 'm
         })
     }
 
-    pub fn run<T>(self, value: &'m T) -> impl Future<Output = ()> + Send + 'm
-    where H: DynHandlerPack<T> {
+    pub fn run<'h, T>(self, value: &'h T) -> impl Future<Output = ()> + Send + 'h
+    where
+        H: DynHandlerPack<T>,
+        'm: 'h,
+    {
         futures_util::future::join_all(self.get_handlers().map(move |(f, h)| {
             h.handle(value).map(move |r| match r {
                 Ok(()) => (),
@@ -214,6 +230,6 @@ where I::Item: AsRef<str> + Send + 'm
                 },
             })
         }))
-        .map(|v| v.into_iter().collect())
+        .map(move |v| v.into_iter().collect())
     }
 }

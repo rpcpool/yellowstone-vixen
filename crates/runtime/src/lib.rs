@@ -11,7 +11,7 @@ pub extern crate yellowstone_vixen_core as vixen_core;
 mod buffer;
 // mod parser;
 // mod parser_manager;
-mod handler;
+pub mod handler;
 mod yellowstone;
 
 pub use handler::{

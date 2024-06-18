@@ -1,7 +1,11 @@
 // TODO
 #![allow(dead_code, unused)]
 
-use std::{collections::{HashMap, HashSet}, future::Future, ops};
+use std::{
+    collections::{HashMap, HashSet},
+    future::Future,
+    ops,
+};
 
 use solana_sdk::pubkey::Pubkey;
 use yellowstone_grpc_proto::geyser::{
@@ -197,4 +201,3 @@ impl<'a> From<Filters<'a>> for SubscribeRequest {
         }
     }
 }
-
