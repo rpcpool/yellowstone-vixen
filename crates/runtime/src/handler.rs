@@ -32,7 +32,6 @@ impl<F: Fn(&T) -> U, T, U: Future<Output = HandlerResult<()>> + Send> Handler<T>
     fn handle(&self, value: &T) -> impl Future<Output = HandlerResult<()>> + Send { self.0(value) }
 }
 
-// TODO: this should probably be merged into a cratewide runtime error?
 #[derive(Debug, thiserror::Error)]
 pub enum HandlerPackError {
     #[error("Error parsing input value")]
@@ -72,7 +71,7 @@ where
         };
         let parsed = &parsed;
 
-        // TODO: use futuresunordered?
+        // TODO: use FuturesUnordered?
         let errs: Vec<_> = futures_util::future::join_all(
             (&self.1)
                 .into_iter()
