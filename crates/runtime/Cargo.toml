@@ -1,16 +1,13 @@
 [package]
 name = "yellowstone-vixen"
-# description = "TODO"
+description = "An all-in-one consumer runtime library for Yellowstone"
 # authors = ["TODO"]
 version = "0.0.0"
 edition = "2021"
 license = "AGPL-3.0-or-later"
-# repository = "TODO"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
 
-# TODO: pare this down
 [dependencies]
-anyhow = "1.0.82"
-bs58 = "0.5.1"
 clap = { version = "4.5.4", default-features = false, features = ["env", "derive", "std"] }
 futures-channel = { version = "0.3.30", features = ["sink"] }
 futures-util = { version = "0.3.30", features = ["sink"] }

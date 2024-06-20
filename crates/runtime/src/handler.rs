@@ -1,10 +1,8 @@
-use std::{collections::HashMap, ops, pin::Pin};
+use std::{collections::HashMap, pin::Pin};
 
-use futures_util::{Future, FutureExt, TryFutureExt};
+use futures_util::{Future, FutureExt};
 use tracing::{error, warn};
-use yellowstone_vixen_core::{
-    AccountUpdate, Filters, ParseError, ParseResult, Parser, Prefilter, TransactionUpdate,
-};
+use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 pub type HandlerResult<T> = Result<T, BoxedError>;
@@ -42,6 +40,7 @@ pub enum HandlerPackError {
 
 // TODO: HandlerPack is also a really bad name (see below)
 
+#[derive(Debug)]
 pub struct HandlerPack<P, H>(P, H);
 
 impl<P, H> HandlerPack<P, H> {
@@ -113,7 +112,7 @@ pub trait DynHandlerPack<T>: GetPrefilter {
 impl<T> DynHandlerPack<T> for std::convert::Infallible {
     fn handle<'h>(
         &'h self,
-        value: &'h T,
+        _: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>> {
         match *self {}
     }
@@ -146,12 +145,14 @@ impl<T> DynHandlerPack<T> for Box<dyn DynHandlerPack<T> + Send + Sync + 'static>
 
 // TODO: HandlerManager et al are really terrible names, plsfix
 
+#[derive(Debug)]
 pub struct HandlerManagers<A, T> {
     pub account: HandlerManager<A>,
     pub transaction: HandlerManager<T>,
 }
 
 impl<A: GetPrefilter, T: GetPrefilter> HandlerManagers<A, T> {
+    #[must_use]
     pub fn filters(&self) -> Filters {
         Filters::new(
             self.account
@@ -164,10 +165,13 @@ impl<A: GetPrefilter, T: GetPrefilter> HandlerManagers<A, T> {
     }
 }
 
+#[derive(Debug)]
 pub struct HandlerManager<H>(HashMap<&'static str, H>);
 
 impl HandlerManager<std::convert::Infallible> {
+    #[allow(clippy::zero_sized_map_values)]
     #[inline]
+    #[must_use]
     pub fn empty() -> Self { Self(HashMap::new()) }
 }
 
@@ -190,6 +194,7 @@ impl<H> FromIterator<H> for HandlerManager<H> {
     }
 }
 
+#[derive(Debug)]
 pub struct Handlers<'m, H, I>(&'m HandlerManager<H>, I);
 
 impl<'m, H, I: IntoIterator> Handlers<'m, H, I>
@@ -220,7 +225,7 @@ where I::Item: AsRef<str> + Send + 'm
                 Err(v) => {
                     for e in v {
                         error!(
-                            err = ?anyhow::Error::from(e),
+                            err = %crate::Chain(&e),
                             handler = f.as_ref(),
                             r#type = std::any::type_name::<T>(),
                             "Handler failed",

@@ -1,12 +1,12 @@
 use std::{pin::pin, sync::Arc};
 
-use futures_channel::oneshot;
 use futures_util::{Stream, StreamExt};
+use tokio::sync::oneshot;
 use topograph::{
     executor::{Executor, Nonblock, Tokio},
     prelude::*,
 };
-use tracing::{error, warn};
+use tracing::warn;
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},
     tonic::Status,
@@ -15,7 +15,7 @@ use yellowstone_vixen_core::{AccountUpdate, TransactionUpdate};
 
 use crate::{handler::DynHandlerPack, yellowstone, HandlerManagers};
 
-#[derive(Default, Debug, clap::Args, serde::Deserialize)]
+#[derive(Default, Debug, Clone, Copy, clap::Args, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct BufferOpts {
     pub jobs: Option<usize>,
@@ -29,7 +29,7 @@ impl Buffer {
     pub async fn wait_for_stop(self) -> Result<std::convert::Infallible, crate::Error> {
         self.0
             .await
-            .map_err(|oneshot::Canceled| crate::Error::ClientHangup)
+            .map_err(|_| crate::Error::ClientHangup)
             .and_then(Err)
     }
 }
@@ -62,7 +62,7 @@ pub fn run_yellowstone<
                 match update {
                     UpdateOneof::Account(a) => manager.account.get_handlers(&filters).run(&a).await,
                     UpdateOneof::Transaction(t) => {
-                        manager.transaction.get_handlers(&filters).run(&t).await
+                        manager.transaction.get_handlers(&filters).run(&t).await;
                     },
                     var => warn!(?var, "Unknown update variant"),
                 }
@@ -79,14 +79,16 @@ pub fn run_yellowstone<
                 Ok(u) => exec.push(u),
                 Err(e) => {
                     tx.send(e.into()).unwrap_or_else(|err| {
-                        warn!(%err, "Yellowstone stream returned an error after stop requested")
+                        warn!(%err, "Yellowstone stream returned an error after stop requested");
                     });
                     return;
                 },
             }
         }
 
-        tx.send(crate::Error::ServerHangup);
+        tx.send(crate::Error::ServerHangup).unwrap_or_else(|_| {
+            warn!("Yellowstone client and server both hung up");
+        });
     });
 
     Buffer(rx)

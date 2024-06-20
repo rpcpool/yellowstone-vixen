@@ -1,5 +1,15 @@
-// TODO
-#![allow(dead_code, unused)]
+#![deny(
+    clippy::disallowed_methods,
+    clippy::suspicious,
+    clippy::style,
+    clippy::clone_on_ref_ptr,
+    missing_debug_implementations,
+    missing_copy_implementations
+)]
+#![warn(clippy::pedantic, missing_docs)]
+#![allow(clippy::module_name_repetitions)]
+
+use std::fmt;
 
 use buffer::BufferOpts;
 use tokio::task::LocalSet;
@@ -9,8 +19,6 @@ use yellowstone::YellowstoneOpts;
 pub extern crate yellowstone_vixen_core as vixen_core;
 
 mod buffer;
-// mod parser;
-// mod parser_manager;
 pub mod handler;
 mod yellowstone;
 
@@ -43,6 +51,94 @@ pub struct IndexerOpts {
     buffer: BufferOpts,
 }
 
+#[derive(Debug, Clone, Copy)]
+struct Chain<'a, E>(&'a E);
+
+impl<'a, E: std::error::Error> fmt::Display for Chain<'a, E> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use fmt::Write;
+
+        enum IndentState {
+            NumberStart(usize), // Numbered and indented initial line
+            PlainStart,         // Plain indented initial line
+            HangStart,          // Hanging indent for successive lines
+            MidLine,            // No indent, not at line start
+        }
+
+        struct Indented<'a, F> {
+            f: &'a mut F,
+            state: IndentState,
+        }
+
+        impl<'a, F: Write> Indented<'a, F> {
+            fn write_pad(&mut self) -> fmt::Result {
+                match std::mem::replace(&mut self.state, IndentState::MidLine) {
+                    IndentState::NumberStart(i) => write!(self.f, "{i: >5}: "),
+                    IndentState::PlainStart => write!(self.f, "    "),
+                    IndentState::HangStart => write!(self.f, "      "),
+                    IndentState::MidLine => Ok(()),
+                }
+            }
+        }
+
+        impl<'a, F: Write> Write for Indented<'a, F> {
+            fn write_str(&mut self, mut s: &str) -> fmt::Result {
+                while let Some((head, tail)) = s.split_once('\n') {
+                    if !head.is_empty() {
+                        self.write_pad()?;
+                    }
+                    self.f.write_str(head)?;
+                    self.f.write_char('\n')?;
+                    self.state = IndentState::HangStart;
+                    s = tail;
+                }
+
+                let trail = !s.is_empty();
+                if trail {
+                    self.write_pad()?;
+                }
+                self.f.write_str(s)?;
+                self.state = if trail {
+                    IndentState::MidLine
+                } else {
+                    IndentState::HangStart
+                };
+                Ok(())
+            }
+        }
+
+        let Self(err) = *self;
+
+        write!(f, "{err}")?;
+
+        if let src @ Some(_) = err.source() {
+            let mut multi_src = false;
+
+            for (i, src) in std::iter::successors(src, |s| s.source()).enumerate() {
+                if i == 0 {
+                    write!(f, "\nCaused by:")?;
+                    multi_src = src.source().is_some();
+                }
+
+                writeln!(f)?;
+                write!(
+                    Indented {
+                        f,
+                        state: if multi_src {
+                            IndentState::NumberStart(i)
+                        } else {
+                            IndentState::PlainStart
+                        },
+                    },
+                    "{src}"
+                )?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
 pub fn run<
     A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
     X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
@@ -53,7 +149,7 @@ pub fn run<
     match try_run(opts, manager) {
         Ok(()) => (),
         Err(e) => {
-            tracing::error!(err = ?anyhow::Error::new(e), "Fatal error encountered");
+            tracing::error!(err = %Chain(&e), "Fatal error encountered");
             std::process::exit(1);
         },
     }
@@ -149,9 +245,8 @@ async fn run_async<
             "Signal handler returned None",
         )
         .into()),
-        StopType::Signal(Err(e)) => Err(e),
         // Not sure why the compiler couldn't figure this one out
         StopType::Buffer(Ok(o)) => match o {},
-        StopType::Buffer(Err(e)) => Err(e),
+        StopType::Signal(Err(e)) | StopType::Buffer(Err(e)) => Err(e),
     }
 }

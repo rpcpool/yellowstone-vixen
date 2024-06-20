@@ -1,3 +1,12 @@
+#![deny(
+    clippy::disallowed_methods,
+    clippy::suspicious,
+    clippy::style,
+    clippy::clone_on_ref_ptr
+)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
+
 use std::path::PathBuf;
 
 use clap::Parser as _;
@@ -6,7 +15,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::{
     handler,
     vixen_core::{self, ParseResult},
-    HandlerManager, HandlerManagers, HandlerPack,
+    HandlerManager, HandlerManagers,
 };
 use vixen_core::{AccountUpdate, Prefilter};
 use yellowstone_vixen as vixen;

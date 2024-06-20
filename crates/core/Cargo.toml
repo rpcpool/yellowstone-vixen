@@ -1,11 +1,11 @@
 [package]
 name = "yellowstone-vixen-core"
-# description = "TODO"
+description = "Core types for Vixen"
 # authors = ["TODO"]
 version = "0.0.0"
 edition = "2021"
 license = "AGPL-3.0-or-later"
-# repository = "TODO"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
 solana-sdk = "1.17.31"

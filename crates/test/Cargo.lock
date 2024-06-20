@@ -657,15 +657,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
 
 [[package]]
-name = "bs58"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf88ba1141d185c399bee5288d850d63b8369520c1eafc32a0430b5b6c287bf4"
-dependencies = [
- "tinyvec",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3015,7 +3006,7 @@ dependencies = [
  "Inflector",
  "base64 0.21.7",
  "bincode",
- "bs58 0.4.0",
+ "bs58",
  "bv",
  "lazy_static",
  "serde",
@@ -3054,7 +3045,7 @@ dependencies = [
  "ahash 0.8.5",
  "blake3",
  "block-buffer 0.10.4",
- "bs58 0.4.0",
+ "bs58",
  "bv",
  "byteorder",
  "cc",
@@ -3139,7 +3130,7 @@ dependencies = [
  "blake3",
  "borsh 0.10.3",
  "borsh 0.9.3",
- "bs58 0.4.0",
+ "bs58",
  "bv",
  "bytemuck",
  "cc",
@@ -3216,7 +3207,7 @@ dependencies = [
  "bincode",
  "bitflags 2.5.0",
  "borsh 0.10.3",
- "bs58 0.4.0",
+ "bs58",
  "bytemuck",
  "byteorder",
  "chrono",
@@ -3265,7 +3256,7 @@ version = "1.17.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8019cc997f6c07f09b23dfeb2c45530fa94df2e2fb9d654f3c772c9766a1511f"
 dependencies = [
- "bs58 0.4.0",
+ "bs58",
  "proc-macro2",
  "quote",
  "rustversion",
@@ -3288,7 +3279,7 @@ dependencies = [
  "base64 0.21.7",
  "bincode",
  "borsh 0.10.3",
- "bs58 0.4.0",
+ "bs58",
  "lazy_static",
  "log",
  "serde",
@@ -4530,8 +4521,6 @@ dependencies = [
 name = "yellowstone-vixen"
 version = "0.0.0"
 dependencies = [
- "anyhow",
- "bs58 0.5.1",
  "clap",
  "futures-channel",
  "futures-util",
