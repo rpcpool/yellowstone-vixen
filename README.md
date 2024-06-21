@@ -1,4 +1,4 @@
-# Yellowstone Vixen (Formerly Solana Indexer Stack)
+# Yellowstone Vixen
 
 Yellowstone Vixen allows dApp developers to build program-aware change event streams for Solana. It provides the building blocks, such as a runtime, parser specification, and handler specification, to create custom indexes for specific programs, accounts, and transactions. Vixen enables developers to assemble program parsers to process real-time change events from Dragonmouth, converting them into program-aware structures. These structures can then be stored in a database or used in other data pipelines.
 
