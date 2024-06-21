@@ -1,20 +1,20 @@
 # Yellowstone Vixen
 
-Yellowstone Vixen allows dApp developers to build program-aware change event streams for Solana. It provides the building blocks, such as a runtime, parser specification, and handler specification, to create custom indexes for specific programs, accounts, and transactions. Vixen enables developers to assemble program parsers to process real-time change events from Dragonmouth, converting them into program-aware structures. These structures can then be stored in a database or used in other data pipelines.
+Yellowstone Vixen allows dApp developers to build program-aware change event streams for Solana. It provides the building blocks, such as a runtime, parser specification, and handler specification, to create custom indexes for specific programs, accounts, and transactions. Vixen enables developers to assemble program parsers to process real-time change events from Dragon's Mouth, converting them into program-aware structures. These structures can then be stored in a database or used in other data pipelines.
 
 ## Table of Contents
 
 1. [Objectives](#objectives)
 2. [Requirements](#requirements)
 3. [Example](#example)
-4. [Dragonmouth](#dragonmouth)
+4. [Dragon's Mouth](#dragonsmouth)
 5. [Developers](#developers)
 
 ## Objectives
 
-1. **Cost Efficiency**: Utilizing Dragonmouth, multiple Vixen instances can share a single geyser stream. With various filter options, storage costs focus on what's essential for the dApp.
+1. **Cost Efficiency**: Utilizing Dragon's Mouth, multiple Vixen instances can share a single geyser stream. With various filter options, storage costs focus on what's essential for the dApp.
 2. **Operational Simplicity**: Vixen requires minimal configuration and dependency on other systems, making it easy to operate.
-3. **Recovery**: In the event of a crash or cold start, operators can designate a starting slot. Vixen, in conjunction with Dragonmouth, replays all transactions and accounts from the specified slot until reaching the active slot, then switches to real-time processing.
+3. **Recovery**: In the event of a crash or cold start, operators can designate a starting slot. Vixen, in conjunction with Dragon's Mouth, replays all transactions and accounts from the specified slot until reaching the active slot, then switches to real-time processing.
 4. **Auditability**: Operators can conduct verifiable audits to check the accounts and transactions processed by the index and at which slot.
 5. **Observability**: Operators can monitor the health of their installation, gaining insights into lag, throughput, and error rates.
 6. **Composability**: Program parsers are developed as separate modules (cargo crates), enabling programs to include other parsers needed to deserialize cross-program invocations (CPI).
@@ -43,7 +43,7 @@ You can find an example configuration file at [`Vixen.toml`](/Vixen.toml).
 
 In this example, you need to implement specific components to create a functional parsing pipeline:
 
-- **CustomParser Struct**: Defines the parsing logic for the specific program. The `prefilter` method sets up filters for the accounts owned by the target program, which are used to build the underlying Dragonmouth subscription. The `parse` method contains the logic to transform raw account data into the desired structure.
+- **CustomParser Struct**: Defines the parsing logic for the specific program. The `prefilter` method sets up filters for the accounts owned by the target program, which are used to build the underlying Dragon's Mouth subscription. The `parse` method contains the logic to transform raw account data into the desired structure.
 
 ```rust
 pub struct CustomParser;
@@ -151,9 +151,9 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for Handler {
 
 This setup shows how to use Vixen to create an efficient indexing solution for specific needs on the Solana blockchain. By following this pattern, developers can build their custom parsers and handlers for various Solana programs and data pipelines.
 
-## Dragonmouth
+## Dragon's Mouth
 
-Dragonmouth can be self-hosted as a Geyser plugin or used via a commercial vendor. For more details, refer to the [Yellowstone Dragonmouth documentation](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions) and [Yellow Stone repository](https://github.com/rpcpool/yellowstone-grpc).
+Dragon's Mouth can be self-hosted as a Geyser plugin or used via a commercial vendor. For more details, refer to the [Yellowstone Dragon's Mouth documentation](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions) and [Yellowstone repository](https://github.com/rpcpool/yellowstone-grpc).
 
 ## Developers
 
