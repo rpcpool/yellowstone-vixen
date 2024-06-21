@@ -1,7 +1,19 @@
-// TODO
-#![allow(dead_code, unused)]
+#![deny(
+    clippy::disallowed_methods,
+    clippy::suspicious,
+    clippy::style,
+    clippy::clone_on_ref_ptr,
+    missing_debug_implementations,
+    missing_copy_implementations
+)]
+#![warn(clippy::pedantic, missing_docs)]
+#![allow(clippy::module_name_repetitions)]
 
-use std::{collections::{HashMap, HashSet}, future::Future, ops};
+use std::{
+    collections::{HashMap, HashSet},
+    future::Future,
+    ops,
+};
 
 use solana_sdk::pubkey::Pubkey;
 use yellowstone_grpc_proto::geyser::{
@@ -27,36 +39,39 @@ pub type ParseResult<T> = Result<T, ParseError>;
 pub type AccountUpdate = SubscribeUpdateAccount;
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 
-pub trait Parser<T> {
+pub trait Parser {
+    type Input;
     type Output;
 
     fn prefilter(&self) -> Prefilter;
 
-    fn parse(&self, value: &T) -> impl Future<Output = ParseResult<Self::Output>> + Send;
+    fn parse(&self, value: &Self::Input) -> impl Future<Output = ParseResult<Self::Output>> + Send;
 }
 
+#[derive(Debug)]
 pub struct Prefilter {
     pub(crate) account: Option<AccountPrefilter>,
     pub(crate) transaction: Option<TransactionPrefilter>,
 }
 
-#[derive(Default, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub(crate) struct AccountPrefilter {
     pub accounts: HashSet<Pubkey>,
     pub owners: HashSet<Pubkey>,
 }
 
-#[derive(Default, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub(crate) struct TransactionPrefilter {
     pub accounts: HashSet<Pubkey>,
 }
 
 impl Prefilter {
     #[inline]
+    #[must_use]
     pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone, Copy, thiserror::Error)]
 pub enum PrefilterError {
     #[error("Value already given for field {0}")]
     AlreadySet(&'static str),
@@ -114,6 +129,7 @@ impl PrefilterBuilder {
         self
     }
 
+    #[must_use]
     pub fn account_owners<I: IntoIterator>(self, it: I) -> Self
     where HashSet<Pubkey>: FromIterator<I::Item> {
         self.mutate(|this| {
@@ -125,6 +141,7 @@ impl PrefilterBuilder {
         })
     }
 
+    #[must_use]
     pub fn transaction_accounts<I: IntoIterator>(self, it: I) -> Self
     where HashSet<Pubkey>: FromIterator<I::Item> {
         self.mutate(|this| {
@@ -137,11 +154,13 @@ impl PrefilterBuilder {
     }
 }
 
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct Filters<'a>(HashMap<&'a str, Prefilter>);
 
 impl<'a> Filters<'a> {
     #[inline]
+    #[must_use]
     pub const fn new(filters: HashMap<&'a str, Prefilter>) -> Self { Self(filters) }
 }
 
@@ -196,4 +215,3 @@ impl<'a> From<Filters<'a>> for SubscribeRequest {
         }
     }
 }
-

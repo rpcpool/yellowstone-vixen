@@ -6,8 +6,6 @@ use yellowstone_grpc_client::{GeyserGrpcClient, Interceptor};
 use yellowstone_grpc_proto::{prelude::*, tonic::Status};
 use yellowstone_vixen_core::Filters;
 
-use crate::HandlerManagers;
-
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Yellowstone client builder error")]
@@ -28,7 +26,9 @@ pub struct YellowstoneOpts {
 }
 
 pub struct YellowstoneStream<I, T, S> {
+    #[allow(dead_code)]
     client: GeyserGrpcClient<I>,
+    #[allow(dead_code)]
     sub_tx: T,
     pub(super) stream: S,
 }
