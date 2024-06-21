@@ -1,0 +1,7 @@
+[yellowstone]
+# endpoint of the dragonmouth stream
+endpoint = "<endpoint>"
+# x-token of the dragonmouth stream
+x-token = "<x-token>"
+# dragonmouth connect timeout in seconds
+timeout = 60
