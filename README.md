@@ -34,7 +34,7 @@ To run the example, navigate to the test directory and execute the following com
 
 ```
 cd crates/test
-RUST_LOG=info cargo run -- --config "$(pwd)/Vixen.toml"
+RUST_LOG=info cargo run -- --config "$(pwd)/../../Vixen.toml"
 ```
 
 You can find an example configuration file at [`Vixen.toml`](/Vixen.toml).
