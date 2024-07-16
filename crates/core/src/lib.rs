@@ -17,8 +17,8 @@ use std::{
 
 use solana_sdk::pubkey::Pubkey;
 use yellowstone_grpc_proto::geyser::{
-    SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterTransactions,
-    SubscribeUpdateAccount, SubscribeUpdateTransaction,
+    subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
+    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateTransaction,
 };
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -39,8 +39,37 @@ pub type ParseResult<T> = Result<T, ParseError>;
 pub type AccountUpdate = SubscribeUpdateAccount;
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 
+pub trait Update {
+    const TYPE: UpdateType;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum UpdateType {
+    Account,
+    Transaction,
+}
+
+impl UpdateType {
+    #[must_use]
+    pub fn get(update: &Option<UpdateOneof>) -> Option<Self> {
+        match update {
+            Some(UpdateOneof::Account(_)) => Some(Self::Account),
+            Some(UpdateOneof::Transaction(_)) => Some(Self::Transaction),
+            _ => None,
+        }
+    }
+}
+
+impl Update for AccountUpdate {
+    const TYPE: UpdateType = UpdateType::Account;
+}
+
+impl Update for TransactionUpdate {
+    const TYPE: UpdateType = UpdateType::Transaction;
+}
+
 pub trait Parser {
-    type Input;
+    type Input: Update;
     type Output;
 
     fn prefilter(&self) -> Prefilter;

@@ -12,14 +12,22 @@
 use std::fmt;
 
 use buffer::BufferOpts;
+use builder::RuntimeBuilder;
+use metrics::{Metrics, MetricsBackend, NullMetrics};
 use tokio::task::LocalSet;
 use vixen_core::{AccountUpdate, TransactionUpdate};
 use yellowstone::YellowstoneOpts;
 
+#[cfg(feature = "opentelemetry")]
+pub extern crate opentelemetry;
+#[cfg(feature = "prometheus")]
+pub extern crate prometheus;
 pub extern crate yellowstone_vixen_core as vixen_core;
 
 mod buffer;
+mod builder;
 pub mod handler;
+mod metrics;
 mod yellowstone;
 
 pub use handler::{
@@ -139,114 +147,119 @@ impl<'a, E: std::error::Error> fmt::Display for Chain<'a, E> {
     }
 }
 
-pub fn run<
-    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
->(
+#[derive(Debug)]
+pub struct Runtime<A, X, M: MetricsBackend> {
     opts: IndexerOpts,
     manager: HandlerManagers<A, X>,
-) {
-    match try_run(opts, manager) {
-        Ok(()) => (),
-        Err(e) => {
-            tracing::error!(err = %Chain(&e), "Fatal error encountered");
-            std::process::exit(1);
-        },
-    }
+    metrics: Metrics<M>,
 }
 
-pub fn try_run<
-    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
->(
-    opts: IndexerOpts,
-    manager: HandlerManagers<A, X>,
-) -> Result<(), Error> {
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()?
-        .block_on(LocalSet::new().run_until(run_async(opts, manager)))
+impl<A, X> Runtime<A, X, NullMetrics> {
+    #[must_use]
+    pub fn builder() -> RuntimeBuilder<A, X, NullMetrics> { RuntimeBuilder::default() }
 }
 
-async fn run_async<
+impl<
     A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
     X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
->(
-    opts: IndexerOpts,
-    manager: HandlerManagers<A, X>,
-) -> Result<(), Error> {
-    enum StopType<S> {
-        Signal(S),
-        Buffer(Result<std::convert::Infallible, Error>),
+    M: MetricsBackend,
+> Runtime<A, X, M>
+{
+    pub fn run(self) {
+        match self.try_run() {
+            Ok(()) => (),
+            Err(e) => {
+                tracing::error!(err = %Chain(&e), "Fatal error encountered");
+                std::process::exit(1);
+            },
+        }
     }
 
-    let IndexerOpts {
-        yellowstone,
-        buffer,
-    } = opts;
-
-    let client = yellowstone::connect(yellowstone, manager.filters()).await?;
-    let signal;
-
-    #[cfg(unix)]
-    {
-        use futures_util::stream::{FuturesUnordered, StreamExt};
-        use tokio::signal::unix::SignalKind;
-
-        let mut stream = [
-            SignalKind::hangup(),
-            SignalKind::interrupt(),
-            SignalKind::quit(),
-            SignalKind::terminate(),
-        ]
-        .into_iter()
-        .map(|k| {
-            tokio::signal::unix::signal(k).map(|mut s| async move {
-                s.recv().await;
-                Ok(k)
-            })
-        })
-        .collect::<Result<FuturesUnordered<_>, _>>()?;
-
-        signal = async move { stream.next().await.transpose() }
+    pub fn try_run(self) -> Result<(), Error> {
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()?
+            .block_on(LocalSet::new().run_until(self.try_run_async()))
     }
 
-    #[cfg(not(unix))]
-    {
-        use std::fmt;
-
-        use futures_util::TryFutureExt;
-
-        struct CtrlC;
-
-        impl fmt::Debug for CtrlC {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
+    pub async fn try_run_async(self) -> Result<(), Error> {
+        enum StopType<S> {
+            Signal(S),
+            Buffer(Result<std::convert::Infallible, Error>),
         }
 
-        signal = tokio::signal::ctrl_c()
-            .map_ok(|()| Some(CtrlC))
-            .map_err(Into::into);
-    }
+        let Self {
+            opts: IndexerOpts {
+                yellowstone,
+                buffer,
+            },
+            manager,
+            metrics,
+        } = self;
 
-    let buffer = buffer::run_yellowstone(buffer, client, manager).wait_for_stop();
+        let client = yellowstone::connect(yellowstone, manager.filters()).await?;
+        let signal;
 
-    let ret = tokio::select! {
-        s = signal => StopType::Signal(s),
-        b = buffer => StopType::Buffer(b),
-    };
+        #[cfg(unix)]
+        {
+            use futures_util::stream::{FuturesUnordered, StreamExt};
+            use tokio::signal::unix::SignalKind;
 
-    match ret {
-        StopType::Signal(Ok(Some(s))) => {
-            tracing::warn!("{s:?} received, shutting down...");
-            Ok(())
-        },
-        StopType::Signal(Ok(None)) => Err(std::io::Error::new(
-            std::io::ErrorKind::BrokenPipe,
-            "Signal handler returned None",
-        )
-        .into()),
-        // Not sure why the compiler couldn't figure this one out
-        StopType::Buffer(Ok(o)) => match o {},
-        StopType::Signal(Err(e)) | StopType::Buffer(Err(e)) => Err(e),
+            let mut stream = [
+                SignalKind::hangup(),
+                SignalKind::interrupt(),
+                SignalKind::quit(),
+                SignalKind::terminate(),
+            ]
+            .into_iter()
+            .map(|k| {
+                tokio::signal::unix::signal(k).map(|mut s| async move {
+                    s.recv().await;
+                    Ok(k)
+                })
+            })
+            .collect::<Result<FuturesUnordered<_>, _>>()?;
+
+            signal = async move { stream.next().await.transpose() }
+        }
+
+        #[cfg(not(unix))]
+        {
+            use std::fmt;
+
+            use futures_util::TryFutureExt;
+
+            struct CtrlC;
+
+            impl fmt::Debug for CtrlC {
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
+            }
+
+            signal = tokio::signal::ctrl_c()
+                .map_ok(|()| Some(CtrlC))
+                .map_err(Into::into);
+        }
+
+        let buffer = buffer::run_yellowstone(buffer, client, manager, metrics).wait_for_stop();
+
+        let ret = tokio::select! {
+            s = signal => StopType::Signal(s),
+            b = buffer => StopType::Buffer(b),
+        };
+
+        match ret {
+            StopType::Signal(Ok(Some(s))) => {
+                tracing::warn!("{s:?} received, shutting down...");
+                Ok(())
+            },
+            StopType::Signal(Ok(None)) => Err(std::io::Error::new(
+                std::io::ErrorKind::BrokenPipe,
+                "Signal handler returned None",
+            )
+            .into()),
+            // Not sure why the compiler couldn't figure this one out
+            StopType::Buffer(Ok(o)) => match o {},
+            StopType::Signal(Err(e)) | StopType::Buffer(Err(e)) => Err(e),
+        }
     }
 }

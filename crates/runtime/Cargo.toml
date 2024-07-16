@@ -11,7 +11,8 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 clap = { version = "4.5.4", default-features = false, features = ["env", "derive", "std"] }
 futures-channel = { version = "0.3.30", features = ["sink"] }
 futures-util = { version = "0.3.30", features = ["sink"] }
-opentelemetry = "0.22.0"
+opentelemetry = { version = "0.24.0", features = ["metrics"], optional = true }
+prometheus = { version = "0.13.4", optional = true }
 serde = "1.0.198"
 solana-sdk = "1.17.31"
 thiserror = "1.0.59"
@@ -21,3 +22,8 @@ tracing = "0.1.40"
 yellowstone-grpc-client = "1.15.0"
 yellowstone-grpc-proto = "1.14.0"
 yellowstone-vixen-core = { version = "0.0.0", path = "../core" }
+
+[features]
+default = ["opentelemetry"]
+opentelemetry = ["dep:opentelemetry"]
+prometheus = ["dep:prometheus"]

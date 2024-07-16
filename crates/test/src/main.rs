@@ -72,8 +72,15 @@ fn main() {
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
-    vixen::run(config, HandlerManagers {
-        account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(Parser, [Handler]))]),
-        transaction: HandlerManager::empty(),
-    });
+    vixen::Runtime::builder()
+        .opts(config)
+        .manager(HandlerManagers {
+            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(Parser, [
+                Handler,
+            ]))]),
+            transaction: HandlerManager::empty(),
+        })
+        .metrics(vixen::opentelemetry::global::meter("vixen"))
+        .build()
+        .run();
 }
