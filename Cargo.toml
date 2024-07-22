@@ -1,4 +1,15 @@
 [workspace]
 members = ["crates/*"]
-exclude = ["crates/test"]
+exclude = ["crates/test", "crates/test-streams"]
 resolver = "2"
+
+[workspace.dependencies.yellowstone-grpc-client]
+version = "1.15.0"
+git = "https://github.com/abk-labs/yellowstone-grpc"
+branch = "june/optional-sdk"
+
+[workspace.dependencies.yellowstone-grpc-proto]
+version = "1.14.0"
+default-features = false
+git = "https://github.com/abk-labs/yellowstone-grpc"
+branch = "june/optional-sdk"

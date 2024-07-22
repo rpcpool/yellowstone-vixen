@@ -8,6 +8,6 @@ license = "AGPL-3.0-or-later"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
-solana-sdk = "1.17.31"
+bs58 = "0.5.1"
 thiserror = "1.0.59"
-yellowstone-grpc-proto = "1.14.0"
+yellowstone-grpc-proto = { workspace = true }
