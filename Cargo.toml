@@ -1,6 +1,10 @@
 [workspace]
 members = ["crates/*"]
-exclude = ["crates/test", "crates/test-streams"]
+exclude = [
+  "crates/parser",
+  "crates/test",
+  "crates/test-streams",
+]
 resolver = "2"
 
 [workspace.dependencies.yellowstone-grpc-client]

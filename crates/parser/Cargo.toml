@@ -1,0 +1,17 @@
+[package]
+name = "yellowstone-vixen-parser"
+description = "Vixen program parsers for the solana program library."
+version = "0.0.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+spl-token-2022 = { version = "4.0.1", optional = true }
+yellowstone-vixen-core = { path = "../core" }
+
+[features]
+default = []
+token-extensions = ["spl-token-2022"]

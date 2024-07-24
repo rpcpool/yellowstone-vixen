@@ -2818,11 +2818,11 @@ name = "test"
 version = "0.0.0"
 dependencies = [
  "clap",
- "spl-token-2022",
  "toml 0.8.15",
  "tracing",
  "tracing-subscriber",
  "yellowstone-vixen",
+ "yellowstone-vixen-parser",
 ]
 
 [[package]]
@@ -3540,6 +3540,14 @@ dependencies = [
  "bs58",
  "thiserror",
  "yellowstone-grpc-proto",
+]
+
+[[package]]
+name = "yellowstone-vixen-parser"
+version = "0.0.0"
+dependencies = [
+ "spl-token-2022",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
