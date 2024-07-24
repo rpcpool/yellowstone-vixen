@@ -1,17 +1,17 @@
-use spl_token_2022::{
+use spl_token::{
     solana_program::{program_error::ProgramError, program_pack::Pack},
-    state::{Account, Mint, Multisig},
+    state::{Account as TokenAccount, Mint, Multisig},
 };
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter};
 
 #[derive(Debug)]
-pub enum TokenExtensionState {
-    Account(Account),
+pub enum TokenProgramState {
+    Account(TokenAccount),
     Mint(Mint),
     Multisig(Multisig),
 }
 
-impl TokenExtensionState {
+impl TokenProgramState {
     fn try_unpack(input: &[u8]) -> ParseResult<Self> {
         match input.len() {
             Mint::LEN => Mint::unpack(input)
@@ -22,10 +22,10 @@ impl TokenExtensionState {
                 .map_err(Into::into),
             _ => {
                 let data = input
-                    .get(..Account::LEN)
+                    .get(..TokenAccount::LEN)
                     .ok_or(ProgramError::InvalidAccountData)?;
 
-                Account::unpack(data)
+                TokenAccount::unpack(data)
                     .map(|account| Self::Account(account))
                     .map_err(Into::into)
             }
@@ -33,11 +33,11 @@ impl TokenExtensionState {
     }
 }
 
-pub struct TokenExtensionParser;
+pub struct TokenProgramParser;
 
-impl Parser for TokenExtensionParser {
+impl Parser for TokenProgramParser {
     type Input = AccountUpdate;
-    type Output = TokenExtensionState;
+    type Output = TokenProgramState;
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -49,6 +49,6 @@ impl Parser for TokenExtensionParser {
     async fn parse(&self, acct: &AccountUpdate) -> ParseResult<Self::Output> {
         let inner = acct.account.as_ref().ok_or(ProgramError::InvalidArgument)?;
 
-        TokenExtensionState::try_unpack(&inner.data)
+        TokenProgramState::try_unpack(&inner.data)
     }
 }
