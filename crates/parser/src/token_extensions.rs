@@ -5,7 +5,7 @@ use spl_token_2022::{
 };
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter};
 
-use crate::helpers::{
+use crate::token_extension_helpers::{
     get_mint_account_extensions_data_bytes, get_token_account_extensions_data_bytes,
 };
 
@@ -139,5 +139,44 @@ impl Parser for TokenExtensionParser {
         let inner = acct.account.as_ref().ok_or(ProgramError::InvalidArgument)?;
 
         TokenExtensionState::try_unpack(&inner.data)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        constants::token_program_constants::TOKEN_ACCOUNT_WITH_EXTENSION,
+        token_extension_data_parsers::parse_transfer_hook_account_extension,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_token_account_parsing() {
+        let token_account = TokenExtensionState::try_unpack(TOKEN_ACCOUNT_WITH_EXTENSION);
+        assert_eq!(token_account.is_ok(), true);
+        let token_account = token_account.unwrap();
+        match token_account {
+            TokenExtensionState::ExtendedTokenAccount(ext_token_account) => {
+                println!("Token Account with Extensions: {:?}", ext_token_account);
+                let ext_data = ext_token_account.extension_data_vec;
+                assert_eq!(ext_data.len(), 1);
+                assert_eq!(ext_data[0].extension, ExtensionType::TransferHookAccount);
+                assert_eq!(
+                    parse_transfer_hook_account_extension(&ext_data[0].extension_data).is_ok(),
+                    true
+                );
+
+                let parsed_data =
+                    parse_transfer_hook_account_extension(&ext_data[0].extension_data);
+
+                assert_eq!(parsed_data.is_ok(), true);
+
+                let parsed_data = parsed_data.unwrap();
+
+                println!("Parsed Transfer Hook Account Extension: {:?}", parsed_data);
+            }
+            _ => panic!("Invalid account type"),
+        }
     }
 }

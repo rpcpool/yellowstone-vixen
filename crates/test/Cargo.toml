@@ -11,7 +11,4 @@ clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 toml = "0.8.12"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-yellowstone-vixen = { path = "../runtime" }
-yellowstone-vixen-parser = { path = "../parser", features = [
-  "token-extensions",
-] }
+yellowstone-vixen-parser = { path = "../parser"}
