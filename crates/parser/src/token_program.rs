@@ -1,34 +1,29 @@
 use spl_token::{
     solana_program::{program_error::ProgramError, program_pack::Pack},
-    state::{Account as TokenAccount, Mint, Multisig},
+    state::{Account, Mint, Multisig},
 };
-use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter};
+use yellowstone_vixen_core::{AccountUpdate, ParseError, ParseResult, Parser, Prefilter};
 
 #[derive(Debug)]
 pub enum TokenProgramState {
-    Account(TokenAccount),
+    TokenAccount(Account),
     Mint(Mint),
     Multisig(Multisig),
 }
 
 impl TokenProgramState {
-    fn try_unpack(input: &[u8]) -> ParseResult<Self> {
-        match input.len() {
-            Mint::LEN => Mint::unpack(input)
+    fn try_unpack(data_bytes: &[u8]) -> ParseResult<Self> {
+        match data_bytes.len() {
+            Mint::LEN => Mint::unpack(data_bytes)
                 .map(|mint| Self::Mint(mint))
                 .map_err(Into::into),
-            Multisig::LEN => Multisig::unpack(input)
+            Account::LEN => Account::unpack(data_bytes)
+                .map(|token_account| Self::TokenAccount(token_account))
+                .map_err(Into::into),
+            Multisig::LEN => Multisig::unpack(data_bytes)
                 .map(|multisig| Self::Multisig(multisig))
                 .map_err(Into::into),
-            _ => {
-                let data = input
-                    .get(..TokenAccount::LEN)
-                    .ok_or(ProgramError::InvalidAccountData)?;
-
-                TokenAccount::unpack(data)
-                    .map(|account| Self::Account(account))
-                    .map_err(Into::into)
-            }
+            _ => Err(ParseError::from("Invalid Account data length".to_owned()).into()),
         }
     }
 }
@@ -41,7 +36,7 @@ impl Parser for TokenProgramParser {
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
-            .account_owners([spl_token_2022::ID])
+            .account_owners([spl_token::ID])
             .build()
             .unwrap()
     }
