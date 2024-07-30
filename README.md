@@ -151,6 +151,10 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for Handler {
 
 This setup shows how to use Vixen to create an efficient indexing solution for specific needs on the Solana blockchain. By following this pattern, developers can build their custom parsers and handlers for various Solana programs and data pipelines.
 
+## Yellowstone Vixen Mock
+
+This crate includes a mock feature designed for testing Custom Parsers. It is intended solely for testing purposes. For more details, refer to the [mock](crates/mock/README.md) documentation.
+
 ## Dragon's Mouth
 
 Dragon's Mouth can be self-hosted as a Geyser plugin or used via a commercial vendor. For more details, refer to the [Yellowstone Dragon's Mouth documentation](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions) and [Yellowstone repository](https://github.com/rpcpool/yellowstone-grpc).

@@ -1,11 +1,8 @@
-use serde::{Deserialize, Serialize};
-use solana_sdk::genesis_config::ClusterType;
-
-use surf::Client;
-
-use serde_json::json;
-
 use crate::utils::AccountInfo;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use solana_sdk::genesis_config::ClusterType;
+use surf::Client;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RpcResponse<T> {
