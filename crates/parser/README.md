@@ -2,9 +2,22 @@
 
 This crate provides several account parsers, such as Token and TokenExtension. These parsers can be imported from this crate and used within yellowstone-vixen.
 
+## Installation
+
+```bash
+
+cargo add yellowstone_vixen_parser
+
+```
+
 ## Example
 
 ```rust
+
+use yellowstone_vixen_parser::{TokenProgramParser, TokenExtensionProgramParser};
+use yellowstone_vixen as vixen;
+use yellowstone_vixen_core::{Handler, HandlerManager, HandlerManagers};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 fn main(){
     tracing_subscriber::registry()
@@ -31,4 +44,5 @@ fn main(){
         },
     );
 }
+
 ```
