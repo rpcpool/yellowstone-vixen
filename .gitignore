@@ -1,3 +1,2 @@
 target/
-mock/*
-crates/mock/*
+crates/mock/fixtures
