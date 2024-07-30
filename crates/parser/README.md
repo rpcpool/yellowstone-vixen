@@ -6,7 +6,7 @@ This crate provides several account parsers, such as Token and TokenExtension. T
 
 ```bash
 
-cargo add yellowstone_vixen_parser
+cargo add yellowstone-vixen-parser
 
 ```
 

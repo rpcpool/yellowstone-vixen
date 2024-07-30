@@ -7,7 +7,7 @@ the load_account_fixtures function takes pubkey, cluster as inputs and fetches t
 
 ```bash
 
-cargo add yellowstone_vixen_mock
+cargo add yellowstone-vixen-mock
 
 ```
 
