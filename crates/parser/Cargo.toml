@@ -27,7 +27,6 @@ yellowstone-vixen-core = { path = "../core" }
 
 # [features]
 # default = []
-# token-extensions = ["spl-token-2022"]
+# token-extensions = ["spl-token-2022","spl-type-length-value", "spl-pod"]
 # token-program = ["spl-token"]
 # associated-token-program = ["spl-token-2022"]
-# token-extension-data-parsers = ["spl-type-length-value", "spl-pod"]
