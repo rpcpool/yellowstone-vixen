@@ -126,7 +126,7 @@ pub enum ExtensionData {
 }
 
 impl ExtensionData {
-    pub fn from_extension_type_and_data(
+    pub fn try_from_extension_type_and_data(
         extension_type: ExtensionType,
         data_bytes: &[u8],
     ) -> Result<Self, ProgramError> {

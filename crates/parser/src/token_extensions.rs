@@ -32,7 +32,7 @@ impl ExtendedMint {
         for extension in extension_types {
             let extension_data = get_mint_account_extensions_data_bytes(&unpacked, extension)?;
 
-            extension_data_vec.push(ExtensionData::from_extension_type_and_data(
+            extension_data_vec.push(ExtensionData::try_from_extension_type_and_data(
                 extension,
                 extension_data,
             )?);
@@ -59,7 +59,7 @@ impl ExtendedTokenAccount {
         for extension in extension_types {
             let extension_data = get_token_account_extensions_data_bytes(&unpacked, extension)?;
 
-            extension_data_vec.push(ExtensionData::from_extension_type_and_data(
+            extension_data_vec.push(ExtensionData::try_from_extension_type_and_data(
                 extension,
                 extension_data,
             )?);
