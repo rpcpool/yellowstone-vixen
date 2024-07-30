@@ -12,7 +12,7 @@ pub enum TokenProgramState {
 }
 
 impl TokenProgramState {
-    fn try_unpack(data_bytes: &[u8]) -> ParseResult<Self> {
+    pub fn try_unpack(data_bytes: &[u8]) -> ParseResult<Self> {
         match data_bytes.len() {
             Mint::LEN => Mint::unpack(data_bytes)
                 .map(|mint| Self::Mint(mint))
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn test_token_account_parsing() {
         let token_account = TokenProgramState::try_unpack(TOKEN_ACCOUNT);
-        assert_eq!(token_account.is_ok(), true);
+        assert!(token_account.is_ok());
         let token_account = token_account.unwrap();
         match token_account {
             TokenProgramState::TokenAccount(token_account) => {
@@ -84,7 +84,7 @@ mod tests {
                     token_account.delegate.unwrap(),
                     Pubkey::from_str(TOKEN_ACCOUNT_DELEGATE).unwrap()
                 );
-                println!("Token account: {:?}", token_account);
+                println!("Token account: {:#?}", token_account);
             }
             _ => panic!("Invalid Token Account"),
         }
@@ -92,7 +92,7 @@ mod tests {
     #[test]
     fn test_mint_account_parising() {
         let mint_account = TokenProgramState::try_unpack(MINT);
-        assert_eq!(mint_account.is_ok(), true);
+        assert!(mint_account.is_ok());
         let mint_account = mint_account.unwrap();
         match mint_account {
             TokenProgramState::Mint(mint) => {
@@ -102,7 +102,7 @@ mod tests {
                     mint.mint_authority.unwrap(),
                     Pubkey::from_str(MINT_AUTH).unwrap()
                 );
-                println!("Token account: {:?}", mint);
+                println!("Mint account: {:#?}", mint);
             }
             _ => panic!("Invalid Mint Account"),
         }
@@ -111,14 +111,14 @@ mod tests {
     #[test]
     fn test_multisig_parsing() {
         let multisig = TokenProgramState::try_unpack(MULTISIG);
-        assert_eq!(multisig.is_ok(), true);
+        assert!(multisig.is_ok());
         let multisig = multisig.unwrap();
         match multisig {
             TokenProgramState::Multisig(multisig) => {
                 assert_eq!(multisig.m, MULTISIG_M);
                 assert_eq!(multisig.n, MULTISIG_N);
                 assert_eq!(multisig.signers.len(), MULTISIG_SIGNERS);
-                println!("Multisig account: {:?}", multisig);
+                println!("Multisig account: {:#?}", multisig);
             }
             _ => panic!("Invalid Multisig Account"),
         }

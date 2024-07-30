@@ -10,7 +10,7 @@ pub use token_program::{TokenProgramParser, TokenProgramState};
 mod token_extensions;
 
 // #[cfg(feature = "token-extensions")]
-pub use token_extensions::{TokenExtensionParser, TokenExtensionState};
+pub use token_extensions::{TokenExtensionProgramParser, TokenExtensionState};
 // #[cfg(feature = "token-extensions")]
 mod token_extension_helpers;
 
