@@ -62,7 +62,7 @@ mod tests {
         let account = load_account_fixtures(account_pubkey, ClusterType::Devnet).await.unwrap();
         let parser = TokenProgramParser;
 
-        let data = parser.parse(&sub_account_update).await.unwrap();
+        let data = parser.parse(&account).await.unwrap();
 
         let data = data.unwrap();
         println!("Parsed Data:{:?}", data);
