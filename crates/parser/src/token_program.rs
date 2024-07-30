@@ -65,9 +65,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_token_account_parsing() {
-        let token_account = TokenProgramState::try_unpack(TOKEN_ACCOUNT);
-        assert!(token_account.is_ok());
-        let token_account = token_account.unwrap();
+        let token_account = TokenProgramState::try_unpack(TOKEN_ACCOUNT).unwrap();
         match token_account {
             TokenProgramState::TokenAccount(token_account) => {
                 assert_eq!(
@@ -91,9 +89,7 @@ mod tests {
     }
     #[test]
     fn test_mint_account_parising() {
-        let mint_account = TokenProgramState::try_unpack(MINT);
-        assert!(mint_account.is_ok());
-        let mint_account = mint_account.unwrap();
+        let mint_account = TokenProgramState::try_unpack(MINT).unwrap();
         match mint_account {
             TokenProgramState::Mint(mint) => {
                 assert_eq!(mint.supply, MINT_SUPPLY);
@@ -110,9 +106,7 @@ mod tests {
 
     #[test]
     fn test_multisig_parsing() {
-        let multisig = TokenProgramState::try_unpack(MULTISIG);
-        assert!(multisig.is_ok());
-        let multisig = multisig.unwrap();
+        let multisig = TokenProgramState::try_unpack(MULTISIG).unwrap();
         match multisig {
             TokenProgramState::Multisig(multisig) => {
                 assert_eq!(multisig.m, MULTISIG_M);

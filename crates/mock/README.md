@@ -39,13 +39,10 @@ mod tests {
 
     #[tokio::test]
     async fn mock() {
-        let account = load_account_fixtures(account_pubkey, ClusterType::Devnet).await;
-        assert!(account.is_some(), "Account not found");
-        let account = account.unwrap();
+        let account = load_account_fixtures(account_pubkey, ClusterType::Devnet).await.unwrap();
         let parser = TokenExtensionProgramParser;
 
-        let data = parser.parse(&sub_account_update).await;
-        assert!(data.is_ok(), "Error parsing account");
+        let data = parser.parse(&sub_account_update).await.unwrap();
 
         let data = data.unwrap();
         println!("Parsed Data:{:?}", data);

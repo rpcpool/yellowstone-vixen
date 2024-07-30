@@ -11,10 +11,8 @@ use solana_client::rpc_client::RpcClient;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{account::Account, genesis_config::ClusterType};
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
-use yellowstone_vixen_core::{AccountUpdate, Parser};
-use yellowstone_vixen_parser::{
-    TokenExtensionProgramParser, TokenExtensionState, TokenProgramParser, TokenProgramState,
-};
+use yellowstone_vixen_core::Parser;
+use yellowstone_vixen_parser::{TokenProgramParser, TokenProgramState};
 
 use crate::async_client::fetch_account_async;
 
@@ -31,7 +29,22 @@ pub struct AccountInfo {
     pub space: u64,
 }
 
-pub async fn fetch_account_sync(pubkey: &Pubkey, cluster: ClusterType) -> Option<Account> {
+impl TryFrom<AccountInfo> for Account {
+    type Error = Box<dyn std::error::Error>;
+    fn try_from(value: AccountInfo) -> Result<Self, Self::Error> {
+        let data = value.data.first().ok_or("No data found in account info")?;
+        let data = general_purpose::STANDARD.decode(data)?;
+        Ok(Account {
+            lamports: value.lamports,
+            data,
+            owner: Pubkey::from_str(&value.owner).unwrap(),
+            executable: value.executable,
+            rent_epoch: value.rent_epoch,
+        })
+    }
+}
+
+pub fn fetch_account_sync(pubkey: &Pubkey, cluster: ClusterType) -> Option<Account> {
     let rpc_url = match cluster {
         ClusterType::MainnetBeta => "https://api.mainnet-beta.solana.com".to_string(),
         ClusterType::Devnet => "https://api.devnet.solana.com".to_string(),
@@ -41,20 +54,13 @@ pub async fn fetch_account_sync(pubkey: &Pubkey, cluster: ClusterType) -> Option
 
     let rpc_client = RpcClient::new(rpc_url);
     let account = rpc_client.get_account(pubkey);
-    match account {
-        Ok(acc) => Some(acc),
-        Err(_) => None,
-    }
+    account.ok()
 }
 
-pub async fn test_parsing_token_program(sub_account_update: SubscribeUpdateAccount) {
+pub async fn test_parsing_token_program_account(sub_account_update: SubscribeUpdateAccount) {
     let parser = TokenProgramParser;
 
-    let data = parser.parse(&sub_account_update).await;
-
-    assert!(data.is_ok(), "Error parsing account");
-
-    let data = data.unwrap();
+    let data = parser.parse(&sub_account_update).await.unwrap();
 
     match data {
         TokenProgramState::TokenAccount(token_account) => {
@@ -69,50 +75,12 @@ pub async fn test_parsing_token_program(sub_account_update: SubscribeUpdateAccou
     }
 }
 
-pub async fn test_parsing_token_extension_program(sub_account_update: SubscribeUpdateAccount) {
-    let parser = TokenExtensionProgramParser;
-
-    let data = parser.parse(&sub_account_update).await;
-
-    assert!(data.is_ok(), "Error parsing account");
-
-    let data = data.unwrap();
-
-    match data {
-        TokenExtensionState::ExtendedTokenAccount(ext_token_account) => {
-            println!("Token Account with Extensions: {:#?}", ext_token_account);
-        }
-        TokenExtensionState::ExtendedMint(ext_mint_account) => {
-            println!("Mint Account with Extensions: {:#?}", ext_mint_account);
-        }
-        TokenExtensionState::Multisig(multisig) => {
-            println!("Multisig: {:#?}", multisig);
-        }
-    }
-}
-
-pub async fn test_custom_parser(
-    sub_account_update: SubscribeUpdateAccount,
-    parser: impl Parser<Input = AccountUpdate>,
-) {
-    let data = parser.parse(&sub_account_update).await;
-
-    assert!(data.is_ok(), "Error parsing account");
-
-    let data = data.unwrap();
-}
-
-pub fn run_async_task(callback: impl std::future::Future<Output = ()>) {
-    tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .unwrap()
-        .block_on(callback);
-}
-
-pub fn get_subscribe_update_account(pubkey: &str, account: AccountInfo) -> SubscribeUpdateAccount {
-    let account = to_account(account);
-    let pubkey = Pubkey::from_str(pubkey).unwrap();
+pub fn get_subscribe_update_account(
+    pubkey: &str,
+    account_info: AccountInfo,
+) -> Option<SubscribeUpdateAccount> {
+    let account = Account::try_from(account_info).ok()?;
+    let pubkey = Pubkey::from_str(pubkey).ok()?;
     let subscriber_account_info = SubscribeUpdateAccountInfo {
         pubkey: pubkey.as_ref().to_owned(),
         lamports: account.lamports,
@@ -124,23 +92,11 @@ pub fn get_subscribe_update_account(pubkey: &str, account: AccountInfo) -> Subsc
         txn_signature: None,
     };
 
-    SubscribeUpdateAccount {
+    Some(SubscribeUpdateAccount {
         account: Some(subscriber_account_info),
         slot: 0,
         is_startup: false,
-    }
-}
-
-pub fn to_account(account_info: AccountInfo) -> Account {
-    let account_data = account_info.data.first().unwrap();
-    let account_data = general_purpose::STANDARD.decode(account_data).unwrap();
-    Account {
-        lamports: account_info.lamports,
-        data: account_data,
-        owner: Pubkey::from_str(&account_info.owner).unwrap(),
-        executable: account_info.executable,
-        rent_epoch: account_info.rent_epoch,
-    }
+    })
 }
 
 pub fn check_or_create_fixtures_dir() {
@@ -171,38 +127,26 @@ pub fn get_account_data_file_path(pubkey: &str, cluster: ClusterType) -> Option<
 
 pub fn check_account_exists_on_fixtures(pubkey: &str, cluster: ClusterType) -> bool {
     let file_path = get_account_data_file_path(pubkey, cluster);
-    match file_path {
-        Some(path) => Path::new(&path).is_file(),
-        None => false,
-    }
+    file_path.map_or(false, |path| Path::new(&path).is_file())
 }
 
 pub fn read_from_file(file_path: &str) -> Option<AccountInfo> {
     let file = std::fs::read(file_path);
-    match file {
-        Ok(data) => {
-            let account: AccountInfo = serde_json::from_slice(&data).unwrap();
-            Some(account)
-        }
-        Err(_) => None,
-    }
+    file.map(|data| serde_json::from_slice(&data).unwrap()).ok()
 }
 
 pub fn fetch_account_data_from_file(pubkey: &str, cluster: ClusterType) -> Option<AccountInfo> {
     let account_file_path = get_account_data_file_path(pubkey, cluster);
-    match account_file_path {
-        Some(path) => read_from_file(&path),
-        None => None,
-    }
+    account_file_path.map_or(None, |path| read_from_file(&path))
 }
 
 pub fn write_to_file(file_path: &str, account: &AccountInfo) {
     let data = serde_json::to_string(account).unwrap();
     let write_res = fs::write(file_path, data);
-    match write_res {
-        Ok(_) => println!("Data written to file"),
-        Err(_) => println!("Error writing data to file"),
+    if write_res.is_err() {
+        println!("Error writing account data to file: {}", file_path);
     }
+    println!("Account data written to file: {}", file_path);
 }
 
 pub fn format_public_key(pubkey_str: &str) -> String {

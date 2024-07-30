@@ -11,37 +11,48 @@ pub async fn load_account_fixtures(
     use utils::{
         check_account_exists_on_fixtures, check_or_create_fixtures_dir,
         fetch_account_data_from_file, fetch_and_write_account_data, get_subscribe_update_account,
+        AccountInfo,
     };
     check_or_create_fixtures_dir();
     let account_data_exists = check_account_exists_on_fixtures(pubkey, cluster);
-
-    if !account_data_exists {
-        let account = fetch_and_write_account_data(cluster, pubkey).await;
-        match account {
-            Some(account) => Some(get_subscribe_update_account(pubkey, account)),
-            None => None,
-        }
+    let account: Option<AccountInfo>;
+    if account_data_exists {
+        account = fetch_account_data_from_file(pubkey, cluster);
     } else {
-        let account = fetch_account_data_from_file(pubkey, cluster);
-        match account {
-            Some(account) => Some(get_subscribe_update_account(pubkey, account)),
-            None => None,
-        }
+        account = fetch_and_write_account_data(cluster, pubkey).await;
     }
+    account.map_or(None, |account| {
+        get_subscribe_update_account(pubkey, account)
+    })
 }
 
 #[cfg(test)]
 mod tests {
-    const VIXEN_TEST_MINT_DEVNET: &str = "AZLFB7QYN8oZK8wfUt65feHFjDonhiPHQGDcoWfZDPFf";
+    const VIXEN_TEST_MINT_DEVNET: &str = "3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK";
     use solana_sdk::genesis_config::ClusterType;
-    use utils::test_parsing_token_extension_program;
+    use yellowstone_vixen_core::Parser;
+    use yellowstone_vixen_parser::{TokenProgramParser, TokenProgramState};
 
     use super::*;
     #[tokio::test]
     async fn mock() {
-        let account = load_account_fixtures(VIXEN_TEST_MINT_DEVNET, ClusterType::Devnet).await;
-        assert!(account.is_some(), "Account not found");
-        let account = account.unwrap();
-        test_parsing_token_extension_program(account).await;
+        let account = load_account_fixtures(VIXEN_TEST_MINT_DEVNET, ClusterType::Devnet)
+            .await
+            .unwrap();
+        let parser = TokenProgramParser;
+
+        let data = parser.parse(&account).await.unwrap();
+
+        match data {
+            TokenProgramState::TokenAccount(token_account) => {
+                println!("Token Account: {:#?}", token_account);
+            }
+            TokenProgramState::Mint(mint) => {
+                println!("Mint: {:#?}", mint);
+            }
+            TokenProgramState::Multisig(multisig) => {
+                println!("Multisig: {:#?}", multisig);
+            }
+        }
     }
 }

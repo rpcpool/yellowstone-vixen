@@ -14,6 +14,4 @@ pub use token_extensions::{TokenExtensionProgramParser, TokenExtensionState};
 // #[cfg(feature = "token-extensions")]
 mod token_extension_helpers;
 
-pub use token_extension_helpers::token_extension_data_parsers;
-
 mod constants;
