@@ -11,6 +11,17 @@ cargo add yellowstone-vixen-mock
 
 ```
 
+## Setup
+
+To use the mock parser, you need to create a .env file in the same directory as your project with the following content:
+
+```bash
+
+RPC_ENDPOINT=YOUR_RPC_URL
+CLUSTER=YOUR_PREFERRED_CLUSTER # Devnet, Testnet, Mainnet
+
+```
+
 ## Example
 
 ```rust
