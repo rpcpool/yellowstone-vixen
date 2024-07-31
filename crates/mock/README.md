@@ -13,7 +13,7 @@ cargo add yellowstone-vixen-mock
 
 ## Setup
 
-To use the mock parser, you need to create a .env file in the same directory as your project with the following content:
+To use the Mock testing feature, you need to create a .env file in the same directory as your project with the following content:
 
 ```bash
 
