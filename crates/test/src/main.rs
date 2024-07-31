@@ -18,7 +18,7 @@ use vixen::{
 };
 use vixen_core::{AccountUpdate, Prefilter};
 use yellowstone_vixen as vixen;
-use yellowstone_vixen_parser::TokenExtensionParser;
+use yellowstone_vixen_parser::TokenExtensionProgramParser;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -49,7 +49,7 @@ fn main() {
         .opts(config)
         .manager(HandlerManagers {
             account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
-                TokenExtensionParser,
+                TokenExtensionProgramParser,
                 [Handler],
             ))]),
             transaction: HandlerManager::empty(),

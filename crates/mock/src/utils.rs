@@ -44,15 +44,8 @@ impl TryFrom<AccountInfo> for Account {
     }
 }
 
-pub fn fetch_account_sync(pubkey: &Pubkey, cluster: ClusterType) -> Option<Account> {
-    let rpc_url = match cluster {
-        ClusterType::MainnetBeta => "https://api.mainnet-beta.solana.com".to_string(),
-        ClusterType::Devnet => "https://api.devnet.solana.com".to_string(),
-        ClusterType::Testnet => "https://api.testnet.solana.com".to_string(),
-        _ => "https://api.mainnet-beta.solana.com".to_string(),
-    };
-
-    let rpc_client = RpcClient::new(rpc_url);
+pub fn fetch_account_sync(pubkey: &Pubkey, rpc_endpoint: String) -> Option<Account> {
+    let rpc_client = RpcClient::new(rpc_endpoint);
     let account = rpc_client.get_account(pubkey);
     account.ok()
 }
@@ -160,9 +153,10 @@ pub fn format_public_key(pubkey_str: &str) -> String {
 
 pub async fn fetch_and_write_account_data(
     cluster: ClusterType,
+    rpc_endpoint: String,
     pubkey: &str,
 ) -> Option<AccountInfo> {
-    let account = fetch_account_async(cluster, pubkey).await;
+    let account = fetch_account_async(rpc_endpoint, pubkey).await;
     if account.is_ok() {
         let account = account.unwrap();
         let account_file_path = get_account_data_file_path(pubkey, cluster);

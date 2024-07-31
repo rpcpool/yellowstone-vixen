@@ -1,7 +1,6 @@
 use crate::utils::AccountInfo;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use solana_sdk::genesis_config::ClusterType;
 use surf::Client;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -25,15 +24,9 @@ pub struct Context {
 }
 
 pub async fn fetch_account_async(
-    cluster: ClusterType,
+    rpc_endpoint: String,
     account_pubkey: &str,
 ) -> Result<AccountInfo, Box<dyn std::error::Error>> {
-    let rpc_url = match cluster {
-        ClusterType::MainnetBeta => "https://api.mainnet-beta.solana.com".to_string(),
-        ClusterType::Devnet => "https://api.devnet.solana.com".to_string().to_string(),
-        ClusterType::Testnet => "https://api.testnet.solana.com".to_string(),
-        _ => "https://api.mainnet-beta.solana.com".to_string(),
-    };
     let client = Client::new();
     let request_body = json!({
         "jsonrpc": "2.0",
@@ -48,7 +41,7 @@ pub async fn fetch_account_async(
     });
 
     let mut response = client
-        .post(rpc_url)
+        .post(rpc_endpoint)
         .body(request_body.to_string())
         .header("Content-Type", "application/json")
         .send()
