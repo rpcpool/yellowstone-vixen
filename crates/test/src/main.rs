@@ -11,12 +11,7 @@ use std::path::PathBuf;
 
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use vixen::{
-    handler,
-    vixen_core::{self, ParseResult},
-    HandlerManager, HandlerManagers,
-};
-use vixen_core::{AccountUpdate, Prefilter};
+use vixen::{handler, HandlerManager, HandlerManagers};
 use yellowstone_vixen as vixen;
 use yellowstone_vixen_parser::TokenExtensionProgramParser;
 

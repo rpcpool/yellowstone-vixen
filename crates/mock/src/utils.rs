@@ -5,8 +5,6 @@ use std::fs;
 use std::path::Path;
 use std::str::FromStr;
 
-use serde_json::{self};
-
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{account::Account, genesis_config::ClusterType};

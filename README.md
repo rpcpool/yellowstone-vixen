@@ -81,7 +81,7 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for CustomHandler {
 }
 ```
 
-- **Main Function**: Sets up the tracing subscriber, reads the configuration file, and runs the Vixen framework with the specified handlers and managers.
+- **Main Function**: Sets up the tracing subscriber, reads the configuration file, and runs the Vixen framework with the specified handlers, managers and metrics.
 
 ```rust
 fn main() {
@@ -94,10 +94,16 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::run(config, HandlerManagers {
-        account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(CustomParser, [CustomHandler]))]),
-        transaction: HandlerManager::empty(),
-    });
+
+    vixen::Runtime::builder()
+        .opts(config)
+        .manager(HandlerManagers {
+            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(CustomParser, [CustomHandler]))]),
+            transaction: HandlerManager::empty(),
+        })
+        .metrics(vixen::opentelemetry::global::meter("vixen"))
+        .build()
+        .run();
 }
 ```
 
