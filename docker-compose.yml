@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vixen_demo
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - ./data:/usr/src/yellostone-vixen/data

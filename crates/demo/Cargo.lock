@@ -850,6 +850,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "demo"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "spl-token-2022",
+ "toml 0.8.15",
+ "tracing",
+ "tracing-subscriber",
+ "yellowstone-vixen",
+]
+
+[[package]]
 name = "derivation-path"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2811,18 +2823,6 @@ checksum = "21bebf2b7c9e0a515f6e0f8c51dc0f8e4696391e6f1ff30379559f8365fb0df7"
 dependencies = [
  "rustix",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "test"
-version = "0.0.0"
-dependencies = [
- "clap",
- "spl-token-2022",
- "toml 0.8.15",
- "tracing",
- "tracing-subscriber",
- "yellowstone-vixen",
 ]
 
 [[package]]

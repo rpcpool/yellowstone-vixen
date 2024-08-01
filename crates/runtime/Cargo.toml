@@ -8,7 +8,11 @@ license = "AGPL-3.0-or-later"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
-clap = { version = "4.5.4", default-features = false, features = ["env", "derive", "std"] }
+clap = { version = "4.5.4", default-features = false, features = [
+    "env",
+    "derive",
+    "std",
+] }
 futures-channel = { version = "0.3.30", features = ["sink"] }
 futures-util = { version = "0.3.30", features = ["sink"] }
 opentelemetry = { version = "0.24.0", features = ["metrics"], optional = true }
@@ -16,7 +20,9 @@ prometheus = { version = "0.13.4", optional = true }
 serde = "1.0.198"
 thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
-topograph = { version = "0.4.0", features = ["tokio"], git = "https://github.com/ray-kast/topograph", branch = "v0.4-wip" }
+topograph = { version = "0.4.0", features = [
+    "tokio",
+], git = "https://github.com/ray-kast/topograph", branch = "v0.4-wip" }
 tracing = "0.1.40"
 yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
