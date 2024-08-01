@@ -9,4 +9,5 @@ services:
     environment:
       - RUST_LOG=info
     volumes:
-      - ./data:/usr/src/yellostone-vixen/data
+      - ./Vixen.toml:/usr/local/bin/config/Vixen.toml
+    command: ["./demo", "--config", "/usr/local/bin/config/Vixen.toml"]

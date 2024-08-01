@@ -75,9 +75,10 @@ fn main() {
     vixen::Runtime::builder()
         .opts(config)
         .manager(HandlerManagers {
-            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(Parser, [
-                Handler,
-            ]))]),
+            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
+                Parser,
+                [Handler],
+            ))]),
             transaction: HandlerManager::empty(),
         })
         .metrics(vixen::opentelemetry::global::meter("vixen"))
