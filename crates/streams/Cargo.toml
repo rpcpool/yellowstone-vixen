@@ -16,4 +16,4 @@ default-features = false
 [features]
 default = ["opentelemetry"]
 opentelemetry = ["vixen/opentelemetry"]
-prometheus = ["vixen/prometheus"]
+# prometheus = ["vixen/prometheus"]

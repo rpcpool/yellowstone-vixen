@@ -3,6 +3,7 @@ use std::{
     fmt,
 };
 
+use opentelemetry::metrics::{MeterProvider, MetricsError};
 use yellowstone_vixen_core::UpdateType;
 
 use crate::handler::HandlerPackErrors;
@@ -26,7 +27,9 @@ pub trait MetricsBackend: 'static {
 
 pub trait Counter: Send + Sync {
     #[inline]
-    fn inc(&self) { self.inc_by(1); }
+    fn inc(&self) {
+        self.inc_by(1);
+    }
 
     fn inc_by(&self, by: u64);
 }
@@ -52,8 +55,14 @@ impl Counter for NullMetrics {
     fn inc_by(&self, _: u64) {}
 }
 
+pub struct OpenTelemetry {
+    meter: opentelemetry::metrics::Meter,
+}
+
+use opentelemetry_otlp::{ExportConfig, WithExportConfig};
+
 #[cfg(feature = "opentelemetry")]
-impl MetricsBackend for opentelemetry::metrics::Meter {
+impl MetricsBackend for OpenTelemetry {
     type Counter = opentelemetry::metrics::Counter<u64>;
 
     fn make_counter(
@@ -61,19 +70,58 @@ impl MetricsBackend for opentelemetry::metrics::Meter {
         name: impl Into<Cow<'static, str>>,
         desc: impl Into<Cow<'static, str>>,
     ) -> Self::Counter {
-        self.u64_counter(name).with_description(desc).init()
+        self.meter.u64_counter(name).with_description(desc).init()
     }
 }
 
 #[cfg(feature = "opentelemetry")]
 impl Counter for opentelemetry::metrics::Counter<u64> {
-    fn inc_by(&self, by: u64) { self.add(by, &[]); }
+    fn inc_by(&self, by: u64) {
+        self.add(by, &[]);
+    }
 }
 
-#[cfg(feature = "prometheus")]
-pub struct Prometheus;
+impl OpenTelemetry {
+    pub fn new() -> Result<OpenTelemetry, MetricsError> {
+        let export_config = ExportConfig {
+            endpoint: "http://localhost:4317".to_string(),
+            ..ExportConfig::default()
+        };
+        let metrics_provider = opentelemetry_otlp::new_pipeline()
+            .metrics(runtime::Tokio)
+            .with_exporter(
+                opentelemetry_otlp::new_exporter()
+                    .tonic()
+                    .with_export_config(export_config),
+            )
+            .with_resource(RESOURCE.clone())
+            .build()?;
 
-#[cfg(feature = "prometheus")]
+        opentelemetry::global::set_meter_provider(metrics_provider);
+
+        Ok(OpenTelemetry {
+            meter: opentelemetry::global::meter_provider().meter("vixen"),
+        })
+    }
+}
+
+impl MetricsFactory for OpenTelemetry {
+    type Output = Self;
+    type Error = MetricsError;
+
+    fn create() -> Result<Self::Output, Self::Error> {
+        Self::new()
+    }
+}
+
+// #[cfg(feature = "prometheus")]
+use prometheus::Encoder;
+// #[cfg(feature = "prometheus")]
+pub struct Prometheus {
+    registry: prometheus::Registry,
+}
+
+// #[cfg(feature = "prometheus")]
 impl MetricsBackend for Prometheus {
     type Counter = prometheus::IntCounter;
 
@@ -86,9 +134,36 @@ impl MetricsBackend for Prometheus {
     }
 }
 
-#[cfg(feature = "prometheus")]
+// #[cfg(feature = "prometheus")]
 impl Counter for prometheus::IntCounter {
-    fn inc_by(&self, by: u64) { prometheus::IntCounter::inc_by(self, by) }
+    fn inc_by(&self, by: u64) {
+        prometheus::IntCounter::inc_by(self, by)
+    }
+}
+
+impl Prometheus {
+    pub fn new() -> Self {
+        Self {
+            registry: prometheus::Registry::new(),
+        }
+    }
+
+    pub fn gather_metrics(&self) -> Result<String, prometheus::Error> {
+        let mut buffer = vec![];
+        let encoder = prometheus::TextEncoder::new();
+        let metric_families = self.registry.gather();
+        encoder.encode(&metric_families, &mut buffer)?;
+        Ok(String::from_utf8(buffer).unwrap())
+    }
+}
+
+impl MetricsFactory for Prometheus {
+    type Output = Self;
+    type Error = std::convert::Infallible;
+
+    fn create() -> Result<Self::Output, Self::Error> {
+        Ok(Self::new())
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -179,7 +254,9 @@ impl<B: MetricsBackend> Metrics<B> {
 }
 
 impl<B: MetricsBackend> fmt::Debug for Metrics<B> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Metrics").finish() }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Metrics").finish()
+    }
 }
 
 impl<B: MetricsBackend> Metrics<B> {
@@ -221,7 +298,7 @@ impl<B: MetricsBackend> Metrics<B> {
                     UpdateType::Transaction => &self.txn_handle_errs,
                 }
                 .inc_by(n.try_into().unwrap_or_default());
-            },
+            }
         }
     }
 }
