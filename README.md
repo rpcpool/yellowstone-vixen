@@ -151,6 +151,16 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for Handler {
 
 This setup shows how to use Vixen to create an efficient indexing solution for specific needs on the Solana blockchain. By following this pattern, developers can build their custom parsers and handlers for various Solana programs and data pipelines.
 
+## Examples
+
+### Simple
+
+The simple example demonstrates how to create a simple parser with handlers for the test program and setup metrics(opentelemetry and prometheus). The example is located in the [`/examples/simple`](/examples/simple) directory.
+
+### Streams
+
+WIP
+
 ## Metrics Support
 
 ### OpenTelemetry
