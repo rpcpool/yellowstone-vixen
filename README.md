@@ -153,7 +153,7 @@ This setup shows how to use Vixen to create an efficient indexing solution for s
 
 ## Metrics Support
 
-# OpenTelemetry
+### OpenTelemetry
 
 Vixen supports OpenTelemetry for metrics. To enable OpenTelemetry, set the `opentelemetry` feature in the `Cargo.toml` file:
 
@@ -164,7 +164,7 @@ vixen = { version = "0.0.0", features = ["opentelemetry"] }
 
 Opentelemetry metrics are exported to the console using otlp (OpenTelemetry Protocol) through http or grpc. To collect metrics, we have setup a otlp-collector as a docker container. Metric logs are available on the console as soon as you spin up the otlp-collector using docker-compose.
 
-# Prometheus
+### Prometheus
 
 Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prometheus` feature in the `Cargo.toml` file:
 
@@ -176,7 +176,7 @@ vixen = { version = "0.0.0", features = ["prometheus"] }
 
 Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container. You can access the metrics at `http://localhost:9091/metrics` after running the prometheus server using docker-compose.
 
-# Setup
+### Setup
 
 To run opentelemetry and prometheus, you need to have docker and docker-compose installed on your machine. To start the services, run the following command:
 
