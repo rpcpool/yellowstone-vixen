@@ -72,7 +72,7 @@ pub fn run_yellowstone<
         });
 
         // Serve the route
-        println!("Metrics server running on port 3030");
+        println!("Prometheus Metrics server running on port 3030");
         let addr: SocketAddr = ([0, 0, 0, 0], 3030).into();
         warp::serve(route).run(addr).await;
     });

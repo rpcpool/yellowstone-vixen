@@ -1,10 +1,10 @@
 use crate::handler::HandlerPackErrors;
+use std::time::Duration;
 use std::{
     borrow::{Borrow, Cow},
     fmt,
 };
 use yellowstone_vixen_core::UpdateType;
-
 pub trait MetricsFactory {
     type Output: MetricsBackend;
     type Error: std::error::Error;
@@ -91,7 +91,7 @@ pub mod opentelemetry_mod {
             static RESOURCE: Lazy<Resource> = Lazy::new(|| {
                 Resource::new(vec![KeyValue::new(
                     opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-                    "basic-otlp-example",
+                    "vixen",
                 )])
             });
             let metrics_provider = opentelemetry_otlp::new_pipeline()
@@ -102,6 +102,7 @@ pub mod opentelemetry_mod {
                         .with_export_config(export_config),
                 )
                 .with_resource(RESOURCE.clone())
+                .with_period(Duration::from_secs(5))
                 .build()
                 .ok();
 
@@ -158,8 +159,6 @@ pub mod prometheus_mod {
             let mut buffer = vec![];
             let encoder = prometheus::TextEncoder::new();
             let metric_families = self.registry.gather();
-            println!("self:{:?}", self);
-            println!("Metrics data: {:?}", metric_families);
             encoder
                 .encode(&metric_families, &mut buffer)
                 .map_or(None, |_| {

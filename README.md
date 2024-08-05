@@ -174,7 +174,7 @@ Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prome
 vixen = { version = "0.1", features = ["prometheus"] }
 ```
 
-Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container.You can access the metrics at `http://localhost:9090/metrics` after running the prometheus server using docker-compose.
+Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container.You can access the metrics at `http://localhost:9091/metrics` after running the prometheus server using docker-compose.
 
 # Setup
 
