@@ -12,13 +12,11 @@ use std::path::PathBuf;
 use clap::Parser as _;
 use spl_token_2022::solana_program::{program_error::ProgramError, program_pack::Pack};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use vixen::{
-    handler,
-    vixen_core::{self, ParseResult},
-    HandlerManager, HandlerManagers,
-};
+use vixen::vixen_core::{self, ParseResult};
 use vixen_core::{AccountUpdate, Prefilter};
-use yellowstone_vixen as vixen;
+use yellowstone_vixen::handler::{HandlerManager, HandlerManagers};
+use yellowstone_vixen::metrics::MetricsFactory;
+use yellowstone_vixen::{self as vixen, handler};
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -81,7 +79,7 @@ fn main() {
             ))]),
             transaction: HandlerManager::empty(),
         })
-        .metrics(vixen::opentelemetry::global::meter("vixen"))
+        .metrics(vixen::metrics::opentelemetry_mod::OpenTelemetry::create().unwrap())
         .build()
         .run();
 }

@@ -14,4 +14,6 @@ WORKDIR /usr/local/bin
 
 COPY --from=builder /usr/src/yellowstone-vixen/crates/demo/target/release/demo .
 
+EXPOSE 3030
+
 CMD ["./demo"]

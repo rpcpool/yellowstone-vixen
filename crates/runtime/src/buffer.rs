@@ -1,12 +1,16 @@
-use std::{pin::pin, sync::Arc};
+#![feature(async_closure)]
 
+use clap::builder::Str;
 use futures_util::{Stream, StreamExt};
+use std::net::SocketAddr;
+use std::{borrow::Borrow, pin::pin, sync::Arc};
 use tokio::sync::oneshot;
 use topograph::{
     executor::{Executor, Nonblock, Tokio},
     prelude::*,
 };
 use tracing::warn;
+use warp::Filter;
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},
     tonic::Status,
@@ -55,12 +59,36 @@ pub fn run_yellowstone<
 
     let manager = Arc::new(manager);
     let metrics = Arc::new(metrics);
-    let metrics2 = Arc::clone(&metrics);
+    let metrics_clone = Arc::clone(&metrics);
+    #[cfg(feature = "prometheus")]
+    tokio::spawn(async {
+        use prometheus::{Encoder, TextEncoder};
+        let route = warp::path("metrics").map(move || {
+            let encoder = TextEncoder::new();
+            let response = metrics_clone
+                .gather_metrics_data()
+                .unwrap_or(String::from("no metrics data available"));
+            warp::reply::with_header(response, "Content-Type", encoder.format_type())
+        });
+
+        // Serve the route
+        println!("Metrics server running on port 3030");
+        let addr: SocketAddr = ([0, 0, 0, 0], 3030).into();
+        warp::serve(route).run(addr).await;
+    });
+
+    let metrics_clone = Arc::clone(&metrics);
+
+    #[cfg(feature = "opentelemetry")]
+    tokio::spawn(async move {
+        metrics_clone.gather_metrics_data();
+    });
+    let metrics_clone = Arc::clone(&metrics);
     let exec = Executor::builder(Nonblock(Tokio))
         .num_threads(jobs)
         .build(move |update, _| {
             let manager = Arc::clone(&manager);
-            let metrics = Arc::clone(&metrics2);
+            let metrics = Arc::clone(&metrics_clone);
             async move {
                 let SubscribeUpdate {
                     filters,
@@ -75,14 +103,14 @@ pub fn run_yellowstone<
                             .get_handlers(&filters)
                             .run(&a, &metrics)
                             .await;
-                    },
+                    }
                     UpdateOneof::Transaction(t) => {
                         manager
                             .transaction
                             .get_handlers(&filters)
                             .run(&t, &metrics)
                             .await;
-                    },
+                    }
                     var => warn!(?var, "Unknown update variant"),
                 }
             }
@@ -100,13 +128,13 @@ pub fn run_yellowstone<
                         metrics.inc_received(ty);
                     }
                     exec.push(u);
-                },
+                }
                 Err(e) => {
                     tx.send(e.into()).unwrap_or_else(|err| {
                         warn!(%err, "Yellowstone stream returned an error after stop requested");
                     });
                     return;
-                },
+                }
             }
         }
 

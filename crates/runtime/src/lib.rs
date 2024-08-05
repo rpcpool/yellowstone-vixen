@@ -13,6 +13,10 @@ use std::fmt;
 
 use buffer::BufferOpts;
 use builder::RuntimeBuilder;
+#[cfg(feature = "opentelemetry")]
+use metrics::opentelemetry_mod::OpenTelemetry;
+#[cfg(feature = "prometheus")]
+use metrics::prometheus_mod::Prometheus;
 use metrics::{Metrics, MetricsBackend, NullMetrics};
 use tokio::task::LocalSet;
 use vixen_core::{AccountUpdate, TransactionUpdate};
@@ -27,7 +31,7 @@ pub extern crate yellowstone_vixen_core as vixen_core;
 mod buffer;
 mod builder;
 pub mod handler;
-mod metrics;
+pub mod metrics;
 mod yellowstone;
 
 pub use handler::{
@@ -156,14 +160,16 @@ pub struct Runtime<A, X, M: MetricsBackend> {
 
 impl<A, X> Runtime<A, X, NullMetrics> {
     #[must_use]
-    pub fn builder() -> RuntimeBuilder<A, X, NullMetrics> { RuntimeBuilder::default() }
+    pub fn builder() -> RuntimeBuilder<A, X, NullMetrics> {
+        RuntimeBuilder::default()
+    }
 }
 
 impl<
-    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
-    M: MetricsBackend,
-> Runtime<A, X, M>
+        A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
+        X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
+        M: MetricsBackend,
+    > Runtime<A, X, M>
 {
     pub fn run(self) {
         match self.try_run() {
@@ -171,7 +177,7 @@ impl<
             Err(e) => {
                 tracing::error!(err = %Chain(&e), "Fatal error encountered");
                 std::process::exit(1);
-            },
+            }
         }
     }
 
@@ -232,7 +238,9 @@ impl<
             struct CtrlC;
 
             impl fmt::Debug for CtrlC {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("^C")
+                }
             }
 
             signal = tokio::signal::ctrl_c()
@@ -251,7 +259,7 @@ impl<
             StopType::Signal(Ok(Some(s))) => {
                 tracing::warn!("{s:?} received, shutting down...");
                 Ok(())
-            },
+            }
             StopType::Signal(Ok(None)) => Err(std::io::Error::new(
                 std::io::ErrorKind::BrokenPipe,
                 "Signal handler returned None",

@@ -151,6 +151,41 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for Handler {
 
 This setup shows how to use Vixen to create an efficient indexing solution for specific needs on the Solana blockchain. By following this pattern, developers can build their custom parsers and handlers for various Solana programs and data pipelines.
 
+## Metrics Support
+
+# OpenTelemetry
+
+Vixen supports OpenTelemetry for metrics. To enable OpenTelemetry, set the `opentelemetry` feature in the `Cargo.toml` file:
+
+```toml
+[dependencies]
+vixen = { version = "0.1", features = ["opentelemetry"] }
+```
+
+Opentelemetry metrics are exported to the console using otlp (OpenTelemetry Protocol) through http or grpc. To collect metrics, we have setup a otlp-collector as a docker container.Metric logs are available on the console as soon as you spin up the otlp-collector using docker-compose.
+
+# Prometheus
+
+Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prometheus` feature in the `Cargo.toml` file:
+
+```toml
+
+[dependencies]
+vixen = { version = "0.1", features = ["prometheus"] }
+```
+
+Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container.You can access the metrics at `http://localhost:9090/metrics` after running the prometheus server using docker-compose.
+
+# Setup
+
+To run opentelemetry and prometheus, you need to have docker and docker-compose installed on your machine. To start the services, run the following command:
+
+```bash
+
+sudo docker-compose up
+
+```
+
 ## Dragon's Mouth
 
 Dragon's Mouth can be self-hosted as a Geyser plugin or used via a commercial vendor. For more details, refer to the [Yellowstone Dragon's Mouth documentation](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions) and [Yellowstone repository](https://github.com/rpcpool/yellowstone-grpc).
@@ -158,3 +193,7 @@ Dragon's Mouth can be self-hosted as a Geyser plugin or used via a commercial ve
 ## Developers
 
 This project is developed by [ABK Labs](https://abklabs.com/) and [Triton One](https://triton.one/).
+
+```
+
+```

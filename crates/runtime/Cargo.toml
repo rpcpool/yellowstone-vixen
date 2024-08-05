@@ -15,11 +15,14 @@ clap = { version = "4.5.4", default-features = false, features = [
 ] }
 futures-channel = { version = "0.3.30", features = ["sink"] }
 futures-util = { version = "0.3.30", features = ["sink"] }
+once_cell = { version = "1.19.0", optional = true }
 opentelemetry = { version = "0.24.0", features = ["metrics"], optional = true }
-opentelemetry-otlp = "0.17.0"
-opentelemetry-prometheus = "0.17.0"
-opentelemetry_sdk = "0.24.1"
-prometheus = { version = "0.13.4" }
+opentelemetry-otlp = { version = "0.17.0", optional = true }
+opentelemetry-semantic-conventions = { version = "0.16.0", optional = true }
+opentelemetry_sdk = { version = "0.24.1", features = [
+    "rt-tokio",
+], optional = true }
+prometheus = { version = "0.13.4", optional = true }
 serde = { version = "1.0.198", features = ["serde_derive"] }
 thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
@@ -27,11 +30,18 @@ topograph = { version = "0.4.0", features = [
     "tokio",
 ], git = "https://github.com/ray-kast/topograph", branch = "v0.4-wip" }
 tracing = "0.1.40"
+warp = { version = "0.3.7" }
 yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { version = "0.0.0", path = "../core" }
 
 [features]
+opentelemetry = [
+    "dep:opentelemetry",
+    "dep:opentelemetry-otlp",
+    "dep:opentelemetry-semantic-conventions",
+    "dep:opentelemetry_sdk",
+    "dep:once_cell",
+]
 default = ["opentelemetry"]
-opentelemetry = ["dep:opentelemetry"]
-# prometheus = ["dep:prometheus"]
+prometheus = ["dep:prometheus"]

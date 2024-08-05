@@ -50,7 +50,9 @@ impl<A, X, M> RuntimeBuilder<A, X, M> {
         self
     }
 
-    pub fn opts(self, opts: IndexerOpts) -> Self { self.mutate(|s| s.opts = Some(opts)) }
+    pub fn opts(self, opts: IndexerOpts) -> Self {
+        self.mutate(|s| s.opts = Some(opts))
+    }
 
     pub fn metrics<N>(self, metrics: N) -> RuntimeBuilder<A, X, N> {
         let Self {
@@ -86,10 +88,12 @@ impl<A, X, M: MetricsBackend> RuntimeBuilder<A, X, M> {
         Ok(Runtime {
             opts: unwrap("opts", opts)?,
             manager: unwrap("manager", manager)?,
-            metrics: Metrics::new(&metrics),
+            metrics: Metrics::new(metrics),
         })
     }
 
     #[inline]
-    pub fn build(self) -> Runtime<A, X, M> { self.try_build().unwrap() }
+    pub fn build(self) -> Runtime<A, X, M> {
+        self.try_build().unwrap()
+    }
 }

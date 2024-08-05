@@ -21,7 +21,9 @@ impl<T: Handler<U>, U> Handler<U> for &T {
 }
 
 #[inline]
-pub const fn from_fn<F>(f: F) -> FromFn<F> { FromFn(f) }
+pub const fn from_fn<F>(f: F) -> FromFn<F> {
+    FromFn(f)
+}
 
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -29,7 +31,9 @@ pub struct FromFn<F>(F);
 
 impl<F: Fn(&T) -> U, T, U: Future<Output = HandlerResult<()>> + Send> Handler<T> for FromFn<F> {
     #[inline]
-    fn handle(&self, value: &T) -> impl Future<Output = HandlerResult<()>> + Send { self.0(value) }
+    fn handle(&self, value: &T) -> impl Future<Output = HandlerResult<()>> + Send {
+        self.0(value)
+    }
 }
 
 pub use handler_pack_error::Errors as HandlerPackErrors;
@@ -89,7 +93,9 @@ pub struct HandlerPack<P, H>(P, H);
 impl<P, H> HandlerPack<P, H> {
     #[inline]
     #[must_use]
-    pub fn new(parser: P, handlers: H) -> Self { Self(parser, handlers) }
+    pub fn new(parser: P, handlers: H) -> Self {
+        Self(parser, handlers)
+    }
 }
 
 pub fn boxed<'h, P: DynHandlerPack<T> + Send + Sync + 'h, T>(
@@ -136,16 +142,22 @@ pub trait GetPrefilter {
 }
 
 impl GetPrefilter for std::convert::Infallible {
-    fn prefilter(&self) -> Prefilter { match *self {} }
+    fn prefilter(&self) -> Prefilter {
+        match *self {}
+    }
 }
 
 impl<P: Parser, I> GetPrefilter for HandlerPack<P, I> {
-    fn prefilter(&self) -> Prefilter { self.0.prefilter() }
+    fn prefilter(&self) -> Prefilter {
+        self.0.prefilter()
+    }
 }
 
 impl<T> GetPrefilter for Box<dyn DynHandlerPack<T> + Send + Sync + 'static> {
     #[inline]
-    fn prefilter(&self) -> Prefilter { <dyn DynHandlerPack<T>>::prefilter(&**self) }
+    fn prefilter(&self) -> Prefilter {
+        <dyn DynHandlerPack<T>>::prefilter(&**self)
+    }
 }
 
 pub trait DynHandlerPack<T>: GetPrefilter {
@@ -218,16 +230,22 @@ impl HandlerManager<std::convert::Infallible> {
     #[allow(clippy::zero_sized_map_values)]
     #[inline]
     #[must_use]
-    pub fn empty() -> Self { Self(HashMap::new()) }
+    pub fn empty() -> Self {
+        Self(HashMap::new())
+    }
 }
 
 impl<H> HandlerManager<H> {
     #[inline]
-    pub fn new<I: IntoIterator<Item = H>>(it: I) -> Self { Self::from_iter(it) }
+    pub fn new<I: IntoIterator<Item = H>>(it: I) -> Self {
+        Self::from_iter(it)
+    }
 }
 
 impl<H> HandlerManager<H> {
-    pub(crate) fn get_handlers<I>(&self, it: I) -> Handlers<H, I> { Handlers(self, it) }
+    pub(crate) fn get_handlers<I>(&self, it: I) -> Handlers<H, I> {
+        Handlers(self, it)
+    }
 }
 
 impl<H> FromIterator<H> for HandlerManager<H> {
@@ -244,7 +262,8 @@ impl<H> FromIterator<H> for HandlerManager<H> {
 pub(crate) struct Handlers<'m, H, I>(&'m HandlerManager<H>, I);
 
 impl<'m, H, I: IntoIterator> Handlers<'m, H, I>
-where I::Item: AsRef<str> + Send + 'm
+where
+    I::Item: AsRef<str> + Send + 'm,
 {
     fn get_handlers(self) -> impl Iterator<Item = (I::Item, &'m H)> {
         let Self(manager, it) = self;
@@ -283,7 +302,7 @@ where I::Item: AsRef<str> + Send + 'm
                                 "Handler failed",
                             );
                         }
-                    },
+                    }
                 }
             })
         }))
