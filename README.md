@@ -159,7 +159,7 @@ Vixen supports OpenTelemetry for metrics. To enable OpenTelemetry, set the `open
 
 ```toml
 [dependencies]
-vixen = { version = "0.1", features = ["opentelemetry"] }
+vixen = { version = "0.0.0", features = ["opentelemetry"] }
 ```
 
 Opentelemetry metrics are exported to the console using otlp (OpenTelemetry Protocol) through http or grpc. To collect metrics, we have setup a otlp-collector as a docker container.Metric logs are available on the console as soon as you spin up the otlp-collector using docker-compose.
@@ -171,7 +171,7 @@ Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prome
 ```toml
 
 [dependencies]
-vixen = { version = "0.1", features = ["prometheus"] }
+vixen = { version = "0.0.0", features = ["prometheus"] }
 ```
 
 Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container.You can access the metrics at `http://localhost:9091/metrics` after running the prometheus server using docker-compose.
