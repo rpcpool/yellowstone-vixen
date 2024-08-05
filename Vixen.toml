@@ -1,7 +1,7 @@
 [yellowstone]
 # endpoint of the dragonmouth stream
-endpoint = "https://indexer.rpcpool.com"
+endpoint = "<endpoint>"
 # x-token of the dragonmouth stream
-x-token = "57c8e83f-25c4-40d6-84bc-f4dbc9d43298"
+x-token = "<x-token>"
 # dragonmouth connect timeout in seconds
 timeout = 60
