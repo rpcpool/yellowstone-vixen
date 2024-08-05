@@ -8,7 +8,10 @@ license = "MIT"
 
 [dependencies]
 yellowstone-grpc-proto = { workspace = true }
-yellowstone-vixen-parser = { path = "../parser" }
+yellowstone-vixen-parser = { path = "../parser", features = [
+    "token-extensions",
+    "token-program",
+] }
 solana-client = "2.0.3"
 solana-sdk = "2.0.3"
 yellowstone-vixen-core = { path = "../core" }

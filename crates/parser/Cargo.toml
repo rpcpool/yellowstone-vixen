@@ -8,25 +8,23 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-#TODO: replace commented code after completeion
-
 [dependencies]
-spl-associated-token-account = "4.0.0"
-spl-pod = "0.3.0"
-# spl-token = {version="6.0.0",optional = true}
-# spl-token = {version="6.0.0",optional = true}
-spl-token = { version = "6.0.0" }
-# spl-token-2022 = { version = "4.0.1", optional = true }
-# spl-type-length-value = { version = "0.5.0", optional = true }
-spl-type-length-value = "0.5.0"
-spl-token-2022 = { version = "4.0.0" }
-spl-token-group-interface = "0.3.0"
-spl-token-metadata-interface = "0.4.0"
+spl-pod = { version = "0.3.0", optional = true }
+spl-token = { version = "6.0.0", optional = true }
+spl-token-2022 = { version = "4.0.0", optional = true }
+spl-type-length-value = { version = "0.5.0", optional = true }
+spl-token-group-interface = { version = "0.3.0", optional = true }
+spl-token-metadata-interface = { version = "0.4.0", optional = true }
 
 yellowstone-vixen-core = { path = "../core" }
 
-# [features]
-# default = []
-# token-extensions = ["spl-token-2022","spl-type-length-value", "spl-pod"]
-# token-program = ["spl-token"]
-# associated-token-program = ["spl-token-2022"]
+[features]
+default = []
+token-extensions = [
+    "dep:spl-token-2022",
+    "dep:spl-type-length-value",
+    "dep:spl-pod",
+    "dep:spl-token-group-interface",
+    "dep:spl-token-metadata-interface",
+]
+token-program = ["dep:spl-token"]

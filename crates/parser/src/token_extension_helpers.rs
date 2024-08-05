@@ -2,9 +2,7 @@ use spl_token_2022::{
     extension::{self,BaseStateWithExtensions, Extension, ExtensionType, StateWithExtensions},
     solana_program::program_error::ProgramError, solana_zk_token_sdk::instruction::Pod, state::{Account, Mint}
 };
-// #[cfg(feature = "token-extensions")]
 use spl_type_length_value::variable_len_pack::VariableLenPack;
-// #[cfg(feature = "token-extensions")]
 use spl_pod::bytemuck::pod_from_bytes;
 use spl_token_metadata_interface::state::TokenMetadata;
 use spl_token_group_interface::state::{TokenGroup, TokenGroupMember};

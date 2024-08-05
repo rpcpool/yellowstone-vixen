@@ -6169,7 +6169,6 @@ dependencies = [
 name = "yellowstone-vixen-parser"
 version = "0.0.0"
 dependencies = [
- "spl-associated-token-account",
  "spl-pod",
  "spl-token",
  "spl-token-2022",
