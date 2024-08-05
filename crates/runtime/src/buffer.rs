@@ -1,9 +1,6 @@
-#![feature(async_closure)]
-
-use clap::builder::Str;
 use futures_util::{Stream, StreamExt};
 use std::net::SocketAddr;
-use std::{borrow::Borrow, pin::pin, sync::Arc};
+use std::{pin::pin, sync::Arc};
 use tokio::sync::oneshot;
 use topograph::{
     executor::{Executor, Nonblock, Tokio},
