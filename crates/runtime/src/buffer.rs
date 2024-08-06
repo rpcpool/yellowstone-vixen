@@ -56,9 +56,10 @@ pub fn run_yellowstone<
 
     let manager = Arc::new(manager);
     let metrics = Arc::new(metrics);
+    #[cfg(feature = "prometheus")]
     let metrics_clone = Arc::clone(&metrics);
     #[cfg(feature = "prometheus")]
-    tokio::spawn(async {
+    tokio::task::spawn_local(async {
         use prometheus::{Encoder, TextEncoder};
         let route = warp::path("metrics").map(move || {
             let encoder = TextEncoder::new();
@@ -77,7 +78,7 @@ pub fn run_yellowstone<
     let metrics_clone = Arc::clone(&metrics);
 
     #[cfg(feature = "opentelemetry")]
-    tokio::spawn(async move {
+    tokio::task::spawn_local(async move {
         metrics_clone.gather_metrics_data();
     });
     let metrics_clone = Arc::clone(&metrics);

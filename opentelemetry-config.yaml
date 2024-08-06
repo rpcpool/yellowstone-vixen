@@ -16,12 +16,6 @@ exporters:
 
 service:
   pipelines:
-    traces:
-      receivers: [otlp]
-      exporters: [debug]
     metrics:
-      receivers: [otlp]
-      exporters: [debug]
-    logs:
       receivers: [otlp]
       exporters: [debug]
