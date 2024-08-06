@@ -13,4 +13,6 @@ toml = "0.8.12"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 warp = "0.3.7"
-yellowstone-vixen = { path = "../../crates/runtime", features = ["prometheus"] }
+yellowstone-vixen = { path = "../../crates/runtime", features = [
+    "opentelemetry",
+] }
