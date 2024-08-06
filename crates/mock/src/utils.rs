@@ -1,13 +1,9 @@
-use base64::engine::general_purpose;
-use base64::Engine;
-use serde::{Deserialize, Serialize};
-use std::fs;
-use std::path::Path;
-use std::str::FromStr;
+use std::{fs, path::Path, str::FromStr};
 
+use base64::{engine::general_purpose, Engine};
+use serde::{Deserialize, Serialize};
 use solana_client::rpc_client::RpcClient;
-use solana_sdk::pubkey::Pubkey;
-use solana_sdk::{account::Account, genesis_config::ClusterType};
+use solana_sdk::{account::Account, genesis_config::ClusterType, pubkey::Pubkey};
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_parser::{TokenProgramParser, TokenProgramState};
@@ -29,6 +25,7 @@ pub struct AccountInfo {
 
 impl TryFrom<AccountInfo> for Account {
     type Error = Box<dyn std::error::Error>;
+
     fn try_from(value: AccountInfo) -> Result<Self, Self::Error> {
         let data = value.data.first().ok_or("No data found in account info")?;
         let data = general_purpose::STANDARD.decode(data)?;
@@ -56,13 +53,13 @@ pub async fn test_parsing_token_program_account(sub_account_update: SubscribeUpd
     match data {
         TokenProgramState::TokenAccount(token_account) => {
             println!("Token Account: {:#?}", token_account);
-        }
+        },
         TokenProgramState::Mint(mint) => {
             println!("Mint: {:#?}", mint);
-        }
+        },
         TokenProgramState::Multisig(multisig) => {
             println!("Multisig: {:#?}", multisig);
-        }
+        },
     }
 }
 

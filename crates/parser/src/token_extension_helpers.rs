@@ -1,12 +1,13 @@
-use spl_token_2022::{
-    extension::{self,BaseStateWithExtensions, Extension, ExtensionType, StateWithExtensions},
-    solana_program::program_error::ProgramError, solana_zk_token_sdk::instruction::Pod, state::{Account, Mint}
-};
-use spl_type_length_value::variable_len_pack::VariableLenPack;
 use spl_pod::bytemuck::pod_from_bytes;
-use spl_token_metadata_interface::state::TokenMetadata;
+use spl_token_2022::{
+    extension::{self, BaseStateWithExtensions, Extension, ExtensionType, StateWithExtensions},
+    solana_program::program_error::ProgramError,
+    solana_zk_token_sdk::instruction::Pod,
+    state::{Account, Mint},
+};
 use spl_token_group_interface::state::{TokenGroup, TokenGroupMember};
-
+use spl_token_metadata_interface::state::TokenMetadata;
+use spl_type_length_value::variable_len_pack::VariableLenPack;
 
 pub fn get_token_account_extensions_data_bytes<'data>(
     state_with_ex: &'data StateWithExtensions<Account>,
@@ -79,20 +80,18 @@ pub fn get_mint_account_extensions_data_bytes<'data>(
     Ok(extension_data)
 }
 
-
-pub fn parse_extension_data<E:Extension+Pod>(data_bytes: &[u8]) ->Result<E,ProgramError>{
+pub fn parse_extension_data<E: Extension + Pod>(data_bytes: &[u8]) -> Result<E, ProgramError> {
     let extension = pod_from_bytes::<E>(data_bytes)?;
     Ok(extension.to_owned())
 }
 
 //TokenMetadata doesnt implement Pod so we need to use VariableLenPack
-pub fn parse_token_metadata_extension(data_bytes: &[u8]) -> Result<TokenMetadata,ProgramError> {
+pub fn parse_token_metadata_extension(data_bytes: &[u8]) -> Result<TokenMetadata, ProgramError> {
     let token_metadata = TokenMetadata::unpack_from_slice(data_bytes)?;
     Ok(token_metadata.to_owned())
 }
 
-
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum ExtensionData {
     ImmutableOwner(extension::immutable_owner::ImmutableOwner),
     TransferFeeAmount(extension::transfer_fee::TransferFeeAmount),
@@ -130,19 +129,19 @@ impl ExtensionData {
     ) -> Result<Self, ProgramError> {
         match extension_type {
             ExtensionType::ImmutableOwner => Ok(ExtensionData::ImmutableOwner(
-               parse_extension_data(data_bytes)?,
+                parse_extension_data(data_bytes)?,
             )),
             ExtensionType::TransferFeeAmount => Ok(ExtensionData::TransferFeeAmount(
                 parse_extension_data(data_bytes)?,
             )),
 
-            ExtensionType::ConfidentialTransferAccount => Ok(ExtensionData::ConfidentialTransferAccount(
-                parse_extension_data(data_bytes)?,
-            )),
+            ExtensionType::ConfidentialTransferAccount => Ok(
+                ExtensionData::ConfidentialTransferAccount(parse_extension_data(data_bytes)?),
+            ),
 
-            ExtensionType::MemoTransfer => Ok(ExtensionData::MemoTransfer(
-                parse_extension_data(data_bytes)?,
-            )),
+            ExtensionType::MemoTransfer => Ok(ExtensionData::MemoTransfer(parse_extension_data(
+                data_bytes,
+            )?)),
 
             ExtensionType::NonTransferableAccount => Ok(ExtensionData::NonTransferableAccount(
                 parse_extension_data(data_bytes)?,
@@ -151,11 +150,13 @@ impl ExtensionData {
                 parse_extension_data(data_bytes)?,
             )),
 
-            ExtensionType::CpiGuard => Ok(ExtensionData::CpiGuard(parse_extension_data(data_bytes)?)),
+            ExtensionType::CpiGuard => {
+                Ok(ExtensionData::CpiGuard(parse_extension_data(data_bytes)?))
+            },
 
-            ExtensionType::ConfidentialTransferFeeAmount => Ok(ExtensionData::ConfidentialTransferFeeAmount(
-                parse_extension_data(data_bytes)?,
-            )),
+            ExtensionType::ConfidentialTransferFeeAmount => Ok(
+                ExtensionData::ConfidentialTransferFeeAmount(parse_extension_data(data_bytes)?),
+            ),
 
             ExtensionType::TransferFeeConfig => Ok(ExtensionData::TransferFeeConfig(
                 parse_extension_data(data_bytes)?,
@@ -185,14 +186,13 @@ impl ExtensionData {
                 parse_extension_data(data_bytes)?,
             )),
 
-            ExtensionType::TransferHook => Ok(ExtensionData::TransferHook(
-                parse_extension_data(data_bytes)?,
-            )),
+            ExtensionType::TransferHook => Ok(ExtensionData::TransferHook(parse_extension_data(
+                data_bytes,
+            )?)),
 
-
-            ExtensionType::ConfidentialTransferFeeConfig => Ok(ExtensionData::ConfidentialTransferFeeConfig(
-                parse_extension_data(data_bytes)?,
-            )),
+            ExtensionType::ConfidentialTransferFeeConfig => Ok(
+                ExtensionData::ConfidentialTransferFeeConfig(parse_extension_data(data_bytes)?),
+            ),
 
             ExtensionType::MetadataPointer => Ok(ExtensionData::MetadataPointer(
                 parse_extension_data(data_bytes)?,
@@ -201,13 +201,13 @@ impl ExtensionData {
             ExtensionType::TokenMetadata => Ok(ExtensionData::TokenMetadata(
                 parse_token_metadata_extension(data_bytes)?,
             )),
-            ExtensionType::GroupPointer => Ok(ExtensionData::GroupPointer(
-                parse_extension_data(data_bytes)?,
-            )),
+            ExtensionType::GroupPointer => Ok(ExtensionData::GroupPointer(parse_extension_data(
+                data_bytes,
+            )?)),
 
-            ExtensionType::TokenGroup => Ok(ExtensionData::TokenGroup(
-                parse_extension_data(data_bytes)?,
-            )),
+            ExtensionType::TokenGroup => {
+                Ok(ExtensionData::TokenGroup(parse_extension_data(data_bytes)?))
+            },
 
             ExtensionType::GroupMemberPointer => Ok(ExtensionData::GroupMemberPointer(
                 parse_extension_data(data_bytes)?,
@@ -218,7 +218,6 @@ impl ExtensionData {
             )),
 
             _ => Err(ProgramError::InvalidArgument),
-            
         }
     }
 }

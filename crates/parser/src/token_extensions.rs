@@ -1,4 +1,3 @@
-use crate::token_extension_helpers::ExtensionData;
 use spl_token_2022::{
     extension::{BaseStateWithExtensions, StateWithExtensions},
     solana_program::{program_error::ProgramError, program_pack::Pack},
@@ -7,7 +6,7 @@ use spl_token_2022::{
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter};
 
 use crate::token_extension_helpers::{
-    get_mint_account_extensions_data_bytes, get_token_account_extensions_data_bytes,
+    get_mint_account_extensions_data_bytes, get_token_account_extensions_data_bytes, ExtensionData,
 };
 
 #[derive(Debug)]
@@ -108,10 +107,10 @@ impl TokenExtensionState {
                 Ok(TokenExtensionState::ExtendedTokenAccount(
                     ExtendedTokenAccount::try_from_account_data(data_bytes)?,
                 ))
-            }
+            },
             TokenExtensionAccountType::Multisig => {
                 Ok(TokenExtensionState::Multisig(Multisig::unpack(data_bytes)?))
-            }
+            },
         }
     }
 }
@@ -139,13 +138,13 @@ impl Parser for TokenExtensionProgramParser {
 mod tests {
     use std::str::FromStr;
 
+    use spl_pod::{optional_keys::OptionalNonZeroPubkey, solana_program::pubkey::Pubkey};
+
+    use super::*;
     use crate::constants::token_program_constants::{
         MINT_WITH_EXTENSION, MULTISIG, MULTISIG_M, MULTISIG_N, MULTISIG_SIGNERS,
         TOKEN_ACCOUNT_WITH_EXTENSION,
     };
-    use spl_pod::{optional_keys::OptionalNonZeroPubkey, solana_program::pubkey::Pubkey};
-
-    use super::*;
 
     #[test]
     fn test_token_account_parsing() {
@@ -156,10 +155,10 @@ mod tests {
                 let ext_data = ext_token_account.extension_data_vec;
                 assert_eq!(ext_data.len(), 1);
                 match ext_data[0] {
-                    ExtensionData::TransferHookAccount(_) => {}
+                    ExtensionData::TransferHookAccount(_) => {},
                     _ => panic!("Invalid extension type"),
                 }
-            }
+            },
             _ => panic!("Invalid account type"),
         }
     }
@@ -182,10 +181,10 @@ mod tests {
                                     .unwrap()
                             )
                         );
-                    }
+                    },
                     _ => panic!("Invalid extension type"),
                 }
-            }
+            },
             _ => panic!("Invalid account type"),
         }
     }
@@ -199,7 +198,7 @@ mod tests {
                 assert_eq!(multisig.m, MULTISIG_M);
                 assert_eq!(multisig.n, MULTISIG_N);
                 assert_eq!(multisig.signers.len(), MULTISIG_SIGNERS);
-            }
+            },
             _ => panic!("Invalid account type"),
         }
     }

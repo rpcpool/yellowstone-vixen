@@ -1,7 +1,8 @@
-use crate::utils::AccountInfo;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use surf::Client;
+
+use crate::utils::AccountInfo;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RpcResponse<T> {

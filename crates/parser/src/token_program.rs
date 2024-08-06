@@ -56,13 +56,12 @@ mod tests {
 
     use spl_pod::solana_program::pubkey::Pubkey;
 
+    use super::*;
     use crate::constants::token_program_constants::{
         MINT, MINT_AUTH, MINT_DEIMALS, MINT_SUPPLY, MULTISIG, MULTISIG_M, MULTISIG_N,
         MULTISIG_SIGNERS, TOKEN_ACCOUNT, TOKEN_ACCOUNT_DELEGATE, TOKEN_ACCOUNT_MINT,
         TOKEN_ACCOUNT_OWNER, TOKEN_ACCOUNT_STATE, TOKEN_AMOUNT,
     };
-
-    use super::*;
     #[test]
     fn test_token_account_parsing() {
         let token_account = TokenProgramState::try_unpack(TOKEN_ACCOUNT).unwrap();
@@ -83,7 +82,7 @@ mod tests {
                     Pubkey::from_str(TOKEN_ACCOUNT_DELEGATE).unwrap()
                 );
                 println!("Token account: {:#?}", token_account);
-            }
+            },
             _ => panic!("Invalid Token Account"),
         }
     }
@@ -99,7 +98,7 @@ mod tests {
                     Pubkey::from_str(MINT_AUTH).unwrap()
                 );
                 println!("Mint account: {:#?}", mint);
-            }
+            },
             _ => panic!("Invalid Mint Account"),
         }
     }
@@ -113,7 +112,7 @@ mod tests {
                 assert_eq!(multisig.n, MULTISIG_N);
                 assert_eq!(multisig.signers.len(), MULTISIG_SIGNERS);
                 println!("Multisig account: {:#?}", multisig);
-            }
+            },
             _ => panic!("Invalid Multisig Account"),
         }
     }

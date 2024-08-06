@@ -1,5 +1,4 @@
 use solana_sdk::genesis_config::ClusterType;
-
 use yellowstone_grpc_proto::geyser::SubscribeUpdateAccount;
 pub mod async_client;
 pub mod utils;
@@ -58,13 +57,13 @@ mod tests {
         match data {
             TokenProgramState::TokenAccount(token_account) => {
                 println!("Token Account: {:#?}", token_account);
-            }
+            },
             TokenProgramState::Mint(mint) => {
                 println!("Mint: {:#?}", mint);
-            }
+            },
             TokenProgramState::Multisig(multisig) => {
                 println!("Multisig: {:#?}", multisig);
-            }
+            },
         }
     }
 }
