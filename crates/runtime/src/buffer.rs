@@ -1,6 +1,6 @@
+use std::{net::SocketAddr, pin::pin, sync::Arc};
+
 use futures_util::{Stream, StreamExt};
-use std::net::SocketAddr;
-use std::{pin::pin, sync::Arc};
 use tokio::sync::oneshot;
 use topograph::{
     executor::{Executor, Nonblock, Tokio},
@@ -101,14 +101,14 @@ pub fn run_yellowstone<
                             .get_handlers(&filters)
                             .run(&a, &metrics)
                             .await;
-                    }
+                    },
                     UpdateOneof::Transaction(t) => {
                         manager
                             .transaction
                             .get_handlers(&filters)
                             .run(&t, &metrics)
                             .await;
-                    }
+                    },
                     var => warn!(?var, "Unknown update variant"),
                 }
             }
@@ -126,13 +126,13 @@ pub fn run_yellowstone<
                         metrics.inc_received(ty);
                     }
                     exec.push(u);
-                }
+                },
                 Err(e) => {
                     tx.send(e.into()).unwrap_or_else(|err| {
                         warn!(%err, "Yellowstone stream returned an error after stop requested");
                     });
                     return;
-                }
+                },
             }
         }
 
