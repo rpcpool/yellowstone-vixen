@@ -77,7 +77,7 @@ impl crate::proto::IntoProto for TokenProgramParser {
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::{account_fixture, run_parse};
+    use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
 
     use super::*;
 
@@ -85,14 +85,16 @@ mod tests {
     async fn test_mint_parsing() {
         let parser = TokenProgramParser;
 
-        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
+        let fixture_data = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
 
-        let state = run_parse!(parser, account);
+        if let FixtureData::Account(account) = fixture_data {
+            let state = run_account_parse!(parser, account);
 
-        if let TokenProgramState::Mint(mint) = state {
-            assert_eq!(mint.decimals, 10);
-        } else {
-            panic!("Invalid Mint Account");
+            if let TokenProgramState::Mint(mint) = state {
+                assert_eq!(mint.decimals, 10);
+            } else {
+                panic!("Invalid Mint Account");
+            }
         }
     }
 }

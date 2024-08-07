@@ -12,10 +12,9 @@ use std::path::PathBuf;
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen, Pipeline};
-use yellowstone_vixen_parser::{
-    token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
+use yellowstone_vixen_parser::ix_parser::{
+    token_extensions::TokenExtensionProgramIxParser, token_program::TokenProgramIxParser,
 };
-
 #[derive(clap::Parser)]
 #[command(version, author, about)]
 pub struct Opts {
@@ -46,6 +45,8 @@ fn main() {
     vixen::Runtime::builder()
         .account(Pipeline::new(TokenExtensionProgramParser, [Handler]))
         .account(Pipeline::new(TokenProgramParser, [Handler]))
+        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Handler]))
+        .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
         .metrics(vixen::metrics::Prometheus)
         .build(config)
         .run();
