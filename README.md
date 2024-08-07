@@ -28,16 +28,23 @@ Yellowstone Vixen allows dApp developers to build program-aware change event str
 
 ## Example
 
-This example demonstrates how a developer can implement a generic parsing pipeline with Vixen. The example is located in the [`/crates/test`](/crates/test) directory.
+Vixen provides a simple example to demonstrate how to create a custom parser and handler for a specific Solana program. The example includes a parser for the test program and a handler to log the parsed data.
 
-To run the example, navigate to the test directory and execute the following command:
+### Simple
 
-```
-cd crates/test
+The simple example demonstrates how to create a simple parser with handlers for the test program and setup metrics(opentelemetry and prometheus). The example is located in the [`/examples/simple`](/examples/simple) directory.
+
+```bash
+# From the root directory
+cd examples/simple
 RUST_LOG=info cargo run -- --config "$(pwd)/Vixen.toml"
 ```
 
 You can find an example configuration file at [`Vixen.toml`](/Vixen.toml).
+
+### Streams
+
+WIP
 
 ### Explanation
 
@@ -158,16 +165,6 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for Handler {
 
 This setup shows how to use Vixen to create an efficient indexing solution for specific needs on the Solana blockchain. By following this pattern, developers can build their custom parsers and handlers for various Solana programs and data pipelines.
 
-## Examples
-
-### Simple
-
-The simple example demonstrates how to create a simple parser with handlers for the test program and setup metrics(opentelemetry and prometheus). The example is located in the [`/examples/simple`](/examples/simple) directory.
-
-### Streams
-
-WIP
-
 ## Metrics Support
 
 ### OpenTelemetry
@@ -236,7 +233,7 @@ fn main() {
 
 Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container. You can access the metrics at `http://localhost:9091` after running the prometheus server using docker-compose.
 
-### Docker Setup
+### Docker Setup for Metrics
 
 To run opentelemetry and prometheus, you need to have docker and docker-compose installed on your machine. To start the services, run the following command:
 
