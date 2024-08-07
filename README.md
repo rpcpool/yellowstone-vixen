@@ -94,10 +94,17 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::run(config, HandlerManagers {
-        account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(CustomParser, [CustomHandler]))]),
-        transaction: HandlerManager::empty(),
-    });
+    vixen::Runtime::builder()
+        .opts(config)
+        .manager(HandlerManagers {
+            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
+                CustomParser,
+                [Handler],
+            ))]),
+            transaction: HandlerManager::empty(),
+        })
+        .build()
+        .run();
 }
 ```
 
@@ -172,6 +179,28 @@ Vixen supports OpenTelemetry for metrics. To enable OpenTelemetry, set the `open
 vixen = { version = "0.0.0", features = ["opentelemetry"] }
 ```
 
+- **Opentelemetry Setup**:
+
+```rust
+fn main() {
+    let Opts { config } = Opts::parse();
+    let config = std::fs::read_to_string(config).expect("Error reading config file");
+    let config = toml::from_str(&config).expect("Error parsing config");
+    vixen::Runtime::builder()
+        .opts(config)
+        .manager(HandlerManagers {
+            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
+                Parser,
+                [Handler],
+            ))]),
+            transaction: HandlerManager::empty(),
+        })
+        .metrics(vixen::metrics::opentelemetry_mod::OpenTelemetry::create().unwrap())
+        .build()
+        .run();
+}
+```
+
 Opentelemetry metrics are exported to the console using otlp (OpenTelemetry Protocol) through http or grpc. To collect metrics, we have setup a otlp-collector as a docker container. Metric logs are available on the console as soon as you spin up the otlp-collector using docker-compose.
 
 ### Prometheus
@@ -179,21 +208,40 @@ Opentelemetry metrics are exported to the console using otlp (OpenTelemetry Prot
 Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prometheus` feature in the `Cargo.toml` file:
 
 ```toml
-
 [dependencies]
 vixen = { version = "0.0.0", features = ["prometheus"] }
 ```
 
-Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container. You can access the metrics at `http://localhost:9091/metrics` after running the prometheus server using docker-compose.
+- **Prometheus Setup**:
 
-### Setup
+```rust
+fn main() {
+    let Opts { config } = Opts::parse();
+    let config = std::fs::read_to_string(config).expect("Error reading config file");
+    let config = toml::from_str(&config).expect("Error parsing config");
+    vixen::Runtime::builder()
+        .opts(config)
+        .manager(HandlerManagers {
+            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
+                Parser,
+                [Handler],
+            ))]),
+            transaction: HandlerManager::empty(),
+        })
+        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
+        .build()
+        .run();
+}
+```
+
+Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container. You can access the metrics at `http://localhost:9091` after running the prometheus server using docker-compose.
+
+### Docker Setup
 
 To run opentelemetry and prometheus, you need to have docker and docker-compose installed on your machine. To start the services, run the following command:
 
 ```bash
-
 sudo docker-compose up
-
 ```
 
 ## Dragon's Mouth
