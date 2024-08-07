@@ -14,9 +14,11 @@ use spl_token_2022::solana_program::{program_error::ProgramError, program_pack::
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::vixen_core::{self, ParseResult};
 use vixen_core::{AccountUpdate, Prefilter};
-use yellowstone_vixen::handler::{HandlerManager, HandlerManagers};
-use yellowstone_vixen::metrics::MetricsFactory;
-use yellowstone_vixen::{self as vixen, handler};
+use yellowstone_vixen::{
+    self as vixen, handler,
+    handler::{HandlerManager, HandlerManagers},
+    metrics::MetricsFactory,
+};
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -73,10 +75,9 @@ fn main() {
     vixen::Runtime::builder()
         .opts(config)
         .manager(HandlerManagers {
-            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
-                Parser,
-                [Handler],
-            ))]),
+            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(Parser, [
+                Handler,
+            ]))]),
             transaction: HandlerManager::empty(),
         })
         .metrics(vixen::metrics::opentelemetry_mod::OpenTelemetry::create().unwrap())

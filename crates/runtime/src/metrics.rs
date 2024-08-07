@@ -1,10 +1,12 @@
-use crate::handler::HandlerPackErrors;
-use std::time::Duration;
 use std::{
     borrow::{Borrow, Cow},
     fmt,
+    time::Duration,
 };
+
 use yellowstone_vixen_core::UpdateType;
+
+use crate::handler::HandlerPackErrors;
 pub trait MetricsFactory {
     type Output: MetricsBackend;
     type Error: std::error::Error;
@@ -26,9 +28,7 @@ pub trait MetricsBackend: 'static + Send + Sync {
 
 pub trait Counter: Send + Sync {
     #[inline]
-    fn inc(&self) {
-        self.inc_by(1);
-    }
+    fn inc(&self) { self.inc_by(1); }
 
     fn inc_by(&self, by: u64);
 }
@@ -47,9 +47,8 @@ impl MetricsBackend for NullMetrics {
     ) -> Self::Counter {
         NullMetrics
     }
-    fn gather_metrics_data(&self) -> Option<String> {
-        None
-    }
+
+    fn gather_metrics_data(&self) -> Option<String> { None }
 }
 
 impl Counter for NullMetrics {
@@ -59,12 +58,15 @@ impl Counter for NullMetrics {
 
 #[cfg(feature = "opentelemetry")]
 pub mod opentelemetry_mod {
-    use super::*;
     use once_cell::sync::Lazy;
-    use opentelemetry::metrics::{MeterProvider, MetricsError};
-    use opentelemetry::KeyValue;
+    use opentelemetry::{
+        metrics::{MeterProvider, MetricsError},
+        KeyValue,
+    };
     use opentelemetry_otlp::{ExportConfig, WithExportConfig};
     use opentelemetry_sdk::{runtime, Resource};
+
+    use super::*;
 
     #[derive(Debug)]
     pub struct OpenTelemetry {
@@ -114,14 +116,12 @@ pub mod opentelemetry_mod {
     }
 
     impl Counter for opentelemetry::metrics::Counter<u64> {
-        fn inc_by(&self, by: u64) {
-            self.add(by, &[]);
-        }
+        fn inc_by(&self, by: u64) { self.add(by, &[]); }
     }
 
     impl MetricsFactory for OpenTelemetry {
-        type Output = Self;
         type Error = MetricsError;
+        type Output = Self;
 
         fn create() -> Result<Self::Output, Self::Error> {
             Ok(OpenTelemetry {
@@ -133,8 +133,9 @@ pub mod opentelemetry_mod {
 
 #[cfg(feature = "prometheus")]
 pub mod prometheus_mod {
-    use super::*;
     use prometheus::Encoder;
+
+    use super::*;
     #[derive(Debug)]
     pub struct Prometheus {
         registry: prometheus::Registry,
@@ -168,14 +169,12 @@ pub mod prometheus_mod {
     }
 
     impl Counter for prometheus::IntCounter {
-        fn inc_by(&self, by: u64) {
-            prometheus::IntCounter::inc_by(self, by)
-        }
+        fn inc_by(&self, by: u64) { prometheus::IntCounter::inc_by(self, by) }
     }
 
     impl MetricsFactory for Prometheus {
-        type Output = Self;
         type Error = std::convert::Infallible;
+        type Output = Self;
 
         fn create() -> Result<Self::Output, Self::Error> {
             Ok(Self {
@@ -273,15 +272,11 @@ impl<B: MetricsBackend> Metrics<B> {
         }
     }
 
-    pub fn gather_metrics_data(&self) -> Option<String> {
-        self.backend.gather_metrics_data()
-    }
+    pub fn gather_metrics_data(&self) -> Option<String> { self.backend.gather_metrics_data() }
 }
 
 impl<B: MetricsBackend> fmt::Debug for Metrics<B> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Metrics").finish()
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Metrics").finish() }
 }
 
 impl<B: MetricsBackend> Metrics<B> {
@@ -323,7 +318,7 @@ impl<B: MetricsBackend> Metrics<B> {
                     UpdateType::Transaction => &self.txn_handle_errs,
                 }
                 .inc_by(n.try_into().unwrap_or_default());
-            }
+            },
         }
     }
 }
