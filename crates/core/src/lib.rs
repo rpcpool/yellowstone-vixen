@@ -11,14 +11,14 @@
 
 use std::{
     collections::{HashMap, HashSet},
+    fmt,
     future::Future,
     ops,
 };
 
-use solana_sdk::pubkey::Pubkey;
 use yellowstone_grpc_proto::geyser::{
-    SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterTransactions,
-    SubscribeUpdateAccount, SubscribeUpdateTransaction,
+    subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
+    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateTransaction,
 };
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -39,8 +39,37 @@ pub type ParseResult<T> = Result<T, ParseError>;
 pub type AccountUpdate = SubscribeUpdateAccount;
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 
+pub trait Update {
+    const TYPE: UpdateType;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum UpdateType {
+    Account,
+    Transaction,
+}
+
+impl UpdateType {
+    #[must_use]
+    pub fn get(update: &Option<UpdateOneof>) -> Option<Self> {
+        match update {
+            Some(UpdateOneof::Account(_)) => Some(Self::Account),
+            Some(UpdateOneof::Transaction(_)) => Some(Self::Transaction),
+            _ => None,
+        }
+    }
+}
+
+impl Update for AccountUpdate {
+    const TYPE: UpdateType = UpdateType::Account;
+}
+
+impl Update for TransactionUpdate {
+    const TYPE: UpdateType = UpdateType::Transaction;
+}
+
 pub trait Parser {
-    type Input;
+    type Input: Update;
     type Output;
 
     fn prefilter(&self) -> Prefilter;
@@ -52,6 +81,27 @@ pub trait Parser {
 pub struct Prefilter {
     pub(crate) account: Option<AccountPrefilter>,
     pub(crate) transaction: Option<TransactionPrefilter>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct Pubkey(pub [u8; 32]);
+
+impl fmt::Display for Pubkey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&bs58::encode(self.0).into_string())
+    }
+}
+
+impl From<[u8; 32]> for Pubkey {
+    #[inline]
+    fn from(value: [u8; 32]) -> Self { Self(value) }
+}
+
+impl TryFrom<&[u8]> for Pubkey {
+    type Error = std::array::TryFromSliceError;
+
+    #[inline]
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> { value.try_into().map(Self) }
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -71,10 +121,12 @@ impl Prefilter {
     pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
 }
 
-#[derive(Debug, Clone, Copy, thiserror::Error)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum PrefilterError {
     #[error("Value already given for field {0}")]
     AlreadySet(&'static str),
+    #[error("Invalid pubkey {}", bs58::encode(.0).into_string())]
+    BadPubkey(Vec<u8>, std::array::TryFromSliceError),
 }
 
 #[derive(Debug, Default)]
@@ -92,6 +144,18 @@ fn set_opt<T>(opt: &mut Option<T>, field: &'static str, val: T) -> Result<(), Pr
 
     *opt = Some(val);
     Ok(())
+}
+
+// TODO: if Solana ever adds Into<[u8; 32]> for Pubkey this can be simplified
+fn collect_pubkeys<I: IntoIterator>(it: I) -> Result<HashSet<Pubkey>, PrefilterError>
+where I::Item: AsRef<[u8]> {
+    it.into_iter()
+        .map(|p| {
+            let p = p.as_ref();
+            p.try_into()
+                .map_err(|e| PrefilterError::BadPubkey(p.to_vec(), e))
+        })
+        .collect()
 }
 
 impl PrefilterBuilder {
@@ -131,24 +195,24 @@ impl PrefilterBuilder {
 
     #[must_use]
     pub fn account_owners<I: IntoIterator>(self, it: I) -> Self
-    where HashSet<Pubkey>: FromIterator<I::Item> {
+    where I::Item: AsRef<[u8]> {
         self.mutate(|this| {
             set_opt(
                 &mut this.account_owners,
                 "account_owners",
-                FromIterator::from_iter(it),
+                collect_pubkeys(it)?,
             )
         })
     }
 
     #[must_use]
     pub fn transaction_accounts<I: IntoIterator>(self, it: I) -> Self
-    where HashSet<Pubkey>: FromIterator<I::Item> {
+    where I::Item: AsRef<[u8]> {
         self.mutate(|this| {
             set_opt(
                 &mut this.transaction_accounts,
                 "transaction_accounts",
-                FromIterator::from_iter(it),
+                collect_pubkeys(it)?,
             )
         })
     }

@@ -2,7 +2,9 @@ use std::{collections::HashMap, pin::Pin};
 
 use futures_util::{Future, FutureExt};
 use tracing::{error, warn};
-use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
+use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter, Update};
+
+use crate::metrics::{JobResult, Metrics, MetricsBackend};
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 pub type HandlerResult<T> = Result<T, BoxedError>;
@@ -30,12 +32,53 @@ impl<F: Fn(&T) -> U, T, U: Future<Output = HandlerResult<()>> + Send> Handler<T>
     fn handle(&self, value: &T) -> impl Future<Output = HandlerResult<()>> + Send { self.0(value) }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum HandlerPackError {
-    #[error("Error parsing input value")]
-    Parse(#[source] BoxedError),
-    #[error("Handler returned an error on parsed value")]
-    Handler(#[source] BoxedError),
+pub use handler_pack_error::Errors as HandlerPackErrors;
+
+pub mod handler_pack_error {
+    use super::BoxedError;
+
+    #[derive(Debug)]
+    pub enum Errors {
+        Parse(BoxedError),
+        Handlers(Vec<BoxedError>),
+    }
+
+    impl IntoIterator for Errors {
+        type IntoIter = IntoIter;
+        type Item = Error;
+
+        fn into_iter(self) -> Self::IntoIter {
+            match self {
+                Errors::Parse(e) => IntoIter::Parse([e].into_iter()),
+                Errors::Handlers(v) => IntoIter::Handlers(v.into_iter()),
+            }
+        }
+    }
+
+    #[derive(Debug, thiserror::Error)]
+    pub enum Error {
+        #[error("Error parsing input value")]
+        Parse(#[source] BoxedError),
+        #[error("Handler returned an error on parsed value")]
+        Handler(#[source] BoxedError),
+    }
+
+    #[derive(Debug)]
+    pub enum IntoIter {
+        Parse(std::array::IntoIter<BoxedError, 1>),
+        Handlers(std::vec::IntoIter<BoxedError>),
+    }
+
+    impl Iterator for IntoIter {
+        type Item = Error;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            match self {
+                IntoIter::Parse(o) => o.next().map(Error::Parse),
+                IntoIter::Handlers(v) => v.next().map(Error::Handler),
+            }
+        }
+    }
 }
 
 // TODO: HandlerPack is also a really bad name (see below)
@@ -61,12 +104,11 @@ where
     P: Parser,
     for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output>,
 {
-    // TODO: figure out how to ditch the Vec at some point - probably just pull in Either
-    async fn handle(&self, value: &P::Input) -> Result<(), Vec<HandlerPackError>> {
+    async fn handle(&self, value: &P::Input) -> Result<(), HandlerPackErrors> {
         let parsed = match self.0.parse(value).await {
             Ok(p) => p,
             Err(ParseError::Filtered) => return Ok(()),
-            Err(ParseError::Other(e)) => return Err(vec![HandlerPackError::Parse(e)]),
+            Err(ParseError::Other(e)) => return Err(HandlerPackErrors::Parse(e)),
         };
         let parsed = &parsed;
 
@@ -78,10 +120,14 @@ where
         )
         .await
         .into_iter()
-        .filter_map(|r| r.err().map(HandlerPackError::Handler))
+        .filter_map(Result::err)
         .collect();
 
-        if errs.is_empty() { Ok(()) } else { Err(errs) }
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(HandlerPackErrors::Handlers(errs))
+        }
     }
 }
 
@@ -106,14 +152,14 @@ pub trait DynHandlerPack<T>: GetPrefilter {
     fn handle<'h>(
         &'h self,
         value: &'h T,
-    ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>>;
+    ) -> Pin<Box<dyn Future<Output = Result<(), HandlerPackErrors>> + Send + 'h>>;
 }
 
 impl<T> DynHandlerPack<T> for std::convert::Infallible {
     fn handle<'h>(
         &'h self,
         _: &'h T,
-    ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>> {
+    ) -> Pin<Box<dyn Future<Output = Result<(), HandlerPackErrors>> + Send + 'h>> {
         match *self {}
     }
 }
@@ -128,7 +174,7 @@ where
     fn handle<'h>(
         &'h self,
         value: &'h P::Input,
-    ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>> {
+    ) -> Pin<Box<dyn Future<Output = Result<(), HandlerPackErrors>> + Send + 'h>> {
         Box::pin(HandlerPack::handle(self, value))
     }
 }
@@ -138,7 +184,7 @@ impl<T> DynHandlerPack<T> for Box<dyn DynHandlerPack<T> + Send + Sync + 'static>
     fn handle<'h>(
         &'h self,
         value: &'h T,
-    ) -> Pin<Box<dyn Future<Output = Result<(), Vec<HandlerPackError>>> + Send + 'h>> {
+    ) -> Pin<Box<dyn Future<Output = Result<(), HandlerPackErrors>> + Send + 'h>> {
         <dyn DynHandlerPack<T>>::handle(&**self, value)
     }
 }
@@ -181,7 +227,7 @@ impl<H> HandlerManager<H> {
 }
 
 impl<H> HandlerManager<H> {
-    pub fn get_handlers<I>(&self, it: I) -> Handlers<H, I> { Handlers(self, it) }
+    pub(crate) fn get_handlers<I>(&self, it: I) -> Handlers<H, I> { Handlers(self, it) }
 }
 
 impl<H> FromIterator<H> for HandlerManager<H> {
@@ -195,7 +241,7 @@ impl<H> FromIterator<H> for HandlerManager<H> {
 }
 
 #[derive(Debug)]
-pub struct Handlers<'m, H, I>(&'m HandlerManager<H>, I);
+pub(crate) struct Handlers<'m, H, I>(&'m HandlerManager<H>, I);
 
 impl<'m, H, I: IntoIterator> Handlers<'m, H, I>
 where I::Item: AsRef<str> + Send + 'm
@@ -214,24 +260,31 @@ where I::Item: AsRef<str> + Send + 'm
         })
     }
 
-    pub fn run<'h, T>(self, value: &'h T) -> impl Future<Output = ()> + Send + 'h
+    pub fn run<'h, T: Update, B: MetricsBackend>(
+        self,
+        value: &'h T,
+        metrics: &'h Metrics<B>,
+    ) -> impl Future<Output = ()> + Send + 'h
     where
         H: DynHandlerPack<T>,
         'm: 'h,
     {
         futures_util::future::join_all(self.get_handlers().map(move |(f, h)| {
-            h.handle(value).map(move |r| match r {
-                Ok(()) => (),
-                Err(v) => {
-                    for e in v {
-                        error!(
-                            err = %crate::Chain(&e),
-                            handler = f.as_ref(),
-                            r#type = std::any::type_name::<T>(),
-                            "Handler failed",
-                        );
-                    }
-                },
+            h.handle(value).map(move |r| {
+                metrics.inc_processed(T::TYPE, JobResult::from_pack(&r));
+                match r {
+                    Ok(()) => (),
+                    Err(v) => {
+                        for e in v {
+                            error!(
+                                err = %crate::Chain(&e),
+                                handler = f.as_ref(),
+                                r#type = std::any::type_name::<T>(),
+                                "Handler failed",
+                            );
+                        }
+                    },
+                }
             })
         }))
         .map(move |v| v.into_iter().collect())

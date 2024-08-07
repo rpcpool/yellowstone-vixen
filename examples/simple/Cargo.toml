@@ -1,0 +1,18 @@
+[package]
+name = "test"
+description = "Test bed for running the Vixen runtime"
+publish = false
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+
+[dependencies]
+clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+toml = "0.8.12"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+yellowstone-vixen-parser = { workspace = true, features = [
+  "token-extensions",
+  "token-program",
+] }
+yellowstone-vixen = { workspace = true }

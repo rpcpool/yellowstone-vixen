@@ -28,12 +28,12 @@ Yellowstone Vixen allows dApp developers to build program-aware change event str
 
 ## Example
 
-This example demonstrates how a developer can implement a generic parsing pipeline with Vixen. The example is located in the [`/crates/test`](/crates/test) directory.
+This example demonstrates how a developer can implement a generic parsing pipeline with Vixen. The examples are located in the [`/examples`](/examples) directory.
 
-To run the example, navigate to the test directory and execute the following command:
+To run the example, navigate to the desired example directory and execute the following command:
 
 ```
-cd crates/test
+cd examples/simple
 RUST_LOG=info cargo run -- --config "$(pwd)/../../Vixen.toml"
 ```
 
@@ -43,7 +43,7 @@ You can find an example configuration file at [`Vixen.toml`](/Vixen.toml).
 
 In this example, you need to implement specific components to create a functional parsing pipeline:
 
-- **CustomParser Struct**: Defines the parsing logic for the specific program. The `prefilter` method sets up filters for the accounts owned by the target program, which are used to build the underlying Dragon's Mouth subscription. The `parse` method contains the logic to transform raw account data into the desired structure.
+- **Parser**: Defines the parsing logic for the specific program. The `prefilter` method sets up filters for the accounts owned by the target program, which are used to build the underlying Dragon's Mouth subscription. The `parse` method contains the logic to transform raw account data into the desired structure.
 
 ```rust
 pub struct CustomParser;
@@ -67,7 +67,7 @@ impl vixen_core::Parser for CustomParser {
 }
 ```
 
-- **CustomHandler Struct**: Defines how the parsed data should be handled. This could involve logging the data, storing it in a database, or triggering other actions.
+- **Handler**: Defines how the parsed data should be handled. This could involve logging the data, storing it in a database, or triggering other actions.
 
 ```rust
 pub struct CustomHandler;
@@ -81,7 +81,7 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for CustomHandler {
 }
 ```
 
-- **Main Function**: Sets up the tracing subscriber, reads the configuration file, and runs the Vixen framework with the specified handlers and managers.
+- **Main**: Sets up the tracing subscriber, reads the configuration file, and runs the Vixen framework with the specified handlers, managers and metrics.
 
 ```rust
 fn main() {
@@ -94,62 +94,22 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::run(config, HandlerManagers {
-        account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(CustomParser, [CustomHandler]))]),
-        transaction: HandlerManager::empty(),
-    });
+
+    vixen::Runtime::builder()
+        .opts(config)
+        .manager(HandlerManagers {
+            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(CustomParser, [CustomHandler]))]),
+            transaction: HandlerManager::empty(),
+        })
+        .metrics(vixen::opentelemetry::global::meter("vixen"))
+        .build()
+        .run();
 }
 ```
 
-### Token Extensions Example
+## Yellowstone Vixen Mock
 
-To illustrate, here's how you might implement the `CustomParser` and `CustomHandler` for parsing the token extension program:
-
-- **Parser for Token Extension Program**:
-
-```rust
-pub struct Parser;
-
-impl vixen_core::Parser for Parser {
-    type Input = AccountUpdate;
-    type Output = spl_token_2022::state::Account;
-
-    fn prefilter(&self) -> Prefilter {
-        Prefilter::builder()
-            .account_owners([spl_token_2022::ID])
-            .build()
-            .unwrap()
-    }
-
-    async fn parse(&self, acct: &AccountUpdate) -> ParseResult<Self::Output> {
-        let inner = acct.account.as_ref().ok_or(ProgramError::InvalidArgument)?;
-
-        let acct = spl_token_2022::state::Account::unpack(
-            inner
-                .data
-                .get(..spl_token_2022::state::Account::LEN)
-                .ok_or(ProgramError::InvalidArgument)?,
-        )?;
-
-        Ok(acct)
-    }
-}
-```
-
-- **Handler for Logging Parsed Accounts**:
-
-```rust
-pub struct Handler;
-
-impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for Handler {
-    async fn handle(&self, value: &H) -> vixen::HandlerResult<()> {
-        tracing::info!(?value);
-        Ok(())
-    }
-}
-```
-
-This setup shows how to use Vixen to create an efficient indexing solution for specific needs on the Solana blockchain. By following this pattern, developers can build their custom parsers and handlers for various Solana programs and data pipelines.
+This crate includes a mock feature designed for testing parsers. It is intended solely for testing purposes. For more details, refer to the [mock](crates/mock/README.md) documentation.
 
 ## Dragon's Mouth
 
