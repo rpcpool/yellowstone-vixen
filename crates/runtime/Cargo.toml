@@ -20,7 +20,7 @@ topograph = { version = "0.4.0", features = ["tokio"], git = "https://github.com
 tracing = "0.1.40"
 yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
-yellowstone-vixen-core = { version = "0.0.0", path = "../core" }
+yellowstone-vixen-core = { workspace = true }
 
 [features]
 default = ["opentelemetry"]

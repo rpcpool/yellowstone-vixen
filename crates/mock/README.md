@@ -1,83 +1,35 @@
 # Yellowstone Vixen Mock
 
-This crate provides a mock implementation of the Yellowstone Vixen Parser. It is intended to be used for testing purposes.
-the load_account_fixtures function takes pubkey, cluster as inputs and fetches the account on-chain and stores it as a jsom file inside fixtures folder and loads the account from the json file for testing purposes. Devs can use the loaded account to test their custom parsers and verify Parser is parsing the account data correctly.
+This crate provides a mock implementation of the Yellowstone Vixen Parser. It is intended to be used for testing purposes. The `load_fixture` function takes a fixture name as input, fetches the account on-chain if not already present, stores it as a JSON file inside the fixtures folder, and loads the account from the JSON file for testing purposes. Developers can use the loaded account to test their custom parsers and verify that the parser is correctly parsing the account data.
 
 ## Installation
 
 ```bash
-
 cargo add yellowstone-vixen-mock
-
-```
-
-## Setup
-
-To use the Mock testing feature, you need to create a .env file in the same directory as your project with the following content:
-
-```bash
-
-RPC_ENDPOINT=YOUR_RPC_URL
-CLUSTER=YOUR_PREFERRED_CLUSTER # Devnet, Testnet, Mainnet
-
 ```
 
 ## Example
 
 ```rust
-
-use yellowstone_vixen_mock::load_account_fixtures;
-use yellowstone_vixen_core::{
-    AccountUpdate, ParseResult,Parser, Prefilter,
-};
-use yellowstone_vixen_parser::{TokenProgramParser};
-use solana_sdk::{
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    rpc_client::ClusterType,
-};
-
-pub struct Parser;
-
-impl vixen_core::Parser for Parser {
-    type Input = AccountUpdate;
-    type Output = spl_token_2022::state::Account;
-
-    fn prefilter(&self) -> Prefilter {
-        Prefilter::builder()
-            .account_owners([spl_token_2022::ID])
-            .build()
-            .unwrap()
-    }
-
-    async fn parse(&self, acct: &AccountUpdate) -> ParseResult<Self::Output> {
-        let inner = acct.account.as_ref().ok_or(ProgramError::InvalidArgument)?;
-
-        let acct = spl_token_2022::state::Account::unpack(
-            inner
-                .data
-                .get(..spl_token_2022::state::Account::LEN)
-                .ok_or(ProgramError::InvalidArgument)?,
-        )?;
-
-        Ok(acct)
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    const account_pubkey: &str = "DhEP4nTn6DdQA12PZoWN9paKTviPGFf6JzeneB4hGVb2";
+    use yellowstone_vixen_mock::{account_fixture, run_parse};
 
-    #[tokio::test]
-    async fn mock() {
-        let account = load_account_fixtures(account_pubkey, ClusterType::Devnet).await.unwrap();
+    use super::*;
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn test_mint_parsing() {
         let parser = TokenProgramParser;
 
-        let data = parser.parse(&account).await.unwrap();
+        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
 
-        let data = data.unwrap();
-        println!("Parsed Data:{:?}", data);
+        let state = run_parse!(parser, account);
+
+        if let TokenProgramState::Mint(mint) = state {
+            assert_eq!(mint.decimals, 10);
+        } else {
+            panic!("Invalid Mint Account");
+        }
     }
 }
-
 ```

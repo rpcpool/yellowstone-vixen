@@ -1,69 +1,183 @@
-use solana_sdk::genesis_config::ClusterType;
-use yellowstone_grpc_proto::geyser::SubscribeUpdateAccount;
-pub mod async_client;
-pub mod utils;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
-pub async fn load_account_fixtures(pubkey: &str) -> Option<SubscribeUpdateAccount> {
-    use utils::{
-        check_account_exists_on_fixtures, check_or_create_fixtures_dir,
-        fetch_account_data_from_file, fetch_and_write_account_data, get_subscribe_update_account,
-        AccountInfo,
-    };
+use serde::{Deserialize, Serialize};
+use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_rpc_client_api::client_error::Result as ClientResult;
+use solana_sdk::{account::Account, pubkey::Pubkey};
+use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 
-    check_or_create_fixtures_dir();
-    //TODO: Get cluster type from config (.toml) file
-    let cluster = match "devnet" {
-        "devnet" => Some(ClusterType::Devnet),
-        "testnet" => Some(ClusterType::Testnet),
-        "mainnet-beta" => Some(ClusterType::MainnetBeta),
-        _ => None,
-    };
-    if cluster.is_none() {
-        println!("Invalid cluster type");
-        return None;
-    }
-    let cluster = cluster.unwrap();
+//TODO: Look these up from the Vixen.toml config file
+const RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
+const FIXTURES_PATH: &str = "./fixtures";
 
-    let account_data_exists = check_account_exists_on_fixtures(pubkey, cluster);
-    let account: Option<AccountInfo>;
-    if account_data_exists {
-        account = fetch_account_data_from_file(pubkey, cluster);
-    } else {
-        //TODO: Get RPC endpoint from config (.toml) file
-        let rpc_endpoint = "https://api.devnet.solana.com".to_string();
-
-        println!("Fetching account data from RPC endpoint: {}", rpc_endpoint);
-        account = fetch_and_write_account_data(cluster, rpc_endpoint, pubkey).await;
-    }
-    account.map_or(None, |account| {
-        get_subscribe_update_account(pubkey, account)
-    })
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AccountInfo {
+    pub data: Vec<u8>,
+    pub pubkey: Pubkey,
+    pub executable: bool,
+    pub lamports: u64,
+    pub owner: Pubkey,
+    #[serde(rename = "rentEpoch")]
+    pub rent_epoch: u64,
+    pub space: u64,
 }
 
-#[cfg(test)]
-mod tests {
-    const VIXEN_TEST_MINT_DEVNET: &str = "3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK";
-    use yellowstone_vixen_core::Parser;
-    use yellowstone_vixen_parser::{TokenProgramParser, TokenProgramState};
-
-    use super::*;
-    #[tokio::test]
-    async fn mock() {
-        let account = load_account_fixtures(VIXEN_TEST_MINT_DEVNET).await.unwrap();
-        let parser = TokenProgramParser;
-
-        let data = parser.parse(&account).await.unwrap();
-
-        match data {
-            TokenProgramState::TokenAccount(token_account) => {
-                println!("Token Account: {:#?}", token_account);
-            },
-            TokenProgramState::Mint(mint) => {
-                println!("Mint: {:#?}", mint);
-            },
-            TokenProgramState::Multisig(multisig) => {
-                println!("Multisig: {:#?}", multisig);
-            },
+impl From<AccountInfo> for SubscribeUpdateAccount {
+    fn from(value: AccountInfo) -> Self {
+        Self {
+            is_startup: false,
+            slot: 0,
+            account: Some(SubscribeUpdateAccountInfo {
+                txn_signature: None,
+                write_version: 0,
+                pubkey: value.pubkey.to_bytes().to_vec(),
+                data: value.data,
+                executable: value.executable,
+                lamports: value.lamports,
+                owner: value.owner.to_bytes().to_vec(),
+                rent_epoch: value.rent_epoch,
+            }),
         }
     }
+}
+
+impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
+    type Error = &'static str;
+
+    fn try_from(value: SubscribeUpdateAccount) -> Result<Self, Self::Error> {
+        let account_info = value.account.ok_or("Missing account info")?;
+
+        let pubkey = Pubkey::new_from_array(
+            account_info
+                .pubkey
+                .try_into()
+                .map_err(|_| "Invalid pubkey length")?,
+        );
+
+        let owner = Pubkey::new_from_array(
+            account_info
+                .owner
+                .try_into()
+                .map_err(|_| "Invalid owner length")?,
+        );
+
+        Ok(Self {
+            pubkey,
+            data: account_info.data.clone(),
+            executable: account_info.executable,
+            lamports: account_info.lamports,
+            owner,
+            rent_epoch: account_info.rent_epoch,
+            space: account_info.data.len() as u64,
+        })
+    }
+}
+
+#[macro_export]
+macro_rules! account_fixture {
+    ($pubkey:expr) => {
+        $crate::load_fixture($pubkey).await.unwrap()
+    };
+}
+
+#[macro_export]
+macro_rules! run_parse {
+    ($parser:expr, $account:expr) => {
+        $parser.parse(&$account).await.unwrap()
+    };
+}
+
+pub async fn load_fixture(
+    fixture: &str,
+) -> Result<SubscribeUpdateAccount, Box<dyn std::error::Error>> {
+    maybe_create_fixture_dir()?;
+
+    let path = fixture_path(fixture);
+
+    if path.is_file() {
+        read_fixture(path)
+    } else {
+        fetch_fixture(fixture).await.and_then(write_fixture(path))
+    }
+}
+
+fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<AccountInfo> {
+    move |value: Account| {
+        Ok(AccountInfo {
+            data: value.data.clone(),
+            executable: value.executable,
+            lamports: value.lamports,
+            owner: value.owner,
+            rent_epoch: value.rent_epoch,
+            space: value.data.len() as u64,
+            pubkey,
+        })
+    }
+}
+
+// TODO: Determine pubkey vs signature based on the fixture pattern
+#[must_use]
+async fn fetch_fixture(
+    fixture: &str,
+) -> Result<SubscribeUpdateAccount, Box<dyn std::error::Error>> {
+    let pubkey = Pubkey::from_str(fixture)?;
+    let rpc_client = RpcClient::new(RPC_ENDPOINT.to_string());
+
+    let account_info = rpc_client
+        .get_account(&pubkey)
+        .await
+        .and_then(convert_account_info(pubkey))?;
+
+    Ok(SubscribeUpdateAccount::from(account_info))
+}
+
+fn write_fixture(
+    path: PathBuf,
+) -> impl Fn(SubscribeUpdateAccount) -> Result<SubscribeUpdateAccount, Box<dyn std::error::Error>> {
+    move |account: SubscribeUpdateAccount| {
+        let writable = AccountInfo::try_from(account.clone())?;
+        let data = serde_json::to_string(&writable)?;
+
+        fs::write(&path, data)?;
+
+        Ok(account)
+    }
+}
+
+fn maybe_create_fixture_dir() -> std::io::Result<()> {
+    let dir_exists = Path::new(FIXTURES_PATH).is_dir();
+
+    if dir_exists {
+        return Ok(());
+    }
+
+    std::fs::create_dir(FIXTURES_PATH)
+}
+
+pub fn fixture_path(fixture: &str) -> PathBuf {
+    let mut file_name = format_lookup(fixture);
+    file_name.push_str(".json");
+
+    Path::new(FIXTURES_PATH).join(file_name)
+}
+
+pub fn read_fixture(path: PathBuf) -> Result<SubscribeUpdateAccount, Box<dyn std::error::Error>> {
+    let data = std::fs::read(path)?;
+    let account_info: AccountInfo = serde_json::from_slice(&data)?;
+    Ok(SubscribeUpdateAccount::from(account_info))
+}
+
+pub fn format_lookup(fixture: &str) -> String {
+    if fixture.len() <= 6 {
+        return fixture.to_string();
+    }
+
+    let start = &fixture[..3];
+    let end = &fixture[fixture.len() - 3..];
+
+    format!("{}..{}", start, end)
 }
