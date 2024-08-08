@@ -2,9 +2,9 @@ use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, TransactionUpdate};
 
 use crate::tx_parser::vixen_transaction::VixenTransaction;
 
-pub struct TokenProgramParser;
+pub struct TokenProgramTxParser;
 
-impl Parser for TokenProgramParser {
+impl Parser for TokenProgramTxParser {
     type Input = TransactionUpdate;
     type Output = VixenTransaction;
 
@@ -15,5 +15,7 @@ impl Parser for TokenProgramParser {
             .unwrap()
     }
 
-    async fn parse(&self, tx: &TransactionUpdate) -> ParseResult<Self::Output> { todo!() }
+    async fn parse(&self, tx: &TransactionUpdate) -> ParseResult<Self::Output> {
+        VixenTransaction::try_from_tx_update(tx.clone())
+    }
 }
