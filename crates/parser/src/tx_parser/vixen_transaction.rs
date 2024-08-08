@@ -4,8 +4,8 @@ use yellowstone_vixen_core::TransactionUpdate;
 
 #[derive(Debug)]
 pub struct TxReturnData {
-    program_id: String,
-    data: String,
+    pub program_id: String,
+    pub data: String,
 }
 
 impl From<ReturnData> for TxReturnData {
@@ -46,7 +46,7 @@ impl TryFrom<TransactionUpdate> for VixenTransaction {
         let inner_tx = outer_tx.transaction.ok_or("Inner transaction not found")?;
         let tx_message_data = inner_tx.message.ok_or("Transaction message not found")?;
         let tx_meta = outer_tx.meta.ok_or("Transaction meta not found")?;
-        let tx_account_pubkeys = byte_vec_to_pubkey_vec(tx_message_data.account_keys)?;
+        let tx_account_pubkeys = bytes_vec_to_pubkey_vec(tx_message_data.account_keys)?;
         let tx_return_data = tx_meta.return_data.map_or(None, |data| Some(data.into()));
         // let inner_instructions: Vec<UiInnerInstructions> =
         //     Vec::with_capacity(tx_meta.inner_instructions.len());
@@ -60,8 +60,8 @@ impl TryFrom<TransactionUpdate> for VixenTransaction {
             pre_token_balances: check_and_return_vec(tx_meta.pre_token_balances),
             post_token_balances: check_and_return_vec(tx_meta.post_token_balances),
             rewards: tx_meta.rewards,
-            loaded_writeable_addresses: byte_vec_to_pubkey_vec(tx_meta.loaded_writable_addresses)?,
-            loaded_readonly_addresses: byte_vec_to_pubkey_vec(tx_meta.loaded_readonly_addresses)?,
+            loaded_writeable_addresses: bytes_vec_to_pubkey_vec(tx_meta.loaded_writable_addresses)?,
+            loaded_readonly_addresses: bytes_vec_to_pubkey_vec(tx_meta.loaded_readonly_addresses)?,
             return_data: tx_return_data,
             compute_units_consumed: tx_meta.compute_units_consumed,
             is_versioned: tx_message_data.versioned,
@@ -77,7 +77,7 @@ pub fn check_and_return_vec<V>(vec: Vec<V>) -> Option<Vec<V>> {
     if vec.is_empty() { None } else { Some(vec) }
 }
 
-pub fn byte_vec_to_pubkey_vec(bytes_vec: Vec<Vec<u8>>) -> Result<Vec<String>, String> {
+pub fn bytes_vec_to_pubkey_vec(bytes_vec: Vec<Vec<u8>>) -> Result<Vec<String>, String> {
     bytes_vec
         .iter()
         .map(|bytes| bytes_to_pubkey(bytes))
