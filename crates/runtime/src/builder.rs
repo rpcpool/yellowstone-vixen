@@ -86,7 +86,7 @@ impl<A, X, M: MetricsBackend> RuntimeBuilder<A, X, M> {
         Ok(Runtime {
             opts: unwrap("opts", opts)?,
             manager: unwrap("manager", manager)?,
-            metrics: Metrics::new(&metrics),
+            metrics: Metrics::new(metrics),
         })
     }
 
