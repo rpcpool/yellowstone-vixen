@@ -9,7 +9,7 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-spl-pod = { version = "0.3.0", optional = true }
+spl-pod = { version = "0.3.0" }
 spl-token = { version = "6.0.0", optional = true }
 spl-token-2022 = { version = "4.0.0", optional = true }
 spl-type-length-value = { version = "0.5.0", optional = true }
@@ -30,7 +30,6 @@ default = []
 token-extensions = [
     "dep:spl-token-2022",
     "dep:spl-type-length-value",
-    "dep:spl-pod",
     "dep:spl-token-group-interface",
     "dep:spl-token-metadata-interface",
 ]
