@@ -16,9 +16,12 @@ use std::{
     ops,
 };
 
-use yellowstone_grpc_proto::geyser::{
-    subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
-    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateTransaction,
+use yellowstone_grpc_proto::{
+    geyser::{
+        subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
+        SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateTransaction,
+    },
+    solana::storage::confirmed_block::{CompiledInstruction, InnerInstructions},
 };
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -37,7 +40,6 @@ impl<T: Into<BoxedError>> From<T> for ParseError {
 pub type ParseResult<T> = Result<T, ParseError>;
 
 pub type AccountUpdate = SubscribeUpdateAccount;
-pub type TransactionUpdate = SubscribeUpdateTransaction;
 
 pub trait Update {
     const TYPE: UpdateType;

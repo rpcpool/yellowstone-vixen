@@ -1,16 +1,52 @@
 use serde_json::Value;
-use spl_pod::solana_program::program_option::COption;
+use solana_transaction_status::parse_instruction::parse;
+use spl_pod::solana_program::{program_option::COption, pubkey::Pubkey};
 use spl_token::instruction::TokenInstruction;
-use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, TransactionUpdate};
+use yellowstone_vixen_core::{
+    Instruction, InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, TransactionUpdate,
+};
 
 use crate::tx_parser::vixen_transaction::structure::VixenTransaction;
+pub struct TokenProgramInstruction;
 
-pub struct TokenProgramIxParser;
+struct TransferAccounts {
+    mint_info: Pubkey,
+    receiver: Pubkey,
+}
 
-impl Parser for TokenProgramIxParser {
-    type Input = TransactionUpdate;
-    //TODO  IxUpdate maybe
-    type Output = VixenTransaction;
+enum Accounts {
+    Transfer(TransferAccounts),
+}
+
+impl Instruction<Accounts, TokenInstruction> for TokenProgramInstruction {
+    fn new(accounts: &[Pubkey], data: Vec<u8>) -> Self { todo!() }
+}
+
+impl TryFrom<&InstructionUpdate> for TokenProgramInstruction {
+    type Error = ParseError;
+
+    fn try_from(instruction: &InstructionUpdate) -> Result<Self, Self::Error> {
+        let result = parse(
+            instruction.program,
+            instruction.instruction,
+            instruction.account_keys,
+            instruction.stack_height,
+        )?;
+
+        match result {
+            ParsedInstruction::Parsed(parsed) => {
+                let ix = parse_token_program_ix(&parsed)
+                    .ok_or(ParseError::InstructionKeyMismatch(instruction.program))?;
+                Ok(Self::new(&instruction.account_keys, ix))
+            },
+        }
+    }
+}
+pub struct TokenProgramTransactionParser;
+
+impl Parser for TokenProgramTransactionParser {
+    type Input = InstructionUpdate;
+    type Output = TokenProgramInstruction;
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -19,8 +55,8 @@ impl Parser for TokenProgramIxParser {
             .unwrap()
     }
 
-    async fn parse(&self, tx: &TransactionUpdate) -> ParseResult<Self::Output> {
-        VixenTransaction::try_from_tx_update(tx.clone())
+    async fn parse(&self, instruction: &InstructionUpdate) -> ParseResult<Self::Output> {
+        instruction.try_into()
     }
 }
 
