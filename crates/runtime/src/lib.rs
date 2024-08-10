@@ -13,8 +13,6 @@ use std::fmt;
 
 use buffer::BufferOpts;
 use builder::RuntimeBuilder;
-#[cfg(feature = "opentelemetry")]
-use metrics::opentelemetry_mod::OpenTelemetry;
 #[cfg(feature = "prometheus")]
 use metrics::prometheus_mod::Prometheus;
 use metrics::{Metrics, MetricsBackend, NullMetrics};
@@ -22,8 +20,6 @@ use tokio::task::LocalSet;
 use vixen_core::{AccountUpdate, TransactionUpdate};
 use yellowstone::YellowstoneOpts;
 
-#[cfg(feature = "opentelemetry")]
-pub extern crate opentelemetry;
 #[cfg(feature = "prometheus")]
 pub extern crate prometheus;
 pub extern crate yellowstone_vixen_core as vixen_core;

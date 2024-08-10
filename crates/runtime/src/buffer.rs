@@ -77,11 +77,6 @@ pub fn run_yellowstone<
 
     let metrics_clone = Arc::clone(&metrics);
 
-    #[cfg(feature = "opentelemetry")]
-    tokio::task::spawn_local(async move {
-        metrics_clone.gather_metrics_data();
-    });
-    let metrics_clone = Arc::clone(&metrics);
     let exec = Executor::builder(Nonblock(Tokio))
         .num_threads(jobs)
         .build(move |update, _| {

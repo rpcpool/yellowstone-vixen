@@ -8,6 +8,7 @@ license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
+prometheus = { version = "0.13.4", optional = true }
 clap = { version = "4.5.4", default-features = false, features = [
     "env",
     "derive",
@@ -15,14 +16,6 @@ clap = { version = "4.5.4", default-features = false, features = [
 ] }
 futures-channel = { version = "0.3.30", features = ["sink"] }
 futures-util = { version = "0.3.30", features = ["sink"] }
-once_cell = { version = "1.19.0", optional = true }
-opentelemetry = { version = "0.24.0", features = ["metrics"], optional = true }
-opentelemetry-otlp = { version = "0.17.0", optional = true }
-opentelemetry-semantic-conventions = { version = "0.16.0", optional = true }
-opentelemetry_sdk = { version = "0.24.1", features = [
-    "rt-tokio",
-], optional = true }
-prometheus = { version = "0.13.4", optional = true }
 serde = "1.0.198"
 thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
@@ -35,14 +28,6 @@ yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 
-
 [features]
-default = ["opentelemetry"]
-opentelemetry = [
-    "dep:opentelemetry",
-    "dep:opentelemetry-otlp",
-    "dep:opentelemetry-semantic-conventions",
-    "dep:opentelemetry_sdk",
-    "dep:once_cell",
-]
+default = ["prometheus"]
 prometheus = ["dep:prometheus"]

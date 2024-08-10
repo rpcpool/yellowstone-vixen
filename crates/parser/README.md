@@ -41,7 +41,7 @@ fn main() {
             ]),
             transaction: HandlerManager::empty(),
         })
-        .metrics(vixen::opentelemetry::global::meter("vixen"))
+        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
         .build()
         .run();
 }

@@ -14,6 +14,5 @@ path = "../runtime"
 default-features = false
 
 [features]
-default = ["opentelemetry"]
-opentelemetry = ["vixen/opentelemetry"]
+default = ["prometheus"]
 prometheus = ["vixen/prometheus"]

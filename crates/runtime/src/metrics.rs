@@ -56,79 +56,11 @@ impl Counter for NullMetrics {
     fn inc_by(&self, _: u64) {}
 }
 
-#[cfg(feature = "opentelemetry")]
-pub mod opentelemetry_mod {
-    use once_cell::sync::Lazy;
-    use opentelemetry::{
-        metrics::{MeterProvider, MetricsError},
-        KeyValue,
-    };
-    use opentelemetry_otlp::{ExportConfig, WithExportConfig};
-    use opentelemetry_sdk::{runtime, Resource};
+impl MetricsFactory for NullMetrics {
+    type Error = std::convert::Infallible;
+    type Output = Self;
 
-    use super::*;
-
-    #[derive(Debug)]
-    pub struct OpenTelemetry {
-        meter: opentelemetry::metrics::Meter,
-    }
-
-    impl MetricsBackend for OpenTelemetry {
-        type Counter = opentelemetry::metrics::Counter<u64>;
-
-        fn make_counter(
-            &self,
-            name: impl Into<Cow<'static, str>>,
-            desc: impl Into<Cow<'static, str>>,
-        ) -> Self::Counter {
-            self.meter.u64_counter(name).with_description(desc).init()
-        }
-
-        fn gather_metrics_data(&self) -> Option<String> {
-            let export_config = ExportConfig {
-                endpoint: "http://localhost:4317".to_string(),
-                ..ExportConfig::default()
-            };
-
-            static RESOURCE: Lazy<Resource> = Lazy::new(|| {
-                Resource::new(vec![KeyValue::new(
-                    opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-                    "vixen",
-                )])
-            });
-            let metrics_provider = opentelemetry_otlp::new_pipeline()
-                .metrics(runtime::Tokio)
-                .with_exporter(
-                    opentelemetry_otlp::new_exporter()
-                        .tonic()
-                        .with_export_config(export_config),
-                )
-                .with_resource(RESOURCE.clone())
-                .with_period(Duration::from_secs(5))
-                .build()
-                .ok();
-
-            if let Some(metrics_provider) = metrics_provider {
-                opentelemetry::global::set_meter_provider(metrics_provider);
-            }
-            None
-        }
-    }
-
-    impl Counter for opentelemetry::metrics::Counter<u64> {
-        fn inc_by(&self, by: u64) { self.add(by, &[]); }
-    }
-
-    impl MetricsFactory for OpenTelemetry {
-        type Error = MetricsError;
-        type Output = Self;
-
-        fn create() -> Result<Self::Output, Self::Error> {
-            Ok(OpenTelemetry {
-                meter: opentelemetry::global::meter("vixen"),
-            })
-        }
-    }
+    fn create() -> Result<Self::Output, Self::Error> { Ok(Self) }
 }
 
 #[cfg(feature = "prometheus")]

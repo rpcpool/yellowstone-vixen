@@ -1,13 +1,6 @@
 version: "3.9"
 
 services:
-  opentelemetry-collector:
-    image: otel/opentelemetry-collector:latest
-    command: ["--config=/etc/opentelemetry-config.yaml", "${OTELCOL_ARGS}"]
-    volumes:
-      - ./opentelemetry-config.yaml:/etc/opentelemetry-config.yaml
-    ports:
-      - "4317:4317" # OTLP gRPC receiver
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
