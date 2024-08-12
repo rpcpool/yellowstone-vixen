@@ -41,6 +41,8 @@ pub type ParseResult<T> = Result<T, ParseError>;
 
 pub type AccountUpdate = SubscribeUpdateAccount;
 
+pub type TransactionUpdate = SubscribeUpdateTransaction;
+
 pub trait Update {
     const TYPE: UpdateType;
 }

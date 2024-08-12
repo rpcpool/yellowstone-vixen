@@ -6,47 +6,32 @@ use spl_pod::solana_program::{
     pubkey::{self, Pubkey},
 };
 
-use super::structure::{IxsInfo, ReadableInstructions, TransactionIxData};
-use crate::tx_parser::token_program::parse_token_program_ix;
+// use super::structure::{IxsInfo, ReadableInstructions, TransactionIxData};
+// use crate::tx_parser::token_program::parse_token_program_ix;
 
 #[derive(Debug)]
-pub struct AddressLookupTableKeys {
+pub struct TxAccountKeys {
     pub static_keys: Vec<Pubkey>,
     pub dynamic_keys: Option<LoadedAddresses>,
 }
 
-pub fn get_address_lookup_table_keys<'a>(
-    tx_account_pubkeys: &Vec<String>,
-    loaded_readonly_addresses: &Vec<String>,
-    loaded_writeable_addresses: &Vec<String>,
-) -> Result<AddressLookupTableKeys, String> {
-    let static_keys = tx_account_pubkeys
-        .iter()
-        .map(|key| key.to_pubkey())
-        .collect::<Result<Vec<Pubkey>, String>>()?;
-
+pub fn get_tx_account_keys(
+    tx_account_pubkeys: Vec<Pubkey>,
+    loaded_readonly_addresses: Vec<Pubkey>,
+    loaded_writeable_addresses: Vec<Pubkey>,
+) -> Result<TxAccountKeys, String> {
     let dynamic_keys: Option<LoadedAddresses> =
         if loaded_readonly_addresses.is_empty() || loaded_writeable_addresses.is_empty() {
             None
         } else {
-            let readonly_keys = loaded_readonly_addresses
-                .iter()
-                .map(|key| key.to_pubkey())
-                .collect::<Result<Vec<Pubkey>, String>>()?;
-
-            let writeable_keys = loaded_writeable_addresses
-                .iter()
-                .map(|key| key.to_pubkey())
-                .collect::<Result<Vec<Pubkey>, String>>()?;
-
             Some(LoadedAddresses {
-                readonly: readonly_keys,
-                writable: writeable_keys,
+                readonly: loaded_readonly_addresses,
+                writable: loaded_writeable_addresses,
             })
         };
 
-    Ok(AddressLookupTableKeys {
-        static_keys,
+    Ok(TxAccountKeys {
+        static_keys: tx_account_pubkeys.clone(),
         dynamic_keys,
     })
 }
@@ -70,14 +55,14 @@ impl<T> CheckVec for Vec<T> {
 }
 
 pub trait ToPubkeyVecString {
-    fn to_pubkey_vec(&self) -> Result<Vec<String>, String>;
+    fn to_pubkey_vec(&self) -> Result<Vec<Pubkey>, String>;
 }
 
 impl ToPubkeyVecString for Vec<Vec<u8>> {
-    fn to_pubkey_vec(&self) -> Result<Vec<String>, String> {
+    fn to_pubkey_vec(&self) -> Result<Vec<Pubkey>, String> {
         self.iter()
-            .map(|key| key.to_pubkey_string())
-            .collect::<Result<Vec<String>, String>>()
+            .map(|key| key.to_pubkey())
+            .collect::<Result<Vec<Pubkey>, String>>()
     }
 }
 pub trait StringToPubkey {
@@ -165,57 +150,57 @@ pub struct ParsedIx {
     // params:Vec<String> //TODO
 }
 
-pub fn parse_ixs(readables_ixs: &Vec<ReadableInstructions>) -> Vec<ParsedIx> {
-    let mut parsed_ixs: Vec<ParsedIx> = Vec::new();
+// pub fn parse_ixs(readables_ixs: &Vec<ReadableInstructions>) -> Vec<ParsedIx> {
+//     let mut parsed_ixs: Vec<ParsedIx> = Vec::new();
 
-    for ix in readables_ixs.iter() {
-        for inner_ix in ix.instructions.iter() {
-            let parsed = parse_ix_from_json(inner_ix.parsed.clone());
-            if parsed.is_none() {
-                continue;
-            }
+//     for ix in readables_ixs.iter() {
+//         for inner_ix in ix.instructions.iter() {
+//             let parsed = parse_ix_from_json(inner_ix.parsed.clone());
+//             if parsed.is_none() {
+//                 continue;
+//             }
 
-            let ix_name = parsed.unwrap();
+//             let ix_name = parsed.unwrap();
 
-            let parsed_ix = ParsedIx {
-                calling_program: inner_ix.program_id.clone(),
-                name: ix_name.to_snake_case(),
-                ix_type: IxType::Cpi, //these calls are always CPI
-            };
+//             let parsed_ix = ParsedIx {
+//                 calling_program: inner_ix.program_id.clone(),
+//                 name: ix_name.to_snake_case(),
+//                 ix_type: IxType::Cpi, //these calls are always CPI
+//             };
 
-            parsed_ixs.push(parsed_ix);
-        }
-    }
+//             parsed_ixs.push(parsed_ix);
+//         }
+//     }
 
-    parsed_ixs
-}
+//     parsed_ixs
+// }
 
-pub fn parse_ix_from_json(parsed: Value) -> Option<String> {
-    parsed
-        .as_object()
-        .and_then(|data| data.get("type"))
-        .and_then(|ix_name| ix_name.as_str())
-        .map(|name| name.to_string())
-}
+// pub fn parse_ix_from_json(parsed: Value) -> Option<String> {
+//     parsed
+//         .as_object()
+//         .and_then(|data| data.get("type"))
+//         .and_then(|ix_name| ix_name.as_str())
+//         .map(|name| name.to_string())
+// }
 
-pub fn get_ix_info(
-    logs: &Option<Vec<String>>,
-    readables_ixs: &Vec<ReadableInstructions>,
-) -> Option<IxsInfo> {
-    let all_ixs = get_all_ixs_in_tx(logs.as_ref()?)?;
-    let parsed_ixs = parse_ixs(readables_ixs);
-    Some(IxsInfo {
-        all_ixs,
-        filtered_parsed_ixs: parsed_ixs,
-    })
-}
+// pub fn get_ix_info(
+//     logs: &Option<Vec<String>>,
+//     readables_ixs: &Vec<ReadableInstructions>,
+// ) -> Option<IxsInfo> {
+//     let all_ixs = get_all_ixs_in_tx(logs.as_ref()?)?;
+//     let parsed_ixs = parse_ixs(readables_ixs);
+//     Some(IxsInfo {
+//         all_ixs,
+//         filtered_parsed_ixs: parsed_ixs,
+//     })
+// }
 
-pub fn get_ix_data<'i>(program_id: &String, json_data: &Value) -> Option<TransactionIxData> {
-    let spl_program_id = Pubkey::from_str(program_id).ok()?;
-    if program_id.eq(&spl_program_id.to_string()) {
-        return parse_token_program_ix(json_data)
-            .map_or(None, |ix| Some(TransactionIxData::TokenProgramIx(ix)));
-    }
+// pub fn get_ix_data<'i>(program_id: &String, json_data: &Value) -> Option<TransactionIxData> {
+//     let spl_program_id = Pubkey::from_str(program_id).ok()?;
+//     if program_id.eq(&spl_program_id.to_string()) {
+//         return parse_token_program_ix(json_data)
+//             .map_or(None, |ix| Some(TransactionIxData::TokenProgramIx(ix)));
+//     }
 
-    return None;
-}
+//     return None;
+// }

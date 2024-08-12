@@ -13,7 +13,7 @@ use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::{handler, HandlerManager, HandlerManagers};
 use yellowstone_vixen as vixen;
-use yellowstone_vixen_parser::tx_parser::token_program::TokenProgramTxParser;
+use yellowstone_vixen_parser::ix_parser::token_program::TokenProgramIxParser;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -53,7 +53,7 @@ fn main() {
             // ]),
             HandlerManager::empty(),
             transaction: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
-                TokenProgramTxParser,
+                TokenProgramIxParser,
                 [Handler],
             ))]),
         })
