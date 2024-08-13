@@ -7,6 +7,7 @@ use topograph::{
     prelude::*,
 };
 use tracing::warn;
+use vixen_core::InstructionUpdate;
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},
     tonic::Status,
@@ -76,13 +77,18 @@ pub fn run_yellowstone<
                             .run(&a, &metrics)
                             .await;
                     },
-                    UpdateOneof::Transaction(t) => {
-                        manager
-                            .transaction
-                            .get_handlers(&filters)
-                            .run(&t, &metrics)
-                            .await;
-                    },
+                    // UpdateOneof::Transaction(t) => {
+                    //     manager
+                    //         .instruction
+                    //         .get_handlers(&filters)
+                    //         .run(&t, &metrics)
+                    //         .await;
+                    // manager
+                    //     .transaction
+                    //     .get_handlers(&filters)
+                    //     .run(&t, &metrics)
+                    //     .await;
+                    // },
                     var => warn!(?var, "Unknown update variant"),
                 }
             }

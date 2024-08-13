@@ -111,16 +111,22 @@ impl JobResult {
 pub(crate) struct Metrics<B: MetricsBackend> {
     pub accts_recvd: B::Counter,
     pub txns_recvd: B::Counter,
+    pub ixs_recvd: B::Counter,
     pub accts_handled: B::Counter,
     pub txns_handled: B::Counter,
+    pub ixs_handled: B::Counter,
     pub accts_ok: B::Counter,
     pub txns_ok: B::Counter,
+    pub ixs_ok: B::Counter,
     pub acct_parse_errs: B::Counter,
     pub txn_parse_errs: B::Counter,
+    pub ix_parse_errs: B::Counter,
     pub acct_handle_errs: B::Counter,
     pub txn_handle_errs: B::Counter,
+    pub ix_handle_errs: B::Counter,
     pub uniq_acct_handle_errs: B::Counter,
     pub uniq_txn_handle_errs: B::Counter,
+    pub uniq_ix_handle_errs: B::Counter,
 }
 
 impl<B: MetricsBackend> Metrics<B> {
@@ -134,6 +140,10 @@ impl<B: MetricsBackend> Metrics<B> {
                 "transactions_received",
                 "Number of transactions received for processing",
             ),
+            ixs_recvd: metrics.make_counter(
+                "instructions_received",
+                "Number of instructions received for processing",
+            ),
             accts_handled: metrics.make_counter(
                 "accounts_processed",
                 "Number of (successfully or unsuccessfully) processed accounts",
@@ -141,6 +151,10 @@ impl<B: MetricsBackend> Metrics<B> {
             txns_handled: metrics.make_counter(
                 "transactions_processed",
                 "Number of (successfully or unsuccessfully) processed transactions",
+            ),
+            ixs_handled: metrics.make_counter(
+                "instructions_processed",
+                "Number of (successfully or unsuccessfully) processed instructions",
             ),
             accts_ok: metrics.make_counter(
                 "successful_accounts",
@@ -150,6 +164,10 @@ impl<B: MetricsBackend> Metrics<B> {
                 "successful_transactions",
                 "Number of successfully processed transactions",
             ),
+            ixs_ok: metrics.make_counter(
+                "successful_instructions",
+                "Number of successfully processed instructions",
+            ),
             acct_parse_errs: metrics.make_counter(
                 "account_parse_errors",
                 "Number of accounts that failed to parse",
@@ -157,6 +175,10 @@ impl<B: MetricsBackend> Metrics<B> {
             txn_parse_errs: metrics.make_counter(
                 "transaction_parse_errors",
                 "Number of transactions that failed to parse",
+            ),
+            ix_parse_errs: metrics.make_counter(
+                "instruction_parse_errors",
+                "Number of instructions that failed to parse",
             ),
             acct_handle_errs: metrics.make_counter(
                 "account_handler_errors",
@@ -166,6 +188,10 @@ impl<B: MetricsBackend> Metrics<B> {
                 "transaction_handler_errors",
                 "Number of errors thrown by transaction handlers",
             ),
+            ix_handle_errs: metrics.make_counter(
+                "instruction_handler_errors",
+                "Number of errors thrown by instruction handlers",
+            ),
             uniq_acct_handle_errs: metrics.make_counter(
                 "accounts_with_handler_errors",
                 "Number of accounts that threw at least one handler error",
@@ -173,6 +199,10 @@ impl<B: MetricsBackend> Metrics<B> {
             uniq_txn_handle_errs: metrics.make_counter(
                 "transactions_with_handler_errors",
                 "Number of transactions that threw at least one handler error",
+            ),
+            uniq_ix_handle_errs: metrics.make_counter(
+                "instructions_with_handler_errors",
+                "Number of instructions that threw at least one handler error",
             ),
         }
     }
@@ -187,6 +217,7 @@ impl<B: MetricsBackend> Metrics<B> {
         match ty {
             UpdateType::Account => &self.accts_recvd,
             UpdateType::Transaction => &self.txns_recvd,
+            UpdateType::Instruction => &self.ixs_recvd,
         }
         .inc();
     }
@@ -195,6 +226,7 @@ impl<B: MetricsBackend> Metrics<B> {
         match ty {
             UpdateType::Account => &self.accts_handled,
             UpdateType::Transaction => &self.txns_handled,
+            UpdateType::Instruction => &self.ixs_handled,
         }
         .inc();
 
@@ -202,23 +234,27 @@ impl<B: MetricsBackend> Metrics<B> {
             JobResult::Ok => match ty {
                 UpdateType::Account => &self.accts_ok,
                 UpdateType::Transaction => &self.txns_ok,
+                UpdateType::Instruction => &self.ixs_ok,
             }
             .inc(),
             JobResult::ParseErr => match ty {
                 UpdateType::Account => &self.acct_parse_errs,
                 UpdateType::Transaction => &self.txn_parse_errs,
+                UpdateType::Instruction => &self.ix_parse_errs,
             }
             .inc(),
             JobResult::HandleErr(n) => {
                 match ty {
                     UpdateType::Account => &self.uniq_acct_handle_errs,
                     UpdateType::Transaction => &self.uniq_txn_handle_errs,
+                    UpdateType::Instruction => &self.uniq_ix_handle_errs,
                 }
                 .inc();
 
                 match ty {
                     UpdateType::Account => &self.acct_handle_errs,
                     UpdateType::Transaction => &self.txn_handle_errs,
+                    UpdateType::Instruction => &self.ix_handle_errs,
                 }
                 .inc_by(n.try_into().unwrap_or_default());
             },

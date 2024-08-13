@@ -15,7 +15,7 @@ use buffer::BufferOpts;
 use builder::RuntimeBuilder;
 use metrics::{Metrics, MetricsBackend, NullMetrics};
 use tokio::task::LocalSet;
-use vixen_core::{AccountUpdate, TransactionUpdate};
+use vixen_core::{AccountUpdate, InstructionUpdate, TransactionUpdate};
 use yellowstone::YellowstoneOpts;
 
 #[cfg(feature = "opentelemetry")]

@@ -98,43 +98,22 @@ impl ToBase58 for Vec<u8> {
     fn to_base58(&self) -> String { bs58::encode(self).into_string() }
 }
 
-pub trait ToSnakeCase {
-    fn to_snake_case(self) -> String;
-}
-
-impl ToSnakeCase for String {
-    fn to_snake_case(self) -> String {
-        let mut result = String::new();
-        for (i, c) in self.chars().enumerate() {
-            if c.is_uppercase() {
-                if i != 0 {
-                    result.push('_');
-                }
-                result.push(c.to_lowercase().next().unwrap());
-            } else {
-                result.push(c);
-            }
-        }
-        result
-    }
-}
-
-pub fn get_all_ixs_in_tx(logs: &Vec<String>) -> Option<Vec<String>> {
-    let mut ix_logs: Vec<&String> = Vec::new();
-    for log in logs.iter() {
-        if log.contains("Instruction:") {
-            ix_logs.push(log);
-        }
-    }
-    let ix_names = ix_logs
-        .iter()
-        .map(|log| {
-            let ix_name = log.split("Instruction: ").last()?;
-            Some(ix_name.to_string().to_snake_case())
-        })
-        .collect::<Option<Vec<String>>>()?;
-    Some(ix_names)
-}
+// pub fn get_all_ixs_in_tx(logs: &Vec<String>) -> Option<Vec<String>> {
+//     let mut ix_logs: Vec<&String> = Vec::new();
+//     for log in logs.iter() {
+//         if log.contains("Instruction:") {
+//             ix_logs.push(log);
+//         }
+//     }
+//     let ix_names = ix_logs
+//         .iter()
+//         .map(|log| {
+//             let ix_name = log.split("Instruction: ").last()?;
+//             Some(ix_name.to_string().to_snake_case())
+//         })
+//         .collect::<Option<Vec<String>>>()?;
+//     Some(ix_names)
+// }
 
 #[derive(Debug)]
 pub enum IxType {
@@ -148,6 +127,19 @@ pub struct ParsedIx {
     pub name: String,
     pub ix_type: IxType,
     // params:Vec<String> //TODO
+}
+
+pub fn check_min_accounts_req(
+    accounts_len: usize,
+    expected_no_of_accounts: usize,
+) -> Result<(), String> {
+    if accounts_len < expected_no_of_accounts {
+        return Err(format!(
+            "Expected {} accounts, found {}",
+            expected_no_of_accounts, accounts_len
+        ));
+    }
+    Ok(())
 }
 
 // pub fn parse_ixs(readables_ixs: &Vec<ReadableInstructions>) -> Vec<ParsedIx> {

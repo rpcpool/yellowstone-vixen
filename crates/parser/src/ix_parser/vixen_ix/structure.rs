@@ -49,33 +49,73 @@ use super::helpers::{get_account_from_index, *};
 //     }
 // }
 
-pub struct InstructionData {
-    pub progran_id: Pubkey,
+#[derive(Debug)]
+pub struct InstructionUpdate {
     pub data: Vec<u8>,
     pub accounts: Vec<Pubkey>,
 }
-pub trait Instruction<C> {
-    fn get_ix_context(_: &InstructionData) -> Result<C, ProgramError>;
+
+impl Update for InstructionUpdate {
+    const TYPE: UpdateType = UpdateType::Instruction;
 }
 
-pub struct InstructionUpdate {
-    pub account_keys: TxAccountKeys,
+#[derive(Debug)]
+pub struct Instruction {
+    pub data: Vec<u8>,
+    pub accounts: Vec<Pubkey>,
+}
+
+#[derive(Debug)]
+pub struct ReadableInstruction<A, D> {
+    pub accounts: A,
+    pub data: Option<D>,
+}
+
+impl<A, D> ReadableInstruction<A, D> {
+    pub fn new(accounts: A, data: Option<D>) -> Self { Self { accounts, data } }
+
+    pub fn from_accounts(accounts: A) -> Self {
+        Self {
+            accounts,
+            data: None,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ReadableInstructions<I> {
+    pub index: u32,
+    pub instructions: Vec<I>,
+}
+
+pub trait InstructionParser<C> {
+    fn parse_readable_ix(_: &InstructionUpdate) -> Result<C, String>;
+}
+
+pub struct InstructionsUpdate {
+    pub tx_account_keys: TxAccountKeys,
     pub instructions: Vec<InnerInstructions>,
 }
 
-impl Update for InstructionUpdate {
+impl Update for InstructionsUpdate {
     const TYPE: UpdateType = UpdateType::Transaction;
 }
 
-impl InstructionUpdate {
-    pub fn try_from(tx_update: TransactionUpdate) -> Result<Self, String> {
-        let tx = tx_update.transaction.ok_or("No transaction found")?;
-        let tx_meta = tx.meta.ok_or("No transaction meta found")?;
-        let tx_message = tx
+impl InstructionsUpdate {
+    pub fn try_from(tx_update: &TransactionUpdate) -> Result<Self, String> {
+        let tx = tx_update
             .transaction
-            .map_or(Err("No transaction message found".to_string()), |tx| {
-                tx.message.ok_or("No transaction message found".to_owned())
-            })?;
+            .as_ref()
+            .ok_or("No transaction found")?;
+        let tx_meta = tx.meta.as_ref().ok_or("No transaction meta found")?;
+        let tx_message = tx.transaction.as_ref().map_or(
+            Err("No transaction message found".to_string()),
+            |tx| {
+                tx.message
+                    .as_ref()
+                    .ok_or("No transaction message found".to_owned())
+            },
+        )?;
         let tx_accounts = tx_message.account_keys.to_pubkey_vec()?;
 
         let read_only_addresses = tx_meta.loaded_readonly_addresses.to_pubkey_vec()?;
@@ -84,8 +124,8 @@ impl InstructionUpdate {
             get_tx_account_keys(tx_accounts, read_only_addresses, writeable_addresses)?;
 
         Ok(Self {
-            instructions: tx_meta.inner_instructions,
-            account_keys: tx_account_keys,
+            instructions: tx_meta.inner_instructions.clone(),
+            tx_account_keys,
         })
     }
 }

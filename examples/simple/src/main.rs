@@ -13,8 +13,11 @@ use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::{handler, HandlerManager, HandlerManagers};
 use yellowstone_vixen as vixen;
-use yellowstone_vixen_parser::ix_parser::token_program::TokenProgramIxParser;
+use yellowstone_vixen_parser::ix_parser::{
+    token_program::TokenProgramIxParser,
+    token_extensions::TokenExtensionProgramIxParser
 
+};
 #[derive(clap::Parser)]
 #[command(version, author, about)]
 pub struct Opts {
@@ -52,10 +55,24 @@ fn main() {
             //     handler::boxed(vixen::HandlerPack::new(TokenProgramParser, [Handler])),
             // ]),
             HandlerManager::empty(),
-            transaction: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
-                TokenProgramIxParser,
-                [Handler],
-            ))]),
+            transaction: 
+            // HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
+            //     TokenProgramIxParser,
+            //     [Handler],
+            // ))]),
+            HandlerManager::empty(),
+
+            //instruction : 
+            // HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
+            //     TokenExtensionProgramIxParser,
+            //     [Handler],
+            // )), 
+            // handler::boxed(vixen::HandlerPack::new(
+            //     TokenProgramIxParser,
+            //     [Handler],
+            // ))]),
+    
+            
         })
         .metrics(vixen::opentelemetry::global::meter("vixen"))
         .build()
