@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::{handler, HandlerManager, HandlerManagers};
-use yellowstone_vixen as vixen;
+use yellowstone_vixen::{self as vixen, metrics::MetricsFactory};
 use yellowstone_vixen_parser::{
     token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
 };
@@ -54,7 +54,7 @@ fn main() {
             ]),
             transaction: HandlerManager::empty(),
         })
-        .metrics(vixen::opentelemetry::global::meter("vixen"))
+        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
         .build()
         .run();
 }

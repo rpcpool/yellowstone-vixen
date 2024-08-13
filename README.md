@@ -101,7 +101,7 @@ fn main() {
             account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(CustomParser, [CustomHandler]))]),
             transaction: HandlerManager::empty(),
         })
-        .metrics(vixen::opentelemetry::global::meter("vixen"))
+        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
         .build()
         .run();
 }
@@ -110,6 +110,49 @@ fn main() {
 ## Yellowstone Vixen Mock
 
 This crate includes a mock feature designed for testing parsers. It is intended solely for testing purposes. For more details, refer to the [mock](crates/mock/README.md) documentation.
+
+## Metrics Support
+
+### Prometheus
+
+Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prometheus` feature in the `Cargo.toml` file:
+
+```toml
+[dependencies]
+vixen = { version = "0.0.0", features = ["prometheus"] }
+```
+
+- **Prometheus Setup**:
+
+```rust
+fn main() {
+    let Opts { config } = Opts::parse();
+    let config = std::fs::read_to_string(config).expect("Error reading config file");
+    let config = toml::from_str(&config).expect("Error parsing config");
+    vixen::Runtime::builder()
+        .opts(config)
+        .manager(HandlerManagers {
+            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
+                Parser,
+                [Handler],
+            ))]),
+            transaction: HandlerManager::empty(),
+        })
+        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
+        .build()
+        .run();
+}
+```
+
+Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container. You can access the metrics at `http://localhost:9091` after running the prometheus server using docker-compose.
+
+### Docker Setup for Metrics
+
+To run prometheus, you need to have docker and docker-compose installed on your machine. To start the services, run the following command:
+
+```bash
+sudo docker-compose up
+```
 
 ## Dragon's Mouth
 
