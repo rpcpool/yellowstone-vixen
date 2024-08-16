@@ -12,11 +12,9 @@ use std::path::PathBuf;
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::{handler, HandlerManager, HandlerManagers};
-use yellowstone_vixen as vixen;
+use yellowstone_vixen::{self as vixen, metrics::MetricsFactory};
 use yellowstone_vixen_parser::ix_parser::{
-    token_program::TokenProgramIxParser,
-    token_extensions::TokenExtensionProgramIxParser
-
+    token_extensions::TokenExtensionProgramIxParser, token_program::TokenProgramIxParser,
 };
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -47,34 +45,15 @@ fn main() {
     vixen::Runtime::builder()
         .opts(config)
         .manager(HandlerManagers {
-            account:
-            //  HandlerManager::new([
-            //     handler::boxed(vixen::HandlerPack::new(TokenExtensionProgramParser, [
-            //         Handler,
-            //     ])),
-            //     handler::boxed(vixen::HandlerPack::new(TokenProgramParser, [Handler])),
-            // ]),
-            HandlerManager::empty(),
-            transaction: 
-            // HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
-            //     TokenProgramIxParser,
-            //     [Handler],
-            // ))]),
-            HandlerManager::empty(),
-
-            //instruction : 
-            // HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
-            //     TokenExtensionProgramIxParser,
-            //     [Handler],
-            // )), 
-            // handler::boxed(vixen::HandlerPack::new(
-            //     TokenProgramIxParser,
-            //     [Handler],
-            // ))]),
-    
-            
+            account: HandlerManager::new([
+                handler::boxed(vixen::HandlerPack::new(TokenExtensionProgramParser, [
+                    Handler,
+                ])),
+                handler::boxed(vixen::HandlerPack::new(TokenProgramParser, [Handler])),
+            ]),
+            transaction: HandlerManager::empty(),
         })
-        .metrics(vixen::opentelemetry::global::meter("vixen"))
+        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
         .build()
         .run();
 }

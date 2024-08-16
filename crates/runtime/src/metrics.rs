@@ -1,12 +1,12 @@
 use std::{
     borrow::{Borrow, Cow},
     fmt,
+    time::Duration,
 };
 
 use yellowstone_vixen_core::UpdateType;
 
 use crate::handler::HandlerPackErrors;
-
 pub trait MetricsFactory {
     type Output: MetricsBackend;
     type Error: std::error::Error;
@@ -14,7 +14,7 @@ pub trait MetricsFactory {
     fn create() -> Result<Self::Output, Self::Error>;
 }
 
-pub trait MetricsBackend: 'static {
+pub trait MetricsBackend: 'static + Send + Sync {
     type Counter: Counter;
 
     fn make_counter(
@@ -22,6 +22,8 @@ pub trait MetricsBackend: 'static {
         name: impl Into<Cow<'static, str>>,
         desc: impl Into<Cow<'static, str>>,
     ) -> Self::Counter;
+
+    fn gather_metrics_data(&self) -> Option<String>;
 }
 
 pub trait Counter: Send + Sync {
@@ -45,6 +47,8 @@ impl MetricsBackend for NullMetrics {
     ) -> Self::Counter {
         NullMetrics
     }
+
+    fn gather_metrics_data(&self) -> Option<String> { None }
 }
 
 impl Counter for NullMetrics {
@@ -52,43 +56,64 @@ impl Counter for NullMetrics {
     fn inc_by(&self, _: u64) {}
 }
 
-#[cfg(feature = "opentelemetry")]
-impl MetricsBackend for opentelemetry::metrics::Meter {
-    type Counter = opentelemetry::metrics::Counter<u64>;
+impl MetricsFactory for NullMetrics {
+    type Error = std::convert::Infallible;
+    type Output = Self;
 
-    fn make_counter(
-        &self,
-        name: impl Into<Cow<'static, str>>,
-        desc: impl Into<Cow<'static, str>>,
-    ) -> Self::Counter {
-        self.u64_counter(name).with_description(desc).init()
+    fn create() -> Result<Self::Output, Self::Error> { Ok(Self) }
+}
+
+#[cfg(feature = "prometheus")]
+pub mod prometheus_mod {
+    use prometheus::Encoder;
+
+    use super::*;
+    #[derive(Debug)]
+    pub struct Prometheus {
+        registry: prometheus::Registry,
     }
-}
 
-#[cfg(feature = "opentelemetry")]
-impl Counter for opentelemetry::metrics::Counter<u64> {
-    fn inc_by(&self, by: u64) { self.add(by, &[]); }
-}
+    impl MetricsBackend for Prometheus {
+        type Counter = prometheus::IntCounter;
 
-#[cfg(feature = "prometheus")]
-pub struct Prometheus;
+        fn make_counter(
+            &self,
+            name: impl Into<Cow<'static, str>>,
+            desc: impl Into<Cow<'static, str>>,
+        ) -> Self::Counter {
+            let counter =
+                prometheus::IntCounter::with_opts(prometheus::Opts::new(name.into(), desc.into()))
+                    .unwrap();
+            self.registry.register(Box::new(counter.clone())).unwrap();
+            counter
+        }
 
-#[cfg(feature = "prometheus")]
-impl MetricsBackend for Prometheus {
-    type Counter = prometheus::IntCounter;
-
-    fn make_counter(
-        &self,
-        name: impl Into<Cow<'static, str>>,
-        desc: impl Into<Cow<'static, str>>,
-    ) -> Self::Counter {
-        prometheus::IntCounter::with_opts(prometheus::Opts::new(name.into(), desc.into())).unwrap()
+        fn gather_metrics_data(&self) -> Option<String> {
+            let mut buffer = vec![];
+            let encoder = prometheus::TextEncoder::new();
+            let metric_families = self.registry.gather();
+            encoder
+                .encode(&metric_families, &mut buffer)
+                .map_or(None, |_| {
+                    String::from_utf8(buffer).map_or(None, |data| Some(data))
+                })
+        }
     }
-}
 
-#[cfg(feature = "prometheus")]
-impl Counter for prometheus::IntCounter {
-    fn inc_by(&self, by: u64) { prometheus::IntCounter::inc_by(self, by) }
+    impl Counter for prometheus::IntCounter {
+        fn inc_by(&self, by: u64) { prometheus::IntCounter::inc_by(self, by) }
+    }
+
+    impl MetricsFactory for Prometheus {
+        type Error = std::convert::Infallible;
+        type Output = Self;
+
+        fn create() -> Result<Self::Output, Self::Error> {
+            Ok(Self {
+                registry: prometheus::Registry::new(),
+            })
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -127,10 +152,11 @@ pub(crate) struct Metrics<B: MetricsBackend> {
     pub uniq_acct_handle_errs: B::Counter,
     pub uniq_txn_handle_errs: B::Counter,
     pub uniq_ix_handle_errs: B::Counter,
+    pub backend: B,
 }
 
 impl<B: MetricsBackend> Metrics<B> {
-    pub(crate) fn new(metrics: &B) -> Self {
+    pub(crate) fn new(metrics: B) -> Self {
         Self {
             accts_recvd: metrics.make_counter(
                 "accounts_received",
@@ -204,8 +230,11 @@ impl<B: MetricsBackend> Metrics<B> {
                 "instructions_with_handler_errors",
                 "Number of instructions that threw at least one handler error",
             ),
+            backend: metrics,
         }
     }
+
+    pub fn gather_metrics_data(&self) -> Option<String> { self.backend.gather_metrics_data() }
 }
 
 impl<B: MetricsBackend> fmt::Debug for Metrics<B> {

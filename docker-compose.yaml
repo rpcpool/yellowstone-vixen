@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml
+    command: ["--config.file=/etc/prometheus/prometheus-config.yaml"]
+    ports:
+      - "9091:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
