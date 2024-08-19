@@ -145,9 +145,9 @@ mod tests {
         if let TokenExtensionState::ExtendedMint(ext_mint) = state {
             assert_eq!(ext_mint.base_account.decimals as u8, 9);
 
-            assert_eq!(ext_mint.extension_data_vec.len(), 1);
+            assert_eq!(ext_mint.extension_data_vec.len(), 2);
 
-            let extension_data = &ext_mint.extension_data_vec[0];
+            let extension_data = &ext_mint.extension_data_vec[1];
 
             if let ExtensionData::TokenMetadata(meta) = extension_data {
                 assert_eq!(
