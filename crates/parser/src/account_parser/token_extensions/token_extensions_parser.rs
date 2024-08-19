@@ -125,3 +125,44 @@ impl Parser for TokenExtensionProgramParser {
         TokenExtensionState::try_unpack(&inner.data)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use core::panic;
+
+    use yellowstone_vixen_mock::{account_fixture, run_parse};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_mint_parsing() {
+        let parser = TokenExtensionProgramParser;
+
+        let account = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu");
+
+        let state = run_parse!(parser, account);
+
+        if let TokenExtensionState::ExtendedMint(ext_mint) = state {
+            assert_eq!(ext_mint.base_account.decimals as u8, 9);
+
+            assert_eq!(ext_mint.extension_data_vec.len(), 1);
+
+            let extension_data = &ext_mint.extension_data_vec[0];
+
+            if let ExtensionData::TokenMetadata(meta) = extension_data {
+                assert_eq!(
+                    meta.mint.to_string(),
+                    "BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu"
+                );
+
+                assert_eq!(meta.name, "vixen_test");
+
+                assert_eq!(meta.symbol, "VIX");
+            } else {
+                panic!("Invalid Extension Data");
+            }
+        } else {
+            panic!("Invalid Mint Account");
+        }
+    }
+}

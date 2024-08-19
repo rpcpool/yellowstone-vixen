@@ -17,7 +17,7 @@ use builder::RuntimeBuilder;
 use metrics::prometheus_mod::Prometheus;
 use metrics::{Metrics, MetricsBackend, NullMetrics};
 use tokio::task::LocalSet;
-use vixen_core::{AccountUpdate, InstructionUpdate, TransactionUpdate};
+use vixen_core::{AccountUpdate, TransactionUpdate};
 use yellowstone::YellowstoneOpts;
 
 #[cfg(feature = "prometheus")]

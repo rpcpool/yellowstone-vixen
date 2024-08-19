@@ -7,7 +7,6 @@ use topograph::{
     prelude::*,
 };
 use tracing::warn;
-use vixen_core::InstructionUpdate;
 use warp::Filter;
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},

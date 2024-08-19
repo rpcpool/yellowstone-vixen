@@ -4,7 +4,10 @@ use spl_token_2022::extension::confidential_transfer::instruction::ConfidentialT
 use super::helpers::{decode_extension_ix_type, ExtensionIxParser, Ix};
 use crate::ix_parser::{
     token_program::token_ix::InitializeMintAccounts,
-    vixen_ix::{helpers::check_min_accounts_req, structure::InstructionUpdate},
+    vixen_ix::{
+        helpers::{check_min_accounts_req, get_multisig_signers},
+        structure::InstructionUpdate,
+    },
 };
 
 #[derive(Debug)]
@@ -42,7 +45,6 @@ pub struct EmptyAccountAccounts {
 pub struct DepositAccounts {
     pub account: Pubkey,
     pub mint: Pubkey,
-    pub sysvar: Pubkey,
     pub owner: Pubkey,
     pub multisig_signers: Option<Vec<Pubkey>>,
 }
@@ -52,7 +54,6 @@ pub struct WithdrawAccounts {
     pub source_account: Pubkey,
     pub mint: Pubkey,
     pub destination: Pubkey,
-    pub sysvar: Pubkey,
     pub owner: Pubkey,
     pub multisig_signers: Option<Vec<Pubkey>>,
 }
@@ -60,8 +61,11 @@ pub struct WithdrawAccounts {
 #[derive(Debug)]
 
 pub struct ConfidentialTransferAccounts {
-    pub account: Pubkey,
+    pub source_account: Pubkey,
+    pub mint: Pubkey,
+    pub destination: Pubkey,
     pub owner: Pubkey,
+    pub context_account: Pubkey, // Sysvar account or context state account
     pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
@@ -117,15 +121,15 @@ pub enum ConfidentaltransferIx {
 }
 
 impl ExtensionIxParser for ConfidentaltransferIx {
-    fn try_parse_extension_ix(ix_data: &InstructionUpdate) -> Result<Self, String> {
-        let accounts_len = ix_data.accounts.len();
-        let ix_type = decode_extension_ix_type(&ix_data.data)?;
+    fn try_parse_extension_ix(ix_update: &InstructionUpdate) -> Result<Self, String> {
+        let accounts_len = ix_update.accounts.len();
+        let ix_type = decode_extension_ix_type(&ix_update.data)?;
         match ix_type {
             ConfidentialTransferInstruction::InitializeMint => {
                 check_min_accounts_req(accounts_len, 1)?;
                 Ok(ConfidentaltransferIx::InitializeMint(Ix::from_accounts(
                     InitializeMintAccounts {
-                        mint: ix_data.accounts[0],
+                        mint: ix_update.accounts[0],
                     },
                 )))
             },
@@ -133,8 +137,8 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 2)?;
                 Ok(ConfidentaltransferIx::UpdateMint(Ix::from_accounts(
                     UpdateMintAccounts {
-                        mint: ix_data.accounts[0],
-                        authority: ix_data.accounts[1],
+                        mint: ix_update.accounts[0],
+                        authority: ix_update.accounts[1],
                     },
                 )))
             },
@@ -142,11 +146,11 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 4)?;
                 Ok(ConfidentaltransferIx::ConfigureAccount(Ix::from_accounts(
                     ConfigureAccountAccounts {
-                        account: ix_data.accounts[0],
-                        mint: ix_data.accounts[1],
-                        sysvar: ix_data.accounts[2],
-                        owner: ix_data.accounts[3],
-                        multisig_signers: None,
+                        account: ix_update.accounts[0],
+                        mint: ix_update.accounts[1],
+                        sysvar: ix_update.accounts[2],
+                        owner: ix_update.accounts[3],
+                        multisig_signers: get_multisig_signers(ix_update, 4),
                     },
                 )))
             },
@@ -155,9 +159,9 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 3)?;
                 Ok(ConfidentaltransferIx::ApproveAccount(Ix::from_accounts(
                     ApproveAccountAccounts {
-                        account: ix_data.accounts[0],
-                        mint: ix_data.accounts[1],
-                        authority: ix_data.accounts[2],
+                        account: ix_update.accounts[0],
+                        mint: ix_update.accounts[1],
+                        authority: ix_update.accounts[2],
                     },
                 )))
             },
@@ -166,48 +170,49 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 3)?;
                 Ok(ConfidentaltransferIx::EmptyAccount(Ix::from_accounts(
                     EmptyAccountAccounts {
-                        account: ix_data.accounts[0],
-                        sysvar: ix_data.accounts[1],
-                        owner: ix_data.accounts[2],
-                        multisig_signers: None,
+                        account: ix_update.accounts[0],
+                        sysvar: ix_update.accounts[1],
+                        owner: ix_update.accounts[2],
+                        multisig_signers: get_multisig_signers(ix_update, 3),
                     },
                 )))
             },
 
             ConfidentialTransferInstruction::Deposit => {
-                check_min_accounts_req(accounts_len, 4)?;
+                check_min_accounts_req(accounts_len, 3)?;
                 Ok(ConfidentaltransferIx::Deposit(Ix::from_accounts(
                     DepositAccounts {
-                        account: ix_data.accounts[0],
-                        mint: ix_data.accounts[1],
-                        sysvar: ix_data.accounts[2],
-                        owner: ix_data.accounts[3],
-                        multisig_signers: None,
+                        account: ix_update.accounts[0],
+                        mint: ix_update.accounts[1],
+                        owner: ix_update.accounts[2],
+                        multisig_signers: get_multisig_signers(ix_update, 3),
                     },
                 )))
             },
 
             ConfidentialTransferInstruction::Withdraw => {
-                check_min_accounts_req(accounts_len, 5)?;
+                check_min_accounts_req(accounts_len, 4)?;
                 Ok(ConfidentaltransferIx::Withdraw(Ix::from_accounts(
                     WithdrawAccounts {
-                        source_account: ix_data.accounts[0],
-                        mint: ix_data.accounts[1],
-                        destination: ix_data.accounts[2],
-                        sysvar: ix_data.accounts[3],
-                        owner: ix_data.accounts[4],
-                        multisig_signers: None,
+                        source_account: ix_update.accounts[0],
+                        mint: ix_update.accounts[1],
+                        destination: ix_update.accounts[2],
+                        owner: ix_update.accounts[3],
+                        multisig_signers: get_multisig_signers(ix_update, 4),
                     },
                 )))
             },
 
             ConfidentialTransferInstruction::Transfer => {
-                check_min_accounts_req(accounts_len, 3)?;
+                check_min_accounts_req(accounts_len, 5)?;
                 Ok(ConfidentaltransferIx::Transfer(Ix::from_accounts(
                     ConfidentialTransferAccounts {
-                        account: ix_data.accounts[0],
-                        owner: ix_data.accounts[1],
-                        multisig_signers: None,
+                        source_account: ix_update.accounts[0],
+                        mint: ix_update.accounts[1],
+                        destination: ix_update.accounts[2],
+                        context_account: ix_update.accounts[3],
+                        owner: ix_update.accounts[4],
+                        multisig_signers: get_multisig_signers(ix_update, 5),
                     },
                 )))
             },
@@ -216,9 +221,9 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 2)?;
                 Ok(ConfidentaltransferIx::ApplyPendingBalance(
                     Ix::from_accounts(ApplyPendingBalanceAccounts {
-                        account: ix_data.accounts[0],
-                        owner: ix_data.accounts[1],
-                        multisig_signers: None,
+                        account: ix_update.accounts[0],
+                        owner: ix_update.accounts[1],
+                        multisig_signers: get_multisig_signers(ix_update, 2),
                     }),
                 ))
             },
@@ -227,9 +232,9 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 2)?;
                 Ok(ConfidentaltransferIx::EnableConfidentialCredits(
                     Ix::from_accounts(CreditsAccounts {
-                        account: ix_data.accounts[0],
-                        owner: ix_data.accounts[1],
-                        multisig_signers: None,
+                        account: ix_update.accounts[0],
+                        owner: ix_update.accounts[1],
+                        multisig_signers: get_multisig_signers(ix_update, 2),
                     }),
                 ))
             },
@@ -238,9 +243,9 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 2)?;
                 Ok(ConfidentaltransferIx::DisableConfidentialCredits(
                     Ix::from_accounts(CreditsAccounts {
-                        account: ix_data.accounts[0],
-                        owner: ix_data.accounts[1],
-                        multisig_signers: None,
+                        account: ix_update.accounts[0],
+                        owner: ix_update.accounts[1],
+                        multisig_signers: get_multisig_signers(ix_update, 2),
                     }),
                 ))
             },
@@ -249,9 +254,9 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 2)?;
                 Ok(ConfidentaltransferIx::EnableNonConfidentialCredits(
                     Ix::from_accounts(CreditsAccounts {
-                        account: ix_data.accounts[0],
-                        owner: ix_data.accounts[1],
-                        multisig_signers: None,
+                        account: ix_update.accounts[0],
+                        owner: ix_update.accounts[1],
+                        multisig_signers: get_multisig_signers(ix_update, 2),
                     }),
                 ))
             },
@@ -260,9 +265,9 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 2)?;
                 Ok(ConfidentaltransferIx::DisableNonConfidentialCredits(
                     Ix::from_accounts(CreditsAccounts {
-                        account: ix_data.accounts[0],
-                        owner: ix_data.accounts[1],
-                        multisig_signers: None,
+                        account: ix_update.accounts[0],
+                        owner: ix_update.accounts[1],
+                        multisig_signers: get_multisig_signers(ix_update, 2),
                     }),
                 ))
             },
@@ -271,9 +276,9 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                 check_min_accounts_req(accounts_len, 13)?;
                 Ok(ConfidentaltransferIx::TransferWithSplitProofs(
                     Ix::from_accounts(TransferWithSplitProofsAccounts {
-                        source_account: ix_data.accounts[0],
-                        mint: ix_data.accounts[1],
-                        destination: ix_data.accounts[2],
+                        source_account: ix_update.accounts[0],
+                        mint: ix_update.accounts[1],
+                        destination: ix_update.accounts[2],
                         verify_batched_grouped_cipher_text_2_handles_validity_proof: None,
                         verify_batched_range_proof_u128: None,
                         close_split_context_state_on_execution: false,
@@ -283,7 +288,7 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                         destination_account_for_lamports: None,
                         context_state_account_owner: None,
                         zk_token_proof_program: None,
-                        owner: ix_data.accounts[12],
+                        owner: ix_update.accounts[12],
                         multisig_signers: None,
                     }),
                 ))

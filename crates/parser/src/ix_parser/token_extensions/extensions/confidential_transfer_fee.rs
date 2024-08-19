@@ -2,7 +2,10 @@ use spl_pod::solana_program::pubkey::Pubkey;
 use spl_token_2022::extension::confidential_transfer_fee::instruction::ConfidentialTransferFeeInstruction;
 
 use super::helpers::{decode_extension_ix_type, ExtensionIxParser, Ix};
-use crate::ix_parser::vixen_ix::{helpers::check_min_accounts_req, structure::InstructionUpdate};
+use crate::ix_parser::vixen_ix::{
+    helpers::{check_min_accounts_req, get_multisig_signers},
+    structure::InstructionUpdate,
+};
 
 #[derive(Debug)]
 pub struct InitializeConfidentialTransferFeeConfigAccounts {
@@ -36,7 +39,7 @@ pub struct HarvestWithheldTokensToMint {
 
 #[derive(Debug)]
 pub struct EnableHarvestToMint {
-    pub account: Pubkey,
+    pub mint: Pubkey,
     pub confidential_transfer_fee_authority: Pubkey,
     pub multisig_signers: Option<Vec<Pubkey>>,
 }
@@ -83,7 +86,7 @@ impl ExtensionIxParser for ConfidentaltransferFeeIx {
                         fee_recipient: ix_update.accounts[1],
                         sysvar: ix_update.accounts[2],
                         withdraw_withheld_authority: ix_update.accounts[3],
-                        multisig_signers: None,
+                        multisig_signers: get_multisig_signers(ix_update, 4),
                     }),
                 ))
             },
@@ -97,8 +100,8 @@ impl ExtensionIxParser for ConfidentaltransferFeeIx {
                             fee_recipient: ix_update.accounts[1],
                             sysvar: ix_update.accounts[2],
                             withdraw_withheld_authority: ix_update.accounts[3],
-                            multisig_signers: None,
                             source_accounts: ix_update.accounts[4..].to_vec(),
+                            multisig_signers: None,
                         }),
                     ),
                 )
@@ -115,23 +118,23 @@ impl ExtensionIxParser for ConfidentaltransferFeeIx {
             },
 
             ConfidentialTransferFeeInstruction::EnableHarvestToMint => {
-                check_min_accounts_req(accounts_len, 1)?;
+                check_min_accounts_req(accounts_len, 2)?;
                 Ok(ConfidentaltransferFeeIx::EnableHarvestToMint(
                     Ix::from_accounts(EnableHarvestToMint {
-                        account: ix_update.accounts[0],
+                        mint: ix_update.accounts[0],
                         confidential_transfer_fee_authority: ix_update.accounts[1],
-                        multisig_signers: None,
+                        multisig_signers: get_multisig_signers(ix_update, 2),
                     }),
                 ))
             },
 
             ConfidentialTransferFeeInstruction::DisableHarvestToMint => {
-                check_min_accounts_req(accounts_len, 1)?;
+                check_min_accounts_req(accounts_len, 2)?;
                 Ok(ConfidentaltransferFeeIx::DisableHarvestToMint(
                     Ix::from_accounts(DisableHarvestToMint {
                         account: ix_update.accounts[0],
                         confidential_transfer_fee_authority: ix_update.accounts[1],
-                        multisig_signers: None,
+                        multisig_signers: get_multisig_signers(ix_update, 2),
                     }),
                 ))
             },

@@ -3,7 +3,7 @@ use spl_token_2022::extension::transfer_fee::instruction::TransferFeeInstruction
 
 use super::helpers::ExtensionIxParser;
 use crate::ix_parser::vixen_ix::{
-    helpers::check_min_accounts_req,
+    helpers::{check_min_accounts_req, get_multisig_signers},
     structure::{InstructionUpdate, ReadableInstruction},
 };
 
@@ -12,6 +12,8 @@ pub struct TransferCheckedWithFeeAccounts {
     pub source: Pubkey,
     pub mint: Pubkey,
     pub destination: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 #[derive(Debug)]
 pub struct TransferCheckedWithFeeData {
@@ -39,6 +41,7 @@ pub struct WithdrawWithheldTokensFromMintAccounts {
     pub mint: Pubkey,
     pub fee_recipient: Pubkey,
     pub withdraw_withheld_authority: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -47,6 +50,7 @@ pub struct WithdrawWithheldTokensFromAccountsAccounts {
     pub fee_recipient: Pubkey,
     pub withdraw_withheld_authority: Pubkey,
     pub source_accounts: Vec<Pubkey>,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -66,6 +70,7 @@ pub struct HarvestWithheldTokensToMintAccounts {
 pub struct SetTransferFeeAccounts {
     pub mint: Pubkey,
     pub mint_fee_acc_owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -98,9 +103,9 @@ pub enum TransferFeeIx {
 }
 
 impl ExtensionIxParser for TransferFeeIx {
-    fn try_parse_extension_ix(ix_data: &InstructionUpdate) -> Result<Self, String> {
-        let accounts_len = ix_data.accounts.len();
-        let ix_type = TransferFeeInstruction::unpack(&ix_data.data).map_err(|e| e.to_string())?;
+    fn try_parse_extension_ix(ix_update: &InstructionUpdate) -> Result<Self, String> {
+        let accounts_len = ix_update.accounts.len();
+        let ix_type = TransferFeeInstruction::unpack(&ix_update.data).map_err(|e| e.to_string())?;
         match ix_type {
             TransferFeeInstruction::TransferCheckedWithFee {
                 amount,
@@ -110,9 +115,11 @@ impl ExtensionIxParser for TransferFeeIx {
                 check_min_accounts_req(accounts_len, 4)?;
                 Ok(TransferFeeIx::TransferCheckedWithFee(ReadableInstruction {
                     accounts: TransferCheckedWithFeeAccounts {
-                        source: ix_data.accounts[0],
-                        mint: ix_data.accounts[1],
-                        destination: ix_data.accounts[2],
+                        source: ix_update.accounts[0],
+                        mint: ix_update.accounts[1],
+                        destination: ix_update.accounts[2],
+                        owner: ix_update.accounts[3],
+                        multisig_signers: get_multisig_signers(ix_update, 4),
                     },
                     data: Some(TransferCheckedWithFeeData {
                         amount,
@@ -132,7 +139,7 @@ impl ExtensionIxParser for TransferFeeIx {
                 Ok(TransferFeeIx::InitializeTransferFeeConfig(
                     ReadableInstruction {
                         accounts: InitializeTransferFeeConfigAccounts {
-                            mint: ix_data.accounts[0],
+                            mint: ix_update.accounts[0],
                         },
                         data: Some(InitializeTransferFeeConfigData {
                             transfer_fee_config_authority,
@@ -148,9 +155,10 @@ impl ExtensionIxParser for TransferFeeIx {
                 check_min_accounts_req(accounts_len, 3)?;
                 Ok(TransferFeeIx::WithdrawWithheldTokensFromMint(
                     ReadableInstruction::from_accounts(WithdrawWithheldTokensFromMintAccounts {
-                        mint: ix_data.accounts[0],
-                        fee_recipient: ix_data.accounts[1],
-                        withdraw_withheld_authority: ix_data.accounts[2],
+                        mint: ix_update.accounts[0],
+                        fee_recipient: ix_update.accounts[1],
+                        withdraw_withheld_authority: ix_update.accounts[2],
+                        multisig_signers: get_multisig_signers(ix_update, 3),
                     }),
                 ))
             },
@@ -160,10 +168,16 @@ impl ExtensionIxParser for TransferFeeIx {
                 Ok(TransferFeeIx::WithdrawWithheldTokensFromAccounts(
                     ReadableInstruction {
                         accounts: WithdrawWithheldTokensFromAccountsAccounts {
-                            mint: ix_data.accounts[0],
-                            fee_recipient: ix_data.accounts[1],
-                            withdraw_withheld_authority: ix_data.accounts[2],
-                            source_accounts: ix_data.accounts[3..].to_vec(),
+                            mint: ix_update.accounts[0],
+                            fee_recipient: ix_update.accounts[1],
+                            withdraw_withheld_authority: ix_update.accounts[2],
+                            source_accounts: ix_update.accounts
+                                [3..(3 + num_token_accounts) as usize]
+                                .to_vec(),
+                            multisig_signers: get_multisig_signers(
+                                ix_update,
+                                3 + num_token_accounts as usize,
+                            ),
                         },
                         data: Some(WithdrawWithheldTokensFromAccountsData { num_token_accounts }),
                     },
@@ -174,8 +188,8 @@ impl ExtensionIxParser for TransferFeeIx {
                 check_min_accounts_req(accounts_len, 1)?;
                 Ok(TransferFeeIx::HarvestWithheldTokensToMint(
                     ReadableInstruction::from_accounts(HarvestWithheldTokensToMintAccounts {
-                        mint: ix_data.accounts[0],
-                        source_accounts: ix_data.accounts[1..].to_vec(),
+                        mint: ix_update.accounts[0],
+                        source_accounts: ix_update.accounts[1..].to_vec(),
                     }),
                 ))
             },
@@ -187,8 +201,9 @@ impl ExtensionIxParser for TransferFeeIx {
                 check_min_accounts_req(accounts_len, 2)?;
                 Ok(TransferFeeIx::SetTransferFee(ReadableInstruction {
                     accounts: SetTransferFeeAccounts {
-                        mint: ix_data.accounts[0],
-                        mint_fee_acc_owner: ix_data.accounts[1],
+                        mint: ix_update.accounts[0],
+                        mint_fee_acc_owner: ix_update.accounts[1],
+                        multisig_signers: get_multisig_signers(ix_update, 2),
                     },
                     data: Some(SetTransferFeeData {
                         transfer_fee_basis_points,

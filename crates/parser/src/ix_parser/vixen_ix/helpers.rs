@@ -6,6 +6,8 @@ use spl_pod::solana_program::{
     pubkey::{self, Pubkey},
 };
 
+use crate::ix_parser::vixen_ix::structure::InstructionUpdate;
+
 // use super::structure::{IxsInfo, ReadableInstructions, TransactionIxData};
 // use crate::tx_parser::token_program::parse_token_program_ix;
 
@@ -196,3 +198,10 @@ pub fn check_min_accounts_req(
 
 //     return None;
 // }
+
+pub fn get_multisig_signers(ix_update: &InstructionUpdate, from_idx: usize) -> Option<Vec<Pubkey>> {
+    if from_idx >= ix_update.accounts.len() {
+        return None;
+    }
+    ix_update.accounts.get(from_idx..).map(|p| p.to_vec())
+}

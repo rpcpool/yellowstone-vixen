@@ -4,7 +4,6 @@ use crate::ix_parser::token_program::token_ix::*;
 #[derive(Debug)]
 pub enum TokenExtensionProgramIx {
     TokenProgramIx(TokenProgramIx),
-
     TransferFeeIx(TransferFeeIx),
     ConfidentialTransferIx(ConfidentaltransferIx),
     ConfidentialtransferFeeIx(ConfidentaltransferFeeIx),

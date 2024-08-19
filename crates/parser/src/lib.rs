@@ -1,5 +1,3 @@
-use solana_transaction_status::InnerInstructions;
-
 pub mod account_parser;
 
 pub mod ix_parser;

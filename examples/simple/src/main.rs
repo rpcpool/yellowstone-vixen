@@ -13,8 +13,13 @@ use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::{handler, HandlerManager, HandlerManagers};
 use yellowstone_vixen::{self as vixen, metrics::MetricsFactory};
-use yellowstone_vixen_parser::ix_parser::{
-    token_extensions::TokenExtensionProgramIxParser, token_program::TokenProgramIxParser,
+use yellowstone_vixen_parser::{
+    account_parser::{
+        token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
+    },
+    ix_parser::{
+        token_extensions::TokenExtensionProgramIxParser, token_program::TokenProgramIxParser,
+    },
 };
 #[derive(clap::Parser)]
 #[command(version, author, about)]

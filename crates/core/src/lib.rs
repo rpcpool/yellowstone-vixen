@@ -43,16 +43,6 @@ pub type AccountUpdate = SubscribeUpdateAccount;
 
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 
-#[derive(Debug)]
-pub struct InstructionUpdate {
-    pub data: Vec<u8>,
-    pub accounts: Vec<Pubkey>,
-}
-
-impl Update for InstructionUpdate {
-    const TYPE: UpdateType = UpdateType::Instruction;
-}
-
 pub trait Update {
     const TYPE: UpdateType;
 }
@@ -104,7 +94,7 @@ pub(crate) struct Pubkey(pub [u8; 32]);
 impl fmt::Display for Pubkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&bs58::encode(self.0).into_string())
-     }
+    }
 }
 
 impl From<[u8; 32]> for Pubkey {

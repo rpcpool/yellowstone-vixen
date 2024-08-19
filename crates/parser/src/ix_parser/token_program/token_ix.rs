@@ -8,6 +8,7 @@ pub struct TransferAccounts {
     pub source: Pubkey,
     pub destination: Pubkey,
     pub owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -34,6 +35,12 @@ pub struct InitializeAccountAccounts {
 }
 
 #[derive(Debug)]
+pub struct InitializeAccount2Accounts {
+    pub account: Pubkey,
+    pub mint: Pubkey,
+}
+
+#[derive(Debug)]
 pub struct InitializeAccountData2 {
     pub owner: Pubkey,
 }
@@ -41,7 +48,7 @@ pub struct InitializeAccountData2 {
 #[derive(Debug)]
 pub struct InitializeMultisigAccounts {
     pub multisig: Pubkey,
-    pub signers: Vec<Pubkey>,
+    pub signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -54,6 +61,7 @@ pub struct ApproveAccounts {
     pub source: Pubkey,
     pub delegate: Pubkey,
     pub owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -65,12 +73,14 @@ pub struct ApproveData {
 pub struct RevokeAccounts {
     pub source: Pubkey,
     pub owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
 pub struct SetAuthorityAccounts {
     pub current_authority: Pubkey,
     pub account: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -85,6 +95,7 @@ pub struct MintToAccounts {
     pub mint: Pubkey,
     pub account: Pubkey,
     pub mint_authority: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -97,6 +108,7 @@ pub struct BurnAccounts {
     pub account: Pubkey,
     pub mint: Pubkey,
     pub owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -109,6 +121,7 @@ pub struct CloseAccountAccounts {
     pub account: Pubkey,
     pub destination: Pubkey,
     pub owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -116,12 +129,14 @@ pub struct FreezeAccountAccounts {
     pub account: Pubkey,
     pub mint: Pubkey,
     pub mint_freeze_authority: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 #[derive(Debug)]
 pub struct ThawAccountAccounts {
     pub account: Pubkey,
     pub mint: Pubkey,
     pub mint_freeze_authority: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 #[derive(Debug)]
 pub struct TransferCheckedAccounts {
@@ -129,6 +144,7 @@ pub struct TransferCheckedAccounts {
     pub mint: Pubkey,
     pub destination: Pubkey,
     pub owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -143,6 +159,7 @@ pub struct ApproveCheckedAccounts {
     pub mint: Pubkey,
     pub delegate: Pubkey,
     pub owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -156,6 +173,7 @@ pub struct MintToCheckedAccounts {
     pub mint: Pubkey,
     pub account: Pubkey,
     pub mint_authority: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -168,6 +186,8 @@ pub struct MintToCheckedData {
 pub struct BurnCheckedAccounts {
     pub account: Pubkey,
     pub mint: Pubkey,
+    pub owner: Pubkey,
+    pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
 #[derive(Debug)]
@@ -215,8 +235,8 @@ pub enum TokenProgramIx {
     Transfer(ReadableInstruction<TransferAccounts, TransferData>),
     InitializeMint(ReadableInstruction<InitializeMintAccounts, InitializeMintData>),
     InitializeAccount(ReadableInstruction<InitializeAccountAccounts, ()>),
-    InitializeAccount2(ReadableInstruction<InitializeAccountAccounts, InitializeAccountData2>),
-    InitializeAccount3(ReadableInstruction<InitializeAccountAccounts, InitializeAccountData2>),
+    InitializeAccount2(ReadableInstruction<InitializeAccount2Accounts, InitializeAccountData2>),
+    InitializeAccount3(ReadableInstruction<InitializeAccount2Accounts, InitializeAccountData2>),
     InitializeMultisig(ReadableInstruction<InitializeMultisigAccounts, InitializeMultisigData>),
     Approve(ReadableInstruction<ApproveAccounts, ApproveData>),
     Revoke(ReadableInstruction<RevokeAccounts, ()>),
