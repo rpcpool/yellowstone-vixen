@@ -245,8 +245,8 @@ impl<B: MetricsBackend> Metrics<B> {
     pub fn inc_received(&self, ty: UpdateType) {
         match ty {
             UpdateType::Account => &self.accts_recvd,
-            UpdateType::Transaction => &self.txns_recvd,
-            UpdateType::Instruction => &self.ixs_recvd,
+            // UpdateType::Transaction => &self.txns_recvd,
+            UpdateType::Instructions => &self.ixs_recvd,
         }
         .inc();
     }
@@ -254,36 +254,36 @@ impl<B: MetricsBackend> Metrics<B> {
     pub fn inc_processed(&self, ty: UpdateType, res: JobResult) {
         match ty {
             UpdateType::Account => &self.accts_handled,
-            UpdateType::Transaction => &self.txns_handled,
-            UpdateType::Instruction => &self.ixs_handled,
+            // UpdateType::Transaction => &self.txns_handled,
+            UpdateType::Instructions => &self.ixs_handled,
         }
         .inc();
 
         match res {
             JobResult::Ok => match ty {
                 UpdateType::Account => &self.accts_ok,
-                UpdateType::Transaction => &self.txns_ok,
-                UpdateType::Instruction => &self.ixs_ok,
+                // UpdateType::Transaction => &self.txns_ok,
+                UpdateType::Instructions => &self.ixs_ok,
             }
             .inc(),
             JobResult::ParseErr => match ty {
                 UpdateType::Account => &self.acct_parse_errs,
-                UpdateType::Transaction => &self.txn_parse_errs,
-                UpdateType::Instruction => &self.ix_parse_errs,
+                // UpdateType::Transaction => &self.txn_parse_errs,
+                UpdateType::Instructions => &self.ix_parse_errs,
             }
             .inc(),
             JobResult::HandleErr(n) => {
                 match ty {
                     UpdateType::Account => &self.uniq_acct_handle_errs,
-                    UpdateType::Transaction => &self.uniq_txn_handle_errs,
-                    UpdateType::Instruction => &self.uniq_ix_handle_errs,
+                    // UpdateType::Transaction => &self.uniq_txn_handle_errs,
+                    UpdateType::Instructions => &self.uniq_ix_handle_errs,
                 }
                 .inc();
 
                 match ty {
                     UpdateType::Account => &self.acct_handle_errs,
-                    UpdateType::Transaction => &self.txn_handle_errs,
-                    UpdateType::Instruction => &self.ix_handle_errs,
+                    // UpdateType::Transaction => &self.txn_handle_errs,
+                    UpdateType::Instructions => &self.ix_handle_errs,
                 }
                 .inc_by(n.try_into().unwrap_or_default());
             },

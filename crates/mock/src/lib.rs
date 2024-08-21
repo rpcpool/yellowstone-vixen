@@ -159,7 +159,7 @@ fn maybe_create_fixture_dir() -> std::io::Result<()> {
 }
 
 pub fn fixture_path(fixture: &str) -> PathBuf {
-    let mut file_name = format_lookup(fixture);
+    let mut file_name = fixture.to_string();
     file_name.push_str(".json");
 
     Path::new(FIXTURES_PATH).join(file_name)
@@ -169,15 +169,4 @@ pub fn read_fixture(path: PathBuf) -> Result<SubscribeUpdateAccount, Box<dyn std
     let data = std::fs::read(path)?;
     let account_info: AccountInfo = serde_json::from_slice(&data)?;
     Ok(SubscribeUpdateAccount::from(account_info))
-}
-
-pub fn format_lookup(fixture: &str) -> String {
-    if fixture.len() <= 6 {
-        return fixture.to_string();
-    }
-
-    let start = &fixture[..3];
-    let end = &fixture[fixture.len() - 3..];
-
-    format!("{}..{}", start, end)
 }

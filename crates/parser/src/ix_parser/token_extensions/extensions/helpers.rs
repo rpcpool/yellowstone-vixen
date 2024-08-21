@@ -1,11 +1,11 @@
-use crate::ix_parser::vixen_ix::structure::{InstructionUpdate, ReadableInstruction};
+use yellowstone_vixen_core::{Instruction, ReadableInstruction};
 
 pub fn decode_extension_ix_type<T: TryFrom<u8>>(ix_data: &[u8]) -> Result<T, String> {
     T::try_from(ix_data[0]).map_err(|_| "Error decoding extension ix data".to_owned())
 }
 
 pub trait ExtensionIxParser {
-    fn try_parse_extension_ix(ix_update: &InstructionUpdate) -> Result<Self, String>
+    fn try_parse_extension_ix(ix: &Instruction) -> Result<Self, String>
     where Self: Sized;
 }
 

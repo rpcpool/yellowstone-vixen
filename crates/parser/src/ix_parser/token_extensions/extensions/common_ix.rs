@@ -1,10 +1,7 @@
-use spl_pod::solana_program::pubkey::Pubkey;
+use yellowstone_vixen_core::{Instruction, Pubkey};
 
 use super::helpers::{decode_extension_ix_type, Ix};
-use crate::ix_parser::vixen_ix::{
-    helpers::{check_min_accounts_req, get_multisig_signers},
-    structure::InstructionUpdate,
-};
+use crate::ix_parser::helpers::{check_min_accounts_req, get_multisig_signers};
 
 #[derive(Debug)]
 pub enum ExtensionWithCommonIxs {
@@ -82,10 +79,10 @@ pub enum CommonIx {
 impl CommonExtIxs {
     pub fn try_parse_extension_ix(
         extension: ExtensionWithCommonIxs,
-        ix_update: &InstructionUpdate,
+        ix: &Instruction,
     ) -> Result<Self, String> {
-        let ix_type = decode_extension_ix_type(&ix_update.data)?;
-        let accounts_len = ix_update.accounts.len();
+        let ix_type = decode_extension_ix_type(&ix.data)?;
+        let accounts_len = ix.accounts.len();
         match ExtensionWithCommonIxs::get_ixs_supported(&extension) {
             IxsSupported::InitAndUpdate => match ix_type {
                 0 => {
@@ -93,7 +90,7 @@ impl CommonExtIxs {
                     Ok(CommonExtIxs {
                         extension,
                         ix: CommonIx::Initialize(Ix::from_accounts(InitializeAccounts {
-                            mint: ix_update.accounts[0],
+                            mint: ix.accounts[0],
                         })),
                     })
                 },
@@ -102,9 +99,9 @@ impl CommonExtIxs {
                     Ok(CommonExtIxs {
                         extension,
                         ix: CommonIx::Update(Ix::from_accounts(UpdateAccounts {
-                            mint: ix_update.accounts[0],
-                            extension_authority: ix_update.accounts[1],
-                            multisig_signers: get_multisig_signers(ix_update, 2),
+                            mint: ix.accounts[0],
+                            extension_authority: ix.accounts[1],
+                            multisig_signers: get_multisig_signers(ix, 2),
                         })),
                     })
                 },
@@ -116,9 +113,9 @@ impl CommonExtIxs {
                     Ok(CommonExtIxs {
                         extension,
                         ix: CommonIx::Enable(Ix::from_accounts(EnableAccounts {
-                            account: ix_update.accounts[0],
-                            owner: ix_update.accounts[1],
-                            multisig_signers: get_multisig_signers(ix_update, 2),
+                            account: ix.accounts[0],
+                            owner: ix.accounts[1],
+                            multisig_signers: get_multisig_signers(ix, 2),
                         })),
                     })
                 },
@@ -127,9 +124,9 @@ impl CommonExtIxs {
                     Ok(CommonExtIxs {
                         extension,
                         ix: CommonIx::Disable(Ix::from_accounts(DisableAccounts {
-                            account: ix_update.accounts[0],
-                            owner: ix_update.accounts[1],
-                            multisig_signers: ix_update.accounts.get(2..).map(|a| a.to_vec()),
+                            account: ix.accounts[0],
+                            owner: ix.accounts[1],
+                            multisig_signers: ix.accounts.get(2..).map(|a| a.to_vec()),
                         })),
                     })
                 },

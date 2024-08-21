@@ -1,14 +1,11 @@
-use spl_pod::solana_program::pubkey::Pubkey;
 use spl_token_group_interface::instruction::{
     InitializeGroup, InitializeMember, TokenGroupInstruction, UpdateGroupAuthority,
     UpdateGroupMaxSize,
 };
+use yellowstone_vixen_core::{Instruction, Pubkey, ReadableInstruction};
 
 use super::helpers::ExtensionIxParser;
-use crate::ix_parser::vixen_ix::{
-    helpers::check_min_accounts_req,
-    structure::{InstructionUpdate, ReadableInstruction},
-};
+use crate::ix_parser::helpers::check_min_accounts_req;
 
 #[derive(Debug)]
 pub struct InitializeGroupAccounts {
@@ -46,19 +43,19 @@ pub enum TokenGroupIx {
 }
 
 impl ExtensionIxParser for TokenGroupIx {
-    fn try_parse_extension_ix(ix_update: &InstructionUpdate) -> Result<Self, String> {
-        let accounts_len = ix_update.accounts.len();
+    fn try_parse_extension_ix(ix: &Instruction) -> Result<Self, String> {
+        let accounts_len = ix.accounts.len();
 
-        let ix_type = TokenGroupInstruction::unpack(&ix_update.data).map_err(|e| e.to_string())?;
+        let ix_type = TokenGroupInstruction::unpack(&ix.data).map_err(|e| e.to_string())?;
 
         match ix_type {
             TokenGroupInstruction::InitializeGroup(data) => {
                 check_min_accounts_req(accounts_len, 3)?;
                 Ok(TokenGroupIx::InitializeGroup(ReadableInstruction {
                     accounts: InitializeGroupAccounts {
-                        group: ix_update.accounts[0],
-                        mint: ix_update.accounts[1],
-                        mint_authority: ix_update.accounts[2],
+                        group: ix.accounts[0],
+                        mint: ix.accounts[1],
+                        mint_authority: ix.accounts[2],
                     },
                     data: Some(data),
                 }))
@@ -67,8 +64,8 @@ impl ExtensionIxParser for TokenGroupIx {
                 check_min_accounts_req(accounts_len, 2)?;
                 Ok(TokenGroupIx::UpdateGroupMaxSize(ReadableInstruction {
                     accounts: UpdateGroupMaxSizeAccounts {
-                        group: ix_update.accounts[0],
-                        update_authority: ix_update.accounts[1],
+                        group: ix.accounts[0],
+                        update_authority: ix.accounts[1],
                     },
                     data: Some(data),
                 }))
@@ -78,8 +75,8 @@ impl ExtensionIxParser for TokenGroupIx {
                 check_min_accounts_req(accounts_len, 2)?;
                 Ok(TokenGroupIx::UpdateGroupAuthority(ReadableInstruction {
                     accounts: UpdateGroupAuthorityAccounts {
-                        group: ix_update.accounts[0],
-                        current_authority: ix_update.accounts[1],
+                        group: ix.accounts[0],
+                        current_authority: ix.accounts[1],
                     },
                     data: Some(data),
                 }))
@@ -89,11 +86,11 @@ impl ExtensionIxParser for TokenGroupIx {
                 check_min_accounts_req(accounts_len, 5)?;
                 Ok(TokenGroupIx::InitializeMember(ReadableInstruction {
                     accounts: InitializeMemberAccounts {
-                        member: ix_update.accounts[0],
-                        member_mint: ix_update.accounts[1],
-                        member_mint_authority: ix_update.accounts[2],
-                        group: ix_update.accounts[3],
-                        group_update_authority: ix_update.accounts[4],
+                        member: ix.accounts[0],
+                        member_mint: ix.accounts[1],
+                        member_mint_authority: ix.accounts[2],
+                        group: ix.accounts[3],
+                        group_update_authority: ix.accounts[4],
                     },
                     data: Some(data),
                 }))

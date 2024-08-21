@@ -1,13 +1,10 @@
-use spl_pod::solana_program::pubkey::Pubkey;
 use spl_token_metadata_interface::instruction::{
     Emit, Initialize, RemoveKey, TokenMetadataInstruction, UpdateAuthority, UpdateField,
 };
+use yellowstone_vixen_core::{Instruction, Pubkey, ReadableInstruction};
 
-use super::helpers::{decode_extension_ix_type, ExtensionIxParser, Ix};
-use crate::ix_parser::vixen_ix::{
-    helpers::check_min_accounts_req,
-    structure::{InstructionUpdate, ReadableInstruction},
-};
+use super::helpers::ExtensionIxParser;
+use crate::ix_parser::helpers::check_min_accounts_req;
 
 #[derive(Debug)]
 pub struct InitializeAccounts {
@@ -50,11 +47,10 @@ pub enum TokenMetadataIx {
 }
 
 impl ExtensionIxParser for TokenMetadataIx {
-    fn try_parse_extension_ix(ix_update: &InstructionUpdate) -> Result<Self, String> {
-        let accounts_len = ix_update.accounts.len();
+    fn try_parse_extension_ix(ix: &Instruction) -> Result<Self, String> {
+        let accounts_len = ix.accounts.len();
 
-        let ix_type =
-            TokenMetadataInstruction::unpack(&ix_update.data).map_err(|e| e.to_string())?;
+        let ix_type = TokenMetadataInstruction::unpack(&ix.data).map_err(|e| e.to_string())?;
 
         match ix_type {
             TokenMetadataInstruction::Initialize(data) => {
@@ -62,10 +58,10 @@ impl ExtensionIxParser for TokenMetadataIx {
 
                 Ok(TokenMetadataIx::Initialize(ReadableInstruction {
                     accounts: InitializeAccounts {
-                        metadata: ix_update.accounts[0],
-                        update_authority: ix_update.accounts[1],
-                        mint: ix_update.accounts[2],
-                        mint_authority: ix_update.accounts[3],
+                        metadata: ix.accounts[0],
+                        update_authority: ix.accounts[1],
+                        mint: ix.accounts[2],
+                        mint_authority: ix.accounts[3],
                     },
                     data: Some(data),
                 }))
@@ -75,8 +71,8 @@ impl ExtensionIxParser for TokenMetadataIx {
 
                 Ok(TokenMetadataIx::UpdateField(ReadableInstruction {
                     accounts: UpdateFieldAccounts {
-                        metadata: ix_update.accounts[0],
-                        update_authority: ix_update.accounts[1],
+                        metadata: ix.accounts[0],
+                        update_authority: ix.accounts[1],
                     },
                     data: Some(data),
                 }))
@@ -87,8 +83,8 @@ impl ExtensionIxParser for TokenMetadataIx {
 
                 Ok(TokenMetadataIx::RemoveKey(ReadableInstruction {
                     accounts: RmoveKeyAccounts {
-                        metadata: ix_update.accounts[0],
-                        update_authority: ix_update.accounts[1],
+                        metadata: ix.accounts[0],
+                        update_authority: ix.accounts[1],
                     },
                     data: Some(data),
                 }))
@@ -99,8 +95,8 @@ impl ExtensionIxParser for TokenMetadataIx {
 
                 Ok(TokenMetadataIx::UpdateAuthority(ReadableInstruction {
                     accounts: UpdateAuthorityAccounts {
-                        metadata: ix_update.accounts[0],
-                        current_update_authority: ix_update.accounts[1],
+                        metadata: ix.accounts[0],
+                        current_update_authority: ix.accounts[1],
                     },
                     data: Some(data),
                 }))
@@ -111,7 +107,7 @@ impl ExtensionIxParser for TokenMetadataIx {
 
                 Ok(TokenMetadataIx::Emit(ReadableInstruction {
                     accounts: EmitAccounts {
-                        metadata: ix_update.accounts[0],
+                        metadata: ix.accounts[0],
                     },
                     data: Some(data),
                 }))

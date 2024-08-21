@@ -1,7 +1,6 @@
-use spl_pod::solana_program::{program_option::COption, pubkey::Pubkey};
-use spl_token::instruction::{AuthorityType, TokenInstruction};
-
-use crate::ix_parser::vixen_ix::structure::ReadableInstruction;
+use spl_pod::solana_program::program_option::COption;
+use spl_token::instruction::AuthorityType;
+use yellowstone_vixen_core::{Pubkey, ReadableInstruction};
 
 #[derive(Debug)]
 pub struct TransferAccounts {

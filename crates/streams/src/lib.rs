@@ -1,10 +1,10 @@
 pub(crate) use vixen::vixen_core;
-use vixen::DynHandlerPack;
-use vixen_core::{AccountUpdate, TransactionUpdate};
+use vixen::{vixen_core::InstructionsUpdate, DynHandlerPack};
+use vixen_core::AccountUpdate;
 
 pub fn run<
     A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
+    X: DynHandlerPack<InstructionsUpdate> + Send + Sync + 'static,
 >() {
     vixen::Runtime::<A, X, _>::builder().build().run()
 }

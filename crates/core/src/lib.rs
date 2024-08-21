@@ -9,19 +9,21 @@
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
+mod helpers;
+
 use std::{
     collections::{HashMap, HashSet},
     fmt,
     future::Future,
     ops,
+    str::FromStr,
 };
 
-use yellowstone_grpc_proto::{
-    geyser::{
-        subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
-        SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateTransaction,
-    },
-    solana::storage::confirmed_block::{CompiledInstruction, InnerInstructions},
+use helpers::{get_account_from_index, LoadedAddresses, VixenInnerIxs, *};
+use yellowstone_grpc_proto::geyser::{
+    subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
+    SubscribeRequestFilterTransactions, SubscribeUpdate, SubscribeUpdateAccount,
+    SubscribeUpdateTransaction,
 };
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -43,6 +45,136 @@ pub type AccountUpdate = SubscribeUpdateAccount;
 
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 
+#[derive(Debug)]
+pub enum VixenUpdateOneOf {
+    Account(AccountUpdate),
+    Instructions(InstructionsUpdate),
+}
+#[derive(Debug)]
+pub struct VixenSubscribeUpdate {
+    pub filters: Vec<String>,
+    pub update_oneof: Option<VixenUpdateOneOf>,
+}
+
+impl TryFrom<SubscribeUpdate> for VixenSubscribeUpdate {
+    type Error = String;
+
+    fn try_from(value: SubscribeUpdate) -> Result<Self, String> {
+        let filters = value.filters;
+        let update_oneof = match value.update_oneof {
+            Some(UpdateOneof::Account(account)) => VixenUpdateOneOf::Account(account),
+            Some(UpdateOneof::Transaction(transaction)) => {
+                VixenUpdateOneOf::Instructions(InstructionsUpdate::try_from(&transaction)?)
+            },
+            _ => return Err("No update found".to_string()),
+        };
+        Ok(Self {
+            filters,
+            update_oneof: Some(update_oneof),
+        })
+    }
+}
+
+#[derive(Debug)]
+pub struct Instruction {
+    pub data: Vec<u8>,
+    pub accounts: Vec<Pubkey>,
+}
+
+impl Update for InstructionsUpdate {
+    const TYPE: UpdateType = UpdateType::Instructions;
+}
+
+#[derive(Debug)]
+pub struct ReadableInstruction<A, D> {
+    pub accounts: A,
+    pub data: Option<D>,
+}
+
+impl<A, D> ReadableInstruction<A, D> {
+    pub fn new(accounts: A, data: Option<D>) -> Self { Self { accounts, data } }
+
+    pub fn from_accounts(accounts: A) -> Self {
+        Self {
+            accounts,
+            data: None,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ReadableInstructions<I> {
+    pub index: u32,
+    pub instructions: Vec<I>,
+}
+
+pub trait InstructionParser<C> {
+    fn parse_ix(_: &Instruction) -> Result<C, String>;
+}
+
+#[derive(Debug)]
+pub struct InstructionsUpdate {
+    pub instructions: Vec<VixenInnerIxs>,
+}
+
+impl InstructionsUpdate {
+    pub fn try_from(tx_update: &TransactionUpdate) -> Result<Self, String> {
+        let tx = tx_update
+            .transaction
+            .as_ref()
+            .ok_or("No transaction found")?;
+        let tx_meta = tx.meta.as_ref().ok_or("No transaction meta found")?;
+        let tx_message = tx.transaction.as_ref().map_or(
+            Err("No transaction message found".to_string()),
+            |tx| {
+                tx.message
+                    .as_ref()
+                    .ok_or("No transaction message found".to_owned())
+            },
+        )?;
+        let static_account_keys = tx_message.account_keys.to_pubkey_vec()?;
+
+        let mut vixen_ixs: Vec<VixenInnerIxs> =
+            Vec::with_capacity(tx_meta.inner_instructions.len());
+
+        let loaded_addresses: LoadedAddresses = LoadedAddresses {
+            writable: tx_meta.loaded_writable_addresses.to_pubkey_vec()?,
+            readonly: tx_meta.loaded_readonly_addresses.to_pubkey_vec()?,
+        };
+
+        let tx_accounts: TxAccountKeys = TxAccountKeys {
+            static_keys: static_account_keys,
+            dynamic_keys: Some(loaded_addresses),
+        };
+
+        for inner_ix in tx_meta.inner_instructions.iter() {
+            let mut inner_ixs: Vec<Instruction> = Vec::with_capacity(inner_ix.instructions.len());
+            for ix in inner_ix.instructions.iter() {
+                let accounts = ix
+                    .accounts
+                    .iter()
+                    .map(|idx| get_account_from_index(*idx as usize, &tx_accounts))
+                    .collect::<Result<Vec<Pubkey>, String>>()?;
+
+                let instruction = Instruction {
+                    data: ix.data.clone(),
+                    accounts,
+                };
+                inner_ixs.push(instruction);
+            }
+            let vixen_ix = VixenInnerIxs {
+                index: inner_ix.index,
+                instructions: inner_ixs,
+            };
+            vixen_ixs.push(vixen_ix);
+        }
+
+        Ok(Self {
+            instructions: vixen_ixs,
+        })
+    }
+}
+
 pub trait Update {
     const TYPE: UpdateType;
 }
@@ -50,16 +182,15 @@ pub trait Update {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UpdateType {
     Account,
-    Transaction,
-    Instruction,
+    Instructions,
 }
 
 impl UpdateType {
     #[must_use]
-    pub fn get(update: &Option<UpdateOneof>) -> Option<Self> {
+    pub fn get(update: &Option<VixenUpdateOneOf>) -> Option<Self> {
         match update {
-            Some(UpdateOneof::Account(_)) => Some(Self::Account),
-            Some(UpdateOneof::Transaction(_)) => Some(Self::Transaction),
+            Some(VixenUpdateOneOf::Account(_)) => Some(Self::Account),
+            Some(VixenUpdateOneOf::Instructions(_)) => Some(Self::Instructions),
             _ => None,
         }
     }
@@ -67,10 +198,6 @@ impl UpdateType {
 
 impl Update for AccountUpdate {
     const TYPE: UpdateType = UpdateType::Account;
-}
-
-impl Update for TransactionUpdate {
-    const TYPE: UpdateType = UpdateType::Transaction;
 }
 
 pub trait Parser {
@@ -88,12 +215,28 @@ pub struct Prefilter {
     pub(crate) transaction: Option<TransactionPrefilter>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) struct Pubkey(pub [u8; 32]);
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Pubkey(pub [u8; 32]);
+
+impl fmt::Debug for Pubkey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", bs58::encode(self.0).into_string())
+    }
+}
 
 impl fmt::Display for Pubkey {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&bs58::encode(self.0).into_string())
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", bs58::encode(self.0).into_string())
+    }
+}
+impl FromStr for Pubkey {
+    type Err = bs58::decode::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let decoded = bs58::decode(s).into_vec()?;
+        let mut bytes = [0; 32];
+        bytes.copy_from_slice(&decoded);
+        Ok(Self(bytes))
     }
 }
 

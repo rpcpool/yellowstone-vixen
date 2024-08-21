@@ -4,4 +4,4 @@ pub mod token_program;
 #[cfg(feature = "token-extensions")]
 pub mod token_extensions;
 
-pub mod vixen_ix;
+pub mod helpers;

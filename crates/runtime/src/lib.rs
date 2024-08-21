@@ -17,7 +17,7 @@ use builder::RuntimeBuilder;
 use metrics::prometheus_mod::Prometheus;
 use metrics::{Metrics, MetricsBackend, NullMetrics};
 use tokio::task::LocalSet;
-use vixen_core::{AccountUpdate, TransactionUpdate};
+use vixen_core::{AccountUpdate, InstructionsUpdate, TransactionUpdate};
 use yellowstone::YellowstoneOpts;
 
 #[cfg(feature = "prometheus")]
@@ -161,7 +161,7 @@ impl<A, X> Runtime<A, X, NullMetrics> {
 
 impl<
     A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
+    X: DynHandlerPack<InstructionsUpdate> + Send + Sync + 'static,
     M: MetricsBackend,
 > Runtime<A, X, M>
 {

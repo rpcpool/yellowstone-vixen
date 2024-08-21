@@ -1,4 +1,4 @@
-use std::{collections::HashMap, pin::Pin};
+use std::{collections::HashMap, fmt::Debug, pin::Pin};
 
 use futures_util::{Future, FutureExt};
 use tracing::{error, warn};
@@ -194,7 +194,7 @@ impl<T> DynHandlerPack<T> for Box<dyn DynHandlerPack<T> + Send + Sync + 'static>
 #[derive(Debug)]
 pub struct HandlerManagers<A, T> {
     pub account: HandlerManager<A>,
-    pub transaction: HandlerManager<T>,
+    pub instructions: HandlerManager<T>,
 }
 
 impl<A: GetPrefilter, T: GetPrefilter> HandlerManagers<A, T> {
@@ -205,7 +205,7 @@ impl<A: GetPrefilter, T: GetPrefilter> HandlerManagers<A, T> {
                 .0
                 .iter()
                 .map(|(&k, v)| (k, v.prefilter()))
-                .chain(self.transaction.0.iter().map(|(&k, v)| (k, v.prefilter())))
+                .chain(self.instructions.0.iter().map(|(&k, v)| (k, v.prefilter())))
                 .collect(),
         )
     }
