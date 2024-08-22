@@ -6,7 +6,7 @@ use topograph::{
     executor::{Executor, Nonblock, Tokio},
     prelude::*,
 };
-use tracing::warn;
+use tracing::{warn, Instrument};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},
     tonic::Status,
@@ -32,6 +32,8 @@ impl Buffer {
             .and_then(Err)
     }
 }
+
+struct Job(tracing::Span, SubscribeUpdate);
 
 struct Handler<
     A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
@@ -60,16 +62,19 @@ impl<
     X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
     M: Instrumenter,
     H: Send,
-> topograph::AsyncHandler<SubscribeUpdate, H> for Handler<A, X, M>
+> topograph::AsyncHandler<Job, H> for Handler<A, X, M>
 {
     type Output = ();
 
-    async fn handle(&self, update: SubscribeUpdate, _: H) {
+    async fn handle(&self, update: Job, _: H) {
         let Self { manager, counters } = self;
-        let SubscribeUpdate {
-            filters,
-            update_oneof,
-        } = update;
+        let Job(
+            span,
+            SubscribeUpdate {
+                filters,
+                update_oneof,
+            },
+        ) = update;
         let Some(update) = update_oneof else { return };
 
         match update {
@@ -77,14 +82,14 @@ impl<
                 manager
                     .account
                     .get_handlers(&filters)
-                    .run(&a, counters)
+                    .run(span, &a, counters)
                     .await;
             },
             UpdateOneof::Transaction(t) => {
                 manager
                     .transaction
                     .get_handlers(&filters)
-                    .run(&t, counters)
+                    .run(span, &t, counters)
                     .await;
             },
             var => warn!(?var, "Unknown update variant"),
@@ -121,13 +126,18 @@ pub fn run_yellowstone<
 
     tokio::task::spawn_local(async move {
         let mut stream = pin!(client.stream);
-        while let Some(update) = stream.next().await {
+        while let Some(update) = stream
+            .next()
+            .instrument(tracing::trace_span!("await_update"))
+            .await
+        {
+            let span = tracing::trace_span!("process_update", ?update).entered();
             match update {
                 Ok(u) => {
                     if let Some(ty) = UpdateType::get(&u.update_oneof) {
                         counters.inc_received(ty);
                     }
-                    exec.push(u);
+                    exec.push(Job(span.exit(), u));
                 },
                 Err(e) => {
                     tx.send(e.into()).unwrap_or_else(|err| {

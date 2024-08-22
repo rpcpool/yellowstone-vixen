@@ -1,7 +1,7 @@
 use std::{collections::HashMap, pin::Pin};
 
 use futures_util::{Future, FutureExt};
-use tracing::{error, warn};
+use tracing::{error, warn, Instrument, Span};
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter, Update};
 
 use crate::metrics::{Counters, Instrumenter, JobResult};
@@ -262,6 +262,7 @@ where I::Item: AsRef<str> + Send + 'm
 
     pub fn run<'h, T: Update, B: Instrumenter>(
         self,
+        span: Span,
         value: &'h T,
         metrics: &'h Counters<B>,
     ) -> impl Future<Output = ()> + Send + 'h
@@ -269,23 +270,26 @@ where I::Item: AsRef<str> + Send + 'm
         H: DynHandlerPack<T>,
         'm: 'h,
     {
+        let _span = span.entered();
         futures_util::future::join_all(self.get_handlers().map(move |(f, h)| {
-            h.handle(value).map(move |r| {
-                metrics.inc_processed(T::TYPE, JobResult::from_pack(&r));
-                match r {
-                    Ok(()) => (),
-                    Err(v) => {
-                        for e in v {
-                            error!(
-                                err = %crate::Chain(&e),
-                                handler = f.as_ref(),
-                                r#type = std::any::type_name::<T>(),
-                                "Handler failed",
-                            );
-                        }
-                    },
-                }
-            })
+            h.handle(value)
+                .map(move |r| {
+                    metrics.inc_processed(T::TYPE, JobResult::from_pack(&r));
+                    match r {
+                        Ok(()) => (),
+                        Err(v) => {
+                            for e in v {
+                                error!(
+                                    err = %crate::Chain(&e),
+                                    handler = f.as_ref(),
+                                    r#type = std::any::type_name::<T>(),
+                                    "Handler failed",
+                                );
+                            }
+                        },
+                    }
+                })
+                .in_current_span()
         }))
         .map(move |v| v.into_iter().collect())
     }

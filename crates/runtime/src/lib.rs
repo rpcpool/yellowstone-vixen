@@ -237,8 +237,8 @@ impl<
     M: MetricsFactory,
 > Runtime<A, X, M>
 {
-    pub fn run(self) {
-        match self.try_run() {
+    fn handle_error(res: Result<(), Error>) {
+        match res {
             Ok(()) => (),
             Err(e) => {
                 tracing::error!(err = %Chain(&e), "Fatal error encountered");
@@ -247,18 +247,29 @@ impl<
         }
     }
 
+    #[inline]
+    pub fn run(self) { Self::handle_error(self.try_run()) }
+
     pub fn try_run(self) -> Result<(), Error> {
         tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()?
-            .block_on(LocalSet::new().run_until(self.try_run_async()))
+            .block_on(self.try_run_async())
     }
 
+    #[inline]
+    pub async fn run_async(self) { Self::handle_error(self.try_run_async().await) }
+
+    #[inline]
     pub async fn try_run_async(self) -> Result<(), Error> {
+        LocalSet::new().run_until(self.try_run_local()).await
+    }
+
+    pub async fn try_run_local(self) -> Result<(), Error> {
         enum StopType<S, X> {
             Signal(S),
             Buffer(Result<std::convert::Infallible, Error>),
-            Exporter(Option<Result<Result<stop::StopCode, X>, tokio::task::JoinError>>),
+            Exporter(Result<Result<stop::StopCode, X>, tokio::task::JoinError>),
         }
 
         let Self {
@@ -320,7 +331,7 @@ impl<
         let ret = tokio::select! {
             s = signal => StopType::Signal(s),
             b = buffer => StopType::Buffer(b),
-            x = &mut exporter => StopType::Exporter(x),
+            Some(x) = &mut exporter => StopType::Exporter(x),
         };
 
         if !matches!(ret, StopType::Exporter(_)) {
@@ -350,12 +361,11 @@ impl<
             // Not sure why the compiler couldn't figure this one out
             StopType::Buffer(Ok(o)) => match o {},
             StopType::Signal(Err(e)) | StopType::Buffer(Err(e)) => Err(e),
-            StopType::Exporter(None) => todo!(),
-            StopType::Exporter(Some(Ok(Ok(..)))) => {
+            StopType::Exporter(Ok(Ok(..))) => {
                 Err(Error::MetricsExporter("Exporter stopped early".into()))
             },
-            StopType::Exporter(Some(Ok(Err(e)))) => Err(Error::MetricsExporter(e.into())),
-            StopType::Exporter(Some(Err(e))) => Err(Error::MetricsExporter(e.into())),
+            StopType::Exporter(Ok(Err(e))) => Err(Error::MetricsExporter(e.into())),
+            StopType::Exporter(Err(e)) => Err(Error::MetricsExporter(e.into())),
         }
     }
 }
