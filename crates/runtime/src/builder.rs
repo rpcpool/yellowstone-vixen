@@ -1,18 +1,24 @@
+use tracing::error;
+
 use crate::{
-    metrics::{Metrics, MetricsBackend, NullMetrics},
-    HandlerManagers, IndexerOpts, Runtime,
+    config::{MaybeDefault, VixenConfig},
+    metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
+    Chain, HandlerManagers, Runtime,
 };
 
-#[derive(Debug, Clone, Copy, thiserror::Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum BuilderError {
-    #[error("Missing field {0}")]
+    #[error("Missing field {0:?}")]
     MissingField(&'static str),
+    #[error("Missing config section {0:?}")]
+    MissingConfig(&'static str),
+    #[error("Error instantiating metrics backend")]
+    Metrics(#[source] Box<dyn std::error::Error>),
 }
 
 #[derive(Debug)]
 pub struct RuntimeBuilder<A, X, M> {
     err: Result<(), BuilderError>,
-    opts: Option<IndexerOpts>,
     manager: Option<HandlerManagers<A, X>>,
     metrics: M,
 }
@@ -21,7 +27,6 @@ impl<A, X> Default for RuntimeBuilder<A, X, NullMetrics> {
     fn default() -> Self {
         Self {
             err: Ok(()),
-            opts: None,
             manager: None,
             metrics: NullMetrics,
         }
@@ -31,6 +36,11 @@ impl<A, X> Default for RuntimeBuilder<A, X, NullMetrics> {
 #[inline]
 fn unwrap<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
     val.ok_or(BuilderError::MissingField(name))
+}
+
+#[inline]
+fn unwrap_cfg<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
+    val.ok_or(BuilderError::MissingConfig(name))
 }
 
 impl<A, X, M> RuntimeBuilder<A, X, M> {
@@ -50,19 +60,15 @@ impl<A, X, M> RuntimeBuilder<A, X, M> {
         self
     }
 
-    pub fn opts(self, opts: IndexerOpts) -> Self { self.mutate(|s| s.opts = Some(opts)) }
-
     pub fn metrics<N>(self, metrics: N) -> RuntimeBuilder<A, X, N> {
         let Self {
             err,
-            opts,
             manager,
             metrics: _,
         } = self;
 
         RuntimeBuilder {
             err,
-            opts,
             manager,
             metrics,
         }
@@ -73,23 +79,47 @@ impl<A, X, M> RuntimeBuilder<A, X, M> {
     }
 }
 
-impl<A, X, M: MetricsBackend> RuntimeBuilder<A, X, M> {
-    pub fn try_build(self) -> Result<Runtime<A, X, M>, BuilderError> {
+impl<A, X, M: MetricsFactory> RuntimeBuilder<A, X, M> {
+    pub fn try_build(
+        self,
+        config: VixenConfig<M::Config>,
+    ) -> Result<Runtime<A, X, M>, BuilderError> {
         let Self {
             err,
-            opts,
             manager,
             metrics,
         } = self;
         let () = err?;
 
+        let VixenConfig {
+            yellowstone: yellowstone_cfg,
+            buffer: buffer_cfg,
+            metrics: metrics_cfg,
+        } = config;
+
+        let metrics_cfg = unwrap_cfg(
+            "metrics",
+            metrics_cfg.opt().or_else(MaybeDefault::default_opt),
+        )?;
+
+        let Metrics(instrumenter, exporter) = metrics
+            .create(metrics_cfg, "vixen")
+            .map_err(|e| BuilderError::Metrics(e.into()))?;
+
         Ok(Runtime {
-            opts: unwrap("opts", opts)?,
+            yellowstone_cfg,
+            buffer_cfg,
             manager: unwrap("manager", manager)?,
-            metrics: Metrics::new(metrics),
+            counters: Counters::new(&instrumenter),
+            exporter,
         })
     }
 
     #[inline]
-    pub fn build(self) -> Runtime<A, X, M> { self.try_build().unwrap() }
+    pub fn build(self, config: VixenConfig<M::Config>) -> Runtime<A, X, M> {
+        self.try_build(config).unwrap_or_else(|e| {
+            error!(e = %Chain(&e), "Error building Vixen runtime");
+            panic!("Error building Vixen runtime: {e}")
+        })
+    }
 }

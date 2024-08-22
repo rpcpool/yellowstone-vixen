@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, pin::pin, sync::Arc};
+use std::{pin::pin, sync::Arc};
 
 use futures_util::{Stream, StreamExt};
 use tokio::sync::oneshot;
@@ -7,7 +7,6 @@ use topograph::{
     prelude::*,
 };
 use tracing::warn;
-use warp::Filter;
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},
     tonic::Status,
@@ -15,16 +14,11 @@ use yellowstone_grpc_proto::{
 use yellowstone_vixen_core::{AccountUpdate, TransactionUpdate, UpdateType};
 
 use crate::{
+    config::BufferConfig,
     handler::DynHandlerPack,
-    metrics::{Metrics, MetricsBackend},
+    metrics::{Counters, Instrumenter},
     yellowstone, HandlerManagers,
 };
-
-#[derive(Default, Debug, Clone, Copy, clap::Args, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct BufferOpts {
-    pub jobs: Option<usize>,
-}
 
 pub struct Buffer(oneshot::Receiver<crate::Error>);
 
@@ -39,74 +33,87 @@ impl Buffer {
     }
 }
 
+struct Handler<
+    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
+    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
+    M: Instrumenter,
+> {
+    manager: Arc<HandlerManagers<A, X>>,
+    counters: Arc<Counters<M>>,
+}
+impl<
+    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
+    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
+    M: Instrumenter,
+> Clone for Handler<A, X, M>
+{
+    fn clone(&self) -> Self {
+        let Self { manager, counters } = self;
+        Self {
+            manager: Arc::clone(manager),
+            counters: Arc::clone(counters),
+        }
+    }
+}
+impl<
+    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
+    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
+    M: Instrumenter,
+    H: Send,
+> topograph::AsyncHandler<SubscribeUpdate, H> for Handler<A, X, M>
+{
+    type Output = ();
+
+    async fn handle(&self, update: SubscribeUpdate, _: H) {
+        let Self { manager, counters } = self;
+        let SubscribeUpdate {
+            filters,
+            update_oneof,
+        } = update;
+        let Some(update) = update_oneof else { return };
+
+        match update {
+            UpdateOneof::Account(a) => {
+                manager
+                    .account
+                    .get_handlers(&filters)
+                    .run(&a, counters)
+                    .await;
+            },
+            UpdateOneof::Transaction(t) => {
+                manager
+                    .transaction
+                    .get_handlers(&filters)
+                    .run(&t, counters)
+                    .await;
+            },
+            var => warn!(?var, "Unknown update variant"),
+        }
+    }
+}
+
 pub fn run_yellowstone<
     I,
     T,
     S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static,
     A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
     X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
-    M: MetricsBackend,
+    M: Instrumenter,
 >(
-    opts: BufferOpts,
+    config: BufferConfig,
     client: yellowstone::YellowstoneStream<I, T, S>,
     manager: HandlerManagers<A, X>,
-    metrics: Metrics<M>,
+    counters: Counters<M>,
 ) -> Buffer {
-    let BufferOpts { jobs } = opts;
+    let BufferConfig { jobs } = config;
 
     let manager = Arc::new(manager);
-    let metrics = Arc::new(metrics);
-    #[cfg(feature = "prometheus")]
-    let metrics_clone = Arc::clone(&metrics);
-    #[cfg(feature = "prometheus")]
-    tokio::task::spawn_local(async {
-        use prometheus::{Encoder, TextEncoder};
-        let route = warp::path("metrics").map(move || {
-            let encoder = TextEncoder::new();
-            let response = metrics_clone
-                .gather_metrics_data()
-                .unwrap_or(String::from("no metrics data available"));
-            warp::reply::with_header(response, "Content-Type", encoder.format_type())
-        });
-
-        // Serve the route
-        println!("Prometheus Metrics server running on port 3030");
-        let addr: SocketAddr = ([0, 0, 0, 0], 3030).into();
-        warp::serve(route).run(addr).await;
-    });
-
-    let metrics_clone = Arc::clone(&metrics);
-
+    let counters = Arc::new(counters);
     let exec = Executor::builder(Nonblock(Tokio))
-        .num_threads(jobs)
-        .build(move |update, _| {
-            let manager = Arc::clone(&manager);
-            let metrics = Arc::clone(&metrics_clone);
-            async move {
-                let SubscribeUpdate {
-                    filters,
-                    update_oneof,
-                } = update;
-                let Some(update) = update_oneof else { return };
-
-                match update {
-                    UpdateOneof::Account(a) => {
-                        manager
-                            .account
-                            .get_handlers(&filters)
-                            .run(&a, &metrics)
-                            .await;
-                    },
-                    UpdateOneof::Transaction(t) => {
-                        manager
-                            .transaction
-                            .get_handlers(&filters)
-                            .run(&t, &metrics)
-                            .await;
-                    },
-                    var => warn!(?var, "Unknown update variant"),
-                }
-            }
+        .max_concurrency(jobs)
+        .build_async(Handler {
+            manager,
+            counters: Arc::clone(&counters),
         })
         .unwrap_or_else(|i| match i {});
 
@@ -118,7 +125,7 @@ pub fn run_yellowstone<
             match update {
                 Ok(u) => {
                     if let Some(ty) = UpdateType::get(&u.update_oneof) {
-                        metrics.inc_received(ty);
+                        counters.inc_received(ty);
                     }
                     exec.push(u);
                 },

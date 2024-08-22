@@ -4,7 +4,7 @@ use futures_util::{Future, FutureExt};
 use tracing::{error, warn};
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter, Update};
 
-use crate::metrics::{JobResult, Metrics, MetricsBackend};
+use crate::metrics::{Counters, Instrumenter, JobResult};
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 pub type HandlerResult<T> = Result<T, BoxedError>;
@@ -260,10 +260,10 @@ where I::Item: AsRef<str> + Send + 'm
         })
     }
 
-    pub fn run<'h, T: Update, B: MetricsBackend>(
+    pub fn run<'h, T: Update, B: Instrumenter>(
         self,
         value: &'h T,
-        metrics: &'h Metrics<B>,
+        metrics: &'h Counters<B>,
     ) -> impl Future<Output = ()> + Send + 'h
     where
         H: DynHandlerPack<T>,

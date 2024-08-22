@@ -1,20 +1,38 @@
 use std::{
     borrow::{Borrow, Cow},
+    convert::Infallible,
+    error::Error,
     fmt,
-    time::Duration,
+    future::Future,
 };
 
+#[cfg(feature = "opentelemetry")]
+pub use opentelemetry_impl::*;
+#[cfg(feature = "prometheus")]
+pub use prometheus_impl::*;
 use yellowstone_vixen_core::UpdateType;
 
-use crate::handler::HandlerPackErrors;
-pub trait MetricsFactory {
-    type Output: MetricsBackend;
-    type Error: std::error::Error;
+use crate::{
+    config::{MaybeDefault, NullConfig},
+    handler::HandlerPackErrors,
+    stop::{StopCode, StopRx},
+};
 
-    fn create() -> Result<Self::Output, Self::Error>;
+#[derive(Debug)]
+pub struct Metrics<F: MetricsFactory + ?Sized>(pub F::Instrumenter, pub Option<F::Exporter>);
+
+type FactoryResult<F> = Result<Metrics<F>, <F as MetricsFactory>::Error>;
+
+pub trait MetricsFactory {
+    type Config: clap::Args + for<'de> serde::Deserialize<'de> + MaybeDefault;
+    type Instrumenter: Instrumenter;
+    type Exporter: Exporter;
+    type Error: Error + Send + Sync + 'static;
+
+    fn create(self, config: Self::Config, id: &'static str) -> FactoryResult<Self>;
 }
 
-pub trait MetricsBackend: 'static + Send + Sync {
+pub trait Instrumenter: 'static {
     type Counter: Counter;
 
     fn make_counter(
@@ -22,8 +40,15 @@ pub trait MetricsBackend: 'static + Send + Sync {
         name: impl Into<Cow<'static, str>>,
         desc: impl Into<Cow<'static, str>>,
     ) -> Self::Counter;
+}
 
-    fn gather_metrics_data(&self) -> Option<String>;
+pub trait Exporter {
+    type Error: Error + Send + Sync + 'static;
+
+    fn run(
+        self,
+        stop: StopRx,
+    ) -> impl Future<Output = Result<StopCode, Self::Error>> + Send + 'static;
 }
 
 pub trait Counter: Send + Sync {
@@ -36,7 +61,18 @@ pub trait Counter: Send + Sync {
 #[derive(Debug, Default, Clone, Copy)]
 pub struct NullMetrics;
 
-impl MetricsBackend for NullMetrics {
+impl MetricsFactory for NullMetrics {
+    type Config = NullConfig;
+    type Error = Infallible;
+    type Exporter = Infallible;
+    type Instrumenter = Self;
+
+    fn create(self, NullConfig: Self::Config, _: &'static str) -> FactoryResult<Self> {
+        Ok(Metrics(Self, None))
+    }
+}
+
+impl Instrumenter for NullMetrics {
     type Counter = NullMetrics;
 
     #[inline]
@@ -47,8 +83,6 @@ impl MetricsBackend for NullMetrics {
     ) -> Self::Counter {
         NullMetrics
     }
-
-    fn gather_metrics_data(&self) -> Option<String> { None }
 }
 
 impl Counter for NullMetrics {
@@ -56,24 +90,79 @@ impl Counter for NullMetrics {
     fn inc_by(&self, _: u64) {}
 }
 
-impl MetricsFactory for NullMetrics {
-    type Error = std::convert::Infallible;
-    type Output = Self;
+impl Exporter for Infallible {
+    type Error = Infallible;
 
-    fn create() -> Result<Self::Output, Self::Error> { Ok(Self) }
+    async fn run(self, _: StopRx) -> Result<StopCode, Self::Error> { match self {} }
 }
 
 #[cfg(feature = "prometheus")]
-pub mod prometheus_mod {
-    use prometheus::Encoder;
+mod prometheus_impl {
+    use std::{borrow::Cow, time::Duration};
 
-    use super::*;
-    #[derive(Debug)]
-    pub struct Prometheus {
-        registry: prometheus::Registry,
+    use prometheus::Registry;
+
+    use super::{FactoryResult, Metrics};
+    use crate::{
+        config::PrometheusConfig,
+        stop::{StopCode, StopRx},
+    };
+
+    #[derive(Debug, Clone, Copy)]
+    pub struct Prometheus;
+
+    impl super::MetricsFactory for Prometheus {
+        type Config = PrometheusConfig;
+        type Error = prometheus::Error;
+        type Exporter = PrometheusExporter;
+        type Instrumenter = Registry;
+
+        fn create(self, config: Self::Config, id: &'static str) -> FactoryResult<Self> {
+            Registry::new_custom(Some(id.into()), None)
+                .map(|r| Metrics(r.clone(), Some(PrometheusExporter(r, config))))
+                .map_err(Into::into)
+        }
     }
 
-    impl MetricsBackend for Prometheus {
+    #[derive(Debug, Clone)]
+    pub struct PrometheusExporter(Registry, PrometheusConfig);
+
+    impl super::Exporter for PrometheusExporter {
+        type Error = prometheus::Error;
+
+        async fn run(self, mut stop: StopRx) -> Result<StopCode, Self::Error> {
+            loop {
+                let ret = tokio::select! {
+                    () = tokio::time::sleep(Duration::from_secs(self.1.export_interval)) => None,
+                    c = &mut stop => Some(c),
+                };
+
+                let me = self.clone();
+                // spawn_blocking is required here, see the comment below
+                tokio::task::spawn_blocking(move || {
+                    // TODO: this spawns a Tokio runtime, which is dumb since we're already in one
+                    prometheus::push_metrics(
+                        &me.1.job,
+                        prometheus::labels! {},
+                        &me.1.endpoint,
+                        me.0.gather(),
+                        Some(prometheus::BasicAuthentication {
+                            username: me.1.username.clone(),
+                            password: me.1.password.to_string(),
+                        }),
+                    )
+                })
+                .await
+                .map_err(std::io::Error::from)??;
+
+                if let Some(ret) = ret {
+                    return Ok(ret);
+                }
+            }
+        }
+    }
+
+    impl super::Instrumenter for Registry {
         type Counter = prometheus::IntCounter;
 
         fn make_counter(
@@ -84,35 +173,56 @@ pub mod prometheus_mod {
             let counter =
                 prometheus::IntCounter::with_opts(prometheus::Opts::new(name.into(), desc.into()))
                     .unwrap();
-            self.registry.register(Box::new(counter.clone())).unwrap();
+            self.register(Box::new(counter.clone())).unwrap();
             counter
         }
+    }
 
-        fn gather_metrics_data(&self) -> Option<String> {
-            let mut buffer = vec![];
-            let encoder = prometheus::TextEncoder::new();
-            let metric_families = self.registry.gather();
-            encoder
-                .encode(&metric_families, &mut buffer)
-                .map_or(None, |_| {
-                    String::from_utf8(buffer).map_or(None, |data| Some(data))
-                })
+    impl super::Counter for prometheus::IntCounter {
+        fn inc_by(&self, by: u64) { prometheus::IntCounter::inc_by(self, by); }
+    }
+}
+
+#[cfg(feature = "opentelemetry")]
+mod opentelemetry_impl {
+    use std::{borrow::Cow, convert::Infallible};
+
+    use opentelemetry::{
+        global,
+        metrics::{Counter, Meter},
+    };
+
+    use super::{FactoryResult, Metrics};
+    use crate::config::NullConfig;
+
+    #[derive(Debug, Clone, Copy)]
+    pub struct OpenTelemetry;
+
+    impl super::MetricsFactory for OpenTelemetry {
+        type Config = NullConfig;
+        type Error = Infallible;
+        type Exporter = Infallible;
+        type Instrumenter = Meter;
+
+        fn create(self, NullConfig: Self::Config, id: &'static str) -> FactoryResult<Self> {
+            Ok(Metrics(global::meter(id), None))
         }
     }
 
-    impl Counter for prometheus::IntCounter {
-        fn inc_by(&self, by: u64) { prometheus::IntCounter::inc_by(self, by) }
+    impl super::Instrumenter for Meter {
+        type Counter = Counter<u64>;
+
+        fn make_counter(
+            &self,
+            name: impl Into<Cow<'static, str>>,
+            desc: impl Into<Cow<'static, str>>,
+        ) -> Self::Counter {
+            self.u64_counter(name).with_description(desc).init()
+        }
     }
 
-    impl MetricsFactory for Prometheus {
-        type Error = std::convert::Infallible;
-        type Output = Self;
-
-        fn create() -> Result<Self::Output, Self::Error> {
-            Ok(Self {
-                registry: prometheus::Registry::new(),
-            })
-        }
+    impl super::Counter for Counter<u64> {
+        fn inc_by(&self, by: u64) { self.add(by, &[]); }
     }
 }
 
@@ -133,7 +243,7 @@ impl JobResult {
     }
 }
 
-pub(crate) struct Metrics<B: MetricsBackend> {
+pub(crate) struct Counters<B: Instrumenter> {
     pub accts_recvd: B::Counter,
     pub txns_recvd: B::Counter,
     pub accts_handled: B::Counter,
@@ -146,11 +256,10 @@ pub(crate) struct Metrics<B: MetricsBackend> {
     pub txn_handle_errs: B::Counter,
     pub uniq_acct_handle_errs: B::Counter,
     pub uniq_txn_handle_errs: B::Counter,
-    pub backend: B,
 }
 
-impl<B: MetricsBackend> Metrics<B> {
-    pub(crate) fn new(metrics: B) -> Self {
+impl<B: Instrumenter> Counters<B> {
+    pub(crate) fn new(metrics: &B) -> Self {
         Self {
             accts_recvd: metrics.make_counter(
                 "accounts_received",
@@ -200,18 +309,15 @@ impl<B: MetricsBackend> Metrics<B> {
                 "transactions_with_handler_errors",
                 "Number of transactions that threw at least one handler error",
             ),
-            backend: metrics,
         }
     }
-
-    pub fn gather_metrics_data(&self) -> Option<String> { self.backend.gather_metrics_data() }
 }
 
-impl<B: MetricsBackend> fmt::Debug for Metrics<B> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Metrics").finish() }
+impl<B: Instrumenter> fmt::Debug for Counters<B> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Counters").finish() }
 }
 
-impl<B: MetricsBackend> Metrics<B> {
+impl<B: Instrumenter> Counters<B> {
     pub fn inc_received(&self, ty: UpdateType) {
         match ty {
             UpdateType::Account => &self.accts_recvd,

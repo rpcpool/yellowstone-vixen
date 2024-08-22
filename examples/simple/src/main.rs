@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::{handler, HandlerManager, HandlerManagers};
-use yellowstone_vixen::{self as vixen, metrics::MetricsFactory};
+use yellowstone_vixen as vixen;
 use yellowstone_vixen_parser::{
     token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
 };
@@ -44,7 +44,6 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .opts(config)
         .manager(HandlerManagers {
             account: HandlerManager::new([
                 handler::boxed(vixen::HandlerPack::new(TokenExtensionProgramParser, [
@@ -54,7 +53,7 @@ fn main() {
             ]),
             transaction: HandlerManager::empty(),
         })
-        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
-        .build()
+        .metrics(vixen::metrics::Prometheus)
+        .build(config)
         .run();
 }

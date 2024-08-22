@@ -11,21 +11,22 @@
 
 use std::fmt;
 
-use buffer::BufferOpts;
 use builder::RuntimeBuilder;
-#[cfg(feature = "prometheus")]
-use metrics::prometheus_mod::Prometheus;
-use metrics::{Metrics, MetricsBackend, NullMetrics};
+use config::{BufferConfig, YellowstoneConfig};
+use futures_util::future::OptionFuture;
+use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
 use tokio::task::LocalSet;
 use vixen_core::{AccountUpdate, TransactionUpdate};
-use yellowstone::YellowstoneOpts;
 
+#[cfg(feature = "opentelemetry")]
+pub extern crate opentelemetry;
 #[cfg(feature = "prometheus")]
 pub extern crate prometheus;
 pub extern crate yellowstone_vixen_core as vixen_core;
 
 mod buffer;
 mod builder;
+pub mod config;
 pub mod handler;
 pub mod metrics;
 mod yellowstone;
@@ -46,17 +47,38 @@ pub enum Error {
     ServerHangup,
     #[error("Yellowstone stream returned an error")]
     YellowstoneStatus(#[from] yellowstone_grpc_proto::tonic::Status),
+    #[error("Error exporting metrics")]
+    MetricsExporter(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
 }
 
-#[derive(Debug, clap::Args, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct IndexerOpts {
-    #[command(flatten)]
-    yellowstone: YellowstoneOpts,
+#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
+#[repr(transparent)]
+pub struct PrivateString(pub String);
 
-    #[command(flatten)]
-    #[serde(default)]
-    buffer: BufferOpts,
+impl std::fmt::Debug for PrivateString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("<private>") }
+}
+
+impl std::ops::Deref for PrivateString {
+    type Target = String;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl std::ops::DerefMut for PrivateString {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+}
+
+impl From<String> for PrivateString {
+    #[inline]
+    fn from(value: String) -> Self { Self(value) }
+}
+
+impl From<PrivateString> for String {
+    #[inline]
+    fn from(PrivateString(value): PrivateString) -> Self { value }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -147,11 +169,61 @@ impl<'a, E: std::error::Error> fmt::Display for Chain<'a, E> {
     }
 }
 
+pub mod stop {
+    use std::pin::Pin;
+
+    use tokio::sync::oneshot;
+
+    #[derive(Debug)]
+    #[allow(missing_copy_implementations)]
+    #[repr(transparent)]
+    pub struct StopCode(());
+
+    #[derive(Debug)]
+    #[repr(transparent)]
+    pub struct StopTx(oneshot::Sender<StopCode>);
+
+    impl StopTx {
+        #[inline]
+        pub fn send_or_else<F: FnOnce()>(self, f: F) {
+            self.0.send(StopCode(())).unwrap_or_else(|StopCode(())| f());
+        }
+
+        #[inline]
+        pub fn maybe_send(self) { self.send_or_else(|| ()); }
+    }
+
+    #[derive(Debug)]
+    #[repr(transparent)]
+    pub struct StopRx(oneshot::Receiver<StopCode>);
+
+    impl std::future::Future for StopRx {
+        type Output = StopCode;
+
+        fn poll(
+            self: Pin<&mut Self>,
+            cx: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<Self::Output> {
+            Pin::new(&mut self.get_mut().0)
+                .poll(cx)
+                .map(|r| r.unwrap_or(StopCode(())))
+        }
+    }
+
+    #[must_use]
+    pub fn channel() -> (StopTx, StopRx) {
+        let (tx, rx) = oneshot::channel();
+        (StopTx(tx), StopRx(rx))
+    }
+}
+
 #[derive(Debug)]
-pub struct Runtime<A, X, M: MetricsBackend> {
-    opts: IndexerOpts,
+pub struct Runtime<A, X, M: MetricsFactory> {
+    yellowstone_cfg: YellowstoneConfig,
+    buffer_cfg: BufferConfig,
     manager: HandlerManagers<A, X>,
-    metrics: Metrics<M>,
+    counters: Counters<M::Instrumenter>,
+    exporter: Option<M::Exporter>,
 }
 
 impl<A, X> Runtime<A, X, NullMetrics> {
@@ -162,7 +234,7 @@ impl<A, X> Runtime<A, X, NullMetrics> {
 impl<
     A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
     X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
-    M: MetricsBackend,
+    M: MetricsFactory,
 > Runtime<A, X, M>
 {
     pub fn run(self) {
@@ -183,21 +255,24 @@ impl<
     }
 
     pub async fn try_run_async(self) -> Result<(), Error> {
-        enum StopType<S> {
+        enum StopType<S, X> {
             Signal(S),
             Buffer(Result<std::convert::Infallible, Error>),
+            Exporter(Option<Result<Result<stop::StopCode, X>, tokio::task::JoinError>>),
         }
 
         let Self {
-            opts: IndexerOpts {
-                yellowstone,
-                buffer,
-            },
+            yellowstone_cfg,
+            buffer_cfg,
             manager,
-            metrics,
+            counters,
+            exporter,
         } = self;
 
-        let client = yellowstone::connect(yellowstone, manager.filters()).await?;
+        let (stop_exporter, rx) = stop::channel();
+        let mut exporter = OptionFuture::from(exporter.map(|e| tokio::spawn(e.run(rx))));
+
+        let client = yellowstone::connect(yellowstone_cfg, manager.filters()).await?;
         let signal;
 
         #[cfg(unix)]
@@ -240,12 +315,27 @@ impl<
                 .map_err(Into::into);
         }
 
-        let buffer = buffer::run_yellowstone(buffer, client, manager, metrics).wait_for_stop();
+        let buffer = buffer::run_yellowstone(buffer_cfg, client, manager, counters).wait_for_stop();
 
         let ret = tokio::select! {
             s = signal => StopType::Signal(s),
             b = buffer => StopType::Buffer(b),
+            x = &mut exporter => StopType::Exporter(x),
         };
+
+        if !matches!(ret, StopType::Exporter(_)) {
+            stop_exporter.maybe_send();
+
+            match exporter.await {
+                Some(Ok(Err(err))) => {
+                    tracing::warn!(%err, "Metrics exporter returned an error after stop requested");
+                },
+                Some(Err(err)) => {
+                    tracing::warn!(%err, "Metrics exporter crashed after stop requested");
+                },
+                Some(Ok(Ok(..))) | None => (),
+            }
+        }
 
         match ret {
             StopType::Signal(Ok(Some(s))) => {
@@ -260,6 +350,12 @@ impl<
             // Not sure why the compiler couldn't figure this one out
             StopType::Buffer(Ok(o)) => match o {},
             StopType::Signal(Err(e)) | StopType::Buffer(Err(e)) => Err(e),
+            StopType::Exporter(None) => todo!(),
+            StopType::Exporter(Some(Ok(Ok(..)))) => {
+                Err(Error::MetricsExporter("Exporter stopped early".into()))
+            },
+            StopType::Exporter(Some(Ok(Err(e)))) => Err(Error::MetricsExporter(e.into())),
+            StopType::Exporter(Some(Err(e))) => Err(Error::MetricsExporter(e.into())),
         }
     }
 }
