@@ -9,5 +9,7 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
 bs58 = "0.5.1"
+serde = "1.0.208"
+serde_json = "1.0.125"
 thiserror = "1.0.59"
 yellowstone-grpc-proto = { workspace = true }

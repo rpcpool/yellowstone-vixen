@@ -10,7 +10,6 @@
 #![allow(clippy::module_name_repetitions)]
 
 mod helpers;
-
 use std::{
     collections::{HashMap, HashSet},
     fmt,
@@ -19,7 +18,8 @@ use std::{
     str::FromStr,
 };
 
-use helpers::{get_account_from_index, LoadedAddresses, VixenInnerIxs, *};
+pub use helpers::{get_account_from_index, Ixs, LoadedAddresses, *};
+use serde::{Deserialize, Serialize};
 use yellowstone_grpc_proto::geyser::{
     subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
     SubscribeRequestFilterTransactions, SubscribeUpdate, SubscribeUpdateAccount,
@@ -75,7 +75,7 @@ impl TryFrom<SubscribeUpdate> for VixenSubscribeUpdate {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Instruction {
     pub data: Vec<u8>,
     pub accounts: Vec<Pubkey>,
@@ -112,10 +112,7 @@ pub trait InstructionParser<C> {
     fn parse_ix(_: &Instruction) -> Result<C, String>;
 }
 
-#[derive(Debug)]
-pub struct InstructionsUpdate {
-    pub instructions: Vec<VixenInnerIxs>,
-}
+pub type InstructionsUpdate = Ixs;
 
 impl InstructionsUpdate {
     pub fn try_from(tx_update: &TransactionUpdate) -> Result<Self, String> {
@@ -123,6 +120,7 @@ impl InstructionsUpdate {
             .transaction
             .as_ref()
             .ok_or("No transaction found")?;
+
         let tx_meta = tx.meta.as_ref().ok_or("No transaction meta found")?;
         let tx_message = tx.transaction.as_ref().map_or(
             Err("No transaction message found".to_string()),
@@ -132,10 +130,10 @@ impl InstructionsUpdate {
                     .ok_or("No transaction message found".to_owned())
             },
         )?;
+
         let static_account_keys = tx_message.account_keys.to_pubkey_vec()?;
 
-        let mut vixen_ixs: Vec<VixenInnerIxs> =
-            Vec::with_capacity(tx_meta.inner_instructions.len());
+        // let mut vixen_ixs: Vec<VixenIxs> = Vec::with_capacity(tx_meta.inner_instructions.len());
 
         let loaded_addresses: LoadedAddresses = LoadedAddresses {
             writable: tx_meta.loaded_writable_addresses.to_pubkey_vec()?,
@@ -147,7 +145,32 @@ impl InstructionsUpdate {
             dynamic_keys: Some(loaded_addresses),
         };
 
+        let outer_ixs = tx_message
+            .instructions
+            .iter()
+            .map(|ix| -> Result<Instruction, String> {
+                let accounts = ix
+                    .accounts
+                    .iter()
+                    .map(|idx| get_account_from_index(*idx as usize, &tx_accounts))
+                    .collect::<Result<Vec<Pubkey>, String>>()?;
+
+                let instruction = Instruction {
+                    data: ix.data.clone(),
+                    accounts,
+                };
+
+                Ok(instruction)
+            })
+            .collect::<Result<Vec<Instruction>, String>>()?;
+
+        let inner_ixs = tx_meta.inner_instructions.clone();
+        let mut ix_with_inner_ixs: Vec<IxWithInnerIxs> = Vec::new();
+
         for inner_ix in tx_meta.inner_instructions.iter() {
+            if outer_ixs.get(inner_ix.index as usize).is_none() {
+                return Err("Index out of bounds".to_string());
+            }
             let mut inner_ixs: Vec<Instruction> = Vec::with_capacity(inner_ix.instructions.len());
             for ix in inner_ix.instructions.iter() {
                 let accounts = ix
@@ -162,15 +185,16 @@ impl InstructionsUpdate {
                 };
                 inner_ixs.push(instruction);
             }
-            let vixen_ix = VixenInnerIxs {
-                index: inner_ix.index,
-                instructions: inner_ixs,
+            let ix_with_inner_ix = IxWithInnerIxs {
+                outer_ix: outer_ixs[inner_ix.index as usize].clone(),
+                inner_ixs,
             };
-            vixen_ixs.push(vixen_ix);
+
+            ix_with_inner_ixs.push(ix_with_inner_ix);
         }
 
         Ok(Self {
-            instructions: vixen_ixs,
+            instructions: ix_with_inner_ixs,
         })
     }
 }
@@ -215,7 +239,7 @@ pub struct Prefilter {
     pub(crate) transaction: Option<TransactionPrefilter>,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Pubkey(pub [u8; 32]);
 
 impl fmt::Debug for Pubkey {
@@ -230,10 +254,10 @@ impl fmt::Display for Pubkey {
     }
 }
 impl FromStr for Pubkey {
-    type Err = bs58::decode::Error;
+    type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let decoded = bs58::decode(s).into_vec()?;
+        let decoded = bs58::decode(s).into_vec().map_err(|e| e.to_string())?;
         let mut bytes = [0; 32];
         bytes.copy_from_slice(&decoded);
         Ok(Self(bytes))

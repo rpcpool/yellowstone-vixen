@@ -1,4 +1,6 @@
-use std::{fmt::format, iter::zip, ops::Index};
+use std::{iter::zip, ops::Index, str::FromStr};
+
+use serde::{Deserialize, Serialize};
 
 use crate::{Instruction, Pubkey};
 
@@ -13,10 +15,15 @@ pub struct TxAccountKeys {
     pub dynamic_keys: Option<LoadedAddresses>,
 }
 
-#[derive(Debug)]
-pub struct VixenInnerIxs {
-    pub index: u32,
-    pub instructions: Vec<Instruction>,
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Ixs {
+    pub instructions: Vec<IxWithInnerIxs>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct IxWithInnerIxs {
+    pub outer_ix: Instruction,
+    pub inner_ixs: Vec<Instruction>,
 }
 
 #[derive(Clone, Default, Debug, Eq)]
@@ -98,6 +105,24 @@ pub fn get_account_from_index(index: usize, accounts: &TxAccountKeys) -> Result<
             tx_account_keys_loaded.len(),
         )),
         |account| Ok(*account),
+    )
+}
+
+pub fn get_account_pubkeys_from_index(
+    index: usize,
+    accounts: &Vec<String>,
+) -> Result<Pubkey, String> {
+    if accounts.is_empty() {
+        return Err("No accounts found".to_string());
+    }
+
+    accounts.get(index).map_or(
+        Err(format!(
+            "Account index {} out of bounds for {} accounts",
+            index,
+            accounts.len(),
+        )),
+        |account| Ok(Pubkey::from_str(account)?),
     )
 }
 

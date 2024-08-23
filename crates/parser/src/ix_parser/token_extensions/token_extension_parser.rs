@@ -26,7 +26,10 @@ impl Parser for TokenExtensionProgramIxParser {
     async fn parse(&self, ixs_update: &InstructionsUpdate) -> ParseResult<Self::Output> {
         let mut parsed_ixs: Vec<TokenExtensionProgramIx> = Vec::new();
         for outer_ixs in ixs_update.instructions.iter() {
-            for inner_ix in outer_ixs.instructions.iter() {
+            let parsed_ix = TokenExtensionProgramIxParser::parse_ix(&outer_ixs.outer_ix)
+                .map_err(|e| ParseError::Other(e.into()))?;
+            parsed_ixs.push(parsed_ix);
+            for inner_ix in outer_ixs.inner_ixs.iter() {
                 let parsed_ix = TokenExtensionProgramIxParser::parse_ix(inner_ix)
                     .map_err(|e| ParseError::Other(e.into()))?;
                 parsed_ixs.push(parsed_ix);
@@ -114,25 +117,67 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                     )?),
                 ),
 
-                _ => Ok(TokenExtensionProgramIx::TokenProgramIx(
-                    TokenProgramIxParser::parse_ix(ix)?,
-                )),
+                _ => {
+                    println!("TokenProgramIx");
+                    Ok(TokenExtensionProgramIx::TokenProgramIx(
+                        TokenProgramIxParser::parse_ix(ix)?,
+                    ))
+                },
             },
             Err(e) => {
+                println!("Error while unpacking ix data : {}", e);
                 if let Ok(_) = TokenMetadataInstruction::unpack(&ix.data) {
+                    println!("TokenMetadataIx");
                     return Ok(TokenExtensionProgramIx::TokenMetadataIx(
                         TokenMetadataIx::try_parse_extension_ix(ix)?,
                     ));
                 }
 
                 if let Ok(_) = TokenGroupInstruction::unpack(&ix.data) {
+                    println!("TokenGroupIx");
                     return Ok(TokenExtensionProgramIx::TokenGroupIx(
                         TokenGroupIx::try_parse_extension_ix(ix)?,
                     ));
                 }
 
-                Err(e.to_string())
+                Err(format!("Err while unpacking ix data : {}", e))
             },
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::ops::Mul;
+
+    use yellowstone_vixen_mock::{run_tx_parse, tx_fixture, FixtureData};
+
+    use super::*;
+    use crate::ix_parser::token_program::token_ix::TokenProgramIx;
+
+    #[tokio::test]
+    async fn test_mint_parsing() {
+        let parser = TokenExtensionProgramIxParser;
+
+        let fixture_data = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
+
+        if let FixtureData::Instructions(ixs) = fixture_data {
+            let ixs = run_tx_parse!(parser, ixs);
+            if let TokenExtensionProgramIx::TokenProgramIx(ix) = &ixs[0] {
+                match ix {
+                    TokenProgramIx::MintToChecked(ix) => {
+                        assert!(ix.data.is_some());
+                        let data = ix.data.as_ref().unwrap();
+                        assert_eq!(data.decimals, 9);
+                        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals as u32)));
+                    },
+                    _ => panic!("Invalid Instruction"),
+                }
+            } else {
+                panic!("Invalid Instruction")
+            }
+        } else {
+            panic!("Invalid Fixture Data")
         }
     }
 }

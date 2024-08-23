@@ -26,7 +26,10 @@ impl Parser for TokenProgramIxParser {
     async fn parse(&self, ixs_update: &InstructionsUpdate) -> ParseResult<Self::Output> {
         let mut parsed_ixs: Vec<TokenProgramIx> = Vec::new();
         for outer_ixs in ixs_update.instructions.iter() {
-            for inner_ix in outer_ixs.instructions.iter() {
+            let parsed_ix = TokenProgramIxParser::parse_ix(&outer_ixs.outer_ix)
+                .map_err(|e| ParseError::Other(e.into()))?;
+            parsed_ixs.push(parsed_ix);
+            for inner_ix in outer_ixs.inner_ixs.iter() {
                 let parsed_ix = TokenProgramIxParser::parse_ix(inner_ix)
                     .map_err(|e| ParseError::Other(e.into()))?;
                 parsed_ixs.push(parsed_ix);
@@ -38,8 +41,8 @@ impl Parser for TokenProgramIxParser {
 
 impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
     fn parse_ix(ix: &Instruction) -> Result<TokenProgramIx, String> {
-        let ix_type = TokenInstruction::unpack(&ix.data).map_err(|e| e.to_string())?;
-
+        let ix_type = TokenInstruction::unpack(&ix.data)
+            .map_err(|e| format!("Err while unpacking ix data : {}", e))?;
         let accounts_len = ix.accounts.len();
         match ix_type {
             TokenInstruction::Transfer { amount } => {
@@ -364,6 +367,37 @@ impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
                     }),
                 }))
             },
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::ops::Mul;
+
+    use yellowstone_vixen_mock::{run_tx_parse, tx_fixture, FixtureData};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_mint_to_checked_ix_parsing() {
+        let parser = TokenProgramIxParser;
+
+        let fixture_data = tx_fixture!("55kpnRufcX9Fo44oRBXtrkxPRww4UWJKxCpgBV39kzAAag8oyJbd9Y3YWdQQUi3TBqtrhjgsMGb9Nw8bUxy7j5rt");
+
+        if let FixtureData::Instructions(ixs) = fixture_data {
+            let ixs = run_tx_parse!(parser, ixs);
+
+            if let TokenProgramIx::MintToChecked(ix) = &ixs[0] {
+                assert!(ix.data.is_some());
+                let data = ix.data.as_ref().unwrap();
+                assert_eq!(data.decimals, 10);
+                assert_eq!(data.amount, 10.mul(10u64.pow(data.decimals as u32)));
+            } else {
+                panic!("Invalid Instruction")
+            }
+        } else {
+            panic!("Invalid Fixture Data")
         }
     }
 }
