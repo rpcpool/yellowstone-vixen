@@ -188,24 +188,60 @@ mod opentelemetry_impl {
     use std::{borrow::Cow, convert::Infallible};
 
     use opentelemetry::{
-        global,
-        metrics::{Counter, Meter},
+        global::{self, GlobalMeterProvider},
+        metrics::{Counter, Meter, MeterProvider},
     };
 
     use super::{FactoryResult, Metrics};
-    use crate::config::NullConfig;
+    use crate::{
+        config::NullConfig,
+        stop::{StopCode, StopRx},
+    };
 
     #[derive(Debug, Clone, Copy)]
-    pub struct OpenTelemetry;
+    #[repr(transparent)]
+    pub struct OpenTelemetry<M>(M);
 
-    impl super::MetricsFactory for OpenTelemetry {
+    impl OpenTelemetry<GlobalMeterProvider> {
+        #[inline]
+        #[must_use]
+        pub fn global() -> Self { Self(global::meter_provider()) }
+    }
+
+    impl<M> OpenTelemetry<M> {
+        #[inline]
+        #[must_use]
+        pub fn new(meter_provider: M) -> Self { Self(meter_provider) }
+    }
+
+    impl<M: MeterProvider + Send + 'static> super::MetricsFactory for OpenTelemetry<M> {
         type Config = NullConfig;
         type Error = Infallible;
-        type Exporter = Infallible;
+        type Exporter = OpenTelemetryExporter<M>;
         type Instrumenter = Meter;
 
         fn create(self, NullConfig: Self::Config, id: &'static str) -> FactoryResult<Self> {
-            Ok(Metrics(global::meter(id), None))
+            let Self(meter_provider) = self;
+            Ok(Metrics(
+                meter_provider.meter(id),
+                Some(OpenTelemetryExporter(meter_provider)),
+            ))
+        }
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    #[repr(transparent)]
+    pub struct OpenTelemetryExporter<M>(M);
+
+    impl<M: Send + 'static> super::Exporter for OpenTelemetryExporter<M> {
+        type Error = Infallible;
+
+        async fn run(self, stop: StopRx) -> Result<StopCode, Self::Error> {
+            let Self(meter_provider) = self;
+            let res = stop.await;
+            // TODO: not sure why this takes so long
+            tokio::task::spawn_blocking(|| drop(meter_provider));
+            Ok(res)
         }
     }
 

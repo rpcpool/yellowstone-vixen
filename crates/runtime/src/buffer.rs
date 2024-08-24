@@ -1,14 +1,13 @@
 use std::{pin::pin, sync::Arc};
 
 use futures_util::{Stream, StreamExt};
-use tokio::sync::oneshot;
 use topograph::{
     executor::{Executor, Nonblock, Tokio},
     prelude::*,
 };
 use tracing::{warn, Instrument};
 use yellowstone_grpc_proto::{
-    geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},
+    geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdatePing},
     tonic::Status,
 };
 use yellowstone_vixen_core::UpdateType;
@@ -16,19 +15,30 @@ use yellowstone_vixen_core::UpdateType;
 use crate::{
     config::BufferConfig,
     metrics::{Counters, Instrumenter},
+    stop::{self, StopCode, StopTx},
     yellowstone, PipelineSets,
 };
 
-pub struct Buffer(oneshot::Receiver<crate::Error>);
+pub struct Buffer(
+    tokio::task::JoinHandle<Result<StopCode, crate::Error>>,
+    StopTx,
+);
 
 impl Buffer {
-    // TODO: use never
-    #[inline]
-    pub async fn wait_for_stop(self) -> Result<std::convert::Infallible, crate::Error> {
+    pub async fn join(self) -> Result<StopCode, crate::Error> {
+        self.1.maybe_send();
         self.0
             .await
-            .map_err(|_| crate::Error::ClientHangup)
-            .and_then(Err)
+            .map_err(|e| std::io::Error::from(e).into())
+            .and_then(std::convert::identity)
+    }
+
+    // TODO: use never
+    pub async fn wait_for_stop(&mut self) -> Result<std::convert::Infallible, crate::Error> {
+        (&mut self.0)
+            .await
+            .map_err(|e| std::io::Error::from(e).into())
+            .and_then(|r| r.and(Err(crate::Error::ClientHangup)))
     }
 }
 
@@ -82,6 +92,7 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
                     .run(span, &t, counters)
                     .await;
             },
+            UpdateOneof::Ping(SubscribeUpdatePing {}) => (),
             var => warn!(?var, "Unknown update variant"),
         }
     }
@@ -110,15 +121,30 @@ pub fn run_yellowstone<
         })
         .unwrap_or_else(|i| match i {});
 
-    let (tx, rx) = oneshot::channel();
+    let (stop_tx, mut stop_rx) = stop::channel();
 
-    tokio::task::spawn_local(async move {
+    let task = tokio::task::spawn_local(async move {
+        enum Event {
+            Update(Option<Result<SubscribeUpdate, Status>>),
+            Stop(StopCode),
+        }
+
         let mut stream = pin!(client.stream);
-        while let Some(update) = stream
-            .next()
-            .instrument(tracing::trace_span!("await_update"))
-            .await
-        {
+        loop {
+            let event = tokio::select! {
+                u = stream
+                        .next()
+                        .instrument(tracing::trace_span!("await_update"))
+                    => Event::Update(u),
+                c = &mut stop_rx => Event::Stop(c),
+            };
+
+            let update = match event {
+                Event::Update(Some(u)) => u,
+                Event::Update(None) => break Err(crate::Error::ServerHangup),
+                Event::Stop(c) => break Ok(c),
+            };
+
             let span = tracing::trace_span!("process_update", ?update).entered();
             match update {
                 Ok(u) => {
@@ -127,19 +153,10 @@ pub fn run_yellowstone<
                     }
                     exec.push(Job(span.exit(), u));
                 },
-                Err(e) => {
-                    tx.send(e.into()).unwrap_or_else(|err| {
-                        warn!(%err, "Yellowstone stream returned an error after stop requested");
-                    });
-                    return;
-                },
+                Err(e) => break Err(e.into()),
             }
         }
-
-        tx.send(crate::Error::ServerHangup).unwrap_or_else(|_| {
-            warn!("Yellowstone client and server both hung up");
-        });
     });
 
-    Buffer(rx)
+    Buffer(task, stop_tx)
 }

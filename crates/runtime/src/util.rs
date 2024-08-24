@@ -149,6 +149,11 @@ pub mod stop {
     #[repr(transparent)]
     pub struct StopCode(());
 
+    impl StopCode {
+        #[inline]
+        pub fn as_unit(self) { let Self(()) = self; }
+    }
+
     #[derive(Debug)]
     #[repr(transparent)]
     pub struct StopTx(oneshot::Sender<StopCode>);

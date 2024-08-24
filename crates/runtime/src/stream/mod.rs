@@ -4,6 +4,7 @@ use builder::StreamBuilder;
 use config::GrpcConfig;
 use grpc::Channels;
 use tokio::task::LocalSet;
+use tracing::info;
 use vixen_core::{Parser, Pubkey};
 
 use crate::{
@@ -80,6 +81,7 @@ impl<M: MetricsFactory> Server<M> {
         LocalSet::new().run_until(self.try_run_local()).await
     }
 
+    #[tracing::instrument("stream::Server::run", skip(self), err)]
     pub async fn try_run_local(self) -> Result<(), Error> {
         let Self {
             grpc_cfg,
@@ -87,8 +89,11 @@ impl<M: MetricsFactory> Server<M> {
             runtime,
         } = self;
 
+        let address = grpc_cfg.address;
         let grpc = grpc::Server::run(grpc_cfg, channels);
         // TODO: check for early server shutdowns
+
+        info!(%address, "gRPC server created");
 
         runtime.try_run_local().await?;
         grpc.stop().await?;

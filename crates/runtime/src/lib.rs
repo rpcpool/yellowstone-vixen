@@ -15,6 +15,7 @@ use builder::RuntimeBuilder;
 use config::{BufferConfig, YellowstoneConfig};
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
+use stop::{StopCode, StopTx};
 use tokio::task::LocalSet;
 
 #[cfg(feature = "opentelemetry")]
@@ -86,6 +87,7 @@ impl<M: MetricsFactory> Runtime<M> {
         LocalSet::new().run_until(self.try_run_local()).await
     }
 
+    #[tracing::instrument("Runtime::run", skip(self))]
     pub async fn try_run_local(self) -> Result<(), Error> {
         enum StopType<S, X> {
             Signal(S),
@@ -147,30 +149,18 @@ impl<M: MetricsFactory> Runtime<M> {
                 .map_err(Into::into);
         }
 
-        let buffer =
-            buffer::run_yellowstone(buffer_cfg, client, pipelines, counters).wait_for_stop();
+        let mut buffer = buffer::run_yellowstone(buffer_cfg, client, pipelines, counters);
 
-        let ret = tokio::select! {
+        let stop_ty = tokio::select! {
             s = signal => StopType::Signal(s),
-            b = buffer => StopType::Buffer(b),
+            b = buffer.wait_for_stop() => StopType::Buffer(b),
             Some(x) = &mut exporter => StopType::Exporter(x),
         };
 
-        if !matches!(ret, StopType::Exporter(_)) {
-            stop_exporter.maybe_send();
+        let should_stop_buffer = !matches!(stop_ty, StopType::Buffer(..));
+        let should_stop_exporter = !matches!(stop_ty, StopType::Exporter(..));
 
-            match exporter.await {
-                Some(Ok(Err(err))) => {
-                    tracing::warn!(%err, "Metrics exporter returned an error after stop requested");
-                },
-                Some(Err(err)) => {
-                    tracing::warn!(%err, "Metrics exporter crashed after stop requested");
-                },
-                Some(Ok(Ok(..))) | None => (),
-            }
-        }
-
-        match ret {
+        match stop_ty {
             StopType::Signal(Ok(Some(s))) => {
                 tracing::warn!("{s:?} received, shutting down...");
                 Ok(())
@@ -188,6 +178,62 @@ impl<M: MetricsFactory> Runtime<M> {
             },
             StopType::Exporter(Ok(Err(e))) => Err(Error::MetricsExporter(e.into())),
             StopType::Exporter(Err(e)) => Err(Error::MetricsExporter(e.into())),
+        }?;
+
+        if should_stop_buffer {
+            Self::stop_buffer(buffer).await;
+        }
+
+        if should_stop_exporter {
+            Self::stop_exporter(exporter, stop_exporter).await;
+        }
+
+        Ok(())
+    }
+
+    async fn stop_buffer(buffer: buffer::Buffer) {
+        match buffer.join().await {
+            Err(e) => tracing::warn!(err = %Chain(&e), "Error stopping runtime buffer"),
+            Ok(c) => c.as_unit(),
+        }
+    }
+
+    async fn stop_exporter(
+        exporter: OptionFuture<
+            tokio::task::JoinHandle<Result<StopCode, <M::Exporter as Exporter>::Error>>,
+        >,
+        tx: StopTx,
+    ) {
+        tx.maybe_send();
+
+        let res = tokio::select! {
+            e = exporter => Some(e),
+            () = tokio::time::sleep(std::time::Duration::from_secs(5)) => None,
+        };
+
+        'unpack: {
+            let Some(res) = res else {
+                tracing::warn!("Metrics exporter took too long to stop");
+                break 'unpack;
+            };
+
+            let Some(res) = res else { break 'unpack };
+
+            match res {
+                Err(e) => {
+                    tracing::warn!(
+                        err = %Chain(&e),
+                        "Metrics exporter panicked after stop requested",
+                    );
+                },
+                Ok(Err(e)) => {
+                    tracing::warn!(
+                        err = %Chain(&e),
+                        "Metrics exporter returned an error after stop requested",
+                    );
+                },
+                Ok(Ok(c)) => c.as_unit(),
+            };
         }
     }
 }
