@@ -8,32 +8,37 @@
 )]
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
-
-use std::fmt;
+// TODO: document everything
+#![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 use builder::RuntimeBuilder;
 use config::{BufferConfig, YellowstoneConfig};
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
 use tokio::task::LocalSet;
-use vixen_core::{AccountUpdate, TransactionUpdate};
 
 #[cfg(feature = "opentelemetry")]
 pub extern crate opentelemetry;
 #[cfg(feature = "prometheus")]
 pub extern crate prometheus;
+pub extern crate thiserror;
 pub extern crate yellowstone_vixen_core as vixen_core;
+pub use vixen_core::bs58;
+#[cfg(feature = "stream")]
+pub extern crate yellowstone_vixen_proto as proto;
 
 mod buffer;
-mod builder;
+pub mod builder;
 pub mod config;
 pub mod handler;
 pub mod metrics;
+#[cfg(feature = "stream")]
+pub mod stream;
+mod util;
 mod yellowstone;
 
-pub use handler::{
-    DynHandlerPack, Handler, HandlerManager, HandlerManagers, HandlerPack, HandlerResult,
-};
+pub use handler::{DynPipeline, Handler, HandlerResult, Pipeline, PipelineSet, PipelineSets};
+pub use util::*;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -51,214 +56,30 @@ pub enum Error {
     MetricsExporter(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
 }
 
-#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
-#[repr(transparent)]
-pub struct PrivateString(pub String);
-
-impl std::fmt::Debug for PrivateString {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("<private>") }
-}
-
-impl std::ops::Deref for PrivateString {
-    type Target = String;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl std::ops::DerefMut for PrivateString {
-    #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
-}
-
-impl From<String> for PrivateString {
-    #[inline]
-    fn from(value: String) -> Self { Self(value) }
-}
-
-impl From<PrivateString> for String {
-    #[inline]
-    fn from(PrivateString(value): PrivateString) -> Self { value }
-}
-
-#[derive(Debug, Clone, Copy)]
-struct Chain<'a, E>(&'a E);
-
-impl<'a, E: std::error::Error> fmt::Display for Chain<'a, E> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use fmt::Write;
-
-        enum IndentState {
-            NumberStart(usize), // Numbered and indented initial line
-            PlainStart,         // Plain indented initial line
-            HangStart,          // Hanging indent for successive lines
-            MidLine,            // No indent, not at line start
-        }
-
-        struct Indented<'a, F> {
-            f: &'a mut F,
-            state: IndentState,
-        }
-
-        impl<'a, F: Write> Indented<'a, F> {
-            fn write_pad(&mut self) -> fmt::Result {
-                match std::mem::replace(&mut self.state, IndentState::MidLine) {
-                    IndentState::NumberStart(i) => write!(self.f, "{i: >5}: "),
-                    IndentState::PlainStart => write!(self.f, "    "),
-                    IndentState::HangStart => write!(self.f, "      "),
-                    IndentState::MidLine => Ok(()),
-                }
-            }
-        }
-
-        impl<'a, F: Write> Write for Indented<'a, F> {
-            fn write_str(&mut self, mut s: &str) -> fmt::Result {
-                while let Some((head, tail)) = s.split_once('\n') {
-                    if !head.is_empty() {
-                        self.write_pad()?;
-                    }
-                    self.f.write_str(head)?;
-                    self.f.write_char('\n')?;
-                    self.state = IndentState::HangStart;
-                    s = tail;
-                }
-
-                let trail = !s.is_empty();
-                if trail {
-                    self.write_pad()?;
-                }
-                self.f.write_str(s)?;
-                self.state = if trail {
-                    IndentState::MidLine
-                } else {
-                    IndentState::HangStart
-                };
-                Ok(())
-            }
-        }
-
-        let Self(err) = *self;
-
-        write!(f, "{err}")?;
-
-        if let src @ Some(_) = err.source() {
-            let mut multi_src = false;
-
-            for (i, src) in std::iter::successors(src, |s| s.source()).enumerate() {
-                if i == 0 {
-                    write!(f, "\nCaused by:")?;
-                    multi_src = src.source().is_some();
-                }
-
-                writeln!(f)?;
-                write!(
-                    Indented {
-                        f,
-                        state: if multi_src {
-                            IndentState::NumberStart(i)
-                        } else {
-                            IndentState::PlainStart
-                        },
-                    },
-                    "{src}"
-                )?;
-            }
-        }
-
-        Ok(())
-    }
-}
-
-pub mod stop {
-    use std::pin::Pin;
-
-    use tokio::sync::oneshot;
-
-    #[derive(Debug)]
-    #[allow(missing_copy_implementations)]
-    #[repr(transparent)]
-    pub struct StopCode(());
-
-    #[derive(Debug)]
-    #[repr(transparent)]
-    pub struct StopTx(oneshot::Sender<StopCode>);
-
-    impl StopTx {
-        #[inline]
-        pub fn send_or_else<F: FnOnce()>(self, f: F) {
-            self.0.send(StopCode(())).unwrap_or_else(|StopCode(())| f());
-        }
-
-        #[inline]
-        pub fn maybe_send(self) { self.send_or_else(|| ()); }
-    }
-
-    #[derive(Debug)]
-    #[repr(transparent)]
-    pub struct StopRx(oneshot::Receiver<StopCode>);
-
-    impl std::future::Future for StopRx {
-        type Output = StopCode;
-
-        fn poll(
-            self: Pin<&mut Self>,
-            cx: &mut std::task::Context<'_>,
-        ) -> std::task::Poll<Self::Output> {
-            Pin::new(&mut self.get_mut().0)
-                .poll(cx)
-                .map(|r| r.unwrap_or(StopCode(())))
-        }
-    }
-
-    #[must_use]
-    pub fn channel() -> (StopTx, StopRx) {
-        let (tx, rx) = oneshot::channel();
-        (StopTx(tx), StopRx(rx))
-    }
-}
-
 #[derive(Debug)]
-pub struct Runtime<A, X, M: MetricsFactory> {
+pub struct Runtime<M: MetricsFactory> {
     yellowstone_cfg: YellowstoneConfig,
     buffer_cfg: BufferConfig,
-    manager: HandlerManagers<A, X>,
+    pipelines: PipelineSets,
     counters: Counters<M::Instrumenter>,
     exporter: Option<M::Exporter>,
 }
 
-impl<A, X> Runtime<A, X, NullMetrics> {
-    #[must_use]
-    pub fn builder() -> RuntimeBuilder<A, X, NullMetrics> { RuntimeBuilder::default() }
+impl Runtime<NullMetrics> {
+    pub fn builder() -> RuntimeBuilder<NullMetrics> { RuntimeBuilder::default() }
 }
 
-impl<
-    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
-    M: MetricsFactory,
-> Runtime<A, X, M>
-{
-    fn handle_error(res: Result<(), Error>) {
-        match res {
-            Ok(()) => (),
-            Err(e) => {
-                tracing::error!(err = %Chain(&e), "Fatal error encountered");
-                std::process::exit(1);
-            },
-        }
-    }
+impl<M: MetricsFactory> Runtime<M> {
+    #[inline]
+    pub fn run(self) { util::handle_fatal(self.try_run()); }
 
     #[inline]
-    pub fn run(self) { Self::handle_error(self.try_run()) }
-
     pub fn try_run(self) -> Result<(), Error> {
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()?
-            .block_on(self.try_run_async())
+        util::tokio_runtime()?.block_on(self.try_run_async())
     }
 
     #[inline]
-    pub async fn run_async(self) { Self::handle_error(self.try_run_async().await) }
+    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
 
     #[inline]
     pub async fn try_run_async(self) -> Result<(), Error> {
@@ -275,7 +96,7 @@ impl<
         let Self {
             yellowstone_cfg,
             buffer_cfg,
-            manager,
+            pipelines,
             counters,
             exporter,
         } = self;
@@ -283,7 +104,7 @@ impl<
         let (stop_exporter, rx) = stop::channel();
         let mut exporter = OptionFuture::from(exporter.map(|e| tokio::spawn(e.run(rx))));
 
-        let client = yellowstone::connect(yellowstone_cfg, manager.filters()).await?;
+        let client = yellowstone::connect(yellowstone_cfg, pipelines.filters()).await?;
         let signal;
 
         #[cfg(unix)]
@@ -326,7 +147,8 @@ impl<
                 .map_err(Into::into);
         }
 
-        let buffer = buffer::run_yellowstone(buffer_cfg, client, manager, counters).wait_for_stop();
+        let buffer =
+            buffer::run_yellowstone(buffer_cfg, client, pipelines, counters).wait_for_stop();
 
         let ret = tokio::select! {
             s = signal => StopType::Signal(s),

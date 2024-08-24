@@ -12,18 +12,13 @@ use std::{path::PathBuf, time::Duration};
 use clap::Parser as _;
 use opentelemetry_sdk::{
     metrics::{PeriodicReader, SdkMeterProvider},
-    trace::{BatchSpanProcessor, TracerProvider},
+    trace::TracerProvider,
 };
-use tracing::{error, span};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Registry};
-use vixen::{handler, HandlerManager, HandlerManagers};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{
     self as vixen,
-    opentelemetry::{
-        global,
-        metrics::MeterProvider as _,
-        trace::{Tracer, TracerProvider as _},
-    },
+    opentelemetry::{global, trace::TracerProvider as _},
+    Pipeline,
 };
 use yellowstone_vixen_parser::{
     token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
@@ -36,6 +31,7 @@ pub struct Opts {
     config: PathBuf,
 }
 
+#[derive(Debug)]
 pub struct Handler;
 
 impl<V: std::fmt::Debug + Sync> vixen::Handler<V> for Handler {
@@ -72,15 +68,8 @@ async fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .manager(HandlerManagers {
-            account: HandlerManager::new([
-                handler::boxed(vixen::HandlerPack::new(TokenExtensionProgramParser, [
-                    Handler,
-                ])),
-                handler::boxed(vixen::HandlerPack::new(TokenProgramParser, [Handler])),
-            ]),
-            transaction: HandlerManager::empty(),
-        })
+        .account(Pipeline::new(TokenExtensionProgramParser, [Handler]))
+        .account(Pipeline::new(TokenProgramParser, [Handler]))
         .metrics(vixen::metrics::OpenTelemetry)
         .build(config)
         .run_async()

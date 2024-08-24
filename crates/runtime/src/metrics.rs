@@ -14,7 +14,7 @@ use yellowstone_vixen_core::UpdateType;
 
 use crate::{
     config::{MaybeDefault, NullConfig},
-    handler::HandlerPackErrors,
+    handler::PipelineErrors,
     stop::{StopCode, StopRx},
 };
 
@@ -234,11 +234,11 @@ pub(crate) enum JobResult {
 }
 
 impl JobResult {
-    pub fn from_pack<R: Borrow<Result<U, HandlerPackErrors>>, U>(res: R) -> Self {
+    pub fn from_pipeline<R: Borrow<Result<U, PipelineErrors>>, U>(res: R) -> Self {
         match res.borrow() {
             Ok(_) => Self::Ok,
-            Err(HandlerPackErrors::Parse(_)) => Self::ParseErr,
-            Err(HandlerPackErrors::Handlers(v)) => Self::HandleErr(v.len()),
+            Err(PipelineErrors::Parse(_)) => Self::ParseErr,
+            Err(PipelineErrors::Handlers(v)) => Self::HandleErr(v.len()),
         }
     }
 }

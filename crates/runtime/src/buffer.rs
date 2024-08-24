@@ -11,13 +11,12 @@ use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},
     tonic::Status,
 };
-use yellowstone_vixen_core::{AccountUpdate, TransactionUpdate, UpdateType};
+use yellowstone_vixen_core::UpdateType;
 
 use crate::{
     config::BufferConfig,
-    handler::DynHandlerPack,
     metrics::{Counters, Instrumenter},
-    yellowstone, HandlerManagers,
+    yellowstone, PipelineSets,
 };
 
 pub struct Buffer(oneshot::Receiver<crate::Error>);
@@ -35,39 +34,30 @@ impl Buffer {
 
 struct Job(tracing::Span, SubscribeUpdate);
 
-struct Handler<
-    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
-    M: Instrumenter,
-> {
-    manager: Arc<HandlerManagers<A, X>>,
+struct Handler<M: Instrumenter> {
+    pipelines: Arc<PipelineSets>,
     counters: Arc<Counters<M>>,
 }
-impl<
-    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
-    M: Instrumenter,
-> Clone for Handler<A, X, M>
-{
+impl<M: Instrumenter> Clone for Handler<M> {
     fn clone(&self) -> Self {
-        let Self { manager, counters } = self;
+        let Self {
+            pipelines,
+            counters,
+        } = self;
         Self {
-            manager: Arc::clone(manager),
+            pipelines: Arc::clone(pipelines),
             counters: Arc::clone(counters),
         }
     }
 }
-impl<
-    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
-    M: Instrumenter,
-    H: Send,
-> topograph::AsyncHandler<Job, H> for Handler<A, X, M>
-{
+impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
     type Output = ();
 
     async fn handle(&self, update: Job, _: H) {
-        let Self { manager, counters } = self;
+        let Self {
+            pipelines,
+            counters,
+        } = self;
         let Job(
             span,
             SubscribeUpdate {
@@ -79,14 +69,14 @@ impl<
 
         match update {
             UpdateOneof::Account(a) => {
-                manager
+                pipelines
                     .account
                     .get_handlers(&filters)
                     .run(span, &a, counters)
                     .await;
             },
             UpdateOneof::Transaction(t) => {
-                manager
+                pipelines
                     .transaction
                     .get_handlers(&filters)
                     .run(span, &t, counters)
@@ -101,23 +91,21 @@ pub fn run_yellowstone<
     I,
     T,
     S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static,
-    A: DynHandlerPack<AccountUpdate> + Send + Sync + 'static,
-    X: DynHandlerPack<TransactionUpdate> + Send + Sync + 'static,
     M: Instrumenter,
 >(
     config: BufferConfig,
     client: yellowstone::YellowstoneStream<I, T, S>,
-    manager: HandlerManagers<A, X>,
+    pipelines: PipelineSets,
     counters: Counters<M>,
 ) -> Buffer {
     let BufferConfig { jobs } = config;
 
-    let manager = Arc::new(manager);
+    let pipelines = Arc::new(pipelines);
     let counters = Arc::new(counters);
     let exec = Executor::builder(Nonblock(Tokio))
         .max_concurrency(jobs)
         .build_async(Handler {
-            manager,
+            pipelines,
             counters: Arc::clone(&counters),
         })
         .unwrap_or_else(|i| match i {});

@@ -120,7 +120,6 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
 }
 
 // TODO: Determine pubkey vs signature based on the fixture pattern
-#[must_use]
 async fn fetch_fixture(
     fixture: &str,
 ) -> Result<SubscribeUpdateAccount, Box<dyn std::error::Error>> {

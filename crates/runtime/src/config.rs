@@ -1,4 +1,5 @@
-use crate::PrivateString;
+#[cfg(feature = "prometheus")]
+pub use prometheus_impl::*;
 
 pub trait MaybeDefault: Sized {
     fn default_opt() -> Option<Self>;
@@ -40,22 +41,6 @@ pub struct YellowstoneConfig {
 #[serde(rename_all = "kebab-case")]
 pub struct BufferConfig {
     pub jobs: Option<usize>,
-}
-
-#[cfg(feature = "prometheus")]
-#[derive(Debug, Clone /* TODO: used for hack */, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct PrometheusConfig {
-    pub endpoint: String,
-    pub job: String,
-    pub username: String,
-    pub password: PrivateString,
-    pub export_interval: u64,
-}
-
-impl MaybeDefault for PrometheusConfig {
-    #[inline]
-    fn default_opt() -> Option<Self> { None }
 }
 
 #[derive(
@@ -156,109 +141,134 @@ impl<T: clap::Args> clap::Args for OptConfig<T> {
     }
 }
 
-// TODO: Don't use hacks to rename clap arguments
-mod clap_hacks {
-    #![allow(clippy::struct_field_names)]
+// Used for clap hacks below
+#[allow(dead_code)] // Currently unused if feature 'prometheus' is disabled
+fn update_clone<T: ToOwned, U: Into<T>, F: FnOnce(&mut U) -> V, V>(t: &mut T, f: F) -> V
+where T::Owned: Into<U> {
+    let mut u = t.to_owned().into();
+    let ret = f(&mut u);
+    *t = u.into();
+    ret
+}
 
-    use clap::{Args, FromArgMatches};
+#[cfg(feature = "prometheus")]
+mod prometheus_impl {
+    use super::MaybeDefault;
+    use crate::PrivateString;
 
-    fn update<T: ToOwned, U: Into<T>, F: FnOnce(&mut U) -> V, V>(t: &mut T, f: F) -> V
-    where T::Owned: Into<U> {
-        let mut u = t.to_owned().into();
-        let ret = f(&mut u);
-        *t = u.into();
-        ret
+    #[derive(Debug, Clone /* TODO: used for hack */, serde::Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub struct PrometheusConfig {
+        pub endpoint: String,
+        pub job: String,
+        pub username: String,
+        pub password: PrivateString,
+        pub export_interval: u64,
     }
 
-    #[derive(clap::Args)]
-    struct PrometheusConfig {
-        #[arg(long, env)]
-        prometheus_endpoint: String,
-        #[arg(long, env)]
-        prometheus_job: String,
-        #[arg(long, env)]
-        prometheus_user: String,
-        #[arg(long, env)]
-        prometheus_pass: String,
-        #[arg(long, env)]
-        prometheus_export_interval: u64,
+    #[cfg(feature = "prometheus")]
+    impl MaybeDefault for PrometheusConfig {
+        #[inline]
+        fn default_opt() -> Option<Self> { None }
     }
 
-    impl From<super::PrometheusConfig> for PrometheusConfig {
-        fn from(value: super::PrometheusConfig) -> Self {
-            let super::PrometheusConfig {
-                endpoint,
-                job,
-                username,
-                password,
-                export_interval,
-            } = value;
-            Self {
-                prometheus_endpoint: endpoint,
-                prometheus_job: job,
-                prometheus_user: username,
-                prometheus_pass: password.into(),
-                prometheus_export_interval: export_interval,
+    // TODO: Don't use hacks to rename clap arguments
+    mod clap_hacks {
+        use clap::{Args, FromArgMatches};
+
+        use crate::config::update_clone;
+
+        #[allow(clippy::struct_field_names)]
+        #[derive(clap::Args)]
+        struct PrometheusConfig {
+            #[arg(long, env)]
+            prometheus_endpoint: String,
+            #[arg(long, env)]
+            prometheus_job: String,
+            #[arg(long, env)]
+            prometheus_user: String,
+            #[arg(long, env)]
+            prometheus_pass: String,
+            #[arg(long, env)]
+            prometheus_export_interval: u64,
+        }
+
+        impl From<super::PrometheusConfig> for PrometheusConfig {
+            fn from(value: super::PrometheusConfig) -> Self {
+                let super::PrometheusConfig {
+                    endpoint,
+                    job,
+                    username,
+                    password,
+                    export_interval,
+                } = value;
+                Self {
+                    prometheus_endpoint: endpoint,
+                    prometheus_job: job,
+                    prometheus_user: username,
+                    prometheus_pass: password.into(),
+                    prometheus_export_interval: export_interval,
+                }
             }
         }
-    }
 
-    impl From<PrometheusConfig> for super::PrometheusConfig {
-        fn from(value: PrometheusConfig) -> Self {
-            let PrometheusConfig {
-                prometheus_endpoint,
-                prometheus_job,
-                prometheus_user,
-                prometheus_pass,
-                prometheus_export_interval,
-            } = value;
-            Self {
-                endpoint: prometheus_endpoint,
-                job: prometheus_job,
-                username: prometheus_user,
-                password: prometheus_pass.into(),
-                export_interval: prometheus_export_interval,
+        impl From<PrometheusConfig> for super::PrometheusConfig {
+            fn from(value: PrometheusConfig) -> Self {
+                let PrometheusConfig {
+                    prometheus_endpoint,
+                    prometheus_job,
+                    prometheus_user,
+                    prometheus_pass,
+                    prometheus_export_interval,
+                } = value;
+                Self {
+                    endpoint: prometheus_endpoint,
+                    job: prometheus_job,
+                    username: prometheus_user,
+                    password: prometheus_pass.into(),
+                    export_interval: prometheus_export_interval,
+                }
             }
         }
-    }
 
-    impl FromArgMatches for super::PrometheusConfig {
-        fn from_arg_matches(matches: &clap::ArgMatches) -> Result<Self, clap::Error> {
-            PrometheusConfig::from_arg_matches(matches).map(Into::into)
+        impl FromArgMatches for super::PrometheusConfig {
+            fn from_arg_matches(matches: &clap::ArgMatches) -> Result<Self, clap::Error> {
+                PrometheusConfig::from_arg_matches(matches).map(Into::into)
+            }
+
+            fn from_arg_matches_mut(matches: &mut clap::ArgMatches) -> Result<Self, clap::Error> {
+                PrometheusConfig::from_arg_matches_mut(matches).map(Into::into)
+            }
+
+            fn update_from_arg_matches(
+                &mut self,
+                matches: &clap::ArgMatches,
+            ) -> Result<(), clap::Error> {
+                update_clone(self, |c: &mut PrometheusConfig| {
+                    c.update_from_arg_matches(matches)
+                })
+            }
+
+            fn update_from_arg_matches_mut(
+                &mut self,
+                matches: &mut clap::ArgMatches,
+            ) -> Result<(), clap::Error> {
+                update_clone(self, |c: &mut PrometheusConfig| {
+                    c.update_from_arg_matches_mut(matches)
+                })
+            }
         }
 
-        fn from_arg_matches_mut(matches: &mut clap::ArgMatches) -> Result<Self, clap::Error> {
-            PrometheusConfig::from_arg_matches_mut(matches).map(Into::into)
-        }
+        impl Args for super::PrometheusConfig {
+            fn group_id() -> Option<clap::Id> { PrometheusConfig::group_id() }
 
-        fn update_from_arg_matches(
-            &mut self,
-            matches: &clap::ArgMatches,
-        ) -> Result<(), clap::Error> {
-            update(self, |c: &mut PrometheusConfig| {
-                c.update_from_arg_matches(matches)
-            })
-        }
+            fn augment_args(cmd: clap::Command) -> clap::Command {
+                PrometheusConfig::augment_args_for_update(cmd)
+            }
 
-        fn update_from_arg_matches_mut(
-            &mut self,
-            matches: &mut clap::ArgMatches,
-        ) -> Result<(), clap::Error> {
-            update(self, |c: &mut PrometheusConfig| {
-                c.update_from_arg_matches_mut(matches)
-            })
-        }
-    }
-
-    impl Args for super::PrometheusConfig {
-        fn group_id() -> Option<clap::Id> { PrometheusConfig::group_id() }
-
-        fn augment_args(cmd: clap::Command) -> clap::Command {
-            PrometheusConfig::augment_args_for_update(cmd)
-        }
-
-        fn augment_args_for_update(cmd: clap::Command) -> clap::Command {
-            PrometheusConfig::augment_args_for_update(cmd)
+            fn augment_args_for_update(cmd: clap::Command) -> clap::Command {
+                PrometheusConfig::augment_args_for_update(cmd)
+            }
         }
     }
 }

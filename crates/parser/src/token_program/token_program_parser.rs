@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use spl_token::{
     solana_program::{program_error::ProgramError, program_pack::Pack},
     state::{Account, Mint, Multisig},
@@ -26,11 +28,16 @@ impl TokenProgramState {
     }
 }
 
+#[derive(Debug)]
 pub struct TokenProgramParser;
 
 impl Parser for TokenProgramParser {
     type Input = AccountUpdate;
     type Output = TokenProgramState;
+
+    fn id(&self) -> Cow<str> {
+        "yellowstone_vixen_parser::token_program::TokenProgramParser".into()
+    }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

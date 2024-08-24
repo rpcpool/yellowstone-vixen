@@ -8,18 +8,24 @@
 )]
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
+// TODO: document everything
+#![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 use std::{
+    borrow::Cow,
     collections::{HashMap, HashSet},
     fmt,
     future::Future,
     ops,
+    str::FromStr,
 };
 
 use yellowstone_grpc_proto::geyser::{
     subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
     SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateTransaction,
 };
+
+pub extern crate bs58;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -72,9 +78,39 @@ pub trait Parser {
     type Input: Update;
     type Output;
 
+    fn id(&self) -> Cow<str>;
+
     fn prefilter(&self) -> Prefilter;
 
     fn parse(&self, value: &Self::Input) -> impl Future<Output = ParseResult<Self::Output>> + Send;
+}
+
+pub trait ParserId {
+    fn id(&self) -> Cow<str>;
+}
+
+impl ParserId for std::convert::Infallible {
+    #[inline]
+    fn id(&self) -> Cow<str> { match *self {} }
+}
+
+impl<T: Parser> ParserId for T {
+    #[inline]
+    fn id(&self) -> Cow<str> { Parser::id(self) }
+}
+
+pub trait GetPrefilter {
+    fn prefilter(&self) -> Prefilter;
+}
+
+impl GetPrefilter for std::convert::Infallible {
+    #[inline]
+    fn prefilter(&self) -> Prefilter { match *self {} }
+}
+
+impl<T: Parser> GetPrefilter for T {
+    #[inline]
+    fn prefilter(&self) -> Prefilter { Parser::prefilter(self) }
 }
 
 #[derive(Debug)]
@@ -84,7 +120,7 @@ pub struct Prefilter {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) struct Pubkey(pub [u8; 32]);
+pub struct Pubkey(pub [u8; 32]);
 
 impl fmt::Display for Pubkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -104,6 +140,26 @@ impl TryFrom<&[u8]> for Pubkey {
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> { value.try_into().map(Self) }
 }
 
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub enum PubkeyFromStrError {
+    #[error("Invalid base58 string")]
+    Bs58(#[from] bs58::decode::Error),
+    #[error("Invalid key length, must be 32 bytes")]
+    Len(#[from] std::array::TryFromSliceError),
+}
+
+impl FromStr for Pubkey {
+    type Err = PubkeyFromStrError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        bs58::decode(s)
+            .into_vec()?
+            .as_slice()
+            .try_into()
+            .map_err(Into::into)
+    }
+}
+
 #[derive(Debug, Default, PartialEq)]
 pub(crate) struct AccountPrefilter {
     pub accounts: HashSet<Pubkey>,
@@ -117,7 +173,6 @@ pub(crate) struct TransactionPrefilter {
 
 impl Prefilter {
     #[inline]
-    #[must_use]
     pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
 }
 
@@ -130,6 +185,7 @@ pub enum PrefilterError {
 }
 
 #[derive(Debug, Default)]
+#[must_use = "Consider calling .build() on this builder"]
 pub struct PrefilterBuilder {
     error: Option<PrefilterError>,
     accounts: Option<HashSet<Pubkey>>,
@@ -193,7 +249,6 @@ impl PrefilterBuilder {
         self
     }
 
-    #[must_use]
     pub fn account_owners<I: IntoIterator>(self, it: I) -> Self
     where I::Item: AsRef<[u8]> {
         self.mutate(|this| {
@@ -205,7 +260,6 @@ impl PrefilterBuilder {
         })
     }
 
-    #[must_use]
     pub fn transaction_accounts<I: IntoIterator>(self, it: I) -> Self
     where I::Item: AsRef<[u8]> {
         self.mutate(|this| {

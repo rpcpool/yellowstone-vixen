@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use spl_token_2022::{
     extension::{BaseStateWithExtensions, StateWithExtensions},
     solana_program::{program_error::ProgramError, program_pack::Pack},
@@ -107,11 +109,16 @@ impl TokenExtensionState {
     }
 }
 
+#[derive(Debug)]
 pub struct TokenExtensionProgramParser;
 
 impl Parser for TokenExtensionProgramParser {
     type Input = AccountUpdate;
     type Output = TokenExtensionState;
+
+    fn id(&self) -> Cow<str> {
+        "yellowstone_vixen_parser::token_extensions::TokenExtensionProgramParser".into()
+    }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
