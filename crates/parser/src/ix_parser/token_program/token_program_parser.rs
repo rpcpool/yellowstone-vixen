@@ -6,7 +6,8 @@ use yellowstone_vixen_core::{
 
 use super::token_ix::*;
 use crate::ix_parser::helpers::{
-    check_min_accounts_req, get_multisig_signers, to_supported_coption_pubkey, to_supported_pubkey,
+    check_min_accounts_req, check_pubkeys_match, get_multisig_signers, to_supported_coption_pubkey,
+    to_supported_pubkey,
 };
 
 #[derive(Debug)]
@@ -26,14 +27,25 @@ impl Parser for TokenProgramIxParser {
     async fn parse(&self, ixs_update: &InstructionsUpdate) -> ParseResult<Self::Output> {
         let mut parsed_ixs: Vec<TokenProgramIx> = Vec::new();
         for outer_ixs in ixs_update.instructions.iter() {
-            let parsed_ix = TokenProgramIxParser::parse_ix(&outer_ixs.outer_ix)
-                .map_err(|e| ParseError::Other(e.into()))?;
-            parsed_ixs.push(parsed_ix);
-            for inner_ix in outer_ixs.inner_ixs.iter() {
-                let parsed_ix = TokenProgramIxParser::parse_ix(inner_ix)
+            if check_pubkeys_match(&outer_ixs.outer_ix.program_id, &spl_token::ID) {
+                let parsed_ix = TokenProgramIxParser::parse_ix(&outer_ixs.outer_ix)
                     .map_err(|e| ParseError::Other(e.into()))?;
                 parsed_ixs.push(parsed_ix);
             }
+            for inner_ix in outer_ixs.inner_ixs.iter() {
+                if check_pubkeys_match(&inner_ix.program_id, &spl_token::ID) {
+                    let parsed_ix = TokenProgramIxParser::parse_ix(inner_ix)
+                        .map_err(|e| ParseError::Other(e.into()))?;
+                    parsed_ixs.push(parsed_ix);
+                }
+            }
+        }
+        if parsed_ixs.len() == 0 {
+            return Err(ParseError::Other(
+                "No token program instructions found to parse"
+                    .to_string()
+                    .into(),
+            ));
         }
         Ok(parsed_ixs)
     }
@@ -42,7 +54,7 @@ impl Parser for TokenProgramIxParser {
 impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
     fn parse_ix(ix: &Instruction) -> Result<TokenProgramIx, String> {
         let ix_type = TokenInstruction::unpack(&ix.data)
-            .map_err(|e| format!("Err while unpacking ix data : {}", e))?;
+            .map_err(|e| format!("Err while unpacking ix data : {} data :{:?}", e, ix.data))?;
         let accounts_len = ix.accounts.len();
         match ix_type {
             TokenInstruction::Transfer { amount } => {

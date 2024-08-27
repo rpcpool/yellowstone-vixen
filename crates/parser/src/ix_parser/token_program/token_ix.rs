@@ -11,6 +11,12 @@ pub struct TransferAccounts {
 }
 
 #[derive(Debug)]
+pub struct TransferCheckedData {
+    pub amount: u64,
+    pub decimals: u8,
+}
+
+#[derive(Debug)]
 pub struct TransferData {
     pub amount: u64,
 }
@@ -144,12 +150,6 @@ pub struct TransferCheckedAccounts {
     pub destination: Pubkey,
     pub owner: Pubkey,
     pub multisig_signers: Option<Vec<Pubkey>>,
-}
-
-#[derive(Debug)]
-pub struct TransferCheckedData {
-    pub amount: u64,
-    pub decimals: u8,
 }
 
 #[derive(Debug)]

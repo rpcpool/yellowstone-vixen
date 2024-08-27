@@ -14,7 +14,7 @@ use solana_transaction_status::{
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
-    get_account_pubkeys_from_index, Instruction, InstructionsUpdate, IxWithInnerIxs,
+    get_account_pubkey_from_index, Instruction, InstructionsUpdate, IxWithInnerIxs,
     Pubkey as VixenPubkey,
 };
 
@@ -114,12 +114,17 @@ impl TryFromEncodedTransaction<InstructionsUpdate> for InstructionsUpdate {
                             .accounts
                             .iter()
                             .map(|account| {
-                                get_account_pubkeys_from_index(*account as usize, &account_keys)
+                                get_account_pubkey_from_index(*account as usize, &account_keys)
                             })
                             .collect::<Result<Vec<VixenPubkey>, String>>()?;
+                        let program_id = get_account_pubkey_from_index(
+                            ix.program_id_index as usize,
+                            &account_keys,
+                        )?;
                         let ix = Instruction {
                             data: decode_bs58_to_bytes(&ix.data)?,
                             accounts,
+                            program_id,
                         };
 
                         Ok(ix)
@@ -149,15 +154,20 @@ impl TryFromEncodedTransaction<InstructionsUpdate> for InstructionsUpdate {
                                         .accounts
                                         .iter()
                                         .map(|account| {
-                                            get_account_pubkeys_from_index(
+                                            get_account_pubkey_from_index(
                                                 *account as usize,
                                                 &account_keys,
                                             )
                                         })
                                         .collect::<Result<Vec<VixenPubkey>, String>>()?;
+                                    let program_id = get_account_pubkey_from_index(
+                                        compiled_ix.program_id_index as usize,
+                                        &account_keys,
+                                    )?;
                                     let ix = Instruction {
                                         data: decode_bs58_to_bytes(&compiled_ix.data)?,
                                         accounts,
+                                        program_id,
                                     };
 
                                     Ok(ix)

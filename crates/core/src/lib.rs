@@ -79,6 +79,7 @@ impl TryFrom<SubscribeUpdate> for VixenSubscribeUpdate {
 pub struct Instruction {
     pub data: Vec<u8>,
     pub accounts: Vec<Pubkey>,
+    pub program_id: Pubkey,
 }
 
 impl Update for InstructionsUpdate {
@@ -114,8 +115,10 @@ pub trait InstructionParser<C> {
 
 pub type InstructionsUpdate = Ixs;
 
-impl InstructionsUpdate {
-    pub fn try_from(tx_update: &TransactionUpdate) -> Result<Self, String> {
+impl TryFrom<&TransactionUpdate> for InstructionsUpdate {
+    type Error = String;
+
+    fn try_from(tx_update: &TransactionUpdate) -> Result<Self, String> {
         let tx = tx_update
             .transaction
             .as_ref()
@@ -132,8 +135,6 @@ impl InstructionsUpdate {
         )?;
 
         let static_account_keys = tx_message.account_keys.to_pubkey_vec()?;
-
-        // let mut vixen_ixs: Vec<VixenIxs> = Vec::with_capacity(tx_meta.inner_instructions.len());
 
         let loaded_addresses: LoadedAddresses = LoadedAddresses {
             writable: tx_meta.loaded_writable_addresses.to_pubkey_vec()?,
@@ -155,21 +156,23 @@ impl InstructionsUpdate {
                     .map(|idx| get_account_from_index(*idx as usize, &tx_accounts))
                     .collect::<Result<Vec<Pubkey>, String>>()?;
 
+                let program_id =
+                    get_account_from_index(ix.program_id_index as usize, &tx_accounts)?;
                 let instruction = Instruction {
                     data: ix.data.clone(),
                     accounts,
+                    program_id,
                 };
 
                 Ok(instruction)
             })
             .collect::<Result<Vec<Instruction>, String>>()?;
 
-        let inner_ixs = tx_meta.inner_instructions.clone();
         let mut ix_with_inner_ixs: Vec<IxWithInnerIxs> = Vec::new();
 
         for inner_ix in tx_meta.inner_instructions.iter() {
             if outer_ixs.get(inner_ix.index as usize).is_none() {
-                return Err("Index out of bounds".to_string());
+                return Err("no index matched with outer ixs".to_string());
             }
             let mut inner_ixs: Vec<Instruction> = Vec::with_capacity(inner_ix.instructions.len());
             for ix in inner_ix.instructions.iter() {
@@ -179,9 +182,12 @@ impl InstructionsUpdate {
                     .map(|idx| get_account_from_index(*idx as usize, &tx_accounts))
                     .collect::<Result<Vec<Pubkey>, String>>()?;
 
+                let program_id =
+                    get_account_from_index(ix.program_id_index as usize, &tx_accounts)?;
                 let instruction = Instruction {
                     data: ix.data.clone(),
                     accounts,
+                    program_id,
                 };
                 inner_ixs.push(instruction);
             }

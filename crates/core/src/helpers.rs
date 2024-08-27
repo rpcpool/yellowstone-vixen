@@ -108,7 +108,7 @@ pub fn get_account_from_index(index: usize, accounts: &TxAccountKeys) -> Result<
     )
 }
 
-pub fn get_account_pubkeys_from_index(
+pub fn get_account_pubkey_from_index(
     index: usize,
     accounts: &Vec<String>,
 ) -> Result<Pubkey, String> {

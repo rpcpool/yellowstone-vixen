@@ -4,10 +4,17 @@ use spl_token_group_interface::instruction::TokenGroupInstruction;
 use spl_token_metadata_interface::instruction::TokenMetadataInstruction;
 use yellowstone_vixen_core::{
     Instruction, InstructionParser, InstructionsUpdate, ParseError, ParseResult, Parser, Prefilter,
+    ReadableInstruction,
 };
 
-use super::{extensions::*, token_extensions_ix::TokenExtensionProgramIx};
-use crate::ix_parser::token_program::TokenProgramIxParser;
+use super::{extensions::*, token_extensions_ix::*};
+use crate::ix_parser::{
+    helpers::{
+        check_min_accounts_req, check_pubkeys_match, get_multisig_signers,
+        to_supported_coption_pubkey, to_supported_pubkey,
+    },
+    token_program::{token_ix::*, TokenProgramIxParser},
+};
 
 #[derive(Debug)]
 pub struct TokenExtensionProgramIxParser;
@@ -26,14 +33,25 @@ impl Parser for TokenExtensionProgramIxParser {
     async fn parse(&self, ixs_update: &InstructionsUpdate) -> ParseResult<Self::Output> {
         let mut parsed_ixs: Vec<TokenExtensionProgramIx> = Vec::new();
         for outer_ixs in ixs_update.instructions.iter() {
-            let parsed_ix = TokenExtensionProgramIxParser::parse_ix(&outer_ixs.outer_ix)
-                .map_err(|e| ParseError::Other(e.into()))?;
-            parsed_ixs.push(parsed_ix);
-            for inner_ix in outer_ixs.inner_ixs.iter() {
-                let parsed_ix = TokenExtensionProgramIxParser::parse_ix(inner_ix)
+            if check_pubkeys_match(&outer_ixs.outer_ix.program_id, &spl_token_2022::ID) {
+                let parsed_ix = TokenExtensionProgramIxParser::parse_ix(&outer_ixs.outer_ix)
                     .map_err(|e| ParseError::Other(e.into()))?;
                 parsed_ixs.push(parsed_ix);
             }
+            for inner_ix in outer_ixs.inner_ixs.iter() {
+                if check_pubkeys_match(&inner_ix.program_id, &spl_token_2022::ID) {
+                    let parsed_ix = TokenExtensionProgramIxParser::parse_ix(inner_ix)
+                        .map_err(|e| ParseError::Other(e.into()))?;
+                    parsed_ixs.push(parsed_ix);
+                }
+            }
+        }
+        if parsed_ixs.len() == 0 {
+            return Err(ParseError::Other(
+                "No token extension program instructions found to parse"
+                    .to_string()
+                    .into(),
+            ));
         }
         Ok(parsed_ixs)
     }
@@ -41,6 +59,7 @@ impl Parser for TokenExtensionProgramIxParser {
 
 impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParser {
     fn parse_ix(ix: &Instruction) -> Result<TokenExtensionProgramIx, String> {
+        let accounts_len = ix.accounts.len();
         match TokenInstruction::unpack(&ix.data) {
             Ok(token_ix) => match token_ix {
                 TokenInstruction::TransferFeeExtension => {
@@ -59,12 +78,15 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                     ))
                 },
                 TokenInstruction::CpiGuardExtension => Ok(TokenExtensionProgramIx::CpiGuardIx(
-                    CommonExtIxs::try_parse_extension_ix(ExtensionWithCommonIxs::CpiGuard, ix)?,
+                    CommonExtensionIxs::try_parse_extension_ix(
+                        ExtensionWithCommonIxs::CpiGuard,
+                        ix,
+                    )?,
                 )),
 
                 TokenInstruction::DefaultAccountStateExtension => {
                     Ok(TokenExtensionProgramIx::DefaultAccountStateIx(
-                        CommonExtIxs::try_parse_extension_ix(
+                        CommonExtensionIxs::try_parse_extension_ix(
                             ExtensionWithCommonIxs::DefaultAccountState,
                             ix,
                         )?,
@@ -72,75 +94,175 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                 },
                 TokenInstruction::InterestBearingMintExtension => {
                     Ok(TokenExtensionProgramIx::InterestBearingMintIx(
-                        CommonExtIxs::try_parse_extension_ix(
+                        CommonExtensionIxs::try_parse_extension_ix(
                             ExtensionWithCommonIxs::InterestBearingMint,
                             ix,
                         )?,
                     ))
                 },
-                TokenInstruction::MemoTransferExtension => Ok(
-                    TokenExtensionProgramIx::MemoTransferIx(CommonExtIxs::try_parse_extension_ix(
-                        ExtensionWithCommonIxs::MemoTransfer,
-                        ix,
-                    )?),
-                ),
+                TokenInstruction::MemoTransferExtension => {
+                    Ok(TokenExtensionProgramIx::MemoTransferIx(
+                        CommonExtensionIxs::try_parse_extension_ix(
+                            ExtensionWithCommonIxs::MemoTransfer,
+                            ix,
+                        )?,
+                    ))
+                },
 
                 TokenInstruction::GroupMemberPointerExtension => {
                     Ok(TokenExtensionProgramIx::GroupMemberPointerIx(
-                        CommonExtIxs::try_parse_extension_ix(
+                        CommonExtensionIxs::try_parse_extension_ix(
                             ExtensionWithCommonIxs::GroupMemberPointer,
                             ix,
                         )?,
                     ))
                 },
 
-                TokenInstruction::GroupPointerExtension => Ok(
-                    TokenExtensionProgramIx::GroupPointerIx(CommonExtIxs::try_parse_extension_ix(
-                        ExtensionWithCommonIxs::GroupPointer,
-                        ix,
-                    )?),
-                ),
+                TokenInstruction::GroupPointerExtension => {
+                    Ok(TokenExtensionProgramIx::GroupPointerIx(
+                        CommonExtensionIxs::try_parse_extension_ix(
+                            ExtensionWithCommonIxs::GroupPointer,
+                            ix,
+                        )?,
+                    ))
+                },
 
                 TokenInstruction::MetadataPointerExtension => {
                     Ok(TokenExtensionProgramIx::MetadataPointerIx(
-                        CommonExtIxs::try_parse_extension_ix(
+                        CommonExtensionIxs::try_parse_extension_ix(
                             ExtensionWithCommonIxs::MetadataPointer,
                             ix,
                         )?,
                     ))
                 },
 
-                TokenInstruction::TransferHookExtension => Ok(
-                    TokenExtensionProgramIx::TransferHookIx(CommonExtIxs::try_parse_extension_ix(
-                        ExtensionWithCommonIxs::TransferHook,
-                        ix,
-                    )?),
-                ),
-
-                _ => {
-                    println!("TokenProgramIx");
-                    Ok(TokenExtensionProgramIx::TokenProgramIx(
-                        TokenProgramIxParser::parse_ix(ix)?,
+                TokenInstruction::TransferHookExtension => {
+                    Ok(TokenExtensionProgramIx::TransferHookIx(
+                        CommonExtensionIxs::try_parse_extension_ix(
+                            ExtensionWithCommonIxs::TransferHook,
+                            ix,
+                        )?,
                     ))
                 },
+                TokenInstruction::SetAuthority {
+                    authority_type,
+                    new_authority,
+                } => {
+                    check_min_accounts_req(accounts_len, 2)?;
+                    Ok(TokenExtensionProgramIx::SetAuthority(ReadableInstruction {
+                        accounts: SetAuthorityAccounts {
+                            account: ix.accounts[0],
+                            current_authority: ix.accounts[1],
+                            multisig_signers: get_multisig_signers(ix, 2),
+                        },
+                        data: Some(TokenExtSetAutorityData {
+                            authority_type,
+                            new_authority: to_supported_coption_pubkey(new_authority),
+                        }),
+                    }))
+                },
+                TokenInstruction::CreateNativeMint => {
+                    check_min_accounts_req(accounts_len, 2)?;
+                    Ok(TokenExtensionProgramIx::CreateNativeMint(
+                        ReadableInstruction {
+                            accounts: CreateNativeMintAccounts {
+                                funding_account: ix.accounts[0],
+                                mint: ix.accounts[1],
+                            },
+                            data: None,
+                        },
+                    ))
+                },
+
+                TokenInstruction::InitializeMintCloseAuthority { close_authority } => {
+                    check_min_accounts_req(accounts_len, 1)?;
+                    Ok(TokenExtensionProgramIx::InitializeMintCloseAuthority(
+                        ReadableInstruction {
+                            accounts: InitializeMintCloseAuthorityAccounts {
+                                mint: ix.accounts[0],
+                            },
+                            data: Some(InitializeMintCloseAuthorityData {
+                                close_authority: to_supported_coption_pubkey(close_authority),
+                            }),
+                        },
+                    ))
+                },
+
+                TokenInstruction::InitializeNonTransferableMint => {
+                    check_min_accounts_req(accounts_len, 1)?;
+                    Ok(TokenExtensionProgramIx::InitializeNonTransferableMint(
+                        ReadableInstruction {
+                            accounts: InitializeNonTransferableMintAccounts {
+                                mint: ix.accounts[0],
+                            },
+                            data: None,
+                        },
+                    ))
+                },
+
+                TokenInstruction::Reallocate { extension_types } => {
+                    check_min_accounts_req(accounts_len, 4)?;
+                    Ok(TokenExtensionProgramIx::Reallocate(ReadableInstruction {
+                        accounts: ReallocateAccounts {
+                            account: ix.accounts[0],
+                            payer: ix.accounts[1],
+                            owner: ix.accounts[3],
+                            multisig_signers: get_multisig_signers(ix, 4),
+                        },
+                        data: Some(ReallocateData { extension_types }),
+                    }))
+                },
+
+                TokenInstruction::InitializePermanentDelegate { delegate } => {
+                    check_min_accounts_req(accounts_len, 1)?;
+                    Ok(TokenExtensionProgramIx::InitializePermanentDelegate(
+                        ReadableInstruction {
+                            accounts: InitializePermanentDelegateAccounts {
+                                account: ix.accounts[0],
+                            },
+                            data: Some(InitializePermanentDelegateData {
+                                delegate: to_supported_pubkey(delegate),
+                            }),
+                        },
+                    ))
+                },
+
+                TokenInstruction::WithdrawExcessLamports => {
+                    check_min_accounts_req(accounts_len, 3)?;
+                    Ok(TokenExtensionProgramIx::WithdrawExcessLamports(
+                        ReadableInstruction {
+                            accounts: WithdrawExcessLamportsAccounts {
+                                source_account: ix.accounts[0],
+                                destination_account: ix.accounts[1],
+                                authority: ix.accounts[2],
+                                multisig_signers: get_multisig_signers(ix, 3),
+                            },
+                            data: None,
+                        },
+                    ))
+                },
+
+                _ => Ok(TokenExtensionProgramIx::TokenProgramIx(
+                    TokenProgramIxParser::parse_ix(ix).map_err(|e| e.to_string())?,
+                )),
             },
             Err(e) => {
-                println!("Error while unpacking ix data : {}", e);
                 if let Ok(_) = TokenMetadataInstruction::unpack(&ix.data) {
-                    println!("TokenMetadataIx");
                     return Ok(TokenExtensionProgramIx::TokenMetadataIx(
                         TokenMetadataIx::try_parse_extension_ix(ix)?,
                     ));
                 }
 
                 if let Ok(_) = TokenGroupInstruction::unpack(&ix.data) {
-                    println!("TokenGroupIx");
                     return Ok(TokenExtensionProgramIx::TokenGroupIx(
                         TokenGroupIx::try_parse_extension_ix(ix)?,
                     ));
                 }
 
-                Err(format!("Err while unpacking ix data : {}", e))
+                Err(format!(
+                    "Err while unpacking ix data : {} data : {:?}",
+                    e, ix.data
+                ))
             },
         }
     }
@@ -153,28 +275,27 @@ mod tests {
     use yellowstone_vixen_mock::{run_tx_parse, tx_fixture, FixtureData};
 
     use super::*;
-    use crate::ix_parser::token_program::token_ix::TokenProgramIx;
-
+    use crate::ix_parser::token_extensions::TokenExtensionProgramIxParser;
     #[tokio::test]
-    async fn test_mint_parsing() {
+    async fn test_mint_to_checked_ix_parsing() {
         let parser = TokenExtensionProgramIxParser;
 
         let fixture_data = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
 
         if let FixtureData::Instructions(ixs) = fixture_data {
             let ixs = run_tx_parse!(parser, ixs);
-            if let TokenExtensionProgramIx::TokenProgramIx(ix) = &ixs[0] {
-                match ix {
-                    TokenProgramIx::MintToChecked(ix) => {
+            match &ixs[0] {
+                TokenExtensionProgramIx::TokenProgramIx(ix) => {
+                    if let TokenProgramIx::MintToChecked(ix) = ix {
                         assert!(ix.data.is_some());
                         let data = ix.data.as_ref().unwrap();
                         assert_eq!(data.decimals, 9);
                         assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals as u32)));
-                    },
-                    _ => panic!("Invalid Instruction"),
-                }
-            } else {
-                panic!("Invalid Instruction")
+                    } else {
+                        panic!("Invalid Instruction")
+                    }
+                },
+                _ => panic!("Invalid Instruction"),
             }
         } else {
             panic!("Invalid Fixture Data")

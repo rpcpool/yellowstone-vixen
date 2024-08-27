@@ -50,19 +50,17 @@ fn main() {
     vixen::Runtime::builder()
         .opts(config)
         .manager(HandlerManagers {
-            account:
-            //  HandlerManager::new([
-            //     handler::boxed(vixen::HandlerPack::new(TokenExtensionProgramParser, [
-            //         Handler,
-            //     ])),
-            //     handler::boxed(vixen::HandlerPack::new(TokenProgramParser, [Handler])),
-            // ]),
-            HandlerManager::empty(),
+            account: HandlerManager::new([
+                handler::boxed(vixen::HandlerPack::new(TokenExtensionProgramParser, [
+                    Handler,
+                ])),
+                handler::boxed(vixen::HandlerPack::new(TokenProgramParser, [Handler])),
+            ]),
             instructions: HandlerManager::new([
                 handler::boxed(vixen::HandlerPack::new(TokenExtensionProgramIxParser, [
                     Handler,
                 ])),
-                // handler::boxed(vixen::HandlerPack::new(TokenProgramIxParser, [Handler])),
+                handler::boxed(vixen::HandlerPack::new(TokenProgramIxParser, [Handler])),
             ]),
         })
         .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())

@@ -33,3 +33,7 @@ pub fn to_supported_coption_pubkey(sol_coption: COption<SolanaPubkey>) -> COptio
 pub fn to_supported_pubkey(sol_pubkey: SolanaPubkey) -> Pubkey {
     Pubkey::from_str(&sol_pubkey.to_string()).unwrap()
 }
+
+pub fn check_pubkeys_match<T: ToString, S: ToString>(pubkey1: &T, pubkey2: &S) -> bool {
+    pubkey1.to_string().eq(&pubkey2.to_string())
+}

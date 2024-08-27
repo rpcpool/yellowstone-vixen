@@ -63,7 +63,7 @@ pub struct DisableAccounts {
 }
 
 #[derive(Debug)]
-pub struct CommonExtIxs {
+pub struct CommonExtensionIxs {
     pub extension: ExtensionWithCommonIxs,
     pub ix: CommonIx,
 }
@@ -76,7 +76,7 @@ pub enum CommonIx {
     Disable(Ix<DisableAccounts>),
 }
 
-impl CommonExtIxs {
+impl CommonExtensionIxs {
     pub fn try_parse_extension_ix(
         extension: ExtensionWithCommonIxs,
         ix: &Instruction,
@@ -87,7 +87,7 @@ impl CommonExtIxs {
             IxsSupported::InitAndUpdate => match ix_type {
                 0 => {
                     check_min_accounts_req(accounts_len, 1)?;
-                    Ok(CommonExtIxs {
+                    Ok(CommonExtensionIxs {
                         extension,
                         ix: CommonIx::Initialize(Ix::from_accounts(InitializeAccounts {
                             mint: ix.accounts[0],
@@ -96,7 +96,7 @@ impl CommonExtIxs {
                 },
                 1 => {
                     check_min_accounts_req(accounts_len, 2)?;
-                    Ok(CommonExtIxs {
+                    Ok(CommonExtensionIxs {
                         extension,
                         ix: CommonIx::Update(Ix::from_accounts(UpdateAccounts {
                             mint: ix.accounts[0],
@@ -110,7 +110,7 @@ impl CommonExtIxs {
             IxsSupported::EnableAndDisable => match ix_type {
                 0 => {
                     check_min_accounts_req(accounts_len, 2)?;
-                    Ok(CommonExtIxs {
+                    Ok(CommonExtensionIxs {
                         extension,
                         ix: CommonIx::Enable(Ix::from_accounts(EnableAccounts {
                             account: ix.accounts[0],
@@ -121,7 +121,7 @@ impl CommonExtIxs {
                 },
                 1 => {
                     check_min_accounts_req(accounts_len, 2)?;
-                    Ok(CommonExtIxs {
+                    Ok(CommonExtensionIxs {
                         extension,
                         ix: CommonIx::Disable(Ix::from_accounts(DisableAccounts {
                             account: ix.accounts[0],

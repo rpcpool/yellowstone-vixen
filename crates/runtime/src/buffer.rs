@@ -6,21 +6,16 @@ use topograph::{
     executor::{Executor, Nonblock, Tokio},
     prelude::*,
 };
-use tracing::{error, warn};
-use vixen_core::{
-    Instruction, InstructionsUpdate, UpdateType, VixenSubscribeUpdate, VixenUpdateOneOf,
-};
+use tracing::warn;
+use vixen_core::{InstructionsUpdate, UpdateType, VixenSubscribeUpdate, VixenUpdateOneOf};
 use warp::Filter;
-use yellowstone_grpc_proto::{
-    geyser::{subscribe_update::UpdateOneof, SubscribeUpdate},
-    tonic::Status,
-};
-use yellowstone_vixen_core::{AccountUpdate, TransactionUpdate};
+use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
+use yellowstone_vixen_core::AccountUpdate;
 
 use crate::{
     handler::DynHandlerPack,
     metrics::{Metrics, MetricsBackend},
-    yellowstone, Error, HandlerManagers,
+    yellowstone, HandlerManagers,
 };
 
 #[derive(Default, Debug, Clone, Copy, clap::Args, serde::Deserialize)]
@@ -93,44 +88,6 @@ pub fn run_yellowstone<
                 let Some(update) = update_oneof else { return };
 
                 match update {
-                    // UpdateOneof::Account(a) => {
-                    //     manager
-                    //         .account
-                    //         .get_handlers(&filters)
-                    //         .run(&a, &metrics)
-                    //         .await;
-                    // },
-                    // UpdateOneof::Transaction(t) => {
-                    //     match Instructions::try_from(&t) {
-                    //         // Ok(ix) => {
-                    //         //     manager
-                    //         //         .instruction
-                    //         //         .get_handlers(&filters)
-                    //         //         .run(&ix, &metrics)
-                    //         //         .await;
-                    //         // },
-                    //         // Err(e) => {
-                    //         //     error!(%e, "Error parsing transaction update");
-                    //         // },
-                    //         Ok(ix) => {
-                    //             manager
-                    //                 .instruction
-                    //                 .get_handlers(&filters)
-                    //                 .run(&ix, &metrics)
-                    //                 .await;
-                    //         },
-                    //         Err(e) => {
-                    //             error!(%e, "Error parsing transaction update");
-                    //         },
-                    //     }
-
-                    //     // manager
-                    //     //     .transaction
-                    //     //     .get_handlers(&filters)
-                    //     //     .run(&t, &metrics)
-                    //     //     .await;
-                    // },
-                    // var => warn!(?var, "Unknown update variant"),
                     VixenUpdateOneOf::Account(update) => {
                         manager
                             .account
@@ -156,7 +113,6 @@ pub fn run_yellowstone<
         let mut stream = pin!(client.stream);
         while let Some(update) = stream.next().await {
             match update {
-                //TODO add conversions here
                 Ok(u) => {
                     let vixen_update = VixenSubscribeUpdate::try_from(u);
                     match vixen_update {
@@ -170,14 +126,10 @@ pub fn run_yellowstone<
                             warn!(%e, "Error converting update to vixen update");
                         },
                     }
-                    // if let Some(ty) = UpdateType::get(&u.update_oneof) {
-                    //     metrics.inc_received(ty);
-                    // }
-                    // exec.push(u);
                 },
                 Err(e) => {
                     tx.send(e.into()).unwrap_or_else(|err| {
-                        warn!(%err, "Yellowstone stream returned an error after stop requested");
+                        warn!(%err, "Error converting gRPC stream update to vixen update");
                     });
                     return;
                 },
