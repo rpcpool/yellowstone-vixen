@@ -2,7 +2,7 @@ use spl_token_2022::extension::confidential_transfer_fee::instruction::Confident
 use yellowstone_vixen_core::{Instruction, Pubkey};
 
 use super::helpers::{decode_extension_ix_type, ExtensionIxParser, Ix};
-use crate::ix_parser::helpers::{check_min_accounts_req, get_multisig_signers};
+use crate::helpers::{check_min_accounts_req, get_multisig_signers};
 
 #[derive(Debug)]
 pub struct InitializeConfidentialTransferFeeConfigAccounts {

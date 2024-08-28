@@ -2,9 +2,9 @@ use spl_token_2022::extension::confidential_transfer::instruction::ConfidentialT
 use yellowstone_vixen_core::{Instruction, Pubkey};
 
 use super::helpers::{decode_extension_ix_type, ExtensionIxParser, Ix};
-use crate::ix_parser::{
+use crate::{
     helpers::{check_min_accounts_req, get_multisig_signers},
-    token_program::token_ix::InitializeMintAccounts,
+    token_program::ix_parser::InitializeMintAccounts,
 };
 
 const SOLANA_ZK_PROOF_PROGRAM_ID: &str = "ZkTokenProof1111111111111111111111111111111";

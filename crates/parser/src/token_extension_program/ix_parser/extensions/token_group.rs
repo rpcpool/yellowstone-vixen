@@ -5,7 +5,7 @@ use spl_token_group_interface::instruction::{
 use yellowstone_vixen_core::{Instruction, Pubkey, ReadableInstruction};
 
 use super::helpers::ExtensionIxParser;
-use crate::ix_parser::helpers::check_min_accounts_req;
+use crate::helpers::check_min_accounts_req;
 
 #[derive(Debug)]
 pub struct InitializeGroupAccounts {

@@ -3,7 +3,7 @@ use spl_token_2022::{extension::ExtensionType, instruction::AuthorityType};
 use yellowstone_vixen_core::{Pubkey, ReadableInstruction};
 
 use super::extensions::*;
-use crate::ix_parser::token_program::token_ix::*;
+use crate::token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIx};
 
 #[derive(Debug)]
 pub enum TokenExtensionProgramIx {

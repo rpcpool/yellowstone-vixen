@@ -1,7 +1,7 @@
 use yellowstone_vixen_core::{Instruction, Pubkey};
 
 use super::helpers::{decode_extension_ix_type, Ix};
-use crate::ix_parser::helpers::{check_min_accounts_req, get_multisig_signers};
+use crate::helpers::{check_min_accounts_req, get_multisig_signers};
 
 #[derive(Debug)]
 pub enum ExtensionWithCommonIxs {
@@ -37,7 +37,7 @@ impl ExtensionWithCommonIxs {
 }
 
 #[derive(Debug)]
-pub struct InitializeAccounts {
+pub struct ExtInitializeAccounts {
     pub mint: Pubkey,
 }
 
@@ -70,7 +70,7 @@ pub struct CommonExtensionIxs {
 
 #[derive(Debug)]
 pub enum CommonIx {
-    Initialize(Ix<InitializeAccounts>),
+    Initialize(Ix<ExtInitializeAccounts>),
     Update(Ix<UpdateAccounts>),
     Enable(Ix<EnableAccounts>),
     Disable(Ix<DisableAccounts>),
@@ -89,7 +89,7 @@ impl CommonExtensionIxs {
                     check_min_accounts_req(accounts_len, 1)?;
                     Ok(CommonExtensionIxs {
                         extension,
-                        ix: CommonIx::Initialize(Ix::from_accounts(InitializeAccounts {
+                        ix: CommonIx::Initialize(Ix::from_accounts(ExtInitializeAccounts {
                             mint: ix.accounts[0],
                         })),
                     })

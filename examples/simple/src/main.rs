@@ -14,12 +14,10 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vixen::{handler, HandlerManager, HandlerManagers};
 use yellowstone_vixen::{self as vixen, metrics::MetricsFactory};
 use yellowstone_vixen_parser::{
-    account_parser::{
-        token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
+    token_extension_program::{
+        account_parser::TokenExtensionProgramParser, ix_parser::TokenExtensionProgramIxParser,
     },
-    ix_parser::{
-        token_extensions::TokenExtensionProgramIxParser, token_program::TokenProgramIxParser,
-    },
+    token_program::{account_parser::TokenProgramParser, ix_parser::TokenProgramIxParser},
 };
 #[derive(clap::Parser)]
 #[command(version, author, about)]

@@ -7,13 +7,13 @@ use yellowstone_vixen_core::{
     ReadableInstruction,
 };
 
-use super::{extensions::*, token_extensions_ix::*};
-use crate::ix_parser::{
+use super::{extensions::*, ixs::*};
+use crate::{
     helpers::{
         check_min_accounts_req, check_pubkeys_match, get_multisig_signers,
         to_supported_coption_pubkey, to_supported_pubkey,
     },
-    token_program::{token_ix::*, TokenProgramIxParser},
+    token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIxParser},
 };
 
 #[derive(Debug)]
@@ -275,7 +275,7 @@ mod tests {
     use yellowstone_vixen_mock::{run_tx_parse, tx_fixture, FixtureData};
 
     use super::*;
-    use crate::ix_parser::token_extensions::TokenExtensionProgramIxParser;
+    use crate::token_program::ix_parser::TokenProgramIx;
     #[tokio::test]
     async fn test_mint_to_checked_ix_parsing() {
         let parser = TokenExtensionProgramIxParser;

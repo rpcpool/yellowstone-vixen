@@ -3,9 +3,7 @@ use spl_token_2022::extension::transfer_fee::instruction::TransferFeeInstruction
 use yellowstone_vixen_core::{Instruction, Pubkey, ReadableInstruction};
 
 use super::helpers::ExtensionIxParser;
-use crate::ix_parser::helpers::{
-    check_min_accounts_req, get_multisig_signers, to_supported_coption_pubkey,
-};
+use crate::helpers::{check_min_accounts_req, get_multisig_signers, to_supported_coption_pubkey};
 
 #[derive(Debug)]
 pub struct TransferCheckedWithFeeAccounts {

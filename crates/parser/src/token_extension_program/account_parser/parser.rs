@@ -5,7 +5,7 @@ use spl_token_2022::{
 };
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter};
 
-use super::token_extension_helpers::{
+use super::helpers::{
     mint_account_extensions_data_bytes, token_account_extensions_data_bytes, ExtensionData,
 };
 
