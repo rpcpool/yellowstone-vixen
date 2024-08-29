@@ -1,7 +1,9 @@
 use std::fmt::Debug;
 
 use tokio::sync::broadcast;
-use vixen_core::{AccountUpdate, Parser, Pubkey, TransactionUpdate};
+use vixen_core::{
+    instruction::InstructionUpdate, AccountUpdate, Parser, Pubkey, TransactionUpdate,
+};
 use yellowstone_vixen_proto::{
     prost::{Message, Name},
     prost_types::Any,
@@ -14,9 +16,9 @@ use super::{
 };
 use crate::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
-    handler::BoxPipeline,
+    handler::{BoxPipeline, Pipeline},
     metrics::MetricsFactory,
-    util, Pipeline,
+    util,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -100,11 +102,25 @@ impl<M: MetricsFactory> StreamBuilder<M> {
         self.insert(transaction, |s| &mut s.transaction)
     }
 
+    pub fn instruction<
+        T: Debug + ProgramParser<Input = InstructionUpdate> + Send + Sync + 'static,
+    >(
+        self,
+        instruction: T,
+    ) -> Self
+    where
+        T::Input: Sync,
+        T::Output: Message + Name + Send + Sync,
+    {
+        self.insert(instruction, |s| &mut s.instruction)
+    }
+
     pub fn try_build(self, config: StreamConfig<M::Config>) -> Result<Server<M>, BuilderError> {
         let Self {
             err,
             account,
             transaction,
+            instruction,
             metrics,
             extra: StreamKind(channels),
         } = self;
@@ -119,6 +135,7 @@ impl<M: MetricsFactory> StreamBuilder<M> {
             err: Ok(()),
             account,
             transaction,
+            instruction,
             metrics,
             extra: RuntimeKind,
         }

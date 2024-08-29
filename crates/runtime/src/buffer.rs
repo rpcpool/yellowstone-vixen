@@ -2,7 +2,7 @@ use std::{pin::pin, sync::Arc};
 
 use futures_util::{Stream, StreamExt};
 use topograph::{
-    executor::{Executor, Nonblock, Tokio},
+    executor::{self, Executor, Nonblock, Tokio},
     prelude::*,
 };
 use tracing::{warn, Instrument};
@@ -10,19 +10,17 @@ use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdatePing},
     tonic::Status,
 };
-use yellowstone_vixen_core::UpdateType;
 
 use crate::{
     config::BufferConfig,
-    metrics::{Counters, Instrumenter},
-    stop::{self, StopCode, StopTx},
-    yellowstone, PipelineSets,
+    handler::PipelineSets,
+    metrics::{Counters, Instrumenter, UpdateType},
+    stop::{self, StopCode, StopRx, StopTx},
+    yellowstone,
 };
 
-pub struct Buffer(
-    tokio::task::JoinHandle<Result<StopCode, crate::Error>>,
-    StopTx,
-);
+type TaskHandle = tokio::task::JoinHandle<Result<StopCode, crate::Error>>;
+pub struct Buffer(TaskHandle, StopTx);
 
 impl Buffer {
     pub async fn join(self) -> Result<StopCode, crate::Error> {
@@ -98,65 +96,90 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
     }
 }
 
-pub fn run_yellowstone<
-    I,
-    T,
-    S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static,
-    M: Instrumenter,
->(
-    config: BufferConfig,
-    client: yellowstone::YellowstoneStream<I, T, S>,
-    pipelines: PipelineSets,
-    counters: Counters<M>,
-) -> Buffer {
-    let BufferConfig { jobs } = config;
+impl Buffer {
+    fn dispatch<M: Instrumenter, E: ExecutorHandle<Job>>(
+        exec: &E,
+        update: SubscribeUpdate,
+        counters: &Counters<M>,
+    ) {
+        let span = tracing::trace_span!("process_update", ?update).entered();
+        if let Some(ty) = UpdateType::get(&update.update_oneof) {
+            counters.inc_received(ty);
+        }
+        exec.push(Job(span.exit(), update));
+    }
 
-    let pipelines = Arc::new(pipelines);
-    let counters = Arc::new(counters);
-    let exec = Executor::builder(Nonblock(Tokio))
-        .max_concurrency(jobs)
-        .build_async(Handler {
+    fn run_impl<
+        M: Instrumenter,
+        B: FnOnce(executor::Builder<Job, Nonblock<Tokio>>) -> executor::Builder<Job, Nonblock<Tokio>>,
+        S: FnOnce(Executor<Job, Nonblock<Tokio>>, StopRx, Arc<Counters<M>>) -> TaskHandle,
+    >(
+        config: BufferConfig,
+        pipelines: PipelineSets,
+        counters: Counters<M>,
+        build: B,
+        spawn: S,
+    ) -> Self {
+        let BufferConfig { jobs } = config;
+
+        let pipelines = Arc::new(pipelines);
+        let counters = Arc::new(counters);
+        let exec = build(Executor::builder(Nonblock(Tokio)).max_concurrency(jobs))
+            .build_async(Handler {
+                pipelines,
+                counters: Arc::clone(&counters),
+            })
+            .unwrap_or_else(|i| match i {});
+
+        let (stop_tx, rx) = stop::channel();
+
+        let task = spawn(exec, rx, counters);
+        Self(task, stop_tx)
+    }
+
+    pub fn run_yellowstone<
+        I,
+        T,
+        S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static,
+        M: Instrumenter,
+    >(
+        config: BufferConfig,
+        client: yellowstone::YellowstoneStream<I, T, S>,
+        pipelines: PipelineSets,
+        counters: Counters<M>,
+    ) -> Self {
+        Self::run_impl(
+            config,
             pipelines,
-            counters: Arc::clone(&counters),
-        })
-        .unwrap_or_else(|i| match i {});
-
-    let (stop_tx, mut stop_rx) = stop::channel();
-
-    let task = tokio::task::spawn_local(async move {
-        enum Event {
-            Update(Option<Result<SubscribeUpdate, Status>>),
-            Stop(StopCode),
-        }
-
-        let mut stream = pin!(client.stream);
-        loop {
-            let event = tokio::select! {
-                u = stream
-                        .next()
-                        .instrument(tracing::trace_span!("await_update"))
-                    => Event::Update(u),
-                c = &mut stop_rx => Event::Stop(c),
-            };
-
-            let update = match event {
-                Event::Update(Some(u)) => u,
-                Event::Update(None) => break Err(crate::Error::ServerHangup),
-                Event::Stop(c) => break Ok(c),
-            };
-
-            let span = tracing::trace_span!("process_update", ?update).entered();
-            match update {
-                Ok(u) => {
-                    if let Some(ty) = UpdateType::get(&u.update_oneof) {
-                        counters.inc_received(ty);
+            counters,
+            std::convert::identity,
+            |exec, mut stop_rx, counters| {
+                tokio::task::spawn_local(async move {
+                    enum Event {
+                        Update(Option<Result<SubscribeUpdate, Status>>),
+                        Stop(StopCode),
                     }
-                    exec.push(Job(span.exit(), u));
-                },
-                Err(e) => break Err(e.into()),
-            }
-        }
-    });
 
-    Buffer(task, stop_tx)
+                    let mut stream = pin!(client.stream);
+                    loop {
+                        let event = tokio::select! {
+                            u = stream
+                                .next()
+                                .instrument(tracing::trace_span!("await_update"))
+                                => Event::Update(u),
+                                c = &mut stop_rx => Event::Stop(c),
+                        };
+
+                        let update = match event {
+                            Event::Update(Some(u)) => u,
+                            Event::Update(None) => break Err(crate::Error::ServerHangup),
+                            Event::Stop(c) => break Ok(c),
+                        };
+
+                        Self::dispatch(&exec, update?, &counters);
+                    }
+                })
+            },
+        )
+    }
 }

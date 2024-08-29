@@ -32,13 +32,14 @@ mod buffer;
 pub mod builder;
 pub mod config;
 pub mod handler;
+pub mod instruction;
 pub mod metrics;
 #[cfg(feature = "stream")]
 pub mod stream;
 mod util;
 mod yellowstone;
 
-pub use handler::{DynPipeline, Handler, HandlerResult, Pipeline, PipelineSet, PipelineSets};
+pub use handler::{Handler, HandlerResult, Pipeline};
 pub use util::*;
 
 #[derive(Debug, thiserror::Error)]
@@ -61,7 +62,7 @@ pub enum Error {
 pub struct Runtime<M: MetricsFactory> {
     yellowstone_cfg: YellowstoneConfig,
     buffer_cfg: BufferConfig,
-    pipelines: PipelineSets,
+    pipelines: handler::PipelineSets,
     counters: Counters<M::Instrumenter>,
     exporter: Option<M::Exporter>,
 }
@@ -149,7 +150,7 @@ impl<M: MetricsFactory> Runtime<M> {
                 .map_err(Into::into);
         }
 
-        let mut buffer = buffer::run_yellowstone(buffer_cfg, client, pipelines, counters);
+        let mut buffer = buffer::Buffer::run_yellowstone(buffer_cfg, client, pipelines, counters);
 
         let stop_ty = tokio::select! {
             s = signal => StopType::Signal(s),

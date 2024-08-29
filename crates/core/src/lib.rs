@@ -21,11 +21,13 @@ use std::{
 };
 
 use yellowstone_grpc_proto::geyser::{
-    subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
-    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateTransaction,
+    SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterTransactions,
+    SubscribeUpdateAccount, SubscribeUpdateTransaction,
 };
 
 pub extern crate bs58;
+
+pub mod instruction;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -45,37 +47,8 @@ pub type ParseResult<T> = Result<T, ParseError>;
 pub type AccountUpdate = SubscribeUpdateAccount;
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 
-pub trait Update {
-    const TYPE: UpdateType;
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum UpdateType {
-    Account,
-    Transaction,
-}
-
-impl UpdateType {
-    #[must_use]
-    pub fn get(update: &Option<UpdateOneof>) -> Option<Self> {
-        match update {
-            Some(UpdateOneof::Account(_)) => Some(Self::Account),
-            Some(UpdateOneof::Transaction(_)) => Some(Self::Transaction),
-            _ => None,
-        }
-    }
-}
-
-impl Update for AccountUpdate {
-    const TYPE: UpdateType = UpdateType::Account;
-}
-
-impl Update for TransactionUpdate {
-    const TYPE: UpdateType = UpdateType::Transaction;
-}
-
 pub trait Parser {
-    type Input: Update;
+    type Input;
     type Output;
 
     fn id(&self) -> Cow<str>;
@@ -113,10 +86,72 @@ impl<T: Parser> GetPrefilter for T {
     fn prefilter(&self) -> Prefilter { Parser::prefilter(self) }
 }
 
-#[derive(Debug)]
+// TODO: why are so many fields on the prefilters and prefilter builder optional???
+#[derive(Debug, Default)]
 pub struct Prefilter {
     pub(crate) account: Option<AccountPrefilter>,
     pub(crate) transaction: Option<TransactionPrefilter>,
+}
+
+fn merge_opt<T, F: FnOnce(&mut T, T)>(lhs: &mut Option<T>, rhs: Option<T>, f: F) {
+    match (lhs.as_mut(), rhs) {
+        (None, r) => *lhs = r,
+        (Some(_), None) => (),
+        (Some(l), Some(r)) => f(l, r),
+    }
+}
+
+impl Prefilter {
+    #[inline]
+    pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
+
+    pub fn merge(&mut self, other: Prefilter) {
+        let Self {
+            account,
+            transaction,
+        } = self;
+        merge_opt(account, other.account, AccountPrefilter::merge);
+        merge_opt(transaction, other.transaction, TransactionPrefilter::merge);
+    }
+}
+
+impl FromIterator<Prefilter> for Prefilter {
+    fn from_iter<T: IntoIterator<Item = Prefilter>>(iter: T) -> Self {
+        let mut iter = iter.into_iter();
+        let Some(ret) = iter.next() else {
+            return Self::default();
+        };
+        iter.fold(ret, |mut l, r| {
+            l.merge(r);
+            l
+        })
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
+pub(crate) struct AccountPrefilter {
+    pub accounts: HashSet<Pubkey>,
+    pub owners: HashSet<Pubkey>,
+}
+
+impl AccountPrefilter {
+    pub fn merge(&mut self, other: AccountPrefilter) {
+        let Self { accounts, owners } = self;
+        accounts.extend(other.accounts);
+        owners.extend(other.owners);
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
+pub(crate) struct TransactionPrefilter {
+    pub accounts: HashSet<Pubkey>,
+}
+
+impl TransactionPrefilter {
+    pub fn merge(&mut self, other: TransactionPrefilter) {
+        let Self { accounts } = self;
+        accounts.extend(other.accounts);
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -158,22 +193,6 @@ impl FromStr for Pubkey {
             .try_into()
             .map_err(Into::into)
     }
-}
-
-#[derive(Debug, Default, PartialEq)]
-pub(crate) struct AccountPrefilter {
-    pub accounts: HashSet<Pubkey>,
-    pub owners: HashSet<Pubkey>,
-}
-
-#[derive(Debug, Default, PartialEq)]
-pub(crate) struct TransactionPrefilter {
-    pub accounts: HashSet<Pubkey>,
-}
-
-impl Prefilter {
-    #[inline]
-    pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
 }
 
 #[derive(Debug, Clone, thiserror::Error)]

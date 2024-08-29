@@ -6047,6 +6047,7 @@ dependencies = [
  "opentelemetry",
  "prometheus",
  "serde",
+ "smallvec",
  "thiserror",
  "tokio",
  "topograph",

@@ -1,11 +1,12 @@
 use tracing::error;
-use vixen_core::{AccountUpdate, TransactionUpdate};
+use vixen_core::{instruction::InstructionUpdate, AccountUpdate, TransactionUpdate};
 
 use crate::{
     config::{MaybeDefault, VixenConfig},
-    handler::BoxPipeline,
+    handler::{BoxPipeline, DynPipeline, PipelineSets},
+    instruction::InstructionPipeline,
     metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
-    util, DynPipeline, PipelineSets, Runtime,
+    util, Runtime,
 };
 
 pub trait BuilderKind: Default {
@@ -32,6 +33,7 @@ pub struct Builder<K: BuilderKind, M> {
     pub(crate) err: Result<(), K::Error>,
     pub(crate) account: Vec<BoxPipeline<'static, AccountUpdate>>,
     pub(crate) transaction: Vec<BoxPipeline<'static, TransactionUpdate>>,
+    pub(crate) instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
     pub(crate) metrics: M,
     pub(crate) extra: K,
 }
@@ -42,6 +44,7 @@ impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
             err: Ok(()),
             account: vec![],
             transaction: vec![],
+            instruction: vec![],
             metrics: NullMetrics,
             extra: K::default(),
         }
@@ -83,6 +86,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             err,
             account,
             transaction,
+            instruction,
             metrics: _,
             extra,
         } = self;
@@ -91,6 +95,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             err,
             account,
             transaction,
+            instruction,
             metrics,
             extra,
         }
@@ -120,11 +125,19 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.transaction.push(Box::new(transaction)))
     }
 
+    pub fn instruction<I: DynPipeline<InstructionUpdate> + Send + Sync + 'static>(
+        self,
+        instruction: I,
+    ) -> Self {
+        self.mutate(|s| s.instruction.push(Box::new(instruction)))
+    }
+
     pub fn try_build(self, config: VixenConfig<M::Config>) -> Result<Runtime<M>, BuilderError> {
         let Self {
             err,
             account,
-            transaction,
+            mut transaction,
+            instruction,
             metrics,
             extra: RuntimeKind,
         } = self;
@@ -144,6 +157,10 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         let Metrics(instrumenter, exporter) = metrics
             .create(metrics_cfg, "vixen")
             .map_err(|e| BuilderError::Metrics(e.into()))?;
+
+        if let Some(i) = InstructionPipeline::new(instruction, &instrumenter) {
+            transaction.push(Box::new(i));
+        }
 
         let account_len = account.len();
         let transaction_len = transaction.len();

@@ -18,7 +18,10 @@ use yellowstone_vixen_proto::{
 };
 
 use super::config::GrpcConfig;
-use crate::{stop, Handler, HandlerResult};
+use crate::{
+    handler::{Handler, HandlerResult},
+    stop,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

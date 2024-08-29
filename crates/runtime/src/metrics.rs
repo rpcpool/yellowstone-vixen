@@ -10,7 +10,7 @@ use std::{
 pub use opentelemetry_impl::*;
 #[cfg(feature = "prometheus")]
 pub use prometheus_impl::*;
-use yellowstone_vixen_core::UpdateType;
+use yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof;
 
 use crate::{
     config::{MaybeDefault, NullConfig},
@@ -56,6 +56,14 @@ pub trait Counter: Send + Sync {
     fn inc(&self) { self.inc_by(1); }
 
     fn inc_by(&self, by: u64);
+}
+
+impl<T: Counter> Counter for &T {
+    #[inline]
+    fn inc(&self) { T::inc(self); }
+
+    #[inline]
+    fn inc_by(&self, by: u64) { T::inc_by(self, by); }
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -239,7 +247,6 @@ mod opentelemetry_impl {
         async fn run(self, stop: StopRx) -> Result<StopCode, Self::Error> {
             let Self(meter_provider) = self;
             let res = stop.await;
-            // TODO: not sure why this takes so long
             tokio::task::spawn_blocking(|| drop(meter_provider));
             Ok(res)
         }
@@ -270,81 +277,155 @@ pub(crate) enum JobResult {
 }
 
 impl JobResult {
-    pub fn from_pipeline<R: Borrow<Result<U, PipelineErrors>>, U>(res: R) -> Self {
-        match res.borrow() {
+    pub fn from_pipeline<R: Borrow<Result<U, PipelineErrors>>, U>(res: R) -> Option<Self> {
+        Some(match res.borrow() {
             Ok(_) => Self::Ok,
             Err(PipelineErrors::Parse(_)) => Self::ParseErr,
             Err(PipelineErrors::Handlers(v)) => Self::HandleErr(v.len()),
+            Err(PipelineErrors::AlreadyHandled(_)) => return None,
+        })
+    }
+}
+
+pub(crate) trait Update {
+    const TYPE: UpdateType;
+}
+
+impl Update for vixen_core::AccountUpdate {
+    const TYPE: UpdateType = UpdateType::Account;
+}
+
+impl Update for vixen_core::TransactionUpdate {
+    const TYPE: UpdateType = UpdateType::Transaction;
+}
+
+/// Tuple of `(singular, plural)`
+#[derive(Clone, Copy)]
+struct Noun(&'static str, &'static str);
+
+macro_rules! noun_formatters {
+    () => {};
+
+    ($name:ident($s:pat, $p:pat) => $fmt:literal $(, $($tts:tt)*)?) => {
+        fn $name(Noun($s, $p): Noun) -> String { format!($fmt) }
+        $(noun_formatters!($($tts)*);)?
+    };
+}
+
+#[derive(Clone, Copy)]
+pub(crate) enum UpdateType {
+    Account,
+    Transaction,
+}
+
+impl UpdateType {
+    pub fn get(update: &Option<UpdateOneof>) -> Option<Self> {
+        match update {
+            Some(UpdateOneof::Account(vixen_core::AccountUpdate { .. })) => Some(Self::Account),
+            Some(UpdateOneof::Transaction(vixen_core::TransactionUpdate { .. })) => {
+                Some(Self::Transaction)
+            },
+            _ => None,
+        }
+    }
+
+    const fn noun(self) -> Noun {
+        match self {
+            UpdateType::Account => Noun("account", "accounts"),
+            UpdateType::Transaction => Noun("transaction", "transactions"),
         }
     }
 }
 
+struct UpdateCounters<B: Instrumenter> {
+    account: B::Counter,
+    transaction: B::Counter,
+}
+
+impl<B: Instrumenter> UpdateCounters<B> {
+    fn new<F: Fn(Noun) -> B::Counter>(f: F) -> Self {
+        let f = move |t: UpdateType| f(t.noun());
+        Self {
+            account: f(UpdateType::Account),
+            transaction: f(UpdateType::Transaction),
+        }
+    }
+
+    fn get(&self, ty: UpdateType) -> &B::Counter {
+        match ty {
+            UpdateType::Account => &self.account,
+            UpdateType::Transaction => &self.transaction,
+        }
+    }
+}
+
+struct ResultCounters<C> {
+    handled: C,
+    ok: C,
+    parse_err: C,
+    handle_err: C,
+    total_handle_errs: C,
+}
+
+impl<C> ResultCounters<C> {
+    // `f` receives two function pointers, one for a counter name and another
+    // for a counter description
+    fn new<F: Fn(fn(Noun) -> String, fn(Noun) -> String) -> C>(f: F) -> Self {
+        noun_formatters! {
+            handled_name(_, p) => "{p}_processed",
+            handled_desc(_, p) => "Number of (successfully or unsuccessfully) processed {p}",
+            ok_name(_, p) => "successful_{p}",
+            ok_desc(_, p) => "Number of successfully processed {p}",
+            parse_err_name(s, _) => "{s}_parse_errors",
+            parse_err_desc(_, p) => "Number of {p} that failed to parse",
+            handle_err_name(_, p) => "{p}_with_handler_errors",
+            handle_err_desc(_, p) => "Number of {p} that threw at least one handler error",
+            total_handle_errs_name(s, _) => "{s}_handler_errors",
+            total_handle_errs_desc(s, _) => "Number of errors thrown by {s} handlers",
+        }
+
+        Self {
+            handled: f(handled_name, handled_desc),
+            ok: f(ok_name, ok_desc),
+            parse_err: f(parse_err_name, parse_err_desc),
+            handle_err: f(handle_err_name, handle_err_desc),
+            total_handle_errs: f(total_handle_errs_name, total_handle_errs_desc),
+        }
+    }
+
+    fn inc<'a, F: Fn(&'a C) -> D, D: Counter + 'a>(&'a self, res: JobResult, lens: F) {
+        lens(&self.handled).inc();
+
+        match res {
+            JobResult::Ok => lens(&self.ok).inc(),
+            JobResult::ParseErr => lens(&self.parse_err).inc(),
+            JobResult::HandleErr(n) => {
+                lens(&self.handle_err).inc();
+
+                lens(&self.total_handle_errs).inc_by(n.try_into().unwrap_or_default());
+            },
+        }
+    }
+}
+
+// TODO: this should probably use datapoint attributes rather than weird name formatting
 pub(crate) struct Counters<B: Instrumenter> {
-    pub accts_recvd: B::Counter,
-    pub txns_recvd: B::Counter,
-    pub accts_handled: B::Counter,
-    pub txns_handled: B::Counter,
-    pub accts_ok: B::Counter,
-    pub txns_ok: B::Counter,
-    pub acct_parse_errs: B::Counter,
-    pub txn_parse_errs: B::Counter,
-    pub acct_handle_errs: B::Counter,
-    pub txn_handle_errs: B::Counter,
-    pub uniq_acct_handle_errs: B::Counter,
-    pub uniq_txn_handle_errs: B::Counter,
+    updates_recvd: UpdateCounters<B>,
+    update_results: ResultCounters<UpdateCounters<B>>,
 }
 
 impl<B: Instrumenter> Counters<B> {
-    pub(crate) fn new(metrics: &B) -> Self {
+    pub fn new(metrics: &B) -> Self {
         Self {
-            accts_recvd: metrics.make_counter(
-                "accounts_received",
-                "Number of accounts received for processing",
-            ),
-            txns_recvd: metrics.make_counter(
-                "transactions_received",
-                "Number of transactions received for processing",
-            ),
-            accts_handled: metrics.make_counter(
-                "accounts_processed",
-                "Number of (successfully or unsuccessfully) processed accounts",
-            ),
-            txns_handled: metrics.make_counter(
-                "transactions_processed",
-                "Number of (successfully or unsuccessfully) processed transactions",
-            ),
-            accts_ok: metrics.make_counter(
-                "successful_accounts",
-                "Number of successfully processed accounts",
-            ),
-            txns_ok: metrics.make_counter(
-                "successful_transactions",
-                "Number of successfully processed transactions",
-            ),
-            acct_parse_errs: metrics.make_counter(
-                "account_parse_errors",
-                "Number of accounts that failed to parse",
-            ),
-            txn_parse_errs: metrics.make_counter(
-                "transaction_parse_errors",
-                "Number of transactions that failed to parse",
-            ),
-            acct_handle_errs: metrics.make_counter(
-                "account_handler_errors",
-                "Number of errors thrown by account handlers",
-            ),
-            txn_handle_errs: metrics.make_counter(
-                "transaction_handler_errors",
-                "Number of errors thrown by transaction handlers",
-            ),
-            uniq_acct_handle_errs: metrics.make_counter(
-                "accounts_with_handler_errors",
-                "Number of accounts that threw at least one handler error",
-            ),
-            uniq_txn_handle_errs: metrics.make_counter(
-                "transactions_with_handler_errors",
-                "Number of transactions that threw at least one handler error",
-            ),
+            updates_recvd: UpdateCounters::new(|Noun(_, p)| {
+                metrics.make_counter(
+                    format!("{p}_received"),
+                    format!("Number of {p} received for processing"),
+                )
+            }),
+            update_results: ResultCounters::new(|c, d| {
+                UpdateCounters::new(|n| metrics.make_counter(c(n), d(n)))
+            }),
         }
     }
 }
@@ -354,45 +435,35 @@ impl<B: Instrumenter> fmt::Debug for Counters<B> {
 }
 
 impl<B: Instrumenter> Counters<B> {
-    pub fn inc_received(&self, ty: UpdateType) {
-        match ty {
-            UpdateType::Account => &self.accts_recvd,
-            UpdateType::Transaction => &self.txns_recvd,
-        }
-        .inc();
-    }
+    pub fn inc_received(&self, ty: UpdateType) { self.updates_recvd.get(ty).inc(); }
 
+    #[inline]
     pub fn inc_processed(&self, ty: UpdateType, res: JobResult) {
-        match ty {
-            UpdateType::Account => &self.accts_handled,
-            UpdateType::Transaction => &self.txns_handled,
-        }
-        .inc();
+        self.update_results.inc(res, |u| u.get(ty));
+    }
+}
 
-        match res {
-            JobResult::Ok => match ty {
-                UpdateType::Account => &self.accts_ok,
-                UpdateType::Transaction => &self.txns_ok,
-            }
-            .inc(),
-            JobResult::ParseErr => match ty {
-                UpdateType::Account => &self.acct_parse_errs,
-                UpdateType::Transaction => &self.txn_parse_errs,
-            }
-            .inc(),
-            JobResult::HandleErr(n) => {
-                match ty {
-                    UpdateType::Account => &self.uniq_acct_handle_errs,
-                    UpdateType::Transaction => &self.uniq_txn_handle_errs,
-                }
-                .inc();
+const INSTRUCTION_NOUN: Noun = Noun("instruction", "instructions");
 
-                match ty {
-                    UpdateType::Account => &self.acct_handle_errs,
-                    UpdateType::Transaction => &self.txn_handle_errs,
-                }
-                .inc_by(n.try_into().unwrap_or_default());
-            },
+pub(crate) struct InstructionCounters<B: Instrumenter> {
+    result: ResultCounters<B::Counter>,
+}
+
+impl<B: Instrumenter> fmt::Debug for InstructionCounters<B> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("InstructionCounters").finish()
+    }
+}
+
+impl<B: Instrumenter> InstructionCounters<B> {
+    pub fn new(metrics: &B) -> Self {
+        Self {
+            result: ResultCounters::new(|c, d| {
+                metrics.make_counter(c(INSTRUCTION_NOUN), d(INSTRUCTION_NOUN))
+            }),
         }
     }
+
+    #[inline]
+    pub fn inc_processed(&self, res: JobResult) { self.result.inc(res, std::convert::identity); }
 }

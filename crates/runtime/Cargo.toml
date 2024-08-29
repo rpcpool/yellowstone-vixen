@@ -18,6 +18,7 @@ futures-util = { version = "0.3.30", features = ["sink"] }
 opentelemetry = { version = "0.24.0", features = ["metrics"], optional = true }
 prometheus = { version = "0.13.4", features = ["push"], optional = true }
 serde = { version = "1.0.198", features = ["derive"] }
+smallvec = "1.13.2"
 thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
 topograph = { version = "0.4.0", features = [

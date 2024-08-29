@@ -1,11 +1,12 @@
 use std::{borrow::Cow, collections::HashMap, pin::Pin};
 
-use futures_util::{Future, FutureExt};
-use tracing::{error, warn, Instrument, Span};
+use futures_util::{Future, FutureExt, StreamExt};
+use smallvec::SmallVec;
+use tracing::{warn, Instrument, Span};
 use vixen_core::{AccountUpdate, GetPrefilter, ParserId, TransactionUpdate};
-use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter, Update};
+use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
-use crate::metrics::{Counters, Instrumenter, JobResult};
+use crate::metrics::{Counters, Instrumenter, JobResult, Update};
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 pub type HandlerResult<T> = Result<T, BoxedError>;
@@ -36,12 +37,45 @@ impl<F: Fn(&T) -> U, T, U: Future<Output = HandlerResult<()>> + Send> Handler<T>
 pub use pipeline_error::Errors as PipelineErrors;
 
 pub mod pipeline_error {
+    use smallvec::SmallVec;
+
     use super::BoxedError;
+
+    #[derive(Debug, Clone, Copy)]
+    #[must_use]
+    pub struct Handled(());
+
+    impl Handled {
+        #[inline]
+        pub fn as_unit(self) { let Self(()) = self; }
+    }
 
     #[derive(Debug)]
     pub enum Errors {
         Parse(BoxedError),
-        Handlers(Vec<BoxedError>),
+        Handlers(SmallVec<[BoxedError; 1]>),
+        AlreadyHandled(Handled),
+    }
+
+    impl Errors {
+        #[inline]
+        #[must_use]
+        pub fn parse<E: std::error::Error + Send + Sync + 'static>(e: E) -> Self {
+            Self::Parse(Box::new(e))
+        }
+
+        pub fn handle<T>(self, handler: &str) -> Handled {
+            for e in self {
+                tracing::error!(
+                    err = %crate::Chain(&e),
+                    handler,
+                    r#type = std::any::type_name::<T>(),
+                    "Handler failed",
+                );
+            }
+
+            Handled(())
+        }
     }
 
     impl IntoIterator for Errors {
@@ -52,6 +86,7 @@ pub mod pipeline_error {
             match self {
                 Errors::Parse(e) => IntoIter::Parse([e].into_iter()),
                 Errors::Handlers(v) => IntoIter::Handlers(v.into_iter()),
+                Errors::AlreadyHandled(Handled(())) => IntoIter::AlreadyHandled,
             }
         }
     }
@@ -59,7 +94,7 @@ pub mod pipeline_error {
     #[derive(Debug, thiserror::Error)]
     pub enum Error {
         #[error("Error parsing input value")]
-        Parse(#[source] BoxedError),
+        Parser(#[source] BoxedError),
         #[error("Handler returned an error on parsed value")]
         Handler(#[source] BoxedError),
     }
@@ -67,7 +102,8 @@ pub mod pipeline_error {
     #[derive(Debug)]
     pub enum IntoIter {
         Parse(std::array::IntoIter<BoxedError, 1>),
-        Handlers(std::vec::IntoIter<BoxedError>),
+        Handlers(smallvec::IntoIter<[BoxedError; 1]>),
+        AlreadyHandled,
     }
 
     impl Iterator for IntoIter {
@@ -75,8 +111,9 @@ pub mod pipeline_error {
 
         fn next(&mut self) -> Option<Self::Item> {
             match self {
-                IntoIter::Parse(o) => o.next().map(Error::Parse),
-                IntoIter::Handlers(v) => v.next().map(Error::Handler),
+                Self::Parse(o) => o.next().map(Error::Parser),
+                Self::Handlers(v) => v.next().map(Error::Handler),
+                Self::AlreadyHandled => None,
             }
         }
     }
@@ -121,16 +158,13 @@ where
         };
         let parsed = &parsed;
 
-        // TODO: use FuturesUnordered?
-        let errs: Vec<_> = futures_util::future::join_all(
-            (&self.1)
-                .into_iter()
-                .map(|h| async move { h.handle(parsed).await }),
-        )
-        .await
-        .into_iter()
-        .filter_map(Result::err)
-        .collect();
+        let errs = (&self.1)
+            .into_iter()
+            .map(|h| async move { h.handle(parsed).await })
+            .collect::<futures_util::stream::FuturesUnordered<_>>()
+            .filter_map(|r| async move { r.err() })
+            .collect::<SmallVec<[_; 1]>>()
+            .await;
 
         if errs.is_empty() {
             Ok(())
@@ -289,19 +323,12 @@ where I::Item: AsRef<str> + Send + 'm
         futures_util::future::join_all(self.get_pipelines().map(move |(f, h)| {
             h.handle(value)
                 .map(move |r| {
-                    metrics.inc_processed(T::TYPE, JobResult::from_pipeline(&r));
+                    if let Some(r) = JobResult::from_pipeline(&r) {
+                        metrics.inc_processed(T::TYPE, r);
+                    }
                     match r {
                         Ok(()) => (),
-                        Err(v) => {
-                            for e in v {
-                                error!(
-                                    err = %crate::Chain(&e),
-                                    handler = f.as_ref(),
-                                    r#type = std::any::type_name::<T>(),
-                                    "Handler failed",
-                                );
-                            }
-                        },
+                        Err(v) => v.handle::<T>(f.as_ref()).as_unit(),
                     }
                 })
                 .in_current_span()
