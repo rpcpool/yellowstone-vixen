@@ -6,9 +6,18 @@ pub extern crate tonic;
 #[cfg(feature = "stream")]
 pub extern crate tonic_reflection;
 
-#[cfg(feature = "stream")]
-pub mod stream {
-    tonic::include_proto!("stream");
+mod vixen {
+    #[cfg(feature = "parser")]
+    pub mod parser {
+        include!(concat!(env!("OUT_DIR"), concat!("/vixen.parser.rs")));
+    }
 
-    pub const DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("stream_descriptor");
+    #[cfg(feature = "stream")]
+    pub mod stream {
+        tonic::include_proto!("vixen.stream");
+
+        pub const DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("stream_descriptor");
+    }
 }
+
+pub use vixen::*;

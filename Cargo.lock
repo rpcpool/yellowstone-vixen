@@ -4973,11 +4973,23 @@ dependencies = [
  "clap 4.5.13",
  "prost 0.13.1",
  "prost-build 0.13.1",
- "spl-token-2022",
  "toml 0.8.19",
  "tracing",
  "tracing-subscriber",
  "yellowstone-vixen",
+]
+
+[[package]]
+name = "test-stream-parser"
+version = "0.0.0"
+dependencies = [
+ "clap 4.5.13",
+ "prost-build 0.13.1",
+ "toml 0.8.19",
+ "tracing",
+ "tracing-subscriber",
+ "yellowstone-vixen",
+ "yellowstone-vixen-parser",
 ]
 
 [[package]]
@@ -6093,6 +6105,7 @@ dependencies = [
  "tokio",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
+ "yellowstone-vixen-proto",
 ]
 
 [[package]]
@@ -6100,6 +6113,7 @@ name = "yellowstone-vixen-proto"
 version = "0.0.0"
 dependencies = [
  "prost 0.13.1",
+ "prost-build 0.13.1",
  "prost-types 0.13.1",
  "tonic 0.12.1",
  "tonic-build 0.12.1",

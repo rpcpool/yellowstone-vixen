@@ -10,7 +10,7 @@ use yellowstone_vixen_proto::{
     prost_types::Any,
     stream::{
         self,
-        vixen_server::{Vixen, VixenServer},
+        program_streams_server::{ProgramStreams, ProgramStreamsServer},
         SubscribeRequest, SubscribeUpdate,
     },
     tonic::{self, transport, Request, Response, Status},
@@ -46,7 +46,7 @@ pub type Channels = HashMap<Pubkey, broadcast::Receiver<Any>>;
 pub(super) struct Service(Channels);
 
 #[tonic::async_trait]
-impl Vixen for Service {
+impl ProgramStreams for Service {
     // TODO: Box<dyn Stream> is tacky but any alternatives are not worth thinking about right now
     type SubscribeStream = Pin<
         Box<
@@ -124,7 +124,7 @@ impl Server {
             tokio::task::spawn(async move {
                 transport::Server::builder()
                     .add_service(reflection)
-                    .add_service(VixenServer::new(Service(channels)))
+                    .add_service(ProgramStreamsServer::new(Service(channels)))
                     .serve_with_shutdown(address, rx.as_unit())
                     .await
             }),

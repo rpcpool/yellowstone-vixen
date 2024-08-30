@@ -5,7 +5,7 @@ use spl_token_2022::{
     solana_program::{program_error::ProgramError, program_pack::Pack},
     state::{Account, Mint, Multisig},
 };
-use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter};
+use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter, ProgramParser};
 
 use super::token_extension_helpers::{
     mint_account_extensions_data_bytes, token_account_extensions_data_bytes, ExtensionData,
@@ -130,5 +130,25 @@ impl Parser for TokenExtensionProgramParser {
     async fn parse(&self, acct: &AccountUpdate) -> ParseResult<Self::Output> {
         let inner = acct.account.as_ref().ok_or(ProgramError::InvalidArgument)?;
         TokenExtensionState::try_unpack(&inner.data)
+    }
+}
+
+impl ProgramParser for TokenExtensionProgramParser {
+    #[inline]
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
+}
+
+#[cfg(feature = "proto")]
+impl crate::proto::IntoProto for TokenExtensionProgramParser {
+    type Proto = yellowstone_vixen_proto::parser::TokenExtensionState;
+
+    fn into_proto(value: Self::Output) -> Self::Proto {
+        let state_oneof = match value {
+            TokenExtensionState::ExtendedTokenAccount(_) => todo!(),
+            TokenExtensionState::ExtendedMint(_) => todo!(),
+            TokenExtensionState::Multisig(_) => todo!(),
+        };
+
+        Self::Proto { state_oneof }
     }
 }

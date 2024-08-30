@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package vixen.parser;
+
+message TokenProgramState {
+  oneof state_oneof {
+    TokenAccount token_account = 1;
+    TokenMint mint = 2;
+    TokenMultisig multisig = 3;
+  }
+}
+
+message TokenAccount {}
+message TokenMint {}
+message TokenMultisig {}
+
+message TokenExtensionState {
+  oneof state_oneof {
+    ExtendedTokenAccount token_account = 1;
+    ExtendedTokenMint mint = 2;
+    ExtendedTokenMultisig multisig = 3;
+  }
+}
+
+message ExtendedTokenAccount {}
+message ExtendedTokenMint {}
+message ExtendedTokenMultisig {}

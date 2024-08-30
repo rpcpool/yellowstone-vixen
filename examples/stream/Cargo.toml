@@ -9,7 +9,6 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 [dependencies]
 clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 prost = "0.13.1"
-spl-token-2022 = "4"
 toml = "0.8.12"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

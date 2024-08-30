@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use tokio::sync::broadcast;
 use vixen_core::{
-    instruction::InstructionUpdate, AccountUpdate, Parser, Pubkey, TransactionUpdate,
+    instruction::InstructionUpdate, AccountUpdate, Parser, ProgramParser, Pubkey, TransactionUpdate,
 };
 use yellowstone_vixen_proto::{
     prost::{Message, Name},
@@ -12,7 +12,7 @@ use yellowstone_vixen_proto::{
 use super::{
     config::StreamConfig,
     grpc::{Channels, GrpcHandler},
-    ProgramParser, Server,
+    Server,
 };
 use crate::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},

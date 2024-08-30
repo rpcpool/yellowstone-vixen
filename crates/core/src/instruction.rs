@@ -26,7 +26,6 @@ pub enum Missing {
     Transaction,
     TransactionMeta,
     TransactionMessage,
-    InnerInstructions,
 }
 
 impl Missing {
@@ -37,7 +36,6 @@ impl Missing {
             Self::Transaction => "transaction",
             Self::TransactionMeta => "transaction status and metadata",
             Self::TransactionMessage => "transaction message",
-            Self::InnerInstructions => "inner instructions",
         }
     }
 }
@@ -134,7 +132,7 @@ impl InstructionUpdate {
             pre_balances,
             post_balances,
             inner_instructions,
-            inner_instructions_none,
+            inner_instructions_none: _,
             log_messages,
             log_messages_none: _,
             pre_token_balances,
@@ -182,10 +180,6 @@ impl InstructionUpdate {
             .into_iter()
             .map(|i| Self::parse_one(Arc::clone(&shared), i))
             .collect::<Result<Vec<_>, _>>()?;
-
-        if inner_instructions_none {
-            return Err(Missing::InnerInstructions.into());
-        }
 
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
 

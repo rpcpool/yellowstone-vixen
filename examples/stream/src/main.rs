@@ -17,12 +17,6 @@ mod account {
     use yellowstone_vixen::proto::tonic;
 
     tonic::include_proto!("account");
-
-    // TODO: does prost not do this by itself?
-    impl prost::Name for Account {
-        const NAME: &'static str = "Account";
-        const PACKAGE: &'static str = "account";
-    }
 }
 
 #[derive(clap::Parser)]
@@ -65,17 +59,8 @@ impl vixen_core::Parser for Parser {
     }
 }
 
-impl vixen::stream::ProgramParser for Parser {
+impl vixen_core::ProgramParser for Parser {
     fn program_id(&self) -> vixen_core::Pubkey { id() }
-}
-
-pub struct Handler;
-
-impl<V: std::fmt::Debug + Sync> vixen::Handler<V> for Handler {
-    async fn handle(&self, value: &V) -> vixen::HandlerResult<()> {
-        tracing::info!(?value);
-        Ok(())
-    }
 }
 
 fn main() {

@@ -2,9 +2,9 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 
-package stream;
+package vixen.stream;
 
-service Vixen {
+service ProgramStreams {
   rpc Subscribe(SubscribeRequest) returns (stream SubscribeUpdate) {}
 }
 

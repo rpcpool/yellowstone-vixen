@@ -5,7 +5,6 @@ use config::GrpcConfig;
 use grpc::Channels;
 use tokio::task::LocalSet;
 use tracing::info;
-use vixen_core::{Parser, Pubkey};
 
 use crate::{
     metrics::{MetricsFactory, NullMetrics},
@@ -17,10 +16,6 @@ pub mod config;
 mod grpc;
 
 pub use grpc::GrpcHandler;
-
-pub trait ProgramParser: Parser {
-    fn program_id(&self) -> Pubkey;
-}
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

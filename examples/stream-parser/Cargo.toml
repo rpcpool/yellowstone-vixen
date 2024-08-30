@@ -1,22 +1,22 @@
 [package]
-name = "test-opentelemetry"
-description = "Test bed for basic OpenTelemetry metrics with Vixen"
+name = "test-stream-parser"
+description = "Test bed for integrating yellowstone-vixen-parser with Vixen program streams"
 publish = false
 edition = "2021"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
 clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 toml = "0.8.12"
-opentelemetry_sdk = { version = "0.24.1", features = ["metrics", "rt-tokio", "trace"] }
-opentelemetry-stdout = "0.5.0"
-tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
 tracing = "0.1.40"
-tracing-opentelemetry = "0.25.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-yellowstone-vixen = { workspace = true, features = ["opentelemetry"] }
+yellowstone-vixen = { workspace = true, features = ["stream"] }
 yellowstone-vixen-parser = { workspace = true, features = [
+  "proto",
   "token-extensions",
   "token-program",
 ] }
+
+[build-dependencies]
+prost-build = "0.13.1"

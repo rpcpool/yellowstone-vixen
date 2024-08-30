@@ -58,6 +58,10 @@ pub trait Parser {
     fn parse(&self, value: &Self::Input) -> impl Future<Output = ParseResult<Self::Output>> + Send;
 }
 
+pub trait ProgramParser: Parser {
+    fn program_id(&self) -> Pubkey;
+}
+
 pub trait ParserId {
     fn id(&self) -> Cow<str>;
 }
