@@ -1,3 +1,8 @@
+#![warn(clippy::missing_errors_doc, clippy::missing_panics_doc, missing_docs)]
+#![allow(clippy::module_name_repetitions)]
+// TODO: document everything
+#![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
 pub extern crate prost;
 #[cfg(feature = "stream")]
 pub extern crate prost_types;
