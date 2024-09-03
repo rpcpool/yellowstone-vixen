@@ -37,3 +37,26 @@ pub fn to_supported_pubkey(sol_pubkey: SolanaPubkey) -> Pubkey {
 pub fn check_pubkeys_match<T: ToString, S: ToString>(pubkey1: &T, pubkey2: &S) -> bool {
     pubkey1.to_string().eq(&pubkey2.to_string())
 }
+
+#[derive(Debug)]
+pub struct ReadableInstruction<A, D> {
+    pub accounts: A,
+    pub data: Option<D>,
+}
+
+impl<A, D> ReadableInstruction<A, D> {
+    pub fn new(accounts: A, data: Option<D>) -> Self {
+        Self { accounts, data }
+    }
+
+    pub fn from_accounts(accounts: A) -> Self {
+        Self {
+            accounts,
+            data: None,
+        }
+    }
+}
+
+pub trait InstructionParser<C> {
+    fn parse_ix(_: &InstructionUpdate) -> Result<C, String>;
+}

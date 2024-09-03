@@ -17,7 +17,8 @@ use opentelemetry_sdk::{
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen, opentelemetry::trace::TracerProvider as _, Pipeline};
 use yellowstone_vixen_parser::{
-    token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
+    token_extension_program::account_parser::TokenExtensionProgramAccParser,
+    token_program::account_parser::TokenProgramAccParser,
 };
 
 #[derive(clap::Parser)]
@@ -62,8 +63,8 @@ async fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .account(Pipeline::new(TokenExtensionProgramParser, [Handler]))
-        .account(Pipeline::new(TokenProgramParser, [Handler]))
+        .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
+        .account(Pipeline::new(TokenProgramAccParser, [Handler]))
         .metrics(vixen::metrics::OpenTelemetry::new(meter_provider))
         .build(config)
         .run_async()

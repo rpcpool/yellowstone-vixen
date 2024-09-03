@@ -1,6 +1,7 @@
+use crate::helpers::ReadableInstruction;
 use spl_pod::solana_program::program_option::COption;
 use spl_token_2022::extension::transfer_fee::instruction::TransferFeeInstruction;
-use yellowstone_vixen_core::{Instruction, Pubkey, ReadableInstruction};
+use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::ExtensionIxParser;
 use crate::helpers::{check_min_accounts_req, get_multisig_signers, to_supported_coption_pubkey};
@@ -13,19 +14,19 @@ pub struct TransferCheckedWithFeeAccounts {
     pub owner: Pubkey,
     pub multisig_signers: Option<Vec<Pubkey>>,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct TransferCheckedWithFeeData {
     pub amount: u64,
     pub fee_amount: u64,
     pub decimals: u8,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InitializeTransferFeeConfigAccounts {
     pub mint: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InitializeTransferFeeConfigData {
     pub transfer_fee_config_authority: COption<Pubkey>,
     pub withdraw_withheld_authority: COption<Pubkey>,
@@ -51,7 +52,7 @@ pub struct WithdrawWithheldTokensFromAccountsAccounts {
     pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct WithdrawWithheldTokensFromAccountsData {
     pub num_token_accounts: u8,
 }
@@ -71,7 +72,7 @@ pub struct SetTransferFeeAccounts {
     pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 
 pub struct SetTransferFeeData {
     pub transfer_fee_basis_points: u16,
@@ -101,7 +102,7 @@ pub enum TransferFeeIx {
 }
 
 impl ExtensionIxParser for TransferFeeIx {
-    fn try_parse_extension_ix(ix: &Instruction) -> Result<Self, String> {
+    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
         let accounts_len = ix.accounts.len();
         let ix_type = TransferFeeInstruction::unpack(&ix.data).map_err(|e| e.to_string())?;
         match ix_type {

@@ -1,5 +1,5 @@
 use spl_token_2022::extension::confidential_transfer::instruction::ConfidentialTransferInstruction;
-use yellowstone_vixen_core::{Instruction, Pubkey};
+use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::{decode_extension_ix_type, ExtensionIxParser, Ix};
 use crate::{
@@ -9,13 +9,13 @@ use crate::{
 
 const SOLANA_ZK_PROOF_PROGRAM_ID: &str = "ZkTokenProof1111111111111111111111111111111";
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct UpdateMintAccounts {
     pub mint: Pubkey,
     pub authority: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConfigureAccountAccounts {
     pub account: Pubkey,
     pub mint: Pubkey,
@@ -24,7 +24,7 @@ pub struct ConfigureAccountAccounts {
     pub multisig_signers: Option<Vec<Pubkey>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ApproveAccountAccounts {
     pub account: Pubkey,
     pub mint: Pubkey,
@@ -119,7 +119,7 @@ pub enum ConfidentaltransferIx {
 }
 
 impl ExtensionIxParser for ConfidentaltransferIx {
-    fn try_parse_extension_ix(ix: &Instruction) -> Result<Self, String> {
+    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
         let accounts_len = ix.accounts.len();
         let ix_type = decode_extension_ix_type(&ix.data)?;
         match ix_type {

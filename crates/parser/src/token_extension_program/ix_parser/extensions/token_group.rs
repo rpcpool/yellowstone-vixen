@@ -1,32 +1,33 @@
+use crate::helpers::ReadableInstruction;
 use spl_token_group_interface::instruction::{
     InitializeGroup, InitializeMember, TokenGroupInstruction, UpdateGroupAuthority,
     UpdateGroupMaxSize,
 };
-use yellowstone_vixen_core::{Instruction, Pubkey, ReadableInstruction};
+use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::ExtensionIxParser;
 use crate::helpers::check_min_accounts_req;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InitializeGroupAccounts {
     pub group: Pubkey,
     pub mint: Pubkey,
     pub mint_authority: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct UpdateGroupMaxSizeAccounts {
     pub group: Pubkey,
     pub update_authority: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct UpdateGroupAuthorityAccounts {
     pub group: Pubkey,
     pub current_authority: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InitializeMemberAccounts {
     pub member: Pubkey,
     pub member_mint: Pubkey,
@@ -43,7 +44,7 @@ pub enum TokenGroupIx {
 }
 
 impl ExtensionIxParser for TokenGroupIx {
-    fn try_parse_extension_ix(ix: &Instruction) -> Result<Self, String> {
+    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
         let accounts_len = ix.accounts.len();
 
         let ix_type = TokenGroupInstruction::unpack(&ix.data).map_err(|e| e.to_string())?;

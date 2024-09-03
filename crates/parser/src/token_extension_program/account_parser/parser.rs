@@ -11,7 +11,7 @@ use super::helpers::{
     mint_account_extensions_data_bytes, token_account_extensions_data_bytes, ExtensionData,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum TokenExtensionAccountType {
     TokenAccount,
     Mint,
@@ -109,15 +109,15 @@ impl TokenExtensionState {
     }
 }
 
-#[derive(Debug)]
-pub struct TokenExtensionProgramParser;
+#[derive(Debug, Clone, Copy)]
+pub struct TokenExtensionProgramAccParser;
 
-impl Parser for TokenExtensionProgramParser {
+impl Parser for TokenExtensionProgramAccParser {
     type Input = AccountUpdate;
     type Output = TokenExtensionState;
 
     fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::token_extensions::TokenExtensionProgramParser".into()
+        "yellowstone_vixen_parser::token_extensions::TokenExtensionProgramAccParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
@@ -133,13 +133,15 @@ impl Parser for TokenExtensionProgramParser {
     }
 }
 
-impl ProgramParser for TokenExtensionProgramParser {
+impl ProgramParser for TokenExtensionProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        spl_token_2022::ID.to_bytes().into()
+    }
 }
 
 #[cfg(feature = "proto")]
-impl crate::proto::IntoProto for TokenExtensionProgramParser {
+impl crate::proto::IntoProto for TokenExtensionProgramAccParser {
     type Proto = yellowstone_vixen_proto::parser::TokenExtensionState;
 
     fn into_proto(value: Self::Output) -> Self::Proto {
@@ -163,7 +165,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_mint_parsing() {
-        let parser = TokenExtensionProgramParser;
+        let parser = TokenExtensionProgramAccParser;
 
         let fixture_data = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu");
 

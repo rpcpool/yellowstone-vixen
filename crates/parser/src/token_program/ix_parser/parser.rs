@@ -1,3 +1,4 @@
+use crate::helpers::{InstructionParser, ReadableInstruction};
 use spl_token::instruction::TokenInstruction;
 use yellowstone_vixen_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
@@ -9,12 +10,16 @@ use crate::helpers::{
     to_supported_pubkey,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct TokenProgramIxParser;
 
 impl Parser for TokenProgramIxParser {
-    type Input = InstructionsUpdate;
-    type Output = Vec<TokenProgramIx>;
+    type Input = InstructionUpdate;
+    type Output = TokenProgramIx;
+
+    fn id(&self) -> std::borrow::Cow<str> {
+        "yellowstone_vixen_parser::token_program::TokenProgramIxParser".into()
+    }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -23,37 +28,19 @@ impl Parser for TokenProgramIxParser {
             .unwrap()
     }
 
-    async fn parse(&self, ixs_update: &InstructionsUpdate) -> ParseResult<Self::Output> {
-        let mut parsed_ixs: Vec<TokenProgramIx> = Vec::new();
-        for outer_ixs in ixs_update.instructions.iter() {
-            if check_pubkeys_match(&outer_ixs.outer_ix.program_id, &spl_token::ID) {
-                let parsed_ix = TokenProgramIxParser::parse_ix(&outer_ixs.outer_ix)
-                    .map_err(|e| ParseError::Other(e.into()))?;
-                parsed_ixs.push(parsed_ix);
-            }
-            for inner_ix in outer_ixs.inner_ixs.iter() {
-                if check_pubkeys_match(&inner_ix.program_id, &spl_token::ID) {
-                    let parsed_ix = TokenProgramIxParser::parse_ix(inner_ix)
-                        .map_err(|e| ParseError::Other(e.into()))?;
-                    parsed_ixs.push(parsed_ix);
-                }
-            }
+    async fn parse(&self, ix_update: &InstructionUpdate) -> ParseResult<Self::Output> {
+        if check_pubkeys_match(&ix_update.program, &spl_token::ID) {
+            TokenProgramIxParser::parse_ix(ix_update).map_err(|e| ParseError::Other(e.into()))
+        } else {
+            Err(ParseError::Filtered)
         }
-        if parsed_ixs.len() == 0 {
-            return Err(ParseError::Other(
-                "No token program instructions found to parse"
-                    .to_string()
-                    .into(),
-            ));
-        }
-        Ok(parsed_ixs)
     }
 }
 
 impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
     fn parse_ix(ix: &InstructionUpdate) -> Result<TokenProgramIx, String> {
         let ix_type = TokenInstruction::unpack(&ix.data)
-            .map_err(|e| format!("Err while unpacking ix data : {} data :{:?}", e, ix.data))?;
+            .map_err(|e| format!("Err while unpacking ix data : {}", e))?;
         let accounts_len = ix.accounts.len();
         match ix_type {
             TokenInstruction::Transfer { amount } => {
@@ -386,7 +373,7 @@ impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
 mod tests {
     use std::ops::Mul;
 
-    use yellowstone_vixen_mock::{run_tx_parse, tx_fixture, FixtureData};
+    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
 
     use super::*;
 
@@ -397,9 +384,9 @@ mod tests {
         let fixture_data = tx_fixture!("55kpnRufcX9Fo44oRBXtrkxPRww4UWJKxCpgBV39kzAAag8oyJbd9Y3YWdQQUi3TBqtrhjgsMGb9Nw8bUxy7j5rt");
 
         if let FixtureData::Instructions(ixs) = fixture_data {
-            let ixs = run_tx_parse!(parser, ixs);
+            let ix = run_ix_parse!(parser, &ixs[0]);
 
-            if let TokenProgramIx::MintToChecked(ix) = &ixs[0] {
+            if let TokenProgramIx::MintToChecked(ix) = &ix {
                 assert!(ix.data.is_some());
                 let data = ix.data.as_ref().unwrap();
                 assert_eq!(data.decimals, 10);
