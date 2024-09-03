@@ -14,7 +14,7 @@ cargo add yellowstone-vixen-parser
 
 ```rust
 
-use yellowstone_vixen_parser::{TokenProgramParser, TokenExtensionProgramParser};
+use yellowstone_vixen_parser::{TokenProgramAccParser, TokenExtensionProgramAccParser};
 use yellowstone_vixen as vixen;
 use yellowstone_vixen_core::{Handler, HandlerManager, HandlerManagers};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -33,10 +33,10 @@ fn main() {
         .manager(HandlerManagers {
             account: HandlerManager::new([
                 handler::boxed(vixen::HandlerPack::new(
-                TokenExtensionProgramParser,
+                TokenExtensionProgramAccParser,
                 [Handler],
             )), handler::boxed(vixen::HandlerPack::new(
-                TokenProgramParser,
+                TokenProgramAccParser,
                 [Handler]))
             ]),
             transaction: HandlerManager::empty(),

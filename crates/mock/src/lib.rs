@@ -12,9 +12,11 @@
 #![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 use std::{
+    fmt::Debug,
     fs,
     path::{Path, PathBuf},
     str::FromStr,
+    sync::Arc,
 };
 
 use serde::{Deserialize, Serialize};
@@ -22,11 +24,14 @@ use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client_api::client_error::Result as ClientResult;
 use solana_sdk::{account::Account, bs58, pubkey::Pubkey, signature::Signature};
 use solana_transaction_status::{
-    EncodedTransaction, EncodedTransactionWithStatusMeta, UiInstruction, UiMessage,
-    UiTransactionEncoding,
+    EncodedConfirmedTransactionWithStatusMeta, EncodedTransaction,
+    EncodedTransactionWithStatusMeta, UiInstruction, UiMessage, UiTransactionEncoding,
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
-use yellowstone_vixen_core::Pubkey as VixenPubkey;
+use yellowstone_vixen_core::{
+    instruction::{InstructionShared, InstructionUpdate},
+    Pubkey as VixenPubkey,
+};
 
 //TODO: Look these up from the Vixen.toml config file
 const RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
@@ -97,112 +102,169 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
     }
 }
 
-pub trait TryFromEncodedTransaction<T> {
-    type Error;
-    fn try_from_tx_meta(value: EncodedTransactionWithStatusMeta) -> Result<T, Self::Error>;
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub struct SerializablePubkey(pub [u8; 32]);
+
+impl From<VixenPubkey> for SerializablePubkey {
+    fn from(value: VixenPubkey) -> Self {
+        Self(value.0)
+    }
 }
 
-impl TryFromEncodedTransaction<InstructionsUpdate> for InstructionsUpdate {
-    type Error = String;
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct SerializableInstructionUpdate {
+    pub program: SerializablePubkey,
+    pub accounts: Vec<SerializablePubkey>,
+    pub data: Vec<u8>,
+    pub inner: Vec<SerializableInstructionUpdate>,
+}
 
-    fn try_from_tx_meta(value: EncodedTransactionWithStatusMeta) -> Result<Self, Self::Error> {
-        let encoded_tx = value.transaction;
-        let inner_ixs = value
-            .meta
-            .map(|meta| meta.inner_instructions.map_or(None, |x| Some(x)))
-            .flatten();
-        let mut vixen_ixs: Vec<IxWithInnerIxs> = Vec::new();
-        if let EncodedTransaction::Json(tx_data) = encoded_tx {
-            if let UiMessage::Raw(raw_message) = tx_data.message {
-                let account_keys = raw_message.account_keys;
-
-                let mut outer_ixs = raw_message
-                    .instructions
-                    .iter()
-                    .map(|ix| -> Result<Instruction, String> {
-                        let accounts = ix
-                            .accounts
-                            .iter()
-                            .map(|account| {
-                                get_account_pubkey_from_index(*account as usize, &account_keys)
-                            })
-                            .collect::<Result<Vec<VixenPubkey>, String>>()?;
-                        let program_id = get_account_pubkey_from_index(
-                            ix.program_id_index as usize,
-                            &account_keys,
-                        )?;
-                        let ix = Instruction {
-                            data: decode_bs58_to_bytes(&ix.data)?,
-                            accounts,
-                            program_id,
-                        };
-
-                        Ok(ix)
-                    })
-                    .collect::<Result<Vec<Instruction>, String>>()?;
-                outer_ixs.pop(); // Remove the last instruction which is a
-                // set compute unit ix and will cause errors while parsing
-                if let Some(inner_ixs) = inner_ixs {
-                    if inner_ixs.len() == 0 {
-                        for ix in outer_ixs {
-                            vixen_ixs.push(IxWithInnerIxs {
-                                outer_ix: ix,
-                                inner_ixs: vec![],
-                            });
-                        }
-                        return Ok(Self {
-                            instructions: vixen_ixs,
-                        });
-                    }
-                    for (idx, ix) in inner_ixs.iter().enumerate() {
-                        let inner_ixs: Vec<Instruction> = ix
-                            .instructions
-                            .iter()
-                            .map(|ix| {
-                                if let UiInstruction::Compiled(compiled_ix) = ix {
-                                    let accounts = compiled_ix
-                                        .accounts
-                                        .iter()
-                                        .map(|account| {
-                                            get_account_pubkey_from_index(
-                                                *account as usize,
-                                                &account_keys,
-                                            )
-                                        })
-                                        .collect::<Result<Vec<VixenPubkey>, String>>()?;
-                                    let program_id = get_account_pubkey_from_index(
-                                        compiled_ix.program_id_index as usize,
-                                        &account_keys,
-                                    )?;
-                                    let ix = Instruction {
-                                        data: decode_bs58_to_bytes(&compiled_ix.data)?,
-                                        accounts,
-                                        program_id,
-                                    };
-
-                                    Ok(ix)
-                                } else {
-                                    Err("Invalid instruction encoding".into())
-                                }
-                            })
-                            .collect::<Result<Vec<Instruction>, String>>()?;
-
-                        let outer_ix = outer_ixs.get(idx).ok_or("Invalid outer ix index")?;
-                        vixen_ixs.push(IxWithInnerIxs {
-                            outer_ix: outer_ix.clone(),
-                            inner_ixs,
-                        });
-                    }
-                }
-            } else {
-                return Err("Invalid transaction encoding".into());
-            }
+impl From<&InstructionUpdate> for SerializableInstructionUpdate {
+    fn from(value: &InstructionUpdate) -> Self {
+        Self {
+            program: SerializablePubkey(value.program.0),
+            accounts: value
+                .accounts
+                .iter()
+                .map(|x| SerializablePubkey(x.0))
+                .collect(),
+            data: value.data.clone(),
+            inner: value.inner.iter().map(|x| x.into()).collect(),
         }
-
-        Ok(Self {
-            instructions: vixen_ixs,
-        })
     }
+}
+
+impl From<&SerializableInstructionUpdate> for InstructionUpdate {
+    fn from(value: &SerializableInstructionUpdate) -> Self {
+        Self {
+            program: VixenPubkey(value.program.0),
+            accounts: value.accounts.iter().map(|x| VixenPubkey(x.0)).collect(),
+            data: value.data.clone(),
+            shared: Arc::new(InstructionShared::default()),
+            inner: value.inner.iter().map(|x| x.into()).collect(),
+        }
+    }
+}
+
+pub fn get_account_pubkey_from_index(
+    index: usize,
+    accounts: &Vec<String>,
+) -> Result<SerializablePubkey, String> {
+    if accounts.is_empty() {
+        return Err("No accounts found".to_string());
+    }
+
+    accounts.get(index).map_or(
+        Err(format!(
+            "Account index {} out of bounds for {} accounts",
+            index,
+            accounts.len(),
+        )),
+        |account| {
+            Ok(VixenPubkey::from_str(account)
+                .map_err(|e| e.to_string())?
+                .into())
+        },
+    )
+}
+
+fn try_from_tx_meta(
+    value: EncodedConfirmedTransactionWithStatusMeta,
+) -> Result<Vec<SerializableInstructionUpdate>, String> {
+    let EncodedConfirmedTransactionWithStatusMeta {
+        transaction,
+        slot: _,
+        block_time: _,
+    } = value;
+    let EncodedTransactionWithStatusMeta {
+        transaction,
+        meta,
+        version: _,
+    } = transaction;
+    let inner_ixs = meta
+        .map(|meta| meta.inner_instructions.map_or(None, |x| Some(x)))
+        .flatten();
+
+    if let EncodedTransaction::Json(tx_data) = transaction {
+        if let UiMessage::Raw(raw_message) = tx_data.message {
+            let account_keys = raw_message.account_keys;
+            let mut outer_with_inner_ixs = raw_message
+                .instructions
+                .iter()
+                .map(|ix| -> Result<SerializableInstructionUpdate, String> {
+                    let accounts = ix
+                        .accounts
+                        .iter()
+                        .map(|account| {
+                            get_account_pubkey_from_index(*account as usize, &account_keys)
+                        })
+                        .collect::<Result<Vec<SerializablePubkey>, String>>()?;
+                    let program =
+                        get_account_pubkey_from_index(ix.program_id_index as usize, &account_keys)?;
+
+                    let ix = SerializableInstructionUpdate {
+                        data: decode_bs58_to_bytes(&ix.data)?,
+                        accounts,
+                        program,
+                        inner: Vec::new(),
+                    };
+
+                    Ok(ix)
+                })
+                .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
+            outer_with_inner_ixs.pop(); // Remove the last instruction which is a
+                                        // set compute unit ix and will cause errors while parsing
+
+            if let Some(inner_ixs) = inner_ixs {
+                if inner_ixs.len() == 0 {
+                    return Ok(outer_with_inner_ixs);
+                }
+                for (idx, ix) in inner_ixs.iter().enumerate() {
+                    let inner_ixs: Vec<SerializableInstructionUpdate> = ix
+                        .instructions
+                        .iter()
+                        .map(|ix| {
+                            if let UiInstruction::Compiled(compiled_ix) = ix {
+                                let accounts = compiled_ix
+                                    .accounts
+                                    .iter()
+                                    .map(|account| {
+                                        get_account_pubkey_from_index(
+                                            *account as usize,
+                                            &account_keys,
+                                        )
+                                    })
+                                    .collect::<Result<Vec<SerializablePubkey>, String>>()?;
+                                let program = get_account_pubkey_from_index(
+                                    compiled_ix.program_id_index as usize,
+                                    &account_keys,
+                                )?;
+                                let ix = SerializableInstructionUpdate {
+                                    data: decode_bs58_to_bytes(&compiled_ix.data)?,
+                                    accounts,
+                                    program,
+                                    inner: Vec::new(),
+                                };
+
+                                Ok(ix)
+                            } else {
+                                Err("Invalid instruction encoding".into())
+                            }
+                        })
+                        .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
+
+                    let outer_ix = outer_with_inner_ixs
+                        .get_mut(idx)
+                        .ok_or("Invalid outer ix index")?;
+                    outer_ix.inner = inner_ixs;
+                }
+            }
+        } else {
+            return Err("Invalid transaction encoding".into());
+        }
+    }
+
+    Err("Invalid transaction encoding".into())
 }
 
 #[macro_export]
@@ -227,9 +289,9 @@ macro_rules! run_account_parse {
 }
 
 #[macro_export]
-macro_rules! run_tx_parse {
-    ($parser:expr, $ixs:expr) => {
-        $parser.parse(&$ixs).await.unwrap()
+macro_rules! run_ix_parse {
+    ($parser:expr, $ix:expr) => {
+        $parser.parse(&$ix.into()).await.unwrap()
     };
 }
 
@@ -257,12 +319,14 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
     }
 }
 
-pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) }
+pub fn get_rpc_client() -> RpcClient {
+    RpcClient::new(RPC_ENDPOINT.to_string())
+}
 
 #[derive(Debug, Clone)]
 pub enum FixtureData {
     Account(SubscribeUpdateAccount),
-    Instructions(InstructionsUpdate),
+    Instructions(Vec<SerializableInstructionUpdate>),
 }
 
 // TODO: Determine pubkey vs signature based on the fixture pattern
@@ -292,7 +356,7 @@ async fn fetch_fixture(fixture: &str) -> Result<FixtureData, Box<dyn std::error:
                 .await
                 .map_err(|e| format!("Error fetching tx: {:?}", e))?;
 
-            let instructions = InstructionsUpdate::try_from_tx_meta(tx.transaction)?;
+            let instructions = try_from_tx_meta(tx)?;
 
             Ok(FixtureData::Instructions(instructions))
         },
@@ -330,7 +394,7 @@ fn maybe_create_fixture_dir() -> std::io::Result<()> {
     std::fs::create_dir(FIXTURES_PATH)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum FixtureType {
     Pubkey,
     Signature,
@@ -372,7 +436,7 @@ pub fn read_account_fixture(data: Vec<u8>) -> Result<FixtureData, Box<dyn std::e
 }
 
 pub fn read_instructions_fixture(data: Vec<u8>) -> Result<FixtureData, Box<dyn std::error::Error>> {
-    let instructions: InstructionsUpdate = serde_json::from_slice(&data)?;
+    let instructions: Vec<SerializableInstructionUpdate> = serde_json::from_slice(&data)?;
     Ok(FixtureData::Instructions(instructions))
 }
 

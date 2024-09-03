@@ -1,10 +1,9 @@
 use spl_token_2022::extension::confidential_transfer_fee::instruction::ConfidentialTransferFeeInstruction;
-use yellowstone_vixen_core::{Instruction, Pubkey};
+use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::{decode_extension_ix_type, ExtensionIxParser, Ix};
 use crate::helpers::{check_min_accounts_req, get_multisig_signers};
-
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InitializeConfidentialTransferFeeConfigAccounts {
     pub mint: Pubkey,
 }
@@ -59,7 +58,7 @@ pub enum ConfidentaltransferFeeIx {
 }
 
 impl ExtensionIxParser for ConfidentaltransferFeeIx {
-    fn try_parse_extension_ix(ix: &Instruction) -> Result<Self, String> {
+    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
         let accounts_len = ix.accounts.len();
         let ix_type = decode_extension_ix_type(&ix.data)?;
 

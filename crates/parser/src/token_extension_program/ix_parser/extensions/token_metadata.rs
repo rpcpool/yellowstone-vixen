@@ -1,12 +1,13 @@
+use crate::helpers::ReadableInstruction;
 use spl_token_metadata_interface::instruction::{
     Emit, Initialize, RemoveKey, TokenMetadataInstruction, UpdateAuthority, UpdateField,
 };
-use yellowstone_vixen_core::{Instruction, Pubkey, ReadableInstruction};
+use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::ExtensionIxParser;
 use crate::helpers::check_min_accounts_req;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InitializeAccounts {
     pub metadata: Pubkey,
     pub update_authority: Pubkey,
@@ -14,25 +15,25 @@ pub struct InitializeAccounts {
     pub mint_authority: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct UpdateFieldAccounts {
     pub metadata: Pubkey,
     pub update_authority: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct RmoveKeyAccounts {
     pub metadata: Pubkey,
     pub update_authority: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct UpdateAuthorityAccounts {
     pub metadata: Pubkey,
     pub current_update_authority: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct EmitAccounts {
     pub metadata: Pubkey,
 }
@@ -47,7 +48,7 @@ pub enum TokenMetadataIx {
 }
 
 impl ExtensionIxParser for TokenMetadataIx {
-    fn try_parse_extension_ix(ix: &Instruction) -> Result<Self, String> {
+    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
         let accounts_len = ix.accounts.len();
 
         let ix_type = TokenMetadataInstruction::unpack(&ix.data).map_err(|e| e.to_string())?;

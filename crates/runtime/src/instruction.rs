@@ -39,16 +39,16 @@ impl<M: Instrumenter> InstructionPipeline<M> {
 
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
         let mut err = None;
-        let insns = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
+        let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
-        for insn in insns.iter().flat_map(|i| i.visit_all()) {
+        for ix in ixs.iter().flat_map(|i| i.visit_all()) {
             for pipe in &self.0 {
                 // TODO: run these concurrently?
-                let res = pipe.handle(insn).await;
-                if let Some(r) = JobResult::from_pipeline(res) {
+                let res = pipe.handle(ix).await;
+                if let Some(r) = JobResult::from_pipeline(&res) {
                     self.1.inc_processed(r);
                 }
-                match pipe.handle(insn).await {
+                match res {
                     Ok(()) => (),
                     Err(PipelineErrors::AlreadyHandled(h)) => h.as_unit(),
                     Err(e) => err = Some(e.handle::<InstructionUpdate>(&pipe.id())),

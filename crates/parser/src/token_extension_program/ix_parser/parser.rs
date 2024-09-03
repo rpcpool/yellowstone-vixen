@@ -1,10 +1,10 @@
+use crate::helpers::{InstructionParser, ReadableInstruction};
 use helpers::ExtensionIxParser;
 use spl_token_2022::instruction::TokenInstruction;
 use spl_token_group_interface::instruction::TokenGroupInstruction;
 use spl_token_metadata_interface::instruction::TokenMetadataInstruction;
 use yellowstone_vixen_core::{
-    Instruction, InstructionParser, InstructionsUpdate, ParseError, ParseResult, Parser, Prefilter,
-    ReadableInstruction,
+    instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
 };
 
 use super::{extensions::*, ixs::*};
@@ -16,12 +16,16 @@ use crate::{
     token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIxParser},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct TokenExtensionProgramIxParser;
 
 impl Parser for TokenExtensionProgramIxParser {
-    type Input = InstructionsUpdate;
-    type Output = Vec<TokenExtensionProgramIx>;
+    type Input = InstructionUpdate;
+    type Output = TokenExtensionProgramIx;
+
+    fn id(&self) -> std::borrow::Cow<str> {
+        "yellowstone_vixen_parser::token_extensions::TokenExtensionProgramIxParser".into()
+    }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -30,35 +34,18 @@ impl Parser for TokenExtensionProgramIxParser {
             .unwrap()
     }
 
-    async fn parse(&self, ixs_update: &InstructionsUpdate) -> ParseResult<Self::Output> {
-        let mut parsed_ixs: Vec<TokenExtensionProgramIx> = Vec::new();
-        for outer_ixs in ixs_update.instructions.iter() {
-            if check_pubkeys_match(&outer_ixs.outer_ix.program_id, &spl_token_2022::ID) {
-                let parsed_ix = TokenExtensionProgramIxParser::parse_ix(&outer_ixs.outer_ix)
-                    .map_err(|e| ParseError::Other(e.into()))?;
-                parsed_ixs.push(parsed_ix);
-            }
-            for inner_ix in outer_ixs.inner_ixs.iter() {
-                if check_pubkeys_match(&inner_ix.program_id, &spl_token_2022::ID) {
-                    let parsed_ix = TokenExtensionProgramIxParser::parse_ix(inner_ix)
-                        .map_err(|e| ParseError::Other(e.into()))?;
-                    parsed_ixs.push(parsed_ix);
-                }
-            }
+    async fn parse(&self, ix_update: &InstructionUpdate) -> ParseResult<Self::Output> {
+        if check_pubkeys_match(&ix_update.program, &spl_token_2022::ID) {
+            TokenExtensionProgramIxParser::parse_ix(ix_update)
+                .map_err(|e| ParseError::Other(e.into()))
+        } else {
+            Err(ParseError::Filtered)
         }
-        if parsed_ixs.len() == 0 {
-            return Err(ParseError::Other(
-                "No token extension program instructions found to parse"
-                    .to_string()
-                    .into(),
-            ));
-        }
-        Ok(parsed_ixs)
     }
 }
 
 impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParser {
-    fn parse_ix(ix: &Instruction) -> Result<TokenExtensionProgramIx, String> {
+    fn parse_ix(ix: &InstructionUpdate) -> Result<TokenExtensionProgramIx, String> {
         let accounts_len = ix.accounts.len();
         match TokenInstruction::unpack(&ix.data) {
             Ok(token_ix) => match token_ix {
@@ -259,10 +246,7 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                     ));
                 }
 
-                Err(format!(
-                    "Err while unpacking ix data : {} data : {:?}",
-                    e, ix.data
-                ))
+                Err(format!("Err while unpacking ix data : {} ", e,))
             },
         }
     }
@@ -272,7 +256,7 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
 mod tests {
     use std::ops::Mul;
 
-    use yellowstone_vixen_mock::{run_tx_parse, tx_fixture, FixtureData};
+    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
 
     use super::*;
     use crate::token_program::ix_parser::TokenProgramIx;
@@ -283,8 +267,8 @@ mod tests {
         let fixture_data = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
 
         if let FixtureData::Instructions(ixs) = fixture_data {
-            let ixs = run_tx_parse!(parser, ixs);
-            match &ixs[0] {
+            let ix = run_ix_parse!(parser, &ixs[0]);
+            match ix {
                 TokenExtensionProgramIx::TokenProgramIx(ix) => {
                     if let TokenProgramIx::MintToChecked(ix) = ix {
                         assert!(ix.data.is_some());

@@ -3,7 +3,7 @@ use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 use super::helpers::{decode_extension_ix_type, Ix};
 use crate::helpers::{check_min_accounts_req, get_multisig_signers};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ExtensionWithCommonIxs {
     CpiGuard,
     DefaultAccountState,
@@ -15,6 +15,7 @@ pub enum ExtensionWithCommonIxs {
     TransferHook,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum IxsSupported {
     InitAndUpdate,
     EnableAndDisable,
@@ -36,7 +37,7 @@ impl ExtensionWithCommonIxs {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ExtInitializeAccounts {
     pub mint: Pubkey,
 }

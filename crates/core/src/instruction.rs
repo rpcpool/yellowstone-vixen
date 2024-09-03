@@ -42,10 +42,12 @@ impl Missing {
 
 impl From<Missing> for ParseError {
     #[inline]
-    fn from(value: Missing) -> Self { Self::Missing(value) }
+    fn from(value: Missing) -> Self {
+        Self::Missing(value)
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct InstructionShared {
     pub slot: u64,
     pub signature: Vec<u8>,
@@ -73,7 +75,7 @@ pub struct InstructionUpdate {
     pub inner: Vec<InstructionUpdate>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct AccountKeys {
     static_keys: Vec<Vec<u8>>,
     dynamic_rw: Vec<Vec<u8>>,
@@ -92,7 +94,9 @@ pub enum AccountKeyError {
 
 impl AccountKeys {
     fn get<I: TryInto<usize>>(&self, idx: I) -> Result<Pubkey, AccountKeyError>
-    where I::Error: Into<std::num::TryFromIntError> {
+    where
+        I::Error: Into<std::num::TryFromIntError>,
+    {
         let idx = idx
             .try_into()
             .map_err(|e| AccountKeyError::IndexConvert(e.into()))?;
@@ -280,7 +284,9 @@ impl InstructionUpdate {
     }
 
     #[inline]
-    pub fn visit_all(&self) -> VisitAll<'_> { VisitAll::new(self) }
+    pub fn visit_all(&self) -> VisitAll<'_> {
+        VisitAll::new(self)
+    }
 }
 
 #[derive(Debug)]
@@ -295,7 +301,9 @@ enum VisitAllState<'a> {
 
 impl<'a> VisitAll<'a> {
     #[inline]
-    fn new(insn: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(insn)) }
+    fn new(ixs: &'a InstructionUpdate) -> Self {
+        Self(VisitAllState::Init(ixs))
+    }
 }
 
 impl<'a> Iterator for VisitAll<'a> {
@@ -310,12 +318,12 @@ impl<'a> Iterator for VisitAll<'a> {
                 Some(i)
             },
             VisitAllState::Started(d) => loop {
-                let Some(insn) = d.back_mut()?.next() else {
+                let Some(ix) = d.back_mut()?.next() else {
                     let _ = d.pop_back().unwrap_or_else(|| unreachable!());
                     continue;
                 };
-                d.push_back(insn.inner.iter());
-                break Some(insn);
+                d.push_back(ix.inner.iter());
+                break Some(ix);
             },
         }
     }
