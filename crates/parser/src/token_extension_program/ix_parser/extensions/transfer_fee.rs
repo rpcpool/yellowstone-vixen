@@ -1,10 +1,11 @@
-use crate::helpers::ReadableInstruction;
 use spl_pod::solana_program::program_option::COption;
 use spl_token_2022::extension::transfer_fee::instruction::TransferFeeInstruction;
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::ExtensionIxParser;
-use crate::helpers::{check_min_accounts_req, get_multisig_signers, to_supported_coption_pubkey};
+use crate::helpers::{
+    check_min_accounts_req, get_multisig_signers, to_supported_coption_pubkey, ReadableInstruction,
+};
 
 #[derive(Debug)]
 pub struct TransferCheckedWithFeeAccounts {

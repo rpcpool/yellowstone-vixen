@@ -39,9 +39,7 @@ pub enum ParseError {
 
 impl<T: Into<BoxedError>> From<T> for ParseError {
     #[inline]
-    fn from(value: T) -> Self {
-        Self::Other(value.into())
-    }
+    fn from(value: T) -> Self { Self::Other(value.into()) }
 }
 
 pub type ParseResult<T> = Result<T, ParseError>;
@@ -70,16 +68,12 @@ pub trait ParserId {
 
 impl ParserId for std::convert::Infallible {
     #[inline]
-    fn id(&self) -> Cow<str> {
-        match *self {}
-    }
+    fn id(&self) -> Cow<str> { match *self {} }
 }
 
 impl<T: Parser> ParserId for T {
     #[inline]
-    fn id(&self) -> Cow<str> {
-        Parser::id(self)
-    }
+    fn id(&self) -> Cow<str> { Parser::id(self) }
 }
 
 pub trait GetPrefilter {
@@ -88,16 +82,12 @@ pub trait GetPrefilter {
 
 impl GetPrefilter for std::convert::Infallible {
     #[inline]
-    fn prefilter(&self) -> Prefilter {
-        match *self {}
-    }
+    fn prefilter(&self) -> Prefilter { match *self {} }
 }
 
 impl<T: Parser> GetPrefilter for T {
     #[inline]
-    fn prefilter(&self) -> Prefilter {
-        Parser::prefilter(self)
-    }
+    fn prefilter(&self) -> Prefilter { Parser::prefilter(self) }
 }
 
 // TODO: why are so many fields on the prefilters and prefilter builder optional???
@@ -117,9 +107,7 @@ fn merge_opt<T, F: FnOnce(&mut T, T)>(lhs: &mut Option<T>, rhs: Option<T>, f: F)
 
 impl Prefilter {
     #[inline]
-    pub fn builder() -> PrefilterBuilder {
-        PrefilterBuilder::default()
-    }
+    pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
 
     pub fn merge(&mut self, other: Prefilter) {
         let Self {
@@ -187,18 +175,14 @@ impl fmt::Display for Pubkey {
 
 impl From<[u8; 32]> for Pubkey {
     #[inline]
-    fn from(value: [u8; 32]) -> Self {
-        Self(value)
-    }
+    fn from(value: [u8; 32]) -> Self { Self(value) }
 }
 
 impl TryFrom<&[u8]> for Pubkey {
     type Error = std::array::TryFromSliceError;
 
     #[inline]
-    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        value.try_into().map(Self)
-    }
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> { value.try_into().map(Self) }
 }
 
 #[derive(Debug, Clone, Copy, thiserror::Error)]
@@ -249,9 +233,7 @@ fn set_opt<T>(opt: &mut Option<T>, field: &'static str, val: T) -> Result<(), Pr
 
 // TODO: if Solana ever adds Into<[u8; 32]> for Pubkey this can be simplified
 fn collect_pubkeys<I: IntoIterator>(it: I) -> Result<HashSet<Pubkey>, PrefilterError>
-where
-    I::Item: AsRef<[u8]>,
-{
+where I::Item: AsRef<[u8]> {
     it.into_iter()
         .map(|p| {
             let p = p.as_ref();
@@ -297,9 +279,7 @@ impl PrefilterBuilder {
     }
 
     pub fn account_owners<I: IntoIterator>(self, it: I) -> Self
-    where
-        I::Item: AsRef<[u8]>,
-    {
+    where I::Item: AsRef<[u8]> {
         self.mutate(|this| {
             set_opt(
                 &mut this.account_owners,
@@ -310,9 +290,7 @@ impl PrefilterBuilder {
     }
 
     pub fn transaction_accounts<I: IntoIterator>(self, it: I) -> Self
-    where
-        I::Item: AsRef<[u8]>,
-    {
+    where I::Item: AsRef<[u8]> {
         self.mutate(|this| {
             set_opt(
                 &mut this.transaction_accounts,
@@ -330,18 +308,14 @@ pub struct Filters<'a>(HashMap<&'a str, Prefilter>);
 impl<'a> Filters<'a> {
     #[inline]
     #[must_use]
-    pub const fn new(filters: HashMap<&'a str, Prefilter>) -> Self {
-        Self(filters)
-    }
+    pub const fn new(filters: HashMap<&'a str, Prefilter>) -> Self { Self(filters) }
 }
 
 impl<'a> ops::Deref for Filters<'a> {
     type Target = HashMap<&'a str, Prefilter>;
 
     #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl<'a> From<Filters<'a>> for SubscribeRequest {
@@ -352,15 +326,12 @@ impl<'a> From<Filters<'a>> for SubscribeRequest {
                 .filter_map(|(k, v)| {
                     let v = v.account.as_ref()?;
 
-                    Some((
-                        k.to_owned().into(),
-                        SubscribeRequestFilterAccounts {
-                            account: v.accounts.iter().map(ToString::to_string).collect(),
-                            owner: v.owners.iter().map(ToString::to_string).collect(),
-                            // TODO: probably a good thing to look into
-                            filters: vec![],
-                        },
-                    ))
+                    Some((k.to_owned().into(), SubscribeRequestFilterAccounts {
+                        account: v.accounts.iter().map(ToString::to_string).collect(),
+                        owner: v.owners.iter().map(ToString::to_string).collect(),
+                        // TODO: probably a good thing to look into
+                        filters: vec![],
+                    }))
                 })
                 .collect(),
             slots: [].into_iter().collect(),
@@ -369,19 +340,16 @@ impl<'a> From<Filters<'a>> for SubscribeRequest {
                 .filter_map(|(k, v)| {
                     let v = v.transaction.as_ref()?;
 
-                    Some((
-                        k.to_owned().into(),
-                        SubscribeRequestFilterTransactions {
-                            vote: None,
-                            // TODO: make this configurable
-                            failed: Some(false),
-                            signature: None,
-                            // TODO: figure these out
-                            account_include: v.accounts.iter().map(ToString::to_string).collect(),
-                            account_exclude: [].into_iter().collect(),
-                            account_required: [].into_iter().collect(),
-                        },
-                    ))
+                    Some((k.to_owned().into(), SubscribeRequestFilterTransactions {
+                        vote: None,
+                        // TODO: make this configurable
+                        failed: Some(false),
+                        signature: None,
+                        // TODO: figure these out
+                        account_include: v.accounts.iter().map(ToString::to_string).collect(),
+                        account_exclude: [].into_iter().collect(),
+                        account_required: [].into_iter().collect(),
+                    }))
                 })
                 .collect(),
             transactions_status: [].into_iter().collect(),

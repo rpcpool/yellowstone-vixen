@@ -1,11 +1,10 @@
-use crate::helpers::ReadableInstruction;
 use spl_token_metadata_interface::instruction::{
     Emit, Initialize, RemoveKey, TokenMetadataInstruction, UpdateAuthority, UpdateField,
 };
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::ExtensionIxParser;
-use crate::helpers::check_min_accounts_req;
+use crate::helpers::{check_min_accounts_req, ReadableInstruction};
 
 #[derive(Debug, Clone, Copy)]
 pub struct InitializeAccounts {

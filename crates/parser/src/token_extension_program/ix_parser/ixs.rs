@@ -1,10 +1,12 @@
-use crate::helpers::ReadableInstruction;
 use spl_pod::solana_program::program_option::COption;
 use spl_token_2022::{extension::ExtensionType, instruction::AuthorityType};
 use yellowstone_vixen_core::Pubkey;
 
 use super::extensions::*;
-use crate::token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIx};
+use crate::{
+    helpers::ReadableInstruction,
+    token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIx},
+};
 
 #[derive(Debug)]
 pub enum TokenExtensionProgramIx {

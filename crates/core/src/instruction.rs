@@ -42,9 +42,7 @@ impl Missing {
 
 impl From<Missing> for ParseError {
     #[inline]
-    fn from(value: Missing) -> Self {
-        Self::Missing(value)
-    }
+    fn from(value: Missing) -> Self { Self::Missing(value) }
 }
 
 #[derive(Debug, Default)]
@@ -94,9 +92,7 @@ pub enum AccountKeyError {
 
 impl AccountKeys {
     fn get<I: TryInto<usize>>(&self, idx: I) -> Result<Pubkey, AccountKeyError>
-    where
-        I::Error: Into<std::num::TryFromIntError>,
-    {
+    where I::Error: Into<std::num::TryFromIntError> {
         let idx = idx
             .try_into()
             .map_err(|e| AccountKeyError::IndexConvert(e.into()))?;
@@ -284,9 +280,7 @@ impl InstructionUpdate {
     }
 
     #[inline]
-    pub fn visit_all(&self) -> VisitAll<'_> {
-        VisitAll::new(self)
-    }
+    pub fn visit_all(&self) -> VisitAll<'_> { VisitAll::new(self) }
 }
 
 #[derive(Debug)]
@@ -301,9 +295,7 @@ enum VisitAllState<'a> {
 
 impl<'a> VisitAll<'a> {
     #[inline]
-    fn new(ixs: &'a InstructionUpdate) -> Self {
-        Self(VisitAllState::Init(ixs))
-    }
+    fn new(ixs: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(ixs)) }
 }
 
 impl<'a> Iterator for VisitAll<'a> {
