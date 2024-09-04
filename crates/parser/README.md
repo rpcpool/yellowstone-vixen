@@ -13,11 +13,10 @@ cargo add yellowstone-vixen-parser
 ## Example
 
 ```rust
-
-use yellowstone_vixen_parser::{TokenProgramParser, TokenExtensionProgramParser};
-use yellowstone_vixen as vixen;
-use yellowstone_vixen_core::{Handler, HandlerManager, HandlerManagers};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use yellowstone_vixen_parser::{
+    token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
+};
+use yellowstone_vixen::{self as vixen, Pipeline};
 
 fn main() {
     tracing_subscriber::registry()
@@ -28,23 +27,11 @@ fn main() {
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
+
     vixen::Runtime::builder()
-        .opts(config)
-        .manager(HandlerManagers {
-            account: HandlerManager::new([
-                handler::boxed(vixen::HandlerPack::new(
-                TokenExtensionProgramParser,
-                [Handler],
-            )), handler::boxed(vixen::HandlerPack::new(
-                TokenProgramParser,
-                [Handler]))
-            ]),
-            transaction: HandlerManager::empty(),
-        })
-        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
-        .build()
+        .account(Pipeline::new(TokenExtensionProgramParser, [Handler]))
+        .account(Pipeline::new(TokenProgramParser, [Handler]))
+        .build(config)
         .run();
 }
-
-
 ```
