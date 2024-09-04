@@ -1,7 +1,21 @@
 [yellowstone]
 # endpoint of the dragonmouth stream
-endpoint = "<endpoint>"
+endpoint = "https://index.rpcpool.com"
 # x-token of the dragonmouth stream
-x-token = "<x-token>"
+x-token = "d19dadc5-f7bf-4dc6-bf71-b28d052baee6"
 # dragonmouth connect timeout in seconds
 timeout = 60
+
+
+# #Prometheus metrics config, uncomment this while using prometheus
+# [metrics]
+# # endpoint of the metrics stream (metrics data is pushed to this endpoint and consumed by prometheus)
+# endpoint = "http://localhost:3030"
+# # job name of the metrics stream
+# job = "<job>"
+# # username of the metrics stream
+# username = "<username>"
+# # password of the metrics stream
+# password = "<password>"
+# # metrics export interval in seconds
+# export-interval = 60
