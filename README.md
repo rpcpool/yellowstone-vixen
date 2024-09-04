@@ -82,10 +82,25 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for CustomHandler {
 - **Main**: Sets up the tracing subscriber, reads the configuration file, and runs the Vixen framework with the specified handlers, managers and metrics.
 
 ```rust
+<<<<<<< HEAD
 use yellowstone_vixen_parser::{
     token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
 };
 use yellowstone_vixen::{self as vixen, Pipeline};
+=======
+use std::path::PathBuf;
+
+use clap::Parser as _;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use yellowstone_vixen::{self as vixen, Pipeline};
+use yellowstone_vixen_parser::{
+    token_extension_program::{
+        account_parser::TokenExtensionProgramAccParser, ix_parser::TokenExtensionProgramIxParser,
+    },
+    token_program::{account_parser::TokenProgramAccParser, ix_parser::TokenProgramIxParser},
+};
+
+>>>>>>> 4d454a5 (chore: update READMEs and cleanup)
 
 fn main() {
     tracing_subscriber::registry()
@@ -98,8 +113,15 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
+<<<<<<< HEAD
         .account(Pipeline::new(TokenExtensionProgramParser, [Handler]))
         .account(Pipeline::new(TokenProgramParser, [Handler]))
+=======
+        .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
+        .account(Pipeline::new(TokenProgramAccParser, [Handler]))
+        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Handler]))
+        .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
+>>>>>>> 4d454a5 (chore: update READMEs and cleanup)
         .build(config)
         .run();
 }
@@ -134,8 +156,10 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .account(Pipeline::new(TokenExtensionProgramParser, [Handler]))
-        .account(Pipeline::new(TokenProgramParser, [Handler]))
+        .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
+        .account(Pipeline::new(TokenProgramAccParser, [Handler]))
+        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Handler]))
+        .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
         .metrics(vixen::metrics::Prometheus)
         .build(config)
         .run();

@@ -14,8 +14,13 @@ cargo add yellowstone-vixen-mock
 #[cfg(test)]
 mod tests {
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, tx_fixture, run_ix_parse, FixtureData};
-
-    use super::*;
+    // using token program and token extension program parsers
+    use yellowstone_vixen_parser::{
+        token_extension_program::{
+        ix_parser::{TokenExtensionProgramIxParser,TokenExtensionProgramIx}
+        },
+        token_program::{account_parser::{TokenProgramAccParser,TokenProgramState}, ix_parser::{TokenProgramIxParser,TokenProgramIx}},
+    };
 
     #[tokio::test]
     async fn test_mint_parsing() {
@@ -29,35 +34,37 @@ mod tests {
             if let TokenProgramState::Mint(mint) = state {
                 assert_eq!(mint.decimals, 10);
             } else {
-                panic!("Invalid Mint Account");
+                panic!("Invalid Account");
             }
+        } else {
+            panic!("Invalid Fixture Data");
         }
     }
 
     // Transaction fixture
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    #[tokio::test]
     async fn test_mint_to_checked_ix_parsing() {
-    let parser = TokenExtensionProgramIxParser;
+        let parser = TokenExtensionProgramIxParser;
 
-    let fixture_data = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
+        let fixture_data = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
 
-    if let FixtureData::Instructions(ixs) = fixture_data {
-        let ix = run_ix_parse!(parser, &ixs[0]);
-        match ix {
-            TokenExtensionProgramIx::TokenProgramIx(ix) => {
-                if let TokenProgramIx::MintToChecked(ix) = ix {
-                    assert!(ix.data.is_some());
-                    let data = ix.data.as_ref().unwrap();
-                    assert_eq!(data.decimals, 9);
-                    assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals as u32)));
-                } else {
-                    panic!("Invalid Instruction")
-                }
-            },
-            _ => panic!("Invalid Instruction"),
-        }
-    } else {
-        panic!("Invalid Fixture Data")
+        if let FixtureData::Instructions(ixs) = fixture_data {
+            let ix = run_ix_parse!(parser, &ixs[0]);
+            match ix {
+                TokenExtensionProgramIx::TokenProgramIx(ix) => {
+                    if let TokenProgramIx::MintToChecked(ix) = ix {
+                        assert!(ix.data.is_some());
+                        let data = ix.data.as_ref().unwrap();
+                        assert_eq!(data.decimals, 9);
+                        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals as u32)));
+                    } else {
+                        panic!("Invalid Instruction")
+                    }
+                },
+                _ => panic!("Invalid Instruction"),
+            }
+        } else {
+            panic!("Invalid Fixture Data")
         }
     }
 
