@@ -106,9 +106,7 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 pub struct SerializablePubkey(pub [u8; 32]);
 
 impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self {
-        Self(value.0)
-    }
+    fn from(value: VixenPubkey) -> Self { Self(value.0) }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -213,7 +211,7 @@ fn try_from_tx_meta(
                 })
                 .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
             outer_with_inner_ixs.pop(); // Remove the last instruction which is a
-                                        // set compute unit ix and will cause errors while parsing
+            // set compute unit ix and will cause errors while parsing
 
             if let Some(inner_ixs) = inner_ixs {
                 if inner_ixs.len() == 0 {
@@ -319,9 +317,7 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
     }
 }
 
-pub fn get_rpc_client() -> RpcClient {
-    RpcClient::new(RPC_ENDPOINT.to_string())
-}
+pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) }
 
 #[derive(Debug, Clone)]
 pub enum FixtureData {

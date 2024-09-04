@@ -45,9 +45,7 @@ pub struct ReadableInstruction<A, D> {
 }
 
 impl<A, D> ReadableInstruction<A, D> {
-    pub fn new(accounts: A, data: Option<D>) -> Self {
-        Self { accounts, data }
-    }
+    pub fn new(accounts: A, data: Option<D>) -> Self { Self { accounts, data } }
 
     pub fn from_accounts(accounts: A) -> Self {
         Self {

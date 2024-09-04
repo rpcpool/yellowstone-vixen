@@ -1,4 +1,3 @@
-use crate::helpers::ReadableInstruction;
 use spl_token_group_interface::instruction::{
     InitializeGroup, InitializeMember, TokenGroupInstruction, UpdateGroupAuthority,
     UpdateGroupMaxSize,
@@ -6,7 +5,7 @@ use spl_token_group_interface::instruction::{
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::ExtensionIxParser;
-use crate::helpers::check_min_accounts_req;
+use crate::helpers::{check_min_accounts_req, ReadableInstruction};
 
 #[derive(Debug, Clone, Copy)]
 pub struct InitializeGroupAccounts {

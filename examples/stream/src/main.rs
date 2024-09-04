@@ -43,9 +43,7 @@ impl vixen_core::Parser for Parser {
     type Input = vixen_core::AccountUpdate;
     type Output = account::Account;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "test_stream::Parser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "test_stream::Parser".into() }
 
     fn prefilter(&self) -> vixen_core::Prefilter {
         vixen_core::Prefilter::builder()
@@ -62,9 +60,7 @@ impl vixen_core::Parser for Parser {
 }
 
 impl vixen_core::ProgramParser for Parser {
-    fn program_id(&self) -> vixen_core::Pubkey {
-        id()
-    }
+    fn program_id(&self) -> vixen_core::Pubkey { id() }
 }
 
 fn main() {
