@@ -84,6 +84,19 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for CustomHandler {
 - **Main**: Sets up the tracing subscriber, reads the configuration file, and runs the Vixen framework with the specified handlers, managers and metrics.
 
 ```rust
+use std::path::PathBuf;
+
+use clap::Parser as _;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use yellowstone_vixen::{self as vixen, Pipeline};
+use yellowstone_vixen_parser::{
+    token_extension_program::{
+        account_parser::TokenExtensionProgramAccParser, ix_parser::TokenExtensionProgramIxParser,
+    },
+    token_program::{account_parser::TokenProgramAccParser, ix_parser::TokenProgramIxParser},
+};
+
+
 fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
@@ -94,15 +107,12 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-
     vixen::Runtime::builder()
-        .opts(config)
-        .manager(HandlerManagers {
-            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(CustomParser, [CustomHandler]))]),
-            transaction: HandlerManager::empty(),
-        })
-        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
-        .build()
+        .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
+        .account(Pipeline::new(TokenProgramAccParser, [Handler]))
+        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Handler]))
+        .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
+        .build(config)
         .run();
 }
 ```
@@ -119,27 +129,29 @@ Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prome
 
 ```toml
 [dependencies]
-vixen = { version = "0.0.0", features = ["prometheus"] }
+yellowstone-vixen = { version = "0.0.0", features = ["prometheus"] }
 ```
 
 - **Prometheus Setup**:
 
 ```rust
 fn main() {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
+
     vixen::Runtime::builder()
-        .opts(config)
-        .manager(HandlerManagers {
-            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
-                Parser,
-                [Handler],
-            ))]),
-            transaction: HandlerManager::empty(),
-        })
-        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
-        .build()
+        .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
+        .account(Pipeline::new(TokenProgramAccParser, [Handler]))
+        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Handler]))
+        .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
+        .metrics(vixen::metrics::Prometheus)
+        .build(config)
         .run();
 }
 ```

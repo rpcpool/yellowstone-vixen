@@ -82,7 +82,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_mint_parsing() {
+    async fn test_mint_account_parsing() {
         let parser = TokenProgramAccParser;
 
         let fixture_data = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
@@ -93,8 +93,10 @@ mod tests {
             if let TokenProgramState::Mint(mint) = state {
                 assert_eq!(mint.decimals, 10);
             } else {
-                panic!("Invalid Mint Account");
+                panic!("Invalid Account");
             }
+        } else {
+            panic!("Invalid Fixture Data");
         }
     }
 }

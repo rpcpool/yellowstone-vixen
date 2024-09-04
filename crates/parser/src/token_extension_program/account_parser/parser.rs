@@ -162,7 +162,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_mint_parsing() {
+    async fn test_mint_account_parsing() {
         let parser = TokenExtensionProgramAccParser;
 
         let fixture_data = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu");
@@ -190,7 +190,7 @@ mod tests {
                     panic!("Invalid Extension Data");
                 }
             } else {
-                panic!("Invalid Mint Account");
+                panic!("Invalid Account");
             }
         } else {
             panic!("Invalid Fixture Data");
