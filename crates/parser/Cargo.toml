@@ -17,7 +17,11 @@ spl-token-group-interface = { version = "0.3.0", optional = true }
 spl-token-metadata-interface = { version = "0.4.0", optional = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
-yellowstone-vixen-proto = { workspace = true, features = ["parser"], optional = true }
+yellowstone-vixen-proto = { workspace = true, features = [
+    "parser",
+], optional = true }
+orca_whirlpools_client = "0.1.0"
+
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
