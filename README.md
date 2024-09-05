@@ -14,10 +14,8 @@ Yellowstone Vixen allows dApp developers to build program-aware change event str
 
 1. **Cost Efficiency**: Utilizing Dragon's Mouth, multiple Vixen instances can share a single geyser stream. With various filter options, storage costs focus on what's essential for the dApp.
 2. **Operational Simplicity**: Vixen requires minimal configuration and dependency on other systems, making it easy to operate.
-3. **Recovery**: In the event of a crash or cold start, operators can designate a starting slot. Vixen, in conjunction with Dragon's Mouth, replays all transactions and accounts from the specified slot until reaching the active slot, then switches to real-time processing.
-4. **Auditability**: Operators can conduct verifiable audits to check the accounts and transactions processed by the index and at which slot.
-5. **Observability**: Operators can monitor the health of their installation, gaining insights into lag, throughput, and error rates.
-6. **Composability**: Program parsers are developed as separate modules (cargo crates), enabling programs to include other parsers needed to deserialize cross-program invocations (CPI).
+3. **Observability**: Operators can monitor the health of their installation, gaining insights into lag, throughput, and error rates.
+4. **Composability**: Program parsers are developed as separate modules (cargo crates), enabling programs to include other parsers needed to deserialize cross-program invocations (CPI).
 
 ## Requirements
 

@@ -8,14 +8,14 @@ timeout = 60
 
 
 # #Prometheus metrics config, uncomment this while using prometheus
-# [metrics]
+[metrics]
 # # endpoint of the metrics stream (metrics data is pushed to this endpoint and consumed by prometheus)
-# endpoint = "http://localhost:3030"
+endpoint = "http://localhost:3030"
 # # job name of the metrics stream
-# job = "<job>"
+job = "example"
 # # username of the metrics stream
-# username = "<username>"
+username = "foo"
 # # password of the metrics stream
-# password = "<password>"
+password = "bar"
 # # metrics export interval in seconds
-# export-interval = 60
+export-interval = 60

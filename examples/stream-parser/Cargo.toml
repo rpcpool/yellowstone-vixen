@@ -1,9 +1,9 @@
 [package]
-name = "test-stream-parser"
+name = "example-vixen-stream-parser"
 description = "Test bed for integrating yellowstone-vixen-parser with Vixen program streams"
 publish = false
 edition = "2021"
-license = "AGPL-3.0-or-later"
+license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]

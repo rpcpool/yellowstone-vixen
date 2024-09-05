@@ -1449,6 +1449,60 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 
 [[package]]
+name = "example-vixen-opentelemetry"
+version = "0.0.0"
+dependencies = [
+ "clap 4.5.13",
+ "opentelemetry-stdout",
+ "opentelemetry_sdk",
+ "tokio",
+ "toml 0.8.19",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+ "yellowstone-vixen",
+ "yellowstone-vixen-parser",
+]
+
+[[package]]
+name = "example-vixen-prometheus"
+version = "0.0.0"
+dependencies = [
+ "clap 4.5.13",
+ "toml 0.8.19",
+ "tracing",
+ "tracing-subscriber",
+ "yellowstone-vixen",
+ "yellowstone-vixen-parser",
+]
+
+[[package]]
+name = "example-vixen-stream"
+version = "0.0.0"
+dependencies = [
+ "clap 4.5.13",
+ "prost 0.13.1",
+ "prost-build 0.13.1",
+ "toml 0.8.19",
+ "tracing",
+ "tracing-subscriber",
+ "yellowstone-vixen",
+]
+
+[[package]]
+name = "example-vixen-stream-parser"
+version = "0.0.0"
+dependencies = [
+ "clap 4.5.13",
+ "prost-build 0.13.1",
+ "toml 0.8.19",
+ "tracing",
+ "tracing-subscriber",
+ "yellowstone-vixen",
+ "yellowstone-vixen-parser",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4936,60 +4990,6 @@ checksum = "21bebf2b7c9e0a515f6e0f8c51dc0f8e4696391e6f1ff30379559f8365fb0df7"
 dependencies = [
  "rustix",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "test"
-version = "0.0.0"
-dependencies = [
- "clap 4.5.13",
- "toml 0.8.19",
- "tracing",
- "tracing-subscriber",
- "yellowstone-vixen",
- "yellowstone-vixen-parser",
-]
-
-[[package]]
-name = "test-opentelemetry"
-version = "0.0.0"
-dependencies = [
- "clap 4.5.13",
- "opentelemetry-stdout",
- "opentelemetry_sdk",
- "tokio",
- "toml 0.8.19",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
- "yellowstone-vixen",
- "yellowstone-vixen-parser",
-]
-
-[[package]]
-name = "test-stream"
-version = "0.0.0"
-dependencies = [
- "clap 4.5.13",
- "prost 0.13.1",
- "prost-build 0.13.1",
- "toml 0.8.19",
- "tracing",
- "tracing-subscriber",
- "yellowstone-vixen",
-]
-
-[[package]]
-name = "test-stream-parser"
-version = "0.0.0"
-dependencies = [
- "clap 4.5.13",
- "prost-build 0.13.1",
- "toml 0.8.19",
- "tracing",
- "tracing-subscriber",
- "yellowstone-vixen",
- "yellowstone-vixen-parser",
 ]
 
 [[package]]
