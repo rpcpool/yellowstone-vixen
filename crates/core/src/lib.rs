@@ -14,7 +14,7 @@
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
-    fmt,
+    fmt::{self, Debug},
     future::Future,
     ops,
     str::FromStr,
@@ -158,8 +158,14 @@ impl TransactionPrefilter {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Pubkey(pub [u8; 32]);
+
+impl Debug for Pubkey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&bs58::encode(self.0).into_string())
+    }
+}
 
 impl fmt::Display for Pubkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

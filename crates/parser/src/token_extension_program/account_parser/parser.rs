@@ -7,11 +7,11 @@ use spl_token_2022::{
 };
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter, ProgramParser};
 
-use super::token_extension_helpers::{
+use super::helpers::{
     mint_account_extensions_data_bytes, token_account_extensions_data_bytes, ExtensionData,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum TokenExtensionAccountType {
     TokenAccount,
     Mint,
@@ -109,15 +109,15 @@ impl TokenExtensionState {
     }
 }
 
-#[derive(Debug)]
-pub struct TokenExtensionProgramParser;
+#[derive(Debug, Clone, Copy)]
+pub struct TokenExtensionProgramAccParser;
 
-impl Parser for TokenExtensionProgramParser {
+impl Parser for TokenExtensionProgramAccParser {
     type Input = AccountUpdate;
     type Output = TokenExtensionState;
 
     fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::token_extensions::TokenExtensionProgramParser".into()
+        "yellowstone_vixen_parser::token_extensions::TokenExtensionProgramAccParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
@@ -133,13 +133,13 @@ impl Parser for TokenExtensionProgramParser {
     }
 }
 
-impl ProgramParser for TokenExtensionProgramParser {
+impl ProgramParser for TokenExtensionProgramAccParser {
     #[inline]
     fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 #[cfg(feature = "proto")]
-impl crate::proto::IntoProto for TokenExtensionProgramParser {
+impl crate::proto::IntoProto for TokenExtensionProgramAccParser {
     type Proto = yellowstone_vixen_proto::parser::TokenExtensionState;
 
     fn into_proto(value: Self::Output) -> Self::Proto {
@@ -150,5 +150,50 @@ impl crate::proto::IntoProto for TokenExtensionProgramParser {
         };
 
         Self::Proto { state_oneof }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use core::panic;
+
+    use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_mint_account_parsing() {
+        let parser = TokenExtensionProgramAccParser;
+
+        let fixture_data = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu");
+
+        if let FixtureData::Account(account) = fixture_data {
+            let state = run_account_parse!(parser, account);
+
+            if let TokenExtensionState::ExtendedMint(ext_mint) = state {
+                assert_eq!(ext_mint.base_account.decimals as u8, 9);
+
+                assert_eq!(ext_mint.extension_data_vec.len(), 2);
+
+                let extension_data = &ext_mint.extension_data_vec[1];
+
+                if let ExtensionData::TokenMetadata(meta) = extension_data {
+                    assert_eq!(
+                        meta.mint.to_string(),
+                        "BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu"
+                    );
+
+                    assert_eq!(meta.name, "vixen_test");
+
+                    assert_eq!(meta.symbol, "VIX");
+                } else {
+                    panic!("Invalid Extension Data");
+                }
+            } else {
+                panic!("Invalid Account");
+            }
+        } else {
+            panic!("Invalid Fixture Data");
+        }
     }
 }

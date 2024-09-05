@@ -30,15 +30,15 @@ impl TokenProgramState {
     }
 }
 
-#[derive(Debug)]
-pub struct TokenProgramParser;
+#[derive(Debug, Clone, Copy)]
+pub struct TokenProgramAccParser;
 
-impl Parser for TokenProgramParser {
+impl Parser for TokenProgramAccParser {
     type Input = AccountUpdate;
     type Output = TokenProgramState;
 
     fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::token_program::TokenProgramParser".into()
+        "yellowstone_vixen_parser::token_program::TokenProgramAccParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
@@ -55,13 +55,13 @@ impl Parser for TokenProgramParser {
     }
 }
 
-impl ProgramParser for TokenProgramParser {
+impl ProgramParser for TokenProgramAccParser {
     #[inline]
     fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[cfg(feature = "proto")]
-impl crate::proto::IntoProto for TokenProgramParser {
+impl crate::proto::IntoProto for TokenProgramAccParser {
     type Proto = yellowstone_vixen_proto::parser::TokenProgramState;
 
     fn into_proto(value: Self::Output) -> Self::Proto {
@@ -77,22 +77,26 @@ impl crate::proto::IntoProto for TokenProgramParser {
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::{account_fixture, run_parse};
+    use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
 
     use super::*;
 
     #[tokio::test]
-    async fn test_mint_parsing() {
-        let parser = TokenProgramParser;
+    async fn test_mint_account_parsing() {
+        let parser = TokenProgramAccParser;
 
-        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
+        let fixture_data = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
 
-        let state = run_parse!(parser, account);
+        if let FixtureData::Account(account) = fixture_data {
+            let state = run_account_parse!(parser, account);
 
-        if let TokenProgramState::Mint(mint) = state {
-            assert_eq!(mint.decimals, 10);
+            if let TokenProgramState::Mint(mint) = state {
+                assert_eq!(mint.decimals, 10);
+            } else {
+                panic!("Invalid Account");
+            }
         } else {
-            panic!("Invalid Mint Account");
+            panic!("Invalid Fixture Data");
         }
     }
 }

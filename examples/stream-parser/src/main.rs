@@ -12,7 +12,9 @@ use std::path::PathBuf;
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen};
-use yellowstone_vixen_parser::{proto::Proto, token_extensions::TokenExtensionProgramParser};
+use yellowstone_vixen_parser::{
+    proto::Proto, token_extension_program::account_parser::TokenExtensionProgramAccParser,
+};
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -32,7 +34,7 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::stream::Server::builder()
-        .account(Proto::new(TokenExtensionProgramParser))
+        .account(Proto::new(TokenExtensionProgramAccParser))
         .build(config)
         .run();
 }

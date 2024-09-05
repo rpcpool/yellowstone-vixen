@@ -45,7 +45,7 @@ impl From<Missing> for ParseError {
     fn from(value: Missing) -> Self { Self::Missing(value) }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct InstructionShared {
     pub slot: u64,
     pub signature: Vec<u8>,
@@ -73,7 +73,7 @@ pub struct InstructionUpdate {
     pub inner: Vec<InstructionUpdate>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct AccountKeys {
     static_keys: Vec<Vec<u8>>,
     dynamic_rw: Vec<Vec<u8>>,
@@ -295,7 +295,7 @@ enum VisitAllState<'a> {
 
 impl<'a> VisitAll<'a> {
     #[inline]
-    fn new(insn: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(insn)) }
+    fn new(ixs: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(ixs)) }
 }
 
 impl<'a> Iterator for VisitAll<'a> {
@@ -310,12 +310,12 @@ impl<'a> Iterator for VisitAll<'a> {
                 Some(i)
             },
             VisitAllState::Started(d) => loop {
-                let Some(insn) = d.back_mut()?.next() else {
+                let Some(ix) = d.back_mut()?.next() else {
                     let _ = d.pop_back().unwrap_or_else(|| unreachable!());
                     continue;
                 };
-                d.push_back(insn.inner.iter());
-                break Some(insn);
+                d.push_back(ix.inner.iter());
+                break Some(ix);
             },
         }
     }

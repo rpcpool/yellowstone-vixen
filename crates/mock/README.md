@@ -13,23 +13,60 @@ cargo add yellowstone-vixen-mock
 ```rust
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::{account_fixture, run_parse};
-
-    use super::*;
+    use yellowstone_vixen_mock::{account_fixture, run_account_parse, tx_fixture, run_ix_parse, FixtureData};
+    // using token program and token extension program parsers
+    use yellowstone_vixen_parser::{
+        token_extension_program::{
+        ix_parser::{TokenExtensionProgramIxParser,TokenExtensionProgramIx}
+        },
+        token_program::{account_parser::{TokenProgramAccParser,TokenProgramState}, ix_parser::{TokenProgramIxParser,TokenProgramIx}},
+    };
 
     #[tokio::test]
     async fn test_mint_parsing() {
         let parser = TokenProgramParser;
 
-        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
+        let fixture_data = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
 
-        let state = run_parse!(parser, account);
+        if let FixtureData::Account(account) = fixture_data {
+            let state = run_account_parse!(parser, account);
 
-        if let TokenProgramState::Mint(mint) = state {
-            assert_eq!(mint.decimals, 10);
+            if let TokenProgramState::Mint(mint) = state {
+                assert_eq!(mint.decimals, 10);
+            } else {
+                panic!("Invalid Account");
+            }
         } else {
-            panic!("Invalid Mint Account");
+            panic!("Invalid Fixture Data");
         }
     }
+
+    // Transaction fixture
+    #[tokio::test]
+    async fn test_mint_to_checked_ix_parsing() {
+        let parser = TokenExtensionProgramIxParser;
+
+        let fixture_data = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
+
+        if let FixtureData::Instructions(ixs) = fixture_data {
+            let ix = run_ix_parse!(parser, &ixs[0]);
+            match ix {
+                TokenExtensionProgramIx::TokenProgramIx(ix) => {
+                    if let TokenProgramIx::MintToChecked(ix) = ix {
+                        assert!(ix.data.is_some());
+                        let data = ix.data.as_ref().unwrap();
+                        assert_eq!(data.decimals, 9);
+                        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals as u32)));
+                    } else {
+                        panic!("Invalid Instruction")
+                    }
+                },
+                _ => panic!("Invalid Instruction"),
+            }
+        } else {
+            panic!("Invalid Fixture Data")
+        }
+    }
+
 }
 ```
