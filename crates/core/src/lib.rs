@@ -8,18 +8,26 @@
 )]
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
+// TODO: document everything
+#![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 use std::{
+    borrow::Cow,
     collections::{HashMap, HashSet},
     fmt,
     future::Future,
     ops,
+    str::FromStr,
 };
 
 use yellowstone_grpc_proto::geyser::{
-    subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterAccounts,
-    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateTransaction,
+    SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterTransactions,
+    SubscribeUpdateAccount, SubscribeUpdateTransaction,
 };
+
+pub extern crate bs58;
+
+pub mod instruction;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -39,52 +47,119 @@ pub type ParseResult<T> = Result<T, ParseError>;
 pub type AccountUpdate = SubscribeUpdateAccount;
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 
-pub trait Update {
-    const TYPE: UpdateType;
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum UpdateType {
-    Account,
-    Transaction,
-}
-
-impl UpdateType {
-    #[must_use]
-    pub fn get(update: &Option<UpdateOneof>) -> Option<Self> {
-        match update {
-            Some(UpdateOneof::Account(_)) => Some(Self::Account),
-            Some(UpdateOneof::Transaction(_)) => Some(Self::Transaction),
-            _ => None,
-        }
-    }
-}
-
-impl Update for AccountUpdate {
-    const TYPE: UpdateType = UpdateType::Account;
-}
-
-impl Update for TransactionUpdate {
-    const TYPE: UpdateType = UpdateType::Transaction;
-}
-
 pub trait Parser {
-    type Input: Update;
+    type Input;
     type Output;
+
+    fn id(&self) -> Cow<str>;
 
     fn prefilter(&self) -> Prefilter;
 
     fn parse(&self, value: &Self::Input) -> impl Future<Output = ParseResult<Self::Output>> + Send;
 }
 
-#[derive(Debug)]
+pub trait ProgramParser: Parser {
+    fn program_id(&self) -> Pubkey;
+}
+
+pub trait ParserId {
+    fn id(&self) -> Cow<str>;
+}
+
+impl ParserId for std::convert::Infallible {
+    #[inline]
+    fn id(&self) -> Cow<str> { match *self {} }
+}
+
+impl<T: Parser> ParserId for T {
+    #[inline]
+    fn id(&self) -> Cow<str> { Parser::id(self) }
+}
+
+pub trait GetPrefilter {
+    fn prefilter(&self) -> Prefilter;
+}
+
+impl GetPrefilter for std::convert::Infallible {
+    #[inline]
+    fn prefilter(&self) -> Prefilter { match *self {} }
+}
+
+impl<T: Parser> GetPrefilter for T {
+    #[inline]
+    fn prefilter(&self) -> Prefilter { Parser::prefilter(self) }
+}
+
+// TODO: why are so many fields on the prefilters and prefilter builder optional???
+#[derive(Debug, Default)]
 pub struct Prefilter {
     pub(crate) account: Option<AccountPrefilter>,
     pub(crate) transaction: Option<TransactionPrefilter>,
 }
 
+fn merge_opt<T, F: FnOnce(&mut T, T)>(lhs: &mut Option<T>, rhs: Option<T>, f: F) {
+    match (lhs.as_mut(), rhs) {
+        (None, r) => *lhs = r,
+        (Some(_), None) => (),
+        (Some(l), Some(r)) => f(l, r),
+    }
+}
+
+impl Prefilter {
+    #[inline]
+    pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
+
+    pub fn merge(&mut self, other: Prefilter) {
+        let Self {
+            account,
+            transaction,
+        } = self;
+        merge_opt(account, other.account, AccountPrefilter::merge);
+        merge_opt(transaction, other.transaction, TransactionPrefilter::merge);
+    }
+}
+
+impl FromIterator<Prefilter> for Prefilter {
+    fn from_iter<T: IntoIterator<Item = Prefilter>>(iter: T) -> Self {
+        let mut iter = iter.into_iter();
+        let Some(ret) = iter.next() else {
+            return Self::default();
+        };
+        iter.fold(ret, |mut l, r| {
+            l.merge(r);
+            l
+        })
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
+pub(crate) struct AccountPrefilter {
+    pub accounts: HashSet<Pubkey>,
+    pub owners: HashSet<Pubkey>,
+}
+
+impl AccountPrefilter {
+    pub fn merge(&mut self, other: AccountPrefilter) {
+        let Self { accounts, owners } = self;
+        accounts.extend(other.accounts);
+        owners.extend(other.owners);
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
+pub(crate) struct TransactionPrefilter {
+    pub accounts: HashSet<Pubkey>,
+}
+
+impl TransactionPrefilter {
+    pub fn merge(&mut self, other: TransactionPrefilter) {
+        let Self { accounts } = self;
+        accounts.extend(other.accounts);
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) struct Pubkey(pub [u8; 32]);
+pub struct Pubkey(pub [u8; 32]);
 
 impl fmt::Display for Pubkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -104,21 +179,24 @@ impl TryFrom<&[u8]> for Pubkey {
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> { value.try_into().map(Self) }
 }
 
-#[derive(Debug, Default, PartialEq)]
-pub(crate) struct AccountPrefilter {
-    pub accounts: HashSet<Pubkey>,
-    pub owners: HashSet<Pubkey>,
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub enum PubkeyFromStrError {
+    #[error("Invalid base58 string")]
+    Bs58(#[from] bs58::decode::Error),
+    #[error("Invalid key length, must be 32 bytes")]
+    Len(#[from] std::array::TryFromSliceError),
 }
 
-#[derive(Debug, Default, PartialEq)]
-pub(crate) struct TransactionPrefilter {
-    pub accounts: HashSet<Pubkey>,
-}
+impl FromStr for Pubkey {
+    type Err = PubkeyFromStrError;
 
-impl Prefilter {
-    #[inline]
-    #[must_use]
-    pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        bs58::decode(s)
+            .into_vec()?
+            .as_slice()
+            .try_into()
+            .map_err(Into::into)
+    }
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
@@ -130,6 +208,7 @@ pub enum PrefilterError {
 }
 
 #[derive(Debug, Default)]
+#[must_use = "Consider calling .build() on this builder"]
 pub struct PrefilterBuilder {
     error: Option<PrefilterError>,
     accounts: Option<HashSet<Pubkey>>,
@@ -193,7 +272,6 @@ impl PrefilterBuilder {
         self
     }
 
-    #[must_use]
     pub fn account_owners<I: IntoIterator>(self, it: I) -> Self
     where I::Item: AsRef<[u8]> {
         self.mutate(|this| {
@@ -205,7 +283,6 @@ impl PrefilterBuilder {
         })
     }
 
-    #[must_use]
     pub fn transaction_accounts<I: IntoIterator>(self, it: I) -> Self
     where I::Item: AsRef<[u8]> {
         self.mutate(|this| {

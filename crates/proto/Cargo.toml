@@ -1,0 +1,22 @@
+[package]
+name = "yellowstone-vixen-proto"
+description = "Protobuf definitions for Vixen"
+# authors = ["TODO"]
+version = "0.0.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+
+[dependencies]
+prost = "0.13.1"
+prost-types = { version = "0.13.1", optional = true }
+tonic = { version = "0.12.1", optional = true, features = ["gzip", "zstd"] }
+tonic-reflection = { version = "0.12.1", optional = true }
+
+[build-dependencies]
+prost-build = { version = "0.13.1", optional = true }
+tonic-build = { version = "0.12.1", optional = true }
+
+[features]
+parser = ["dep:prost-build"]
+stream = ["dep:prost-types", "dep:tonic", "dep:tonic-build", "dep:tonic-reflection"]

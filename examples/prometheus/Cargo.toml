@@ -1,15 +1,18 @@
 [package]
-name = "test-streams"
-description = "Test bed for running Vixen program streams"
+name = "example-vixen-prometheus"
+description = "Test bed for basic Prometheus metrics with Vixen"
 publish = false
 edition = "2021"
-license = "AGPL-3.0-or-later"
+license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
 clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
-spl-token-2022 = "4"
 toml = "0.8.12"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-yellowstone-vixen = { workspace = true }
+yellowstone-vixen = { workspace = true, features = ["prometheus"] }
+yellowstone-vixen-parser = { workspace = true, features = [
+  "token-extensions",
+  "token-program",
+] }

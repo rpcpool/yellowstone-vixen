@@ -17,7 +17,7 @@ mod tests {
 
     use super::*;
 
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    #[tokio::test]
     async fn test_mint_parsing() {
         let parser = TokenProgramParser;
 

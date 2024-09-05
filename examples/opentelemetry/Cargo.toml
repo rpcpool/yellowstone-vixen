@@ -1,0 +1,26 @@
+[package]
+name = "example-vixen-opentelemetry"
+description = "Test bed for basic OpenTelemetry metrics with Vixen"
+publish = false
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+
+[dependencies]
+clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+toml = "0.8.12"
+opentelemetry_sdk = { version = "0.24.1", features = [
+  "metrics",
+  "rt-tokio",
+  "trace",
+] }
+opentelemetry-stdout = "0.5.0"
+tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
+tracing = "0.1.40"
+tracing-opentelemetry = "0.25.0"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+yellowstone-vixen = { workspace = true, features = ["opentelemetry"] }
+yellowstone-vixen-parser = { workspace = true, features = [
+  "token-extensions",
+  "token-program",
+] }

@@ -16,6 +16,7 @@ spl-type-length-value = { version = "0.5.0", optional = true }
 spl-token-group-interface = { version = "0.3.0", optional = true }
 spl-token-metadata-interface = { version = "0.4.0", optional = true }
 yellowstone-vixen-core = { workspace = true }
+yellowstone-vixen-proto = { workspace = true, features = ["parser"], optional = true }
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
@@ -23,6 +24,7 @@ tokio = "1.39.2"
 
 [features]
 default = []
+proto = ["dep:yellowstone-vixen-proto"]
 token-extensions = [
     "dep:spl-token-2022",
     "dep:spl-type-length-value",

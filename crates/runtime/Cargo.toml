@@ -8,7 +8,6 @@ license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
-prometheus = { version = "0.13.4", optional = true }
 clap = { version = "4.5.4", default-features = false, features = [
     "env",
     "derive",
@@ -16,18 +15,22 @@ clap = { version = "4.5.4", default-features = false, features = [
 ] }
 futures-channel = { version = "0.3.30", features = ["sink"] }
 futures-util = { version = "0.3.30", features = ["sink"] }
-serde = "1.0.198"
+opentelemetry = { version = "0.24.0", features = ["metrics"], optional = true }
+prometheus = { version = "0.13.4", features = ["push"], optional = true }
+serde = { version = "1.0.198", features = ["derive"] }
+smallvec = "1.13.2"
 thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
 topograph = { version = "0.4.0", features = [
     "tokio",
 ], git = "https://github.com/ray-kast/topograph", branch = "v0.4-wip" }
 tracing = "0.1.40"
-warp = "0.3.7"
 yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
+yellowstone-vixen-proto = { workspace = true, optional = true }
 
 [features]
-default = ["prometheus"]
+opentelemetry = ["dep:opentelemetry"]
 prometheus = ["dep:prometheus"]
+stream = ["dep:yellowstone-vixen-proto", "yellowstone-vixen-proto/stream"]

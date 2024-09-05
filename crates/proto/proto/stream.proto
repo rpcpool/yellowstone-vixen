@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package vixen.stream;
+
+service ProgramStreams {
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeUpdate) {}
+}
+
+message SubscribeRequest {
+  string program = 1;
+}
+
+message SubscribeUpdate {
+  google.protobuf.Any parsed = 1;
+}

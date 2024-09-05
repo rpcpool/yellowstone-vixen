@@ -6,23 +6,14 @@ use yellowstone_grpc_client::{GeyserGrpcClient, Interceptor};
 use yellowstone_grpc_proto::{prelude::*, tonic::Status};
 use yellowstone_vixen_core::Filters;
 
+use crate::config::YellowstoneConfig;
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Yellowstone client builder error")]
     Builder(#[from] yellowstone_grpc_client::GeyserGrpcBuilderError),
     #[error("Yellowstone client error")]
     Client(#[from] yellowstone_grpc_client::GeyserGrpcClientError),
-}
-
-#[derive(Debug, clap::Args, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct YellowstoneOpts {
-    #[clap(long, env)]
-    pub endpoint: String,
-    #[clap(long, env)]
-    pub x_token: Option<String>,
-    #[clap(long, env)]
-    pub timeout: u64,
 }
 
 pub struct YellowstoneStream<I, T, S> {
@@ -34,7 +25,7 @@ pub struct YellowstoneStream<I, T, S> {
 }
 
 pub async fn connect(
-    opts: YellowstoneOpts,
+    config: YellowstoneConfig,
     filters: Filters<'_>,
 ) -> Result<
     YellowstoneStream<
@@ -44,11 +35,11 @@ pub async fn connect(
     >,
     Error,
 > {
-    let YellowstoneOpts {
+    let YellowstoneConfig {
         endpoint,
         x_token,
         timeout,
-    } = opts;
+    } = config;
     let timeout = Duration::from_secs(timeout);
 
     // TODO: where are the docs on this stuff?

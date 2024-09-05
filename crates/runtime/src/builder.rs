@@ -1,41 +1,69 @@
+use tracing::error;
+use vixen_core::{instruction::InstructionUpdate, AccountUpdate, TransactionUpdate};
+
 use crate::{
-    metrics::{Metrics, MetricsBackend, NullMetrics},
-    HandlerManagers, IndexerOpts, Runtime,
+    config::{MaybeDefault, VixenConfig},
+    handler::{BoxPipeline, DynPipeline, PipelineSets},
+    instruction::InstructionPipeline,
+    metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
+    util, Runtime,
 };
 
-#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub trait BuilderKind: Default {
+    type Error: std::error::Error;
+}
+
+#[derive(Debug, thiserror::Error)]
 pub enum BuilderError {
-    #[error("Missing field {0}")]
+    #[error("ID collision detected among account pipelines")]
+    AccountPipelineCollision,
+    #[error("ID collision detected among transaction pipelines")]
+    TransactionPipelineCollision,
+    #[error("Missing field {0:?}")]
     MissingField(&'static str),
+    #[error("Missing config section {0:?}")]
+    MissingConfig(&'static str),
+    #[error("Error instantiating metrics backend")]
+    Metrics(#[source] Box<dyn std::error::Error>),
 }
 
 #[derive(Debug)]
-pub struct RuntimeBuilder<A, X, M> {
-    err: Result<(), BuilderError>,
-    opts: Option<IndexerOpts>,
-    manager: Option<HandlerManagers<A, X>>,
-    metrics: M,
+#[must_use = "Consider calling .build() on this builder"]
+pub struct Builder<K: BuilderKind, M> {
+    pub(crate) err: Result<(), K::Error>,
+    pub(crate) account: Vec<BoxPipeline<'static, AccountUpdate>>,
+    pub(crate) transaction: Vec<BoxPipeline<'static, TransactionUpdate>>,
+    pub(crate) instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
+    pub(crate) metrics: M,
+    pub(crate) extra: K,
 }
 
-impl<A, X> Default for RuntimeBuilder<A, X, NullMetrics> {
+impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
     fn default() -> Self {
         Self {
             err: Ok(()),
-            opts: None,
-            manager: None,
+            account: vec![],
+            transaction: vec![],
+            instruction: vec![],
             metrics: NullMetrics,
+            extra: K::default(),
         }
     }
 }
 
+// #[inline]
+// pub(crate) fn unwrap<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
+//     val.ok_or(BuilderError::MissingField(name))
+// }
+
 #[inline]
-fn unwrap<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
-    val.ok_or(BuilderError::MissingField(name))
+pub(crate) fn unwrap_cfg<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
+    val.ok_or(BuilderError::MissingConfig(name))
 }
 
-impl<A, X, M> RuntimeBuilder<A, X, M> {
+impl<K: BuilderKind, M> Builder<K, M> {
     #[inline]
-    fn mutate(self, mutate: impl FnOnce(&mut Self)) -> Self {
+    pub(crate) fn mutate(self, mutate: impl FnOnce(&mut Self)) -> Self {
         self.try_mutate(|s| {
             mutate(s);
             Ok(())
@@ -43,53 +71,124 @@ impl<A, X, M> RuntimeBuilder<A, X, M> {
     }
 
     #[inline]
-    fn try_mutate(mut self, mutate: impl FnOnce(&mut Self) -> Result<(), BuilderError>) -> Self {
+    pub(crate) fn try_mutate(
+        mut self,
+        mutate: impl FnOnce(&mut Self) -> Result<(), K::Error>,
+    ) -> Self {
         if let Ok(()) = self.err {
             self.err = mutate(&mut self);
         }
         self
     }
 
-    pub fn opts(self, opts: IndexerOpts) -> Self { self.mutate(|s| s.opts = Some(opts)) }
-
-    pub fn metrics<N>(self, metrics: N) -> RuntimeBuilder<A, X, N> {
+    pub fn metrics<N>(self, metrics: N) -> Builder<K, N> {
         let Self {
             err,
-            opts,
-            manager,
+            account,
+            transaction,
+            instruction,
             metrics: _,
+            extra,
         } = self;
 
-        RuntimeBuilder {
+        Builder {
             err,
-            opts,
-            manager,
+            account,
+            transaction,
+            instruction,
             metrics,
+            extra,
         }
-    }
-
-    pub fn manager(self, manager: HandlerManagers<A, X>) -> Self {
-        self.mutate(|s| s.manager = Some(manager))
     }
 }
 
-impl<A, X, M: MetricsBackend> RuntimeBuilder<A, X, M> {
-    pub fn try_build(self) -> Result<Runtime<A, X, M>, BuilderError> {
+#[derive(Debug, Default, Clone, Copy)]
+pub struct RuntimeKind;
+pub type RuntimeBuilder<M> = Builder<RuntimeKind, M>;
+
+impl BuilderKind for RuntimeKind {
+    type Error = BuilderError;
+}
+
+impl<M: MetricsFactory> RuntimeBuilder<M> {
+    pub fn account<A: DynPipeline<AccountUpdate> + Send + Sync + 'static>(
+        self,
+        account: A,
+    ) -> Self {
+        self.mutate(|s| s.account.push(Box::new(account)))
+    }
+
+    pub fn transaction<T: DynPipeline<TransactionUpdate> + Send + Sync + 'static>(
+        self,
+        transaction: T,
+    ) -> Self {
+        self.mutate(|s| s.transaction.push(Box::new(transaction)))
+    }
+
+    pub fn instruction<I: DynPipeline<InstructionUpdate> + Send + Sync + 'static>(
+        self,
+        instruction: I,
+    ) -> Self {
+        self.mutate(|s| s.instruction.push(Box::new(instruction)))
+    }
+
+    pub fn try_build(self, config: VixenConfig<M::Config>) -> Result<Runtime<M>, BuilderError> {
         let Self {
             err,
-            opts,
-            manager,
+            account,
+            mut transaction,
+            instruction,
             metrics,
+            extra: RuntimeKind,
         } = self;
         let () = err?;
 
+        let VixenConfig {
+            yellowstone: yellowstone_cfg,
+            buffer: buffer_cfg,
+            metrics: metrics_cfg,
+        } = config;
+
+        let metrics_cfg = unwrap_cfg(
+            "metrics",
+            metrics_cfg.opt().or_else(MaybeDefault::default_opt),
+        )?;
+
+        let Metrics(instrumenter, exporter) = metrics
+            .create(metrics_cfg, "vixen")
+            .map_err(|e| BuilderError::Metrics(e.into()))?;
+
+        if let Some(i) = InstructionPipeline::new(instruction, &instrumenter) {
+            transaction.push(Box::new(i));
+        }
+
+        let account_len = account.len();
+        let transaction_len = transaction.len();
+
+        let pipelines = PipelineSets {
+            account: account.into_iter().collect(),
+            transaction: transaction.into_iter().collect(),
+        };
+
+        if pipelines.account.len() != account_len {
+            return Err(BuilderError::AccountPipelineCollision);
+        }
+
+        if pipelines.transaction.len() != transaction_len {
+            return Err(BuilderError::TransactionPipelineCollision);
+        }
+
         Ok(Runtime {
-            opts: unwrap("opts", opts)?,
-            manager: unwrap("manager", manager)?,
-            metrics: Metrics::new(metrics),
+            yellowstone_cfg,
+            buffer_cfg,
+            pipelines,
+            counters: Counters::new(&instrumenter),
+            exporter,
         })
     }
 
     #[inline]
-    pub fn build(self) -> Runtime<A, X, M> { self.try_build().unwrap() }
+    pub fn build(self, config: VixenConfig<M::Config>) -> Runtime<M> {
+        util::handle_fatal_msg(self.try_build(config), "Error building Vixen runtime")
+    }
 }

@@ -14,10 +14,8 @@ Yellowstone Vixen allows dApp developers to build program-aware change event str
 
 1. **Cost Efficiency**: Utilizing Dragon's Mouth, multiple Vixen instances can share a single geyser stream. With various filter options, storage costs focus on what's essential for the dApp.
 2. **Operational Simplicity**: Vixen requires minimal configuration and dependency on other systems, making it easy to operate.
-3. **Recovery**: In the event of a crash or cold start, operators can designate a starting slot. Vixen, in conjunction with Dragon's Mouth, replays all transactions and accounts from the specified slot until reaching the active slot, then switches to real-time processing.
-4. **Auditability**: Operators can conduct verifiable audits to check the accounts and transactions processed by the index and at which slot.
-5. **Observability**: Operators can monitor the health of their installation, gaining insights into lag, throughput, and error rates.
-6. **Composability**: Program parsers are developed as separate modules (cargo crates), enabling programs to include other parsers needed to deserialize cross-program invocations (CPI).
+3. **Observability**: Operators can monitor the health of their installation, gaining insights into lag, throughput, and error rates.
+4. **Composability**: Program parsers are developed as separate modules (cargo crates), enabling programs to include other parsers needed to deserialize cross-program invocations (CPI).
 
 ## Requirements
 
@@ -33,7 +31,7 @@ This example demonstrates how a developer can implement a generic parsing pipeli
 To run the example, navigate to the desired example directory and execute the following command:
 
 ```
-cd examples/simple
+cd examples/prometheus
 RUST_LOG=info cargo run -- --config "$(pwd)/../../Vixen.toml"
 ```
 
@@ -84,6 +82,11 @@ impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for CustomHandler {
 - **Main**: Sets up the tracing subscriber, reads the configuration file, and runs the Vixen framework with the specified handlers, managers and metrics.
 
 ```rust
+use yellowstone_vixen_parser::{
+    token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
+};
+use yellowstone_vixen::{self as vixen, Pipeline};
+
 fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
@@ -94,15 +97,10 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-
     vixen::Runtime::builder()
-        .opts(config)
-        .manager(HandlerManagers {
-            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(CustomParser, [CustomHandler]))]),
-            transaction: HandlerManager::empty(),
-        })
-        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
-        .build()
+        .account(Pipeline::new(TokenExtensionProgramParser, [Handler]))
+        .account(Pipeline::new(TokenProgramParser, [Handler]))
+        .build(config)
         .run();
 }
 ```
@@ -119,27 +117,27 @@ Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prome
 
 ```toml
 [dependencies]
-vixen = { version = "0.0.0", features = ["prometheus"] }
+yellowstone-vixen = { version = "0.0.0", features = ["prometheus"] }
 ```
 
 - **Prometheus Setup**:
 
 ```rust
 fn main() {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
+
     vixen::Runtime::builder()
-        .opts(config)
-        .manager(HandlerManagers {
-            account: HandlerManager::new([handler::boxed(vixen::HandlerPack::new(
-                Parser,
-                [Handler],
-            ))]),
-            transaction: HandlerManager::empty(),
-        })
-        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
-        .build()
+        .account(Pipeline::new(TokenExtensionProgramParser, [Handler]))
+        .account(Pipeline::new(TokenProgramParser, [Handler]))
+        .metrics(vixen::metrics::Prometheus)
+        .build(config)
         .run();
 }
 ```

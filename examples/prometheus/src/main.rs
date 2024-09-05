@@ -11,8 +11,7 @@ use std::path::PathBuf;
 
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use vixen::{handler, HandlerManager, HandlerManagers};
-use yellowstone_vixen::{self as vixen, metrics::MetricsFactory};
+use yellowstone_vixen::{self as vixen, Pipeline};
 use yellowstone_vixen_parser::{
     token_extensions::TokenExtensionProgramParser, token_program::TokenProgramParser,
 };
@@ -24,6 +23,7 @@ pub struct Opts {
     config: PathBuf,
 }
 
+#[derive(Debug)]
 pub struct Handler;
 
 impl<V: std::fmt::Debug + Sync> vixen::Handler<V> for Handler {
@@ -44,17 +44,9 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .opts(config)
-        .manager(HandlerManagers {
-            account: HandlerManager::new([
-                handler::boxed(vixen::HandlerPack::new(TokenExtensionProgramParser, [
-                    Handler,
-                ])),
-                handler::boxed(vixen::HandlerPack::new(TokenProgramParser, [Handler])),
-            ]),
-            transaction: HandlerManager::empty(),
-        })
-        .metrics(vixen::metrics::prometheus_mod::Prometheus::create().unwrap())
-        .build()
+        .account(Pipeline::new(TokenExtensionProgramParser, [Handler]))
+        .account(Pipeline::new(TokenProgramParser, [Handler]))
+        .metrics(vixen::metrics::Prometheus)
+        .build(config)
         .run();
 }
