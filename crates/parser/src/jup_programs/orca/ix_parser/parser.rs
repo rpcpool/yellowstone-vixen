@@ -3,12 +3,11 @@ use std::borrow::Cow;
 use borsh::BorshDeserialize;
 use yellowstone_vixen_core::{instruction::InstructionUpdate, ParseError, ParseResult, Parser};
 
+use super::ixs::*;
 use crate::helpers::{
     check_min_accounts_req, check_pubkeys_match, InstructionParser, ReadableInstruction,
     IX_DISCRIMINATOR_SIZE,
 };
-
-use super::ixs::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct OrcaProgramIxParser;

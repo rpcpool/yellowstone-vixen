@@ -23,14 +23,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use solana_client::{nonblocking::rpc_client::RpcClient, rpc_request::RpcRequest};
 use solana_rpc_client_api::client_error::Result as ClientResult;
-use solana_sdk::{
-    account::Account, bs58, inner_instruction::InnerInstruction, pubkey::Pubkey,
-    signature::Signature,
-};
+use solana_sdk::{account::Account, bs58, pubkey::Pubkey, signature::Signature};
 use solana_transaction_status::{
     option_serializer::OptionSerializer, EncodedConfirmedTransactionWithStatusMeta,
     EncodedTransaction, EncodedTransactionWithStatusMeta, UiInnerInstructions, UiInstruction,
-    UiMessage, UiTransactionEncoding,
+    UiMessage,
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
