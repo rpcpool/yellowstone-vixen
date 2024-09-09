@@ -26,8 +26,8 @@ use solana_rpc_client_api::client_error::Result as ClientResult;
 use solana_sdk::{account::Account, bs58, pubkey::Pubkey, signature::Signature};
 use solana_transaction_status::{
     option_serializer::OptionSerializer, EncodedConfirmedTransactionWithStatusMeta,
-    EncodedTransaction, EncodedTransactionWithStatusMeta, UiInnerInstructions, UiInstruction,
-    UiMessage,
+    EncodedTransaction, EncodedTransactionWithStatusMeta, UiCompiledInstruction,
+    UiInnerInstructions, UiInstruction, UiMessage,
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
@@ -36,7 +36,7 @@ use yellowstone_vixen_core::{
 };
 
 //TODO: Look these up from the Vixen.toml config file
-const RPC_ENDPOINT: &str = "https://api.mainnet-beta.solana.com";
+const RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
 const FIXTURES_PATH: &str = "./fixtures";
 const PUBKEY_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{32,44}$";
 const TX_SIGNATURE_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{64,90}$";
@@ -112,6 +112,12 @@ impl Debug for SerializablePubkey {
     }
 }
 
+impl ToString for SerializablePubkey {
+    fn to_string(&self) -> String {
+        bs58::encode(&self.0).into_string()
+    }
+}
+
 impl From<VixenPubkey> for SerializablePubkey {
     fn from(value: VixenPubkey) -> Self {
         Self(value.into_bytes())
@@ -124,8 +130,11 @@ impl From<SerializablePubkey> for VixenPubkey {
     }
 }
 
+type IxIndex = [u8; 2];
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SerializableInstructionUpdate {
+    pub ix_index: IxIndex,
     pub program: SerializablePubkey,
     pub accounts: Vec<SerializablePubkey>,
     pub data: Vec<u8>,
@@ -135,7 +144,8 @@ pub struct SerializableInstructionUpdate {
 impl From<&InstructionUpdate> for SerializableInstructionUpdate {
     fn from(value: &InstructionUpdate) -> Self {
         Self {
-            program: SerializablePubkey(value.program.into_bytes()),
+            ix_index: [0; 2],
+            program: SerializablePubkey(value.program.0),
             accounts: value
                 .accounts
                 .iter()
@@ -181,8 +191,111 @@ pub fn get_account_pubkey_from_index(
     )
 }
 
+fn try_from_ui_instructions(
+    ui_ixs: Vec<UiCompiledInstruction>,
+    accounts: &Vec<String>,
+    filters: &Option<LoadFixtureFilters>,
+) -> Result<Vec<SerializableInstructionUpdate>, String> {
+    let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
+    for (idx, ix) in ui_ixs.iter().enumerate() {
+        let accounts_out = ix
+            .accounts
+            .iter()
+            .map(|account| get_account_pubkey_from_index(*account as usize, accounts))
+            .collect::<Result<Vec<SerializablePubkey>, String>>()?;
+        let program = get_account_pubkey_from_index(ix.program_id_index as usize, accounts)?;
+
+        let ix = SerializableInstructionUpdate {
+            ix_index: [idx as u8, 0],
+            data: decode_bs58_to_bytes(&ix.data)?,
+            accounts: accounts_out,
+            program,
+            inner: Vec::new(),
+        };
+
+        ixs.push(ix);
+    }
+    Ok(filter_outer_ixs(ixs, &filters))
+}
+
+fn try_from_ui_inner_ixs(
+    ui_inner_ixs: UiInnerInstructions,
+    accounts: &Vec<String>,
+    filters: &Option<LoadFixtureFilters>,
+) -> Result<Vec<SerializableInstructionUpdate>, String> {
+    let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
+    for (idx, ix) in ui_inner_ixs.instructions.iter().enumerate() {
+        if let UiInstruction::Compiled(compiled_ix) = ix {
+            let accounts_out = compiled_ix
+                .accounts
+                .iter()
+                .map(|account| get_account_pubkey_from_index(*account as usize, accounts))
+                .collect::<Result<Vec<SerializablePubkey>, String>>()?;
+            let program =
+                get_account_pubkey_from_index(compiled_ix.program_id_index as usize, accounts)?;
+
+            let ix = SerializableInstructionUpdate {
+                ix_index: [ui_inner_ixs.index, idx as u8],
+                data: decode_bs58_to_bytes(&compiled_ix.data)?,
+                accounts: accounts_out,
+                program,
+                inner: Vec::new(),
+            };
+            ixs.push(ix);
+        } else {
+            return Err("Invalid inner instruction".into());
+        }
+    }
+    Ok(filter_inner_ixs(ixs, &filters))
+}
+
+fn filter_outer_ixs(
+    ixs: Vec<SerializableInstructionUpdate>,
+    filters: &Option<LoadFixtureFilters>,
+) -> Vec<SerializableInstructionUpdate> {
+    if let Some(filter) = filters {
+        let LoadFixtureFilters {
+            programs,
+            discriminators: _,
+        } = filter;
+
+        // Filter out instructions that matches the programs in the filters
+        ixs.into_iter()
+            .filter(|ix| programs.contains(&ix.program.to_string()))
+            .collect::<Vec<SerializableInstructionUpdate>>()
+    } else {
+        ixs
+    }
+}
+
+fn filter_inner_ixs(
+    ixs: Vec<SerializableInstructionUpdate>,
+    filters: &Option<LoadFixtureFilters>,
+) -> Vec<SerializableInstructionUpdate> {
+    if let Some(filter) = filters {
+        let LoadFixtureFilters {
+            programs: _,
+            discriminators,
+        } = filter;
+        if discriminators.is_none() {
+            return ixs;
+        }
+        let discriminators = discriminators.as_ref().unwrap();
+        // Filter out instructions that matches the discriminators in the filters
+        ixs.into_iter()
+            .filter(|ix| {
+                let disc = ix.data[..8].try_into().unwrap();
+                discriminators.contains(&disc)
+            })
+            .collect::<Vec<SerializableInstructionUpdate>>()
+    } else {
+        ixs
+    }
+}
+
 fn try_from_tx_meta(
     value: EncodedConfirmedTransactionWithStatusMeta,
+    filters: Option<LoadFixtureFilters>,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let EncodedConfirmedTransactionWithStatusMeta {
         transaction,
@@ -206,88 +319,38 @@ fn try_from_tx_meta(
                 inner_ixs = meta.inner_instructions.map_or(None, |x| Some(x));
 
                 if let OptionSerializer::Some(loaded) = meta.loaded_addresses {
-                    for address in loaded.readonly {
+                    for address in loaded.writable {
                         account_keys.push(address);
                     }
-                    for address in loaded.writable {
+
+                    for address in loaded.readonly {
                         account_keys.push(address);
                     }
                 }
             }
 
-            println!("account_keys: {:#?}", account_keys);
-            let mut outer_with_inner_ixs = raw_message
-                .instructions
-                .iter()
-                .map(|ix| -> Result<SerializableInstructionUpdate, String> {
-                    let accounts = ix
-                        .accounts
-                        .iter()
-                        .map(|account| {
-                            get_account_pubkey_from_index(*account as usize, &account_keys)
-                        })
-                        .collect::<Result<Vec<SerializablePubkey>, String>>()?;
-                    let program =
-                        get_account_pubkey_from_index(ix.program_id_index as usize, &account_keys)?;
-
-                    let ix = SerializableInstructionUpdate {
-                        data: decode_bs58_to_bytes(&ix.data)?,
-                        accounts,
-                        program,
-                        inner: Vec::new(),
-                    };
-
-                    Ok(ix)
-                })
-                .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
-            outer_with_inner_ixs.pop(); // Remove the last instruction which is a
-                                        // set compute unit ix and will cause errors while parsing
+            let mut outer_with_inner_ixs =
+                try_from_ui_instructions(raw_message.instructions, &account_keys, &filters)?;
 
             if let Some(inner_ixs) = inner_ixs {
                 if inner_ixs.is_empty() {
                     return Ok(outer_with_inner_ixs);
                 }
-                println!("inner_ixs: {:#?}", inner_ixs);
-                for ix in inner_ixs.iter() {
-                    let inner_ixs: Vec<SerializableInstructionUpdate> = ix
-                        .instructions
-                        .iter()
-                        .map(|ix| {
-                            if let UiInstruction::Compiled(compiled_ix) = ix {
-                                let accounts = compiled_ix
-                                    .accounts
-                                    .iter()
-                                    .map(|account| {
-                                        get_account_pubkey_from_index(
-                                            *account as usize,
-                                            &account_keys,
-                                        )
-                                    })
-                                    .collect::<Result<Vec<SerializablePubkey>, String>>()?;
-                                let program = get_account_pubkey_from_index(
-                                    compiled_ix.program_id_index as usize,
-                                    &account_keys,
-                                )?;
-                                let ix = SerializableInstructionUpdate {
-                                    data: decode_bs58_to_bytes(&compiled_ix.data)?,
-                                    accounts,
-                                    program,
-                                    inner: Vec::new(),
-                                };
 
-                                Ok(ix)
-                            } else {
-                                Err("Invalid instruction encoding".into())
-                            }
-                        })
-                        .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
-
-                    let outer_ix = outer_with_inner_ixs
-                        .get_mut(ix.index as usize)
-                        .ok_or("Invalid outer ix index")?;
-                    outer_ix.inner = inner_ixs;
+                for ixs in inner_ixs.into_iter() {
+                    let ix_index = ixs.index as usize;
+                    let inner_ixs = try_from_ui_inner_ixs(ixs, &account_keys, &filters)?;
+                    if inner_ixs.len() == 0 {
+                        continue;
+                    }
+                    outer_with_inner_ixs
+                        .iter_mut()
+                        .find(|x| x.ix_index[0] == ix_index as u8)
+                        .and_then(|x| {
+                            x.inner = inner_ixs;
+                            Some(())
+                        });
                 }
-                println!("outer_with_inner_ixs after: {:#?}", outer_with_inner_ixs);
                 return Ok(outer_with_inner_ixs);
             }
         } else {
@@ -300,21 +363,15 @@ fn try_from_tx_meta(
 
 #[macro_export]
 macro_rules! account_fixture {
-    ($pubkey:expr) => {
-        match $crate::load_fixture($pubkey).await.unwrap() {
-            FixtureData::Account(a) => a,
-            f @ _ => panic!("Invalid account fixture {f:?}"),
-        }
+    ($pubkey:expr, $filters:expr) => {
+        $crate::load_fixture($pubkey, $filters).await.unwrap()
     };
 }
 
 #[macro_export]
 macro_rules! tx_fixture {
-    ($sig:expr) => {
-        match $crate::load_fixture($sig).await.unwrap() {
-            FixtureData::Instructions(i) => i,
-            f @ _ => panic!("Invalid transaction fixture {f:?}"),
-        }
+    ($sig:expr, $filters:expr) => {
+        $crate::load_fixture($sig, $filters).await.unwrap()
     };
 }
 
@@ -332,13 +389,24 @@ macro_rules! run_ix_parse {
     };
 }
 
-pub async fn load_fixture(fixture: &str) -> Result<FixtureData, Box<dyn std::error::Error>> {
+#[derive(Debug, Clone)]
+pub struct LoadFixtureFilters {
+    pub programs: Vec<String>,
+    pub discriminators: Option<Vec<[u8; 8]>>,
+}
+
+pub async fn load_fixture(
+    fixture: &str,
+    filters: Option<LoadFixtureFilters>,
+) -> Result<FixtureData, Box<dyn std::error::Error>> {
     maybe_create_fixture_dir()?;
     let path = fixture_path(fixture)?;
     if path.is_file() {
         read_fixture(&path)
     } else {
-        fetch_fixture(fixture).await.and_then(write_fixture(path))
+        fetch_fixture(fixture, filters)
+            .await
+            .and_then(write_fixture(path))
     }
 }
 
@@ -367,7 +435,10 @@ pub enum FixtureData {
     Instructions(Vec<SerializableInstructionUpdate>),
 }
 
-async fn fetch_fixture(fixture: &str) -> Result<FixtureData, Box<dyn std::error::Error>> {
+async fn fetch_fixture(
+    fixture: &str,
+    filters: Option<LoadFixtureFilters>,
+) -> Result<FixtureData, Box<dyn std::error::Error>> {
     let fixture_type = get_fixture_type(fixture);
 
     match fixture_type {
@@ -403,7 +474,7 @@ async fn fetch_fixture(fixture: &str) -> Result<FixtureData, Box<dyn std::error:
                 .await
                 .map_err(|e| format!("Error fetching tx: {e:?}"))?;
 
-            let instructions = try_from_tx_meta(tx)?;
+            let instructions = try_from_tx_meta(tx, filters)?;
 
             Ok(FixtureData::Instructions(instructions))
         },

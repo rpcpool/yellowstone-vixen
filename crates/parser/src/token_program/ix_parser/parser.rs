@@ -377,7 +377,7 @@ mod proto_parser {
 mod tests {
     use std::ops::Mul;
 
-    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
+    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData, LoadFixtureFilters};
 
     use super::*;
 
