@@ -1,9 +1,12 @@
 use std::fmt::Debug;
 
-use spl_token_metadata_interface::borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSerialize};
 use yellowstone_vixen_core::Pubkey;
 
 use crate::helpers::ReadableInstruction;
+
+pub const SWAP_IX_DISC: [u8; 8] = [248, 198, 158, 145, 225, 117, 135, 200];
+
 #[derive(Debug, Clone, Copy)]
 pub struct SwapAccounts {
     pub token_program: Pubkey,
@@ -28,15 +31,7 @@ pub struct SwapIxData {
     pub a_to_b: bool,
 }
 
-#[derive(Debug, BorshDeserialize, BorshSerialize, Clone, Copy)]
-pub struct SwapV2IxData {
-    pub amount: u64,
-    pub other_amount_threshold: u64,
-    pub sqrt_price_limit: u128,
-    pub amount_specified_is_input: bool,
-    pub a_to_b: bool,
-}
-
+pub const SWAP_V2_IX_DISC: [u8; 8] = [43, 4, 237, 11, 26, 201, 30, 98];
 #[derive(Debug, Clone, Copy)]
 pub struct SwapV2Accounts {
     pub token_program_a: Pubkey,
@@ -54,6 +49,15 @@ pub struct SwapV2Accounts {
     pub tick_array1: Pubkey,
     pub tick_array2: Pubkey,
     pub oracle: Pubkey,
+}
+
+#[derive(Debug, BorshDeserialize, BorshSerialize, Clone, Copy)]
+pub struct SwapV2IxData {
+    pub amount: u64,
+    pub other_amount_threshold: u64,
+    pub sqrt_price_limit: u128,
+    pub amount_specified_is_input: bool,
+    pub a_to_b: bool,
 }
 
 #[derive(Debug)]

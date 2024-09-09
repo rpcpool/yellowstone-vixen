@@ -10,10 +10,6 @@ use crate::helpers::{
 
 use super::ixs::*;
 
-pub const SWAP_IX_DISC: [u8; 8] = [248, 198, 158, 145, 225, 117, 135, 200];
-
-pub const SWAP_V2_IX_DISC: [u8; 8] = [248, 198, 158, 145, 225, 117, 135, 201];
-
 #[derive(Debug, Clone, Copy)]
 pub struct OrcaProgramIxParser;
 
@@ -44,8 +40,7 @@ impl Parser for OrcaProgramIxParser {
 impl InstructionParser<OrcaProgramIx> for OrcaProgramIxParser {
     fn parse_ix(ix: &InstructionUpdate) -> Result<OrcaProgramIx, ParseError> {
         let accounts_len = ix.accounts.len();
-        let mut ix_discriminator: [u8; 8] = [0; 8];
-        ix_discriminator.copy_from_slice(&ix.data[0..IX_DISCRIMINATOR_SIZE]);
+        let ix_discriminator: [u8; 8] = ix.data[0..IX_DISCRIMINATOR_SIZE].try_into()?;
         let mut ix_data = &ix.data[IX_DISCRIMINATOR_SIZE..];
 
         match ix_discriminator {
@@ -95,6 +90,34 @@ impl InstructionParser<OrcaProgramIx> for OrcaProgramIxParser {
                 }))
             },
             _ => return Err(ParseError::from("Unknown instruction")),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_swap_v2_ix_parsing() {
+        let parser = OrcaProgramIxParser;
+
+        let fixture_data = tx_fixture!("3WC8LGHHs3wYzWef1YmLsRS96G1s5BV4XJYhzvypgWp1uGG16SxepFCd7FhHaTieW66Yn9JFR4tUPA1HYArgFZaA");
+
+        println!("{:#?}", fixture_data);
+        match fixture_data {
+            FixtureData::Instructions(ixs) => {
+                let parsed = run_ix_parse!(parser, &ixs[0]);
+
+                if let OrcaProgramIx::SwapV2(ReadableInstruction { accounts, data }) = parsed {
+                    println!("{:?} {:?}", accounts, data);
+                } else {
+                    panic!("Invalid Instruction");
+                }
+            },
+            _ => panic!("Invalid fixture data"),
         }
     }
 }

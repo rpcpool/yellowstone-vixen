@@ -20,12 +20,17 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use solana_client::nonblocking::rpc_client::RpcClient;
+use serde_json::json;
+use solana_client::{nonblocking::rpc_client::RpcClient, rpc_request::RpcRequest};
 use solana_rpc_client_api::client_error::Result as ClientResult;
-use solana_sdk::{account::Account, bs58, pubkey::Pubkey, signature::Signature};
+use solana_sdk::{
+    account::Account, bs58, inner_instruction::InnerInstruction, pubkey::Pubkey,
+    signature::Signature,
+};
 use solana_transaction_status::{
-    EncodedConfirmedTransactionWithStatusMeta, EncodedTransaction,
-    EncodedTransactionWithStatusMeta, UiInstruction, UiMessage, UiTransactionEncoding,
+    option_serializer::OptionSerializer, EncodedConfirmedTransactionWithStatusMeta,
+    EncodedTransaction, EncodedTransactionWithStatusMeta, UiInnerInstructions, UiInstruction,
+    UiMessage, UiTransactionEncoding,
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
@@ -34,11 +39,10 @@ use yellowstone_vixen_core::{
 };
 
 //TODO: Look these up from the Vixen.toml config file
-const RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
+const RPC_ENDPOINT: &str = "https://api.mainnet-beta.solana.com";
 const FIXTURES_PATH: &str = "./fixtures";
-const PUBKEY_REGEX: &str = r"\b[1-9A-HJ-NP-Za-km-z]{44}\b";
-const TX_SIGNATURE_REGEX: &str = r"\b[1-9A-HJ-NP-Za-km-z]{88}\b";
-
+const PUBKEY_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{32,44}$";
+const TX_SIGNATURE_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{64,90}$";
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountInfo {
@@ -102,8 +106,14 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SerializablePubkey(pub [u8; 32]);
+
+impl Debug for SerializablePubkey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&bs58::encode(&self.0).into_string())
+    }
+}
 
 impl From<VixenPubkey> for SerializablePubkey {
     fn from(value: VixenPubkey) -> Self {
@@ -187,11 +197,28 @@ fn try_from_tx_meta(
         meta,
         version: _,
     } = transaction;
-    let inner_ixs = meta.and_then(|meta| meta.inner_instructions.map_or(None, Some));
+    let mut inner_ixs: Option<Vec<UiInnerInstructions>> = None;
+
+    let mut account_keys: Vec<String> = Vec::new();
 
     if let EncodedTransaction::Json(tx_data) = transaction {
         if let UiMessage::Raw(raw_message) = tx_data.message {
-            let account_keys = raw_message.account_keys;
+            account_keys.extend(raw_message.account_keys);
+
+            if let Some(meta) = meta {
+                inner_ixs = meta.inner_instructions.map_or(None, |x| Some(x));
+
+                if let OptionSerializer::Some(loaded) = meta.loaded_addresses {
+                    for address in loaded.readonly {
+                        account_keys.push(address);
+                    }
+                    for address in loaded.writable {
+                        account_keys.push(address);
+                    }
+                }
+            }
+
+            println!("account_keys: {:#?}", account_keys);
             let mut outer_with_inner_ixs = raw_message
                 .instructions
                 .iter()
@@ -223,7 +250,8 @@ fn try_from_tx_meta(
                 if inner_ixs.is_empty() {
                     return Ok(outer_with_inner_ixs);
                 }
-                for (idx, ix) in inner_ixs.iter().enumerate() {
+                println!("inner_ixs: {:#?}", inner_ixs);
+                for ix in inner_ixs.iter() {
                     let inner_ixs: Vec<SerializableInstructionUpdate> = ix
                         .instructions
                         .iter()
@@ -258,10 +286,12 @@ fn try_from_tx_meta(
                         .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
 
                     let outer_ix = outer_with_inner_ixs
-                        .get_mut(idx)
+                        .get_mut(ix.index as usize)
                         .ok_or("Invalid outer ix index")?;
                     outer_ix.inner = inner_ixs;
                 }
+                println!("outer_with_inner_ixs after: {:#?}", outer_with_inner_ixs);
+                return Ok(outer_with_inner_ixs);
             }
         } else {
             return Err("Invalid transaction encoding".into());
@@ -340,7 +370,6 @@ pub enum FixtureData {
     Instructions(Vec<SerializableInstructionUpdate>),
 }
 
-// TODO: Determine pubkey vs signature based on the fixture pattern
 async fn fetch_fixture(fixture: &str) -> Result<FixtureData, Box<dyn std::error::Error>> {
     let fixture_type = get_fixture_type(fixture);
 
@@ -362,8 +391,18 @@ async fn fetch_fixture(fixture: &str) -> Result<FixtureData, Box<dyn std::error:
             let signature = Signature::from_str(fixture)?;
             let rpc_client = get_rpc_client();
 
+            // let tx = rpc_client
+            //     .get_transaction(&signature, UiTransactionEncoding::Json)
+            //     .await
+            //     .map_err(|e| format!("Error fetching tx: {:?}", e))?;
+
+            let params = json!([signature.to_string(), {
+                "encoding": "json",
+                "maxSupportedTransactionVersion": 0
+            }]);
+
             let tx = rpc_client
-                .get_transaction(&signature, UiTransactionEncoding::Json)
+                .send(RpcRequest::GetTransaction, params)
                 .await
                 .map_err(|e| format!("Error fetching tx: {e:?}"))?;
 
