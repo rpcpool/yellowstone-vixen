@@ -1,3 +1,5 @@
+//! Metrics interface and backend support for the Vixen runtime.
+
 use std::{
     borrow::{Borrow, Cow},
     convert::Infallible,
@@ -18,23 +20,39 @@ use crate::{
     stop::{StopCode, StopRx},
 };
 
+/// The constructed metrics backend from a [`MetricsFactory`].
 #[derive(Debug)]
 pub struct Metrics<F: MetricsFactory + ?Sized>(pub F::Instrumenter, pub Option<F::Exporter>);
 
-type FactoryResult<F> = Result<Metrics<F>, <F as MetricsFactory>::Error>;
+/// The result of creating a metrics backend from a [`MetricsFactory`].
+pub type FactoryResult<F> = Result<Metrics<F>, <F as MetricsFactory>::Error>;
 
+/// A factory for creating metrics backends.
 pub trait MetricsFactory {
+    /// Configuration type for the metrics backend.
     type Config: clap::Args + for<'de> serde::Deserialize<'de> + MaybeDefault;
+    /// The type of code instrumenter created by this factory.
     type Instrumenter: Instrumenter;
+    /// The type of metrics exporter created by this factory.
     type Exporter: Exporter;
+    /// Error thrown when creating a metrics backend with this factory.
     type Error: Error + Send + Sync + 'static;
 
+    /// Construct a metrics backend from this factory with the given
+    /// configuration and service ID.
+    ///
+    /// # Errors
+    /// This function may return an error if the metrics backend cannot be
+    /// created.
     fn create(self, config: Self::Config, id: &'static str) -> FactoryResult<Self>;
 }
 
+/// A metrics instrumenter.
 pub trait Instrumenter: 'static {
+    /// The type of an integer counter for this metrics backend.
     type Counter: Counter;
 
+    /// Create a new integer counter with the given name and description.
     fn make_counter(
         &self,
         name: impl Into<Cow<'static, str>>,
@@ -42,19 +60,29 @@ pub trait Instrumenter: 'static {
     ) -> Self::Counter;
 }
 
+/// A metrics exporter.
 pub trait Exporter {
+    /// Error thrown when running the exporter.
     type Error: Error + Send + Sync + 'static;
 
+    /// Run the exporter until the given stop signal is received.
+    ///
+    /// # Errors
+    /// This function may yield early if an error occurs while running the
+    /// exporter.
     fn run(
         self,
         stop: StopRx,
     ) -> impl Future<Output = Result<StopCode, Self::Error>> + Send + 'static;
 }
 
+/// An integer counter for a metrics backend.
 pub trait Counter: Send + Sync {
+    /// Increment the counter by one.
     #[inline]
     fn inc(&self) { self.inc_by(1); }
 
+    /// Increment the counter by the given amount.
     fn inc_by(&self, by: u64);
 }
 
@@ -66,6 +94,7 @@ impl<T: Counter> Counter for &T {
     fn inc_by(&self, by: u64) { T::inc_by(self, by); }
 }
 
+/// A no-op metrics backend.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct NullMetrics;
 
@@ -116,6 +145,7 @@ mod prometheus_impl {
         stop::{StopCode, StopRx},
     };
 
+    /// The Prometheus metrics backend.
     #[derive(Debug, Clone, Copy)]
     pub struct Prometheus;
 
@@ -132,6 +162,7 @@ mod prometheus_impl {
         }
     }
 
+    /// Exporter for the Prometheus metrics backend.
     #[derive(Debug, Clone)]
     pub struct PrometheusExporter(Registry, PrometheusConfig);
 
@@ -206,17 +237,22 @@ mod opentelemetry_impl {
         stop::{StopCode, StopRx},
     };
 
+    /// The OpenTelemetry metrics backend.
     #[derive(Debug, Clone, Copy)]
     #[repr(transparent)]
     pub struct OpenTelemetry<M>(M);
 
     impl OpenTelemetry<GlobalMeterProvider> {
+        /// Create a new OpenTelemetry metrics backend from the global meter
+        /// provider.
         #[inline]
         #[must_use]
         pub fn global() -> Self { Self(global::meter_provider()) }
     }
 
     impl<M> OpenTelemetry<M> {
+        /// Create a new OpenTelemetry metrics backend from the given meter
+        /// provider.
         #[inline]
         #[must_use]
         pub fn new(meter_provider: M) -> Self { Self(meter_provider) }
@@ -237,6 +273,7 @@ mod opentelemetry_impl {
         }
     }
 
+    /// Exporter for the OpenTelemetry metrics backend.
     #[derive(Debug, Clone, Copy)]
     #[repr(transparent)]
     pub struct OpenTelemetryExporter<M>(M);

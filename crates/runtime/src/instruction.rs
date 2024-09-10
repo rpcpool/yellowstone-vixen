@@ -1,3 +1,6 @@
+//! Helper types for parsing and dispatching instructions from transaction
+//! updates.
+
 use std::fmt;
 
 use vixen_core::{instruction::InstructionUpdate, GetPrefilter, ParserId, TransactionUpdate};
@@ -7,6 +10,7 @@ use crate::{
     metrics::{InstructionCounters, Instrumenter, JobResult},
 };
 
+/// A pipeline for dispatching instruction updates given a transaction update.
 pub struct InstructionPipeline<M: Instrumenter>(
     Box<[BoxPipeline<'static, InstructionUpdate>]>,
     InstructionCounters<M>,
@@ -22,6 +26,7 @@ impl<M: Instrumenter> fmt::Debug for InstructionPipeline<M> {
 }
 
 impl<M: Instrumenter> InstructionPipeline<M> {
+    /// Create a new instruction pipeline from a list of sub-pipelines.
     #[must_use]
     pub fn new(
         pipelines: Vec<BoxPipeline<'static, InstructionUpdate>>,
@@ -37,6 +42,11 @@ impl<M: Instrumenter> InstructionPipeline<M> {
         ))
     }
 
+    /// Handle a transaction update by dispatching its instruction updates to
+    /// the sub-pipelines.
+    ///
+    /// # Errors
+    /// Returns an error if any of the sub-pipelines return an error.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
         let mut err = None;
         let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;

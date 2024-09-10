@@ -106,9 +106,7 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 pub struct SerializablePubkey(pub [u8; 32]);
 
 impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self {
-        Self(value.0)
-    }
+    fn from(value: VixenPubkey) -> Self { Self(value.0) }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -129,7 +127,7 @@ impl From<&InstructionUpdate> for SerializableInstructionUpdate {
                 .map(|x| SerializablePubkey(x.0))
                 .collect(),
             data: value.data.clone(),
-            inner: value.inner.iter().map(|x| x.into()).collect(),
+            inner: value.inner.iter().map(Into::into).collect(),
         }
     }
 }
@@ -141,14 +139,14 @@ impl From<&SerializableInstructionUpdate> for InstructionUpdate {
             accounts: value.accounts.iter().map(|x| VixenPubkey(x.0)).collect(),
             data: value.data.clone(),
             shared: Arc::new(InstructionShared::default()),
-            inner: value.inner.iter().map(|x| x.into()).collect(),
+            inner: value.inner.iter().map(Into::into).collect(),
         }
     }
 }
 
 pub fn get_account_pubkey_from_index(
     index: usize,
-    accounts: &Vec<String>,
+    accounts: &[String],
 ) -> Result<SerializablePubkey, String> {
     if accounts.is_empty() {
         return Err("No accounts found".to_string());
@@ -181,9 +179,7 @@ fn try_from_tx_meta(
         meta,
         version: _,
     } = transaction;
-    let inner_ixs = meta
-        .map(|meta| meta.inner_instructions.map_or(None, |x| Some(x)))
-        .flatten();
+    let inner_ixs = meta.and_then(|meta| meta.inner_instructions.map_or(None, Some));
 
     if let EncodedTransaction::Json(tx_data) = transaction {
         if let UiMessage::Raw(raw_message) = tx_data.message {
@@ -213,10 +209,10 @@ fn try_from_tx_meta(
                 })
                 .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
             outer_with_inner_ixs.pop(); // Remove the last instruction which is a
-                                        // set compute unit ix and will cause errors while parsing
+            // set compute unit ix and will cause errors while parsing
 
             if let Some(inner_ixs) = inner_ixs {
-                if inner_ixs.len() == 0 {
+                if inner_ixs.is_empty() {
                     return Ok(outer_with_inner_ixs);
                 }
                 for (idx, ix) in inner_ixs.iter().enumerate() {
@@ -305,7 +301,7 @@ pub async fn load_fixture(fixture: &str) -> Result<FixtureData, Box<dyn std::err
     maybe_create_fixture_dir()?;
     let path = fixture_path(fixture)?;
     if path.is_file() {
-        read_fixture(path)
+        read_fixture(&path)
     } else {
         fetch_fixture(fixture).await.and_then(write_fixture(path))
     }
@@ -325,6 +321,7 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
     }
 }
 
+#[must_use]
 pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) }
 
 #[derive(Debug, Clone)]
@@ -358,7 +355,7 @@ async fn fetch_fixture(fixture: &str) -> Result<FixtureData, Box<dyn std::error:
             let tx = rpc_client
                 .get_transaction(&signature, UiTransactionEncoding::Json)
                 .await
-                .map_err(|e| format!("Error fetching tx: {:?}", e))?;
+                .map_err(|e| format!("Error fetching tx: {e:?}"))?;
 
             let instructions = try_from_tx_meta(tx)?;
 
@@ -405,6 +402,7 @@ pub enum FixtureType {
     Invalid,
 }
 
+#[must_use]
 pub fn get_fixture_type(fixture: &str) -> FixtureType {
     if regex::Regex::new(TX_SIGNATURE_REGEX)
         .unwrap()
@@ -431,35 +429,35 @@ pub fn fixture_path(fixture: &str) -> Result<PathBuf, String> {
     Ok(Path::new(FIXTURES_PATH).join(file_name))
 }
 
-pub fn read_account_fixture(data: Vec<u8>) -> Result<FixtureData, Box<dyn std::error::Error>> {
-    let account_info: AccountInfo = serde_json::from_slice(&data)?;
+pub fn read_account_fixture(data: &[u8]) -> Result<FixtureData, Box<dyn std::error::Error>> {
+    let account_info: AccountInfo = serde_json::from_slice(data)?;
 
     Ok(FixtureData::Account(SubscribeUpdateAccount::from(
         account_info,
     )))
 }
 
-pub fn read_instructions_fixture(data: Vec<u8>) -> Result<FixtureData, Box<dyn std::error::Error>> {
-    let instructions: Vec<SerializableInstructionUpdate> = serde_json::from_slice(&data)?;
+pub fn read_instructions_fixture(data: &[u8]) -> Result<FixtureData, Box<dyn std::error::Error>> {
+    let instructions: Vec<SerializableInstructionUpdate> = serde_json::from_slice(data)?;
     Ok(FixtureData::Instructions(instructions))
 }
 
-pub fn read_fixture(path: PathBuf) -> Result<FixtureData, Box<dyn std::error::Error>> {
-    let data = std::fs::read(path.clone())?;
+pub fn read_fixture(path: &Path) -> Result<FixtureData, Box<dyn std::error::Error>> {
+    let data = std::fs::read(path)?;
 
     let fixture_type = get_fixture_type(
         path.file_stem()
             .ok_or("Invalid fixture path")?
             .to_str()
             .ok_or("Invalid fixture path")?
-            .split("_")
+            .split('_')
             .next()
             .ok_or("Invalid fixture path")?,
     );
 
     match fixture_type {
-        FixtureType::Pubkey => read_account_fixture(data),
-        FixtureType::Signature => read_instructions_fixture(data),
+        FixtureType::Pubkey => read_account_fixture(&data),
+        FixtureType::Signature => read_instructions_fixture(&data),
         FixtureType::Invalid => Err("Invalid fixture".into()),
     }
 }
@@ -467,6 +465,6 @@ pub fn read_fixture(path: PathBuf) -> Result<FixtureData, Box<dyn std::error::Er
 pub fn decode_bs58_to_bytes(bs58: &str) -> Result<Vec<u8>, String> {
     let bytes = bs58::decode(bs58)
         .into_vec()
-        .map_err(|e| format!("Error decoding bs58: {:?}", e))?;
+        .map_err(|e| format!("Error decoding bs58: {e:?}"))?;
     Ok(bytes)
 }

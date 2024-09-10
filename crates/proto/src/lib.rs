@@ -1,7 +1,7 @@
-#![warn(clippy::missing_errors_doc, clippy::missing_panics_doc, missing_docs)]
+#![warn(missing_docs)]
 #![allow(clippy::module_name_repetitions)]
-// TODO: document everything
-#![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
+//! Protobuf definitions used by the `yellowstone-vixen` family of crates.
 
 pub extern crate prost;
 #[cfg(feature = "stream")]
@@ -14,13 +14,24 @@ pub extern crate tonic_reflection;
 mod vixen {
     #[cfg(feature = "parser")]
     pub mod parser {
+        #![allow(missing_docs)]
+
+        //! Protobuf definitions for the `yellowstone-vixen-parser` crate.
+
         include!(concat!(env!("OUT_DIR"), concat!("/vixen.parser.rs")));
     }
 
     #[cfg(feature = "stream")]
     pub mod stream {
+        #![allow(missing_docs)]
+
+        //! Protobuf definitions for the `stream` feature of the
+        //! `yellowstone-vixen` crate.
+
         tonic::include_proto!("vixen.stream");
 
+        /// Compiled protobuf file descriptor set for the `vixen.stream`
+        /// package.
         pub const DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("stream_descriptor");
     }
 }

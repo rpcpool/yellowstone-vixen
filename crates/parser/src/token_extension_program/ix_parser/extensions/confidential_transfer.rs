@@ -100,6 +100,7 @@ pub struct TransferWithSplitProofsAccounts {
     pub owner: Option<Pubkey>,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum ConfidentaltransferIx {
     InitializeMint(Ix<InitializeMintAccounts>),
@@ -119,6 +120,7 @@ pub enum ConfidentaltransferIx {
 }
 
 impl ExtensionIxParser for ConfidentaltransferIx {
+    #[allow(clippy::too_many_lines)]
     fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
         let accounts_len = ix.accounts.len();
         let ix_type = decode_extension_ix_type(&ix.data)?;
@@ -295,7 +297,7 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                     )),
                     9 => {
                         let ninth_account = ix.accounts[8];
-                        if &ninth_account.to_string() == SOLANA_ZK_PROOF_PROGRAM_ID {
+                        if ninth_account.to_string() == SOLANA_ZK_PROOF_PROGRAM_ID {
                             Ok(ConfidentaltransferIx::TransferWithSplitProofs(
                                 Ix::from_accounts(TransferWithSplitProofsAccounts {
                                     source_account: ix.accounts[0],
@@ -364,8 +366,7 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                     )),
 
                     _ => Err(format!(
-                        "Invalid number of accounts for TransferWithSplitProofs: {}",
-                        accounts_len
+                        "Invalid number of accounts for TransferWithSplitProofs: {accounts_len}"
                     )),
                 }
             },

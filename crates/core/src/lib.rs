@@ -8,8 +8,12 @@
 )]
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
-// TODO: document everything
-#![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
+//! This crate provides the core components necessary for implementing parsers
+//! for the `yellowstone-vixen` family of crates.  This crate should be used
+//! as a dependency instead of `yellowstone-vixen` for crates that intend to
+//! define and export Vixen parsers as libraries without needing to access the
+//! runtime functionality of Vixen.
 
 use std::{
     borrow::Cow,
@@ -31,9 +35,14 @@ pub mod instruction;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
+/// An error returned by a Vixen parser
 #[derive(Debug)]
 pub enum ParseError {
+    /// The parser received an undesired update and requested to skip
+    /// processing for it.  No error will be logged by the Vixen runtime, and
+    /// no handlers registered to this parser will be executed.
     Filtered,
+    /// The parser encountered an error while processing an update.
     Other(BoxedError),
 }
 
@@ -42,27 +51,44 @@ impl<T: Into<BoxedError>> From<T> for ParseError {
     fn from(value: T) -> Self { Self::Other(value.into()) }
 }
 
+/// The result of parsing an update.
 pub type ParseResult<T> = Result<T, ParseError>;
 
+/// An account update from Yellowstone.
 pub type AccountUpdate = SubscribeUpdateAccount;
+/// A transaction update from Yellowstone.
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 
+/// A core trait that defines the parse logic for producing a parsed value from
+/// a Vixen update (typically [`AccountUpdate`], [`TransactionUpdate`], or
+/// [`InstructionUpdate`](instruction::InstructionUpdate)).
 pub trait Parser {
+    /// The input update type for this parser.
     type Input;
+    /// The type of the parsed value produced by this parser.
     type Output;
 
+    /// A unique ID for this parser.  Used to associate the parser with its
+    /// requested prefilter data.
     fn id(&self) -> Cow<str>;
 
+    /// Filter data passed to Yellowstone to coarsely narrow down updates
+    /// to values parseable by this parser.
     fn prefilter(&self) -> Prefilter;
 
+    /// Parse the given update into a parsed value.
     fn parse(&self, value: &Self::Input) -> impl Future<Output = ParseResult<Self::Output>> + Send;
 }
 
+/// A parser that parses all relevant updates for a particular program ID.
 pub trait ProgramParser: Parser {
+    /// The program ID that this parser is associated with.
     fn program_id(&self) -> Pubkey;
 }
 
+/// Helper trait for getting the ID of a parser.
 pub trait ParserId {
+    /// Get the ID of this parser, see [`Parser::id`].
     fn id(&self) -> Cow<str>;
 }
 
@@ -76,7 +102,9 @@ impl<T: Parser> ParserId for T {
     fn id(&self) -> Cow<str> { Parser::id(self) }
 }
 
+/// Helper trait for getting the prefilter of a parser.
 pub trait GetPrefilter {
+    /// Get the prefilter of this parser, see [`Parser::prefilter`].
     fn prefilter(&self) -> Prefilter;
 }
 
@@ -91,6 +119,7 @@ impl<T: Parser> GetPrefilter for T {
 }
 
 // TODO: why are so many fields on the prefilters and prefilter builder optional???
+/// A prefilter for narrowing down the updates that a parser will receive.
 #[derive(Debug, Default)]
 pub struct Prefilter {
     pub(crate) account: Option<AccountPrefilter>,
@@ -106,9 +135,12 @@ fn merge_opt<T, F: FnOnce(&mut T, T)>(lhs: &mut Option<T>, rhs: Option<T>, f: F)
 }
 
 impl Prefilter {
+    /// Create a new prefilter builder.
     #[inline]
     pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
 
+    /// Merge another prefilter into this one, producing a prefilter that
+    /// describes the union of the two.
     pub fn merge(&mut self, other: Prefilter) {
         let Self {
             account,
@@ -158,12 +190,15 @@ impl TransactionPrefilter {
     }
 }
 
+/// Helper type representing a Solana public key.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Pubkey(pub [u8; 32]);
 
 impl Debug for Pubkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&bs58::encode(self.0).into_string())
+        f.debug_tuple("Pubkey")
+            .field(&bs58::encode(self.0).into_string())
+            .finish()
     }
 }
 
@@ -185,10 +220,13 @@ impl TryFrom<&[u8]> for Pubkey {
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> { value.try_into().map(Self) }
 }
 
+/// An error that can occur when parsing a [`Pubkey`] from a string.
 #[derive(Debug, Clone, Copy, thiserror::Error)]
 pub enum PubkeyFromStrError {
+    /// The string was not a valid base58 string.
     #[error("Invalid base58 string")]
     Bs58(#[from] bs58::decode::Error),
+    /// The parsed base58 data was not the correct length for a public key.
     #[error("Invalid key length, must be 32 bytes")]
     Len(#[from] std::array::TryFromSliceError),
 }
@@ -205,14 +243,18 @@ impl FromStr for Pubkey {
     }
 }
 
+/// An error that can occur when building a prefilter.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum PrefilterError {
+    /// A value was already set for a field that can only be set once.
     #[error("Value already given for field {0}")]
     AlreadySet(&'static str),
+    /// An error occurred while parsing a public key as a [`Pubkey`].
     #[error("Invalid pubkey {}", bs58::encode(.0).into_string())]
     BadPubkey(Vec<u8>, std::array::TryFromSliceError),
 }
 
+/// A builder for constructing a prefilter.
 #[derive(Debug, Default)]
 #[must_use = "Consider calling .build() on this builder"]
 pub struct PrefilterBuilder {
@@ -244,6 +286,10 @@ where I::Item: AsRef<[u8]> {
 }
 
 impl PrefilterBuilder {
+    /// Build the prefilter from the given data.
+    ///
+    /// # Errors
+    /// Returns an error if any of the fields provided are invalid.
     pub fn build(self) -> Result<Prefilter, PrefilterError> {
         let PrefilterBuilder {
             error,
@@ -278,6 +324,7 @@ impl PrefilterBuilder {
         self
     }
 
+    /// Set the accounts that this prefilter will match.
     pub fn account_owners<I: IntoIterator>(self, it: I) -> Self
     where I::Item: AsRef<[u8]> {
         self.mutate(|this| {
@@ -289,6 +336,8 @@ impl PrefilterBuilder {
         })
     }
 
+    /// Set the accounts mentioned by transactions that this prefilter will
+    /// match.
     pub fn transaction_accounts<I: IntoIterator>(self, it: I) -> Self
     where I::Item: AsRef<[u8]> {
         self.mutate(|this| {
@@ -301,11 +350,13 @@ impl PrefilterBuilder {
     }
 }
 
+/// A collection of filters for a Vixen subscription.
 #[derive(Debug)]
 #[repr(transparent)]
 pub struct Filters<'a>(HashMap<&'a str, Prefilter>);
 
 impl<'a> Filters<'a> {
+    /// Construct a new collection of filters.
     #[inline]
     #[must_use]
     pub const fn new(filters: HashMap<&'a str, Prefilter>) -> Self { Self(filters) }

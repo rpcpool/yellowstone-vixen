@@ -22,6 +22,7 @@ pub enum IxsSupported {
 }
 
 impl ExtensionWithCommonIxs {
+    #[must_use]
     pub fn get_ixs_supported(extension: &ExtensionWithCommonIxs) -> IxsSupported {
         match extension {
             ExtensionWithCommonIxs::CpiGuard | ExtensionWithCommonIxs::MemoTransfer => {
@@ -106,7 +107,7 @@ impl CommonExtensionIxs {
                         })),
                     })
                 },
-                _ => return Err("Invalid instruction".to_string()),
+                _ => Err("Invalid instruction".to_string()),
             },
             IxsSupported::EnableAndDisable => match ix_type {
                 0 => {
@@ -127,11 +128,11 @@ impl CommonExtensionIxs {
                         ix: CommonIx::Disable(Ix::from_accounts(DisableAccounts {
                             account: ix.accounts[0],
                             owner: ix.accounts[1],
-                            multisig_signers: ix.accounts.get(2..).map(|a| a.to_vec()),
+                            multisig_signers: ix.accounts.get(2..).map(<[_]>::to_vec),
                         })),
                     })
                 },
-                _ => return Err("Invalid instruction".to_string()),
+                _ => Err("Invalid instruction".to_string()),
             },
         }
     }

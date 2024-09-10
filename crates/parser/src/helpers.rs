@@ -10,8 +10,7 @@ pub fn check_min_accounts_req(
 ) -> Result<(), String> {
     if accounts_len < expected_no_of_accounts {
         return Err(format!(
-            "Expected {} accounts, found {}",
-            expected_no_of_accounts, accounts_len
+            "Expected {expected_no_of_accounts} accounts, found {accounts_len}"
         ));
     }
     Ok(())
@@ -21,7 +20,7 @@ pub fn get_multisig_signers(ix: &InstructionUpdate, from_idx: usize) -> Option<V
     if from_idx >= ix.accounts.len() {
         return None;
     }
-    ix.accounts.get(from_idx..).map(|p| p.to_vec())
+    ix.accounts.get(from_idx..).map(<[_]>::to_vec)
 }
 
 pub fn to_supported_coption_pubkey(sol_coption: COption<SolanaPubkey>) -> COption<Pubkey> {

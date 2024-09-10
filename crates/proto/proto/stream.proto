@@ -4,14 +4,20 @@ import "google/protobuf/any.proto";
 
 package vixen.stream;
 
+// The `ProgramStreams` service allows clients to subscribe to a stream of
+// updates for a given program ID.
 service ProgramStreams {
   rpc Subscribe(SubscribeRequest) returns (stream SubscribeUpdate) {}
 }
 
+// Request to subscribe to a stream of updates for a given program ID.
 message SubscribeRequest {
+  // The program ID to subscribe to.
   string program = 1;
 }
 
+// Update from the requested program containing a parsed value.
 message SubscribeUpdate {
+  // The parsed value.
   google.protobuf.Any parsed = 1;
 }

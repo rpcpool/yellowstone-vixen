@@ -2,12 +2,16 @@ use spl_pod::solana_program::program_option::COption;
 use spl_token_2022::{extension::ExtensionType, instruction::AuthorityType};
 use yellowstone_vixen_core::Pubkey;
 
-use super::extensions::*;
+use super::extensions::{
+    CommonExtensionIxs, ConfidentaltransferFeeIx, ConfidentaltransferIx, TokenGroupIx,
+    TokenMetadataIx, TransferFeeIx,
+};
 use crate::{
     helpers::ReadableInstruction,
     token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIx},
 };
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum TokenExtensionProgramIx {
     TokenProgramIx(TokenProgramIx),

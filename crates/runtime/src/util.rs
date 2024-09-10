@@ -21,6 +21,7 @@ pub(crate) fn tokio_runtime() -> Result<tokio::runtime::Runtime, std::io::Error>
         .build()
 }
 
+/// A helper type for preventing sensitive strings from being printed.
 #[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
 #[repr(transparent)]
 pub struct PrivateString(pub String);
@@ -140,39 +141,52 @@ impl<'a, E: Error> fmt::Display for Chain<'a, E> {
 }
 
 pub mod stop {
+    //! A oneshot channel for requesting a task to stop.
+
     use std::pin::Pin;
 
     use tokio::sync::oneshot;
 
+    /// A signal that a task has received a request to stop.
     #[derive(Debug)]
+    #[must_use = "Consider calling .as_unit()"]
     #[allow(missing_copy_implementations)]
     #[repr(transparent)]
     pub struct StopCode(());
 
     impl StopCode {
+        /// Convert the stop code into a unit value.
         #[inline]
         pub fn as_unit(self) { let Self(()) = self; }
     }
 
+    /// A sender for requesting a task to stop.
     #[derive(Debug)]
     #[repr(transparent)]
     pub struct StopTx(oneshot::Sender<StopCode>);
 
     impl StopTx {
+        /// Send a stop signal, or run the provided closure if the receiver has
+        /// already been dropped.
         #[inline]
         pub fn send_or_else<F: FnOnce()>(self, f: F) {
             self.0.send(StopCode(())).unwrap_or_else(|StopCode(())| f());
         }
 
+        /// Send a stop signal, or do nothing if the receiver has already been
+        /// dropped.
         #[inline]
         pub fn maybe_send(self) { self.send_or_else(|| ()); }
     }
 
+    /// A receiver for a stop signal.
     #[derive(Debug)]
     #[repr(transparent)]
     pub struct StopRx(oneshot::Receiver<StopCode>);
 
     impl StopRx {
+        /// Convert the receiver into a future that resolves when the task
+        /// should stop.
         pub fn as_unit(self) -> impl std::future::Future<Output = ()> + Send + Sync + 'static {
             use futures_util::FutureExt;
             self.0.map(|r| r.map_or((), |StopCode(())| ()))
@@ -192,6 +206,7 @@ pub mod stop {
         }
     }
 
+    /// Create a new stop transmitter and receiver pair.
     #[must_use]
     pub fn channel() -> (StopTx, StopRx) {
         let (tx, rx) = oneshot::channel();
