@@ -130,7 +130,7 @@ impl From<SerializablePubkey> for VixenPubkey {
     }
 }
 
-type IxIndex = [u8; 2];
+type IxIndex = [u8; 2]; // [outer_ix_index, inner_ix_index]
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SerializableInstructionUpdate {
@@ -458,11 +458,6 @@ async fn fetch_fixture(
         FixtureType::Signature => {
             let signature = Signature::from_str(fixture)?;
             let rpc_client = get_rpc_client();
-
-            // let tx = rpc_client
-            //     .get_transaction(&signature, UiTransactionEncoding::Json)
-            //     .await
-            //     .map_err(|e| format!("Error fetching tx: {:?}", e))?;
 
             let params = json!([signature.to_string(), {
                 "encoding": "json",
