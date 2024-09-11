@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package solana.token.program;
+
+enum AccountState{
+    Uninitialized = 0;
+    Initialized = 1;
+    Frozen = 2;
+}
+
+message TokenAccount{
+    bytes mint = 1;
+    bytes owner = 2;
+    uint64 amount = 3;
+    optional bytes delegate = 4;
+    optional AccountState state = 5;
+    optional uint64 is_native = 6;
+    optional uint64 delegated_amount = 7;
+    optional bytes close_authority = 8;
+}
+  
+message Mint {
+    optional bytes mint_authority = 1;
+    uint64 supply = 2;
+    uint64 decimals = 4;
+    bool is_initialized =  5;
+    optional bytes freeze_authority = 6;
+}
+
+message Multisig {
+    uint64 m = 1;
+    uint64 n = 2;
+    bool is_initialized = 3;
+    repeated bytes signers = 4;  
+}
