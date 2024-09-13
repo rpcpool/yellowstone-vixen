@@ -66,11 +66,12 @@ impl ProgramParser for TokenProgramAccParser {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::*;
     use yellowstone_vixen_proto::parser::{
         token_program_state_proto, MintProto, MultisigProto, TokenAccountProto,
         TokenProgramStateProto,
     };
+
+    use super::*;
 
     impl IntoProtoData<TokenAccountProto> for Account {
         fn into_proto_data(self) -> TokenAccountProto {
@@ -118,6 +119,7 @@ mod proto_parser {
 
     impl crate::proto::IntoProto for TokenProgramAccParser {
         type Proto = TokenProgramStateProto;
+
         fn into_proto(value: Self::Output) -> Self::Proto {
             let state_oneof = match value {
                 TokenProgramState::TokenAccount(data) => Some(

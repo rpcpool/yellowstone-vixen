@@ -182,8 +182,6 @@ impl TryFrom<(ExtensionType, &[u8])> for ExtensionData {
 
 #[cfg(feature = "proto")]
 pub mod token_extensions_proto_parser {
-    use crate::helpers::{from_coption_to_option, pubkey_to_vec, IntoProtoData};
-
     use super::*;
     use extension::{
         group_member_pointer::GroupMemberPointer, group_pointer::GroupPointer,
@@ -192,8 +190,9 @@ pub mod token_extensions_proto_parser {
     use solana_zk_token_sdk::zk_token_elgamal::pod::ElGamalPubkey;
     use spl_token_2022::state::Multisig;
     use yellowstone_grpc_proto::prost::Message;
-    use yellowstone_vixen_proto::parser::extension_data_proto::Data;
-    use yellowstone_vixen_proto::parser::*;
+    use yellowstone_vixen_proto::parser::{extension_data_proto::Data, *};
+
+    use crate::helpers::{from_coption_to_option, pubkey_to_vec, IntoProtoData};
 
     macro_rules! impl_into_proto_data {
         ($($variant:ident),*) => {
@@ -454,7 +453,7 @@ pub mod token_extensions_proto_parser {
                     .withdraw_withheld_authority_elgamal_pubkey
                     .0
                     .to_vec(),
-                harvest_to_mint_enaabled: self.harvest_to_mint_enabled.into(),
+                harvest_to_mint_enabled: self.harvest_to_mint_enabled.into(),
             }
         }
     }

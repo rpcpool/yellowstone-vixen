@@ -7,8 +7,6 @@ use spl_token_2022::{
 };
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter, ProgramParser};
 
-use crate::helpers::IntoProtoData;
-
 use super::helpers::{
     mint_account_extensions_data_bytes, token_account_extensions_data_bytes, ExtensionData,
 };
@@ -137,19 +135,18 @@ impl Parser for TokenExtensionProgramAccParser {
 
 impl ProgramParser for TokenExtensionProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token_2022::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::*;
-    use crate::helpers::IntoProtoData;
     use yellowstone_vixen_proto::parser::{
         token_extension_state_proto, ExtendedMintProto, ExtendedTokenAccountProto,
         ExtensionDataProto, TokenExtensionStateProto,
     };
+
+    use super::*;
+    use crate::helpers::IntoProtoData;
 
     impl IntoProtoData<ExtendedMintProto> for ExtendedMint {
         fn into_proto_data(self) -> ExtendedMintProto {

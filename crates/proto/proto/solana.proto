@@ -130,7 +130,7 @@ message TransferHookProto{
 message ConfidentialTransferFeeConfigProto {
     bytes authority = 1;
     bytes withdraw_withheld_authority_elgamal_pubkey = 2;
-    bool harvest_to_mint_enaabled = 3;
+    bool harvest_to_mint_enabled = 3;
     bytes withheld_amount = 4;
 }
 

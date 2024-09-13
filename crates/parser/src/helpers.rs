@@ -45,9 +45,7 @@ pub struct ReadableInstruction<A, D> {
 }
 
 impl<A, D> ReadableInstruction<A, D> {
-    pub fn new(accounts: A, data: Option<D>) -> Self {
-        Self { accounts, data }
-    }
+    pub fn new(accounts: A, data: Option<D>) -> Self { Self { accounts, data } }
 
     pub fn from_accounts(accounts: A) -> Self {
         Self {
@@ -72,6 +70,4 @@ pub trait IntoProtoData<O> {
     fn into_proto_data(self) -> O;
 }
 
-pub fn pubkey_to_vec(pubkey: SolanaPubkey) -> Vec<u8> {
-    pubkey.to_bytes().to_vec()
-}
+pub fn pubkey_to_vec(pubkey: SolanaPubkey) -> Vec<u8> { pubkey.to_bytes().to_vec() }

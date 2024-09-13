@@ -35,7 +35,7 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::stream::Server::builder()
-        // .account(Proto::new(TokenExtensionProgramAccParser))
+        .account(Proto::new(TokenExtensionProgramAccParser))
         .account(Proto::new(TokenProgramAccParser))
         .build(config)
         .run();
