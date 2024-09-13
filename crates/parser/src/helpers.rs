@@ -45,7 +45,9 @@ pub struct ReadableInstruction<A, D> {
 }
 
 impl<A, D> ReadableInstruction<A, D> {
-    pub fn new(accounts: A, data: Option<D>) -> Self { Self { accounts, data } }
+    pub fn new(accounts: A, data: Option<D>) -> Self {
+        Self { accounts, data }
+    }
 
     pub fn from_accounts(accounts: A) -> Self {
         Self {
@@ -57,4 +59,19 @@ impl<A, D> ReadableInstruction<A, D> {
 
 pub trait InstructionParser<C> {
     fn parse_ix(_: &InstructionUpdate) -> Result<C, String>;
+}
+
+pub fn from_coption_to_option<T>(coption: COption<T>) -> Option<T> {
+    match coption {
+        COption::Some(val) => Some(val),
+        COption::None => None,
+    }
+}
+
+pub trait IntoProtoData<O> {
+    fn into_proto_data(self) -> O;
+}
+
+pub fn pubkey_to_vec(pubkey: SolanaPubkey) -> Vec<u8> {
+    pubkey.to_bytes().to_vec()
 }

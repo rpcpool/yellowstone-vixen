@@ -2,25 +2,23 @@ syntax = "proto3";
 
 package vixen.parser;
 
-import public "solana-token-program.proto";
-
-import public "solana-token-extensions.proto";
+import "solana.proto";
 
 
-message TokenProgramState {
+message TokenProgramStateProto {
     oneof state_oneof {
-        solana.token.program.TokenAccount token_account = 1;
-        solana.token.program.Mint mint = 2;
-        solana.token.program.Multisig multisig = 3;
+        TokenAccountProto token_account = 1;
+        MintProto mint = 2;
+        MultisigProto multisig = 3;
   }
 }
 
-
-message TokenExtensionState {
+message TokenExtensionStateProto {
     oneof state_oneof {
-        solana.token.extensions.ExtendedTokenAccount token_account = 1;
-        solana.token.extensions.ExtendedTokenMint mint = 2;
-        solana.token.extensions.ExtendedTokenMultisig multisig = 3;
+      ExtendedTokenAccountProto extended_token_account = 1;
+      ExtendedMintProto extended_mint_account = 2;
+      MultisigProto multisig = 3;
+       
   }
 }
 

@@ -8,6 +8,8 @@ use yellowstone_vixen_core::{
     AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
+use crate::helpers::{from_coption_to_option, IntoProtoData};
+
 #[derive(Debug)]
 pub enum TokenProgramState {
     TokenAccount(Account),
@@ -57,24 +59,81 @@ impl Parser for TokenProgramAccParser {
 
 impl ProgramParser for TokenProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
-}
-
-#[cfg(feature = "proto")]
-impl crate::proto::IntoProto for TokenProgramAccParser {
-    type Proto = yellowstone_vixen_proto::parser::TokenProgramState;
-
-    fn into_proto(value: Self::Output) -> Self::Proto {
-        let state_oneof = match value {
-            TokenProgramState::TokenAccount(_) => todo!(),
-            TokenProgramState::Mint(_) => todo!(),
-            TokenProgramState::Multisig(_) => todo!(),
-        };
-
-        Self::Proto { state_oneof }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        spl_token::ID.to_bytes().into()
     }
 }
 
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use super::*;
+    use yellowstone_vixen_proto::parser::{
+        token_program_state_proto, MintProto, MultisigProto, TokenAccountProto,
+        TokenProgramStateProto,
+    };
+
+    impl IntoProtoData<TokenAccountProto> for Account {
+        fn into_proto_data(self) -> TokenAccountProto {
+            TokenAccountProto {
+                mint: self.mint.to_bytes().to_vec(),
+                owner: self.owner.to_bytes().to_vec(),
+                amount: self.amount,
+                delegate: from_coption_to_option(self.delegate.map(|d| d.to_bytes().to_vec())),
+                state: self.state as i32,
+                is_native: from_coption_to_option(self.is_native),
+                delegated_amount: self.delegated_amount,
+                close_authority: from_coption_to_option(
+                    self.close_authority.map(|ca| ca.to_bytes().to_vec()),
+                ),
+            }
+        }
+    }
+
+    impl IntoProtoData<MintProto> for Mint {
+        fn into_proto_data(self) -> MintProto {
+            MintProto {
+                mint_authority: from_coption_to_option(
+                    self.mint_authority.map(|ma| ma.to_bytes().to_vec()),
+                ),
+                supply: self.supply,
+                decimals: self.decimals as u64,
+                is_initialized: self.is_initialized,
+                freeze_authority: from_coption_to_option(
+                    self.freeze_authority.map(|fa| fa.to_bytes().to_vec()),
+                ),
+            }
+        }
+    }
+
+    impl IntoProtoData<MultisigProto> for Multisig {
+        fn into_proto_data(self) -> MultisigProto {
+            MultisigProto {
+                m: self.m.into(),
+                n: self.n.into(),
+                is_initialized: self.is_initialized,
+                signers: self.signers.iter().map(|s| s.to_bytes().to_vec()).collect(),
+            }
+        }
+    }
+
+    impl crate::proto::IntoProto for TokenProgramAccParser {
+        type Proto = TokenProgramStateProto;
+        fn into_proto(value: Self::Output) -> Self::Proto {
+            let state_oneof = match value {
+                TokenProgramState::TokenAccount(data) => Some(
+                    token_program_state_proto::StateOneof::TokenAccount(data.into_proto_data()),
+                ),
+                TokenProgramState::Mint(data) => Some(token_program_state_proto::StateOneof::Mint(
+                    data.into_proto_data(),
+                )),
+                TokenProgramState::Multisig(data) => Some(
+                    token_program_state_proto::StateOneof::Multisig(data.into_proto_data()),
+                ),
+            };
+            Self::Proto { state_oneof }
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};

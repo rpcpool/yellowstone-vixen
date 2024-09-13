@@ -18,6 +18,7 @@ spl-token-metadata-interface = { version = "0.4.0", optional = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, features = ["parser"], optional = true }
+solana-zk-token-sdk = "2.0.9"
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
