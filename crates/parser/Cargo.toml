@@ -19,6 +19,7 @@ yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, features = ["parser"], optional = true }
 solana-zk-token-sdk = "2.0.9"
+bs58 = "0.5.1"
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }

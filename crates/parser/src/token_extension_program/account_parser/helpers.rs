@@ -182,17 +182,18 @@ impl TryFrom<(ExtensionType, &[u8])> for ExtensionData {
 
 #[cfg(feature = "proto")]
 pub mod token_extensions_proto_parser {
-    use super::*;
     use extension::{
         group_member_pointer::GroupMemberPointer, group_pointer::GroupPointer,
         immutable_owner::ImmutableOwner, metadata_pointer::MetadataPointer,
     };
     use solana_zk_token_sdk::zk_token_elgamal::pod::ElGamalPubkey;
     use spl_token_2022::state::Multisig;
-    use yellowstone_grpc_proto::prost::Message;
     use yellowstone_vixen_proto::parser::{extension_data_proto::Data, *};
 
-    use crate::helpers::{from_coption_to_option, pubkey_to_vec, IntoProtoData};
+    use super::*;
+    use crate::helpers::{
+        bytes_to_elgamal_pubkey, from_coption_to_option, pubkey_to_string, IntoProtoData,
+    };
 
     macro_rules! impl_into_proto_data {
         ($($variant:ident),*) => {
@@ -239,15 +240,15 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<TokenAccountProto> for Account {
         fn into_proto_data(self) -> TokenAccountProto {
             TokenAccountProto {
-                mint: self.mint.to_bytes().to_vec(),
-                owner: self.owner.to_bytes().to_vec(),
+                mint: pubkey_to_string(self.mint),
+                owner: pubkey_to_string(self.owner),
                 amount: self.amount,
-                delegate: from_coption_to_option(self.delegate.map(|d| d.to_bytes().to_vec())),
+                delegate: from_coption_to_option(self.delegate.map(|d| pubkey_to_string(d))),
                 state: self.state as i32,
                 is_native: from_coption_to_option(self.is_native),
                 delegated_amount: self.delegated_amount,
                 close_authority: from_coption_to_option(
-                    self.close_authority.map(|ca| ca.to_bytes().to_vec()),
+                    self.close_authority.map(|ca| pubkey_to_string(ca)),
                 ),
             }
         }
@@ -257,13 +258,13 @@ pub mod token_extensions_proto_parser {
         fn into_proto_data(self) -> MintProto {
             MintProto {
                 mint_authority: from_coption_to_option(
-                    self.mint_authority.map(|ma| ma.to_bytes().to_vec()),
+                    self.mint_authority.map(|ma| pubkey_to_string(ma)),
                 ),
                 supply: self.supply,
                 decimals: self.decimals as u64,
                 is_initialized: self.is_initialized,
                 freeze_authority: from_coption_to_option(
-                    self.freeze_authority.map(|fa| fa.to_bytes().to_vec()),
+                    self.freeze_authority.map(|fa| pubkey_to_string(fa)),
                 ),
             }
         }
@@ -275,15 +276,17 @@ pub mod token_extensions_proto_parser {
                 m: self.m.into(),
                 n: self.n.into(),
                 is_initialized: self.is_initialized,
-                signers: self.signers.iter().map(|s| s.to_bytes().to_vec()).collect(),
+                signers: self
+                    .signers
+                    .into_iter()
+                    .map(|s| pubkey_to_string(s))
+                    .collect(),
             }
         }
     }
 
     impl IntoProtoData<ImmutableOwnerProto> for ImmutableOwner {
-        fn into_proto_data(self) -> ImmutableOwnerProto {
-            ImmutableOwnerProto {}
-        }
+        fn into_proto_data(self) -> ImmutableOwnerProto { ImmutableOwnerProto {} }
     }
 
     impl IntoProtoData<TransferFeeAmountProto> for extension::transfer_fee::TransferFeeAmount {
@@ -298,7 +301,26 @@ pub mod token_extensions_proto_parser {
         for extension::confidential_transfer::ConfidentialTransferAccount
     {
         fn into_proto_data(self) -> ConfidentialTransferAccountProto {
-            todo!()
+            ConfidentialTransferAccountProto {
+                approved: self.approved.into(),
+                elgamal_pubkey: bytes_to_elgamal_pubkey(self.elgamal_pubkey.0),
+                pending_balance: self.pending_balance_lo.to_string(),
+                pending_balance_lo: self.pending_balance_lo.to_string(),
+                pending_balance_hi: self.pending_balance_hi.to_string(),
+                available_balance: self.available_balance.to_string(),
+                decryptable_available_balance: self.decryptable_available_balance.to_string(),
+                allow_confidential_credits: self.allow_confidential_credits.into(),
+                pending_balance_credit_counter: self.pending_balance_credit_counter.into(),
+                maximum_pending_balance_credit_counter: self
+                    .maximum_pending_balance_credit_counter
+                    .into(),
+                expected_pending_balance_credit_counter: self
+                    .expected_pending_balance_credit_counter
+                    .into(),
+                actual_pending_balance_credit_counter: self
+                    .actual_pending_balance_credit_counter
+                    .into(),
+            }
         }
     }
 
@@ -313,9 +335,7 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<NonTransferableAccountProto>
         for extension::non_transferable::NonTransferableAccount
     {
-        fn into_proto_data(self) -> NonTransferableAccountProto {
-            NonTransferableAccountProto {}
-        }
+        fn into_proto_data(self) -> NonTransferableAccountProto { NonTransferableAccountProto {} }
     }
 
     impl IntoProtoData<TransferHookAccountProto> for extension::transfer_hook::TransferHookAccount {
@@ -339,7 +359,7 @@ pub mod token_extensions_proto_parser {
     {
         fn into_proto_data(self) -> ConfidentialTransferFeeAmountProto {
             ConfidentialTransferFeeAmountProto {
-                withheld_amount: self.withheld_amount.to_string().encode_to_vec(),
+                withheld_amount: self.withheld_amount.to_string(),
             }
         }
     }
@@ -347,8 +367,10 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<TransferFeeConfigProto> for extension::transfer_fee::TransferFeeConfig {
         fn into_proto_data(self) -> TransferFeeConfigProto {
             TransferFeeConfigProto {
-                transfer_fee_config_authority: pubkey_to_vec(self.transfer_fee_config_authority.0),
-                withdraw_withheld_authority: pubkey_to_vec(self.withdraw_withheld_authority.0),
+                transfer_fee_config_authority: pubkey_to_string(
+                    self.transfer_fee_config_authority.0,
+                ),
+                withdraw_withheld_authority: pubkey_to_string(self.withdraw_withheld_authority.0),
                 withheld_amount: self.withheld_amount.into(),
                 older_transfer_fee: Some(TransferFeeProto {
                     epoch: self.older_transfer_fee.epoch.into(),
@@ -375,7 +397,7 @@ pub mod token_extensions_proto_parser {
     {
         fn into_proto_data(self) -> MintCloseAuthorityProto {
             MintCloseAuthorityProto {
-                close_authority: pubkey_to_vec(self.close_authority.0),
+                close_authority: pubkey_to_string(self.close_authority.0),
             }
         }
     }
@@ -385,11 +407,11 @@ pub mod token_extensions_proto_parser {
     {
         fn into_proto_data(self) -> ConfidentialTransferMintProto {
             ConfidentialTransferMintProto {
-                authority: pubkey_to_vec(self.authority.0),
+                authority: pubkey_to_string(self.authority.0),
                 auditor_elgamal_pubkey: Into::<Option<ElGamalPubkey>>::into(
                     self.auditor_elgamal_pubkey,
                 )
-                .map(|x| x.0.to_vec()),
+                .map(|x| bytes_to_elgamal_pubkey(x.0)),
                 auto_approve_new_accounts: self.auto_approve_new_accounts.into(),
             }
         }
@@ -406,9 +428,7 @@ pub mod token_extensions_proto_parser {
     }
 
     impl IntoProtoData<NonTransferableProto> for extension::non_transferable::NonTransferable {
-        fn into_proto_data(self) -> NonTransferableProto {
-            NonTransferableProto {}
-        }
+        fn into_proto_data(self) -> NonTransferableProto { NonTransferableProto {} }
     }
 
     impl IntoProtoData<InterestBearingConfigProto>
@@ -416,7 +436,7 @@ pub mod token_extensions_proto_parser {
     {
         fn into_proto_data(self) -> InterestBearingConfigProto {
             InterestBearingConfigProto {
-                rate_authority: pubkey_to_vec(self.rate_authority.0),
+                rate_authority: pubkey_to_string(self.rate_authority.0),
                 initialization_timestamp: self.initialization_timestamp.into(),
                 pre_update_average_rate: Into::<i16>::into(self.pre_update_average_rate).into(),
                 last_update_timestamp: self.last_update_timestamp.into(),
@@ -428,7 +448,7 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<PermanentDelegateProto> for extension::permanent_delegate::PermanentDelegate {
         fn into_proto_data(self) -> PermanentDelegateProto {
             PermanentDelegateProto {
-                delegate: pubkey_to_vec(self.delegate.0),
+                delegate: pubkey_to_string(self.delegate.0),
             }
         }
     }
@@ -436,8 +456,8 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<TransferHookProto> for extension::transfer_hook::TransferHook {
         fn into_proto_data(self) -> TransferHookProto {
             TransferHookProto {
-                authority: pubkey_to_vec(self.authority.0),
-                program_id: pubkey_to_vec(self.program_id.0),
+                authority: pubkey_to_string(self.authority.0),
+                program_id: pubkey_to_string(self.program_id.0),
             }
         }
     }
@@ -447,12 +467,11 @@ pub mod token_extensions_proto_parser {
     {
         fn into_proto_data(self) -> ConfidentialTransferFeeConfigProto {
             ConfidentialTransferFeeConfigProto {
-                authority: pubkey_to_vec(self.authority.0),
-                withheld_amount: self.withheld_amount.0.to_vec(),
-                withdraw_withheld_authority_elgamal_pubkey: self
-                    .withdraw_withheld_authority_elgamal_pubkey
-                    .0
-                    .to_vec(),
+                authority: pubkey_to_string(self.authority.0),
+                withheld_amount: self.withheld_amount.to_string(),
+                withdraw_withheld_authority_elgamal_pubkey: bytes_to_elgamal_pubkey(
+                    self.withdraw_withheld_authority_elgamal_pubkey.0,
+                ),
                 harvest_to_mint_enabled: self.harvest_to_mint_enabled.into(),
             }
         }
@@ -461,8 +480,8 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<MetadataPointerProto> for MetadataPointer {
         fn into_proto_data(self) -> MetadataPointerProto {
             MetadataPointerProto {
-                authority: pubkey_to_vec(self.authority.0),
-                metadata_address: pubkey_to_vec(self.metadata_address.0),
+                authority: pubkey_to_string(self.authority.0),
+                metadata_address: pubkey_to_string(self.metadata_address.0),
             }
         }
     }
@@ -470,8 +489,8 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<TokenMetadataProto> for TokenMetadata {
         fn into_proto_data(self) -> TokenMetadataProto {
             TokenMetadataProto {
-                update_authority: pubkey_to_vec(self.update_authority.0),
-                mint: pubkey_to_vec(self.mint),
+                update_authority: pubkey_to_string(self.update_authority.0),
+                mint: pubkey_to_string(self.mint),
                 name: self.name,
                 symbol: self.symbol,
                 uri: self.uri,
@@ -490,8 +509,8 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<GroupPointerProto> for GroupPointer {
         fn into_proto_data(self) -> GroupPointerProto {
             GroupPointerProto {
-                authority: pubkey_to_vec(self.authority.0),
-                group_address: pubkey_to_vec(self.group_address.0),
+                authority: pubkey_to_string(self.authority.0),
+                group_address: pubkey_to_string(self.group_address.0),
             }
         }
     }
@@ -499,8 +518,8 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<TokenGroupProto> for TokenGroup {
         fn into_proto_data(self) -> TokenGroupProto {
             TokenGroupProto {
-                update_authority: pubkey_to_vec(self.update_authority.0),
-                mint: pubkey_to_vec(self.mint),
+                update_authority: pubkey_to_string(self.update_authority.0),
+                mint: pubkey_to_string(self.mint),
                 size: self.size.into(),
                 max_size: self.max_size.into(),
             }
@@ -510,8 +529,8 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<GroupMemberPointerProto> for GroupMemberPointer {
         fn into_proto_data(self) -> GroupMemberPointerProto {
             GroupMemberPointerProto {
-                authority: pubkey_to_vec(self.authority.0),
-                member_address: pubkey_to_vec(self.member_address.0),
+                authority: pubkey_to_string(self.authority.0),
+                member_address: pubkey_to_string(self.member_address.0),
             }
         }
     }
@@ -520,8 +539,8 @@ pub mod token_extensions_proto_parser {
         fn into_proto_data(self) -> TokenGroupMemberProto {
             TokenGroupMemberProto {
                 member_number: Into::<u32>::into(self.member_number).into(),
-                mint: pubkey_to_vec(self.mint),
-                group: pubkey_to_vec(self.group),
+                mint: pubkey_to_string(self.mint),
+                group: pubkey_to_string(self.group),
             }
         }
     }

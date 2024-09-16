@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use solana_zk_token_sdk::encryption::elgamal::ELGAMAL_KEYPAIR_LEN;
 use spl_pod::solana_program::{program_option::COption, pubkey::Pubkey as SolanaPubkey};
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
@@ -70,4 +71,8 @@ pub trait IntoProtoData<O> {
     fn into_proto_data(self) -> O;
 }
 
-pub fn pubkey_to_vec(pubkey: SolanaPubkey) -> Vec<u8> { pubkey.to_bytes().to_vec() }
+pub fn pubkey_to_string(pubkey: SolanaPubkey) -> String { pubkey.to_string() }
+
+pub fn bytes_to_elgamal_pubkey(bytes: [u8; ELGAMAL_KEYPAIR_LEN / 2]) -> String {
+    bs58::encode(bytes).into_string()
+}

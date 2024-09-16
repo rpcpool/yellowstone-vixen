@@ -59,9 +59,7 @@ impl Parser for TokenProgramAccParser {
 
 impl ProgramParser for TokenProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[cfg(feature = "proto")]
@@ -72,19 +70,20 @@ mod proto_parser {
     };
 
     use super::*;
+    use crate::helpers::pubkey_to_string;
 
     impl IntoProtoData<TokenAccountProto> for Account {
         fn into_proto_data(self) -> TokenAccountProto {
             TokenAccountProto {
-                mint: self.mint.to_bytes().to_vec(),
-                owner: self.owner.to_bytes().to_vec(),
+                mint: pubkey_to_string(self.mint),
+                owner: pubkey_to_string(self.owner),
                 amount: self.amount,
-                delegate: from_coption_to_option(self.delegate.map(|d| d.to_bytes().to_vec())),
+                delegate: from_coption_to_option(self.delegate.map(|d| pubkey_to_string(d))),
                 state: self.state as i32,
                 is_native: from_coption_to_option(self.is_native),
                 delegated_amount: self.delegated_amount,
                 close_authority: from_coption_to_option(
-                    self.close_authority.map(|ca| ca.to_bytes().to_vec()),
+                    self.close_authority.map(|ca| pubkey_to_string(ca)),
                 ),
             }
         }
@@ -94,13 +93,13 @@ mod proto_parser {
         fn into_proto_data(self) -> MintProto {
             MintProto {
                 mint_authority: from_coption_to_option(
-                    self.mint_authority.map(|ma| ma.to_bytes().to_vec()),
+                    self.mint_authority.map(|ma| pubkey_to_string(ma)),
                 ),
                 supply: self.supply,
                 decimals: self.decimals as u64,
                 is_initialized: self.is_initialized,
                 freeze_authority: from_coption_to_option(
-                    self.freeze_authority.map(|fa| fa.to_bytes().to_vec()),
+                    self.freeze_authority.map(|fa| pubkey_to_string(fa)),
                 ),
             }
         }
@@ -112,7 +111,11 @@ mod proto_parser {
                 m: self.m.into(),
                 n: self.n.into(),
                 is_initialized: self.is_initialized,
-                signers: self.signers.iter().map(|s| s.to_bytes().to_vec()).collect(),
+                signers: self
+                    .signers
+                    .into_iter()
+                    .map(|s| pubkey_to_string(s))
+                    .collect(),
             }
         }
     }

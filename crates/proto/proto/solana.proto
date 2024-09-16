@@ -9,29 +9,29 @@ enum AccountStateProto{
 }
 
 message TokenAccountProto {
-    bytes mint = 1;
-    bytes owner = 2;
+    string mint = 1;
+    string owner = 2;
     uint64 amount = 3;
-    optional bytes delegate = 4;
+    optional string delegate = 4;
     AccountStateProto state = 5;
     optional uint64 is_native = 6;
     uint64 delegated_amount = 7;
-    optional bytes close_authority = 8;
+    optional string close_authority = 8;
 }
   
 message MintProto {
-    optional bytes mint_authority = 1;
+    optional string mint_authority = 1;
     uint64 supply = 2;
     uint64 decimals = 4;
     bool is_initialized =  5;
-    optional bytes freeze_authority = 6;
+    optional string freeze_authority = 6;
 }
 
 message MultisigProto {
     uint64 m = 1;
     uint64 n = 2;
     bool is_initialized = 3;
-    repeated bytes signers = 4;  
+    repeated string signers = 4;  
 }
 
 
@@ -46,12 +46,12 @@ message TransferFeeAmountProto{
 
 message ConfidentialTransferAccountProto{
     bool approved = 1;
-    bytes elgamal_pubkey = 2;
-    bytes pending_balance_lo = 3;
-    bytes pending_balance_hi = 4;
-    bytes pending_balance = 5;
-    bytes available_balance = 6;
-    bytes decryptable_available_balance = 7;
+    string elgamal_pubkey = 2;
+    string pending_balance_lo = 3;
+    string pending_balance_hi = 4;
+    string pending_balance = 5;
+    string available_balance = 6;
+    string decryptable_available_balance = 7;
     bool allow_confidential_credits = 8;
     uint64 pending_balance_credit_counter = 9;
     uint64 maximum_pending_balance_credit_counter = 10;
@@ -75,7 +75,7 @@ message CpiGuardProto{
 }
 
 message ConfidentialTransferFeeAmountProto{
-    bytes withheld_amount = 1;
+    string withheld_amount = 1;
 }
 
 message TransferFeeProto{
@@ -85,21 +85,21 @@ message TransferFeeProto{
 }
 
 message TransferFeeConfigProto{
-    bytes transfer_fee_config_authority = 1;
-    bytes withdraw_withheld_authority = 2;
+    string transfer_fee_config_authority = 1;
+    string withdraw_withheld_authority = 2;
     uint64 withheld_amount = 3;
     TransferFeeProto older_transfer_fee = 4;
     TransferFeeProto newer_transfer_fee = 5;
 }
 
 message MintCloseAuthorityProto{
-    bytes close_authority = 1;
+    string close_authority = 1;
 }
 
 message ConfidentialTransferMintProto{
-    bytes authority = 1;
+    string authority = 1;
     bool auto_approve_new_accounts = 2;
-    optional bytes auditor_elgamal_pubkey = 3;
+    optional string auditor_elgamal_pubkey = 3;
 }
 
 
@@ -111,7 +111,7 @@ message NonTransferableProto{
 }
 
 message InterestBearingConfigProto{
-    bytes rate_authority = 1;
+    string rate_authority = 1;
     int64 initialization_timestamp = 2;
     int64 pre_update_average_rate = 3;
     int64 last_update_timestamp = 4;
@@ -119,24 +119,24 @@ message InterestBearingConfigProto{
 }
 
 message PermanentDelegateProto{
-    bytes delegate = 1;
+    string delegate = 1;
 }
 
 message TransferHookProto{
-    bytes authority = 1;
-    bytes program_id = 2;
+    string authority = 1;
+    string program_id = 2;
 }
 
 message ConfidentialTransferFeeConfigProto {
-    bytes authority = 1;
-    bytes withdraw_withheld_authority_elgamal_pubkey = 2;
+    string authority = 1;
+    string withdraw_withheld_authority_elgamal_pubkey = 2;
     bool harvest_to_mint_enabled = 3;
-    bytes withheld_amount = 4;
+    string withheld_amount = 4;
 }
 
 message MetadataPointerProto{
-    bytes authority = 1;
-    bytes metadata_address = 2;
+    string authority = 1;
+    string metadata_address = 2;
 }
 
 message KeyValue{
@@ -145,8 +145,8 @@ message KeyValue{
 }
 
 message TokenMetadataProto{
-    bytes update_authority = 1;
-    bytes mint = 2;
+    string update_authority = 1;
+    string mint = 2;
     string name = 3;
     string symbol = 4;
     string uri = 5;
@@ -154,25 +154,25 @@ message TokenMetadataProto{
 }
 
 message GroupPointerProto{
-    bytes authority = 1;
-    bytes group_address = 2;
+    string authority = 1;
+    string group_address = 2;
 }
 
 message TokenGroupProto{
-    bytes update_authority = 1;
-    bytes mint = 2;
+    string update_authority = 1;
+    string mint = 2;
     uint32 size = 3;
     uint32 max_size = 4;
 }
 
 message GroupMemberPointerProto{
-    bytes authority = 1;
-    bytes member_address = 3;
+    string authority = 1;
+    string member_address = 3;
 }
 
 message TokenGroupMemberProto{
-    bytes mint = 2;
-    bytes group = 3;
+    string mint = 2;
+    string group = 3;
     uint64 member_number = 4;
 }
 
