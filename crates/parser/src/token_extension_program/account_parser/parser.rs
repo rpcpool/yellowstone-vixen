@@ -135,7 +135,9 @@ impl Parser for TokenExtensionProgramAccParser {
 
 impl ProgramParser for TokenExtensionProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        spl_token_2022::ID.to_bytes().into()
+    }
 }
 
 #[cfg(feature = "proto")]
@@ -211,35 +213,27 @@ mod tests {
     async fn test_mint_account_parsing() {
         let parser = TokenExtensionProgramAccParser;
 
-        let fixture_data = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu");
+        let account = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu");
+        let state = run_account_parse!(parser, account);
 
-        if let FixtureData::Account(account) = fixture_data {
-            let state = run_account_parse!(parser, account);
+        let TokenExtensionState::ExtendedMint(ext_mint) = state else {
+            panic!("Invalid Account");
+        };
 
-            if let TokenExtensionState::ExtendedMint(ext_mint) = state {
-                assert_eq!(ext_mint.base_account.decimals as u8, 9);
+        assert_eq!(ext_mint.base_account.decimals as u8, 9);
+        assert_eq!(ext_mint.extension_data_vec.len(), 2);
 
-                assert_eq!(ext_mint.extension_data_vec.len(), 2);
+        let extension_data = &ext_mint.extension_data_vec[1];
 
-                let extension_data = &ext_mint.extension_data_vec[1];
+        let ExtensionData::TokenMetadata(meta) = extension_data else {
+            panic!("Invalid Extension Data");
+        };
 
-                if let ExtensionData::TokenMetadata(meta) = extension_data {
-                    assert_eq!(
-                        meta.mint.to_string(),
-                        "BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu"
-                    );
-
-                    assert_eq!(meta.name, "vixen_test");
-
-                    assert_eq!(meta.symbol, "VIX");
-                } else {
-                    panic!("Invalid Extension Data");
-                }
-            } else {
-                panic!("Invalid Account");
-            }
-        } else {
-            panic!("Invalid Fixture Data");
-        }
+        assert_eq!(
+            meta.mint.to_string(),
+            "BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu"
+        );
+        assert_eq!(meta.name, "vixen_test");
+        assert_eq!(meta.symbol, "VIX");
     }
 }

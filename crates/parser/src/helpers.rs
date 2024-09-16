@@ -60,19 +60,13 @@ pub trait InstructionParser<C> {
     fn parse_ix(_: &InstructionUpdate) -> Result<C, String>;
 }
 
-pub fn from_coption_to_option<T>(coption: COption<T>) -> Option<T> {
-    match coption {
-        COption::Some(val) => Some(val),
-        COption::None => None,
-    }
-}
-
 pub trait IntoProtoData<O> {
     fn into_proto_data(self) -> O;
 }
 
-pub fn pubkey_to_string(pubkey: SolanaPubkey) -> String { pubkey.to_string() }
+#[derive(Debug, Clone, Copy)]
+pub struct ElGamalPubkeyBytes(pub [u8; ELGAMAL_KEYPAIR_LEN / 2]);
 
-pub fn bytes_to_elgamal_pubkey(bytes: [u8; ELGAMAL_KEYPAIR_LEN / 2]) -> String {
-    bs58::encode(bytes).into_string()
+impl From<ElGamalPubkeyBytes> for String {
+    fn from(bytes: ElGamalPubkeyBytes) -> Self { bs58::encode(bytes.0).into_string() }
 }

@@ -8,7 +8,7 @@ use yellowstone_vixen_core::{
     AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
-use crate::helpers::{from_coption_to_option, IntoProtoData};
+use crate::helpers::IntoProtoData;
 
 #[derive(Debug)]
 pub enum TokenProgramState {
@@ -59,7 +59,9 @@ impl Parser for TokenProgramAccParser {
 
 impl ProgramParser for TokenProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        spl_token::ID.to_bytes().into()
+    }
 }
 
 #[cfg(feature = "proto")]
@@ -70,21 +72,18 @@ mod proto_parser {
     };
 
     use super::*;
-    use crate::helpers::pubkey_to_string;
 
     impl IntoProtoData<TokenAccountProto> for Account {
         fn into_proto_data(self) -> TokenAccountProto {
             TokenAccountProto {
-                mint: pubkey_to_string(self.mint),
-                owner: pubkey_to_string(self.owner),
+                mint: self.mint.to_string(),
+                owner: self.owner.to_string(),
                 amount: self.amount,
-                delegate: from_coption_to_option(self.delegate.map(|d| pubkey_to_string(d))),
+                delegate: self.delegate.map(|d| d.to_string()).into(),
                 state: self.state as i32,
-                is_native: from_coption_to_option(self.is_native),
+                is_native: self.is_native.into(),
                 delegated_amount: self.delegated_amount,
-                close_authority: from_coption_to_option(
-                    self.close_authority.map(|ca| pubkey_to_string(ca)),
-                ),
+                close_authority: self.close_authority.map(|ca| ca.to_string()).into(),
             }
         }
     }
@@ -92,15 +91,11 @@ mod proto_parser {
     impl IntoProtoData<MintProto> for Mint {
         fn into_proto_data(self) -> MintProto {
             MintProto {
-                mint_authority: from_coption_to_option(
-                    self.mint_authority.map(|ma| pubkey_to_string(ma)),
-                ),
+                mint_authority: self.mint_authority.map(|ma| ma.to_string()).into(),
                 supply: self.supply,
                 decimals: self.decimals as u64,
                 is_initialized: self.is_initialized,
-                freeze_authority: from_coption_to_option(
-                    self.freeze_authority.map(|fa| pubkey_to_string(fa)),
-                ),
+                freeze_authority: self.freeze_authority.map(|fa| fa.to_string()).into(),
             }
         }
     }
@@ -111,11 +106,7 @@ mod proto_parser {
                 m: self.m.into(),
                 n: self.n.into(),
                 is_initialized: self.is_initialized,
-                signers: self
-                    .signers
-                    .into_iter()
-                    .map(|s| pubkey_to_string(s))
-                    .collect(),
+                signers: self.signers.into_iter().map(|s| s.to_string()).collect(),
             }
         }
     }
@@ -149,18 +140,13 @@ mod tests {
     async fn test_mint_account_parsing() {
         let parser = TokenProgramAccParser;
 
-        let fixture_data = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
+        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
+        let state = run_account_parse!(parser, account);
 
-        if let FixtureData::Account(account) = fixture_data {
-            let state = run_account_parse!(parser, account);
+        let TokenProgramState::Mint(mint) = state else {
+            panic!("Invalid Account");
+        };
 
-            if let TokenProgramState::Mint(mint) = state {
-                assert_eq!(mint.decimals, 10);
-            } else {
-                panic!("Invalid Account");
-            }
-        } else {
-            panic!("Invalid Fixture Data");
-        }
+        assert_eq!(mint.decimals, 10);
     }
 }
