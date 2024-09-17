@@ -380,21 +380,16 @@ mod tests {
     async fn test_mint_to_checked_ix_parsing() {
         let parser = TokenProgramIxParser;
 
-        let fixture_data = tx_fixture!("55kpnRufcX9Fo44oRBXtrkxPRww4UWJKxCpgBV39kzAAag8oyJbd9Y3YWdQQUi3TBqtrhjgsMGb9Nw8bUxy7j5rt");
+        let ixs = tx_fixture!("55kpnRufcX9Fo44oRBXtrkxPRww4UWJKxCpgBV39kzAAag8oyJbd9Y3YWdQQUi3TBqtrhjgsMGb9Nw8bUxy7j5rt");
+        let ix = run_ix_parse!(parser, &ixs[0]);
 
-        if let FixtureData::Instructions(ixs) = fixture_data {
-            let ix = run_ix_parse!(parser, &ixs[0]);
+        let TokenProgramIx::MintToChecked(ix) = ix else {
+            panic!("Invalid Instruction");
+        };
 
-            if let TokenProgramIx::MintToChecked(ix) = &ix {
-                assert!(ix.data.is_some());
-                let data = ix.data.as_ref().unwrap();
-                assert_eq!(data.decimals, 10);
-                assert_eq!(data.amount, 10.mul(10u64.pow(data.decimals as u32)));
-            } else {
-                panic!("Invalid Instruction")
-            }
-        } else {
-            panic!("Invalid Fixture Data")
-        }
+        assert!(ix.data.is_some());
+        let data = ix.data.as_ref().unwrap();
+        assert_eq!(data.decimals, 10);
+        assert_eq!(data.amount, 10.mul(10u64.pow(data.decimals as u32)));
     }
 }

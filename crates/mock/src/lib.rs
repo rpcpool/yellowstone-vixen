@@ -106,7 +106,9 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 pub struct SerializablePubkey(pub [u8; 32]);
 
 impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self { Self(value.0) }
+    fn from(value: VixenPubkey) -> Self {
+        Self(value.0)
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -211,7 +213,7 @@ fn try_from_tx_meta(
                 })
                 .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
             outer_with_inner_ixs.pop(); // Remove the last instruction which is a
-            // set compute unit ix and will cause errors while parsing
+                                        // set compute unit ix and will cause errors while parsing
 
             if let Some(inner_ixs) = inner_ixs {
                 if inner_ixs.len() == 0 {
@@ -268,14 +270,20 @@ fn try_from_tx_meta(
 #[macro_export]
 macro_rules! account_fixture {
     ($pubkey:expr) => {
-        $crate::load_fixture($pubkey).await.unwrap()
+        match $crate::load_fixture($pubkey).await.unwrap() {
+            FixtureData::Account(a) => a,
+            f @ _ => panic!("Invalid account fixture {f:?}"),
+        }
     };
 }
 
 #[macro_export]
 macro_rules! tx_fixture {
     ($sig:expr) => {
-        $crate::load_fixture($sig).await.unwrap()
+        match $crate::load_fixture($sig).await.unwrap() {
+            FixtureData::Instructions(i) => i,
+            f @ _ => panic!("Invalid transaction fixture {f:?}"),
+        }
     };
 }
 

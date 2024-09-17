@@ -57,7 +57,9 @@ impl Parser for TokenProgramAccParser {
 
 impl ProgramParser for TokenProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        spl_token::ID.to_bytes().into()
+    }
 }
 
 #[cfg(feature = "proto")]
@@ -85,18 +87,13 @@ mod tests {
     async fn test_mint_account_parsing() {
         let parser = TokenProgramAccParser;
 
-        let fixture_data = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
+        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
+        let state = run_account_parse!(parser, account);
 
-        if let FixtureData::Account(account) = fixture_data {
-            let state = run_account_parse!(parser, account);
+        let TokenProgramState::Mint(mint) = state else {
+            panic!("Invalid Account");
+        };
 
-            if let TokenProgramState::Mint(mint) = state {
-                assert_eq!(mint.decimals, 10);
-            } else {
-                panic!("Invalid Account");
-            }
-        } else {
-            panic!("Invalid Fixture Data");
-        }
+        assert_eq!(mint.decimals, 10);
     }
 }
