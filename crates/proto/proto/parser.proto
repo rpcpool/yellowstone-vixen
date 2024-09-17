@@ -2,23 +2,49 @@ syntax = "proto3";
 
 package vixen.parser;
 
-import "solana.proto";
-
+import "solana-token/accounts.proto";
+import "solana-token/ixs.proto";
 
 message TokenProgramStateProto {
-    oneof state_oneof {
-        TokenAccountProto token_account = 1;
-        MintProto mint = 2;
-        MultisigProto multisig = 3;
+  oneof state_oneof {
+    TokenAccountProto token_account = 1;
+    MintProto mint = 2;
+    MultisigProto multisig = 3;
   }
 }
 
 message TokenExtensionStateProto {
-    oneof state_oneof {
-      ExtendedTokenAccountProto extended_token_account = 1;
-      ExtendedMintProto extended_mint_account = 2;
-      MultisigProto multisig = 3;
-       
+  oneof state_oneof {
+    ExtendedTokenAccountProto extended_token_account = 1;
+    ExtendedMintProto extended_mint_account = 2;
+    MultisigProto multisig = 3;
+
   }
 }
 
+message TokenProgramIxProto {
+  oneof ix {
+    TransferIx transfer = 1;
+    InitializeMintIx initialize_mint = 2;
+    InitializeAccountIx initialize_account = 3;
+    InitializeAccount2Ix initialize_account2 = 4;
+    InitializeMultisigIx initialize_multisig = 5;
+    ApproveIx approve = 6;
+    RevokeIx revoke = 7;
+    SetAuthorityIx set_authority = 8;
+    MintToIx mint_to = 9;
+    BurnIx burn = 10;
+    CloseAccountIx close_account = 11;
+    FreezeAccountIx freeze_account = 12;
+    ThawAccountIx thaw_account = 13;
+    TransferCheckedIx transfer_checked = 14;
+    ApproveCheckedIx approve_checked = 15;
+    MintToCheckedIx mint_to_checked = 16;
+    BurnCheckedIx burn_checked = 17;
+    SyncNativeIx sync_native = 18;
+    GetAccountDataSizeIx get_account_data_size = 19;
+    InitializeImmutableOwnerIx initialize_immutable_owner = 20;
+    AmountToUiAmountIx amount_to_ui_amount = 21;
+    UiAmountToAmountIx ui_amount_to_amount = 22;
+  }
+}

@@ -349,6 +349,20 @@ impl TokenProgramIxParser {
     }
 }
 
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use super::*;
+    use yellowstone_vixen_proto::parser::TokenProgramIxProto;
+
+    impl crate::proto::IntoProto for TokenProgramIxParser {
+        type Proto = TokenProgramIxProto;
+
+        fn into_proto(value: Self::Output) -> Self::Proto {
+            todo!();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::ops::Mul;

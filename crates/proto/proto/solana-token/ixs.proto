@@ -1,0 +1,308 @@
+syntax = "proto3";
+
+package vixen.parser;
+
+message TransferAccountsProto {
+  string source = 1;
+  string destination = 2;
+  string owner = 3;
+  repeated string multisig_signers = 4;
+}
+
+
+message TransferDataProto {
+  uint64 amount = 1;
+}
+
+message TransferIx {
+  TransferAccountsProto accounts = 1;
+  TransferDataProto data = 2;
+}
+
+message InitializeMintAccountsProto {
+  string mint = 1;
+}
+
+message InitializeMintDataProto {
+  uint32 decimals = 1;
+  string mint_authority = 2;
+  string freeze_authority = 3;
+}
+
+message InitializeMintIx {
+  InitializeMintAccountsProto accounts = 1;
+  InitializeMintDataProto data = 2;
+}
+
+message InitializeAccountAccountsProto {
+  string account = 1;
+  string mint = 2;
+  string owner = 3;
+}
+
+message InitializeAccountDataProto {
+  uint64 amount = 1;
+}
+
+message InitializeAccountIx {
+  InitializeAccountAccountsProto accounts = 1;
+  InitializeAccountDataProto data = 2;
+}
+
+message InitializeAccount2AccountsProto {
+  string account = 1;
+  string mint = 2;
+}
+
+message InitializeAccountData2Proto {
+  string owner = 1;
+}
+
+message InitializeAccount2Ix {
+  InitializeAccount2AccountsProto accounts = 1;
+  InitializeAccountData2Proto data = 2;
+}
+
+message InitializeMultisigAccountsProto {
+  string multisig = 1;
+  repeated string signers = 2;
+}
+
+message InitializeMultisigDataProto {
+  uint32 m = 1;
+}
+
+message InitializeMultisigIx {
+  InitializeMultisigAccountsProto accounts = 1;
+  InitializeMultisigDataProto data = 2;
+}
+
+
+message ApproveAccountsProto {
+  string source = 1;
+  string delegate = 2;
+  string owner = 3;
+  repeated string multisig_signers = 4;
+}
+
+message ApproveDataProto {
+  uint64 amount = 1;
+}
+
+message ApproveIx {
+  ApproveAccountsProto accounts = 1;
+  ApproveDataProto data = 2;
+}
+
+message RevokeAccountsProto {
+  string source = 1;
+  string owner = 2;
+  repeated string multisig_signers = 3;
+}
+
+message RevokeIx {
+  RevokeAccountsProto accounts = 1;
+}
+
+message SetAuthorityAccountsProto {
+  string current_authority = 1;
+  string account = 2;
+  repeated string multisig_signers = 3;
+}
+
+message SetAuthorityDataProto {
+  string authority_type = 1;
+  string new_authority = 2;
+}
+
+message SetAuthorityIx {
+  SetAuthorityAccountsProto accounts = 1;
+  SetAuthorityDataProto data = 2;
+}
+
+message MintToAccountsProto {
+  string mint = 1;
+  string account = 2;
+  string mint_authority = 3;
+  repeated string multisig_signers = 4;
+}
+
+message MintToDataProto {
+  uint64 amount = 1;
+}
+
+message MintToIx {
+  MintToAccountsProto accounts = 1;
+  MintToDataProto data = 2;
+}
+
+message BurnAccountsProto {
+  string account = 1;
+  string mint = 2;
+  string owner = 3;
+  repeated string multisig_signers = 4;
+}
+
+message BurnDataProto {
+  uint64 amount = 1;
+}
+
+message BurnIx {
+  BurnAccountsProto accounts = 1;
+  BurnDataProto data = 2;
+}
+
+message CloseAccountAccountsProto {
+  string account = 1;
+  string destination = 2;
+  string owner = 3;
+  repeated string multisig_signers = 4;
+}
+
+message CloseAccountIx {
+  CloseAccountAccountsProto accounts = 1;
+}
+
+message FreezeAccountAccountsProto {
+  string account = 1;
+  string mint = 2;
+  string mint_freeze_authority = 3;
+  repeated string multisig_signers = 4;
+}
+
+message FreezeAccountIx {
+  FreezeAccountAccountsProto accounts = 1;
+}
+
+message ThawAccountAccountsProto {
+  string account = 1;
+  string mint = 2;
+  string mint_freeze_authority = 3;
+  repeated string multisig_signers = 4;
+}
+
+message ThawAccountIx {
+  ThawAccountAccountsProto accounts = 1;
+}
+
+message TransferCheckedAccountsProto {
+  string source = 1;
+  string mint = 2;
+  string destination = 3;
+  string owner = 4;
+  repeated string multisig_signers = 5;
+}
+
+message TransferCheckedDataProto {
+  uint64 amount = 1;
+  uint32 decimals = 2;
+}
+
+message TransferCheckedIx {
+  TransferCheckedAccountsProto accounts = 1;
+  TransferCheckedDataProto data = 2;
+}
+
+message ApproveCheckedAccountsProto {
+  string source = 1;
+  string mint = 2;
+  string delegate = 3;
+  string owner = 4;
+  repeated string multisig_signers = 5;
+}
+
+message ApproveCheckedDataProto {
+  uint64 amount = 1;
+  uint32 decimals = 2;
+}
+
+message ApproveCheckedIx {
+  ApproveCheckedAccountsProto accounts = 1;
+  ApproveCheckedDataProto data = 2;
+}
+
+message MintToCheckedAccountsProto {
+  string mint = 1;
+  string account = 2;
+  string mint_authority = 3;
+  repeated string multisig_signers = 4;
+}
+
+message MintToCheckedDataProto {
+  uint64 amount = 1;
+  uint32 decimals = 2;
+}
+
+message MintToCheckedIx {
+  MintToCheckedAccountsProto accounts = 1;
+  MintToCheckedDataProto data = 2;
+}
+
+message BurnCheckedAccountsProto {
+  string account = 1;
+  string mint = 2;
+  string owner = 3;
+  repeated string multisig_signers = 4;
+}
+
+message BurnCheckedDataProto {
+  uint64 amount = 1;
+  uint32 decimals = 2;
+}
+
+message BurnCheckedIx {
+  BurnCheckedAccountsProto accounts = 1;
+  BurnCheckedDataProto data = 2;
+}
+
+message SyncNativeAccountsProto {
+  string account = 1;
+}
+
+message SyncNativeIx {
+  SyncNativeAccountsProto accounts = 1;
+}
+
+message GetAccountDataSizeAccountsProto {
+  string mint = 1;
+}
+
+message GetAccountDataSizeIx {
+  GetAccountDataSizeAccountsProto accounts = 1;
+}
+
+message InitializeImmutableOwnerAccountsProto {
+  string account = 1;
+}
+
+message InitializeImmutableOwnerIx {
+  InitializeImmutableOwnerAccountsProto accounts = 1;
+}
+
+
+message AmountToUiAmountAccountsProto {
+  string mint = 1;
+}
+
+message AmountToUiAmountDataProto {
+  uint64 amount = 1;
+}
+
+message AmountToUiAmountIx {
+  AmountToUiAmountAccountsProto accounts = 1;
+  AmountToUiAmountDataProto data = 2;
+}
+
+message UiAmountToAmountAccountsProto {
+  string mint = 1;
+}
+
+message UiAmountToAmountDataProto {
+  string ui_amount = 1;
+}
+
+message UiAmountToAmountIx {
+  UiAmountToAmountAccountsProto accounts = 1;
+  UiAmountToAmountDataProto data = 2;
+}
+
