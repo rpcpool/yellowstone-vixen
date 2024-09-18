@@ -207,3 +207,119 @@ impl ExtensionIxParser for TransferFeeIx {
         }
     }
 }
+
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use crate::helpers::IntoProtoData;
+
+    use super::*;
+    use crate::helpers::{FromOptVecToDefVec, FromOptionToProtoOption};
+
+    use yellowstone_vixen_proto::parser::*;
+
+    // impl IntoProtoData<InitializeTransferFeeConfigAccountsProto>
+    //     for InitializeTransferFeeConfigAccounts
+    // {
+    //     fn into_proto_data(self) -> InitializeTransferFeeConfigAccountsProto {
+    //         InitializeTransferFeeConfigAccountsProto {
+    //             mint: self.mint.to_string(),
+    //         }
+    //     }
+    // }
+
+    // impl IntoProtoData<WithdrawWithheldTokensFromMintAccountsProto>
+    //     for WithdrawWithheldTokensFromMintAccounts
+    // {
+    //     fn into_proto_data(self) -> WithdrawWithheldTokensFromMintAccountsProto {
+    //         WithdrawWithheldTokensFromMintAccountsProto {
+    //             mint: self.mint.to_string(),
+    //             fee_recipient: self.fee_recipient.to_string(),
+    //             withdraw_withheld_authority: self.withdraw_withheld_authority.to_string(),
+    //             multisig_signers: self.multisig_signers.to_def_vec(),
+    //         }
+    //     }
+    // }
+
+    // impl IntoProtoData<WithdrawWithheldTokensFromAccountsAccountsProto>
+    //     for WithdrawWithheldTokensFromAccountsAccounts
+    // {
+    //     fn into_proto_data(self) -> WithdrawWithheldTokensFromAccountsAccountsProto {
+    //         WithdrawWithheldTokensFromAccountsAccountsProto {
+    //             mint: self.mint.to_string(),
+    //             fee_recipient: self.fee_recipient.to_string(),
+    //             withdraw_withheld_authority: self.withdraw_withheld_authority.to_string(),
+    //             source_accounts: self
+    //                 .source_accounts
+    //                 .into_iter()
+    //                 .map(|a| a.to_string())
+    //                 .collect(),
+    //             multisig_signers: self.multisig_signers.to_def_vec(),
+    //         }
+    //     }
+    // }
+
+    // impl IntoProtoData<HarvestWithheldTokensToMintAccountsProto>
+    //     for HarvestWithheldTokensToMintAccounts
+    // {
+    //     fn into_proto_data(self) -> HarvestWithheldTokensToMintAccountsProto {
+    //         HarvestWithheldTokensToMintAccountsProto {
+    //             mint: self.mint.to_string(),
+    //             source_accounts: self
+    //                 .source_accounts
+    //                 .into_iter()
+    //                 .map(|a| a.to_string())
+    //                 .collect(),
+    //         }
+    //     }
+    // }
+
+    // impl IntoProtoData<SetTransferFeeAccountsProto> for SetTransferFeeAccounts {
+    //     fn into_proto_data(self) -> SetTransferFeeAccountsProto {
+    //         SetTransferFeeAccountsProto {
+    //             mint: self.mint.to_string(),
+    //             mint_fee_acc_owner: self.mint_fee_acc_owner.to_string(),
+    //             multisig_signers: self.multisig_signers.to_def_vec(),
+    //         }
+    //     }
+    // }
+
+    // impl IntoProtoData<TransferCheckedWithFeeDataProto> for TransferCheckedWithFeeData {
+    //     fn into_proto_data(self) -> TransferCheckedWithFeeDataProto {
+    //         TransferCheckedWithFeeDataProto {
+    //             amount: self.amount,
+    //             fee_amount: self.fee_amount,
+    //             decimals: self.decimals as u32,
+    //         }
+    //     }
+    // }
+
+    // impl IntoProtoData<InitializeTransferFeeConfigDataProto> for InitializeTransferFeeConfigData {
+    //     fn into_proto_data(self) -> InitializeTransferFeeConfigDataProto {
+    //         InitializeTransferFeeConfigDataProto {
+    //             transfer_fee_config_authority: self.transfer_fee_config_authority.to_proto_option(),
+    //             withdraw_withheld_authority: self.withdraw_withheld_authority.to_proto_option(),
+    //             transfer_fee_basis_points: self.transfer_fee_basis_points as u32,
+    //             maximum_fee: self.maximum_fee,
+    //         }
+    //     }
+    // }
+
+    // impl IntoProtoData<WithdrawWithheldTokensFromAccountsDataProto>
+    //     for WithdrawWithheldTokensFromAccountsData
+    // {
+    //     fn into_proto_data(self) -> WithdrawWithheldTokensFromAccountsDataProto {
+    //         WithdrawWithheldTokensFromAccountsDataProto {
+    //             num_token_accounts: self.num_token_accounts as u32,
+    //         }
+    //     }
+    // }
+
+    // impl IntoProtoData<SetTransferFeeDataProto> for SetTransferFeeData {
+    //     fn into_proto_data(self) -> SetTransferFeeDataProto {
+    //         SetTransferFeeDataProto {
+    //             transfer_fee_basis_points: self.transfer_fee_basis_points as u32,
+    //             maximum_fee: self.maximum_fee,
+    //         }
+    //     }
+    // }
+}

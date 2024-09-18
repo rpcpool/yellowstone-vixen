@@ -4,6 +4,7 @@ package vixen.parser;
 
 import "solana-token/accounts.proto";
 import "solana-token/ixs.proto";
+import "solana-token/extensions.proto";
 
 message TokenProgramStateProto {
   oneof state_oneof {
@@ -53,5 +54,10 @@ message TokenProgramIxProto {
 message TokenExtensionProgramIxProto {
   oneof ix_one_of {
     TokenProgramIxProto token_program_ix = 1;
+    TransferFeeIxProto transfer_fee_ix = 2;
+    TokenMetadataIxProto token_metadata_ix = 3;
+    TokenGroupIxProto token_group_ix = 4;
+    ConfidentialTransferIxProto confidential_transfer_ix = 5;
+    ConfidentialTransferFeeIxProto confidential_transfer_fee_ix = 6;
   }
 }

@@ -263,25 +263,7 @@ pub mod proto_parser {
 
     use super::*;
 
-    trait FromOptionToProtoOption<S, T: IntoProtoData<S>> {
-        fn to_proto_option(self) -> Option<S>;
-    }
-
-    trait FromOptVecToDefVec<P> {
-        fn to_def_vec(self) -> Vec<P>;
-    }
-
-    impl FromOptVecToDefVec<String> for Option<Vec<Pubkey>> {
-        fn to_def_vec(self) -> Vec<String> {
-            self.map_or(vec![], |s| s.into_iter().map(|p| p.to_string()).collect())
-        }
-    }
-
-    impl<S, T: IntoProtoData<S>> FromOptionToProtoOption<S, T> for Option<T> {
-        fn to_proto_option(self) -> Option<S> {
-            self.map_or(None, |d| Some(d.into_proto_data()))
-        }
-    }
+    use crate::helpers::{FromOptVecToDefVec, FromOptionToProtoOption};
 
     impl IntoProtoData<TransferAccountsProto> for TransferAccounts {
         fn into_proto_data(self) -> TransferAccountsProto {
