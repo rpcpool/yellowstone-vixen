@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use solana_zk_token_sdk::encryption::elgamal::ELGAMAL_KEYPAIR_LEN;
 use spl_pod::solana_program::{program_option::COption, pubkey::Pubkey as SolanaPubkey};
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
@@ -57,4 +58,15 @@ impl<A, D> ReadableInstruction<A, D> {
 
 pub trait InstructionParser<C> {
     fn parse_ix(_: &InstructionUpdate) -> Result<C, String>;
+}
+
+pub trait IntoProtoData<O> {
+    fn into_proto_data(self) -> O;
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ElGamalPubkeyBytes(pub [u8; ELGAMAL_KEYPAIR_LEN / 2]);
+
+impl From<ElGamalPubkeyBytes> for String {
+    fn from(bytes: ElGamalPubkeyBytes) -> Self { bs58::encode(bytes.0).into_string() }
 }
