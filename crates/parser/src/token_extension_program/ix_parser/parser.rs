@@ -263,25 +263,16 @@ mod tests {
     async fn test_mint_to_checked_ix_parsing() {
         let parser = TokenExtensionProgramIxParser;
 
-        let fixture_data = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
+        let ixs = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
+        let ix = run_ix_parse!(parser, &ixs[0]);
 
-        if let FixtureData::Instructions(ixs) = fixture_data {
-            let ix = run_ix_parse!(parser, &ixs[0]);
-            match ix {
-                TokenExtensionProgramIx::TokenProgramIx(ix) => {
-                    if let TokenProgramIx::MintToChecked(ix) = ix {
-                        assert!(ix.data.is_some());
-                        let data = ix.data.as_ref().unwrap();
-                        assert_eq!(data.decimals, 9);
-                        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals as u32)));
-                    } else {
-                        panic!("Invalid Instruction")
-                    }
-                },
-                _ => panic!("Invalid Instruction"),
-            }
-        } else {
-            panic!("Invalid Fixture Data")
-        }
+        let TokenExtensionProgramIx::TokenProgramIx(TokenProgramIx::MintToChecked(ix)) = ix else {
+            panic!("Invalid Instruction");
+        };
+
+        assert!(ix.data.is_some());
+        let data = ix.data.as_ref().unwrap();
+        assert_eq!(data.decimals, 9);
+        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals as u32)));
     }
 }
