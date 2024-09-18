@@ -13,8 +13,9 @@ use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen, vixen_core::proto::Proto};
 use yellowstone_vixen_parser::{
+    proto::Proto,
     token_extension_program::account_parser::TokenExtensionProgramAccParser,
-    token_program::account_parser::TokenProgramAccParser,
+    token_program::{account_parser::TokenProgramAccParser, ix_parser::TokenProgramIxParser},
 };
 
 #[derive(clap::Parser)]
@@ -35,8 +36,9 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::stream::Server::builder()
-        .account(Proto::new(TokenExtensionProgramAccParser))
-        .account(Proto::new(TokenProgramAccParser))
+        // .account(Proto::new(TokenExtensionProgramAccParser))
+        // .account(Proto::new(TokenProgramAccParser))
+        .instruction(Proto::new(TokenProgramIxParser))
         .build(config)
         .run();
 }

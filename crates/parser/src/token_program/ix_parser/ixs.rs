@@ -254,3 +254,532 @@ pub enum TokenProgramIx {
     AmountToUiAmount(AmountToUiAmountAccounts, AmountToUiAmountData),
     UiAmountToAmount(UiAmountToAmountAccounts, UiAmountToAmountData),
 }
+
+#[cfg(feature = "proto")]
+pub mod proto_parser {
+    use crate::helpers::{from_coption_to_option, IntoProtoData};
+    use token_program_ix_proto::IxOneof;
+    use yellowstone_vixen_proto::parser::*;
+
+    use super::*;
+
+    trait FromOptionToProtoOption<S, T: IntoProtoData<S>> {
+        fn to_proto_option(self) -> Option<S>;
+    }
+
+    trait FromOptVecToDefVec<P> {
+        fn to_def_vec(self) -> Vec<P>;
+    }
+
+    impl FromOptVecToDefVec<String> for Option<Vec<Pubkey>> {
+        fn to_def_vec(self) -> Vec<String> {
+            self.map_or(vec![], |s| s.into_iter().map(|p| p.to_string()).collect())
+        }
+    }
+
+    impl<S, T: IntoProtoData<S>> FromOptionToProtoOption<S, T> for Option<T> {
+        fn to_proto_option(self) -> Option<S> {
+            self.map_or(None, |d| Some(d.into_proto_data()))
+        }
+    }
+
+    impl IntoProtoData<TransferAccountsProto> for TransferAccounts {
+        fn into_proto_data(self) -> TransferAccountsProto {
+            TransferAccountsProto {
+                source: self.source.to_string(),
+                destination: self.destination.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<TransferDataProto> for TransferData {
+        fn into_proto_data(self) -> TransferDataProto {
+            TransferDataProto {
+                amount: self.amount,
+            }
+        }
+    }
+
+    impl IntoProtoData<InitializeMintAccountsProto> for InitializeMintAccounts {
+        fn into_proto_data(self) -> InitializeMintAccountsProto {
+            InitializeMintAccountsProto {
+                mint: self.mint.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<InitializeMintDataProto> for InitializeMintData {
+        fn into_proto_data(self) -> InitializeMintDataProto {
+            InitializeMintDataProto {
+                decimals: self.decimals as u64,
+                mint_authority: from_coption_to_option(
+                    self.mint_authority.map(|ma| ma.to_string()),
+                ),
+                freeze_authority: from_coption_to_option(
+                    self.freeze_authority.map(|fa| fa.to_string()),
+                ),
+            }
+        }
+    }
+
+    impl IntoProtoData<InitializeAccountAccountsProto> for InitializeAccountAccounts {
+        fn into_proto_data(self) -> InitializeAccountAccountsProto {
+            InitializeAccountAccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+                owner: self.owner.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<InitializeAccount2AccountsProto> for InitializeAccount2Accounts {
+        fn into_proto_data(self) -> InitializeAccount2AccountsProto {
+            InitializeAccount2AccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<InitializeAccountData2Proto> for InitializeAccountData2 {
+        fn into_proto_data(self) -> InitializeAccountData2Proto {
+            InitializeAccountData2Proto {
+                owner: self.owner.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<InitializeMultisigAccountsProto> for InitializeMultisigAccounts {
+        fn into_proto_data(self) -> InitializeMultisigAccountsProto {
+            InitializeMultisigAccountsProto {
+                multisig: self.multisig.to_string(),
+                signers: self.signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<InitializeMultisigDataProto> for InitializeMultisigData {
+        fn into_proto_data(self) -> InitializeMultisigDataProto {
+            InitializeMultisigDataProto { m: self.m.into() }
+        }
+    }
+
+    impl IntoProtoData<ApproveAccountsProto> for ApproveAccounts {
+        fn into_proto_data(self) -> ApproveAccountsProto {
+            ApproveAccountsProto {
+                source: self.source.to_string(),
+                delegate: self.delegate.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<ApproveDataProto> for ApproveData {
+        fn into_proto_data(self) -> ApproveDataProto {
+            ApproveDataProto {
+                amount: self.amount,
+            }
+        }
+    }
+
+    impl IntoProtoData<RevokeAccountsProto> for RevokeAccounts {
+        fn into_proto_data(self) -> RevokeAccountsProto {
+            RevokeAccountsProto {
+                source: self.source.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<SetAuthorityAccountsProto> for SetAuthorityAccounts {
+        fn into_proto_data(self) -> SetAuthorityAccountsProto {
+            SetAuthorityAccountsProto {
+                current_authority: self.current_authority.to_string(),
+                account: self.account.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<SetAuthorityDataProto> for SetAuthorityData {
+        fn into_proto_data(self) -> SetAuthorityDataProto {
+            SetAuthorityDataProto {
+                authority_type: self.authority_type as i32,
+                new_authority: from_coption_to_option(self.new_authority.map(|na| na.to_string())),
+            }
+        }
+    }
+
+    impl IntoProtoData<MintToAccountsProto> for MintToAccounts {
+        fn into_proto_data(self) -> MintToAccountsProto {
+            MintToAccountsProto {
+                mint: self.mint.to_string(),
+                account: self.account.to_string(),
+                mint_authority: self.mint_authority.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<MintToDataProto> for MintToData {
+        fn into_proto_data(self) -> MintToDataProto {
+            MintToDataProto {
+                amount: self.amount,
+            }
+        }
+    }
+
+    impl IntoProtoData<BurnAccountsProto> for BurnAccounts {
+        fn into_proto_data(self) -> BurnAccountsProto {
+            BurnAccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<BurnDataProto> for BurnData {
+        fn into_proto_data(self) -> BurnDataProto {
+            BurnDataProto {
+                amount: self.amount,
+            }
+        }
+    }
+
+    impl IntoProtoData<CloseAccountAccountsProto> for CloseAccountAccounts {
+        fn into_proto_data(self) -> CloseAccountAccountsProto {
+            CloseAccountAccountsProto {
+                account: self.account.to_string(),
+                destination: self.destination.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<FreezeAccountAccountsProto> for FreezeAccountAccounts {
+        fn into_proto_data(self) -> FreezeAccountAccountsProto {
+            FreezeAccountAccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+                mint_freeze_authority: self.mint_freeze_authority.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<ThawAccountAccountsProto> for ThawAccountAccounts {
+        fn into_proto_data(self) -> ThawAccountAccountsProto {
+            ThawAccountAccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+                mint_freeze_authority: self.mint_freeze_authority.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<TransferCheckedAccountsProto> for TransferCheckedAccounts {
+        fn into_proto_data(self) -> TransferCheckedAccountsProto {
+            TransferCheckedAccountsProto {
+                source: self.source.to_string(),
+                mint: self.mint.to_string(),
+                destination: self.destination.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<TransferCheckedDataProto> for TransferCheckedData {
+        fn into_proto_data(self) -> TransferCheckedDataProto {
+            TransferCheckedDataProto {
+                amount: self.amount,
+                decimals: self.decimals as u64,
+            }
+        }
+    }
+
+    impl IntoProtoData<ApproveCheckedAccountsProto> for ApproveCheckedAccounts {
+        fn into_proto_data(self) -> ApproveCheckedAccountsProto {
+            ApproveCheckedAccountsProto {
+                source: self.source.to_string(),
+                mint: self.mint.to_string(),
+                delegate: self.delegate.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<ApproveCheckedDataProto> for ApproveCheckedData {
+        fn into_proto_data(self) -> ApproveCheckedDataProto {
+            ApproveCheckedDataProto {
+                amount: self.amount,
+                decimals: self.decimals as u64,
+            }
+        }
+    }
+
+    impl IntoProtoData<MintToCheckedAccountsProto> for MintToCheckedAccounts {
+        fn into_proto_data(self) -> MintToCheckedAccountsProto {
+            MintToCheckedAccountsProto {
+                mint: self.mint.to_string(),
+                account: self.account.to_string(),
+                mint_authority: self.mint_authority.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<MintToCheckedDataProto> for MintToCheckedData {
+        fn into_proto_data(self) -> MintToCheckedDataProto {
+            MintToCheckedDataProto {
+                amount: self.amount,
+                decimals: self.decimals as u64,
+            }
+        }
+    }
+
+    impl IntoProtoData<BurnCheckedAccountsProto> for BurnCheckedAccounts {
+        fn into_proto_data(self) -> BurnCheckedAccountsProto {
+            BurnCheckedAccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_def_vec(),
+            }
+        }
+    }
+
+    impl IntoProtoData<BurnCheckedDataProto> for BurnCheckedData {
+        fn into_proto_data(self) -> BurnCheckedDataProto {
+            BurnCheckedDataProto {
+                amount: self.amount,
+                decimals: self.decimals as u64,
+            }
+        }
+    }
+
+    impl IntoProtoData<SyncNativeAccountsProto> for SyncNativeAccounts {
+        fn into_proto_data(self) -> SyncNativeAccountsProto {
+            SyncNativeAccountsProto {
+                account: self.account.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<GetAccountDataSizeAccountsProto> for GetAccountDataSizeAccounts {
+        fn into_proto_data(self) -> GetAccountDataSizeAccountsProto {
+            GetAccountDataSizeAccountsProto {
+                mint: self.mint.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<InitializeImmutableOwnerAccountsProto> for InitializeImmutableOwnerAccounts {
+        fn into_proto_data(self) -> InitializeImmutableOwnerAccountsProto {
+            InitializeImmutableOwnerAccountsProto {
+                account: self.account.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<AmountToUiAmountAccountsProto> for AmountToUiAmountAccounts {
+        fn into_proto_data(self) -> AmountToUiAmountAccountsProto {
+            AmountToUiAmountAccountsProto {
+                mint: self.mint.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<AmountToUiAmountDataProto> for AmountToUiAmountData {
+        fn into_proto_data(self) -> AmountToUiAmountDataProto {
+            AmountToUiAmountDataProto {
+                amount: self.amount,
+            }
+        }
+    }
+
+    impl IntoProtoData<UiAmountToAmountAccountsProto> for UiAmountToAmountAccounts {
+        fn into_proto_data(self) -> UiAmountToAmountAccountsProto {
+            UiAmountToAmountAccountsProto {
+                mint: self.mint.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<UiAmountToAmountDataProto> for UiAmountToAmountData {
+        fn into_proto_data(self) -> UiAmountToAmountDataProto {
+            UiAmountToAmountDataProto {
+                ui_amount: self.ui_amount,
+            }
+        }
+    }
+    impl IntoProtoData<TokenProgramIxProto> for TokenProgramIx {
+        fn into_proto_data(self) -> TokenProgramIxProto {
+            match self {
+                TokenProgramIx::Transfer(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::Transfer(TransferIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+                TokenProgramIx::InitializeMint(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::InitializeMint(InitializeMintIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::InitializeAccount(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::InitializeAccount(InitializeAccountIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: None,
+                    })),
+                },
+
+                TokenProgramIx::InitializeAccount2(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::InitializeAccount2(InitializeAccount2Ix {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::InitializeAccount3(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::InitializeAccount3(InitializeAccount3Ix {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::InitializeMultisig(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::InitializeMultisig(InitializeMultisigIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::Approve(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::Approve(ApproveIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::Revoke(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::Revoke(RevokeIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                    })),
+                },
+
+                TokenProgramIx::SetAuthority(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::SetAuthority(SetAuthorityIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::MintTo(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::MintTo(MintToIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::Burn(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::Burn(BurnIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::CloseAccount(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::CloseAccount(CloseAccountIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                    })),
+                },
+
+                TokenProgramIx::FreezeAccount(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::FreezeAccount(FreezeAccountIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                    })),
+                },
+
+                TokenProgramIx::ThawAccount(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::ThawAccount(ThawAccountIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                    })),
+                },
+
+                TokenProgramIx::TransferChecked(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::TransferChecked(TransferCheckedIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::ApproveChecked(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::ApproveChecked(ApproveCheckedIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::MintToChecked(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::MintToChecked(MintToCheckedIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::BurnChecked(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::BurnChecked(BurnCheckedIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::SyncNative(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::SyncNative(SyncNativeIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                    })),
+                },
+
+                TokenProgramIx::GetAccountDataSize(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::GetAccountDataSize(GetAccountDataSizeIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                    })),
+                },
+
+                TokenProgramIx::InitializeImmutableOwner(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::InitializeImmutableOwner(
+                        InitializeImmutableOwnerIx {
+                            accounts: Some(ri.accounts.into_proto_data()),
+                        },
+                    )),
+                },
+
+                TokenProgramIx::AmountToUiAmount(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::AmountToUiAmount(AmountToUiAmountIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+
+                TokenProgramIx::UiAmountToAmount(ri) => TokenProgramIxProto {
+                    ix_oneof: Some(IxOneof::UiAmountToAmount(UiAmountToAmountIx {
+                        accounts: Some(ri.accounts.into_proto_data()),
+                        data: ri.data.to_proto_option(),
+                    })),
+                },
+            }
+        }
+    }
+}

@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package vixen.parser;
+
+
+// TransferFee Extension
+
+message TransferCheckedWithFeeAccountsProto {
+  string source = 1;
+  string mint = 2;
+  string destination = 3;
+  string owner = 4;
+  repeated string multisig_signers = 5;
+}
+
+message TransferCheckedWithFeeDataProto {
+  uint64 amount = 1;
+  uint64 fee_amount = 2;
+  uint64 decimals = 3;
+}
+
+message InitializeTransferFeeConfigAccountsProto {
+  string mint = 1;
+}
+
+message InitializeTransferFeeConfigDataProto {
+  string transfer_fee_config_authority = 1;
+  string withdraw_withheld_authority = 2;
+  uint64 transfer_fee_basis_points = 3;
+  uint64 maximum_fee = 4;
+}
+
+message WithdrawWithheldTokensFromMintAccountsProto {
+  string mint = 1;
+  string fee_recipient = 2;
+  string withdraw_withheld_authority = 3;
+  repeated string multisig_signers = 4;
+}
+
+message WithdrawWithheldTokensFromAccountsAccountsProto {
+  string mint = 1;
+  string fee_recipient = 2;
+  string withdraw_withheld_authority = 3;
+  repeated string source_accounts = 4;
+  repeated string multisig_signers = 5;
+}
+
+message WithdrawWithheldTokensFromAccountsDataProto {
+  uint64 num_token_accounts = 1;
+}
+
+message HarvestWithheldTokensToMintAccountsProto {
+  string mint = 1;
+  repeated string source_accounts = 2;
+}
+
+message SetTransferFeeAccountsProto {
+  string mint = 1;
+  string mint_fee_acc_owner = 2;
+  repeated string multisig_signers = 3;
+}
+
+message SetTransferFeeDataProto {
+  uint64 transfer_fee_basis_points = 1;
+  uint64 maximum_fee = 2;
+}
+
+// TokenMetadata Extension
+
+message InitializeAccountsProto {
+  string metadata = 1;
+  string update_authority = 2;
+  string mint = 3;
+  string mint_authority = 4;
+}
+
+message UpdateFieldAccountsProto {
+  string metadata = 1;
+  string update_authority = 2;
+}
+
+message RmoveKeyAccountsProto {
+  string metadata = 1;
+  string update_authority = 2;
+}
+
+message UpdateAuthorityAccountsProto {
+  string metadata = 1;
+  string current_update_authority = 2;
+}
+
+message EmitAccountsProto {
+  string metadata = 1;
+}
+
+// TokenGroup Extension
+
+message InitializeGroupAccountsProto {
+  string group = 1;
+  string mint = 2;
+  string mint_authority = 3;
+}
+
+message UpdateGroupMaxSizeAccountsProto {
+  string group = 1;
+  string update_authority = 2;
+}
+
+message UpdateGroupAuthorityAccountsProto {
+  string group = 1;
+  string current_authority = 2;
+}
+
+message InitializeMemberAccountsProto {
+  string member = 1;
+  string member_mint = 2;
+  string member_mint_authority = 3;
+  string group = 4;
+  string group_update_authority = 5;
+}

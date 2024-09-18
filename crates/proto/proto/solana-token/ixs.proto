@@ -2,6 +2,13 @@ syntax = "proto3";
 
 package vixen.parser;
 
+enum AuthorityType {
+  MintTokens = 0;
+  FreezeAccount = 1;
+  AccountOwner = 2;
+  CloseAccount = 3;
+}
+
 message TransferAccountsProto {
   string source = 1;
   string destination = 2;
@@ -24,9 +31,9 @@ message InitializeMintAccountsProto {
 }
 
 message InitializeMintDataProto {
-  uint32 decimals = 1;
-  string mint_authority = 2;
-  string freeze_authority = 3;
+  uint64 decimals = 1;
+  optional string mint_authority = 2;
+  optional string freeze_authority = 3;
 }
 
 message InitializeMintIx {
@@ -63,13 +70,18 @@ message InitializeAccount2Ix {
   InitializeAccountData2Proto data = 2;
 }
 
+message InitializeAccount3Ix {
+  InitializeAccount2AccountsProto accounts = 1;
+  InitializeAccountData2Proto data = 2;
+}
+
 message InitializeMultisigAccountsProto {
   string multisig = 1;
   repeated string signers = 2;
 }
 
 message InitializeMultisigDataProto {
-  uint32 m = 1;
+  uint64 m = 1;
 }
 
 message InitializeMultisigIx {
@@ -102,6 +114,7 @@ message RevokeAccountsProto {
 
 message RevokeIx {
   RevokeAccountsProto accounts = 1;
+
 }
 
 message SetAuthorityAccountsProto {
@@ -111,8 +124,8 @@ message SetAuthorityAccountsProto {
 }
 
 message SetAuthorityDataProto {
-  string authority_type = 1;
-  string new_authority = 2;
+  AuthorityType authority_type = 1;
+  optional string new_authority = 2;
 }
 
 message SetAuthorityIx {
@@ -195,7 +208,7 @@ message TransferCheckedAccountsProto {
 
 message TransferCheckedDataProto {
   uint64 amount = 1;
-  uint32 decimals = 2;
+  uint64 decimals = 2;
 }
 
 message TransferCheckedIx {
@@ -213,7 +226,7 @@ message ApproveCheckedAccountsProto {
 
 message ApproveCheckedDataProto {
   uint64 amount = 1;
-  uint32 decimals = 2;
+  uint64 decimals = 2;
 }
 
 message ApproveCheckedIx {
@@ -230,7 +243,7 @@ message MintToCheckedAccountsProto {
 
 message MintToCheckedDataProto {
   uint64 amount = 1;
-  uint32 decimals = 2;
+  uint64 decimals = 2;
 }
 
 message MintToCheckedIx {
@@ -247,7 +260,7 @@ message BurnCheckedAccountsProto {
 
 message BurnCheckedDataProto {
   uint64 amount = 1;
-  uint32 decimals = 2;
+  uint64 decimals = 2;
 }
 
 message BurnCheckedIx {
@@ -305,4 +318,5 @@ message UiAmountToAmountIx {
   UiAmountToAmountAccountsProto accounts = 1;
   UiAmountToAmountDataProto data = 2;
 }
+
 
