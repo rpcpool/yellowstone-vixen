@@ -242,11 +242,11 @@ pub mod token_extensions_proto_parser {
                 mint: self.mint.to_string(),
                 owner: self.owner.to_string(),
                 amount: self.amount,
-                delegate: self.delegate.map(|d| d.to_string()).into(),
+                delegate: self.delegate.to_opt_string(),
                 state: self.state as i32,
                 is_native: self.is_native.into(),
                 delegated_amount: self.delegated_amount,
-                close_authority: self.close_authority.map(|ca| ca.to_string()).into(),
+                close_authority: self.close_authority.to_opt_string(),
             }
         }
     }
@@ -254,12 +254,12 @@ pub mod token_extensions_proto_parser {
     impl IntoProto<MintProto> for Mint {
         fn into_proto(self) -> MintProto {
             MintProto {
-                mint_authority: self.mint_authority.map(|ma| ma.to_string()).into(),
+                mint_authority: self.mint_authority.to_opt_string(),
 
                 supply: self.supply,
                 decimals: self.decimals.into(),
                 is_initialized: self.is_initialized,
-                freeze_authority: self.freeze_authority.map(|fa| fa.to_string()).into(),
+                freeze_authority: self.freeze_authority.to_opt_string(),
             }
         }
     }

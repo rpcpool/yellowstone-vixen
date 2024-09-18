@@ -257,13 +257,15 @@ pub enum TokenProgramIx {
 
 #[cfg(feature = "proto")]
 pub mod proto_parser {
-    use crate::helpers::{from_coption_to_option, IntoProtoData};
+    use crate::helpers::IntoProtoData;
     use token_program_ix_proto::IxOneof;
     use yellowstone_vixen_proto::parser::*;
 
-    use super::*;
+    use crate::helpers::{
+        FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption,
+    };
 
-    use crate::helpers::{FromOptVecToDefVec, FromOptionToProtoOption};
+    use super::*;
 
     impl IntoProtoData<TransferAccountsProto> for TransferAccounts {
         fn into_proto_data(self) -> TransferAccountsProto {
@@ -296,12 +298,8 @@ pub mod proto_parser {
         fn into_proto_data(self) -> InitializeMintDataProto {
             InitializeMintDataProto {
                 decimals: self.decimals as u64,
-                mint_authority: from_coption_to_option(
-                    self.mint_authority.map(|ma| ma.to_string()),
-                ),
-                freeze_authority: from_coption_to_option(
-                    self.freeze_authority.map(|fa| fa.to_string()),
-                ),
+                mint_authority: self.mint_authority.to_opt_string(),
+                freeze_authority: self.freeze_authority.to_opt_string(),
             }
         }
     }
@@ -391,7 +389,7 @@ pub mod proto_parser {
         fn into_proto_data(self) -> SetAuthorityDataProto {
             SetAuthorityDataProto {
                 authority_type: self.authority_type as i32,
-                new_authority: from_coption_to_option(self.new_authority.map(|na| na.to_string())),
+                new_authority: self.new_authority.to_opt_string(),
             }
         }
     }
