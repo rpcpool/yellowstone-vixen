@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{collections::HashMap, fmt::Debug};
 
 use tokio::sync::broadcast;
 use vixen_core::{
@@ -11,7 +11,7 @@ use yellowstone_vixen_proto::{
 
 use super::{
     config::StreamConfig,
-    grpc::{Channels, GrpcHandler},
+    grpc::{Channels, GrpcHandler, Receiver},
     Server,
 };
 use crate::{
@@ -25,8 +25,8 @@ use crate::{
 #[derive(Debug, thiserror::Error)]
 pub enum BuilderError {
     /// Two program parsers were registered with the same program ID.
-    #[error("Duplicate program ID {0} registered")]
-    DuplicateId(Pubkey),
+    #[error("Parser with duplicate ID {1:?} and duplicate program ID {0} registered")]
+    DuplicateId(Pubkey, String),
     /// An error occurred while building the underlying Vixen runtime.
     #[error("Error building Vixen runtime")]
     Runtime(#[from] crate::builder::BuilderError),
@@ -34,7 +34,7 @@ pub enum BuilderError {
 
 /// Marker type for the [`StreamBuilder`] type.
 #[derive(Debug, Default)]
-pub struct StreamKind(Channels);
+pub struct StreamKind(Channels<HashMap<String, Receiver>>);
 /// A builder for the [`Server`] type.
 pub type StreamBuilder<M = NullMetrics> = Builder<StreamKind, M>;
 
@@ -74,9 +74,19 @@ impl<M: MetricsFactory> StreamBuilder<M> {
 
             match s.extra.0.entry(parser.program_id()) {
                 Entry::Vacant(v) => {
-                    v.insert(rx);
+                    v.insert([(parser.id().into_owned(), rx)].into_iter().collect());
                 },
-                Entry::Occupied(_) => return Err(BuilderError::DuplicateId(parser.program_id())),
+                Entry::Occupied(o) => match o.into_mut().entry(parser.id().into_owned()) {
+                    Entry::Vacant(v) => {
+                        v.insert(rx);
+                    },
+                    Entry::Occupied(_) => {
+                        return Err(BuilderError::DuplicateId(
+                            parser.program_id(),
+                            parser.id().into_owned(),
+                        ));
+                    },
+                },
             }
             f(s).push(wrap_parser(parser, tx));
             Ok(())
@@ -144,6 +154,11 @@ impl<M: MetricsFactory> StreamBuilder<M> {
             grpc: grpc_cfg,
             runtime: runtime_cfg,
         } = config;
+
+        let channels = channels
+            .into_iter()
+            .map(|(k, v)| (k, v.into_values().collect()))
+            .collect();
 
         let runtime = RuntimeBuilder {
             err: Ok(()),
