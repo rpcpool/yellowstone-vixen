@@ -1,7 +1,12 @@
+//! Configuration types for the Vixen runtime.
+
 #[cfg(feature = "prometheus")]
 pub use prometheus_impl::*;
 
+/// A helper trait for types that may or may not have a default value,
+/// determined at runtime.
 pub trait MaybeDefault: Sized {
+    /// Get the default value for this type, if it exists.
     fn default_opt() -> Option<Self>;
 }
 
@@ -10,39 +15,51 @@ impl<T: Default> MaybeDefault for T {
     fn default_opt() -> Option<Self> { Some(Self::default()) }
 }
 
+/// Root configuration for [the Vixen runtime](crate::Runtime).
 #[derive(Debug, clap::Args, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct VixenConfig<M: clap::Args> {
+    /// Configuration for connecting to the Yellowstone server.
     #[command(flatten)]
     pub yellowstone: YellowstoneConfig,
 
+    /// Configuration for scheduling jobs.
     #[command(flatten)]
     #[serde(default)]
     pub buffer: BufferConfig,
 
     // TODO: this doesn't show up in clap usage correctly, not sure why
+    /// Configuration for the requested metrics backend.
     #[command(flatten)]
     #[serde(default = "OptConfig::default")]
     pub metrics: OptConfig<M>,
 }
 
+/// Yellowstone connection configuration.
 #[derive(Debug, clap::Args, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct YellowstoneConfig {
+    /// The endpoint of the Yellowstone server.
     #[arg(long, env)]
     pub endpoint: String,
+    /// The token to use for authentication.
     #[arg(long, env)]
     pub x_token: Option<String>,
+    /// The timeout for the connection.
     #[arg(long, env)]
     pub timeout: u64,
 }
 
+/// Job scheduler configuration.
 #[derive(Default, Debug, Clone, Copy, clap::Args, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct BufferConfig {
+    /// The maximum number of concurrent jobs to run.  If unset, defaults to
+    /// the number of CPUs.
     pub jobs: Option<usize>,
 }
 
+/// Helper type for blank configuration sections.
 #[derive(
     Default,
     Debug,
@@ -63,6 +80,7 @@ impl From<Option<NullConfig>> for NullConfig {
     fn from(value: Option<NullConfig>) -> Self { value.unwrap_or_default() }
 }
 
+/// Helper type for optional configuration sections.
 #[derive(Debug, serde::Deserialize)]
 #[repr(transparent)]
 pub struct OptConfig<T>(Option<T>);
@@ -73,6 +91,7 @@ impl<T> Default for OptConfig<T> {
 }
 
 impl<T> OptConfig<T> {
+    /// Get the underlying `Option`.
     #[inline]
     pub fn opt(self) -> Option<T> { self.into() }
 }
@@ -156,13 +175,19 @@ mod prometheus_impl {
     use super::MaybeDefault;
     use crate::PrivateString;
 
+    /// Configuration for the Prometheus metrics backend.
     #[derive(Debug, Clone /* TODO: used for hack */, serde::Deserialize)]
     #[serde(rename_all = "kebab-case")]
     pub struct PrometheusConfig {
+        /// Prometheus gateway endpoint.
         pub endpoint: String,
+        /// Prometheus job name.
         pub job: String,
+        /// Prometheus username.
         pub username: String,
+        /// Prometheus password.
         pub password: PrivateString,
+        /// Export interval for Prometheus metrics.
         pub export_interval: u64,
     }
 

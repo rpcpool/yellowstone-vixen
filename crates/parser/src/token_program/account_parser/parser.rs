@@ -71,7 +71,7 @@ mod proto_parser {
         TokenProgramStateProto,
     };
 
-    use super::*;
+    use super::{Account, IntoProtoData, Mint, Multisig, TokenProgramAccParser, TokenProgramState};
 
     impl IntoProtoData<TokenAccountProto> for Account {
         fn into_proto_data(self) -> TokenAccountProto {
@@ -93,7 +93,7 @@ mod proto_parser {
             MintProto {
                 mint_authority: self.mint_authority.map(|ma| ma.to_string()).into(),
                 supply: self.supply,
-                decimals: self.decimals as u64,
+                decimals: self.decimals.into(),
                 is_initialized: self.is_initialized,
                 freeze_authority: self.freeze_authority.map(|fa| fa.to_string()).into(),
             }

@@ -39,7 +39,7 @@ fn get_extension_data_bytes<'data, T: BaseState + Pack>(
         ExtensionType::TokenGroup => state_with_ex.get_extension_bytes::<TokenGroup>()?,
         ExtensionType::GroupMemberPointer => state_with_ex.get_extension_bytes::<extension::group_member_pointer::GroupMemberPointer>()?,
         ExtensionType::TokenGroupMember => state_with_ex.get_extension_bytes::<TokenGroupMember>()?,
-        _ => &[],
+        ExtensionType::Uninitialized => &[],
     };
 
     Ok(extension_data)
@@ -66,7 +66,7 @@ pub fn parse_extension_data<E: Extension + Pod>(data_bytes: &[u8]) -> Result<E, 
 
 pub fn parse_token_metadata_extension(data_bytes: &[u8]) -> Result<TokenMetadata, ProgramError> {
     let token_metadata = TokenMetadata::unpack_from_slice(data_bytes)?;
-    Ok(token_metadata.to_owned())
+    Ok(token_metadata.clone())
 }
 
 #[derive(Debug, PartialEq)]
@@ -175,7 +175,7 @@ impl TryFrom<(ExtensionType, &[u8])> for ExtensionData {
             ExtensionType::TokenGroupMember => Ok(ExtensionData::TokenGroupMember(
                 parse_extension_data(data_bytes)?,
             )),
-            _ => Err(ProgramError::InvalidArgument),
+            ExtensionType::Uninitialized => Err(ProgramError::InvalidArgument),
         }
     }
 }
@@ -188,9 +188,12 @@ pub mod token_extensions_proto_parser {
     };
     use solana_zk_token_sdk::zk_token_elgamal::pod::ElGamalPubkey;
     use spl_token_2022::state::Multisig;
+    #[allow(clippy::wildcard_imports)]
     use yellowstone_vixen_proto::parser::{extension_data_proto::Data, *};
 
-    use super::*;
+    use super::{
+        extension, Account, ExtensionData, Mint, TokenGroup, TokenGroupMember, TokenMetadata,
+    };
     use crate::helpers::{ElGamalPubkeyBytes, IntoProtoData};
     macro_rules! impl_into_proto_data {
         ($($variant:ident),*) => {
@@ -255,7 +258,7 @@ pub mod token_extensions_proto_parser {
                 mint_authority: self.mint_authority.map(|ma| ma.to_string()).into(),
 
                 supply: self.supply,
-                decimals: self.decimals as u64,
+                decimals: self.decimals.into(),
                 is_initialized: self.is_initialized,
                 freeze_authority: self.freeze_authority.map(|fa| fa.to_string()).into(),
             }
@@ -274,7 +277,9 @@ pub mod token_extensions_proto_parser {
     }
 
     impl IntoProtoData<ImmutableOwnerProto> for ImmutableOwner {
-        fn into_proto_data(self) -> ImmutableOwnerProto { ImmutableOwnerProto {} }
+        fn into_proto_data(self) -> ImmutableOwnerProto {
+            ImmutableOwnerProto {}
+        }
     }
 
     impl IntoProtoData<TransferFeeAmountProto> for extension::transfer_fee::TransferFeeAmount {
@@ -323,7 +328,9 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<NonTransferableAccountProto>
         for extension::non_transferable::NonTransferableAccount
     {
-        fn into_proto_data(self) -> NonTransferableAccountProto { NonTransferableAccountProto {} }
+        fn into_proto_data(self) -> NonTransferableAccountProto {
+            NonTransferableAccountProto {}
+        }
     }
 
     impl IntoProtoData<TransferHookAccountProto> for extension::transfer_hook::TransferHookAccount {
@@ -415,7 +422,9 @@ pub mod token_extensions_proto_parser {
     }
 
     impl IntoProtoData<NonTransferableProto> for extension::non_transferable::NonTransferable {
-        fn into_proto_data(self) -> NonTransferableProto { NonTransferableProto {} }
+        fn into_proto_data(self) -> NonTransferableProto {
+            NonTransferableProto {}
+        }
     }
 
     impl IntoProtoData<InterestBearingConfigProto>

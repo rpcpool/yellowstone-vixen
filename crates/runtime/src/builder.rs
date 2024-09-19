@@ -1,3 +1,5 @@
+//! Builder types for the Vixen runtime and stream server.
+
 use tracing::error;
 use vixen_core::{instruction::InstructionUpdate, AccountUpdate, TransactionUpdate};
 
@@ -9,24 +11,34 @@ use crate::{
     util, Runtime,
 };
 
+/// Helper trait for defining the intended use for a builder.
 pub trait BuilderKind: Default {
+    /// The type of error returned by the builder.
     type Error: std::error::Error;
 }
 
+/// An error thrown by the Vixen runtime builder.
 #[derive(Debug, thiserror::Error)]
 pub enum BuilderError {
+    /// Two account pipelines were registered with the same parser ID.
     #[error("ID collision detected among account pipelines")]
     AccountPipelineCollision,
+    /// Two transaction pipelines were registered with the same parser ID.
     #[error("ID collision detected among transaction pipelines")]
     TransactionPipelineCollision,
+    /// A required field was missing from the builder.
     #[error("Missing field {0:?}")]
     MissingField(&'static str),
+    /// A required field or section was missing from the provided configuration.
     #[error("Missing config section {0:?}")]
     MissingConfig(&'static str),
+    /// An error occurred while instantiating the metrics backend.
     #[error("Error instantiating metrics backend")]
     Metrics(#[source] Box<dyn std::error::Error>),
 }
 
+/// A builder used by both the [`Runtime`] and
+/// [`stream::Server`](crate::stream::Server) types.
 #[derive(Debug)]
 #[must_use = "Consider calling .build() on this builder"]
 pub struct Builder<K: BuilderKind, M> {
@@ -81,6 +93,8 @@ impl<K: BuilderKind, M> Builder<K, M> {
         self
     }
 
+    /// Replace the metrics backend currently configured with a new one,
+    /// updating the type of the builder in the process.
     pub fn metrics<N>(self, metrics: N) -> Builder<K, N> {
         let Self {
             err,
@@ -102,15 +116,18 @@ impl<K: BuilderKind, M> Builder<K, M> {
     }
 }
 
+/// Marker type used for the [`RuntimeBuilder`] type.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct RuntimeKind;
-pub type RuntimeBuilder<M> = Builder<RuntimeKind, M>;
+/// A builder for the [`Runtime`] type.
+pub type RuntimeBuilder<M = NullMetrics> = Builder<RuntimeKind, M>;
 
 impl BuilderKind for RuntimeKind {
     type Error = BuilderError;
 }
 
 impl<M: MetricsFactory> RuntimeBuilder<M> {
+    /// Add a new account pipeline to the builder.
     pub fn account<A: DynPipeline<AccountUpdate> + Send + Sync + 'static>(
         self,
         account: A,
@@ -118,6 +135,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.account.push(Box::new(account)))
     }
 
+    /// Add a new transaction pipeline to the builder.
     pub fn transaction<T: DynPipeline<TransactionUpdate> + Send + Sync + 'static>(
         self,
         transaction: T,
@@ -125,6 +143,10 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.transaction.push(Box::new(transaction)))
     }
 
+    /// Add a new instruction pipeline to the builder.
+    ///
+    /// **NOTE:** All registered instruction pipelines will be bundled into a
+    /// single [`InstructionPipeline`] instance.
     pub fn instruction<I: DynPipeline<InstructionUpdate> + Send + Sync + 'static>(
         self,
         instruction: I,
@@ -132,6 +154,12 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.instruction.push(Box::new(instruction)))
     }
 
+    /// Attempt to build a new [`Runtime`] instance from the current builder
+    /// state and the provided configuration.
+    ///
+    /// # Errors
+    /// This function returns an error if the builder or configuration are
+    /// invalid.
     pub fn try_build(self, config: VixenConfig<M::Config>) -> Result<Runtime<M>, BuilderError> {
         let Self {
             err,
@@ -187,6 +215,9 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         })
     }
 
+    /// Build a new [`Runtime`] instance from the current builder state and the
+    /// provided configuration, terminating the current process if an error
+    /// occurs.
     #[inline]
     pub fn build(self, config: VixenConfig<M::Config>) -> Runtime<M> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen runtime")

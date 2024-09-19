@@ -103,6 +103,7 @@ pub enum TransferFeeIx {
 }
 
 impl ExtensionIxParser for TransferFeeIx {
+    #[allow(clippy::too_many_lines)]
     fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
         let accounts_len = ix.accounts.len();
         let ix_type = TransferFeeInstruction::unpack(&ix.data).map_err(|e| e.to_string())?;

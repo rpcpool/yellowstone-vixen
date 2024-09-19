@@ -3,6 +3,7 @@ use yellowstone_vixen_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
 };
 
+#[allow(clippy::wildcard_imports)]
 use super::ixs::*;
 use crate::helpers::{
     check_min_accounts_req, check_pubkeys_match, get_multisig_signers, to_supported_coption_pubkey,
@@ -37,9 +38,10 @@ impl Parser for TokenProgramIxParser {
 }
 
 impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
+    #[allow(clippy::too_many_lines)]
     fn parse_ix(ix: &InstructionUpdate) -> Result<TokenProgramIx, String> {
         let ix_type = TokenInstruction::unpack(&ix.data)
-            .map_err(|e| format!("Err while unpacking ix data : {}", e))?;
+            .map_err(|e| format!("Err while unpacking ix data : {e}"))?;
         let accounts_len = ix.accounts.len();
         match ix_type {
             TokenInstruction::Transfer { amount } => {
@@ -390,6 +392,6 @@ mod tests {
         assert!(ix.data.is_some());
         let data = ix.data.as_ref().unwrap();
         assert_eq!(data.decimals, 10);
-        assert_eq!(data.amount, 10.mul(10u64.pow(data.decimals as u32)));
+        assert_eq!(data.amount, 10.mul(10u64.pow(data.decimals.into())));
     }
 }

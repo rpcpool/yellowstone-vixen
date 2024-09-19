@@ -8,8 +8,9 @@
 )]
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
-// TODO: document everything
-#![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
+//! Vixen provides a simple API for requesting, parsing, and consuming data
+//! from Yellowstone.
 
 use builder::RuntimeBuilder;
 use config::{BufferConfig, YellowstoneConfig};
@@ -42,22 +43,30 @@ mod yellowstone;
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use util::*;
 
+/// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// A system I/O error.
     #[error("I/O error")]
     Io(#[from] std::io::Error),
+    /// An error returned by a Yellowstone server.
     #[error("Yellowstone gRPC error")]
     Yellowstone(#[from] yellowstone::Error),
+    /// An error occurring when the Yellowstone client stops early.
     #[error("Yellowstone client crashed")]
     ClientHangup,
+    /// An error occurring when the Yellowstone server closes the connection.
     #[error("Yellowstone stream hung up unexpectedly")]
     ServerHangup,
+    /// A gRPC error returned by the Yellowstone server.
     #[error("Yellowstone stream returned an error")]
     YellowstoneStatus(#[from] yellowstone_grpc_proto::tonic::Status),
+    /// An error caused by the metrics exporter.
     #[error("Error exporting metrics")]
     MetricsExporter(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
 }
 
+/// The main runtime for Vixen.
 #[derive(Debug)]
 pub struct Runtime<M: MetricsFactory> {
     yellowstone_cfg: YellowstoneConfig,
@@ -68,26 +77,50 @@ pub struct Runtime<M: MetricsFactory> {
 }
 
 impl Runtime<NullMetrics> {
-    pub fn builder() -> RuntimeBuilder<NullMetrics> { RuntimeBuilder::default() }
+    /// Create a new runtime builder.
+    pub fn builder() -> RuntimeBuilder { RuntimeBuilder::default() }
 }
 
 impl<M: MetricsFactory> Runtime<M> {
+    /// Create a new Tokio runtime and run the Vixen runtime within it,
+    /// terminating the current process if the runtime crashes.
     #[inline]
     pub fn run(self) { util::handle_fatal(self.try_run()); }
 
+    /// Create a new Tokio runtime and run the Vixen runtime within it.
+    ///
+    /// # Errors
+    /// This function returns an error if the runtime crashes.
     #[inline]
     pub fn try_run(self) -> Result<(), Error> {
         util::tokio_runtime()?.block_on(self.try_run_async())
     }
 
+    /// Create a new [`LocalSet`] and run the Vixen runtime within it,
+    /// terminating the current process if the runtime crashes.
+    ///
+    /// **NOTE:** This function **must** be called from within a Tokio runtime.
     #[inline]
     pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
 
+    /// Create a new [`LocalSet`] and run the Vixen runtime within it.
+    ///
+    /// **NOTE:** This function **must** be called from within a Tokio runtime.
+    ///
+    /// # Errors
+    /// This function returns an error if the runtime crashes.
     #[inline]
     pub async fn try_run_async(self) -> Result<(), Error> {
         LocalSet::new().run_until(self.try_run_local()).await
     }
 
+    /// Run the Vixen runtime.
+    ///
+    /// **NOTE:** This function **must** be called from within a Tokio
+    /// [`LocalSet`].
+    ///
+    /// # Errors
+    /// This function returns an error if the runtime crashes.
     #[tracing::instrument("Runtime::run", skip(self))]
     pub async fn try_run_local(self) -> Result<(), Error> {
         enum StopType<S, X> {

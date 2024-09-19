@@ -17,21 +17,26 @@ use super::{
 use crate::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
     handler::{BoxPipeline, Pipeline},
-    metrics::MetricsFactory,
+    metrics::{MetricsFactory, NullMetrics},
     util,
 };
 
+/// An error thrown by the Vixen stream server builder.
 #[derive(Debug, thiserror::Error)]
 pub enum BuilderError {
+    /// Two program parsers were registered with the same program ID.
     #[error("Duplicate program ID {0} registered")]
     DuplicateId(Pubkey),
+    /// An error occurred while building the underlying Vixen runtime.
     #[error("Error building Vixen runtime")]
     Runtime(#[from] crate::builder::BuilderError),
 }
 
+/// Marker type for the [`StreamBuilder`] type.
 #[derive(Debug, Default)]
 pub struct StreamKind(Channels);
-pub type StreamBuilder<M> = Builder<StreamKind, M>;
+/// A builder for the [`Server`] type.
+pub type StreamBuilder<M = NullMetrics> = Builder<StreamKind, M>;
 
 impl BuilderKind for StreamKind {
     type Error = BuilderError;
@@ -78,6 +83,7 @@ impl<M: MetricsFactory> StreamBuilder<M> {
         })
     }
 
+    /// Add a new account parser to the builder.
     pub fn account<A: Debug + ProgramParser<Input = AccountUpdate> + Send + Sync + 'static>(
         self,
         account: A,
@@ -89,6 +95,7 @@ impl<M: MetricsFactory> StreamBuilder<M> {
         self.insert(account, |s| &mut s.account)
     }
 
+    /// Add a new transaction parser to the builder.
     pub fn transaction<
         T: Debug + ProgramParser<Input = TransactionUpdate> + Send + Sync + 'static,
     >(
@@ -102,6 +109,7 @@ impl<M: MetricsFactory> StreamBuilder<M> {
         self.insert(transaction, |s| &mut s.transaction)
     }
 
+    /// Add a new instruction parser to the builder.
     pub fn instruction<
         T: Debug + ProgramParser<Input = InstructionUpdate> + Send + Sync + 'static,
     >(
@@ -115,6 +123,12 @@ impl<M: MetricsFactory> StreamBuilder<M> {
         self.insert(instruction, |s| &mut s.instruction)
     }
 
+    /// Attempt to build a new [`Server`] instance from the current builder
+    /// state and the provided configuration.
+    ///
+    /// # Errors
+    /// This function returns an error if the builder or configuration are
+    /// invalid.
     pub fn try_build(self, config: StreamConfig<M::Config>) -> Result<Server<M>, BuilderError> {
         let Self {
             err,
@@ -148,6 +162,9 @@ impl<M: MetricsFactory> StreamBuilder<M> {
         })
     }
 
+    /// Build a new [`Server`] instance from the current builder state and the
+    /// provided configuration, terminating the current process if an error
+    /// occurs.
     #[inline]
     pub fn build(self, config: StreamConfig<M::Config>) -> Server<M> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen stream server")

@@ -147,7 +147,9 @@ mod proto_parser {
         ExtensionDataProto, TokenExtensionStateProto,
     };
 
-    use super::*;
+    use super::{
+        ExtendedMint, ExtendedTokenAccount, TokenExtensionProgramAccParser, TokenExtensionState,
+    };
     use crate::helpers::IntoProtoData;
 
     impl IntoProtoData<ExtendedMintProto> for ExtendedMint {
@@ -220,7 +222,7 @@ mod tests {
             panic!("Invalid Account");
         };
 
-        assert_eq!(ext_mint.base_account.decimals as u8, 9);
+        assert_eq!(ext_mint.base_account.decimals, 9);
         assert_eq!(ext_mint.extension_data_vec.len(), 2);
 
         let extension_data = &ext_mint.extension_data_vec[1];

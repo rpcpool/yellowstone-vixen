@@ -1,3 +1,6 @@
+//! Helper types for bundling [Vixen parsers](crate::vixen_core::Parser) and
+//! handler callbacks.
+
 use std::{borrow::Cow, collections::HashMap, pin::Pin};
 
 use futures_util::{Future, FutureExt, StreamExt};
@@ -9,9 +12,12 @@ use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 use crate::metrics::{Counters, Instrumenter, JobResult, Update};
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
+/// The result returned by a handler.
 pub type HandlerResult<T> = Result<T, BoxedError>;
 
+/// A handler callback for a parsed value.
 pub trait Handler<T> {
+    /// Consume the parsed value.
     fn handle(&self, value: &T) -> impl Future<Output = HandlerResult<()>> + Send;
 }
 
@@ -22,21 +28,9 @@ impl<T: Handler<U>, U> Handler<U> for &T {
     }
 }
 
-#[inline]
-pub const fn from_fn<F>(f: F) -> FromFn<F> { FromFn(f) }
+pub(crate) use pipeline_error::Errors as PipelineErrors;
 
-#[repr(transparent)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FromFn<F>(F);
-
-impl<F: Fn(&T) -> U, T, U: Future<Output = HandlerResult<()>> + Send> Handler<T> for FromFn<F> {
-    #[inline]
-    fn handle(&self, value: &T) -> impl Future<Output = HandlerResult<()>> + Send { self.0(value) }
-}
-
-pub use pipeline_error::Errors as PipelineErrors;
-
-pub mod pipeline_error {
+mod pipeline_error {
     use smallvec::SmallVec;
 
     use super::BoxedError;
@@ -119,10 +113,12 @@ pub mod pipeline_error {
     }
 }
 
+/// A parser and a set of handlers its output is passed to.
 #[derive(Debug)]
 pub struct Pipeline<P, H>(P, H);
 
 impl<P, H> Pipeline<P, H> {
+    /// Create a new pipeline from a parser and a list of handlers.
     #[inline]
     #[must_use]
     pub fn new(parser: P, handlers: H) -> Self { Self(parser, handlers) }
@@ -138,11 +134,7 @@ impl<P: GetPrefilter, H> GetPrefilter for Pipeline<P, H> {
     fn prefilter(&self) -> Prefilter { self.0.prefilter() }
 }
 
-pub type BoxPipeline<'h, T> = Box<dyn DynPipeline<T> + Send + Sync + 'h>;
-
-pub fn boxed<'h, P: DynPipeline<T> + Send + Sync + 'h, T>(value: P) -> BoxPipeline<'h, T> {
-    Box::new(value)
-}
+pub(crate) type BoxPipeline<'h, T> = Box<dyn DynPipeline<T> + Send + Sync + 'h>;
 
 impl<P, I> Pipeline<P, I>
 where
@@ -174,7 +166,10 @@ where
     }
 }
 
+/// Object-safe trait for parsing and handling values.
 pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
+    /// Pass the provided value to the parser and handlers comprising this
+    /// pipeline.
     fn handle<'h>(
         &'h self,
         value: &'h T,
@@ -226,7 +221,7 @@ impl<'j, T> DynPipeline<T> for BoxPipeline<'j, T> {
 }
 
 #[derive(Debug)]
-pub struct PipelineSets {
+pub(crate) struct PipelineSets {
     pub account: PipelineSet<BoxPipeline<'static, AccountUpdate>>,
     pub transaction: PipelineSet<BoxPipeline<'static, TransactionUpdate>>,
 }
@@ -244,32 +239,12 @@ impl PipelineSets {
 }
 
 #[derive(Debug)]
-pub struct PipelineSet<P>(HashMap<String, P>);
-
-impl PipelineSet<std::convert::Infallible> {
-    #[allow(clippy::zero_sized_map_values)]
-    #[inline]
-    #[must_use]
-    pub fn empty() -> Self { Self(HashMap::new()) }
-}
+pub(crate) struct PipelineSet<P>(HashMap<String, P>);
 
 impl<P> PipelineSet<P> {
     #[inline]
     #[must_use]
     pub fn len(&self) -> usize { self.0.len() }
-
-    #[inline]
-    #[must_use]
-    pub fn is_empty(&self) -> bool { self.0.is_empty() }
-
-    pub fn map<J: ParserId, F: FnMut(P) -> J>(self, f: F) -> PipelineSet<J> {
-        PipelineSet::new(self.0.into_values().map(f))
-    }
-}
-
-impl<P: ParserId> PipelineSet<P> {
-    #[inline]
-    pub fn new<I: IntoIterator<Item = P>>(it: I) -> Self { Self::from_iter(it) }
 }
 
 impl<P: GetPrefilter> PipelineSet<P> {

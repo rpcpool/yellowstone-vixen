@@ -1,3 +1,5 @@
+//! Helpers for parsing transaction updates into instructions.
+
 use std::{collections::VecDeque, sync::Arc};
 
 use yellowstone_grpc_proto::{
@@ -10,21 +12,30 @@ use yellowstone_grpc_proto::{
 
 use crate::{Pubkey, TransactionUpdate};
 
+/// Errors that can occur when parsing a transaction update into instructions.
 #[derive(Debug, Clone, Copy, thiserror::Error)]
 pub enum ParseError {
+    /// A required field was missing from the transaction update.
     #[error("Transaction update missing {}", .0.name())]
     Missing(Missing),
+    /// An inner instruction referenced an out-of-range outer instruction.
     #[error("Invalid inner instruction index {0}")]
     InvalidInnerInstructionIndex(u32),
+    /// An error occurred while parsing an account key.
     #[error("Invalid account key in transaction data")]
     AccountKey(#[from] AccountKeyError),
 }
 
+/// A required field that was missing from the transaction update.
 #[derive(Debug, Clone, Copy)]
 pub enum Missing {
+    /// The `transaction` field was not present.
     TransactionInfo,
+    /// The `transaction.transaction` field was not present.
     Transaction,
+    /// The `transaction.meta` field was not present.
     TransactionMeta,
+    /// The `transaction.transaction.message` field was not present.
     TransactionMessage,
 }
 
@@ -45,47 +56,77 @@ impl From<Missing> for ParseError {
     fn from(value: Missing) -> Self { Self::Missing(value) }
 }
 
+/// Shared data between all instructions in a transaction.
 #[derive(Debug, Default)]
 pub struct InstructionShared {
+    /// The slot in which the transaction was processed.
     pub slot: u64,
+    /// The signature of the transaction.
     pub signature: Vec<u8>,
+    /// Whether the transaction is a vote transaction.
     pub is_vote: bool,
+    /// The index of the transaction in the block.
     pub txn_index: u64,
+    /// If the transaction failed, the error that occurred.
     pub err: Option<TransactionError>,
+    /// The fee paid by the transaction in lamports.
     pub fee: u64,
+    /// The balances of the accounts before the transaction.
     pub pre_balances: Vec<u64>,
+    /// The balances of the accounts after the transaction.
     pub post_balances: Vec<u64>,
+    /// The token balances of the accounts before the transaction.
     pub pre_token_balances: Vec<TokenBalance>,
+    /// The token balances of the accounts after the transaction.
     pub post_token_balances: Vec<TokenBalance>,
+    /// The log messages produced during execution of the transaction.
     pub log_messages: Vec<String>,
+    /// The rewards produced during execution of the transaction.
     pub rewards: Vec<Reward>,
+    /// The number of compute units consumed by the transaction.
     pub compute_units_consumed: Option<u64>,
+    /// The recent blockhash submitted with the transaction.
     pub recent_blockhash: Vec<u8>,
+    /// The keys of the accounts involved in the transaction.
     pub accounts: AccountKeys,
 }
 
+/// A parsed instruction from a transaction update.
 #[derive(Debug)]
 pub struct InstructionUpdate {
+    /// The program ID of the instruction.
     pub program: Pubkey,
+    /// The accounts passed to the instruction.
     pub accounts: Vec<Pubkey>,
+    /// The serialized binary instruction payload.
     pub data: Vec<u8>,
+    /// Shared data between all instructions in this transaction.
     pub shared: Arc<InstructionShared>,
+    /// Inner instructions invoked by this instruction.
     pub inner: Vec<InstructionUpdate>,
 }
 
+/// The keys of the accounts involved in a transaction.
 #[derive(Debug, Default)]
 pub struct AccountKeys {
+    /// Account keys submitted directly with the transaction.
     static_keys: Vec<Vec<u8>>,
+    /// Resolved writable account keys.
     dynamic_rw: Vec<Vec<u8>>,
+    /// Resolved readonly account keys.
     dynamic_ro: Vec<Vec<u8>>,
 }
 
+/// Errors that can occur when parsing an account key.
 #[derive(Debug, Clone, Copy, thiserror::Error)]
 pub enum AccountKeyError {
+    /// An error occurred while converting the account key index to a usize.
     #[error("Error converting index to usize")]
     IndexConvert(#[from] std::num::TryFromIntError),
+    /// The account key index was out of range.
     #[error("Invalid account key index {0}")]
     InvalidIndex(usize),
+    /// The referenced account key was invalid.
     #[error("Invalid account key data")]
     InvalidKey(#[from] std::array::TryFromSliceError),
 }
@@ -113,6 +154,11 @@ impl AccountKeys {
 }
 
 impl InstructionUpdate {
+    /// Parse a transaction update into a list of instructions.
+    ///
+    /// # Errors
+    /// Returns an error if the transaction update received is in an unparseable
+    /// form.
     pub fn parse_from_txn(txn: &TransactionUpdate) -> Result<Vec<Self>, ParseError> {
         let TransactionUpdate { transaction, slot } = txn.clone();
         let SubscribeUpdateTransactionInfo {
@@ -279,10 +325,12 @@ impl InstructionUpdate {
         })
     }
 
+    /// Iterate over all inner instructions stored in this instruction.
     #[inline]
     pub fn visit_all(&self) -> VisitAll<'_> { VisitAll::new(self) }
 }
 
+/// An iterator over all inner instructions stored in an instruction update.
 #[derive(Debug)]
 #[must_use = "This type does nothing unless iterated"]
 pub struct VisitAll<'a>(VisitAllState<'a>);

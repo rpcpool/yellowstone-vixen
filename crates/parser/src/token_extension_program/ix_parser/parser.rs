@@ -6,7 +6,19 @@ use yellowstone_vixen_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
 };
 
-use super::{extensions::*, ixs::*};
+use super::{
+    extensions::{
+        helpers, CommonExtensionIxs, ConfidentaltransferFeeIx, ConfidentaltransferIx,
+        ExtensionWithCommonIxs, TokenGroupIx, TokenMetadataIx, TransferFeeIx,
+    },
+    ixs::{
+        CreateNativeMintAccounts, InitializeMintCloseAuthorityAccounts,
+        InitializeMintCloseAuthorityData, InitializeNonTransferableMintAccounts,
+        InitializePermanentDelegateAccounts, InitializePermanentDelegateData, ReallocateAccounts,
+        ReallocateData, TokenExtSetAutorityData, TokenExtensionProgramIx,
+        WithdrawExcessLamportsAccounts,
+    },
+};
 use crate::{
     helpers::{
         check_min_accounts_req, check_pubkeys_match, get_multisig_signers,
@@ -44,6 +56,7 @@ impl Parser for TokenExtensionProgramIxParser {
 }
 
 impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParser {
+    #[allow(clippy::too_many_lines)]
     fn parse_ix(ix: &InstructionUpdate) -> Result<TokenExtensionProgramIx, String> {
         let accounts_len = ix.accounts.len();
         match TokenInstruction::unpack(&ix.data) {
@@ -233,19 +246,19 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                 )),
             },
             Err(e) => {
-                if let Ok(_) = TokenMetadataInstruction::unpack(&ix.data) {
+                if TokenMetadataInstruction::unpack(&ix.data).is_ok() {
                     return Ok(TokenExtensionProgramIx::TokenMetadataIx(
                         TokenMetadataIx::try_parse_extension_ix(ix)?,
                     ));
                 }
 
-                if let Ok(_) = TokenGroupInstruction::unpack(&ix.data) {
+                if TokenGroupInstruction::unpack(&ix.data).is_ok() {
                     return Ok(TokenExtensionProgramIx::TokenGroupIx(
                         TokenGroupIx::try_parse_extension_ix(ix)?,
                     ));
                 }
 
-                Err(format!("Err while unpacking ix data : {} ", e,))
+                Err(format!("Err while unpacking ix data : {e} "))
             },
         }
     }
@@ -273,6 +286,6 @@ mod tests {
         assert!(ix.data.is_some());
         let data = ix.data.as_ref().unwrap();
         assert_eq!(data.decimals, 9);
-        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals as u32)));
+        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals.into())));
     }
 }
