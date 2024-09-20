@@ -606,155 +606,155 @@ pub mod proto_parser {
         fn into_proto_data(self) -> TokenProgramIxProto {
             match self {
                 TokenProgramIx::Transfer(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::Transfer(TransferIx {
+                    ix_oneof: Some(IxOneof::Transfer(TransferIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
                 TokenProgramIx::InitializeMint(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::InitializeMint(InitializeMintIx {
+                    ix_oneof: Some(IxOneof::InitializeMint(InitializeMintIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::InitializeAccount(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::InitializeAccount(InitializeAccountIx {
+                    ix_oneof: Some(IxOneof::InitializeAccount(InitializeAccountIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: None,
                     })),
                 },
 
                 TokenProgramIx::InitializeAccount2(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::InitializeAccount2(InitializeAccount2Ix {
+                    ix_oneof: Some(IxOneof::InitializeAccount2(InitializeAccount2IxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::InitializeAccount3(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::InitializeAccount3(InitializeAccount3Ix {
+                    ix_oneof: Some(IxOneof::InitializeAccount3(InitializeAccount3IxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::InitializeMultisig(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::InitializeMultisig(InitializeMultisigIx {
+                    ix_oneof: Some(IxOneof::InitializeMultisig(InitializeMultisigIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::Approve(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::Approve(ApproveIx {
+                    ix_oneof: Some(IxOneof::Approve(ApproveIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::Revoke(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::Revoke(RevokeIx {
+                    ix_oneof: Some(IxOneof::Revoke(RevokeIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                     })),
                 },
 
                 TokenProgramIx::SetAuthority(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::SetAuthority(SetAuthorityIx {
+                    ix_oneof: Some(IxOneof::SetAuthority(SetAuthorityIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::MintTo(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::MintTo(MintToIx {
+                    ix_oneof: Some(IxOneof::MintTo(MintToIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::Burn(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::Burn(BurnIx {
+                    ix_oneof: Some(IxOneof::Burn(BurnIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::CloseAccount(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::CloseAccount(CloseAccountIx {
+                    ix_oneof: Some(IxOneof::CloseAccount(CloseAccountIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                     })),
                 },
 
                 TokenProgramIx::FreezeAccount(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::FreezeAccount(FreezeAccountIx {
+                    ix_oneof: Some(IxOneof::FreezeAccount(FreezeAccountIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                     })),
                 },
 
                 TokenProgramIx::ThawAccount(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::ThawAccount(ThawAccountIx {
+                    ix_oneof: Some(IxOneof::ThawAccount(ThawAccountIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                     })),
                 },
 
                 TokenProgramIx::TransferChecked(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::TransferChecked(TransferCheckedIx {
+                    ix_oneof: Some(IxOneof::TransferChecked(TransferCheckedIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::ApproveChecked(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::ApproveChecked(ApproveCheckedIx {
+                    ix_oneof: Some(IxOneof::ApproveChecked(ApproveCheckedIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::MintToChecked(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::MintToChecked(MintToCheckedIx {
+                    ix_oneof: Some(IxOneof::MintToChecked(MintToCheckedIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::BurnChecked(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::BurnChecked(BurnCheckedIx {
+                    ix_oneof: Some(IxOneof::BurnChecked(BurnCheckedIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::SyncNative(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::SyncNative(SyncNativeIx {
+                    ix_oneof: Some(IxOneof::SyncNative(SyncNativeIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                     })),
                 },
 
                 TokenProgramIx::GetAccountDataSize(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::GetAccountDataSize(GetAccountDataSizeIx {
+                    ix_oneof: Some(IxOneof::GetAccountDataSize(GetAccountDataSizeIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                     })),
                 },
 
                 TokenProgramIx::InitializeImmutableOwner(ri) => TokenProgramIxProto {
                     ix_oneof: Some(IxOneof::InitializeImmutableOwner(
-                        InitializeImmutableOwnerIx {
+                        InitializeImmutableOwnerIxProto {
                             accounts: Some(ri.accounts.into_proto_data()),
                         },
                     )),
                 },
 
                 TokenProgramIx::AmountToUiAmount(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::AmountToUiAmount(AmountToUiAmountIx {
+                    ix_oneof: Some(IxOneof::AmountToUiAmount(AmountToUiAmountIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),
                 },
 
                 TokenProgramIx::UiAmountToAmount(ri) => TokenProgramIxProto {
-                    ix_oneof: Some(IxOneof::UiAmountToAmount(UiAmountToAmountIx {
+                    ix_oneof: Some(IxOneof::UiAmountToAmount(UiAmountToAmountIxProto {
                         accounts: Some(ri.accounts.into_proto_data()),
                         data: ri.data.to_proto_option(),
                     })),

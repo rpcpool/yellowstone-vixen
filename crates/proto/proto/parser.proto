@@ -25,29 +25,29 @@ message TokenExtensionStateProto {
 
 message TokenProgramIxProto {
   oneof ix_oneof {
-    TransferIx transfer = 1;
-    InitializeMintIx initialize_mint = 2;
-    InitializeAccountIx initialize_account = 3;
-    InitializeAccount2Ix initialize_account2 = 4;
-    InitializeAccount3Ix initialize_account3 = 5;
-    InitializeMultisigIx initialize_multisig = 6;
-    ApproveIx approve = 7;
-    RevokeIx revoke = 8;
-    SetAuthorityIx set_authority = 9;
-    MintToIx mint_to = 10;
-    BurnIx burn = 11;
-    CloseAccountIx close_account = 12;
-    FreezeAccountIx freeze_account = 13;
-    ThawAccountIx thaw_account = 14;
-    TransferCheckedIx transfer_checked = 15;
-    ApproveCheckedIx approve_checked = 16;
-    MintToCheckedIx mint_to_checked = 17;
-    BurnCheckedIx burn_checked = 18;
-    SyncNativeIx sync_native = 19;
-    GetAccountDataSizeIx get_account_data_size = 20;
-    InitializeImmutableOwnerIx initialize_immutable_owner = 21;
-    AmountToUiAmountIx amount_to_ui_amount = 22;
-    UiAmountToAmountIx ui_amount_to_amount = 23;
+    TransferIxProto transfer = 1;
+    InitializeMintIxProto initialize_mint = 2;
+    InitializeAccountIxProto initialize_account = 3;
+    InitializeAccount2IxProto initialize_account2 = 4;
+    InitializeAccount3IxProto initialize_account3 = 5;
+    InitializeMultisigIxProto initialize_multisig = 6;
+    ApproveIxProto approve = 7;
+    RevokeIxProto revoke = 8;
+    SetAuthorityIxProto set_authority = 9;
+    MintToIxProto mint_to = 10;
+    BurnIxProto burn = 11;
+    CloseAccountIxProto close_account = 12;
+    FreezeAccountIxProto freeze_account = 13;
+    ThawAccountIxProto thaw_account = 14;
+    TransferCheckedIxProto transfer_checked = 15;
+    ApproveCheckedIxProto approve_checked = 16;
+    MintToCheckedIxProto mint_to_checked = 17;
+    BurnCheckedIxProto burn_checked = 18;
+    SyncNativeIxProto sync_native = 19;
+    GetAccountDataSizeIxProto get_account_data_size = 20;
+    InitializeImmutableOwnerIxProto initialize_immutable_owner = 21;
+    AmountToUiAmountIxProto amount_to_ui_amount = 22;
+    UiAmountToAmountIxProto ui_amount_to_amount = 23;
   }
 }
 
@@ -57,7 +57,15 @@ message TokenExtensionProgramIxProto {
     TransferFeeIxProto transfer_fee_ix = 2;
     TokenMetadataIxProto token_metadata_ix = 3;
     TokenGroupIxProto token_group_ix = 4;
-    ConfidentialTransferIxProto confidential_transfer_ix = 5;
+    ConfidentialTransferExtIxProto confidential_transfer_ix = 5;
     ConfidentialTransferFeeIxProto confidential_transfer_fee_ix = 6;
+    CpiGuardIxProto cpi_guard_ix = 7;
+    TransferHookIxProto transfer_hook_ix = 8;
+    MetadataPointerIxProto metadata_pointer_ix = 9;
+    MemoTransferIxProto memo_transfer_ix = 10;
+    InterestBearingMintIxProto interest_bearing_mint_ix = 11;
+    DefaultAccountStateExtension default_account_state_extension = 12;
+    GroupMemberPointerIxProto group_member_pointer_ix = 13;
+    GroupPointerIxProto group_pointer_ix = 14;
   }
 }

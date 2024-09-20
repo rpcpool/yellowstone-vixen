@@ -21,7 +21,7 @@ message TransferDataProto {
   uint64 amount = 1;
 }
 
-message TransferIx {
+message TransferIxProto {
   TransferAccountsProto accounts = 1;
   TransferDataProto data = 2;
 }
@@ -36,7 +36,7 @@ message InitializeMintDataProto {
   optional string freeze_authority = 3;
 }
 
-message InitializeMintIx {
+message InitializeMintIxProto {
   InitializeMintAccountsProto accounts = 1;
   InitializeMintDataProto data = 2;
 }
@@ -51,7 +51,7 @@ message InitializeAccountDataProto {
   uint64 amount = 1;
 }
 
-message InitializeAccountIx {
+message InitializeAccountIxProto {
   InitializeAccountAccountsProto accounts = 1;
   InitializeAccountDataProto data = 2;
 }
@@ -65,12 +65,12 @@ message InitializeAccountData2Proto {
   string owner = 1;
 }
 
-message InitializeAccount2Ix {
+message InitializeAccount2IxProto {
   InitializeAccount2AccountsProto accounts = 1;
   InitializeAccountData2Proto data = 2;
 }
 
-message InitializeAccount3Ix {
+message InitializeAccount3IxProto {
   InitializeAccount2AccountsProto accounts = 1;
   InitializeAccountData2Proto data = 2;
 }
@@ -84,7 +84,7 @@ message InitializeMultisigDataProto {
   uint64 m = 1;
 }
 
-message InitializeMultisigIx {
+message InitializeMultisigIxProto {
   InitializeMultisigAccountsProto accounts = 1;
   InitializeMultisigDataProto data = 2;
 }
@@ -101,7 +101,7 @@ message ApproveDataProto {
   uint64 amount = 1;
 }
 
-message ApproveIx {
+message ApproveIxProto {
   ApproveAccountsProto accounts = 1;
   ApproveDataProto data = 2;
 }
@@ -112,7 +112,7 @@ message RevokeAccountsProto {
   repeated string multisig_signers = 3;
 }
 
-message RevokeIx {
+message RevokeIxProto {
   RevokeAccountsProto accounts = 1;
 
 }
@@ -128,7 +128,7 @@ message SetAuthorityDataProto {
   optional string new_authority = 2;
 }
 
-message SetAuthorityIx {
+message SetAuthorityIxProto {
   SetAuthorityAccountsProto accounts = 1;
   SetAuthorityDataProto data = 2;
 }
@@ -144,7 +144,7 @@ message MintToDataProto {
   uint64 amount = 1;
 }
 
-message MintToIx {
+message MintToIxProto {
   MintToAccountsProto accounts = 1;
   MintToDataProto data = 2;
 }
@@ -160,7 +160,7 @@ message BurnDataProto {
   uint64 amount = 1;
 }
 
-message BurnIx {
+message BurnIxProto {
   BurnAccountsProto accounts = 1;
   BurnDataProto data = 2;
 }
@@ -172,7 +172,7 @@ message CloseAccountAccountsProto {
   repeated string multisig_signers = 4;
 }
 
-message CloseAccountIx {
+message CloseAccountIxProto {
   CloseAccountAccountsProto accounts = 1;
 }
 
@@ -183,7 +183,7 @@ message FreezeAccountAccountsProto {
   repeated string multisig_signers = 4;
 }
 
-message FreezeAccountIx {
+message FreezeAccountIxProto {
   FreezeAccountAccountsProto accounts = 1;
 }
 
@@ -194,7 +194,7 @@ message ThawAccountAccountsProto {
   repeated string multisig_signers = 4;
 }
 
-message ThawAccountIx {
+message ThawAccountIxProto {
   ThawAccountAccountsProto accounts = 1;
 }
 
@@ -211,7 +211,7 @@ message TransferCheckedDataProto {
   uint64 decimals = 2;
 }
 
-message TransferCheckedIx {
+message TransferCheckedIxProto {
   TransferCheckedAccountsProto accounts = 1;
   TransferCheckedDataProto data = 2;
 }
@@ -229,7 +229,7 @@ message ApproveCheckedDataProto {
   uint64 decimals = 2;
 }
 
-message ApproveCheckedIx {
+message ApproveCheckedIxProto {
   ApproveCheckedAccountsProto accounts = 1;
   ApproveCheckedDataProto data = 2;
 }
@@ -246,7 +246,7 @@ message MintToCheckedDataProto {
   uint64 decimals = 2;
 }
 
-message MintToCheckedIx {
+message MintToCheckedIxProto {
   MintToCheckedAccountsProto accounts = 1;
   MintToCheckedDataProto data = 2;
 }
@@ -263,7 +263,7 @@ message BurnCheckedDataProto {
   uint64 decimals = 2;
 }
 
-message BurnCheckedIx {
+message BurnCheckedIxProto {
   BurnCheckedAccountsProto accounts = 1;
   BurnCheckedDataProto data = 2;
 }
@@ -272,7 +272,7 @@ message SyncNativeAccountsProto {
   string account = 1;
 }
 
-message SyncNativeIx {
+message SyncNativeIxProto {
   SyncNativeAccountsProto accounts = 1;
 }
 
@@ -280,7 +280,7 @@ message GetAccountDataSizeAccountsProto {
   string mint = 1;
 }
 
-message GetAccountDataSizeIx {
+message GetAccountDataSizeIxProto {
   GetAccountDataSizeAccountsProto accounts = 1;
 }
 
@@ -288,7 +288,7 @@ message InitializeImmutableOwnerAccountsProto {
   string account = 1;
 }
 
-message InitializeImmutableOwnerIx {
+message InitializeImmutableOwnerIxProto {
   InitializeImmutableOwnerAccountsProto accounts = 1;
 }
 
@@ -301,7 +301,7 @@ message AmountToUiAmountDataProto {
   uint64 amount = 1;
 }
 
-message AmountToUiAmountIx {
+message AmountToUiAmountIxProto {
   AmountToUiAmountAccountsProto accounts = 1;
   AmountToUiAmountDataProto data = 2;
 }
@@ -314,7 +314,7 @@ message UiAmountToAmountDataProto {
   string ui_amount = 1;
 }
 
-message UiAmountToAmountIx {
+message UiAmountToAmountIxProto {
   UiAmountToAmountAccountsProto accounts = 1;
   UiAmountToAmountDataProto data = 2;
 }
