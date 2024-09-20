@@ -51,7 +51,7 @@ message WithdrawWithheldTokensFromMintIxProto {
   WithdrawWithheldTokensFromMintAccountsProto accounts = 1;
 }
 
-message WithdrawWithheldTokensFromAccountsAccountsProto {
+message WithdrawWithheldTokensFromAccountsAccountsProto2 {
   string mint = 1;
   string fee_recipient = 2;
   string withdraw_withheld_authority = 3;
@@ -59,18 +59,14 @@ message WithdrawWithheldTokensFromAccountsAccountsProto {
   repeated string multisig_signers = 5;
 }
 
-message WithdrawWithheldTokensFromAccountsDataProto {
+
+message WithdrawWithheldTokensFromAccountsDataProto2 {
   uint64 num_token_accounts = 1;
 }
 
-message WithdrawWithheldTokensFromAccountsIxProto {
-  WithdrawWithheldTokensFromAccountsAccountsProto accounts = 1;
-  WithdrawWithheldTokensFromAccountsDataProto data = 2;
-}
-
-message HarvestWithheldTokensToMintAccountsProto {
-  string mint = 1;
-  repeated string source_accounts = 2;
+message WithdrawWithheldTokensFromAccountsIxProto2 {
+  WithdrawWithheldTokensFromAccountsAccountsProto2 accounts = 1;
+  WithdrawWithheldTokensFromAccountsDataProto2 data = 2;
 }
 
 message HarvestWithheldTokensToMintIxProto {
@@ -98,7 +94,7 @@ message TransferFeeIxProto {
     TransferCheckedWithFeeIxProto transfer_checked_with_fee_ix = 1;
     InitializeTransferFeeConfigIxProto initialize_transfer_fee_config_ix = 2;
     WithdrawWithheldTokensFromMintIxProto withdraw_withheld_tokens_from_mint_ix = 3;
-    WithdrawWithheldTokensFromAccountsIxProto withdraw_withheld_tokens_from_accounts_ix = 4;
+    WithdrawWithheldTokensFromAccountsIxProto2 withdraw_withheld_tokens_from_accounts_ix = 4;
     HarvestWithheldTokensToMintIxProto harvest_withheld_tokens_to_mint_ix = 5;
     SetTransferFeeIxProto set_transfer_fee_ix = 6;
   }
@@ -135,7 +131,7 @@ message UpdateFieldDataProto {
   string value = 2;
 }
 
-message UpdateFieldsIxProto {
+message UpdateFieldIxProto {
   UpdateFieldAccountsProto accounts = 1;
   UpdateFieldDataProto data = 2;
 }
@@ -175,8 +171,8 @@ message EmitAccountsProto {
 }
 
 message EmitDataProto {
-  uint64 start = 1;
-  uint64 end = 2;
+  optional uint64 start = 1;
+  optional uint64 end = 2;
 }
 
 message EmitIxProto {
@@ -187,7 +183,7 @@ message EmitIxProto {
 message TokenMetadataIxProto {
   oneof ix_oneof {
     InitializeIxProto initialize_ix = 1;
-    UpdateFieldsIxProto update_fields_ix = 2;
+    UpdateFieldIxProto update_fields_ix = 2;
     RemoveKeyIxProto remove_key_ix = 3;
     UpdateAuthorityIxProto update_authority_ix = 4;
     EmitIxProto emit_ix = 5;
@@ -435,49 +431,56 @@ message InitializeConfidentialTransferFeeConfigIxProto {
   InitializeConfidentialTransferFeeConfigAccountsProto accounts = 1;
 }
 
-message WithdrawWithheldTokensFromMintProto {
+
+message WithdrawWithheldTokensFromAccountsAccountsProto {
   string mint = 1;
   string fee_recipient = 2;
-  string sysvar = 3;
-  string withdraw_withheld_authority = 4;
+  string withdraw_withheld_authority = 3;
+  repeated string source_accounts = 4;
   repeated string multisig_signers = 5;
 }
 
 
-message WithdrawWithheldTokensFromAccountsProto {
-  string mint = 1;
-  string fee_recipient = 2;
-  string sysvar = 3;
-  string withdraw_withheld_authority = 4;
-  repeated string multisig_signers = 5;
-  repeated string source_accounts = 6;
+message WithdrawWithheldTokensFromAccountsIxProto {
+  WithdrawWithheldTokensFromAccountsAccountsProto accounts = 1;
+
 }
 
-message HarvestWithheldTokensToMintProto {
+
+message HarvestWithheldTokensToMintAccountsProto {
   string mint = 1;
   repeated string source_accounts = 2;
 }
 
-message EnableHarvestToMintProto {
+message EnableHarvestToMintAccountsProto {
   string mint = 1;
   string confidential_transfer_fee_authority = 2;
   repeated string multisig_signers = 3;
 }
 
-message DisableHarvestToMintProto {
+
+message DisableHarvestToMintAccountsProto {
   string account = 1;
   string confidential_transfer_fee_authority = 2;
   repeated string multisig_signers = 3;
 }
 
+message EnableHarvestToMintIxProto {
+  EnableHarvestToMintAccountsProto accounts = 1;
+}
+
+message DisableHarvestToMintIxProto {
+  DisableHarvestToMintAccountsProto accounts = 1;
+}
+
 message ConfidentialTransferFeeIxProto {
   oneof ix_oneof {
     InitializeConfidentialTransferFeeConfigIxProto initialize_confidential_transfer_fee_config_ix = 1;
-    WithdrawWithheldTokensFromMintProto withdraw_withheld_tokens_from_mint_ix = 2;
-    WithdrawWithheldTokensFromAccountsProto withdraw_withheld_tokens_from_accounts_ix = 3;
-    HarvestWithheldTokensToMintProto harvest_withheld_tokens_to_mint_ix = 4;
-    EnableHarvestToMintProto enable_harvest_to_mint_ix = 5;
-    DisableHarvestToMintProto disable_harvest_to_mint_ix = 6;
+    WithdrawWithheldTokensFromMintIxProto withdraw_withheld_tokens_from_mint_ix = 2;
+    WithdrawWithheldTokensFromAccountsIxProto withdraw_withheld_tokens_from_accounts_ix = 3;
+    HarvestWithheldTokensToMintIxProto harvest_withheld_tokens_to_mint_ix = 4;
+    EnableHarvestToMintIxProto enable_harvest_to_mint_ix = 5;
+    DisableHarvestToMintIxProto disable_harvest_to_mint_ix = 6;
   }
 }
 

@@ -116,3 +116,167 @@ impl ExtensionIxParser for TokenMetadataIx {
         }
     }
 }
+
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use super::*;
+
+    use token_metadata_ix_proto::IxOneof;
+    use yellowstone_vixen_proto::parser::*;
+
+    use crate::helpers::IntoProtoData;
+
+    impl IntoProtoData<InitializeAccountsProto> for InitializeAccounts {
+        fn into_proto_data(self) -> InitializeAccountsProto {
+            InitializeAccountsProto {
+                metadata: self.metadata.to_string(),
+                update_authority: self.update_authority.to_string(),
+                mint: self.mint.to_string(),
+                mint_authority: self.mint_authority.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<UpdateFieldAccountsProto> for UpdateFieldAccounts {
+        fn into_proto_data(self) -> UpdateFieldAccountsProto {
+            UpdateFieldAccountsProto {
+                metadata: self.metadata.to_string(),
+                update_authority: self.update_authority.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<RmoveKeyAccountsProto> for RmoveKeyAccounts {
+        fn into_proto_data(self) -> RmoveKeyAccountsProto {
+            RmoveKeyAccountsProto {
+                metadata: self.metadata.to_string(),
+                update_authority: self.update_authority.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<UpdateAuthorityAccountsProto> for UpdateAuthorityAccounts {
+        fn into_proto_data(self) -> UpdateAuthorityAccountsProto {
+            UpdateAuthorityAccountsProto {
+                metadata: self.metadata.to_string(),
+                current_update_authority: self.current_update_authority.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<EmitAccountsProto> for EmitAccounts {
+        fn into_proto_data(self) -> EmitAccountsProto {
+            EmitAccountsProto {
+                metadata: self.metadata.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<InitializeDataProto> for spl_token_metadata_interface::instruction::Initialize {
+        fn into_proto_data(self) -> InitializeDataProto {
+            InitializeDataProto {
+                name: self.name,
+                symbol: self.symbol,
+                uri: self.uri,
+            }
+        }
+    }
+
+    fn from_field_to_string(field: spl_token_metadata_interface::state::Field) -> String {
+        match field {
+            spl_token_metadata_interface::state::Field::Name => "Name".to_string(),
+            spl_token_metadata_interface::state::Field::Symbol => "Symbol".to_string(),
+            spl_token_metadata_interface::state::Field::Uri => "Uri".to_string(),
+            spl_token_metadata_interface::state::Field::Key(key) => key,
+        }
+    }
+
+    impl IntoProtoData<UpdateFieldDataProto>
+        for spl_token_metadata_interface::instruction::UpdateField
+    {
+        fn into_proto_data(self) -> UpdateFieldDataProto {
+            UpdateFieldDataProto {
+                key: from_field_to_string(self.field),
+                value: self.value,
+            }
+        }
+    }
+
+    impl IntoProtoData<RemoveKeyDataProto> for spl_token_metadata_interface::instruction::RemoveKey {
+        fn into_proto_data(self) -> RemoveKeyDataProto {
+            RemoveKeyDataProto {
+                idempotent: self.idempotent,
+                key: self.key,
+            }
+        }
+    }
+
+    impl IntoProtoData<UpdateAuthorityDataProto>
+        for spl_token_metadata_interface::instruction::UpdateAuthority
+    {
+        fn into_proto_data(self) -> UpdateAuthorityDataProto {
+            UpdateAuthorityDataProto {
+                new_authority: self.new_authority.0.to_string(),
+            }
+        }
+    }
+
+    impl IntoProtoData<EmitDataProto> for spl_token_metadata_interface::instruction::Emit {
+        fn into_proto_data(self) -> EmitDataProto {
+            EmitDataProto {
+                start: self.start,
+                end: self.end,
+            }
+        }
+    }
+
+    impl IntoProtoData<TokenMetadataIxProto> for TokenMetadataIx {
+        fn into_proto_data(self) -> TokenMetadataIxProto {
+            match self {
+                TokenMetadataIx::Initialize(ReadableInstruction { accounts, data }) => {
+                    TokenMetadataIxProto {
+                        ix_oneof: Some(IxOneof::InitializeIx(InitializeIxProto {
+                            accounts: Some(accounts.into_proto_data()),
+                            data: data.map(|data| data.into_proto_data()),
+                        })),
+                    }
+                },
+                TokenMetadataIx::UpdateField(ReadableInstruction { accounts, data }) => {
+                    TokenMetadataIxProto {
+                        ix_oneof: Some(IxOneof::UpdateFieldsIx(UpdateFieldIxProto {
+                            accounts: Some(accounts.into_proto_data()),
+                            data: data.map(|data| data.into_proto_data()),
+                        })),
+                    }
+                },
+
+                TokenMetadataIx::RemoveKey(ReadableInstruction { accounts, data }) => {
+                    TokenMetadataIxProto {
+                        ix_oneof: Some(IxOneof::RemoveKeyIx(RemoveKeyIxProto {
+                            accounts: Some(accounts.into_proto_data()),
+                            data: data.map(|data| data.into_proto_data()),
+                        })),
+                    }
+                },
+
+                TokenMetadataIx::UpdateAuthority(ReadableInstruction { accounts, data }) => {
+                    TokenMetadataIxProto {
+                        ix_oneof: Some(IxOneof::UpdateAuthorityIx(UpdateAuthorityIxProto {
+                            accounts: Some(accounts.into_proto_data()),
+                            data: data.map(|data| data.into_proto_data()),
+                        })),
+                    }
+                },
+
+                TokenMetadataIx::Emit(ReadableInstruction { accounts, data }) => {
+                    TokenMetadataIxProto {
+                        ix_oneof: Some(IxOneof::EmitIx(EmitIxProto {
+                            accounts: Some(accounts.into_proto_data()),
+                            data: data.map(|data| data.into_proto_data()),
+                        })),
+                    }
+                },
+            }
+        }
+    }
+}

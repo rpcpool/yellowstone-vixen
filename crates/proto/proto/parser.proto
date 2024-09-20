@@ -52,7 +52,7 @@ message TokenProgramIxProto {
 }
 
 message TokenExtensionProgramIxProto {
-  oneof ix_one_of {
+  oneof ix_oneof {
     TokenProgramIxProto token_program_ix = 1;
     TransferFeeIxProto transfer_fee_ix = 2;
     TokenMetadataIxProto token_metadata_ix = 3;

@@ -96,3 +96,23 @@ pub struct WithdrawExcessLamportsAccounts {
     pub authority: Pubkey,
     pub multisig_signers: Vec<Pubkey>,
 }
+
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use crate::{helpers::IntoProtoData, proto::IntoProto};
+
+    use super::*;
+
+    use token_extension_program_ix_proto::IxOneof;
+    use yellowstone_vixen_proto::parser::*;
+    impl IntoProtoData<TokenExtensionProgramIxProto> for TokenExtensionProgramIx {
+        fn into_proto_data(self) -> TokenExtensionProgramIxProto {
+            match self {
+                TokenExtensionProgramIx::TokenMetadataIx(ix) => TokenExtensionProgramIxProto {
+                    ix_oneof: Some(IxOneof::TokenMetadataIx(ix.into_proto_data())),
+                },
+                _ => todo!(),
+            }
+        }
+    }
+}
