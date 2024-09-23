@@ -210,12 +210,13 @@ impl ExtensionIxParser for TransferFeeIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use crate::helpers::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString, IntoProtoData};
+    use yellowstone_vixen_proto::parser::*;
 
     use super::*;
-    use crate::helpers::{FromOptVecToDefVec, FromOptionToProtoOption};
-
-    use yellowstone_vixen_proto::parser::*;
+    use crate::helpers::{
+        FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption,
+        FromVecPubkeyToVecString, IntoProtoData,
+    };
 
     impl IntoProtoData<InitializeTransferFeeConfigAccountsProto>
         for InitializeTransferFeeConfigAccounts

@@ -141,12 +141,11 @@ impl CommonExtensionIxs {
 #[cfg(feature = "proto")]
 mod proto_parser {
 
-    use crate::helpers::{FromOptVecToDefVec, IntoProtoData};
-
-    use super::*;
-
     use common_extension_ix_proto::IxOneof;
     use yellowstone_vixen_proto::parser::*;
+
+    use super::*;
+    use crate::helpers::{FromOptVecToDefVec, IntoProtoData};
 
     impl IntoProtoData<ExtInitializeAccountsProto> for ExtInitializeAccounts {
         fn into_proto_data(self) -> ExtInitializeAccountsProto {

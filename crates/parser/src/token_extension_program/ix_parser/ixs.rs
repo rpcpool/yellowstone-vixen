@@ -99,15 +99,13 @@ pub struct WithdrawExcessLamportsAccounts {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use crate::helpers::IntoProtoData;
-
-    use super::*;
-
-    use crate::helpers::{
-        FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption,
-    };
     use token_extension_program_ix_proto::IxOneof;
     use yellowstone_vixen_proto::parser::*;
+
+    use super::*;
+    use crate::helpers::{
+        FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption, IntoProtoData,
+    };
 
     impl IntoProtoData<WithdrawExcessLamportsAccountsProto> for WithdrawExcessLamportsAccounts {
         fn into_proto_data(self) -> WithdrawExcessLamportsAccountsProto {

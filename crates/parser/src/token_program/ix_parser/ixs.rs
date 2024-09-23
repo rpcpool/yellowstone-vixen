@@ -256,15 +256,13 @@ pub enum TokenProgramIx {
 
 #[cfg(feature = "proto")]
 pub mod proto_parser {
-    use crate::helpers::IntoProtoData;
     use token_program_ix_proto::IxOneof;
     use yellowstone_vixen_proto::parser::*;
 
-    use crate::helpers::{
-        FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption,
-    };
-
     use super::*;
+    use crate::helpers::{
+        FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption, IntoProtoData,
+    };
 
     impl IntoProtoData<TransferAccountsProto> for TransferAccounts {
         fn into_proto_data(self) -> TransferAccountsProto {

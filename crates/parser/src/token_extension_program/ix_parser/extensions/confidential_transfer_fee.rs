@@ -140,13 +140,11 @@ impl ExtensionIxParser for ConfidentaltransferFeeIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use crate::helpers::{FromOptVecToDefVec, IntoProtoData};
-
-    use super::*;
-
-    use crate::helpers::FromVecPubkeyToVecString;
     use confidential_transfer_fee_ix_proto::IxOneof;
     use yellowstone_vixen_proto::parser::*;
+
+    use super::*;
+    use crate::helpers::{FromOptVecToDefVec, FromVecPubkeyToVecString, IntoProtoData};
 
     impl IntoProtoData<InitializeConfidentialTransferFeeConfigAccountsProto>
         for InitializeConfidentialTransferFeeConfigAccounts

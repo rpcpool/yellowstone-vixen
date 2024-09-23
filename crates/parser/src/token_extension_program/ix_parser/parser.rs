@@ -259,10 +259,10 @@ impl TokenExtensionProgramIxParser {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::*;
-    use crate::helpers::IntoProtoData;
-    use crate::proto::IntoProto;
     use yellowstone_vixen_proto::parser::TokenExtensionProgramIxProto;
+
+    use super::*;
+    use crate::{helpers::IntoProtoData, proto::IntoProto};
 
     impl IntoProto for TokenExtensionProgramIxParser {
         type Proto = TokenExtensionProgramIxProto;

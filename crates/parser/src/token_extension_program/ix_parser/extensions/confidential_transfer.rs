@@ -369,12 +369,11 @@ impl ExtensionIxParser for ConfidentaltransferIx {
 #[cfg(feature = "proto")]
 mod proto_parser {
 
-    use crate::helpers::{FromOptPubkeyToOptString, FromOptVecToDefVec, IntoProtoData};
-
-    use super::*;
-
     use confidential_transfer_ext_ix_proto::IxOneof;
     use yellowstone_vixen_proto::parser::*;
+
+    use super::*;
+    use crate::helpers::{FromOptPubkeyToOptString, FromOptVecToDefVec, IntoProtoData};
 
     impl IntoProtoData<InitializeConfidentialMintAccountsProto> for InitializeMintAccounts {
         fn into_proto_data(self) -> InitializeConfidentialMintAccountsProto {

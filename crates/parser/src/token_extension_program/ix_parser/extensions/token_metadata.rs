@@ -119,11 +119,10 @@ impl ExtensionIxParser for TokenMetadataIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::*;
-
     use token_metadata_ix_proto::IxOneof;
     use yellowstone_vixen_proto::parser::*;
 
+    use super::*;
     use crate::helpers::IntoProtoData;
 
     impl IntoProtoData<InitializeAccountsProto> for InitializeAccounts {

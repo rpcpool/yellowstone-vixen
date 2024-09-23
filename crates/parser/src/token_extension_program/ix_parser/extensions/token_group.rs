@@ -102,10 +102,10 @@ impl ExtensionIxParser for TokenGroupIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use crate::helpers::IntoProtoData;
+    use yellowstone_vixen_proto::parser::*;
 
     use super::*;
-    use yellowstone_vixen_proto::parser::*;
+    use crate::helpers::IntoProtoData;
 
     impl IntoProtoData<InitializeGroupAccountsProto> for InitializeGroupAccounts {
         fn into_proto_data(self) -> InitializeGroupAccountsProto {
