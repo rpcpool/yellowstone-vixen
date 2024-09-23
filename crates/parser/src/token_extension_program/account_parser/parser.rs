@@ -208,7 +208,7 @@ mod tests {
 
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
 
-    use super::*;
+    use super::{ExtensionData, Parser, TokenExtensionProgramAccParser, TokenExtensionState};
 
     #[tokio::test]
     async fn test_mint_account_parsing() {

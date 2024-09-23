@@ -370,9 +370,26 @@ impl ExtensionIxParser for ConfidentaltransferIx {
 mod proto_parser {
 
     use confidential_transfer_ext_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::*;
+    use yellowstone_vixen_proto::parser::{
+        confidential_transfer_ext_ix_proto, ApplyPendingBalanceAccountsProto,
+        ApplyPendingBalanceIxProto, ApproveAccountAccountsProto, ApproveAccountIxProto,
+        ConfidentialTransferAccountsProto, ConfidentialTransferExtIxProto,
+        ConfidentialTransferIxProto, ConfigureAccountAccountsProto, ConfigureAccountIxProto,
+        CreditsAccountsProto, DepositAccountsProto, DepositIxProto,
+        DisableConfidentialCreditsIxProto, DisableNonConfidentialCreditsIxProto,
+        EmptyAccountAccountsProto, EmptyAccountIxProto, EnableConfidentialCreditsIxProto,
+        EnableNonConfidentialCreditsIxProto, InitializeConfidentialMintAccountsProto,
+        InitializeConfidentialMintIxProto, TransferWithSplitProofsAccountsProto,
+        TransferWithSplitProofsIxProto, UpdateMintAccountsProto, UpdateMintIxProto,
+        WithdrawAccountsProto, WithdrawIxProto,
+    };
 
-    use super::*;
+    use super::{
+        ApplyPendingBalanceAccounts, ApproveAccountAccounts, ConfidentaltransferIx,
+        ConfidentialTransferAccounts, ConfigureAccountAccounts, CreditsAccounts, DepositAccounts,
+        EmptyAccountAccounts, InitializeMintAccounts, TransferWithSplitProofsAccounts,
+        UpdateMintAccounts, WithdrawAccounts,
+    };
     use crate::helpers::{FromOptPubkeyToOptString, FromOptVecToDefVec, IntoProtoData};
 
     impl IntoProtoData<InitializeConfidentialMintAccountsProto> for InitializeMintAccounts {

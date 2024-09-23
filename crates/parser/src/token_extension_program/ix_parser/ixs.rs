@@ -100,9 +100,25 @@ pub struct WithdrawExcessLamportsAccounts {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use token_extension_program_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::*;
+    use yellowstone_vixen_proto::parser::{
+        token_extension_program_ix_proto, CpiGuardIxProto, CreateNativeMintAccountsProto,
+        CreateNativeMintIxProto, DefaultAccountStateIxProto, GroupMemberPointerIxProto,
+        GroupPointerIxProto, InitializeMintCloseAuthorityAccountsProto,
+        InitializeMintCloseAuthorityDataProto, InitializeMintCloseAuthorityIxProto,
+        InitializeNonTransferableMintAccountsProto, InitializeNonTransferableMintIxProto,
+        InitializePermanentDelegateAccountsProto, InitializePermanentDelegateDataProto,
+        InitializePermanentDelegateIxProto, InterestBearingMintIxProto, MemoTransferIxProto,
+        MetadataPointerIxProto, ReallocateAccountsProto, ReallocateDataProto, ReallocateIxProto,
+        TokenExtensionProgramIxProto, TransferHookIxProto, WithdrawExcessLamportsAccountsProto,
+        WithdrawExcessLamportsIxProto,
+    };
 
-    use super::*;
+    use super::{
+        CreateNativeMintAccounts, InitializeMintCloseAuthorityAccounts,
+        InitializeMintCloseAuthorityData, InitializeNonTransferableMintAccounts,
+        InitializePermanentDelegateAccounts, InitializePermanentDelegateData, ReallocateAccounts,
+        ReallocateData, TokenExtensionProgramIx, WithdrawExcessLamportsAccounts,
+    };
     use crate::helpers::{
         FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption, IntoProtoData,
     };
@@ -193,6 +209,7 @@ mod proto_parser {
     }
 
     impl IntoProtoData<TokenExtensionProgramIxProto> for TokenExtensionProgramIx {
+        #[allow(clippy::too_many_lines)]
         fn into_proto_data(self) -> TokenExtensionProgramIxProto {
             match self {
                 TokenExtensionProgramIx::TransferFeeIx(ri) => TokenExtensionProgramIxProto {

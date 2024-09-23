@@ -187,9 +187,21 @@ pub mod token_extensions_proto_parser {
         immutable_owner::ImmutableOwner, metadata_pointer::MetadataPointer,
     };
     use solana_zk_token_sdk::zk_token_elgamal::pod::ElGamalPubkey;
-    use spl_token_2022::state::Multisig;
+    use spl_token_2022::state::{Account, Mint, Multisig};
+    use spl_token_group_interface::state::{TokenGroup, TokenGroupMember};
+    use spl_token_metadata_interface::state::TokenMetadata;
     #[allow(clippy::wildcard_imports)]
-    use yellowstone_vixen_proto::parser::{extension_data_proto::Data, *};
+    use yellowstone_vixen_proto::parser::{
+        extension_data_proto::Data, ConfidentialTransferAccountProto,
+        ConfidentialTransferFeeAmountProto, ConfidentialTransferFeeConfigProto,
+        ConfidentialTransferMintProto, CpiGuardProto, DefaultAccountStateProto, ExtensionDataProto,
+        GroupMemberPointerProto, GroupPointerProto, ImmutableOwnerProto,
+        InterestBearingConfigProto, KeyValue, MemoTransferProto, MetadataPointerProto,
+        MintCloseAuthorityProto, MintProto, MultisigProto, NonTransferableAccountProto,
+        NonTransferableProto, PermanentDelegateProto, TokenAccountProto, TokenGroupMemberProto,
+        TokenGroupProto, TokenMetadataProto, TransferFeeAmountProto, TransferFeeConfigProto,
+        TransferFeeProto, TransferHookAccountProto, TransferHookProto,
+    };
 
     use super::*;
     use crate::helpers::{ElGamalPubkeyBytes, IntoProto};

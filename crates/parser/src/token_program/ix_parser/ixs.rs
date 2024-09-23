@@ -257,9 +257,40 @@ pub enum TokenProgramIx {
 #[cfg(feature = "proto")]
 pub mod proto_parser {
     use token_program_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::*;
+    use yellowstone_vixen_proto::parser::{
+        token_program_ix_proto, AmountToUiAmountAccountsProto, AmountToUiAmountDataProto,
+        AmountToUiAmountIxProto, ApproveAccountsProto, ApproveCheckedAccountsProto,
+        ApproveCheckedDataProto, ApproveCheckedIxProto, ApproveDataProto, ApproveIxProto,
+        BurnAccountsProto, BurnCheckedAccountsProto, BurnCheckedDataProto, BurnCheckedIxProto,
+        BurnDataProto, BurnIxProto, CloseAccountAccountsProto, CloseAccountIxProto,
+        FreezeAccountAccountsProto, FreezeAccountIxProto, GetAccountDataSizeAccountsProto,
+        GetAccountDataSizeIxProto, InitializeAccount2AccountsProto, InitializeAccount2IxProto,
+        InitializeAccount3IxProto, InitializeAccountAccountsProto, InitializeAccountData2Proto,
+        InitializeAccountIxProto, InitializeImmutableOwnerAccountsProto,
+        InitializeImmutableOwnerIxProto, InitializeMintAccountsProto, InitializeMintDataProto,
+        InitializeMintIxProto, InitializeMultisigAccountsProto, InitializeMultisigDataProto,
+        InitializeMultisigIxProto, MintToAccountsProto, MintToCheckedAccountsProto,
+        MintToCheckedDataProto, MintToCheckedIxProto, MintToDataProto, MintToIxProto,
+        RevokeAccountsProto, RevokeIxProto, SetAuthorityAccountsProto, SetAuthorityDataProto,
+        SetAuthorityIxProto, SyncNativeAccountsProto, SyncNativeIxProto, ThawAccountAccountsProto,
+        ThawAccountIxProto, TokenProgramIxProto, TransferAccountsProto,
+        TransferCheckedAccountsProto, TransferCheckedDataProto, TransferCheckedIxProto,
+        TransferDataProto, TransferIxProto, UiAmountToAmountAccountsProto,
+        UiAmountToAmountDataProto, UiAmountToAmountIxProto,
+    };
 
-    use super::*;
+    use super::{
+        AmountToUiAmountAccounts, AmountToUiAmountData, ApproveAccounts, ApproveCheckedAccounts,
+        ApproveCheckedData, ApproveData, BurnAccounts, BurnCheckedAccounts, BurnCheckedData,
+        BurnData, CloseAccountAccounts, FreezeAccountAccounts, GetAccountDataSizeAccounts,
+        InitializeAccount2Accounts, InitializeAccountAccounts, InitializeAccountData2,
+        InitializeImmutableOwnerAccounts, InitializeMintAccounts, InitializeMintData,
+        InitializeMultisigAccounts, InitializeMultisigData, MintToAccounts, MintToCheckedAccounts,
+        MintToCheckedData, MintToData, RevokeAccounts, SetAuthorityAccounts, SetAuthorityData,
+        SyncNativeAccounts, ThawAccountAccounts, TokenProgramIx, TransferAccounts,
+        TransferCheckedAccounts, TransferCheckedData, TransferData, UiAmountToAmountAccounts,
+        UiAmountToAmountData,
+    };
     use crate::helpers::{
         FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption, IntoProtoData,
     };
@@ -294,7 +325,7 @@ pub mod proto_parser {
     impl IntoProtoData<InitializeMintDataProto> for InitializeMintData {
         fn into_proto_data(self) -> InitializeMintDataProto {
             InitializeMintDataProto {
-                decimals: self.decimals as u64,
+                decimals: self.decimals.into(),
                 mint_authority: self.mint_authority.to_opt_string(),
                 freeze_authority: self.freeze_authority.to_opt_string(),
             }
@@ -478,7 +509,7 @@ pub mod proto_parser {
         fn into_proto_data(self) -> TransferCheckedDataProto {
             TransferCheckedDataProto {
                 amount: self.amount,
-                decimals: self.decimals as u64,
+                decimals: self.decimals.into(),
             }
         }
     }
@@ -499,7 +530,7 @@ pub mod proto_parser {
         fn into_proto_data(self) -> ApproveCheckedDataProto {
             ApproveCheckedDataProto {
                 amount: self.amount,
-                decimals: self.decimals as u64,
+                decimals: self.decimals.into(),
             }
         }
     }
@@ -519,7 +550,7 @@ pub mod proto_parser {
         fn into_proto_data(self) -> MintToCheckedDataProto {
             MintToCheckedDataProto {
                 amount: self.amount,
-                decimals: self.decimals as u64,
+                decimals: self.decimals.into(),
             }
         }
     }
@@ -539,7 +570,7 @@ pub mod proto_parser {
         fn into_proto_data(self) -> BurnCheckedDataProto {
             BurnCheckedDataProto {
                 amount: self.amount,
-                decimals: self.decimals as u64,
+                decimals: self.decimals.into(),
             }
         }
     }
@@ -600,6 +631,7 @@ pub mod proto_parser {
         }
     }
     impl IntoProtoData<TokenProgramIxProto> for TokenProgramIx {
+        #[allow(clippy::too_many_lines)]
         fn into_proto_data(self) -> TokenProgramIxProto {
             match self {
                 TokenProgramIx::Transfer(ri) => TokenProgramIxProto {

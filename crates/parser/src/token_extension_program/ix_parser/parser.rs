@@ -258,7 +258,7 @@ impl TokenExtensionProgramIxParser {
 mod proto_parser {
     use yellowstone_vixen_proto::parser::TokenExtensionProgramIxProto;
 
-    use super::*;
+    use super::TokenExtensionProgramIxParser;
     use crate::{helpers::IntoProtoData, proto::IntoProto};
 
     impl IntoProto for TokenExtensionProgramIxParser {
@@ -274,7 +274,7 @@ mod tests {
 
     use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
 
-    use super::*;
+    use super::{Parser, TokenExtensionProgramIx, TokenExtensionProgramIxParser};
     use crate::token_program::ix_parser::TokenProgramIx;
     #[tokio::test]
     async fn test_mint_to_checked_ix_parsing() {

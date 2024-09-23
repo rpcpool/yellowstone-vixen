@@ -142,9 +142,13 @@ impl CommonExtensionIxs {
 mod proto_parser {
 
     use common_extension_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::*;
+    use yellowstone_vixen_proto::parser::{
+        common_extension_ix_proto, CommonExtensionIxProto, DisableAccountsProto, DisableIxProto,
+        EnableAccountsProto, EnableIxProto, ExtInitializeAccountsProto, ExtInitializeIxProto,
+        UpdateAccountsProto, UpdateIxProto,
+    };
 
-    use super::*;
+    use super::{CommonIx, DisableAccounts, EnableAccounts, ExtInitializeAccounts, UpdateAccounts};
     use crate::helpers::{FromOptVecToDefVec, IntoProtoData};
 
     impl IntoProtoData<ExtInitializeAccountsProto> for ExtInitializeAccounts {

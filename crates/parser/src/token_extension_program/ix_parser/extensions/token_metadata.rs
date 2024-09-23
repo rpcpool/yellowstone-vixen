@@ -120,10 +120,19 @@ impl ExtensionIxParser for TokenMetadataIx {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use token_metadata_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::*;
+    use yellowstone_vixen_proto::parser::{
+        token_metadata_ix_proto, EmitAccountsProto, EmitDataProto, EmitIxProto,
+        InitializeAccountsProto, InitializeDataProto, InitializeIxProto, RemoveKeyDataProto,
+        RemoveKeyIxProto, RmoveKeyAccountsProto, TokenMetadataIxProto,
+        UpdateAuthorityAccountsProto, UpdateAuthorityDataProto, UpdateAuthorityIxProto,
+        UpdateFieldAccountsProto, UpdateFieldDataProto, UpdateFieldIxProto,
+    };
 
-    use super::*;
-    use crate::helpers::IntoProtoData;
+    use super::{
+        EmitAccounts, InitializeAccounts, ReadableInstruction, RmoveKeyAccounts, TokenMetadataIx,
+        UpdateAuthorityAccounts, UpdateFieldAccounts,
+    };
+    use crate::helpers::{FromOptionToProtoOption, IntoProtoData};
 
     impl IntoProtoData<InitializeAccountsProto> for InitializeAccounts {
         fn into_proto_data(self) -> InitializeAccountsProto {
@@ -236,7 +245,7 @@ mod proto_parser {
                     TokenMetadataIxProto {
                         ix_oneof: Some(IxOneof::InitializeIx(InitializeIxProto {
                             accounts: Some(accounts.into_proto_data()),
-                            data: data.map(|data| data.into_proto_data()),
+                            data: data.to_proto_option(),
                         })),
                     }
                 },
@@ -244,7 +253,7 @@ mod proto_parser {
                     TokenMetadataIxProto {
                         ix_oneof: Some(IxOneof::UpdateFieldsIx(UpdateFieldIxProto {
                             accounts: Some(accounts.into_proto_data()),
-                            data: data.map(|data| data.into_proto_data()),
+                            data: data.to_proto_option(),
                         })),
                     }
                 },
@@ -253,7 +262,7 @@ mod proto_parser {
                     TokenMetadataIxProto {
                         ix_oneof: Some(IxOneof::RemoveKeyIx(RemoveKeyIxProto {
                             accounts: Some(accounts.into_proto_data()),
-                            data: data.map(|data| data.into_proto_data()),
+                            data: data.to_proto_option(),
                         })),
                     }
                 },
@@ -262,7 +271,7 @@ mod proto_parser {
                     TokenMetadataIxProto {
                         ix_oneof: Some(IxOneof::UpdateAuthorityIx(UpdateAuthorityIxProto {
                             accounts: Some(accounts.into_proto_data()),
-                            data: data.map(|data| data.into_proto_data()),
+                            data: data.to_proto_option(),
                         })),
                     }
                 },
@@ -271,7 +280,7 @@ mod proto_parser {
                     TokenMetadataIxProto {
                         ix_oneof: Some(IxOneof::EmitIx(EmitIxProto {
                             accounts: Some(accounts.into_proto_data()),
-                            data: data.map(|data| data.into_proto_data()),
+                            data: data.to_proto_option(),
                         })),
                     }
                 },

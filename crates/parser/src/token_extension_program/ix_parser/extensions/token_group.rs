@@ -102,9 +102,18 @@ impl ExtensionIxParser for TokenGroupIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use yellowstone_vixen_proto::parser::*;
+    use yellowstone_vixen_proto::parser::{
+        token_group_ix_proto, InitializeGroupAccountsProto, InitializeGroupDataProto,
+        InitializeGroupIxProto, InitializeMemberAccountsProto, InitializeMemberIxProto,
+        TokenGroupIxProto, UpdateGroupAuthorityAccountsProto, UpdateGroupAuthorityDataProto,
+        UpdateGroupAuthorityIxProto, UpdateGroupMaxSizeAccountsProto, UpdateGroupMaxSizeDataProto,
+        UpdateGroupMaxSizeIxProto,
+    };
 
-    use super::*;
+    use super::{
+        InitializeGroupAccounts, InitializeMemberAccounts, TokenGroupIx,
+        UpdateGroupAuthorityAccounts, UpdateGroupMaxSizeAccounts,
+    };
     use crate::helpers::IntoProtoData;
 
     impl IntoProtoData<InitializeGroupAccountsProto> for InitializeGroupAccounts {

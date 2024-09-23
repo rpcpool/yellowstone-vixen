@@ -210,9 +210,25 @@ impl ExtensionIxParser for TransferFeeIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use yellowstone_vixen_proto::parser::*;
+    use yellowstone_vixen_proto::parser::{
+        transfer_fee_ix_proto, HarvestWithheldTokensToMintAccountsProto,
+        HarvestWithheldTokensToMintIxProto, InitializeTransferFeeConfigAccountsProto,
+        InitializeTransferFeeConfigDataProto, InitializeTransferFeeConfigIxProto,
+        SetTransferFeeAccountsProto, SetTransferFeeDataProto, SetTransferFeeIxProto,
+        TransferCheckedWithFeeAccountsProto, TransferCheckedWithFeeDataProto,
+        TransferCheckedWithFeeIxProto, TransferFeeIxProto,
+        WithdrawWithheldTokensFromAccountsAccountsProto2,
+        WithdrawWithheldTokensFromAccountsDataProto2, WithdrawWithheldTokensFromAccountsIxProto2,
+        WithdrawWithheldTokensFromMintAccountsProto, WithdrawWithheldTokensFromMintIxProto,
+    };
 
-    use super::*;
+    use super::{
+        HarvestWithheldTokensToMintAccountsTransferFee, InitializeTransferFeeConfigAccounts,
+        InitializeTransferFeeConfigData, SetTransferFeeAccounts, SetTransferFeeData,
+        TransferCheckedWithFeeAccounts, TransferCheckedWithFeeData, TransferFeeIx,
+        WithdrawWithheldTokensFromAccountsAccounts, WithdrawWithheldTokensFromAccountsData,
+        WithdrawWithheldTokensFromMintAccountsTransferFee,
+    };
     use crate::helpers::{
         FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption,
         FromVecPubkeyToVecString, IntoProtoData,
@@ -323,7 +339,7 @@ mod proto_parser {
         fn into_proto_data(self) -> SetTransferFeeDataProto {
             SetTransferFeeDataProto {
                 transfer_fee_basis_points: self.transfer_fee_basis_points.into(),
-                maximum_fee: self.maximum_fee.into(),
+                maximum_fee: self.maximum_fee,
             }
         }
     }

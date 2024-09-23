@@ -360,7 +360,7 @@ impl TokenProgramIxParser {
 mod proto_parser {
     use yellowstone_vixen_proto::parser::TokenProgramIxProto;
 
-    use super::*;
+    use super::TokenProgramIxParser;
     use crate::helpers::IntoProtoData;
 
     impl crate::proto::IntoProto for TokenProgramIxParser {

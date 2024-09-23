@@ -141,9 +141,22 @@ impl ExtensionIxParser for ConfidentaltransferFeeIx {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use confidential_transfer_fee_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::*;
+    use yellowstone_vixen_proto::parser::{
+        confidential_transfer_fee_ix_proto, ConfidentialTransferFeeIxProto,
+        DisableHarvestToMintAccountsProto, DisableHarvestToMintIxProto,
+        EnableHarvestToMintAccountsProto, EnableHarvestToMintIxProto,
+        HarvestWithheldTokensToMintAccountsProto, HarvestWithheldTokensToMintIxProto,
+        InitializeConfidentialTransferFeeConfigAccountsProto,
+        InitializeConfidentialTransferFeeConfigIxProto,
+        WithdrawWithheldTokensFromAccountsAccountsProto, WithdrawWithheldTokensFromAccountsIxProto,
+        WithdrawWithheldTokensFromMintAccountsProto, WithdrawWithheldTokensFromMintIxProto,
+    };
 
-    use super::*;
+    use super::{
+        ConfidentaltransferFeeIx, DisableHarvestToMintAccounts, EnableHarvestToMintAccounts,
+        HarvestWithheldTokensToMintAccounts, InitializeConfidentialTransferFeeConfigAccounts,
+        WithdrawWithheldTokensFromAccounts, WithdrawWithheldTokensFromMintAccounts,
+    };
     use crate::helpers::{FromOptVecToDefVec, FromVecPubkeyToVecString, IntoProtoData};
 
     impl IntoProtoData<InitializeConfidentialTransferFeeConfigAccountsProto>
