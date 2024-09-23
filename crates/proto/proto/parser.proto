@@ -64,8 +64,14 @@ message TokenExtensionProgramIxProto {
     MetadataPointerIxProto metadata_pointer_ix = 9;
     MemoTransferIxProto memo_transfer_ix = 10;
     InterestBearingMintIxProto interest_bearing_mint_ix = 11;
-    DefaultAccountStateExtension default_account_state_extension = 12;
+    DefaultAccountStateIxProto default_account_state_ix = 12;
     GroupMemberPointerIxProto group_member_pointer_ix = 13;
     GroupPointerIxProto group_pointer_ix = 14;
+    WithdrawExcessLamportsIxProto withdraw_excess_lamports_ix = 15;
+    InitializePermanentDelegateIxProto initialize_permanent_delegate_ix = 16;
+    ReallocateIxProto reallocate_ix = 17;
+    InitializeNonTransferableMintIxProto initialize_non_transferable_mint_ix = 18;
+    InitializeMintCloseAuthorityIxProto initialize_mint_close_authority_ix = 19;
+    CreateNativeMintIxProto create_native_mint_ix = 20;
   }
 }

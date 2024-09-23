@@ -361,10 +361,6 @@ message CreditsAccountsProto {
   repeated string multisig_signers = 3;
 }
 
-message CreditsIxProto {
-  CreditsAccountsProto accounts = 1;
-}
-
 message EnableConfidentialCreditsIxProto {
   CreditsAccountsProto accounts = 1;
 }
@@ -412,12 +408,11 @@ message ConfidentialTransferExtIxProto {
     WithdrawIxProto withdraw_ix = 7;
     ConfidentialTransferIxProto transfer_ix = 8;
     ApplyPendingBalanceIxProto apply_pending_balance_ix = 9;
-    CreditsIxProto credits_ix = 10;
-    EnableConfidentialCreditsIxProto enable_confidential_credits_ix = 11;
-    DisableConfidentialCreditsIxProto disable_confidential_credits_ix = 12;
-    EnableNonConfidentialCreditsIxProto enable_non_confidential_credits_ix = 13;
-    DisableNonConfidentialCreditsIxProto disable_non_confidential_credits_ix = 14;
-    TransferWithSplitProofsIxProto transfer_with_split_proofs_ix = 15;
+    EnableConfidentialCreditsIxProto enable_confidential_credits_ix = 10;
+    DisableConfidentialCreditsIxProto disable_confidential_credits_ix = 11;
+    EnableNonConfidentialCreditsIxProto enable_non_confidential_credits_ix = 12;
+    DisableNonConfidentialCreditsIxProto disable_non_confidential_credits_ix = 13;
+    TransferWithSplitProofsIxProto transfer_with_split_proofs_ix = 14;
   }
 }
 
@@ -534,60 +529,146 @@ message CommonExtensionIxProto {
   }
 }
 
-message CpiGuardIxProto {
-  oneof ix_oneof {
-    EnableIxProto enable_ix = 1;
-    DisableIxProto disable_ix = 2;
-  }
+enum ExtensionWithCommonIxsProto {
+  CPI_GUARD = 0;
+  DEFAULT_ACCOUNT_STATE = 1;
+  INTEREST_BEARING_MINT = 2;
+  MEMO_TRANSFER = 3;
+  GROUP_MEMBER_POINTER = 4;
+  GROUP_POINTER = 5;
+  METADATA_POINTER = 6;
+  TRANSFER_HOOK = 7;
+}
+message CommonExtensionIxsProto {
+  ExtensionWithCommonIxsProto extension = 1;
+  CommonExtensionIxProto ix = 2;
 }
 
-message DefaultAccountStateExtension {
-  oneof state_oneof {
-    ExtInitializeIxProto ext_initialize_ix = 1;
-    UpdateIxProto update_ix = 2;
-  }
+message CpiGuardIxProto {
+  CommonExtensionIxProto ix = 1;
+}
+
+message DefaultAccountStateIxProto {
+  CommonExtensionIxProto ix = 1;
 }
 
 message InterestBearingMintIxProto {
-  oneof ix_oneof {
-    ExtInitializeIxProto ext_initialize_ix = 1;
-    UpdateIxProto update_ix = 2;
-  }
+  CommonExtensionIxProto ix = 1;
 }
 
 message MemoTransferIxProto {
-  oneof ix_oneof {
-    EnableIxProto enable_ix = 1;
-    DisableIxProto disable_ix = 2;
-  }
+  CommonExtensionIxProto ix = 1;
 }
 
 message GroupMemberPointerIxProto {
-  oneof ix_oneof {
-    EnableIxProto enable_ix = 1;
-    DisableIxProto disable_ix = 2;
-  }
+  CommonExtensionIxProto ix = 1;
 }
 
 message GroupPointerIxProto {
-  oneof ix_oneof {
-    EnableIxProto enable_ix = 1;
-    DisableIxProto disable_ix = 2;
-  }
+  CommonExtensionIxProto ix = 1;
 }
 
 message MetadataPointerIxProto {
-  oneof ix_oneof {
-    EnableIxProto enable_ix = 1;
-    DisableIxProto disable_ix = 2;
-  }
+  CommonExtensionIxProto ix = 1;
 }
 
 message TransferHookIxProto {
-  oneof ix_oneof {
-    EnableIxProto enable_ix = 1;
-    DisableIxProto disable_ix = 2;
-  }
+  CommonExtensionIxProto ix = 1;
 }
 
+message WithdrawExcessLamportsAccountsProto {
+  string source_account = 1;
+  string destination_account = 2;
+  string authority = 3;
+  repeated string multisig_signers = 4;
+}
 
+message WithdrawExcessLamportsIxProto {
+  WithdrawExcessLamportsAccountsProto accounts = 1;
+}
+
+message InitializePermanentDelegateAccountsProto {
+  string account = 1;
+}
+
+message InitializePermanentDelegateDataProto {
+  string delegate = 1;
+}
+
+message InitializePermanentDelegateIxProto {
+  InitializePermanentDelegateAccountsProto accounts = 1;
+  InitializePermanentDelegateDataProto data = 2;
+}
+
+message ReallocateAccountsProto {
+  string account = 1;
+  string payer_account = 2;
+  string owner = 3;
+  repeated string multisig_signers = 4;
+}
+
+enum ExtensionType {
+  UNINITIALIZED_EXT = 0;
+  TRANSFER_FEE_CONFIG_EXT = 1;
+  TRANSFER_FEE_AMOUNT_EXT = 2;
+  MINT_CLOSE_AUTHORITY_EXT = 3;
+  CONFIDENTIAL_TRANSFER_MINT_EXT = 4;
+  CONFIDENTIAL_TRANSFER_ACCOUNT_EXT = 5;
+  DEFAULT_ACCOUNT_STATE_EXT = 6;
+  IMMUTABLE_OWNER_EXT = 7;
+  MEMO_TRANSFER_EXT = 8;
+  NON_TRANSFERABLE_EXT = 9;
+  INTEREST_BEARING_CONFIG_EXT = 10;
+  CPI_GUARD_EXT = 11;
+  PERMANENT_DELEGATE_EXT = 12;
+  NON_TRANSFERABLE_ACCOUNT_EXT = 13;
+  TRANSFER_HOOK_EXT = 14;
+  TRANSFER_HOOK_ACCOUNT_EXT = 15;
+  CONFIDENTIAL_TRANSFER_FEE_CONFIG_EXT = 16;
+  CONFIDENTIAL_TRANSFER_FEE_AMOUNT_EXT = 17;
+  METADATA_POINTER_EXT = 18;
+  TOKEN_METADATA_EXT = 19;
+  GROUP_POINTER_EXT = 20;
+  TOKEN_GROUP_EXT = 21;
+  GROUP_MEMBER_POINTER_EXT = 22;
+  TOKEN_GROUP_MEMBER_EXT = 23;
+}
+message ReallocateDataProto {
+  repeated ExtensionType extensions_types = 1;
+}
+
+message ReallocateIxProto {
+  ReallocateAccountsProto accounts = 1;
+  ReallocateDataProto data = 2;
+}
+
+message InitializeNonTransferableMintAccountsProto {
+  string mint = 1;
+}
+
+message InitializeNonTransferableMintIxProto {
+  InitializeNonTransferableMintAccountsProto accounts = 1;
+
+}
+
+message InitializeMintCloseAuthorityAccountsProto {
+  string mint = 1;
+}
+
+message InitializeMintCloseAuthorityDataProto {
+  optional string close_authority = 1;
+}
+
+message InitializeMintCloseAuthorityIxProto {
+  InitializeMintCloseAuthorityAccountsProto accounts = 1;
+  InitializeMintCloseAuthorityDataProto data = 2;
+}
+
+message CreateNativeMintAccountsProto {
+  string mint = 1;
+  string funding_account = 2;
+}
+
+message CreateNativeMintIxProto {
+  CreateNativeMintAccountsProto accounts = 1;
+}

@@ -3,7 +3,7 @@ use spl_token_2022::instruction::TokenInstruction;
 use spl_token_group_interface::instruction::TokenGroupInstruction;
 use spl_token_metadata_interface::instruction::TokenMetadataInstruction;
 use yellowstone_vixen_core::{
-    instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
+    instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
 use super::{
@@ -50,6 +50,12 @@ impl Parser for TokenExtensionProgramIxParser {
         } else {
             Err(ParseError::Filtered)
         }
+    }
+}
+
+impl ProgramParser for TokenExtensionProgramIxParser {
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        spl_token_2022::ID.to_bytes().into()
     }
 }
 
@@ -247,6 +253,22 @@ impl TokenExtensionProgramIxParser {
 
                 Err(Error::from_inner("Error unpacking instruction data", e))
             },
+        }
+    }
+}
+
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use super::*;
+    use crate::helpers::IntoProtoData;
+    use crate::proto::IntoProto;
+    use yellowstone_vixen_proto::parser::TokenExtensionProgramIxProto;
+
+    impl IntoProto for TokenExtensionProgramIxParser {
+        type Proto = TokenExtensionProgramIxProto;
+
+        fn into_proto(value: Self::Output) -> Self::Proto {
+            value.into_proto_data()
         }
     }
 }

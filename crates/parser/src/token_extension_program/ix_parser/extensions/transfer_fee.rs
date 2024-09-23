@@ -59,7 +59,7 @@ pub struct WithdrawWithheldTokensFromAccountsData {
 
 #[derive(Debug)]
 
-pub struct HarvestWithheldTokensToMintAccounts {
+pub struct HarvestWithheldTokensToMintAccountsTransferFee {
     pub mint: Pubkey,
     pub source_accounts: Vec<Pubkey>,
 }
@@ -240,7 +240,7 @@ mod proto_parser {
     }
 
     impl IntoProtoData<WithdrawWithheldTokensFromMintAccountsProto>
-        for WithdrawWithheldTokensFromMintAccounts
+        for WithdrawWithheldTokensFromMintAccountsTransferFee
     {
         fn into_proto_data(self) -> WithdrawWithheldTokensFromMintAccountsProto {
             WithdrawWithheldTokensFromMintAccountsProto {
@@ -267,7 +267,7 @@ mod proto_parser {
     }
 
     impl IntoProtoData<HarvestWithheldTokensToMintAccountsProto>
-        for HarvestWithheldTokensToMintAccounts
+        for HarvestWithheldTokensToMintAccountsTransferFee
     {
         fn into_proto_data(self) -> HarvestWithheldTokensToMintAccountsProto {
             HarvestWithheldTokensToMintAccountsProto {

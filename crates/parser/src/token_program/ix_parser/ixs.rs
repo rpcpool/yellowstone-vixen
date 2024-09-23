@@ -88,7 +88,6 @@ pub struct SetAuthorityAccounts {
 }
 
 #[derive(Debug, Clone)]
-
 pub struct SetAuthorityData {
     pub authority_type: AuthorityType,
     pub new_authority: Option<Pubkey>,

@@ -3,10 +3,10 @@ syntax = "proto3";
 package vixen.parser;
 
 enum AuthorityType {
-  MintTokens = 0;
-  FreezeAccount = 1;
-  AccountOwner = 2;
-  CloseAccount = 3;
+  MINT_TOKEN = 0;
+  FREEZE_ACCOUNT = 1;
+  ACCOUNT_OWNER = 2;
+  CLOSE_ACCOUNT = 3;
 }
 
 message TransferAccountsProto {
