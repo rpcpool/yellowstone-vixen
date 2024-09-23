@@ -15,8 +15,7 @@ use super::{
         CreateNativeMintAccounts, InitializeMintCloseAuthorityAccounts,
         InitializeMintCloseAuthorityData, InitializeNonTransferableMintAccounts,
         InitializePermanentDelegateAccounts, InitializePermanentDelegateData, ReallocateAccounts,
-        ReallocateData, TokenExtSetAutorityData, TokenExtensionProgramIx,
-        WithdrawExcessLamportsAccounts,
+        ReallocateData, TokenExtensionProgramIx, WithdrawExcessLamportsAccounts,
     },
 };
 use crate::{
