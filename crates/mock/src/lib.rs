@@ -19,6 +19,8 @@ use std::{
     sync::Arc,
 };
 
+const IX_DISCRIMINATOR_SIZE: usize = 8;
+
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use solana_client::{nonblocking::rpc_client::RpcClient, rpc_request::RpcRequest};
@@ -36,7 +38,7 @@ use yellowstone_vixen_core::{
 };
 
 //TODO: Look these up from the Vixen.toml config file
-const RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
+const RPC_ENDPOINT: &str = "https://api.mainnet-beta.solana.com";
 const FIXTURES_PATH: &str = "./fixtures";
 const PUBKEY_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{32,44}$";
 const TX_SIGNATURE_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{64,90}$";
@@ -255,13 +257,13 @@ fn filter_outer_ixs(
 ) -> Vec<SerializableInstructionUpdate> {
     if let Some(filter) = filters {
         let LoadFixtureFilters {
-            programs,
-            discriminators: _,
+            outer_ixs_programs,
+            inner_ixs_discriminators: _,
         } = filter;
 
         // Filter out instructions that matches the programs in the filters
         ixs.into_iter()
-            .filter(|ix| programs.contains(&ix.program.to_string()))
+            .filter(|ix| outer_ixs_programs.contains(&ix.program.to_string()))
             .collect::<Vec<SerializableInstructionUpdate>>()
     } else {
         ixs
@@ -274,18 +276,21 @@ fn filter_inner_ixs(
 ) -> Vec<SerializableInstructionUpdate> {
     if let Some(filter) = filters {
         let LoadFixtureFilters {
-            programs: _,
-            discriminators,
+            outer_ixs_programs: _,
+            inner_ixs_discriminators,
         } = filter;
-        if discriminators.is_none() {
-            return ixs;
-        }
-        let discriminators = discriminators.as_ref().unwrap();
-        // Filter out instructions that matches the discriminators in the filters
+
+        // Filter out instructions that matches the inner_ix_discriminators in the filters
         ixs.into_iter()
             .filter(|ix| {
-                let disc = ix.data[..8].try_into().unwrap();
-                discriminators.contains(&disc)
+                inner_ixs_discriminators
+                    .as_ref()
+                    .map_or(true, |inner_ix_discriminators| {
+                        let ix_disc_data = ix.data.as_slice()[..IX_DISCRIMINATOR_SIZE]
+                            .try_into()
+                            .unwrap();
+                        inner_ix_discriminators.contains(&ix_disc_data)
+                    })
             })
             .collect::<Vec<SerializableInstructionUpdate>>()
     } else {
@@ -363,15 +368,21 @@ fn try_from_tx_meta(
 
 #[macro_export]
 macro_rules! account_fixture {
-    ($pubkey:expr, $filters:expr) => {
-        $crate::load_fixture($pubkey, $filters).await.unwrap()
+    ($pubkey:expr,$filters:expr) => {
+        match $crate::load_fixture($pubkey, $filters).await.unwrap() {
+            FixtureData::Account(a) => a,
+            f @ _ => panic!("Invalid account fixture {f:?}"),
+        }
     };
 }
 
 #[macro_export]
 macro_rules! tx_fixture {
-    ($sig:expr, $filters:expr) => {
-        $crate::load_fixture($sig, $filters).await.unwrap()
+    ($sig:expr,$filters:expr) => {
+        match $crate::load_fixture($sig, $filters).await.unwrap() {
+            FixtureData::Instructions(i) => i,
+            f @ _ => panic!("Invalid transaction fixture {f:?}"),
+        }
     };
 }
 
@@ -388,11 +399,10 @@ macro_rules! run_ix_parse {
         $parser.parse(&$ix.into()).await.unwrap()
     };
 }
-
 #[derive(Debug, Clone)]
 pub struct LoadFixtureFilters {
-    pub programs: Vec<String>,
-    pub discriminators: Option<Vec<[u8; 8]>>,
+    pub outer_ixs_programs: Vec<String>,
+    pub inner_ixs_discriminators: Option<Vec<[u8; 8]>>,
 }
 
 pub async fn load_fixture(

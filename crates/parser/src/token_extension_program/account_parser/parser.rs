@@ -214,7 +214,7 @@ mod tests {
     async fn test_mint_account_parsing() {
         let parser = TokenExtensionProgramAccParser;
 
-        let account = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu");
+        let account = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu", None);
         let state = run_account_parse!(parser, account);
 
         let TokenExtensionState::ExtendedMint(ext_mint) = state else {

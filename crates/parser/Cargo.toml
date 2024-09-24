@@ -22,6 +22,8 @@ solana-zk-token-sdk = "2.0.9"
 thiserror = "1.0.64"
 orca_whirlpools_client = { version = "0.1.0" }
 borsh = "1.5.1"
+solana-zk-token-sdk = "2.0.10"
+bs58 = "0.5.1"
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }

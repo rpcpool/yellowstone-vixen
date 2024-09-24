@@ -103,37 +103,28 @@ mod tests {
     async fn test_swap_v2_ix_parsing() {
         let parser = OrcaProgramIxParser;
 
-        let fixture_data = tx_fixture!("3WC8LGHHs3wYzWef1YmLsRS96G1s5BV4XJYhzvypgWp1uGG16SxepFCd7FhHaTieW66Yn9JFR4tUPA1HYArgFZaA",
-            Some(LoadFixtureFilters{
-                programs:vec![
-                    orca_whirlpools_client::ID.to_string(),
-                    "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4".to_string()
-                ],
-                discriminators:
-                Some(
-                    vec![
-                        SWAP_IX_DISC
-                    ]
-                )
-            })
-        );
+        let filters = LoadFixtureFilters {
+            outer_ixs_programs: vec![
+                orca_whirlpools_client::ID.to_string(),
+                "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4".to_string(),
+            ],
+            inner_ixs_discriminators: Some(vec![SWAP_V2_IX_DISC]),
+        };
 
-        match fixture_data {
-            FixtureData::Instructions(ixs) => {
-                let parsed = run_ix_parse!(parser, &ixs[0].inner[0]);
-                if let OrcaProgramIx::Swap(ReadableInstruction { accounts, data }) = parsed {
-                    assert_eq!(
-                        accounts.whirlpool.to_string(),
-                        "ENYEHSyduTbFN1xoSEGaLu7c1F8AqKucdscMuV5Yypy2".to_string()
-                    );
-                    assert!(data.is_some());
-                    let swap_ix_data = data.unwrap();
-                    assert_eq!(swap_ix_data.a_to_b, false);
-                } else {
-                    panic!("Invalid Instruction");
-                }
-            },
-            _ => panic!("Invalid fixture data"),
+        let ixs = tx_fixture!("3WC8LGHHs3wYzWef1YmLsRS96G1s5BV4XJYhzvypgWp1uGG16SxepFCd7FhHaTieW66Yn9JFR4tUPA1HYArgFZaA",
+            Some(filters));
+
+        let parsed = run_ix_parse!(parser, &ixs[0].inner[0]);
+        if let OrcaProgramIx::Swap(ReadableInstruction { accounts, data }) = parsed {
+            assert_eq!(
+                accounts.whirlpool.to_string(),
+                "ENYEHSyduTbFN1xoSEGaLu7c1F8AqKucdscMuV5Yypy2".to_string()
+            );
+            assert!(data.is_some());
+            let swap_ix_data = data.unwrap();
+            assert_eq!(swap_ix_data.a_to_b, false);
+        } else {
+            panic!("Invalid Instruction");
         }
     }
 }
