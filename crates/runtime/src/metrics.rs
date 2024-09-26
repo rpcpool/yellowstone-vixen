@@ -80,7 +80,9 @@ pub trait Exporter {
 pub trait Counter: Send + Sync {
     /// Increment the counter by one.
     #[inline]
-    fn inc(&self) { self.inc_by(1); }
+    fn inc(&self) {
+        self.inc_by(1);
+    }
 
     /// Increment the counter by the given amount.
     fn inc_by(&self, by: u64);
@@ -88,10 +90,14 @@ pub trait Counter: Send + Sync {
 
 impl<T: Counter> Counter for &T {
     #[inline]
-    fn inc(&self) { T::inc(self); }
+    fn inc(&self) {
+        T::inc(self);
+    }
 
     #[inline]
-    fn inc_by(&self, by: u64) { T::inc_by(self, by); }
+    fn inc_by(&self, by: u64) {
+        T::inc_by(self, by);
+    }
 }
 
 /// A no-op metrics backend.
@@ -130,11 +136,14 @@ impl Counter for NullMetrics {
 impl Exporter for Infallible {
     type Error = Infallible;
 
-    async fn run(self, _: StopRx) -> Result<StopCode, Self::Error> { match self {} }
+    async fn run(self, _: StopRx) -> Result<StopCode, Self::Error> {
+        match self {}
+    }
 }
 
 #[cfg(feature = "prometheus")]
 mod prometheus_impl {
+    const PROMETHEUS_PUSH_GATEWAY_ENDPOINT: &str = "http://localhost:9091";
     use std::{borrow::Cow, time::Duration};
 
     use prometheus::Registry;
@@ -183,7 +192,7 @@ mod prometheus_impl {
                     prometheus::push_metrics(
                         &me.1.job,
                         prometheus::labels! {},
-                        &me.1.endpoint,
+                        PROMETHEUS_PUSH_GATEWAY_ENDPOINT,
                         me.0.gather(),
                         Some(prometheus::BasicAuthentication {
                             username: me.1.username.clone(),
@@ -218,7 +227,9 @@ mod prometheus_impl {
     }
 
     impl super::Counter for prometheus::IntCounter {
-        fn inc_by(&self, by: u64) { prometheus::IntCounter::inc_by(self, by); }
+        fn inc_by(&self, by: u64) {
+            prometheus::IntCounter::inc_by(self, by);
+        }
     }
 }
 
@@ -247,7 +258,9 @@ mod opentelemetry_impl {
         /// provider.
         #[inline]
         #[must_use]
-        pub fn global() -> Self { Self(global::meter_provider()) }
+        pub fn global() -> Self {
+            Self(global::meter_provider())
+        }
     }
 
     impl<M> OpenTelemetry<M> {
@@ -255,7 +268,9 @@ mod opentelemetry_impl {
         /// provider.
         #[inline]
         #[must_use]
-        pub fn new(meter_provider: M) -> Self { Self(meter_provider) }
+        pub fn new(meter_provider: M) -> Self {
+            Self(meter_provider)
+        }
     }
 
     impl<M: MeterProvider + Send + 'static> super::MetricsFactory for OpenTelemetry<M> {
@@ -302,7 +317,9 @@ mod opentelemetry_impl {
     }
 
     impl super::Counter for Counter<u64> {
-        fn inc_by(&self, by: u64) { self.add(by, &[]); }
+        fn inc_by(&self, by: u64) {
+            self.add(by, &[]);
+        }
     }
 }
 
@@ -468,11 +485,15 @@ impl<B: Instrumenter> Counters<B> {
 }
 
 impl<B: Instrumenter> fmt::Debug for Counters<B> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Counters").finish() }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Counters").finish()
+    }
 }
 
 impl<B: Instrumenter> Counters<B> {
-    pub fn inc_received(&self, ty: UpdateType) { self.updates_recvd.get(ty).inc(); }
+    pub fn inc_received(&self, ty: UpdateType) {
+        self.updates_recvd.get(ty).inc();
+    }
 
     #[inline]
     pub fn inc_processed(&self, ty: UpdateType, res: JobResult) {
@@ -502,5 +523,7 @@ impl<B: Instrumenter> InstructionCounters<B> {
     }
 
     #[inline]
-    pub fn inc_processed(&self, res: JobResult) { self.result.inc(res, std::convert::identity); }
+    pub fn inc_processed(&self, res: JobResult) {
+        self.result.inc(res, std::convert::identity);
+    }
 }
