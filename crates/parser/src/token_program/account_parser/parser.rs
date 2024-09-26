@@ -140,7 +140,7 @@ mod tests {
     async fn test_mint_account_parsing() {
         let parser = TokenProgramAccParser;
 
-        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK", None);
+        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
         let state = run_account_parse!(parser, account);
 
         let TokenProgramState::Mint(mint) = state else {

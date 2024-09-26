@@ -368,8 +368,8 @@ fn try_from_tx_meta(
 
 #[macro_export]
 macro_rules! account_fixture {
-    ($pubkey:expr,$filters:expr) => {
-        match $crate::load_fixture($pubkey, $filters).await.unwrap() {
+    ($pubkey:expr) => {
+        match $crate::load_fixture($pubkey, None).await.unwrap() {
             FixtureData::Account(a) => a,
             f @ _ => panic!("Invalid account fixture {f:?}"),
         }

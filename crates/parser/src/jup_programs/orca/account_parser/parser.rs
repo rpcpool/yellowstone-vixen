@@ -68,32 +68,27 @@ impl ProgramParser for OrcaProgramAccParser {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
+#[cfg(test)]
+mod tests {
+    use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
 
-//     use super::*;
+    use super::*;
 
-//     #[tokio::test]
-//     async fn test_whirlpool_account_parsing() {
-//         let parser = OrcaProgramAccParser;
+    #[tokio::test]
+    async fn test_whirlpool_account_parsing() {
+        let parser = OrcaProgramAccParser;
 
-//         let fixture_data = account_fixture!("56Ekyu6uBpTna3LR2qkjHjNbDNkCLWK2Lt3uWh7J2R8Z");
+        let account = account_fixture!("56Ekyu6uBpTna3LR2qkjHjNbDNkCLWK2Lt3uWh7J2R8Z");
 
-//         match fixture_data {
-//             FixtureData::Account(account) => {
-//                 let parsed = run_account_parse!(&parser, &account);
+        let parsed = run_account_parse!(&parser, &account);
 
-//                 if let OrcaProgramState::Whirlpool(whirlpool) = parsed {
-//                     assert_eq!(
-//                         whirlpool.whirlpools_config.to_string(),
-//                         "2LecshUwdy9xi7meFgHtFJQNSKk4KdTrcpvaB56dP2NQ".to_string()
-//                     );
-//                 } else {
-//                     panic!("Invalid parsed data");
-//                 }
-//             },
-//             _ => panic!("Invalid fixture data"),
-//         }
-//     }
-// }
+        if let OrcaProgramState::Whirlpool(whirlpool) = parsed {
+            assert_eq!(
+                whirlpool.whirlpools_config.to_string(),
+                "2LecshUwdy9xi7meFgHtFJQNSKk4KdTrcpvaB56dP2NQ".to_string()
+            );
+        } else {
+            panic!("Invalid parsed data");
+        }
+    }
+}
