@@ -179,8 +179,6 @@ mod prometheus_impl {
     #[derive(Debug, Clone /* TODO: used for hack */, serde::Deserialize)]
     #[serde(rename_all = "kebab-case")]
     pub struct PrometheusConfig {
-        /// Prometheus gateway endpoint.
-        pub endpoint: String,
         /// Prometheus job name.
         pub job: String,
         /// Prometheus username.
@@ -207,8 +205,6 @@ mod prometheus_impl {
         #[derive(clap::Args)]
         struct PrometheusConfig {
             #[arg(long, env)]
-            prometheus_endpoint: String,
-            #[arg(long, env)]
             prometheus_job: String,
             #[arg(long, env)]
             prometheus_user: String,
@@ -221,14 +217,12 @@ mod prometheus_impl {
         impl From<super::PrometheusConfig> for PrometheusConfig {
             fn from(value: super::PrometheusConfig) -> Self {
                 let super::PrometheusConfig {
-                    endpoint,
                     job,
                     username,
                     password,
                     export_interval,
                 } = value;
                 Self {
-                    prometheus_endpoint: endpoint,
                     prometheus_job: job,
                     prometheus_user: username,
                     prometheus_pass: password.into(),
@@ -240,14 +234,12 @@ mod prometheus_impl {
         impl From<PrometheusConfig> for super::PrometheusConfig {
             fn from(value: PrometheusConfig) -> Self {
                 let PrometheusConfig {
-                    prometheus_endpoint,
                     prometheus_job,
                     prometheus_user,
                     prometheus_pass,
                     prometheus_export_interval,
                 } = value;
                 Self {
-                    endpoint: prometheus_endpoint,
                     job: prometheus_job,
                     username: prometheus_user,
                     password: prometheus_pass.into(),

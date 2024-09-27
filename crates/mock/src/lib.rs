@@ -209,7 +209,7 @@ fn try_from_tx_meta(
                 })
                 .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
             outer_with_inner_ixs.pop(); // Remove the last instruction which is a
-            // set compute unit ix and will cause errors while parsing
+                                        // set compute unit ix and will cause errors while parsing
 
             if let Some(inner_ixs) = inner_ixs {
                 if inner_ixs.is_empty() {

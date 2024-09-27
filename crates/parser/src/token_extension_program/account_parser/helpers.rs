@@ -277,9 +277,7 @@ pub mod token_extensions_proto_parser {
     }
 
     impl IntoProtoData<ImmutableOwnerProto> for ImmutableOwner {
-        fn into_proto_data(self) -> ImmutableOwnerProto {
-            ImmutableOwnerProto {}
-        }
+        fn into_proto_data(self) -> ImmutableOwnerProto { ImmutableOwnerProto {} }
     }
 
     impl IntoProtoData<TransferFeeAmountProto> for extension::transfer_fee::TransferFeeAmount {
@@ -328,9 +326,7 @@ pub mod token_extensions_proto_parser {
     impl IntoProtoData<NonTransferableAccountProto>
         for extension::non_transferable::NonTransferableAccount
     {
-        fn into_proto_data(self) -> NonTransferableAccountProto {
-            NonTransferableAccountProto {}
-        }
+        fn into_proto_data(self) -> NonTransferableAccountProto { NonTransferableAccountProto {} }
     }
 
     impl IntoProtoData<TransferHookAccountProto> for extension::transfer_hook::TransferHookAccount {
@@ -422,9 +418,7 @@ pub mod token_extensions_proto_parser {
     }
 
     impl IntoProtoData<NonTransferableProto> for extension::non_transferable::NonTransferable {
-        fn into_proto_data(self) -> NonTransferableProto {
-            NonTransferableProto {}
-        }
+        fn into_proto_data(self) -> NonTransferableProto { NonTransferableProto {} }
     }
 
     impl IntoProtoData<InterestBearingConfigProto>
