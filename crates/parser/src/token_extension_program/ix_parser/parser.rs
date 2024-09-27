@@ -17,6 +17,7 @@ use super::{
         InitializePermanentDelegateAccounts, InitializePermanentDelegateData, ReallocateAccounts,
         ReallocateData, TokenExtensionProgramIx, WithdrawExcessLamportsAccounts,
     },
+    SetAuthorityData,
 };
 use crate::{
     helpers::{check_min_accounts_req, into_vixen_pubkey},
@@ -155,7 +156,7 @@ impl TokenExtensionProgramIxParser {
                             current_authority: ix.accounts[1],
                             multisig_signers: ix.accounts[2..].to_vec(),
                         },
-                        TokenExtSetAutorityData {
+                        SetAuthorityData {
                             authority_type,
                             new_authority: new_authority.map(into_vixen_pubkey).into(),
                         },
@@ -256,15 +257,16 @@ impl TokenExtensionProgramIxParser {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
+    use yellowstone_vixen_core::proto::ParseProto;
     use yellowstone_vixen_proto::parser::TokenExtensionProgramIxProto;
 
     use super::TokenExtensionProgramIxParser;
-    use crate::{helpers::IntoProtoData, proto::IntoProto};
+    use crate::helpers::IntoProto;
 
-    impl IntoProto for TokenExtensionProgramIxParser {
-        type Proto = TokenExtensionProgramIxProto;
+    impl ParseProto for TokenExtensionProgramIxParser {
+        type Message = TokenExtensionProgramIxProto;
 
-        fn into_proto(value: Self::Output) -> Self::Proto { value.into_proto_data() }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }
 

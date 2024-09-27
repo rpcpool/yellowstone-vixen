@@ -73,5 +73,6 @@ message TokenExtensionProgramIxProto {
     InitializeNonTransferableMintIxProto initialize_non_transferable_mint_ix = 18;
     InitializeMintCloseAuthorityIxProto initialize_mint_close_authority_ix = 19;
     CreateNativeMintIxProto create_native_mint_ix = 20;
+    SetAuthorityIxProto set_authority = 21;
   }
 }

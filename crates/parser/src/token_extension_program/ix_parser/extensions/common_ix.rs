@@ -149,70 +149,70 @@ mod proto_parser {
     };
 
     use super::{CommonIx, DisableAccounts, EnableAccounts, ExtInitializeAccounts, UpdateAccounts};
-    use crate::helpers::{FromOptVecToDefVec, IntoProtoData};
+    use crate::helpers::{FromVecPubkeyToVecString, IntoProto};
 
-    impl IntoProtoData<ExtInitializeAccountsProto> for ExtInitializeAccounts {
-        fn into_proto_data(self) -> ExtInitializeAccountsProto {
+    impl IntoProto<ExtInitializeAccountsProto> for ExtInitializeAccounts {
+        fn into_proto(self) -> ExtInitializeAccountsProto {
             ExtInitializeAccountsProto {
                 mint: self.mint.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<UpdateAccountsProto> for UpdateAccounts {
-        fn into_proto_data(self) -> UpdateAccountsProto {
+    impl IntoProto<UpdateAccountsProto> for UpdateAccounts {
+        fn into_proto(self) -> UpdateAccountsProto {
             UpdateAccountsProto {
                 mint: self.mint.to_string(),
                 extension_authority: self.extension_authority.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<EnableAccountsProto> for EnableAccounts {
-        fn into_proto_data(self) -> EnableAccountsProto {
+    impl IntoProto<EnableAccountsProto> for EnableAccounts {
+        fn into_proto(self) -> EnableAccountsProto {
             EnableAccountsProto {
                 account: self.account.to_string(),
                 owner: self.owner.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<DisableAccountsProto> for DisableAccounts {
-        fn into_proto_data(self) -> DisableAccountsProto {
+    impl IntoProto<DisableAccountsProto> for DisableAccounts {
+        fn into_proto(self) -> DisableAccountsProto {
             DisableAccountsProto {
                 account: self.account.to_string(),
                 owner: self.owner.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<CommonExtensionIxProto> for CommonIx {
-        fn into_proto_data(self) -> CommonExtensionIxProto {
+    impl IntoProto<CommonExtensionIxProto> for CommonIx {
+        fn into_proto(self) -> CommonExtensionIxProto {
             match self {
-                CommonIx::Initialize(ri) => CommonExtensionIxProto {
+                CommonIx::Initialize(acc) => CommonExtensionIxProto {
                     ix_oneof: Some(IxOneof::ExtInitializeIx(ExtInitializeIxProto {
-                        accounts: Some(ri.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                CommonIx::Update(ri) => CommonExtensionIxProto {
+                CommonIx::Update(acc) => CommonExtensionIxProto {
                     ix_oneof: Some(IxOneof::UpdateIx(UpdateIxProto {
-                        accounts: Some(ri.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                CommonIx::Enable(ri) => CommonExtensionIxProto {
+                CommonIx::Enable(acc) => CommonExtensionIxProto {
                     ix_oneof: Some(IxOneof::EnableIx(EnableIxProto {
-                        accounts: Some(ri.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                CommonIx::Disable(ri) => CommonExtensionIxProto {
+                CommonIx::Disable(acc) => CommonExtensionIxProto {
                     ix_oneof: Some(IxOneof::DisableIx(DisableIxProto {
-                        accounts: Some(ri.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
             }

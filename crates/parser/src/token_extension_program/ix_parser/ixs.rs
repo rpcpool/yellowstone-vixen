@@ -11,7 +11,7 @@ use crate::token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIx};
 #[derive(Debug)]
 pub enum TokenExtensionProgramIx {
     TokenProgramIx(TokenProgramIx),
-    SetAuthority(SetAuthorityAccounts, TokenExtSetAutorityData),
+    SetAuthority(SetAuthorityAccounts, SetAuthorityData),
     CreateNativeMint(CreateNativeMintAccounts),
     InitializeMintCloseAuthority(
         InitializeMintCloseAuthorityAccounts,
@@ -37,12 +37,6 @@ pub enum TokenExtensionProgramIx {
     TransferHookIx(CommonExtensionIxs),
     TokenMetadataIx(TokenMetadataIx),
     TokenGroupIx(TokenGroupIx),
-}
-
-#[derive(Debug)]
-pub struct TokenExtSetAutorityData {
-    pub authority_type: AuthorityType,
-    pub new_authority: Option<Pubkey>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -97,6 +91,12 @@ pub struct WithdrawExcessLamportsAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
+#[derive(Debug, Clone)]
+pub struct SetAuthorityData {
+    pub authority_type: AuthorityType,
+    pub new_authority: Option<Pubkey>,
+}
+
 #[cfg(feature = "proto")]
 mod proto_parser {
     use token_extension_program_ix_proto::IxOneof;
@@ -109,98 +109,92 @@ mod proto_parser {
         InitializePermanentDelegateAccountsProto, InitializePermanentDelegateDataProto,
         InitializePermanentDelegateIxProto, InterestBearingMintIxProto, MemoTransferIxProto,
         MetadataPointerIxProto, ReallocateAccountsProto, ReallocateDataProto, ReallocateIxProto,
-        TokenExtensionProgramIxProto, TransferHookIxProto, WithdrawExcessLamportsAccountsProto,
-        WithdrawExcessLamportsIxProto,
+        SetAuthorityDataProto, SetAuthorityIxProto, TokenExtensionProgramIxProto,
+        TransferHookIxProto, WithdrawExcessLamportsAccountsProto, WithdrawExcessLamportsIxProto,
     };
 
     use super::{
         CreateNativeMintAccounts, InitializeMintCloseAuthorityAccounts,
         InitializeMintCloseAuthorityData, InitializeNonTransferableMintAccounts,
         InitializePermanentDelegateAccounts, InitializePermanentDelegateData, ReallocateAccounts,
-        ReallocateData, TokenExtensionProgramIx, WithdrawExcessLamportsAccounts,
+        ReallocateData, SetAuthorityData, TokenExtensionProgramIx, WithdrawExcessLamportsAccounts,
     };
-    use crate::helpers::{
-        FromCOptionPubkeyToOptString, FromOptVecToDefVec, FromOptionToProtoOption, IntoProtoData,
-    };
+    use crate::helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
 
-    impl IntoProtoData<WithdrawExcessLamportsAccountsProto> for WithdrawExcessLamportsAccounts {
-        fn into_proto_data(self) -> WithdrawExcessLamportsAccountsProto {
+    impl IntoProto<WithdrawExcessLamportsAccountsProto> for WithdrawExcessLamportsAccounts {
+        fn into_proto(self) -> WithdrawExcessLamportsAccountsProto {
             WithdrawExcessLamportsAccountsProto {
                 source_account: self.source_account.to_string(),
                 destination_account: self.destination_account.to_string(),
                 authority: self.authority.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<InitializePermanentDelegateAccountsProto>
-        for InitializePermanentDelegateAccounts
-    {
-        fn into_proto_data(self) -> InitializePermanentDelegateAccountsProto {
+    impl IntoProto<InitializePermanentDelegateAccountsProto> for InitializePermanentDelegateAccounts {
+        fn into_proto(self) -> InitializePermanentDelegateAccountsProto {
             InitializePermanentDelegateAccountsProto {
                 account: self.account.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<InitializePermanentDelegateDataProto> for InitializePermanentDelegateData {
-        fn into_proto_data(self) -> InitializePermanentDelegateDataProto {
+    impl IntoProto<InitializePermanentDelegateDataProto> for InitializePermanentDelegateData {
+        fn into_proto(self) -> InitializePermanentDelegateDataProto {
             InitializePermanentDelegateDataProto {
                 delegate: self.delegate.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<ReallocateAccountsProto> for ReallocateAccounts {
-        fn into_proto_data(self) -> ReallocateAccountsProto {
+    impl IntoProto<ReallocateAccountsProto> for ReallocateAccounts {
+        fn into_proto(self) -> ReallocateAccountsProto {
             ReallocateAccountsProto {
                 account: self.account.to_string(),
                 payer_account: self.payer.to_string(),
                 owner: self.owner.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<ReallocateDataProto> for ReallocateData {
-        fn into_proto_data(self) -> ReallocateDataProto {
+    impl IntoProto<ReallocateDataProto> for ReallocateData {
+        fn into_proto(self) -> ReallocateDataProto {
             ReallocateDataProto {
                 extensions_types: self.extension_types.iter().map(|e| *e as i32).collect(),
             }
         }
     }
 
-    impl IntoProtoData<InitializeNonTransferableMintAccountsProto>
+    impl IntoProto<InitializeNonTransferableMintAccountsProto>
         for InitializeNonTransferableMintAccounts
     {
-        fn into_proto_data(self) -> InitializeNonTransferableMintAccountsProto {
+        fn into_proto(self) -> InitializeNonTransferableMintAccountsProto {
             InitializeNonTransferableMintAccountsProto {
                 mint: self.mint.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<InitializeMintCloseAuthorityAccountsProto>
-        for InitializeMintCloseAuthorityAccounts
-    {
-        fn into_proto_data(self) -> InitializeMintCloseAuthorityAccountsProto {
+    impl IntoProto<InitializeMintCloseAuthorityAccountsProto> for InitializeMintCloseAuthorityAccounts {
+        fn into_proto(self) -> InitializeMintCloseAuthorityAccountsProto {
             InitializeMintCloseAuthorityAccountsProto {
                 mint: self.mint.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<InitializeMintCloseAuthorityDataProto> for InitializeMintCloseAuthorityData {
-        fn into_proto_data(self) -> InitializeMintCloseAuthorityDataProto {
+    impl IntoProto<InitializeMintCloseAuthorityDataProto> for InitializeMintCloseAuthorityData {
+        fn into_proto(self) -> InitializeMintCloseAuthorityDataProto {
             InitializeMintCloseAuthorityDataProto {
                 close_authority: self.close_authority.to_opt_string(),
             }
         }
     }
 
-    impl IntoProtoData<CreateNativeMintAccountsProto> for CreateNativeMintAccounts {
-        fn into_proto_data(self) -> CreateNativeMintAccountsProto {
+    impl IntoProto<CreateNativeMintAccountsProto> for CreateNativeMintAccounts {
+        fn into_proto(self) -> CreateNativeMintAccountsProto {
             CreateNativeMintAccountsProto {
                 mint: self.mint.to_string(),
                 funding_account: self.funding_account.to_string(),
@@ -208,133 +202,150 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<TokenExtensionProgramIxProto> for TokenExtensionProgramIx {
+    impl IntoProto<SetAuthorityDataProto> for SetAuthorityData {
+        fn into_proto(self) -> SetAuthorityDataProto {
+            SetAuthorityDataProto {
+                authority_type: self.authority_type as i32,
+                new_authority: self.new_authority.to_opt_string(),
+            }
+        }
+    }
+
+    impl IntoProto<TokenExtensionProgramIxProto> for TokenExtensionProgramIx {
         #[allow(clippy::too_many_lines)]
-        fn into_proto_data(self) -> TokenExtensionProgramIxProto {
+        fn into_proto(self) -> TokenExtensionProgramIxProto {
             match self {
-                TokenExtensionProgramIx::TransferFeeIx(ri) => TokenExtensionProgramIxProto {
-                    ix_oneof: Some(IxOneof::TransferFeeIx(ri.into_proto_data())),
+                TokenExtensionProgramIx::TransferFeeIx(acc) => TokenExtensionProgramIxProto {
+                    ix_oneof: Some(IxOneof::TransferFeeIx(acc.into_proto())),
                 },
-                TokenExtensionProgramIx::TokenMetadataIx(ri) => TokenExtensionProgramIxProto {
-                    ix_oneof: Some(IxOneof::TokenMetadataIx(ri.into_proto_data())),
+                TokenExtensionProgramIx::TokenMetadataIx(acc) => TokenExtensionProgramIxProto {
+                    ix_oneof: Some(IxOneof::TokenMetadataIx(acc.into_proto())),
                 },
-                TokenExtensionProgramIx::TokenGroupIx(ri) => TokenExtensionProgramIxProto {
-                    ix_oneof: Some(IxOneof::TokenGroupIx(ri.into_proto_data())),
+                TokenExtensionProgramIx::TokenGroupIx(acc) => TokenExtensionProgramIxProto {
+                    ix_oneof: Some(IxOneof::TokenGroupIx(acc.into_proto())),
                 },
-                TokenExtensionProgramIx::ConfidentialtransferFeeIx(ri) => {
+                TokenExtensionProgramIx::ConfidentialtransferFeeIx(acc) => {
                     TokenExtensionProgramIxProto {
-                        ix_oneof: Some(IxOneof::ConfidentialTransferFeeIx(ri.into_proto_data())),
+                        ix_oneof: Some(IxOneof::ConfidentialTransferFeeIx(acc.into_proto())),
                     }
                 },
-                TokenExtensionProgramIx::CpiGuardIx(ri) => TokenExtensionProgramIxProto {
+                TokenExtensionProgramIx::CpiGuardIx(acc) => TokenExtensionProgramIxProto {
                     ix_oneof: Some(IxOneof::CpiGuardIx(CpiGuardIxProto {
-                        ix: Some(ri.ix.into_proto_data()),
+                        ix: Some(acc.ix.into_proto()),
                     })),
                 },
-                TokenExtensionProgramIx::DefaultAccountStateIx(ri) => {
+                TokenExtensionProgramIx::DefaultAccountStateIx(acc) => {
                     TokenExtensionProgramIxProto {
                         ix_oneof: Some(IxOneof::DefaultAccountStateIx(
                             DefaultAccountStateIxProto {
-                                ix: Some(ri.ix.into_proto_data()),
+                                ix: Some(acc.ix.into_proto()),
                             },
                         )),
                     }
                 },
-                TokenExtensionProgramIx::GroupMemberPointerIx(ri) => TokenExtensionProgramIxProto {
-                    ix_oneof: Some(IxOneof::GroupMemberPointerIx(GroupMemberPointerIxProto {
-                        ix: Some(ri.ix.into_proto_data()),
-                    })),
+                TokenExtensionProgramIx::GroupMemberPointerIx(acc) => {
+                    TokenExtensionProgramIxProto {
+                        ix_oneof: Some(IxOneof::GroupMemberPointerIx(GroupMemberPointerIxProto {
+                            ix: Some(acc.ix.into_proto()),
+                        })),
+                    }
                 },
-                TokenExtensionProgramIx::GroupPointerIx(ri) => TokenExtensionProgramIxProto {
+                TokenExtensionProgramIx::GroupPointerIx(acc) => TokenExtensionProgramIxProto {
                     ix_oneof: Some(IxOneof::GroupPointerIx(GroupPointerIxProto {
-                        ix: Some(ri.ix.into_proto_data()),
+                        ix: Some(acc.ix.into_proto()),
                     })),
                 },
 
-                TokenExtensionProgramIx::InterestBearingMintIx(ri) => {
+                TokenExtensionProgramIx::InterestBearingMintIx(acc) => {
                     TokenExtensionProgramIxProto {
                         ix_oneof: Some(IxOneof::InterestBearingMintIx(
                             InterestBearingMintIxProto {
-                                ix: Some(ri.ix.into_proto_data()),
+                                ix: Some(acc.ix.into_proto()),
                             },
                         )),
                     }
                 },
-                TokenExtensionProgramIx::MemoTransferIx(ri) => TokenExtensionProgramIxProto {
+                TokenExtensionProgramIx::MemoTransferIx(acc) => TokenExtensionProgramIxProto {
                     ix_oneof: Some(IxOneof::MemoTransferIx(MemoTransferIxProto {
-                        ix: Some(ri.ix.into_proto_data()),
+                        ix: Some(acc.ix.into_proto()),
                     })),
                 },
 
-                TokenExtensionProgramIx::MetadataPointerIx(ri) => TokenExtensionProgramIxProto {
+                TokenExtensionProgramIx::MetadataPointerIx(acc) => TokenExtensionProgramIxProto {
                     ix_oneof: Some(IxOneof::MetadataPointerIx(MetadataPointerIxProto {
-                        ix: Some(ri.ix.into_proto_data()),
+                        ix: Some(acc.ix.into_proto()),
                     })),
                 },
 
-                TokenExtensionProgramIx::TransferHookIx(ri) => TokenExtensionProgramIxProto {
+                TokenExtensionProgramIx::TransferHookIx(acc) => TokenExtensionProgramIxProto {
                     ix_oneof: Some(IxOneof::TransferHookIx(TransferHookIxProto {
-                        ix: Some(ri.ix.into_proto_data()),
+                        ix: Some(acc.ix.into_proto()),
                     })),
                 },
-                TokenExtensionProgramIx::TokenProgramIx(ri) => TokenExtensionProgramIxProto {
-                    ix_oneof: Some(IxOneof::TokenProgramIx(ri.into_proto_data())),
+                TokenExtensionProgramIx::TokenProgramIx(acc) => TokenExtensionProgramIxProto {
+                    ix_oneof: Some(IxOneof::TokenProgramIx(acc.into_proto())),
                 },
 
-                TokenExtensionProgramIx::CreateNativeMint(ri) => TokenExtensionProgramIxProto {
+                TokenExtensionProgramIx::CreateNativeMint(acc) => TokenExtensionProgramIxProto {
                     ix_oneof: Some(IxOneof::CreateNativeMintIx(CreateNativeMintIxProto {
-                        accounts: Some(ri.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
-                TokenExtensionProgramIx::InitializeMintCloseAuthority(ri) => {
+                TokenExtensionProgramIx::InitializeMintCloseAuthority(acc, data) => {
                     TokenExtensionProgramIxProto {
                         ix_oneof: Some(IxOneof::InitializeMintCloseAuthorityIx(
                             InitializeMintCloseAuthorityIxProto {
-                                accounts: Some(ri.accounts.into_proto_data()),
-                                data: ri.data.to_proto_option(),
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
                             },
                         )),
                     }
                 },
-                TokenExtensionProgramIx::InitializeNonTransferableMint(ri) => {
+                TokenExtensionProgramIx::InitializeNonTransferableMint(acc) => {
                     TokenExtensionProgramIxProto {
                         ix_oneof: Some(IxOneof::InitializeNonTransferableMintIx(
                             InitializeNonTransferableMintIxProto {
-                                accounts: Some(ri.accounts.into_proto_data()),
+                                accounts: Some(acc.into_proto()),
                             },
                         )),
                     }
                 },
-                TokenExtensionProgramIx::Reallocate(ri) => TokenExtensionProgramIxProto {
+                TokenExtensionProgramIx::Reallocate(acc, data) => TokenExtensionProgramIxProto {
                     ix_oneof: Some(IxOneof::ReallocateIx(ReallocateIxProto {
-                        accounts: Some(ri.accounts.into_proto_data()),
-                        data: ri.data.to_proto_option(),
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
                     })),
                 },
-                TokenExtensionProgramIx::InitializePermanentDelegate(ri) => {
+                TokenExtensionProgramIx::InitializePermanentDelegate(acc, data) => {
                     TokenExtensionProgramIxProto {
                         ix_oneof: Some(IxOneof::InitializePermanentDelegateIx(
                             InitializePermanentDelegateIxProto {
-                                accounts: Some(ri.accounts.into_proto_data()),
-                                data: ri.data.to_proto_option(),
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
                             },
                         )),
                     }
                 },
-                TokenExtensionProgramIx::WithdrawExcessLamports(ri) => {
+                TokenExtensionProgramIx::WithdrawExcessLamports(acc) => {
                     TokenExtensionProgramIxProto {
                         ix_oneof: Some(IxOneof::WithdrawExcessLamportsIx(
                             WithdrawExcessLamportsIxProto {
-                                accounts: Some(ri.accounts.into_proto_data()),
+                                accounts: Some(acc.into_proto()),
                             },
                         )),
                     }
                 },
 
-                TokenExtensionProgramIx::ConfidentialTransferIx(ri) => {
+                TokenExtensionProgramIx::ConfidentialTransferIx(acc) => {
                     TokenExtensionProgramIxProto {
-                        ix_oneof: Some(IxOneof::ConfidentialTransferIx(ri.into_proto_data())),
+                        ix_oneof: Some(IxOneof::ConfidentialTransferIx(acc.into_proto())),
                     }
+                },
+                TokenExtensionProgramIx::SetAuthority(acc, data) => TokenExtensionProgramIxProto {
+                    ix_oneof: Some(IxOneof::SetAuthority(SetAuthorityIxProto {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
                 },
             }
         }

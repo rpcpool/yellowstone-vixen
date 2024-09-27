@@ -129,13 +129,13 @@ mod proto_parser {
     };
 
     use super::{
-        EmitAccounts, InitializeAccounts, ReadableInstruction, RmoveKeyAccounts, TokenMetadataIx,
+        EmitAccounts, InitializeAccounts, RmoveKeyAccounts, TokenMetadataIx,
         UpdateAuthorityAccounts, UpdateFieldAccounts,
     };
-    use crate::helpers::{FromOptionToProtoOption, IntoProtoData};
+    use crate::helpers::IntoProto;
 
-    impl IntoProtoData<InitializeAccountsProto> for InitializeAccounts {
-        fn into_proto_data(self) -> InitializeAccountsProto {
+    impl IntoProto<InitializeAccountsProto> for InitializeAccounts {
+        fn into_proto(self) -> InitializeAccountsProto {
             InitializeAccountsProto {
                 metadata: self.metadata.to_string(),
                 update_authority: self.update_authority.to_string(),
@@ -145,8 +145,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<UpdateFieldAccountsProto> for UpdateFieldAccounts {
-        fn into_proto_data(self) -> UpdateFieldAccountsProto {
+    impl IntoProto<UpdateFieldAccountsProto> for UpdateFieldAccounts {
+        fn into_proto(self) -> UpdateFieldAccountsProto {
             UpdateFieldAccountsProto {
                 metadata: self.metadata.to_string(),
                 update_authority: self.update_authority.to_string(),
@@ -154,8 +154,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<RmoveKeyAccountsProto> for RmoveKeyAccounts {
-        fn into_proto_data(self) -> RmoveKeyAccountsProto {
+    impl IntoProto<RmoveKeyAccountsProto> for RmoveKeyAccounts {
+        fn into_proto(self) -> RmoveKeyAccountsProto {
             RmoveKeyAccountsProto {
                 metadata: self.metadata.to_string(),
                 update_authority: self.update_authority.to_string(),
@@ -163,8 +163,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<UpdateAuthorityAccountsProto> for UpdateAuthorityAccounts {
-        fn into_proto_data(self) -> UpdateAuthorityAccountsProto {
+    impl IntoProto<UpdateAuthorityAccountsProto> for UpdateAuthorityAccounts {
+        fn into_proto(self) -> UpdateAuthorityAccountsProto {
             UpdateAuthorityAccountsProto {
                 metadata: self.metadata.to_string(),
                 current_update_authority: self.current_update_authority.to_string(),
@@ -172,16 +172,16 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<EmitAccountsProto> for EmitAccounts {
-        fn into_proto_data(self) -> EmitAccountsProto {
+    impl IntoProto<EmitAccountsProto> for EmitAccounts {
+        fn into_proto(self) -> EmitAccountsProto {
             EmitAccountsProto {
                 metadata: self.metadata.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<InitializeDataProto> for spl_token_metadata_interface::instruction::Initialize {
-        fn into_proto_data(self) -> InitializeDataProto {
+    impl IntoProto<InitializeDataProto> for spl_token_metadata_interface::instruction::Initialize {
+        fn into_proto(self) -> InitializeDataProto {
             InitializeDataProto {
                 name: self.name,
                 symbol: self.symbol,
@@ -199,10 +199,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<UpdateFieldDataProto>
-        for spl_token_metadata_interface::instruction::UpdateField
-    {
-        fn into_proto_data(self) -> UpdateFieldDataProto {
+    impl IntoProto<UpdateFieldDataProto> for spl_token_metadata_interface::instruction::UpdateField {
+        fn into_proto(self) -> UpdateFieldDataProto {
             UpdateFieldDataProto {
                 key: from_field_to_string(self.field),
                 value: self.value,
@@ -210,8 +208,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<RemoveKeyDataProto> for spl_token_metadata_interface::instruction::RemoveKey {
-        fn into_proto_data(self) -> RemoveKeyDataProto {
+    impl IntoProto<RemoveKeyDataProto> for spl_token_metadata_interface::instruction::RemoveKey {
+        fn into_proto(self) -> RemoveKeyDataProto {
             RemoveKeyDataProto {
                 idempotent: self.idempotent,
                 key: self.key,
@@ -219,18 +217,18 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<UpdateAuthorityDataProto>
+    impl IntoProto<UpdateAuthorityDataProto>
         for spl_token_metadata_interface::instruction::UpdateAuthority
     {
-        fn into_proto_data(self) -> UpdateAuthorityDataProto {
+        fn into_proto(self) -> UpdateAuthorityDataProto {
             UpdateAuthorityDataProto {
                 new_authority: self.new_authority.0.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<EmitDataProto> for spl_token_metadata_interface::instruction::Emit {
-        fn into_proto_data(self) -> EmitDataProto {
+    impl IntoProto<EmitDataProto> for spl_token_metadata_interface::instruction::Emit {
+        fn into_proto(self) -> EmitDataProto {
             EmitDataProto {
                 start: self.start,
                 end: self.end,
@@ -238,51 +236,41 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<TokenMetadataIxProto> for TokenMetadataIx {
-        fn into_proto_data(self) -> TokenMetadataIxProto {
+    impl IntoProto<TokenMetadataIxProto> for TokenMetadataIx {
+        fn into_proto(self) -> TokenMetadataIxProto {
             match self {
-                TokenMetadataIx::Initialize(ReadableInstruction { accounts, data }) => {
-                    TokenMetadataIxProto {
-                        ix_oneof: Some(IxOneof::InitializeIx(InitializeIxProto {
-                            accounts: Some(accounts.into_proto_data()),
-                            data: data.to_proto_option(),
-                        })),
-                    }
+                TokenMetadataIx::Initialize(acc, data) => TokenMetadataIxProto {
+                    ix_oneof: Some(IxOneof::InitializeIx(InitializeIxProto {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
                 },
-                TokenMetadataIx::UpdateField(ReadableInstruction { accounts, data }) => {
-                    TokenMetadataIxProto {
-                        ix_oneof: Some(IxOneof::UpdateFieldsIx(UpdateFieldIxProto {
-                            accounts: Some(accounts.into_proto_data()),
-                            data: data.to_proto_option(),
-                        })),
-                    }
+                TokenMetadataIx::UpdateField(acc, data) => TokenMetadataIxProto {
+                    ix_oneof: Some(IxOneof::UpdateFieldsIx(UpdateFieldIxProto {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
                 },
 
-                TokenMetadataIx::RemoveKey(ReadableInstruction { accounts, data }) => {
-                    TokenMetadataIxProto {
-                        ix_oneof: Some(IxOneof::RemoveKeyIx(RemoveKeyIxProto {
-                            accounts: Some(accounts.into_proto_data()),
-                            data: data.to_proto_option(),
-                        })),
-                    }
+                TokenMetadataIx::RemoveKey(acc, data) => TokenMetadataIxProto {
+                    ix_oneof: Some(IxOneof::RemoveKeyIx(RemoveKeyIxProto {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
                 },
 
-                TokenMetadataIx::UpdateAuthority(ReadableInstruction { accounts, data }) => {
-                    TokenMetadataIxProto {
-                        ix_oneof: Some(IxOneof::UpdateAuthorityIx(UpdateAuthorityIxProto {
-                            accounts: Some(accounts.into_proto_data()),
-                            data: data.to_proto_option(),
-                        })),
-                    }
+                TokenMetadataIx::UpdateAuthority(acc, data) => TokenMetadataIxProto {
+                    ix_oneof: Some(IxOneof::UpdateAuthorityIx(UpdateAuthorityIxProto {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
                 },
 
-                TokenMetadataIx::Emit(ReadableInstruction { accounts, data }) => {
-                    TokenMetadataIxProto {
-                        ix_oneof: Some(IxOneof::EmitIx(EmitIxProto {
-                            accounts: Some(accounts.into_proto_data()),
-                            data: data.to_proto_option(),
-                        })),
-                    }
+                TokenMetadataIx::Emit(acc, data) => TokenMetadataIxProto {
+                    ix_oneof: Some(IxOneof::EmitIx(EmitIxProto {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
                 },
             }
         }

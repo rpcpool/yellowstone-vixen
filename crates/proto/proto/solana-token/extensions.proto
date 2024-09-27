@@ -51,7 +51,7 @@ message WithdrawWithheldTokensFromMintIxProto {
   WithdrawWithheldTokensFromMintAccountsProto accounts = 1;
 }
 
-message WithdrawWithheldTokensFromAccountsAccountsProto2 {
+message WithdrawWithheldTokensFromAccountsAccountsProto {
   string mint = 1;
   string fee_recipient = 2;
   string withdraw_withheld_authority = 3;
@@ -60,13 +60,19 @@ message WithdrawWithheldTokensFromAccountsAccountsProto2 {
 }
 
 
-message WithdrawWithheldTokensFromAccountsDataProto2 {
+message WithdrawWithheldTokensFromAccountsDataProto {
   uint64 num_token_accounts = 1;
 }
 
-message WithdrawWithheldTokensFromAccountsIxProto2 {
-  WithdrawWithheldTokensFromAccountsAccountsProto2 accounts = 1;
-  WithdrawWithheldTokensFromAccountsDataProto2 data = 2;
+message WithdrawWithheldTokensFromAccountsIxProto {
+  WithdrawWithheldTokensFromAccountsAccountsProto accounts = 1;
+  WithdrawWithheldTokensFromAccountsDataProto data = 2;
+}
+
+
+message HarvestWithheldTokensToMintAccountsProto {
+  string mint = 1;
+  string mint_fee_owner = 2;
 }
 
 message HarvestWithheldTokensToMintIxProto {
@@ -89,12 +95,13 @@ message SetTransferFeeIxProto {
   SetTransferFeeDataProto data = 2;
 }
 
+
 message TransferFeeIxProto {
   oneof ix_oneof {
     TransferCheckedWithFeeIxProto transfer_checked_with_fee_ix = 1;
     InitializeTransferFeeConfigIxProto initialize_transfer_fee_config_ix = 2;
     WithdrawWithheldTokensFromMintIxProto withdraw_withheld_tokens_from_mint_ix = 3;
-    WithdrawWithheldTokensFromAccountsIxProto2 withdraw_withheld_tokens_from_accounts_ix = 4;
+    WithdrawWithheldTokensFromAccountsIxProto withdraw_withheld_tokens_from_accounts_ix = 4;
     HarvestWithheldTokensToMintIxProto harvest_withheld_tokens_to_mint_ix = 5;
     SetTransferFeeIxProto set_transfer_fee_ix = 6;
   }
@@ -427,7 +434,19 @@ message InitializeConfidentialTransferFeeConfigIxProto {
 }
 
 
-message WithdrawWithheldTokensFromAccountsAccountsProto {
+message ConfidentialWithdrawWithheldTokensFromMintAccountsProto {
+  string mint = 1;
+  string fee_recipient = 2;
+  string sysvar = 3;
+  string withdraw_withheld_authority = 4;
+  repeated string multisig_signers = 5;
+}
+
+message ConfidentialWithdrawWithheldTokensFromMintIxProto {
+  ConfidentialWithdrawWithheldTokensFromMintAccountsProto accounts = 1;
+}
+
+message ConfidentialWithdrawWithheldTokensFromAccountsAccountsProto {
   string mint = 1;
   string fee_recipient = 2;
   string withdraw_withheld_authority = 3;
@@ -436,15 +455,18 @@ message WithdrawWithheldTokensFromAccountsAccountsProto {
 }
 
 
-message WithdrawWithheldTokensFromAccountsIxProto {
-  WithdrawWithheldTokensFromAccountsAccountsProto accounts = 1;
+message ConfidentialWithdrawWithheldTokensFromAccountsIxProto {
+  ConfidentialWithdrawWithheldTokensFromAccountsAccountsProto accounts = 1;
 
 }
 
-
-message HarvestWithheldTokensToMintAccountsProto {
+message ConfidentialHarvestWithheldTokensToMintAccountsProto {
   string mint = 1;
   repeated string source_accounts = 2;
+}
+
+message ConfidentialHarvestWithheldTokensToMintIxProto {
+  ConfidentialHarvestWithheldTokensToMintAccountsProto accounts = 1;
 }
 
 message EnableHarvestToMintAccountsProto {
@@ -471,9 +493,9 @@ message DisableHarvestToMintIxProto {
 message ConfidentialTransferFeeIxProto {
   oneof ix_oneof {
     InitializeConfidentialTransferFeeConfigIxProto initialize_confidential_transfer_fee_config_ix = 1;
-    WithdrawWithheldTokensFromMintIxProto withdraw_withheld_tokens_from_mint_ix = 2;
-    WithdrawWithheldTokensFromAccountsIxProto withdraw_withheld_tokens_from_accounts_ix = 3;
-    HarvestWithheldTokensToMintIxProto harvest_withheld_tokens_to_mint_ix = 4;
+    ConfidentialWithdrawWithheldTokensFromMintIxProto withdraw_withheld_tokens_from_mint_ix = 2;
+    ConfidentialWithdrawWithheldTokensFromAccountsIxProto withdraw_withheld_tokens_from_accounts_ix = 3;
+    ConfidentialHarvestWithheldTokensToMintIxProto harvest_withheld_tokens_to_mint_ix = 4;
     EnableHarvestToMintIxProto enable_harvest_to_mint_ix = 5;
     DisableHarvestToMintIxProto disable_harvest_to_mint_ix = 6;
   }

@@ -390,18 +390,18 @@ mod proto_parser {
         EmptyAccountAccounts, InitializeMintAccounts, TransferWithSplitProofsAccounts,
         UpdateMintAccounts, WithdrawAccounts,
     };
-    use crate::helpers::{FromOptPubkeyToOptString, FromOptVecToDefVec, IntoProtoData};
+    use crate::helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
 
-    impl IntoProtoData<InitializeConfidentialMintAccountsProto> for InitializeMintAccounts {
-        fn into_proto_data(self) -> InitializeConfidentialMintAccountsProto {
+    impl IntoProto<InitializeConfidentialMintAccountsProto> for InitializeMintAccounts {
+        fn into_proto(self) -> InitializeConfidentialMintAccountsProto {
             InitializeConfidentialMintAccountsProto {
                 mint: self.mint.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<UpdateMintAccountsProto> for UpdateMintAccounts {
-        fn into_proto_data(self) -> UpdateMintAccountsProto {
+    impl IntoProto<UpdateMintAccountsProto> for UpdateMintAccounts {
+        fn into_proto(self) -> UpdateMintAccountsProto {
             UpdateMintAccountsProto {
                 mint: self.mint.to_string(),
                 authority: self.authority.to_string(),
@@ -409,20 +409,20 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<ConfigureAccountAccountsProto> for ConfigureAccountAccounts {
-        fn into_proto_data(self) -> ConfigureAccountAccountsProto {
+    impl IntoProto<ConfigureAccountAccountsProto> for ConfigureAccountAccounts {
+        fn into_proto(self) -> ConfigureAccountAccountsProto {
             ConfigureAccountAccountsProto {
                 account: self.account.to_string(),
                 mint: self.mint.to_string(),
                 sysvar: self.sysvar.to_string(),
                 owner: self.owner.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<ApproveAccountAccountsProto> for ApproveAccountAccounts {
-        fn into_proto_data(self) -> ApproveAccountAccountsProto {
+    impl IntoProto<ApproveAccountAccountsProto> for ApproveAccountAccounts {
+        fn into_proto(self) -> ApproveAccountAccountsProto {
             ApproveAccountAccountsProto {
                 account: self.account.to_string(),
                 mint: self.mint.to_string(),
@@ -431,75 +431,75 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<EmptyAccountAccountsProto> for EmptyAccountAccounts {
-        fn into_proto_data(self) -> EmptyAccountAccountsProto {
+    impl IntoProto<EmptyAccountAccountsProto> for EmptyAccountAccounts {
+        fn into_proto(self) -> EmptyAccountAccountsProto {
             EmptyAccountAccountsProto {
                 account: self.account.to_string(),
                 sysvar: self.sysvar.to_string(),
                 owner: self.owner.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<DepositAccountsProto> for DepositAccounts {
-        fn into_proto_data(self) -> DepositAccountsProto {
+    impl IntoProto<DepositAccountsProto> for DepositAccounts {
+        fn into_proto(self) -> DepositAccountsProto {
             DepositAccountsProto {
                 account: self.account.to_string(),
                 mint: self.mint.to_string(),
                 owner: self.owner.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<WithdrawAccountsProto> for WithdrawAccounts {
-        fn into_proto_data(self) -> WithdrawAccountsProto {
+    impl IntoProto<WithdrawAccountsProto> for WithdrawAccounts {
+        fn into_proto(self) -> WithdrawAccountsProto {
             WithdrawAccountsProto {
                 source_account: self.source_account.to_string(),
                 mint: self.mint.to_string(),
                 destination: self.destination.to_string(),
                 owner: self.owner.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<ConfidentialTransferAccountsProto> for ConfidentialTransferAccounts {
-        fn into_proto_data(self) -> ConfidentialTransferAccountsProto {
+    impl IntoProto<ConfidentialTransferAccountsProto> for ConfidentialTransferAccounts {
+        fn into_proto(self) -> ConfidentialTransferAccountsProto {
             ConfidentialTransferAccountsProto {
                 source_account: self.source_account.to_string(),
                 mint: self.mint.to_string(),
                 destination: self.destination.to_string(),
                 owner: self.owner.to_string(),
                 context_account: self.context_account.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<ApplyPendingBalanceAccountsProto> for ApplyPendingBalanceAccounts {
-        fn into_proto_data(self) -> ApplyPendingBalanceAccountsProto {
+    impl IntoProto<ApplyPendingBalanceAccountsProto> for ApplyPendingBalanceAccounts {
+        fn into_proto(self) -> ApplyPendingBalanceAccountsProto {
             ApplyPendingBalanceAccountsProto {
                 account: self.account.to_string(),
                 owner: self.owner.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<CreditsAccountsProto> for CreditsAccounts {
-        fn into_proto_data(self) -> CreditsAccountsProto {
+    impl IntoProto<CreditsAccountsProto> for CreditsAccounts {
+        fn into_proto(self) -> CreditsAccountsProto {
             CreditsAccountsProto {
                 account: self.account.to_string(),
                 owner: self.owner.to_string(),
-                multisig_signers: self.multisig_signers.to_def_vec(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
             }
         }
     }
 
-    impl IntoProtoData<TransferWithSplitProofsAccountsProto> for TransferWithSplitProofsAccounts {
-        fn into_proto_data(self) -> TransferWithSplitProofsAccountsProto {
+    impl IntoProto<TransferWithSplitProofsAccountsProto> for TransferWithSplitProofsAccounts {
+        fn into_proto(self) -> TransferWithSplitProofsAccountsProto {
             TransferWithSplitProofsAccountsProto {
                 source_account: self.source_account.to_string(),
                 mint: self.mint.to_string(),
@@ -530,110 +530,110 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<ConfidentialTransferExtIxProto> for ConfidentaltransferIx {
-        fn into_proto_data(self) -> ConfidentialTransferExtIxProto {
+    impl IntoProto<ConfidentialTransferExtIxProto> for ConfidentaltransferIx {
+        fn into_proto(self) -> ConfidentialTransferExtIxProto {
             match self {
-                ConfidentaltransferIx::InitializeMint(ix) => ConfidentialTransferExtIxProto {
+                ConfidentaltransferIx::InitializeMint(acc) => ConfidentialTransferExtIxProto {
                     ix_oneof: Some(IxOneof::InitializeMintIx(
                         InitializeConfidentialMintIxProto {
-                            accounts: Some(ix.accounts.into_proto_data()),
+                            accounts: Some(acc.into_proto()),
                         },
                     )),
                 },
 
-                ConfidentaltransferIx::UpdateMint(ix) => ConfidentialTransferExtIxProto {
+                ConfidentaltransferIx::UpdateMint(acc) => ConfidentialTransferExtIxProto {
                     ix_oneof: Some(IxOneof::UpdateMintIx(UpdateMintIxProto {
-                        accounts: Some(ix.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                ConfidentaltransferIx::ConfigureAccount(ix) => ConfidentialTransferExtIxProto {
+                ConfidentaltransferIx::ConfigureAccount(acc) => ConfidentialTransferExtIxProto {
                     ix_oneof: Some(IxOneof::ConfigureAccountIx(ConfigureAccountIxProto {
-                        accounts: Some(ix.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                ConfidentaltransferIx::ApproveAccount(ix) => ConfidentialTransferExtIxProto {
+                ConfidentaltransferIx::ApproveAccount(acc) => ConfidentialTransferExtIxProto {
                     ix_oneof: Some(IxOneof::ApproveAccountIx(ApproveAccountIxProto {
-                        accounts: Some(ix.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                ConfidentaltransferIx::EmptyAccount(ix) => ConfidentialTransferExtIxProto {
+                ConfidentaltransferIx::EmptyAccount(acc) => ConfidentialTransferExtIxProto {
                     ix_oneof: Some(IxOneof::EmptyAccountIx(EmptyAccountIxProto {
-                        accounts: Some(ix.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                ConfidentaltransferIx::Deposit(ix) => ConfidentialTransferExtIxProto {
+                ConfidentaltransferIx::Deposit(acc) => ConfidentialTransferExtIxProto {
                     ix_oneof: Some(IxOneof::DepositIx(DepositIxProto {
-                        accounts: Some(ix.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                ConfidentaltransferIx::Withdraw(ix) => ConfidentialTransferExtIxProto {
+                ConfidentaltransferIx::Withdraw(acc) => ConfidentialTransferExtIxProto {
                     ix_oneof: Some(IxOneof::WithdrawIx(WithdrawIxProto {
-                        accounts: Some(ix.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                ConfidentaltransferIx::Transfer(ix) => ConfidentialTransferExtIxProto {
+                ConfidentaltransferIx::Transfer(acc) => ConfidentialTransferExtIxProto {
                     ix_oneof: Some(IxOneof::TransferIx(ConfidentialTransferIxProto {
-                        accounts: Some(ix.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                ConfidentaltransferIx::ApplyPendingBalance(ix) => ConfidentialTransferExtIxProto {
+                ConfidentaltransferIx::ApplyPendingBalance(acc) => ConfidentialTransferExtIxProto {
                     ix_oneof: Some(IxOneof::ApplyPendingBalanceIx(ApplyPendingBalanceIxProto {
-                        accounts: Some(ix.accounts.into_proto_data()),
+                        accounts: Some(acc.into_proto()),
                     })),
                 },
 
-                ConfidentaltransferIx::EnableConfidentialCredits(ix) => {
+                ConfidentaltransferIx::EnableConfidentialCredits(acc) => {
                     ConfidentialTransferExtIxProto {
                         ix_oneof: Some(IxOneof::EnableConfidentialCreditsIx(
                             EnableConfidentialCreditsIxProto {
-                                accounts: Some(ix.accounts.into_proto_data()),
+                                accounts: Some(acc.into_proto()),
                             },
                         )),
                     }
                 },
 
-                ConfidentaltransferIx::DisableConfidentialCredits(ix) => {
+                ConfidentaltransferIx::DisableConfidentialCredits(acc) => {
                     ConfidentialTransferExtIxProto {
                         ix_oneof: Some(IxOneof::DisableConfidentialCreditsIx(
                             DisableConfidentialCreditsIxProto {
-                                accounts: Some(ix.accounts.into_proto_data()),
+                                accounts: Some(acc.into_proto()),
                             },
                         )),
                     }
                 },
 
-                ConfidentaltransferIx::EnableNonConfidentialCredits(ix) => {
+                ConfidentaltransferIx::EnableNonConfidentialCredits(acc) => {
                     ConfidentialTransferExtIxProto {
                         ix_oneof: Some(IxOneof::EnableNonConfidentialCreditsIx(
                             EnableNonConfidentialCreditsIxProto {
-                                accounts: Some(ix.accounts.into_proto_data()),
+                                accounts: Some(acc.into_proto()),
                             },
                         )),
                     }
                 },
 
-                ConfidentaltransferIx::DisableNonConfidentialCredits(ix) => {
+                ConfidentaltransferIx::DisableNonConfidentialCredits(acc) => {
                     ConfidentialTransferExtIxProto {
                         ix_oneof: Some(IxOneof::DisableNonConfidentialCreditsIx(
                             DisableNonConfidentialCreditsIxProto {
-                                accounts: Some(ix.accounts.into_proto_data()),
+                                accounts: Some(acc.into_proto()),
                             },
                         )),
                     }
                 },
 
-                ConfidentaltransferIx::TransferWithSplitProofs(ix) => {
+                ConfidentaltransferIx::TransferWithSplitProofs(acc) => {
                     ConfidentialTransferExtIxProto {
                         ix_oneof: Some(IxOneof::TransferWithSplitProofsIx(
                             TransferWithSplitProofsIxProto {
-                                accounts: Some(ix.accounts.into_proto_data()),
+                                accounts: Some(acc.into_proto()),
                             },
                         )),
                     }

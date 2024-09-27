@@ -114,10 +114,10 @@ mod proto_parser {
         InitializeGroupAccounts, InitializeMemberAccounts, TokenGroupIx,
         UpdateGroupAuthorityAccounts, UpdateGroupMaxSizeAccounts,
     };
-    use crate::helpers::IntoProtoData;
+    use crate::helpers::IntoProto;
 
-    impl IntoProtoData<InitializeGroupAccountsProto> for InitializeGroupAccounts {
-        fn into_proto_data(self) -> InitializeGroupAccountsProto {
+    impl IntoProto<InitializeGroupAccountsProto> for InitializeGroupAccounts {
+        fn into_proto(self) -> InitializeGroupAccountsProto {
             InitializeGroupAccountsProto {
                 group: self.group.to_string(),
                 mint: self.mint.to_string(),
@@ -126,8 +126,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<UpdateGroupMaxSizeAccountsProto> for UpdateGroupMaxSizeAccounts {
-        fn into_proto_data(self) -> UpdateGroupMaxSizeAccountsProto {
+    impl IntoProto<UpdateGroupMaxSizeAccountsProto> for UpdateGroupMaxSizeAccounts {
+        fn into_proto(self) -> UpdateGroupMaxSizeAccountsProto {
             UpdateGroupMaxSizeAccountsProto {
                 group: self.group.to_string(),
                 update_authority: self.update_authority.to_string(),
@@ -135,8 +135,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<UpdateGroupAuthorityAccountsProto> for UpdateGroupAuthorityAccounts {
-        fn into_proto_data(self) -> UpdateGroupAuthorityAccountsProto {
+    impl IntoProto<UpdateGroupAuthorityAccountsProto> for UpdateGroupAuthorityAccounts {
+        fn into_proto(self) -> UpdateGroupAuthorityAccountsProto {
             UpdateGroupAuthorityAccountsProto {
                 group: self.group.to_string(),
                 current_authority: self.current_authority.to_string(),
@@ -144,8 +144,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<InitializeMemberAccountsProto> for InitializeMemberAccounts {
-        fn into_proto_data(self) -> InitializeMemberAccountsProto {
+    impl IntoProto<InitializeMemberAccountsProto> for InitializeMemberAccounts {
+        fn into_proto(self) -> InitializeMemberAccountsProto {
             InitializeMemberAccountsProto {
                 member: self.member.to_string(),
                 member_mint: self.member_mint.to_string(),
@@ -156,10 +156,10 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<InitializeGroupDataProto>
+    impl IntoProto<InitializeGroupDataProto>
         for spl_token_group_interface::instruction::InitializeGroup
     {
-        fn into_proto_data(self) -> InitializeGroupDataProto {
+        fn into_proto(self) -> InitializeGroupDataProto {
             InitializeGroupDataProto {
                 update_authority: Some(self.update_authority.0.to_string()),
                 max_size: Into::<u32>::into(self.max_size).into(),
@@ -167,60 +167,60 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<UpdateGroupMaxSizeDataProto>
+    impl IntoProto<UpdateGroupMaxSizeDataProto>
         for spl_token_group_interface::instruction::UpdateGroupMaxSize
     {
-        fn into_proto_data(self) -> UpdateGroupMaxSizeDataProto {
+        fn into_proto(self) -> UpdateGroupMaxSizeDataProto {
             UpdateGroupMaxSizeDataProto {
                 max_size: Into::<u32>::into(self.max_size).into(),
             }
         }
     }
 
-    impl IntoProtoData<UpdateGroupAuthorityDataProto>
+    impl IntoProto<UpdateGroupAuthorityDataProto>
         for spl_token_group_interface::instruction::UpdateGroupAuthority
     {
-        fn into_proto_data(self) -> UpdateGroupAuthorityDataProto {
+        fn into_proto(self) -> UpdateGroupAuthorityDataProto {
             UpdateGroupAuthorityDataProto {
                 new_authority: self.new_authority.0.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<TokenGroupIxProto> for TokenGroupIx {
-        fn into_proto_data(self) -> TokenGroupIxProto {
+    impl IntoProto<TokenGroupIxProto> for TokenGroupIx {
+        fn into_proto(self) -> TokenGroupIxProto {
             match self {
-                TokenGroupIx::InitializeGroup(ri) => TokenGroupIxProto {
+                TokenGroupIx::InitializeGroup(acc, data) => TokenGroupIxProto {
                     ix_oneof: Some(token_group_ix_proto::IxOneof::InitializeGroupIx(
                         InitializeGroupIxProto {
-                            accounts: Some(ri.accounts.into_proto_data()),
-                            data: Some(ri.data.unwrap().into_proto_data()),
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
                     )),
                 },
 
-                TokenGroupIx::UpdateGroupMaxSize(ri) => TokenGroupIxProto {
+                TokenGroupIx::UpdateGroupMaxSize(acc, data) => TokenGroupIxProto {
                     ix_oneof: Some(token_group_ix_proto::IxOneof::UpdateGroupMaxSizeIx(
                         UpdateGroupMaxSizeIxProto {
-                            accounts: Some(ri.accounts.into_proto_data()),
-                            data: Some(ri.data.unwrap().into_proto_data()),
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
                     )),
                 },
 
-                TokenGroupIx::UpdateGroupAuthority(ri) => TokenGroupIxProto {
+                TokenGroupIx::UpdateGroupAuthority(acc, data) => TokenGroupIxProto {
                     ix_oneof: Some(token_group_ix_proto::IxOneof::UpdateGroupAuthorityIx(
                         UpdateGroupAuthorityIxProto {
-                            accounts: Some(ri.accounts.into_proto_data()),
-                            data: Some(ri.data.unwrap().into_proto_data()),
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
                     )),
                 },
 
-                TokenGroupIx::InitializeMember(ri) => TokenGroupIxProto {
+                TokenGroupIx::InitializeMember(acc, _) => TokenGroupIxProto {
                     ix_oneof: Some(token_group_ix_proto::IxOneof::InitializeMemberIx(
                         InitializeMemberIxProto {
-                            accounts: Some(ri.accounts.into_proto_data()),
+                            accounts: Some(acc.into_proto()),
                         },
                     )),
                 },

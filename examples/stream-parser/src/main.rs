@@ -13,12 +13,10 @@ use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen, vixen_core::proto::Proto};
 use yellowstone_vixen_parser::{
-    proto::Proto,
     token_extension_program::{
-        // account_parser::TokenExtensionProgramAccParser,
-        ix_parser::TokenExtensionProgramIxParser,
+        account_parser::TokenExtensionProgramAccParser, ix_parser::TokenExtensionProgramIxParser,
     },
-    // token_program::{account_parser::TokenProgramAccParser, ix_parser::TokenProgramIxParser},
+    token_program::{account_parser::TokenProgramAccParser, ix_parser::TokenProgramIxParser},
 };
 
 #[derive(clap::Parser)]
@@ -38,11 +36,10 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    //TODO : fix ProgramParser to be able to distinguish between token account and Instruction pipelines
     vixen::stream::Server::builder()
-        // .account(Proto::new(TokenExtensionProgramAccParser))
-        // .account(Proto::new(TokenProgramAccParser))
-        // .instruction(Proto::new(TokenProgramIxParser))
+        .account(Proto::new(TokenExtensionProgramAccParser))
+        .account(Proto::new(TokenProgramAccParser))
+        .instruction(Proto::new(TokenProgramIxParser))
         .instruction(Proto::new(TokenExtensionProgramIxParser))
         .build(config)
         .run();
