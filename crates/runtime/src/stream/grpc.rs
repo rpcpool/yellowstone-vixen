@@ -60,7 +60,7 @@ impl ProgramStreams for Service {
                 .into_inner()
                 .program
                 .parse()
-                .map_err(|e: vixen_core::PubkeyFromStrError| {
+                .map_err(|e: vixen_core::KeyFromStrError| {
                     Status::new(tonic::Code::InvalidArgument, e.to_string())
                 })?;
 

@@ -5,7 +5,10 @@ use yellowstone_vixen_core::{
 
 #[allow(clippy::wildcard_imports)]
 use super::ixs::*;
-use crate::helpers::{check_min_accounts_req, into_vixen_pubkey};
+use crate::{
+    helpers::{check_min_accounts_req, into_vixen_pubkey},
+    Result, ResultExt,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct TokenProgramIxParser;
@@ -36,9 +39,9 @@ impl Parser for TokenProgramIxParser {
 
 impl TokenProgramIxParser {
     #[allow(clippy::too_many_lines)]
-    pub(crate) fn parse_impl(ix: &InstructionUpdate) -> Result<TokenProgramIx, String> {
+    pub(crate) fn parse_impl(ix: &InstructionUpdate) -> Result<TokenProgramIx> {
         let ix_type = TokenInstruction::unpack(&ix.data)
-            .map_err(|e| format!("Err while unpacking ix data : {e}"))?;
+            .parse_err("Error unpacking token instruction data")?;
         let accounts_len = ix.accounts.len();
         match ix_type {
             TokenInstruction::Transfer { amount } => {

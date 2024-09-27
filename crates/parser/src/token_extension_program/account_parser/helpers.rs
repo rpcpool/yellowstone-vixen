@@ -294,7 +294,7 @@ pub mod token_extensions_proto_parser {
         fn into_proto(self) -> ConfidentialTransferAccountProto {
             ConfidentialTransferAccountProto {
                 approved: self.approved.into(),
-                elgamal_pubkey: ElGamalPubkeyBytes(self.elgamal_pubkey.0).into(),
+                elgamal_pubkey: ElGamalPubkeyBytes::new(self.elgamal_pubkey.0).to_string(),
                 pending_balance: self.pending_balance_lo.to_string(),
                 pending_balance_lo: self.pending_balance_lo.to_string(),
                 pending_balance_hi: self.pending_balance_hi.to_string(),
@@ -399,7 +399,7 @@ pub mod token_extensions_proto_parser {
                 auditor_elgamal_pubkey: Into::<Option<ElGamalPubkey>>::into(
                     self.auditor_elgamal_pubkey,
                 )
-                .map(|x| ElGamalPubkeyBytes(x.0).into()),
+                .map(|x| ElGamalPubkeyBytes::new(x.0).to_string()),
                 auto_approve_new_accounts: self.auto_approve_new_accounts.into(),
             }
         }
@@ -455,10 +455,10 @@ pub mod token_extensions_proto_parser {
             ConfidentialTransferFeeConfigProto {
                 authority: self.authority.0.to_string(),
                 withheld_amount: self.withheld_amount.to_string(),
-                withdraw_withheld_authority_elgamal_pubkey: ElGamalPubkeyBytes(
+                withdraw_withheld_authority_elgamal_pubkey: ElGamalPubkeyBytes::new(
                     self.withdraw_withheld_authority_elgamal_pubkey.0,
                 )
-                .into(),
+                .to_string(),
                 harvest_to_mint_enabled: self.harvest_to_mint_enabled.into(),
             }
         }

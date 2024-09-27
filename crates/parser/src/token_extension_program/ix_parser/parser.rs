@@ -22,6 +22,7 @@ use super::{
 use crate::{
     helpers::{check_min_accounts_req, into_vixen_pubkey},
     token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIxParser},
+    Error, Result, ResultExt,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -54,7 +55,7 @@ impl Parser for TokenExtensionProgramIxParser {
 
 impl TokenExtensionProgramIxParser {
     #[allow(clippy::too_many_lines)]
-    fn parse_impl(ix: &InstructionUpdate) -> Result<TokenExtensionProgramIx, String> {
+    fn parse_impl(ix: &InstructionUpdate) -> Result<TokenExtensionProgramIx> {
         let accounts_len = ix.accounts.len();
         match TokenInstruction::unpack(&ix.data) {
             Ok(token_ix) => match token_ix {
@@ -226,7 +227,9 @@ impl TokenExtensionProgramIxParser {
                 },
 
                 _ => Ok(TokenExtensionProgramIx::TokenProgramIx(
-                    TokenProgramIxParser::parse_impl(ix).map_err(|e| e.to_string())?,
+                    TokenProgramIxParser::parse_impl(ix).parse_err(
+                        "Error parsing token extension instruction as token instruction",
+                    )?,
                 )),
             },
             Err(e) => {
@@ -242,7 +245,7 @@ impl TokenExtensionProgramIxParser {
                     ));
                 }
 
-                Err(format!("Err while unpacking ix data : {e} "))
+                Err(Error::from_inner("Error unpacking instruction data", e))
             },
         }
     }

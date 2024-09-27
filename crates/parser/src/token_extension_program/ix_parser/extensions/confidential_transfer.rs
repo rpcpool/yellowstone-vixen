@@ -2,7 +2,10 @@ use spl_token_2022::extension::confidential_transfer::instruction::ConfidentialT
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::{decode_extension_ix_type, ExtensionIxParser};
-use crate::{helpers::check_min_accounts_req, token_program::ix_parser::InitializeMintAccounts};
+use crate::{
+    helpers::check_min_accounts_req, token_program::ix_parser::InitializeMintAccounts, Error,
+    Result,
+};
 
 const SOLANA_ZK_PROOF_PROGRAM_ID: &str = "ZkTokenProof1111111111111111111111111111111";
 
@@ -118,7 +121,7 @@ pub enum ConfidentaltransferIx {
 
 impl ExtensionIxParser for ConfidentaltransferIx {
     #[allow(clippy::too_many_lines)]
-    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
+    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
         let ix_type = decode_extension_ix_type(&ix.data)?;
         match ix_type {
@@ -354,9 +357,9 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                         },
                     )),
 
-                    _ => Err(format!(
+                    _ => Err(Error::new(format!(
                         "Invalid number of accounts for TransferWithSplitProofs: {accounts_len}"
-                    )),
+                    ))),
                 }
             },
         }

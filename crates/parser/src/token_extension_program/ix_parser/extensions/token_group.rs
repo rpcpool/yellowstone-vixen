@@ -5,7 +5,7 @@ use spl_token_group_interface::instruction::{
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::ExtensionIxParser;
-use crate::helpers::check_min_accounts_req;
+use crate::{helpers::check_min_accounts_req, Result, ResultExt};
 
 #[derive(Debug, Clone, Copy)]
 pub struct InitializeGroupAccounts {
@@ -43,10 +43,11 @@ pub enum TokenGroupIx {
 }
 
 impl ExtensionIxParser for TokenGroupIx {
-    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
+    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
 
-        let ix_type = TokenGroupInstruction::unpack(&ix.data).map_err(|e| e.to_string())?;
+        let ix_type = TokenGroupInstruction::unpack(&ix.data)
+            .parse_err("Error unpacking token group instruction data")?;
 
         match ix_type {
             TokenGroupInstruction::InitializeGroup(data) => {

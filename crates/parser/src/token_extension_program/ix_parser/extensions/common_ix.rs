@@ -1,7 +1,7 @@
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::decode_extension_ix_type;
-use crate::helpers::check_min_accounts_req;
+use crate::{helpers::check_min_accounts_req, Error, Result};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ExtensionWithCommonIxs {
@@ -82,7 +82,7 @@ impl CommonExtensionIxs {
     pub fn try_parse_extension_ix(
         extension: ExtensionWithCommonIxs,
         ix: &InstructionUpdate,
-    ) -> Result<Self, String> {
+    ) -> Result<Self> {
         let ix_type = decode_extension_ix_type(&ix.data)?;
         let accounts_len = ix.accounts.len();
         match ExtensionWithCommonIxs::get_ixs_supported(&extension) {
@@ -107,7 +107,7 @@ impl CommonExtensionIxs {
                         }),
                     })
                 },
-                _ => Err("Invalid instruction".to_string()),
+                _ => Err(Error::new("Invalid instruction")),
             },
             IxsSupported::EnableAndDisable => match ix_type {
                 0 => {
@@ -132,7 +132,7 @@ impl CommonExtensionIxs {
                         }),
                     })
                 },
-                _ => Err("Invalid instruction".to_string()),
+                _ => Err(Error::new("Invalid instruction")),
             },
         }
     }

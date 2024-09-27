@@ -2,7 +2,10 @@ use spl_token_2022::extension::transfer_fee::instruction::TransferFeeInstruction
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::ExtensionIxParser;
-use crate::helpers::{check_min_accounts_req, into_vixen_pubkey};
+use crate::{
+    helpers::{check_min_accounts_req, into_vixen_pubkey},
+    Result, ResultExt,
+};
 
 #[derive(Debug)]
 pub struct TransferCheckedWithFeeAccounts {
@@ -97,9 +100,10 @@ pub enum TransferFeeIx {
 
 impl ExtensionIxParser for TransferFeeIx {
     #[allow(clippy::too_many_lines)]
-    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String> {
+    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
-        let ix_type = TransferFeeInstruction::unpack(&ix.data).map_err(|e| e.to_string())?;
+        let ix_type = TransferFeeInstruction::unpack(&ix.data)
+            .parse_err("Error unpacking transfer fee instruction data")?;
         match ix_type {
             TransferFeeInstruction::TransferCheckedWithFee {
                 amount,

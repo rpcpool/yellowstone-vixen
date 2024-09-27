@@ -40,13 +40,13 @@ const PUBKEY_REGEX: &str = r"\b[1-9A-HJ-NP-Za-km-z]{44}\b";
 const TX_SIGNATURE_REGEX: &str = r"\b[1-9A-HJ-NP-Za-km-z]{88}\b";
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AccountInfo {
     pub data: Vec<u8>,
     pub pubkey: Pubkey,
     pub executable: bool,
     pub lamports: u64,
     pub owner: Pubkey,
-    #[serde(rename = "rentEpoch")]
     pub rent_epoch: u64,
     pub space: u64,
 }
