@@ -4,7 +4,7 @@ use spl_token_metadata_interface::instruction::{
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::ExtensionIxParser;
-use crate::helpers::{check_min_accounts_req, ReadableInstruction};
+use crate::helpers::check_min_accounts_req;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InitializeAccounts {
@@ -39,11 +39,11 @@ pub struct EmitAccounts {
 
 #[derive(Debug)]
 pub enum TokenMetadataIx {
-    Initialize(ReadableInstruction<InitializeAccounts, Initialize>),
-    UpdateField(ReadableInstruction<UpdateFieldAccounts, UpdateField>),
-    RemoveKey(ReadableInstruction<RmoveKeyAccounts, RemoveKey>),
-    UpdateAuthority(ReadableInstruction<UpdateAuthorityAccounts, UpdateAuthority>),
-    Emit(ReadableInstruction<EmitAccounts, Emit>),
+    Initialize(InitializeAccounts, Initialize),
+    UpdateField(UpdateFieldAccounts, UpdateField),
+    RemoveKey(RmoveKeyAccounts, RemoveKey),
+    UpdateAuthority(UpdateAuthorityAccounts, UpdateAuthority),
+    Emit(EmitAccounts, Emit),
 }
 
 impl ExtensionIxParser for TokenMetadataIx {
@@ -56,61 +56,61 @@ impl ExtensionIxParser for TokenMetadataIx {
             TokenMetadataInstruction::Initialize(data) => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                Ok(TokenMetadataIx::Initialize(ReadableInstruction {
-                    accounts: InitializeAccounts {
+                Ok(TokenMetadataIx::Initialize(
+                    InitializeAccounts {
                         metadata: ix.accounts[0],
                         update_authority: ix.accounts[1],
                         mint: ix.accounts[2],
                         mint_authority: ix.accounts[3],
                     },
-                    data: Some(data),
-                }))
+                    data,
+                ))
             },
             TokenMetadataInstruction::UpdateField(data) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Ok(TokenMetadataIx::UpdateField(ReadableInstruction {
-                    accounts: UpdateFieldAccounts {
+                Ok(TokenMetadataIx::UpdateField(
+                    UpdateFieldAccounts {
                         metadata: ix.accounts[0],
                         update_authority: ix.accounts[1],
                     },
-                    data: Some(data),
-                }))
+                    data,
+                ))
             },
 
             TokenMetadataInstruction::RemoveKey(data) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Ok(TokenMetadataIx::RemoveKey(ReadableInstruction {
-                    accounts: RmoveKeyAccounts {
+                Ok(TokenMetadataIx::RemoveKey(
+                    RmoveKeyAccounts {
                         metadata: ix.accounts[0],
                         update_authority: ix.accounts[1],
                     },
-                    data: Some(data),
-                }))
+                    data,
+                ))
             },
 
             TokenMetadataInstruction::UpdateAuthority(data) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Ok(TokenMetadataIx::UpdateAuthority(ReadableInstruction {
-                    accounts: UpdateAuthorityAccounts {
+                Ok(TokenMetadataIx::UpdateAuthority(
+                    UpdateAuthorityAccounts {
                         metadata: ix.accounts[0],
                         current_update_authority: ix.accounts[1],
                     },
-                    data: Some(data),
-                }))
+                    data,
+                ))
             },
 
             TokenMetadataInstruction::Emit(data) => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                Ok(TokenMetadataIx::Emit(ReadableInstruction {
-                    accounts: EmitAccounts {
+                Ok(TokenMetadataIx::Emit(
+                    EmitAccounts {
                         metadata: ix.accounts[0],
                     },
-                    data: Some(data),
-                }))
+                    data,
+                ))
             },
         }
     }

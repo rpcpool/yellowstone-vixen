@@ -11,9 +11,9 @@ use std::path::PathBuf;
 
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{self as vixen};
+use yellowstone_vixen::{self as vixen, vixen_core::proto::Proto};
 use yellowstone_vixen_parser::{
-    proto::Proto, token_extension_program::account_parser::TokenExtensionProgramAccParser,
+    token_extension_program::account_parser::TokenExtensionProgramAccParser,
     token_program::account_parser::TokenProgramAccParser,
 };
 

@@ -11,3 +11,7 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 bs58 = "0.5.1"
 thiserror = "1.0.59"
 yellowstone-grpc-proto = { workspace = true }
+yellowstone-vixen-proto = { workspace = true, optional = true }
+
+[features]
+proto = ["dep:yellowstone-vixen-proto"]

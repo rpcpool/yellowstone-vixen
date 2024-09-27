@@ -12,8 +12,6 @@
 #![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 mod helpers;
-#[cfg(feature = "proto")]
-pub mod proto;
 #[cfg(feature = "token-extensions")]
 pub mod token_extension_program;
 #[cfg(feature = "token-program")]

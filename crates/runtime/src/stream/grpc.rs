@@ -55,7 +55,7 @@ impl ProgramStreams for Service {
         &self,
         request: Request<SubscribeRequest>,
     ) -> Result<Response<Self::SubscribeStream>, Status> {
-        let pubkey =
+        let pubkey: Pubkey =
             request
                 .into_inner()
                 .program

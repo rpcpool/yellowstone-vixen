@@ -6078,6 +6078,7 @@ dependencies = [
  "bs58",
  "thiserror",
  "yellowstone-grpc-proto",
+ "yellowstone-vixen-proto",
 ]
 
 [[package]]
@@ -6099,7 +6100,6 @@ dependencies = [
 name = "yellowstone-vixen-parser"
 version = "0.0.0"
 dependencies = [
- "bs58",
  "solana-zk-token-sdk",
  "spl-pod",
  "spl-token",

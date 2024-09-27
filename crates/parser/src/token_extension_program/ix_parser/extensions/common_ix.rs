@@ -1,7 +1,7 @@
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
-use super::helpers::{decode_extension_ix_type, Ix};
-use crate::helpers::{check_min_accounts_req, get_multisig_signers};
+use super::helpers::decode_extension_ix_type;
+use crate::helpers::check_min_accounts_req;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ExtensionWithCommonIxs {
@@ -47,21 +47,21 @@ pub struct ExtInitializeAccounts {
 pub struct UpdateAccounts {
     pub mint: Pubkey,
     pub extension_authority: Pubkey,
-    pub multisig_signers: Option<Vec<Pubkey>>,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[derive(Debug)]
 pub struct EnableAccounts {
     pub account: Pubkey,
     pub owner: Pubkey,
-    pub multisig_signers: Option<Vec<Pubkey>>,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[derive(Debug)]
 pub struct DisableAccounts {
     pub account: Pubkey,
     pub owner: Pubkey,
-    pub multisig_signers: Option<Vec<Pubkey>>,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[derive(Debug)]
@@ -72,10 +72,10 @@ pub struct CommonExtensionIxs {
 
 #[derive(Debug)]
 pub enum CommonIx {
-    Initialize(Ix<ExtInitializeAccounts>),
-    Update(Ix<UpdateAccounts>),
-    Enable(Ix<EnableAccounts>),
-    Disable(Ix<DisableAccounts>),
+    Initialize(ExtInitializeAccounts),
+    Update(UpdateAccounts),
+    Enable(EnableAccounts),
+    Disable(DisableAccounts),
 }
 
 impl CommonExtensionIxs {
@@ -91,20 +91,20 @@ impl CommonExtensionIxs {
                     check_min_accounts_req(accounts_len, 1)?;
                     Ok(CommonExtensionIxs {
                         extension,
-                        ix: CommonIx::Initialize(Ix::from_accounts(ExtInitializeAccounts {
+                        ix: CommonIx::Initialize(ExtInitializeAccounts {
                             mint: ix.accounts[0],
-                        })),
+                        }),
                     })
                 },
                 1 => {
                     check_min_accounts_req(accounts_len, 2)?;
                     Ok(CommonExtensionIxs {
                         extension,
-                        ix: CommonIx::Update(Ix::from_accounts(UpdateAccounts {
+                        ix: CommonIx::Update(UpdateAccounts {
                             mint: ix.accounts[0],
                             extension_authority: ix.accounts[1],
-                            multisig_signers: get_multisig_signers(ix, 2),
-                        })),
+                            multisig_signers: ix.accounts[2..].to_vec(),
+                        }),
                     })
                 },
                 _ => Err("Invalid instruction".to_string()),
@@ -114,22 +114,22 @@ impl CommonExtensionIxs {
                     check_min_accounts_req(accounts_len, 2)?;
                     Ok(CommonExtensionIxs {
                         extension,
-                        ix: CommonIx::Enable(Ix::from_accounts(EnableAccounts {
+                        ix: CommonIx::Enable(EnableAccounts {
                             account: ix.accounts[0],
                             owner: ix.accounts[1],
-                            multisig_signers: get_multisig_signers(ix, 2),
-                        })),
+                            multisig_signers: ix.accounts[2..].to_vec(),
+                        }),
                     })
                 },
                 1 => {
                     check_min_accounts_req(accounts_len, 2)?;
                     Ok(CommonExtensionIxs {
                         extension,
-                        ix: CommonIx::Disable(Ix::from_accounts(DisableAccounts {
+                        ix: CommonIx::Disable(DisableAccounts {
                             account: ix.accounts[0],
                             owner: ix.accounts[1],
-                            multisig_signers: ix.accounts.get(2..).map(<[_]>::to_vec),
-                        })),
+                            multisig_signers: ix.accounts[2..].to_vec(),
+                        }),
                     })
                 },
                 _ => Err("Invalid instruction".to_string()),

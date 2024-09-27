@@ -30,8 +30,12 @@ use yellowstone_grpc_proto::geyser::{
 };
 
 pub extern crate bs58;
+#[cfg(feature = "proto")]
+pub extern crate yellowstone_vixen_proto;
 
 pub mod instruction;
+#[cfg(feature = "proto")]
+pub mod proto;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -70,6 +74,13 @@ pub trait Parser {
 
     /// A unique ID for this parser.  Used to associate the parser with its
     /// requested prefilter data.
+    ///
+    /// **NOTE:** For parsers that do not accept configuration when constructed
+    /// (e.g. a parser that accepts all updates of a certain type from a
+    /// specific program), the ID may be as simple as the fully-qualified type
+    /// name of the parser.  However, for parsers that produce a different
+    /// prefilter depending on some internal configuration, instances that
+    /// output differing prefilters _must_ output different IDs.
     fn id(&self) -> Cow<str>;
 
     /// Filter data passed to Yellowstone to coarsely narrow down updates
@@ -190,9 +201,40 @@ impl TransactionPrefilter {
     }
 }
 
+/// Helper macro for converting Vixen's [`Pubkey`] to a Solana ed25519 public
+/// key.
+///
+/// Invoking the macro with the name of a publicly-exported Solana `Pubkey`
+/// type (e.g. `pubkey_convert_helpers!(solana_sdk::pubkey::Pubkey);`) will
+/// define two functions:
+///
+/// - `pub(crate) fn into_vixen_pubkey(`<Solana Pubkey>`) -> yellowstone_vixen_core::Pubkey;`
+/// - `pub(crate) fn from_vixen_pubkey(yellowstone_vixen_core::Pubkey) -> <Solana Pubkey>;`
+///
+/// These can be used as a convenience for quickly converting between Solana
+/// public keys and their representation in Vixen.  Vixen does not use the
+/// built-in Solana `Pubkey` type, nor does it provide `From`/`Into` impls for
+/// it, to avoid creating an unnecessary dependency on any specific version of
+/// the full Solana SDK.
+#[macro_export]
+macro_rules! pubkey_convert_helpers {
+    ($ty:ty) => {
+        pub(crate) fn into_vixen_pubkey(value: $ty) -> $crate::Pubkey { value.to_bytes().into() }
+
+        pub(crate) fn from_vixen_pubkey(value: $crate::Pubkey) -> $ty { value.into_bytes().into() }
+    };
+}
+
 /// Helper type representing a Solana public key.
+///
+/// This type is functionally equivalent to the `Pubkey` type from the Solana
+/// SDK, and it can be trivially converted to or from one by passing the
+/// underlying `[u8; 32]` array.  Vixen uses this `Pubkey` type to avoid
+/// depending on the Solana SDK, as this can lead to version conflicts when
+/// working with Solana program crates.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Pubkey(pub [u8; 32]);
+#[repr(transparent)]
+pub struct Pubkey([u8; 32]);
 
 impl Debug for Pubkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -213,11 +255,85 @@ impl From<[u8; 32]> for Pubkey {
     fn from(value: [u8; 32]) -> Self { Self(value) }
 }
 
+impl From<Pubkey> for [u8; 32] {
+    #[inline]
+    fn from(value: Pubkey) -> Self { value.0 }
+}
+
+impl std::ops::Deref for Pubkey {
+    type Target = [u8; 32];
+
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl std::ops::DerefMut for Pubkey {
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+}
+
+impl AsRef<[u8; 32]> for Pubkey {
+    fn as_ref(&self) -> &[u8; 32] { self }
+}
+
+impl AsMut<[u8; 32]> for Pubkey {
+    fn as_mut(&mut self) -> &mut [u8; 32] { self }
+}
+
+impl std::borrow::Borrow<[u8; 32]> for Pubkey {
+    fn borrow(&self) -> &[u8; 32] { self }
+}
+
+impl std::borrow::BorrowMut<[u8; 32]> for Pubkey {
+    fn borrow_mut(&mut self) -> &mut [u8; 32] { self }
+}
+
+impl AsRef<[u8]> for Pubkey {
+    fn as_ref(&self) -> &[u8] { self.as_slice() }
+}
+
+impl AsMut<[u8]> for Pubkey {
+    fn as_mut(&mut self) -> &mut [u8] { self.as_mut_slice() }
+}
+
+impl std::borrow::Borrow<[u8]> for Pubkey {
+    fn borrow(&self) -> &[u8] { self.as_ref() }
+}
+
+impl std::borrow::BorrowMut<[u8]> for Pubkey {
+    fn borrow_mut(&mut self) -> &mut [u8] { self.as_mut() }
+}
+
+type PubkeyFromSliceError = std::array::TryFromSliceError;
+
 impl TryFrom<&[u8]> for Pubkey {
-    type Error = std::array::TryFromSliceError;
+    type Error = PubkeyFromSliceError;
 
     #[inline]
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> { value.try_into().map(Self) }
+}
+
+impl Pubkey {
+    /// Wrap the provided public key bytes in a new `Pubkey`
+    #[must_use]
+    pub fn new(bytes: [u8; 32]) -> Self { bytes.into() }
+
+    /// Return the public key bytes contained in this `Pubkey`
+    #[must_use]
+    pub fn into_bytes(self) -> [u8; 32] { self.into() }
+
+    /// Attempt to convert the provided byte slice to a new `Pubkey`
+    ///
+    /// # Errors
+    /// This function returns an error if calling `Pubkey::try_from(slice)`
+    /// returns an error.
+    pub fn try_from_ref<T: AsRef<[u8]>>(key: T) -> Result<Self, PubkeyFromSliceError> {
+        key.as_ref().try_into()
+    }
+
+    /// Compare the public key bytes contained in this `Pubkey` with the given
+    /// byte slice
+    pub fn equals_ref<T: AsRef<[u8]>>(&self, other: T) -> bool {
+        self.as_slice().eq(other.as_ref())
+    }
 }
 
 /// An error that can occur when parsing a [`Pubkey`] from a string.
@@ -241,6 +357,24 @@ impl FromStr for Pubkey {
             .try_into()
             .map_err(Into::into)
     }
+}
+
+impl TryFrom<&str> for Pubkey {
+    type Error = PubkeyFromStrError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> { value.parse() }
+}
+
+impl TryFrom<String> for Pubkey {
+    type Error = PubkeyFromStrError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> { value.parse() }
+}
+
+impl TryFrom<Cow<'_, str>> for Pubkey {
+    type Error = PubkeyFromStrError;
+
+    fn try_from(value: Cow<str>) -> Result<Self, Self::Error> { value.parse() }
 }
 
 /// An error that can occur when building a prefilter.

@@ -47,7 +47,7 @@ impl vixen_core::Parser for Parser {
 
     fn prefilter(&self) -> vixen_core::Prefilter {
         vixen_core::Prefilter::builder()
-            .account_owners([id().0])
+            .account_owners([id()])
             .build()
             .unwrap()
     }

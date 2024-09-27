@@ -1,4 +1,3 @@
-use spl_pod::solana_program::program_option::COption;
 use spl_token_2022::{extension::ExtensionType, instruction::AuthorityType};
 use yellowstone_vixen_core::Pubkey;
 
@@ -6,26 +5,25 @@ use super::extensions::{
     CommonExtensionIxs, ConfidentaltransferFeeIx, ConfidentaltransferIx, TokenGroupIx,
     TokenMetadataIx, TransferFeeIx,
 };
-use crate::{
-    helpers::ReadableInstruction,
-    token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIx},
-};
+use crate::token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIx};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum TokenExtensionProgramIx {
     TokenProgramIx(TokenProgramIx),
-    SetAuthority(ReadableInstruction<SetAuthorityAccounts, TokenExtSetAutorityData>),
-    CreateNativeMint(ReadableInstruction<CreateNativeMintAccounts, ()>),
+    SetAuthority(SetAuthorityAccounts, TokenExtSetAutorityData),
+    CreateNativeMint(CreateNativeMintAccounts),
     InitializeMintCloseAuthority(
-        ReadableInstruction<InitializeMintCloseAuthorityAccounts, InitializeMintCloseAuthorityData>,
+        InitializeMintCloseAuthorityAccounts,
+        InitializeMintCloseAuthorityData,
     ),
-    InitializeNonTransferableMint(ReadableInstruction<InitializeNonTransferableMintAccounts, ()>),
-    Reallocate(ReadableInstruction<ReallocateAccounts, ReallocateData>),
+    InitializeNonTransferableMint(InitializeNonTransferableMintAccounts),
+    Reallocate(ReallocateAccounts, ReallocateData),
     InitializePermanentDelegate(
-        ReadableInstruction<InitializePermanentDelegateAccounts, InitializePermanentDelegateData>,
+        InitializePermanentDelegateAccounts,
+        InitializePermanentDelegateData,
     ),
-    WithdrawExcessLamports(ReadableInstruction<WithdrawExcessLamportsAccounts, ()>),
+    WithdrawExcessLamports(WithdrawExcessLamportsAccounts),
     TransferFeeIx(TransferFeeIx),
     ConfidentialTransferIx(ConfidentaltransferIx),
     ConfidentialtransferFeeIx(ConfidentaltransferFeeIx),
@@ -44,7 +42,7 @@ pub enum TokenExtensionProgramIx {
 #[derive(Debug)]
 pub struct TokenExtSetAutorityData {
     pub authority_type: AuthorityType,
-    pub new_authority: COption<Pubkey>,
+    pub new_authority: Option<Pubkey>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -60,7 +58,7 @@ pub struct InitializeMintCloseAuthorityAccounts {
 
 #[derive(Debug, Clone, Copy)]
 pub struct InitializeMintCloseAuthorityData {
-    pub close_authority: COption<Pubkey>,
+    pub close_authority: Option<Pubkey>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -73,7 +71,7 @@ pub struct ReallocateAccounts {
     pub account: Pubkey,
     pub payer: Pubkey,
     pub owner: Pubkey,
-    pub multisig_signers: Option<Vec<Pubkey>>,
+    pub multisig_signers: Vec<Pubkey>,
 }
 
 #[derive(Debug)]
@@ -96,5 +94,5 @@ pub struct WithdrawExcessLamportsAccounts {
     pub source_account: Pubkey,
     pub destination_account: Pubkey,
     pub authority: Pubkey,
-    pub multisig_signers: Option<Vec<Pubkey>>,
+    pub multisig_signers: Vec<Pubkey>,
 }
