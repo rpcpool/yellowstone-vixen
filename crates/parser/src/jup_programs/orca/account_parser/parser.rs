@@ -6,7 +6,8 @@ use yellowstone_vixen_core::{
     AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
-#[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug)]
 pub enum OrcaProgramState {
     Whirlpool(Whirlpool),
     WhirlpoolsConfig(WhirlpoolsConfig),
@@ -16,7 +17,7 @@ pub enum OrcaProgramState {
 }
 
 impl OrcaProgramState {
-    pub fn try_unpack(data_bytes: &[u8]) -> Result<Self, ParseError> {
+    pub fn try_unpack(data_bytes: &[u8]) -> ParseResult<Self> {
         let data_len = data_bytes.len();
         match data_len {
             Whirlpool::LEN => Ok(OrcaProgramState::Whirlpool(Whirlpool::from_bytes(

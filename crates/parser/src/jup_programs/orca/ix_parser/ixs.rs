@@ -32,6 +32,7 @@ pub struct SwapIxData {
 }
 
 pub const SWAP_V2_IX_DISC: [u8; 8] = [43, 4, 237, 11, 26, 201, 30, 98];
+
 #[derive(Debug, Clone, Copy)]
 pub struct SwapV2Accounts {
     pub token_program_a: Pubkey,

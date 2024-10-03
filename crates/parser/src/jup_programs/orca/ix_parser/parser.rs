@@ -3,7 +3,10 @@ use std::borrow::Cow;
 use borsh::BorshDeserialize;
 use yellowstone_vixen_core::{instruction::InstructionUpdate, ParseError, ParseResult, Parser};
 
-use super::ixs::*;
+use super::ixs::{
+    OrcaProgramIx, SwapAccounts, SwapIxData, SwapV2Accounts, SwapV2IxData, SWAP_IX_DISC,
+    SWAP_V2_IX_DISC,
+};
 use crate::helpers::{
     check_min_accounts_req, check_pubkeys_match, InstructionParser, ReadableInstruction,
     IX_DISCRIMINATOR_SIZE,
@@ -31,7 +34,7 @@ impl Parser for OrcaProgramIxParser {
         if check_pubkeys_match(&ix_update.program, &orca_whirlpools_client::ID) {
             OrcaProgramIxParser::parse_ix(ix_update)
         } else {
-            return Err(ParseError::Filtered);
+            Err(ParseError::Filtered)
         }
     }
 }
@@ -88,7 +91,7 @@ impl InstructionParser<OrcaProgramIx> for OrcaProgramIxParser {
                     data: Some(swap_ix_v2_data),
                 }))
             },
-            _ => return Err(ParseError::from("Unknown instruction")),
+            _ => Err(ParseError::from("Unknown instruction")),
         }
     }
 }
@@ -100,15 +103,15 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_swap_v2_ix_parsing() {
+    async fn test_swap_ix_parsing() {
         let parser = OrcaProgramIxParser;
 
         let filters = LoadFixtureFilters {
             outer_ixs_programs: vec![
-                orca_whirlpools_client::ID.to_string(),
                 "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4".to_string(),
+                orca_whirlpools_client::ID.to_string(),
             ],
-            inner_ixs_discriminators: Some(vec![SWAP_V2_IX_DISC]),
+            inner_ixs_discriminators: vec![SWAP_V2_IX_DISC],
         };
 
         let ixs = tx_fixture!("3WC8LGHHs3wYzWef1YmLsRS96G1s5BV4XJYhzvypgWp1uGG16SxepFCd7FhHaTieW66Yn9JFR4tUPA1HYArgFZaA",

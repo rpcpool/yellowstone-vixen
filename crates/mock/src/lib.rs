@@ -283,14 +283,10 @@ fn filter_inner_ixs(
         // Filter out instructions that matches the inner_ix_discriminators in the filters
         ixs.into_iter()
             .filter(|ix| {
-                inner_ixs_discriminators
-                    .as_ref()
-                    .map_or(true, |inner_ix_discriminators| {
-                        let ix_disc_data = ix.data.as_slice()[..IX_DISCRIMINATOR_SIZE]
-                            .try_into()
-                            .unwrap();
-                        inner_ix_discriminators.contains(&ix_disc_data)
-                    })
+                let ix_disc_data = ix.data.as_slice()[..IX_DISCRIMINATOR_SIZE]
+                    .try_into()
+                    .unwrap();
+                inner_ixs_discriminators.contains(&ix_disc_data)
             })
             .collect::<Vec<SerializableInstructionUpdate>>()
     } else {
@@ -402,7 +398,7 @@ macro_rules! run_ix_parse {
 #[derive(Debug, Clone)]
 pub struct LoadFixtureFilters {
     pub outer_ixs_programs: Vec<String>,
-    pub inner_ixs_discriminators: Option<Vec<[u8; 8]>>,
+    pub inner_ixs_discriminators: Vec<[u8; 8]>,
 }
 
 pub async fn load_fixture(

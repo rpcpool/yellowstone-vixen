@@ -23,5 +23,4 @@ yellowstone-vixen = { workspace = true, features = ["opentelemetry"] }
 yellowstone-vixen-parser = { workspace = true, features = [
   "token-extensions",
   "token-program",
-  "orca_whirlpools",
 ] }
