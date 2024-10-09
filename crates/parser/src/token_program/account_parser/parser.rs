@@ -8,8 +8,6 @@ use yellowstone_vixen_core::{
     AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
-use crate::helpers::IntoProtoData;
-
 #[derive(Debug)]
 pub enum TokenProgramState {
     TokenAccount(Account),
@@ -59,22 +57,22 @@ impl Parser for TokenProgramAccParser {
 
 impl ProgramParser for TokenProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[cfg(feature = "proto")]
 mod proto_parser {
+    use yellowstone_vixen_core::proto::ParseProto;
     use yellowstone_vixen_proto::parser::{
         token_program_state_proto, MintProto, MultisigProto, TokenAccountProto,
         TokenProgramStateProto,
     };
 
-    use super::{Account, IntoProtoData, Mint, Multisig, TokenProgramAccParser, TokenProgramState};
+    use super::{Account, Mint, Multisig, TokenProgramAccParser, TokenProgramState};
+    use crate::helpers::IntoProto;
 
-    impl IntoProtoData<TokenAccountProto> for Account {
-        fn into_proto_data(self) -> TokenAccountProto {
+    impl IntoProto<TokenAccountProto> for Account {
+        fn into_proto(self) -> TokenAccountProto {
             TokenAccountProto {
                 mint: self.mint.to_string(),
                 owner: self.owner.to_string(),
@@ -88,8 +86,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<MintProto> for Mint {
-        fn into_proto_data(self) -> MintProto {
+    impl IntoProto<MintProto> for Mint {
+        fn into_proto(self) -> MintProto {
             MintProto {
                 mint_authority: self.mint_authority.map(|ma| ma.to_string()).into(),
                 supply: self.supply,
@@ -100,8 +98,8 @@ mod proto_parser {
         }
     }
 
-    impl IntoProtoData<MultisigProto> for Multisig {
-        fn into_proto_data(self) -> MultisigProto {
+    impl IntoProto<MultisigProto> for Multisig {
+        fn into_proto(self) -> MultisigProto {
             MultisigProto {
                 m: self.m.into(),
                 n: self.n.into(),
@@ -111,22 +109,22 @@ mod proto_parser {
         }
     }
 
-    impl crate::proto::IntoProto for TokenProgramAccParser {
-        type Proto = TokenProgramStateProto;
+    impl ParseProto for TokenProgramAccParser {
+        type Message = TokenProgramStateProto;
 
-        fn into_proto(value: Self::Output) -> Self::Proto {
+        fn output_into_message(value: Self::Output) -> Self::Message {
             let state_oneof = match value {
                 TokenProgramState::TokenAccount(data) => Some(
-                    token_program_state_proto::StateOneof::TokenAccount(data.into_proto_data()),
+                    token_program_state_proto::StateOneof::TokenAccount(data.into_proto()),
                 ),
                 TokenProgramState::Mint(data) => Some(token_program_state_proto::StateOneof::Mint(
-                    data.into_proto_data(),
+                    data.into_proto(),
                 )),
                 TokenProgramState::Multisig(data) => Some(
-                    token_program_state_proto::StateOneof::Multisig(data.into_proto_data()),
+                    token_program_state_proto::StateOneof::Multisig(data.into_proto()),
                 ),
             };
-            Self::Proto { state_oneof }
+            Self::Message { state_oneof }
         }
     }
 }

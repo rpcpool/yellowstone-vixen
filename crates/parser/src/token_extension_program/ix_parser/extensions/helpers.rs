@@ -1,15 +1,12 @@
 use yellowstone_vixen_core::instruction::InstructionUpdate;
 
-use crate::helpers::ReadableInstruction;
+use crate::{Result, ResultExt};
 
-pub fn decode_extension_ix_type<T: TryFrom<u8>>(ix_data: &[u8]) -> Result<T, String> {
-    T::try_from(ix_data[0]).map_err(|_| "Error decoding extension ix data".to_owned())
+pub fn decode_extension_ix_type<T: TryFrom<u8>>(ix_data: &[u8]) -> Result<T>
+where T::Error: std::error::Error + Send + Sync + 'static {
+    T::try_from(ix_data[0]).parse_err("Error decoding instruction data for token extension")
 }
 
-pub trait ExtensionIxParser {
-    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self, String>
-    where Self: Sized;
+pub trait ExtensionIxParser: Sized {
+    fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self>;
 }
-
-// Ix without any data as arguments
-pub type Ix<A> = ReadableInstruction<A, ()>;

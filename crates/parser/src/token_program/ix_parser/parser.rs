@@ -5,9 +5,9 @@ use yellowstone_vixen_core::{
 
 #[allow(clippy::wildcard_imports)]
 use super::ixs::*;
-use crate::helpers::{
-    check_min_accounts_req, check_pubkeys_match, get_multisig_signers, to_supported_coption_pubkey,
-    to_supported_pubkey, InstructionParser, ReadableInstruction,
+use crate::{
+    helpers::{check_min_accounts_req, into_vixen_pubkey},
+    Result, ResultExt,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -29,43 +29,42 @@ impl Parser for TokenProgramIxParser {
     }
 
     async fn parse(&self, ix_update: &InstructionUpdate) -> ParseResult<Self::Output> {
-        if check_pubkeys_match(&ix_update.program, &spl_token::ID) {
-            TokenProgramIxParser::parse_ix(ix_update).map_err(|e| ParseError::Other(e.into()))
+        if ix_update.program.equals_ref(spl_token::ID) {
+            TokenProgramIxParser::parse_impl(ix_update).map_err(|e| ParseError::Other(e.into()))
         } else {
             Err(ParseError::Filtered)
         }
     }
 }
 
-impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
+impl TokenProgramIxParser {
     #[allow(clippy::too_many_lines)]
-    fn parse_ix(ix: &InstructionUpdate) -> Result<TokenProgramIx, String> {
+    pub(crate) fn parse_impl(ix: &InstructionUpdate) -> Result<TokenProgramIx> {
         let ix_type = TokenInstruction::unpack(&ix.data)
-            .map_err(|e| format!("Err while unpacking ix data : {e}"))?;
+            .parse_err("Error unpacking token instruction data")?;
         let accounts_len = ix.accounts.len();
         match ix_type {
             TokenInstruction::Transfer { amount } => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::Transfer(ReadableInstruction {
-                    accounts: TransferAccounts {
+                Ok(TokenProgramIx::Transfer(
+                    TransferAccounts {
                         source: ix.accounts[0],
                         destination: ix.accounts[1],
                         owner: ix.accounts[2],
-                        multisig_signers: get_multisig_signers(ix, 3),
+                        multisig_signers: ix.accounts[3..].to_vec(),
                     },
-                    data: Some(TransferData { amount }),
-                }))
+                    TransferData { amount },
+                ))
             },
             TokenInstruction::InitializeAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::InitializeAccount(ReadableInstruction {
-                    accounts: InitializeAccountAccounts {
+                Ok(TokenProgramIx::InitializeAccount(
+                    InitializeAccountAccounts {
                         account: ix.accounts[0],
                         mint: ix.accounts[1],
                         owner: ix.accounts[2],
                     },
-                    data: None,
-                }))
+                ))
             },
             TokenInstruction::InitializeMint {
                 decimals,
@@ -73,16 +72,16 @@ impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
                 freeze_authority,
             } => {
                 check_min_accounts_req(accounts_len, 1)?;
-                Ok(TokenProgramIx::InitializeMint(ReadableInstruction {
-                    accounts: InitializeMintAccounts {
+                Ok(TokenProgramIx::InitializeMint(
+                    InitializeMintAccounts {
                         mint: ix.accounts[0],
                     },
-                    data: Some(InitializeMintData {
+                    InitializeMintData {
                         decimals,
-                        mint_authority: to_supported_coption_pubkey(mint_authority.into()),
-                        freeze_authority: to_supported_coption_pubkey(freeze_authority),
-                    }),
-                }))
+                        mint_authority: into_vixen_pubkey(mint_authority),
+                        freeze_authority: freeze_authority.map(into_vixen_pubkey).into(),
+                    },
+                ))
             },
             TokenInstruction::InitializeMint2 {
                 decimals,
@@ -90,87 +89,84 @@ impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
                 freeze_authority,
             } => {
                 check_min_accounts_req(accounts_len, 1)?;
-                Ok(TokenProgramIx::InitializeMint(ReadableInstruction {
-                    accounts: InitializeMintAccounts {
+                Ok(TokenProgramIx::InitializeMint(
+                    InitializeMintAccounts {
                         mint: ix.accounts[0],
                     },
-                    data: Some(InitializeMintData {
+                    InitializeMintData {
                         decimals,
-                        mint_authority: to_supported_coption_pubkey(mint_authority.into()),
-                        freeze_authority: to_supported_coption_pubkey(freeze_authority),
-                    }),
-                }))
+                        mint_authority: into_vixen_pubkey(mint_authority),
+                        freeze_authority: freeze_authority.map(into_vixen_pubkey).into(),
+                    },
+                ))
             },
 
             TokenInstruction::InitializeAccount2 { owner } => {
                 check_min_accounts_req(accounts_len, 2)?;
-                Ok(TokenProgramIx::InitializeAccount2(ReadableInstruction {
-                    accounts: InitializeAccount2Accounts {
+                Ok(TokenProgramIx::InitializeAccount2(
+                    InitializeAccount2Accounts {
                         account: ix.accounts[0],
                         mint: ix.accounts[1],
                     },
-                    data: Some(InitializeAccountData2 {
-                        owner: to_supported_pubkey(owner),
-                    }),
-                }))
+                    InitializeAccountData2 {
+                        owner: into_vixen_pubkey(owner),
+                    },
+                ))
             },
 
             TokenInstruction::InitializeAccount3 { owner } => {
                 check_min_accounts_req(accounts_len, 2)?;
-                Ok(TokenProgramIx::InitializeAccount3(ReadableInstruction {
-                    accounts: InitializeAccount2Accounts {
+                Ok(TokenProgramIx::InitializeAccount3(
+                    InitializeAccount2Accounts {
                         account: ix.accounts[0],
                         mint: ix.accounts[1],
                     },
-                    data: Some(InitializeAccountData2 {
-                        owner: to_supported_pubkey(owner),
-                    }),
-                }))
+                    InitializeAccountData2 {
+                        owner: into_vixen_pubkey(owner),
+                    },
+                ))
             },
             TokenInstruction::InitializeMultisig { m } => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::InitializeMultisig(ReadableInstruction {
-                    accounts: InitializeMultisigAccounts {
+                Ok(TokenProgramIx::InitializeMultisig(
+                    InitializeMultisigAccounts {
                         multisig: ix.accounts[0],
-                        signers: get_multisig_signers(ix, 2),
+                        signers: ix.accounts[2..].to_vec(),
                     },
-                    data: Some(InitializeMultisigData { m }),
-                }))
+                    InitializeMultisigData { m },
+                ))
             },
 
             TokenInstruction::InitializeMultisig2 { m } => {
                 check_min_accounts_req(accounts_len, 2)?;
-                Ok(TokenProgramIx::InitializeMultisig(ReadableInstruction {
-                    accounts: InitializeMultisigAccounts {
+                Ok(TokenProgramIx::InitializeMultisig(
+                    InitializeMultisigAccounts {
                         multisig: ix.accounts[0],
-                        signers: get_multisig_signers(ix, 1),
+                        signers: ix.accounts[1..].to_vec(),
                     },
-                    data: Some(InitializeMultisigData { m }),
-                }))
+                    InitializeMultisigData { m },
+                ))
             },
 
             TokenInstruction::Approve { amount } => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::Approve(ReadableInstruction {
-                    accounts: ApproveAccounts {
+                Ok(TokenProgramIx::Approve(
+                    ApproveAccounts {
                         source: ix.accounts[0],
                         delegate: ix.accounts[1],
                         owner: ix.accounts[2],
-                        multisig_signers: get_multisig_signers(ix, 3),
+                        multisig_signers: ix.accounts[3..].to_vec(),
                     },
-                    data: Some(ApproveData { amount }),
-                }))
+                    ApproveData { amount },
+                ))
             },
 
             TokenInstruction::Revoke => {
                 check_min_accounts_req(accounts_len, 2)?;
-                Ok(TokenProgramIx::Revoke(ReadableInstruction {
-                    accounts: RevokeAccounts {
-                        source: ix.accounts[0],
-                        owner: ix.accounts[1],
-                        multisig_signers: get_multisig_signers(ix, 2),
-                    },
-                    data: None,
+                Ok(TokenProgramIx::Revoke(RevokeAccounts {
+                    source: ix.accounts[0],
+                    owner: ix.accounts[1],
+                    multisig_signers: ix.accounts[2..].to_vec(),
                 }))
             },
 
@@ -179,192 +175,175 @@ impl InstructionParser<TokenProgramIx> for TokenProgramIxParser {
                 new_authority,
             } => {
                 check_min_accounts_req(accounts_len, 2)?;
-                Ok(TokenProgramIx::SetAuthority(ReadableInstruction {
-                    accounts: SetAuthorityAccounts {
+                Ok(TokenProgramIx::SetAuthority(
+                    SetAuthorityAccounts {
                         account: ix.accounts[0],
                         current_authority: ix.accounts[1],
-                        multisig_signers: get_multisig_signers(ix, 2),
+                        multisig_signers: ix.accounts[2..].to_vec(),
                     },
-
-                    data: Some(SetAuthorityData {
+                    SetAuthorityData {
                         authority_type,
-                        new_authority: to_supported_coption_pubkey(new_authority),
-                    }),
-                }))
+                        new_authority: new_authority.map(into_vixen_pubkey).into(),
+                    },
+                ))
             },
 
             TokenInstruction::MintTo { amount } => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::MintTo(ReadableInstruction {
-                    accounts: MintToAccounts {
+                Ok(TokenProgramIx::MintTo(
+                    MintToAccounts {
                         mint: ix.accounts[0],
                         account: ix.accounts[1],
                         mint_authority: ix.accounts[2],
-                        multisig_signers: get_multisig_signers(ix, 3),
+                        multisig_signers: ix.accounts[3..].to_vec(),
                     },
-                    data: Some(MintToData { amount }),
-                }))
+                    MintToData { amount },
+                ))
             },
 
             TokenInstruction::Burn { amount } => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::Burn(ReadableInstruction {
-                    accounts: BurnAccounts {
+                Ok(TokenProgramIx::Burn(
+                    BurnAccounts {
                         account: ix.accounts[0],
                         mint: ix.accounts[1],
                         owner: ix.accounts[2],
-                        multisig_signers: get_multisig_signers(ix, 3),
+                        multisig_signers: ix.accounts[3..].to_vec(),
                     },
-                    data: Some(BurnData { amount }),
-                }))
+                    BurnData { amount },
+                ))
             },
 
             TokenInstruction::CloseAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::CloseAccount(ReadableInstruction {
-                    accounts: CloseAccountAccounts {
-                        account: ix.accounts[0],
-                        destination: ix.accounts[1],
-                        owner: ix.accounts[2],
-                        multisig_signers: get_multisig_signers(ix, 3),
-                    },
-                    data: None,
+                Ok(TokenProgramIx::CloseAccount(CloseAccountAccounts {
+                    account: ix.accounts[0],
+                    destination: ix.accounts[1],
+                    owner: ix.accounts[2],
+                    multisig_signers: ix.accounts[3..].to_vec(),
                 }))
             },
 
             TokenInstruction::FreezeAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::FreezeAccount(ReadableInstruction {
-                    accounts: FreezeAccountAccounts {
-                        account: ix.accounts[0],
-                        mint: ix.accounts[1],
-                        mint_freeze_authority: ix.accounts[2],
-                        multisig_signers: get_multisig_signers(ix, 3),
-                    },
-                    data: None,
+                Ok(TokenProgramIx::FreezeAccount(FreezeAccountAccounts {
+                    account: ix.accounts[0],
+                    mint: ix.accounts[1],
+                    mint_freeze_authority: ix.accounts[2],
+                    multisig_signers: ix.accounts[3..].to_vec(),
                 }))
             },
 
             TokenInstruction::ThawAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::ThawAccount(ReadableInstruction {
-                    accounts: ThawAccountAccounts {
-                        account: ix.accounts[0],
-                        mint: ix.accounts[1],
-                        mint_freeze_authority: ix.accounts[2],
-                        multisig_signers: get_multisig_signers(ix, 3),
-                    },
-                    data: None,
+                Ok(TokenProgramIx::ThawAccount(ThawAccountAccounts {
+                    account: ix.accounts[0],
+                    mint: ix.accounts[1],
+                    mint_freeze_authority: ix.accounts[2],
+                    multisig_signers: ix.accounts[3..].to_vec(),
                 }))
             },
 
             TokenInstruction::TransferChecked { amount, decimals } => {
                 check_min_accounts_req(accounts_len, 4)?;
-                Ok(TokenProgramIx::TransferChecked(ReadableInstruction {
-                    accounts: TransferCheckedAccounts {
+                Ok(TokenProgramIx::TransferChecked(
+                    TransferCheckedAccounts {
                         source: ix.accounts[0],
                         mint: ix.accounts[1],
                         destination: ix.accounts[2],
                         owner: ix.accounts[3],
-                        multisig_signers: get_multisig_signers(ix, 4),
+                        multisig_signers: ix.accounts[4..].to_vec(),
                     },
-                    data: Some(TransferCheckedData { amount, decimals }),
-                }))
+                    TransferCheckedData { amount, decimals },
+                ))
             },
 
             TokenInstruction::ApproveChecked { amount, decimals } => {
                 check_min_accounts_req(accounts_len, 4)?;
-                Ok(TokenProgramIx::ApproveChecked(ReadableInstruction {
-                    accounts: ApproveCheckedAccounts {
+                Ok(TokenProgramIx::ApproveChecked(
+                    ApproveCheckedAccounts {
                         source: ix.accounts[0],
                         mint: ix.accounts[1],
                         delegate: ix.accounts[2],
                         owner: ix.accounts[3],
-                        multisig_signers: get_multisig_signers(ix, 4),
+                        multisig_signers: ix.accounts[4..].to_vec(),
                     },
-                    data: Some(ApproveCheckedData { amount, decimals }),
-                }))
+                    ApproveCheckedData { amount, decimals },
+                ))
             },
 
             TokenInstruction::MintToChecked { amount, decimals } => {
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::MintToChecked(ReadableInstruction {
-                    accounts: MintToCheckedAccounts {
+                Ok(TokenProgramIx::MintToChecked(
+                    MintToCheckedAccounts {
                         mint: ix.accounts[0],
                         account: ix.accounts[1],
                         mint_authority: ix.accounts[2],
-                        multisig_signers: get_multisig_signers(ix, 3),
+                        multisig_signers: ix.accounts[3..].to_vec(),
                     },
-                    data: Some(MintToCheckedData { amount, decimals }),
-                }))
+                    MintToCheckedData { amount, decimals },
+                ))
             },
 
             TokenInstruction::BurnChecked { amount, decimals } => {
                 //TODO : this ix needs 3 accounts , but only 1 account is available in the instruction
                 check_min_accounts_req(accounts_len, 3)?;
-                Ok(TokenProgramIx::BurnChecked(ReadableInstruction {
-                    accounts: BurnCheckedAccounts {
+                Ok(TokenProgramIx::BurnChecked(
+                    BurnCheckedAccounts {
                         account: ix.accounts[0],
                         mint: ix.accounts[1],
                         owner: ix.accounts[2],
-                        multisig_signers: get_multisig_signers(ix, 3),
+                        multisig_signers: ix.accounts[3..].to_vec(),
                     },
-                    data: Some(BurnCheckedData { amount, decimals }),
-                }))
+                    BurnCheckedData { amount, decimals },
+                ))
             },
 
             TokenInstruction::SyncNative => {
                 check_min_accounts_req(accounts_len, 1)?;
-                Ok(TokenProgramIx::SyncNative(ReadableInstruction {
-                    accounts: SyncNativeAccounts {
-                        account: ix.accounts[0],
-                    },
-                    data: None,
+                Ok(TokenProgramIx::SyncNative(SyncNativeAccounts {
+                    account: ix.accounts[0],
                 }))
             },
 
             TokenInstruction::GetAccountDataSize => {
                 check_min_accounts_req(accounts_len, 1)?;
-                Ok(TokenProgramIx::GetAccountDataSize(ReadableInstruction {
-                    accounts: GetAccountDataSizeAccounts {
+                Ok(TokenProgramIx::GetAccountDataSize(
+                    GetAccountDataSizeAccounts {
                         mint: ix.accounts[0],
                     },
-                    data: None,
-                }))
+                ))
             },
 
             TokenInstruction::InitializeImmutableOwner => {
                 check_min_accounts_req(accounts_len, 1)?;
                 Ok(TokenProgramIx::InitializeImmutableOwner(
-                    ReadableInstruction {
-                        accounts: InitializeImmutableOwnerAccounts {
-                            account: ix.accounts[0],
-                        },
-                        data: None,
+                    InitializeImmutableOwnerAccounts {
+                        account: ix.accounts[0],
                     },
                 ))
             },
 
             TokenInstruction::AmountToUiAmount { amount } => {
                 check_min_accounts_req(accounts_len, 1)?;
-                Ok(TokenProgramIx::AmountToUiAmount(ReadableInstruction {
-                    accounts: AmountToUiAmountAccounts {
+                Ok(TokenProgramIx::AmountToUiAmount(
+                    AmountToUiAmountAccounts {
                         mint: ix.accounts[0],
                     },
-                    data: Some(AmountToUiAmountData { amount }),
-                }))
+                    AmountToUiAmountData { amount },
+                ))
             },
 
             TokenInstruction::UiAmountToAmount { ui_amount } => {
                 check_min_accounts_req(accounts_len, 1)?;
-                Ok(TokenProgramIx::UiAmountToAmount(ReadableInstruction {
-                    accounts: UiAmountToAmountAccounts {
+                Ok(TokenProgramIx::UiAmountToAmount(
+                    UiAmountToAmountAccounts {
                         mint: ix.accounts[0],
                     },
-                    data: Some(UiAmountToAmountData {
+                    UiAmountToAmountData {
                         ui_amount: ui_amount.into(),
-                    }),
-                }))
+                    },
+                ))
             },
         }
     }
@@ -385,12 +364,10 @@ mod tests {
         let ixs = tx_fixture!("55kpnRufcX9Fo44oRBXtrkxPRww4UWJKxCpgBV39kzAAag8oyJbd9Y3YWdQQUi3TBqtrhjgsMGb9Nw8bUxy7j5rt");
         let ix = run_ix_parse!(parser, &ixs[0]);
 
-        let TokenProgramIx::MintToChecked(ix) = ix else {
+        let TokenProgramIx::MintToChecked(_accts, data) = ix else {
             panic!("Invalid Instruction");
         };
 
-        assert!(ix.data.is_some());
-        let data = ix.data.as_ref().unwrap();
         assert_eq!(data.decimals, 10);
         assert_eq!(data.amount, 10.mul(10u64.pow(data.decimals.into())));
     }

@@ -194,15 +194,15 @@ pub mod token_extensions_proto_parser {
     use super::{
         extension, Account, ExtensionData, Mint, TokenGroup, TokenGroupMember, TokenMetadata,
     };
-    use crate::helpers::{ElGamalPubkeyBytes, IntoProtoData};
-    macro_rules! impl_into_proto_data {
+    use crate::helpers::{ElGamalPubkeyBytes, IntoProto};
+    macro_rules! impl_into_proto {
         ($($variant:ident),*) => {
-            impl IntoProtoData<ExtensionDataProto> for ExtensionData {
-                fn into_proto_data(self) -> ExtensionDataProto {
+            impl IntoProto<ExtensionDataProto> for ExtensionData {
+                fn into_proto(self) -> ExtensionDataProto {
                     match self {
                         $(
                             ExtensionData::$variant(data) => ExtensionDataProto {
-                                data: Some(Data::$variant(data.into_proto_data())),
+                                data: Some(Data::$variant(data.into_proto())),
                             },
                         )*
                     }
@@ -211,7 +211,7 @@ pub mod token_extensions_proto_parser {
         };
     }
 
-    impl_into_proto_data!(
+    impl_into_proto!(
         ImmutableOwner,
         TransferFeeAmount,
         ConfidentialTransferAccount,
@@ -237,8 +237,8 @@ pub mod token_extensions_proto_parser {
         ConfidentialTransferFeeConfig
     );
 
-    impl IntoProtoData<TokenAccountProto> for Account {
-        fn into_proto_data(self) -> TokenAccountProto {
+    impl IntoProto<TokenAccountProto> for Account {
+        fn into_proto(self) -> TokenAccountProto {
             TokenAccountProto {
                 mint: self.mint.to_string(),
                 owner: self.owner.to_string(),
@@ -252,8 +252,8 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<MintProto> for Mint {
-        fn into_proto_data(self) -> MintProto {
+    impl IntoProto<MintProto> for Mint {
+        fn into_proto(self) -> MintProto {
             MintProto {
                 mint_authority: self.mint_authority.map(|ma| ma.to_string()).into(),
 
@@ -265,8 +265,8 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<MultisigProto> for Multisig {
-        fn into_proto_data(self) -> MultisigProto {
+    impl IntoProto<MultisigProto> for Multisig {
+        fn into_proto(self) -> MultisigProto {
             MultisigProto {
                 m: self.m.into(),
                 n: self.n.into(),
@@ -276,27 +276,25 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<ImmutableOwnerProto> for ImmutableOwner {
-        fn into_proto_data(self) -> ImmutableOwnerProto {
-            ImmutableOwnerProto {}
-        }
+    impl IntoProto<ImmutableOwnerProto> for ImmutableOwner {
+        fn into_proto(self) -> ImmutableOwnerProto { ImmutableOwnerProto {} }
     }
 
-    impl IntoProtoData<TransferFeeAmountProto> for extension::transfer_fee::TransferFeeAmount {
-        fn into_proto_data(self) -> TransferFeeAmountProto {
+    impl IntoProto<TransferFeeAmountProto> for extension::transfer_fee::TransferFeeAmount {
+        fn into_proto(self) -> TransferFeeAmountProto {
             TransferFeeAmountProto {
                 withheld_amount: self.withheld_amount.into(),
             }
         }
     }
 
-    impl IntoProtoData<ConfidentialTransferAccountProto>
+    impl IntoProto<ConfidentialTransferAccountProto>
         for extension::confidential_transfer::ConfidentialTransferAccount
     {
-        fn into_proto_data(self) -> ConfidentialTransferAccountProto {
+        fn into_proto(self) -> ConfidentialTransferAccountProto {
             ConfidentialTransferAccountProto {
                 approved: self.approved.into(),
-                elgamal_pubkey: ElGamalPubkeyBytes(self.elgamal_pubkey.0).into(),
+                elgamal_pubkey: ElGamalPubkeyBytes::new(self.elgamal_pubkey.0).to_string(),
                 pending_balance: self.pending_balance_lo.to_string(),
                 pending_balance_lo: self.pending_balance_lo.to_string(),
                 pending_balance_hi: self.pending_balance_hi.to_string(),
@@ -317,50 +315,48 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<MemoTransferProto> for extension::memo_transfer::MemoTransfer {
-        fn into_proto_data(self) -> MemoTransferProto {
+    impl IntoProto<MemoTransferProto> for extension::memo_transfer::MemoTransfer {
+        fn into_proto(self) -> MemoTransferProto {
             MemoTransferProto {
                 require_incoming_transfer_memos: self.require_incoming_transfer_memos.into(),
             }
         }
     }
 
-    impl IntoProtoData<NonTransferableAccountProto>
+    impl IntoProto<NonTransferableAccountProto>
         for extension::non_transferable::NonTransferableAccount
     {
-        fn into_proto_data(self) -> NonTransferableAccountProto {
-            NonTransferableAccountProto {}
-        }
+        fn into_proto(self) -> NonTransferableAccountProto { NonTransferableAccountProto {} }
     }
 
-    impl IntoProtoData<TransferHookAccountProto> for extension::transfer_hook::TransferHookAccount {
-        fn into_proto_data(self) -> TransferHookAccountProto {
+    impl IntoProto<TransferHookAccountProto> for extension::transfer_hook::TransferHookAccount {
+        fn into_proto(self) -> TransferHookAccountProto {
             TransferHookAccountProto {
                 transferring: self.transferring.into(),
             }
         }
     }
 
-    impl IntoProtoData<CpiGuardProto> for extension::cpi_guard::CpiGuard {
-        fn into_proto_data(self) -> CpiGuardProto {
+    impl IntoProto<CpiGuardProto> for extension::cpi_guard::CpiGuard {
+        fn into_proto(self) -> CpiGuardProto {
             CpiGuardProto {
                 lock_cpi: self.lock_cpi.into(),
             }
         }
     }
 
-    impl IntoProtoData<ConfidentialTransferFeeAmountProto>
+    impl IntoProto<ConfidentialTransferFeeAmountProto>
         for extension::confidential_transfer_fee::ConfidentialTransferFeeAmount
     {
-        fn into_proto_data(self) -> ConfidentialTransferFeeAmountProto {
+        fn into_proto(self) -> ConfidentialTransferFeeAmountProto {
             ConfidentialTransferFeeAmountProto {
                 withheld_amount: self.withheld_amount.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<TransferFeeConfigProto> for extension::transfer_fee::TransferFeeConfig {
-        fn into_proto_data(self) -> TransferFeeConfigProto {
+    impl IntoProto<TransferFeeConfigProto> for extension::transfer_fee::TransferFeeConfig {
+        fn into_proto(self) -> TransferFeeConfigProto {
             TransferFeeConfigProto {
                 transfer_fee_config_authority: self.transfer_fee_config_authority.0.to_string(),
 
@@ -386,51 +382,45 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<MintCloseAuthorityProto>
-        for extension::mint_close_authority::MintCloseAuthority
-    {
-        fn into_proto_data(self) -> MintCloseAuthorityProto {
+    impl IntoProto<MintCloseAuthorityProto> for extension::mint_close_authority::MintCloseAuthority {
+        fn into_proto(self) -> MintCloseAuthorityProto {
             MintCloseAuthorityProto {
                 close_authority: self.close_authority.0.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<ConfidentialTransferMintProto>
+    impl IntoProto<ConfidentialTransferMintProto>
         for extension::confidential_transfer::ConfidentialTransferMint
     {
-        fn into_proto_data(self) -> ConfidentialTransferMintProto {
+        fn into_proto(self) -> ConfidentialTransferMintProto {
             ConfidentialTransferMintProto {
                 authority: self.authority.0.to_string(),
                 auditor_elgamal_pubkey: Into::<Option<ElGamalPubkey>>::into(
                     self.auditor_elgamal_pubkey,
                 )
-                .map(|x| ElGamalPubkeyBytes(x.0).into()),
+                .map(|x| ElGamalPubkeyBytes::new(x.0).to_string()),
                 auto_approve_new_accounts: self.auto_approve_new_accounts.into(),
             }
         }
     }
 
-    impl IntoProtoData<DefaultAccountStateProto>
-        for extension::default_account_state::DefaultAccountState
-    {
-        fn into_proto_data(self) -> DefaultAccountStateProto {
+    impl IntoProto<DefaultAccountStateProto> for extension::default_account_state::DefaultAccountState {
+        fn into_proto(self) -> DefaultAccountStateProto {
             DefaultAccountStateProto {
                 state: self.state.into(),
             }
         }
     }
 
-    impl IntoProtoData<NonTransferableProto> for extension::non_transferable::NonTransferable {
-        fn into_proto_data(self) -> NonTransferableProto {
-            NonTransferableProto {}
-        }
+    impl IntoProto<NonTransferableProto> for extension::non_transferable::NonTransferable {
+        fn into_proto(self) -> NonTransferableProto { NonTransferableProto {} }
     }
 
-    impl IntoProtoData<InterestBearingConfigProto>
+    impl IntoProto<InterestBearingConfigProto>
         for extension::interest_bearing_mint::InterestBearingConfig
     {
-        fn into_proto_data(self) -> InterestBearingConfigProto {
+        fn into_proto(self) -> InterestBearingConfigProto {
             InterestBearingConfigProto {
                 rate_authority: self.rate_authority.0.to_string(),
                 initialization_timestamp: self.initialization_timestamp.into(),
@@ -441,16 +431,16 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<PermanentDelegateProto> for extension::permanent_delegate::PermanentDelegate {
-        fn into_proto_data(self) -> PermanentDelegateProto {
+    impl IntoProto<PermanentDelegateProto> for extension::permanent_delegate::PermanentDelegate {
+        fn into_proto(self) -> PermanentDelegateProto {
             PermanentDelegateProto {
                 delegate: self.delegate.0.to_string(),
             }
         }
     }
 
-    impl IntoProtoData<TransferHookProto> for extension::transfer_hook::TransferHook {
-        fn into_proto_data(self) -> TransferHookProto {
+    impl IntoProto<TransferHookProto> for extension::transfer_hook::TransferHook {
+        fn into_proto(self) -> TransferHookProto {
             TransferHookProto {
                 authority: self.authority.0.to_string(),
                 program_id: self.program_id.0.to_string(),
@@ -458,24 +448,24 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<ConfidentialTransferFeeConfigProto>
+    impl IntoProto<ConfidentialTransferFeeConfigProto>
         for extension::confidential_transfer_fee::ConfidentialTransferFeeConfig
     {
-        fn into_proto_data(self) -> ConfidentialTransferFeeConfigProto {
+        fn into_proto(self) -> ConfidentialTransferFeeConfigProto {
             ConfidentialTransferFeeConfigProto {
                 authority: self.authority.0.to_string(),
                 withheld_amount: self.withheld_amount.to_string(),
-                withdraw_withheld_authority_elgamal_pubkey: ElGamalPubkeyBytes(
+                withdraw_withheld_authority_elgamal_pubkey: ElGamalPubkeyBytes::new(
                     self.withdraw_withheld_authority_elgamal_pubkey.0,
                 )
-                .into(),
+                .to_string(),
                 harvest_to_mint_enabled: self.harvest_to_mint_enabled.into(),
             }
         }
     }
 
-    impl IntoProtoData<MetadataPointerProto> for MetadataPointer {
-        fn into_proto_data(self) -> MetadataPointerProto {
+    impl IntoProto<MetadataPointerProto> for MetadataPointer {
+        fn into_proto(self) -> MetadataPointerProto {
             MetadataPointerProto {
                 authority: self.authority.0.to_string(),
                 metadata_address: self.metadata_address.0.to_string(),
@@ -483,8 +473,8 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<TokenMetadataProto> for TokenMetadata {
-        fn into_proto_data(self) -> TokenMetadataProto {
+    impl IntoProto<TokenMetadataProto> for TokenMetadata {
+        fn into_proto(self) -> TokenMetadataProto {
             TokenMetadataProto {
                 update_authority: self.update_authority.0.to_string(),
                 mint: self.mint.to_string(),
@@ -503,8 +493,8 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<GroupPointerProto> for GroupPointer {
-        fn into_proto_data(self) -> GroupPointerProto {
+    impl IntoProto<GroupPointerProto> for GroupPointer {
+        fn into_proto(self) -> GroupPointerProto {
             GroupPointerProto {
                 authority: self.authority.0.to_string(),
                 group_address: self.group_address.0.to_string(),
@@ -512,8 +502,8 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<TokenGroupProto> for TokenGroup {
-        fn into_proto_data(self) -> TokenGroupProto {
+    impl IntoProto<TokenGroupProto> for TokenGroup {
+        fn into_proto(self) -> TokenGroupProto {
             TokenGroupProto {
                 update_authority: self.update_authority.0.to_string(),
                 mint: self.mint.to_string(),
@@ -523,8 +513,8 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<GroupMemberPointerProto> for GroupMemberPointer {
-        fn into_proto_data(self) -> GroupMemberPointerProto {
+    impl IntoProto<GroupMemberPointerProto> for GroupMemberPointer {
+        fn into_proto(self) -> GroupMemberPointerProto {
             GroupMemberPointerProto {
                 authority: self.authority.0.to_string(),
                 member_address: self.member_address.0.to_string(),
@@ -532,8 +522,8 @@ pub mod token_extensions_proto_parser {
         }
     }
 
-    impl IntoProtoData<TokenGroupMemberProto> for TokenGroupMember {
-        fn into_proto_data(self) -> TokenGroupMemberProto {
+    impl IntoProto<TokenGroupMemberProto> for TokenGroupMember {
+        fn into_proto(self) -> TokenGroupMemberProto {
             TokenGroupMemberProto {
                 member_number: Into::<u32>::into(self.member_number).into(),
                 mint: self.mint.to_string(),

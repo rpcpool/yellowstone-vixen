@@ -40,13 +40,13 @@ const PUBKEY_REGEX: &str = r"\b[1-9A-HJ-NP-Za-km-z]{44}\b";
 const TX_SIGNATURE_REGEX: &str = r"\b[1-9A-HJ-NP-Za-km-z]{88}\b";
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AccountInfo {
     pub data: Vec<u8>,
     pub pubkey: Pubkey,
     pub executable: bool,
     pub lamports: u64,
     pub owner: Pubkey,
-    #[serde(rename = "rentEpoch")]
     pub rent_epoch: u64,
     pub space: u64,
 }
@@ -106,7 +106,11 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 pub struct SerializablePubkey(pub [u8; 32]);
 
 impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self { Self(value.0) }
+    fn from(value: VixenPubkey) -> Self { Self(value.into_bytes()) }
+}
+
+impl From<SerializablePubkey> for VixenPubkey {
+    fn from(value: SerializablePubkey) -> Self { Self::new(value.0) }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -120,11 +124,11 @@ pub struct SerializableInstructionUpdate {
 impl From<&InstructionUpdate> for SerializableInstructionUpdate {
     fn from(value: &InstructionUpdate) -> Self {
         Self {
-            program: SerializablePubkey(value.program.0),
+            program: SerializablePubkey(value.program.into_bytes()),
             accounts: value
                 .accounts
                 .iter()
-                .map(|x| SerializablePubkey(x.0))
+                .map(|x| SerializablePubkey(x.into_bytes()))
                 .collect(),
             data: value.data.clone(),
             inner: value.inner.iter().map(Into::into).collect(),
@@ -135,8 +139,8 @@ impl From<&InstructionUpdate> for SerializableInstructionUpdate {
 impl From<&SerializableInstructionUpdate> for InstructionUpdate {
     fn from(value: &SerializableInstructionUpdate) -> Self {
         Self {
-            program: VixenPubkey(value.program.0),
-            accounts: value.accounts.iter().map(|x| VixenPubkey(x.0)).collect(),
+            program: value.program.into(),
+            accounts: value.accounts.iter().copied().map(Into::into).collect(),
             data: value.data.clone(),
             shared: Arc::new(InstructionShared::default()),
             inner: value.inner.iter().map(Into::into).collect(),
@@ -209,7 +213,7 @@ fn try_from_tx_meta(
                 })
                 .collect::<Result<Vec<SerializableInstructionUpdate>, String>>()?;
             outer_with_inner_ixs.pop(); // Remove the last instruction which is a
-            // set compute unit ix and will cause errors while parsing
+                                        // set compute unit ix and will cause errors while parsing
 
             if let Some(inner_ixs) = inner_ixs {
                 if inner_ixs.is_empty() {

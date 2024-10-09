@@ -20,11 +20,9 @@ use super::{
     },
 };
 use crate::{
-    helpers::{
-        check_min_accounts_req, check_pubkeys_match, get_multisig_signers,
-        to_supported_coption_pubkey, to_supported_pubkey, InstructionParser, ReadableInstruction,
-    },
+    helpers::{check_min_accounts_req, into_vixen_pubkey},
     token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIxParser},
+    Error, Result, ResultExt,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -46,8 +44,8 @@ impl Parser for TokenExtensionProgramIxParser {
     }
 
     async fn parse(&self, ix_update: &InstructionUpdate) -> ParseResult<Self::Output> {
-        if check_pubkeys_match(&ix_update.program, &spl_token_2022::ID) {
-            TokenExtensionProgramIxParser::parse_ix(ix_update)
+        if ix_update.program.equals_ref(spl_token_2022::ID) {
+            TokenExtensionProgramIxParser::parse_impl(ix_update)
                 .map_err(|e| ParseError::Other(e.into()))
         } else {
             Err(ParseError::Filtered)
@@ -55,9 +53,9 @@ impl Parser for TokenExtensionProgramIxParser {
     }
 }
 
-impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParser {
+impl TokenExtensionProgramIxParser {
     #[allow(clippy::too_many_lines)]
-    fn parse_ix(ix: &InstructionUpdate) -> Result<TokenExtensionProgramIx, String> {
+    fn parse_impl(ix: &InstructionUpdate) -> Result<TokenExtensionProgramIx> {
         let accounts_len = ix.accounts.len();
         match TokenInstruction::unpack(&ix.data) {
             Ok(token_ix) => match token_ix {
@@ -148,27 +146,24 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                     new_authority,
                 } => {
                     check_min_accounts_req(accounts_len, 2)?;
-                    Ok(TokenExtensionProgramIx::SetAuthority(ReadableInstruction {
-                        accounts: SetAuthorityAccounts {
+                    Ok(TokenExtensionProgramIx::SetAuthority(
+                        SetAuthorityAccounts {
                             account: ix.accounts[0],
                             current_authority: ix.accounts[1],
-                            multisig_signers: get_multisig_signers(ix, 2),
+                            multisig_signers: ix.accounts[2..].to_vec(),
                         },
-                        data: Some(TokenExtSetAutorityData {
+                        TokenExtSetAutorityData {
                             authority_type,
-                            new_authority: to_supported_coption_pubkey(new_authority),
-                        }),
-                    }))
+                            new_authority: new_authority.map(into_vixen_pubkey).into(),
+                        },
+                    ))
                 },
                 TokenInstruction::CreateNativeMint => {
                     check_min_accounts_req(accounts_len, 2)?;
                     Ok(TokenExtensionProgramIx::CreateNativeMint(
-                        ReadableInstruction {
-                            accounts: CreateNativeMintAccounts {
-                                funding_account: ix.accounts[0],
-                                mint: ix.accounts[1],
-                            },
-                            data: None,
+                        CreateNativeMintAccounts {
+                            funding_account: ix.accounts[0],
+                            mint: ix.accounts[1],
                         },
                     ))
                 },
@@ -176,13 +171,11 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                 TokenInstruction::InitializeMintCloseAuthority { close_authority } => {
                     check_min_accounts_req(accounts_len, 1)?;
                     Ok(TokenExtensionProgramIx::InitializeMintCloseAuthority(
-                        ReadableInstruction {
-                            accounts: InitializeMintCloseAuthorityAccounts {
-                                mint: ix.accounts[0],
-                            },
-                            data: Some(InitializeMintCloseAuthorityData {
-                                close_authority: to_supported_coption_pubkey(close_authority),
-                            }),
+                        InitializeMintCloseAuthorityAccounts {
+                            mint: ix.accounts[0],
+                        },
+                        InitializeMintCloseAuthorityData {
+                            close_authority: close_authority.map(into_vixen_pubkey).into(),
                         },
                     ))
                 },
@@ -190,38 +183,33 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                 TokenInstruction::InitializeNonTransferableMint => {
                     check_min_accounts_req(accounts_len, 1)?;
                     Ok(TokenExtensionProgramIx::InitializeNonTransferableMint(
-                        ReadableInstruction {
-                            accounts: InitializeNonTransferableMintAccounts {
-                                mint: ix.accounts[0],
-                            },
-                            data: None,
+                        InitializeNonTransferableMintAccounts {
+                            mint: ix.accounts[0],
                         },
                     ))
                 },
 
                 TokenInstruction::Reallocate { extension_types } => {
                     check_min_accounts_req(accounts_len, 4)?;
-                    Ok(TokenExtensionProgramIx::Reallocate(ReadableInstruction {
-                        accounts: ReallocateAccounts {
+                    Ok(TokenExtensionProgramIx::Reallocate(
+                        ReallocateAccounts {
                             account: ix.accounts[0],
                             payer: ix.accounts[1],
                             owner: ix.accounts[3],
-                            multisig_signers: get_multisig_signers(ix, 4),
+                            multisig_signers: ix.accounts[4..].to_vec(),
                         },
-                        data: Some(ReallocateData { extension_types }),
-                    }))
+                        ReallocateData { extension_types },
+                    ))
                 },
 
                 TokenInstruction::InitializePermanentDelegate { delegate } => {
                     check_min_accounts_req(accounts_len, 1)?;
                     Ok(TokenExtensionProgramIx::InitializePermanentDelegate(
-                        ReadableInstruction {
-                            accounts: InitializePermanentDelegateAccounts {
-                                account: ix.accounts[0],
-                            },
-                            data: Some(InitializePermanentDelegateData {
-                                delegate: to_supported_pubkey(delegate),
-                            }),
+                        InitializePermanentDelegateAccounts {
+                            account: ix.accounts[0],
+                        },
+                        InitializePermanentDelegateData {
+                            delegate: into_vixen_pubkey(delegate),
                         },
                     ))
                 },
@@ -229,20 +217,19 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                 TokenInstruction::WithdrawExcessLamports => {
                     check_min_accounts_req(accounts_len, 3)?;
                     Ok(TokenExtensionProgramIx::WithdrawExcessLamports(
-                        ReadableInstruction {
-                            accounts: WithdrawExcessLamportsAccounts {
-                                source_account: ix.accounts[0],
-                                destination_account: ix.accounts[1],
-                                authority: ix.accounts[2],
-                                multisig_signers: get_multisig_signers(ix, 3),
-                            },
-                            data: None,
+                        WithdrawExcessLamportsAccounts {
+                            source_account: ix.accounts[0],
+                            destination_account: ix.accounts[1],
+                            authority: ix.accounts[2],
+                            multisig_signers: ix.accounts[3..].to_vec(),
                         },
                     ))
                 },
 
                 _ => Ok(TokenExtensionProgramIx::TokenProgramIx(
-                    TokenProgramIxParser::parse_ix(ix).map_err(|e| e.to_string())?,
+                    TokenProgramIxParser::parse_impl(ix).parse_err(
+                        "Error parsing token extension instruction as token instruction",
+                    )?,
                 )),
             },
             Err(e) => {
@@ -258,7 +245,7 @@ impl InstructionParser<TokenExtensionProgramIx> for TokenExtensionProgramIxParse
                     ));
                 }
 
-                Err(format!("Err while unpacking ix data : {e} "))
+                Err(Error::from_inner("Error unpacking instruction data", e))
             },
         }
     }
@@ -279,12 +266,12 @@ mod tests {
         let ixs = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
         let ix = run_ix_parse!(parser, &ixs[0]);
 
-        let TokenExtensionProgramIx::TokenProgramIx(TokenProgramIx::MintToChecked(ix)) = ix else {
+        let TokenExtensionProgramIx::TokenProgramIx(TokenProgramIx::MintToChecked(_accts, data)) =
+            ix
+        else {
             panic!("Invalid Instruction");
         };
 
-        assert!(ix.data.is_some());
-        let data = ix.data.as_ref().unwrap();
         assert_eq!(data.decimals, 9);
         assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals.into())));
     }

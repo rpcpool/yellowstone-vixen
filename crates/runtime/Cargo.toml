@@ -16,6 +16,7 @@ clap = { version = "4.5.4", default-features = false, features = [
 futures-channel = { version = "0.3.30", features = ["sink"] }
 futures-util = { version = "0.3.30", features = ["sink"] }
 opentelemetry = { version = "0.24.0", features = ["metrics"], optional = true }
+pin-project-lite = { version = "0.2.14", optional = true }
 prometheus = { version = "0.13.4", features = ["push"], optional = true }
 serde = { version = "1.0.198", features = ["derive"] }
 smallvec = "1.13.2"
@@ -33,4 +34,8 @@ yellowstone-vixen-proto = { workspace = true, optional = true }
 [features]
 opentelemetry = ["dep:opentelemetry"]
 prometheus = ["dep:prometheus"]
-stream = ["dep:yellowstone-vixen-proto", "yellowstone-vixen-proto/stream"]
+stream = [
+  "dep:pin-project-lite",
+  "dep:yellowstone-vixen-proto",
+  "yellowstone-vixen-proto/stream",
+]

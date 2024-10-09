@@ -135,13 +135,12 @@ impl Parser for TokenExtensionProgramAccParser {
 
 impl ProgramParser for TokenExtensionProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token_2022::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 #[cfg(feature = "proto")]
 mod proto_parser {
+    use yellowstone_vixen_core::proto::ParseProto;
     use yellowstone_vixen_proto::parser::{
         token_extension_state_proto, ExtendedMintProto, ExtendedTokenAccountProto,
         ExtensionDataProto, TokenExtensionStateProto,
@@ -150,55 +149,53 @@ mod proto_parser {
     use super::{
         ExtendedMint, ExtendedTokenAccount, TokenExtensionProgramAccParser, TokenExtensionState,
     };
-    use crate::helpers::IntoProtoData;
+    use crate::helpers::IntoProto;
 
-    impl IntoProtoData<ExtendedMintProto> for ExtendedMint {
-        fn into_proto_data(self) -> ExtendedMintProto {
+    impl IntoProto<ExtendedMintProto> for ExtendedMint {
+        fn into_proto(self) -> ExtendedMintProto {
             ExtendedMintProto {
-                base_mint: Some(self.base_account.into_proto_data()),
+                base_mint: Some(self.base_account.into_proto()),
                 extension_data_vec: self
                     .extension_data_vec
                     .into_iter()
-                    .map(IntoProtoData::into_proto_data)
+                    .map(IntoProto::into_proto)
                     .collect::<Vec<ExtensionDataProto>>(),
             }
         }
     }
 
-    impl IntoProtoData<ExtendedTokenAccountProto> for ExtendedTokenAccount {
-        fn into_proto_data(self) -> ExtendedTokenAccountProto {
+    impl IntoProto<ExtendedTokenAccountProto> for ExtendedTokenAccount {
+        fn into_proto(self) -> ExtendedTokenAccountProto {
             ExtendedTokenAccountProto {
-                base_account: Some(self.base_account.into_proto_data()),
+                base_account: Some(self.base_account.into_proto()),
                 extension_data_vec: self
                     .extension_data_vec
                     .into_iter()
-                    .map(IntoProtoData::into_proto_data)
+                    .map(IntoProto::into_proto)
                     .collect::<Vec<ExtensionDataProto>>(),
             }
         }
     }
 
-    impl crate::proto::IntoProto for TokenExtensionProgramAccParser {
-        type Proto = TokenExtensionStateProto;
+    impl ParseProto for TokenExtensionProgramAccParser {
+        type Message = TokenExtensionStateProto;
 
-        fn into_proto(value: Self::Output) -> Self::Proto {
+        fn output_into_message(value: Self::Output) -> Self::Message {
             let state_oneof = match value {
                 TokenExtensionState::ExtendedTokenAccount(data) => Some(
                     token_extension_state_proto::StateOneof::ExtendedTokenAccount(
-                        data.into_proto_data(),
+                        data.into_proto(),
                     ),
                 ),
                 TokenExtensionState::ExtendedMint(data) => Some(
-                    token_extension_state_proto::StateOneof::ExtendedMintAccount(
-                        data.into_proto_data(),
-                    ),
+                    token_extension_state_proto::StateOneof::ExtendedMintAccount(data.into_proto()),
                 ),
                 TokenExtensionState::Multisig(data) => Some(
-                    token_extension_state_proto::StateOneof::Multisig(data.into_proto_data()),
+                    token_extension_state_proto::StateOneof::Multisig(data.into_proto()),
                 ),
             };
 
-            Self::Proto { state_oneof }
+            Self::Message { state_oneof }
         }
     }
 }
