@@ -13,8 +13,10 @@ use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen, vixen_core::proto::Proto};
 use yellowstone_vixen_parser::{
-    token_extension_program::account_parser::TokenExtensionProgramAccParser,
-    token_program::account_parser::TokenProgramAccParser,
+    token_extension_program::{
+        account_parser::TokenExtensionProgramAccParser, ix_parser::TokenExtensionProgramIxParser,
+    },
+    token_program::{account_parser::TokenProgramAccParser, ix_parser::TokenProgramIxParser},
 };
 
 #[derive(clap::Parser)]
@@ -37,6 +39,8 @@ fn main() {
     vixen::stream::Server::builder()
         .account(Proto::new(TokenExtensionProgramAccParser))
         .account(Proto::new(TokenProgramAccParser))
+        .instruction(Proto::new(TokenProgramIxParser))
+        .instruction(Proto::new(TokenExtensionProgramIxParser))
         .build(config)
         .run();
 }

@@ -1,0 +1,218 @@
+syntax = "proto3";
+
+package vixen.parser;
+
+enum AccountStateProto {
+  Uninitialized = 0;
+  Initialized = 1;
+  Frozen = 2;
+}
+
+message TokenAccountProto {
+  string mint = 1;
+  string owner = 2;
+  uint64 amount = 3;
+  optional string delegate = 4;
+  AccountStateProto state = 5;
+  optional uint64 is_native = 6;
+  uint64 delegated_amount = 7;
+  optional string close_authority = 8;
+}
+
+message MintProto {
+  optional string mint_authority = 1;
+  uint64 supply = 2;
+  uint64 decimals = 4;
+  bool is_initialized = 5;
+  optional string freeze_authority = 6;
+}
+
+message MultisigProto {
+  uint64 m = 1;
+  uint64 n = 2;
+  bool is_initialized = 3;
+  repeated string signers = 4;
+}
+
+message ImmutableOwnerProto {
+
+}
+
+message TransferFeeAmountProto {
+  uint64 withheld_amount = 1;
+}
+
+message ConfidentialTransferAccountProto {
+  bool approved = 1;
+  string elgamal_pubkey = 2;
+  string pending_balance_lo = 3;
+  string pending_balance_hi = 4;
+  string pending_balance = 5;
+  string available_balance = 6;
+  string decryptable_available_balance = 7;
+  bool allow_confidential_credits = 8;
+  uint64 pending_balance_credit_counter = 9;
+  uint64 maximum_pending_balance_credit_counter = 10;
+  uint64 expected_pending_balance_credit_counter = 11;
+  uint64 actual_pending_balance_credit_counter = 12;
+}
+
+message MemoTransferProto {
+  bool require_incoming_transfer_memos = 1;
+}
+
+message NonTransferableAccountProto {
+}
+
+message TransferHookAccountProto {
+  bool transferring = 1;
+}
+
+message CpiGuardProto {
+  bool lock_cpi = 1;
+}
+
+message ConfidentialTransferFeeAmountProto {
+  string withheld_amount = 1;
+}
+
+message TransferFeeProto {
+  uint64 epoch = 1;
+  uint64 maximum_fee = 2;
+  uint64 transfer_fee_basis_points = 3;
+}
+
+message TransferFeeConfigProto {
+  string transfer_fee_config_authority = 1;
+  string withdraw_withheld_authority = 2;
+  uint64 withheld_amount = 3;
+  TransferFeeProto older_transfer_fee = 4;
+  TransferFeeProto newer_transfer_fee = 5;
+}
+
+message MintCloseAuthorityProto {
+  string close_authority = 1;
+}
+
+message ConfidentialTransferMintProto {
+  string authority = 1;
+  bool auto_approve_new_accounts = 2;
+  optional string auditor_elgamal_pubkey = 3;
+}
+
+
+message DefaultAccountStateProto {
+  uint64 state = 1;
+}
+
+message NonTransferableProto {
+}
+
+message InterestBearingConfigProto {
+  string rate_authority = 1;
+  int64 initialization_timestamp = 2;
+  int64 pre_update_average_rate = 3;
+  int64 last_update_timestamp = 4;
+  int64 current_rate = 5;
+}
+
+message PermanentDelegateProto {
+  string delegate = 1;
+}
+
+message TransferHookProto {
+  string authority = 1;
+  string program_id = 2;
+}
+
+message ConfidentialTransferFeeConfigProto {
+  string authority = 1;
+  string withdraw_withheld_authority_elgamal_pubkey = 2;
+  bool harvest_to_mint_enabled = 3;
+  string withheld_amount = 4;
+}
+
+message MetadataPointerProto {
+  string authority = 1;
+  string metadata_address = 2;
+}
+
+message KeyValue {
+  string key = 1;
+  string value = 2;
+}
+
+message TokenMetadataProto {
+  string update_authority = 1;
+  string mint = 2;
+  string name = 3;
+  string symbol = 4;
+  string uri = 5;
+  repeated KeyValue additional_metadata = 6;
+}
+
+message GroupPointerProto {
+  string authority = 1;
+  string group_address = 2;
+}
+
+message TokenGroupProto {
+  string update_authority = 1;
+  string mint = 2;
+  uint32 size = 3;
+  uint32 max_size = 4;
+}
+
+message GroupMemberPointerProto {
+  string authority = 1;
+  string member_address = 3;
+}
+
+message TokenGroupMemberProto {
+  string mint = 2;
+  string group = 3;
+  uint64 member_number = 4;
+}
+
+
+message ExtensionDataProto {
+  oneof data {
+    ImmutableOwnerProto immutable_owner = 1;
+    TransferFeeAmountProto transfer_fee_amount = 2;
+    ConfidentialTransferAccountProto confidential_transfer_account = 3;
+    MemoTransferProto memo_transfer = 4;
+    NonTransferableAccountProto non_transferable_account = 5;
+    TransferHookAccountProto transfer_hook_account = 6;
+    CpiGuardProto cpi_guard = 7;
+    ConfidentialTransferFeeAmountProto confidential_transfer_fee_amount = 8;
+    TransferFeeConfigProto transfer_fee_config = 9;
+    MintCloseAuthorityProto mint_close_authority = 10;
+    ConfidentialTransferMintProto confidential_transfer_mint = 11;
+    DefaultAccountStateProto default_account_state = 12;
+    NonTransferableProto non_transferable = 13;
+    InterestBearingConfigProto interest_bearing_config = 14;
+    PermanentDelegateProto permanent_delegate = 15;
+    TransferHookProto transfer_hook = 16;
+    ConfidentialTransferFeeConfigProto confidential_transfer_fee_config = 17;
+    MetadataPointerProto metadata_pointer = 18;
+    TokenMetadataProto token_metadata = 19;
+    GroupPointerProto group_pointer = 20;
+    TokenGroupProto token_group = 21;
+    GroupMemberPointerProto group_member_pointer = 22;
+    TokenGroupMemberProto token_group_member = 23;
+  }
+}
+
+message ExtendedTokenAccountProto {
+  TokenAccountProto base_account = 1;
+  repeated ExtensionDataProto extension_data_vec = 2;
+}
+
+message ExtendedMintProto {
+  MintProto base_mint = 1;
+  repeated ExtensionDataProto extension_data_vec = 2;
+}
+
+
+
+

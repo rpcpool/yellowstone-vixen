@@ -3,7 +3,7 @@ use spl_token_2022::instruction::TokenInstruction;
 use spl_token_group_interface::instruction::TokenGroupInstruction;
 use spl_token_metadata_interface::instruction::TokenMetadataInstruction;
 use yellowstone_vixen_core::{
-    instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
+    instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
 use super::{
@@ -15,9 +15,9 @@ use super::{
         CreateNativeMintAccounts, InitializeMintCloseAuthorityAccounts,
         InitializeMintCloseAuthorityData, InitializeNonTransferableMintAccounts,
         InitializePermanentDelegateAccounts, InitializePermanentDelegateData, ReallocateAccounts,
-        ReallocateData, TokenExtSetAutorityData, TokenExtensionProgramIx,
-        WithdrawExcessLamportsAccounts,
+        ReallocateData, TokenExtensionProgramIx, WithdrawExcessLamportsAccounts,
     },
+    SetAuthorityData,
 };
 use crate::{
     helpers::{check_min_accounts_req, into_vixen_pubkey},
@@ -51,6 +51,10 @@ impl Parser for TokenExtensionProgramIxParser {
             Err(ParseError::Filtered)
         }
     }
+}
+
+impl ProgramParser for TokenExtensionProgramIxParser {
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 impl TokenExtensionProgramIxParser {
@@ -152,7 +156,7 @@ impl TokenExtensionProgramIxParser {
                             current_authority: ix.accounts[1],
                             multisig_signers: ix.accounts[2..].to_vec(),
                         },
-                        TokenExtSetAutorityData {
+                        SetAuthorityData {
                             authority_type,
                             new_authority: new_authority.map(into_vixen_pubkey).into(),
                         },
@@ -251,13 +255,28 @@ impl TokenExtensionProgramIxParser {
     }
 }
 
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use yellowstone_vixen_core::proto::ParseProto;
+    use yellowstone_vixen_proto::parser::TokenExtensionProgramIxProto;
+
+    use super::TokenExtensionProgramIxParser;
+    use crate::helpers::IntoProto;
+
+    impl ParseProto for TokenExtensionProgramIxParser {
+        type Message = TokenExtensionProgramIxProto;
+
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::ops::Mul;
 
     use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
 
-    use super::*;
+    use super::{Parser, TokenExtensionProgramIx, TokenExtensionProgramIxParser};
     use crate::token_program::ix_parser::TokenProgramIx;
     #[tokio::test]
     async fn test_mint_to_checked_ix_parsing() {

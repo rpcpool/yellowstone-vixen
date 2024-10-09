@@ -137,3 +137,85 @@ impl CommonExtensionIxs {
         }
     }
 }
+
+#[cfg(feature = "proto")]
+mod proto_parser {
+
+    use common_extension_ix_proto::IxOneof;
+    use yellowstone_vixen_proto::parser::{
+        common_extension_ix_proto, CommonExtensionIxProto, DisableAccountsProto, DisableIxProto,
+        EnableAccountsProto, EnableIxProto, ExtInitializeAccountsProto, ExtInitializeIxProto,
+        UpdateAccountsProto, UpdateIxProto,
+    };
+
+    use super::{CommonIx, DisableAccounts, EnableAccounts, ExtInitializeAccounts, UpdateAccounts};
+    use crate::helpers::{FromVecPubkeyToVecString, IntoProto};
+
+    impl IntoProto<ExtInitializeAccountsProto> for ExtInitializeAccounts {
+        fn into_proto(self) -> ExtInitializeAccountsProto {
+            ExtInitializeAccountsProto {
+                mint: self.mint.to_string(),
+            }
+        }
+    }
+
+    impl IntoProto<UpdateAccountsProto> for UpdateAccounts {
+        fn into_proto(self) -> UpdateAccountsProto {
+            UpdateAccountsProto {
+                mint: self.mint.to_string(),
+                extension_authority: self.extension_authority.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<EnableAccountsProto> for EnableAccounts {
+        fn into_proto(self) -> EnableAccountsProto {
+            EnableAccountsProto {
+                account: self.account.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<DisableAccountsProto> for DisableAccounts {
+        fn into_proto(self) -> DisableAccountsProto {
+            DisableAccountsProto {
+                account: self.account.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<CommonExtensionIxProto> for CommonIx {
+        fn into_proto(self) -> CommonExtensionIxProto {
+            match self {
+                CommonIx::Initialize(acc) => CommonExtensionIxProto {
+                    ix_oneof: Some(IxOneof::ExtInitializeIx(ExtInitializeIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                CommonIx::Update(acc) => CommonExtensionIxProto {
+                    ix_oneof: Some(IxOneof::UpdateIx(UpdateIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                CommonIx::Enable(acc) => CommonExtensionIxProto {
+                    ix_oneof: Some(IxOneof::EnableIx(EnableIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                CommonIx::Disable(acc) => CommonExtensionIxProto {
+                    ix_oneof: Some(IxOneof::DisableIx(DisableIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+            }
+        }
+    }
+}

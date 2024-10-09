@@ -1,6 +1,6 @@
 use spl_token::instruction::TokenInstruction;
 use yellowstone_vixen_core::{
-    instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
+    instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
 #[allow(clippy::wildcard_imports)]
@@ -35,6 +35,11 @@ impl Parser for TokenProgramIxParser {
             Err(ParseError::Filtered)
         }
     }
+}
+
+impl ProgramParser for TokenProgramIxParser {
+    #[inline]
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 impl TokenProgramIxParser {
@@ -346,6 +351,21 @@ impl TokenProgramIxParser {
                 ))
             },
         }
+    }
+}
+
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use yellowstone_vixen_core::proto::ParseProto;
+    use yellowstone_vixen_proto::parser::TokenProgramIxProto;
+
+    use super::TokenProgramIxParser;
+    use crate::helpers::IntoProto;
+
+    impl ParseProto for TokenProgramIxParser {
+        type Message = TokenProgramIxProto;
+
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }
 

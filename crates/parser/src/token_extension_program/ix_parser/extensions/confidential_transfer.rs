@@ -365,3 +365,280 @@ impl ExtensionIxParser for ConfidentaltransferIx {
         }
     }
 }
+
+#[cfg(feature = "proto")]
+mod proto_parser {
+
+    use confidential_transfer_ext_ix_proto::IxOneof;
+    use yellowstone_vixen_proto::parser::{
+        confidential_transfer_ext_ix_proto, ApplyPendingBalanceAccountsProto,
+        ApplyPendingBalanceIxProto, ApproveAccountAccountsProto, ApproveAccountIxProto,
+        ConfidentialTransferAccountsProto, ConfidentialTransferExtIxProto,
+        ConfidentialTransferIxProto, ConfigureAccountAccountsProto, ConfigureAccountIxProto,
+        CreditsAccountsProto, DepositAccountsProto, DepositIxProto,
+        DisableConfidentialCreditsIxProto, DisableNonConfidentialCreditsIxProto,
+        EmptyAccountAccountsProto, EmptyAccountIxProto, EnableConfidentialCreditsIxProto,
+        EnableNonConfidentialCreditsIxProto, InitializeConfidentialMintAccountsProto,
+        InitializeConfidentialMintIxProto, TransferWithSplitProofsAccountsProto,
+        TransferWithSplitProofsIxProto, UpdateMintAccountsProto, UpdateMintIxProto,
+        WithdrawAccountsProto, WithdrawIxProto,
+    };
+
+    use super::{
+        ApplyPendingBalanceAccounts, ApproveAccountAccounts, ConfidentaltransferIx,
+        ConfidentialTransferAccounts, ConfigureAccountAccounts, CreditsAccounts, DepositAccounts,
+        EmptyAccountAccounts, InitializeMintAccounts, TransferWithSplitProofsAccounts,
+        UpdateMintAccounts, WithdrawAccounts,
+    };
+    use crate::helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
+
+    impl IntoProto<InitializeConfidentialMintAccountsProto> for InitializeMintAccounts {
+        fn into_proto(self) -> InitializeConfidentialMintAccountsProto {
+            InitializeConfidentialMintAccountsProto {
+                mint: self.mint.to_string(),
+            }
+        }
+    }
+
+    impl IntoProto<UpdateMintAccountsProto> for UpdateMintAccounts {
+        fn into_proto(self) -> UpdateMintAccountsProto {
+            UpdateMintAccountsProto {
+                mint: self.mint.to_string(),
+                authority: self.authority.to_string(),
+            }
+        }
+    }
+
+    impl IntoProto<ConfigureAccountAccountsProto> for ConfigureAccountAccounts {
+        fn into_proto(self) -> ConfigureAccountAccountsProto {
+            ConfigureAccountAccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+                sysvar: self.sysvar.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<ApproveAccountAccountsProto> for ApproveAccountAccounts {
+        fn into_proto(self) -> ApproveAccountAccountsProto {
+            ApproveAccountAccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+                authority: self.authority.to_string(),
+            }
+        }
+    }
+
+    impl IntoProto<EmptyAccountAccountsProto> for EmptyAccountAccounts {
+        fn into_proto(self) -> EmptyAccountAccountsProto {
+            EmptyAccountAccountsProto {
+                account: self.account.to_string(),
+                sysvar: self.sysvar.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<DepositAccountsProto> for DepositAccounts {
+        fn into_proto(self) -> DepositAccountsProto {
+            DepositAccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<WithdrawAccountsProto> for WithdrawAccounts {
+        fn into_proto(self) -> WithdrawAccountsProto {
+            WithdrawAccountsProto {
+                source_account: self.source_account.to_string(),
+                mint: self.mint.to_string(),
+                destination: self.destination.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<ConfidentialTransferAccountsProto> for ConfidentialTransferAccounts {
+        fn into_proto(self) -> ConfidentialTransferAccountsProto {
+            ConfidentialTransferAccountsProto {
+                source_account: self.source_account.to_string(),
+                mint: self.mint.to_string(),
+                destination: self.destination.to_string(),
+                owner: self.owner.to_string(),
+                context_account: self.context_account.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<ApplyPendingBalanceAccountsProto> for ApplyPendingBalanceAccounts {
+        fn into_proto(self) -> ApplyPendingBalanceAccountsProto {
+            ApplyPendingBalanceAccountsProto {
+                account: self.account.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<CreditsAccountsProto> for CreditsAccounts {
+        fn into_proto(self) -> CreditsAccountsProto {
+            CreditsAccountsProto {
+                account: self.account.to_string(),
+                owner: self.owner.to_string(),
+                multisig_signers: self.multisig_signers.to_string_vec(),
+            }
+        }
+    }
+
+    impl IntoProto<TransferWithSplitProofsAccountsProto> for TransferWithSplitProofsAccounts {
+        fn into_proto(self) -> TransferWithSplitProofsAccountsProto {
+            TransferWithSplitProofsAccountsProto {
+                source_account: self.source_account.to_string(),
+                mint: self.mint.to_string(),
+                destination: self.destination.to_string(),
+                verify_ciphertext_commitment_equality_proof: self
+                    .verify_ciphertext_commitment_equality_proof
+                    .to_string(),
+                verify_batched_grouped_cipher_text_2_handles_validity_proof: self
+                    .verify_batched_grouped_cipher_text_2_handles_validity_proof
+                    .to_string(),
+                verify_batched_range_proof_u128: self
+                    .verify_batched_range_proof_u128
+                    .to_opt_string(),
+                verify_batched_range_proof_u256: self
+                    .verify_batched_range_proof_u256
+                    .to_opt_string(),
+                verify_batched_grouped_cipher_text_2_handles_validity_proof_next: self
+                    .verify_batched_grouped_cipher_text_2_handles_validity_proof_next
+                    .to_opt_string(),
+                verify_fee_sigma_proof: self.verify_fee_sigma_proof.to_opt_string(),
+                destination_account_for_lamports: self
+                    .destination_account_for_lamports
+                    .to_opt_string(),
+                context_state_account_owner: self.context_state_account_owner.to_opt_string(),
+                zk_token_proof_program: self.zk_token_proof_program.to_opt_string(),
+                owner: self.owner.to_opt_string(),
+            }
+        }
+    }
+
+    impl IntoProto<ConfidentialTransferExtIxProto> for ConfidentaltransferIx {
+        fn into_proto(self) -> ConfidentialTransferExtIxProto {
+            match self {
+                ConfidentaltransferIx::InitializeMint(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::InitializeMintIx(
+                        InitializeConfidentialMintIxProto {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+
+                ConfidentaltransferIx::UpdateMint(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::UpdateMintIx(UpdateMintIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                ConfidentaltransferIx::ConfigureAccount(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::ConfigureAccountIx(ConfigureAccountIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                ConfidentaltransferIx::ApproveAccount(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::ApproveAccountIx(ApproveAccountIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                ConfidentaltransferIx::EmptyAccount(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::EmptyAccountIx(EmptyAccountIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                ConfidentaltransferIx::Deposit(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::DepositIx(DepositIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                ConfidentaltransferIx::Withdraw(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::WithdrawIx(WithdrawIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                ConfidentaltransferIx::Transfer(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::TransferIx(ConfidentialTransferIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                ConfidentaltransferIx::ApplyPendingBalance(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::ApplyPendingBalanceIx(ApplyPendingBalanceIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                ConfidentaltransferIx::EnableConfidentialCredits(acc) => {
+                    ConfidentialTransferExtIxProto {
+                        ix_oneof: Some(IxOneof::EnableConfidentialCreditsIx(
+                            EnableConfidentialCreditsIxProto {
+                                accounts: Some(acc.into_proto()),
+                            },
+                        )),
+                    }
+                },
+
+                ConfidentaltransferIx::DisableConfidentialCredits(acc) => {
+                    ConfidentialTransferExtIxProto {
+                        ix_oneof: Some(IxOneof::DisableConfidentialCreditsIx(
+                            DisableConfidentialCreditsIxProto {
+                                accounts: Some(acc.into_proto()),
+                            },
+                        )),
+                    }
+                },
+
+                ConfidentaltransferIx::EnableNonConfidentialCredits(acc) => {
+                    ConfidentialTransferExtIxProto {
+                        ix_oneof: Some(IxOneof::EnableNonConfidentialCreditsIx(
+                            EnableNonConfidentialCreditsIxProto {
+                                accounts: Some(acc.into_proto()),
+                            },
+                        )),
+                    }
+                },
+
+                ConfidentaltransferIx::DisableNonConfidentialCredits(acc) => {
+                    ConfidentialTransferExtIxProto {
+                        ix_oneof: Some(IxOneof::DisableNonConfidentialCreditsIx(
+                            DisableNonConfidentialCreditsIxProto {
+                                accounts: Some(acc.into_proto()),
+                            },
+                        )),
+                    }
+                },
+
+                ConfidentaltransferIx::TransferWithSplitProofs(acc) => {
+                    ConfidentialTransferExtIxProto {
+                        ix_oneof: Some(IxOneof::TransferWithSplitProofsIx(
+                            TransferWithSplitProofsIxProto {
+                                accounts: Some(acc.into_proto()),
+                            },
+                        )),
+                    }
+                },
+            }
+        }
+    }
+}

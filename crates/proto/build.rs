@@ -5,7 +5,7 @@ fn main() {
     {
         prost_build::Config::new()
             .enable_type_names()
-            .compile_protos(&["proto/parser.proto", "proto/solana.proto"], &["proto"])
+            .compile_protos(&["proto/parser.proto"], &["proto"])
             .unwrap();
     }
 
