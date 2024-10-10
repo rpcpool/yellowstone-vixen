@@ -1,5 +1,5 @@
-// #[cfg(feature = "orca_whirlpools")]
+#[cfg(feature = "orca-whirlpools-client")]
 pub mod orca;
 
-// #[cfg(feature = "raydium_amm_v3")]
+#[cfg(feature = "raydium-amm-v3")]
 pub mod raydium;

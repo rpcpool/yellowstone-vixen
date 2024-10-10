@@ -5,17 +5,13 @@ use yellowstone_vixen_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
 };
 
-use crate::{
-    helpers::{
-        check_min_accounts_req, InstructionParser, ReadableInstruction, IX_DISCRIMINATOR_SIZE,
-    },
-    jup_programs::raydium::RADIUM_V3_PROGRAM_ID,
-};
-
 use super::{
     RaydiumProgramIx, SwapAccounts, SwapIxData, SwapV2Accounts, SWAP_IX_DISC, SWAP_V2_IX_DISC,
 };
-use crate::helpers::check_pubkeys_match;
+use crate::{
+    helpers::{check_min_accounts_req, IX_DISCRIMINATOR_SIZE},
+    jup_programs::raydium::RADIUM_V3_PROGRAM_ID,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct RaydiumProgramIxParser;
@@ -36,15 +32,16 @@ impl Parser for RaydiumProgramIxParser {
     }
 
     async fn parse(&self, ix_update: &InstructionUpdate) -> ParseResult<Self::Output> {
-        if check_pubkeys_match(&ix_update.program, &RADIUM_V3_PROGRAM_ID) {
-            return RaydiumProgramIxParser::parse_ix(ix_update);
+        if ix_update.program.equals_ref(RADIUM_V3_PROGRAM_ID) {
+            return RaydiumProgramIxParser::parse_impl(ix_update);
         }
         Err(ParseError::Filtered)
     }
 }
 
-impl InstructionParser<RaydiumProgramIx> for RaydiumProgramIxParser {
-    fn parse_ix(ix: &InstructionUpdate) -> Result<RaydiumProgramIx, ParseError> {
+impl RaydiumProgramIxParser {
+    #[allow(clippy::too_many_lines)]
+    pub(crate) fn parse_impl(ix: &InstructionUpdate) -> Result<RaydiumProgramIx, ParseError> {
         let accounts_len = ix.accounts.len();
         let ix_discriminator: [u8; 8] = ix.data[0..IX_DISCRIMINATOR_SIZE].try_into()?;
         let mut ix_data = &ix.data[IX_DISCRIMINATOR_SIZE..];
@@ -52,8 +49,8 @@ impl InstructionParser<RaydiumProgramIx> for RaydiumProgramIxParser {
         match ix_discriminator {
             SWAP_IX_DISC => {
                 check_min_accounts_req(accounts_len, 10)?;
-                Ok(RaydiumProgramIx::Swap(ReadableInstruction {
-                    accounts: SwapAccounts {
+                Ok(RaydiumProgramIx::Swap(
+                    SwapAccounts {
                         payer: ix.accounts[0],
                         amm_config: ix.accounts[1],
                         pool_state: ix.accounts[2],
@@ -65,13 +62,18 @@ impl InstructionParser<RaydiumProgramIx> for RaydiumProgramIxParser {
                         token_program: ix.accounts[8],
                         tick_array: ix.accounts[9],
                     },
-                    data: Some(swap_single_ix_data),
-                }))
+                    SwapIxData {
+                        amount: swap_single_ix_data.amount,
+                        other_amount_threshold: swap_single_ix_data.other_amount_threshold,
+                        is_base_input: swap_single_ix_data.is_base_input,
+                        sqrt_price_limit_x64: swap_single_ix_data.sqrt_price_limit_x64,
+                    },
+                ))
             },
             SWAP_V2_IX_DISC => {
                 check_min_accounts_req(accounts_len, 14)?;
-                Ok(RaydiumProgramIx::SwapV2(ReadableInstruction {
-                    accounts: SwapV2Accounts {
+                Ok(RaydiumProgramIx::SwapV2(
+                    SwapV2Accounts {
                         payer: ix.accounts[0],
                         amm_config: ix.accounts[1],
                         pool_state: ix.accounts[2],
@@ -87,8 +89,13 @@ impl InstructionParser<RaydiumProgramIx> for RaydiumProgramIxParser {
                         output_vault_mint: ix.accounts[12],
                         tick_array: ix.accounts[13],
                     },
-                    data: Some(swap_single_ix_data),
-                }))
+                    SwapIxData {
+                        amount: swap_single_ix_data.amount,
+                        other_amount_threshold: swap_single_ix_data.other_amount_threshold,
+                        is_base_input: swap_single_ix_data.is_base_input,
+                        sqrt_price_limit_x64: swap_single_ix_data.sqrt_price_limit_x64,
+                    },
+                ))
             },
 
             _ => Err(ParseError::from("Unknown instruction")),
@@ -118,14 +125,12 @@ mod tests {
             Some(filters));
 
         let parsed = run_ix_parse!(parser, &ixs[0].inner[0]);
-        if let RaydiumProgramIx::Swap(ReadableInstruction { accounts, data }) = parsed {
+        if let RaydiumProgramIx::Swap(accounts, data) = parsed {
             assert_eq!(
                 accounts.amm_config.to_string(),
                 "9iFER3bpjf1PTTCQCfTRu17EJgvsxo9pVyA9QWwEuX4x".to_string()
             );
-            assert!(data.is_some());
-            let swap_ix_data = data.unwrap();
-            assert_eq!(swap_ix_data.amount, 553_573_055);
+            assert_eq!(data.amount, 553_573_055);
         } else {
             panic!("Invalid Instruction");
         }

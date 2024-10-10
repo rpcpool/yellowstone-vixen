@@ -1,8 +1,6 @@
 use spl_token::instruction::AuthorityType;
 use yellowstone_vixen_core::Pubkey;
 
-use crate::helpers::ReadableInstruction;
-
 #[derive(Debug, Clone)]
 pub struct TransferAccounts {
     pub source: Pubkey,
@@ -293,7 +291,10 @@ pub mod proto_parser {
         TransferCheckedAccounts, TransferCheckedData, TransferData, UiAmountToAmountAccounts,
         UiAmountToAmountData,
     };
-    use crate::helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
+    use crate::helpers::{
+        proto_helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+        IntoProto,
+    };
 
     impl IntoProto<TransferAccountsProto> for TransferAccounts {
         fn into_proto(self) -> TransferAccountsProto {

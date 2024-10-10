@@ -14,6 +14,7 @@
 pub use error::*;
 
 mod helpers;
+pub mod jup_programs;
 #[cfg(feature = "token-extensions")]
 pub mod token_extension_program;
 #[cfg(feature = "token-program")]

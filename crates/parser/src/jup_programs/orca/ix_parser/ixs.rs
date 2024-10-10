@@ -3,8 +3,6 @@ use std::fmt::Debug;
 use borsh::{BorshDeserialize, BorshSerialize};
 use yellowstone_vixen_core::Pubkey;
 
-use crate::helpers::ReadableInstruction;
-
 pub const SWAP_IX_DISC: [u8; 8] = [248, 198, 158, 145, 225, 117, 135, 200];
 
 #[derive(Debug, Clone, Copy)]
@@ -63,6 +61,6 @@ pub struct SwapV2IxData {
 
 #[derive(Debug)]
 pub enum OrcaProgramIx {
-    Swap(ReadableInstruction<SwapAccounts, SwapIxData>),
-    SwapV2(ReadableInstruction<SwapV2Accounts, SwapV2IxData>),
+    Swap(SwapAccounts, SwapIxData),
+    SwapV2(SwapV2Accounts, SwapV2IxData),
 }

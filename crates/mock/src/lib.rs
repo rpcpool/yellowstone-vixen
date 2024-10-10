@@ -12,7 +12,7 @@
 #![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 use std::{
-    fmt::Debug,
+    fmt::{Debug, Display},
     fs,
     path::{Path, PathBuf},
     str::FromStr,
@@ -109,30 +109,24 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 pub struct SerializablePubkey(pub [u8; 32]);
 
 impl Debug for SerializablePubkey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { Display::fmt(self, f) }
+}
+
+impl Display for SerializablePubkey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&bs58::encode(&self.0).into_string())
     }
 }
 
-impl ToString for SerializablePubkey {
-    fn to_string(&self) -> String {
-        bs58::encode(&self.0).into_string()
-    }
-}
-
 impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self {
-        Self(value.into_bytes())
-    }
+    fn from(value: VixenPubkey) -> Self { Self(value.into_bytes()) }
 }
 
 impl From<SerializablePubkey> for VixenPubkey {
-    fn from(value: SerializablePubkey) -> Self {
-        Self::new(value.0)
-    }
+    fn from(value: SerializablePubkey) -> Self { Self::new(value.0) }
 }
 
-type IxIndex = [u8; 2]; // [outer_ix_index, inner_ix_index]
+type IxIndex = [usize; 2]; // [outer_ix_index, inner_ix_index]
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SerializableInstructionUpdate {
@@ -194,8 +188,8 @@ pub fn get_account_pubkey_from_index(
 }
 
 fn try_from_ui_instructions(
-    ui_ixs: Vec<UiCompiledInstruction>,
-    accounts: &Vec<String>,
+    ui_ixs: &[UiCompiledInstruction],
+    accounts: &[String],
     filters: &Option<LoadFixtureFilters>,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
@@ -208,7 +202,7 @@ fn try_from_ui_instructions(
         let program = get_account_pubkey_from_index(ix.program_id_index as usize, accounts)?;
 
         let ix = SerializableInstructionUpdate {
-            ix_index: [idx as u8, 0],
+            ix_index: [idx, 0],
             data: decode_bs58_to_bytes(&ix.data)?,
             accounts: accounts_out,
             program,
@@ -217,12 +211,12 @@ fn try_from_ui_instructions(
 
         ixs.push(ix);
     }
-    Ok(filter_outer_ixs(ixs, &filters))
+    Ok(filter_outer_ixs(ixs, filters))
 }
 
 fn try_from_ui_inner_ixs(
-    ui_inner_ixs: UiInnerInstructions,
-    accounts: &Vec<String>,
+    ui_inner_ixs: &UiInnerInstructions,
+    accounts: &[String],
     filters: &Option<LoadFixtureFilters>,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
@@ -237,7 +231,7 @@ fn try_from_ui_inner_ixs(
                 get_account_pubkey_from_index(compiled_ix.program_id_index as usize, accounts)?;
 
             let ix = SerializableInstructionUpdate {
-                ix_index: [ui_inner_ixs.index, idx as u8],
+                ix_index: [ui_inner_ixs.index.into(), idx],
                 data: decode_bs58_to_bytes(&compiled_ix.data)?,
                 accounts: accounts_out,
                 program,
@@ -248,7 +242,7 @@ fn try_from_ui_inner_ixs(
             return Err("Invalid inner instruction".into());
         }
     }
-    Ok(filter_inner_ixs(ixs, &filters))
+    Ok(filter_inner_ixs(ixs, filters))
 }
 
 fn filter_outer_ixs(
@@ -296,7 +290,7 @@ fn filter_inner_ixs(
 
 fn try_from_tx_meta(
     value: EncodedConfirmedTransactionWithStatusMeta,
-    filters: Option<LoadFixtureFilters>,
+    filters: &Option<LoadFixtureFilters>,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let EncodedConfirmedTransactionWithStatusMeta {
         transaction,
@@ -317,7 +311,7 @@ fn try_from_tx_meta(
             account_keys.extend(raw_message.account_keys);
 
             if let Some(meta) = meta {
-                inner_ixs = meta.inner_instructions.map_or(None, |x| Some(x));
+                inner_ixs = meta.inner_instructions.map(Some).flatten();
 
                 if let OptionSerializer::Some(loaded) = meta.loaded_addresses {
                     for address in loaded.writable {
@@ -331,23 +325,23 @@ fn try_from_tx_meta(
             }
 
             let mut outer_with_inner_ixs =
-                try_from_ui_instructions(raw_message.instructions, &account_keys, &filters)?;
+                try_from_ui_instructions(&raw_message.instructions, &account_keys, filters)?;
 
             if let Some(inner_ixs) = inner_ixs {
                 if inner_ixs.is_empty() {
                     return Ok(outer_with_inner_ixs);
                 }
 
-                for ixs in inner_ixs.into_iter() {
+                for ixs in inner_ixs {
                     let ix_index = ixs.index as usize;
-                    let inner_ixs = try_from_ui_inner_ixs(ixs, &account_keys, &filters)?;
-                    if inner_ixs.len() == 0 {
+                    let inner_ixs = try_from_ui_inner_ixs(&ixs, &account_keys, filters)?;
+                    if inner_ixs.is_empty() {
                         continue;
                     }
                     outer_with_inner_ixs
                         .iter_mut()
-                        .find(|x| x.ix_index[0] == ix_index as u8)
-                        .and_then(|x| {
+                        .find(|x| x.ix_index[0] == ix_index)
+                        .map(|x| {
                             x.inner = inner_ixs;
                             Some(())
                         });
@@ -374,7 +368,7 @@ macro_rules! account_fixture {
 
 #[macro_export]
 macro_rules! tx_fixture {
-    ($sig:expr,$filters:expr) => {
+    ($sig:expr, $filters:expr) => {
         match $crate::load_fixture($sig, $filters).await.unwrap() {
             FixtureData::Instructions(i) => i,
             f @ _ => panic!("Invalid transaction fixture {f:?}"),
@@ -398,7 +392,7 @@ macro_rules! run_ix_parse {
 #[derive(Debug, Clone)]
 pub struct LoadFixtureFilters {
     pub outer_ixs_programs: Vec<String>,
-    pub inner_ixs_discriminators: Vec<[u8; 8]>,
+    pub inner_ixs_discriminators: Vec<[u8; IX_DISCRIMINATOR_SIZE]>,
 }
 
 pub async fn load_fixture(
@@ -431,9 +425,7 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
 }
 
 #[must_use]
-pub fn get_rpc_client() -> RpcClient {
-    RpcClient::new(RPC_ENDPOINT.to_string())
-}
+pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) }
 
 #[derive(Debug, Clone)]
 pub enum FixtureData {
@@ -475,7 +467,7 @@ async fn fetch_fixture(
                 .await
                 .map_err(|e| format!("Error fetching tx: {e:?}"))?;
 
-            let instructions = try_from_tx_meta(tx, filters)?;
+            let instructions = try_from_tx_meta(tx, &filters)?;
 
             Ok(FixtureData::Instructions(instructions))
         },

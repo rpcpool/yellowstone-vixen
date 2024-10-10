@@ -39,9 +39,7 @@ impl Parser for TokenProgramIxParser {
 
 impl ProgramParser for TokenProgramIxParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 impl TokenProgramIxParser {
@@ -367,9 +365,7 @@ mod proto_parser {
     impl ParseProto for TokenProgramIxParser {
         type Message = TokenProgramIxProto;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }
 
@@ -377,7 +373,7 @@ mod proto_parser {
 mod tests {
     use std::ops::Mul;
 
-    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
+    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData, LoadFixtureFilters};
 
     use super::*;
 
@@ -388,9 +384,9 @@ mod tests {
         let ixs = tx_fixture!("55kpnRufcX9Fo44oRBXtrkxPRww4UWJKxCpgBV39kzAAag8oyJbd9Y3YWdQQUi3TBqtrhjgsMGb9Nw8bUxy7j5rt",
         Some(
             LoadFixtureFilters{
-                programs:vec![spl_token::ID.to_string()],
-                discriminators:None
-            }
+                outer_ixs_programs:vec![spl_token::ID.to_string()],
+                inner_ixs_discriminators:vec![]
+           }
         )
     );
 

@@ -1,4 +1,3 @@
-use crate::helpers::ReadableInstruction;
 use borsh::{BorshDeserialize, BorshSerialize};
 use yellowstone_vixen_core::Pubkey;
 
@@ -76,6 +75,6 @@ pub struct SwapIxData {
 
 #[derive(Debug)]
 pub enum RaydiumProgramIx {
-    Swap(ReadableInstruction<SwapAccounts, SwapIxData>),
-    SwapV2(ReadableInstruction<SwapV2Accounts, SwapIxData>),
+    Swap(SwapAccounts, SwapIxData),
+    SwapV2(SwapV2Accounts, SwapIxData),
 }

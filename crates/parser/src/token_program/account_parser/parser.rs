@@ -57,9 +57,7 @@ impl Parser for TokenProgramAccParser {
 
 impl ProgramParser for TokenProgramAccParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 #[cfg(feature = "proto")]
@@ -71,7 +69,10 @@ mod proto_parser {
     };
 
     use super::{Account, Mint, Multisig, TokenProgramAccParser, TokenProgramState};
-    use crate::helpers::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
+    use crate::helpers::{
+        proto_helpers::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString},
+        IntoProto,
+    };
 
     impl IntoProto<TokenAccountProto> for Account {
         fn into_proto(self) -> TokenAccountProto {

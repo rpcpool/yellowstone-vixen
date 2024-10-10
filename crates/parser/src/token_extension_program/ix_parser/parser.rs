@@ -54,9 +54,7 @@ impl Parser for TokenExtensionProgramIxParser {
 }
 
 impl ProgramParser for TokenExtensionProgramIxParser {
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token_2022::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 impl TokenExtensionProgramIxParser {
@@ -268,9 +266,7 @@ mod proto_parser {
     impl ParseProto for TokenExtensionProgramIxParser {
         type Message = TokenExtensionProgramIxProto;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }
 
