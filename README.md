@@ -94,7 +94,6 @@ use yellowstone_vixen_parser::{
     token_program::{account_parser::TokenProgramAccParser, ix_parser::TokenProgramIxParser},
 };
 
-
 fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())

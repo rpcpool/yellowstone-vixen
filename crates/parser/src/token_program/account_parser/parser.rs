@@ -69,7 +69,10 @@ mod proto_parser {
     };
 
     use super::{Account, Mint, Multisig, TokenProgramAccParser, TokenProgramState};
-    use crate::helpers::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
+    use crate::helpers::{
+        proto_helpers::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString},
+        IntoProto,
+    };
 
     impl IntoProto<TokenAccountProto> for Account {
         fn into_proto(self) -> TokenAccountProto {
