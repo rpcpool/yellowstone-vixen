@@ -1,7 +1,9 @@
 use std::borrow::Cow;
 
 use borsh::BorshDeserialize;
-use yellowstone_vixen_core::{instruction::InstructionUpdate, ParseError, ParseResult, Parser};
+use yellowstone_vixen_core::{
+    instruction::InstructionUpdate, ParseError, ParseResult, Parser, ProgramParser,
+};
 
 use super::ixs::{
     OrcaProgramIx, SwapAccounts, SwapIxData, SwapV2Accounts, SwapV2IxData, SWAP_IX_DISC,
@@ -33,6 +35,13 @@ impl Parser for OrcaProgramIxParser {
         } else {
             Err(ParseError::Filtered)
         }
+    }
+}
+
+impl ProgramParser for OrcaProgramIxParser {
+    #[inline]
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        orca_whirlpools_client::ID.to_bytes().into()
     }
 }
 
@@ -107,7 +116,7 @@ impl OrcaProgramIxParser {
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData, LoadFixtureFilters};
+    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
 
     use super::*;
 
@@ -115,19 +124,9 @@ mod tests {
     async fn test_swap_ix_parsing() {
         let parser = OrcaProgramIxParser;
 
-        let filters = LoadFixtureFilters {
-            outer_ixs_programs: vec![
-                "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4".to_string(),
-                orca_whirlpools_client::ID.to_string(),
-            ],
-            inner_ixs_discriminators: vec![SWAP_IX_DISC],
-        };
+        let ixs = tx_fixture!("3WC8LGHHs3wYzWef1YmLsRS96G1s5BV4XJYhzvypgWp1uGG16SxepFCd7FhHaTieW66Yn9JFR4tUPA1HYArgFZaA",&parser);
 
-        let ixs = tx_fixture!("3WC8LGHHs3wYzWef1YmLsRS96G1s5BV4XJYhzvypgWp1uGG16SxepFCd7FhHaTieW66Yn9JFR4tUPA1HYArgFZaA",
-            Some(filters));
-
-        let parsed = run_ix_parse!(parser, &ixs[0].inner[0]);
-        if let OrcaProgramIx::Swap(accounts, data) = parsed {
+        if let OrcaProgramIx::Swap(accounts, data) = ixs[0] {
             assert_eq!(
                 accounts.whirlpool.to_string(),
                 "ENYEHSyduTbFN1xoSEGaLu7c1F8AqKucdscMuV5Yypy2".to_string()

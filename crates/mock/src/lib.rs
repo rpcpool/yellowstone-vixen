@@ -19,8 +19,7 @@ use std::{
     sync::Arc,
 };
 
-const IX_DISCRIMINATOR_SIZE: usize = 8;
-
+pub use futures;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use solana_client::{nonblocking::rpc_client::RpcClient, rpc_request::RpcRequest};
@@ -34,11 +33,11 @@ use solana_transaction_status::{
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
     instruction::{InstructionShared, InstructionUpdate},
-    Pubkey as VixenPubkey,
+    ProgramParser, Pubkey as VixenPubkey,
 };
 
 //TODO: Look these up from the Vixen.toml config file
-const RPC_ENDPOINT: &str = "https://api.mainnet-beta.solana.com";
+const RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
 const FIXTURES_PATH: &str = "./fixtures";
 const PUBKEY_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{32,44}$";
 const TX_SIGNATURE_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{64,90}$";
@@ -126,7 +125,7 @@ impl From<SerializablePubkey> for VixenPubkey {
     fn from(value: SerializablePubkey) -> Self { Self::new(value.0) }
 }
 
-type IxIndex = [usize; 2]; // [outer_ix_index, inner_ix_index]
+pub type IxIndex = [usize; 2]; // [outer_ix_index, inner_ix_index]
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SerializableInstructionUpdate {
@@ -190,7 +189,7 @@ pub fn get_account_pubkey_from_index(
 fn try_from_ui_instructions(
     ui_ixs: &[UiCompiledInstruction],
     accounts: &[String],
-    filters: &Option<LoadFixtureFilters>,
+    program_id: &str,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
     for (idx, ix) in ui_ixs.iter().enumerate() {
@@ -211,13 +210,13 @@ fn try_from_ui_instructions(
 
         ixs.push(ix);
     }
-    Ok(filter_outer_ixs(ixs, filters))
+    Ok(filter_ixs(ixs, program_id))
 }
 
 fn try_from_ui_inner_ixs(
     ui_inner_ixs: &UiInnerInstructions,
     accounts: &[String],
-    filters: &Option<LoadFixtureFilters>,
+    program_id: &str,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
     for (idx, ix) in ui_inner_ixs.instructions.iter().enumerate() {
@@ -242,55 +241,22 @@ fn try_from_ui_inner_ixs(
             return Err("Invalid inner instruction".into());
         }
     }
-    Ok(filter_inner_ixs(ixs, filters))
+    Ok(filter_ixs(ixs, program_id))
 }
 
-fn filter_outer_ixs(
+fn filter_ixs(
     ixs: Vec<SerializableInstructionUpdate>,
-    filters: &Option<LoadFixtureFilters>,
+    program_id: &str,
 ) -> Vec<SerializableInstructionUpdate> {
-    if let Some(filter) = filters {
-        let LoadFixtureFilters {
-            outer_ixs_programs,
-            inner_ixs_discriminators: _,
-        } = filter;
-
-        // Filter out instructions that matches the programs in the filters
-        ixs.into_iter()
-            .filter(|ix| outer_ixs_programs.contains(&ix.program.to_string()))
-            .collect::<Vec<SerializableInstructionUpdate>>()
-    } else {
-        ixs
-    }
+    // Filter out instructions that matches the program
+    ixs.into_iter()
+        .filter(|ix| ix.program.to_string().eq(program_id))
+        .collect::<Vec<SerializableInstructionUpdate>>()
 }
 
-fn filter_inner_ixs(
-    ixs: Vec<SerializableInstructionUpdate>,
-    filters: &Option<LoadFixtureFilters>,
-) -> Vec<SerializableInstructionUpdate> {
-    if let Some(filter) = filters {
-        let LoadFixtureFilters {
-            outer_ixs_programs: _,
-            inner_ixs_discriminators,
-        } = filter;
-
-        // Filter out instructions that matches the inner_ix_discriminators in the filters
-        ixs.into_iter()
-            .filter(|ix| {
-                let ix_disc_data = ix.data.as_slice()[..IX_DISCRIMINATOR_SIZE]
-                    .try_into()
-                    .unwrap();
-                inner_ixs_discriminators.contains(&ix_disc_data)
-            })
-            .collect::<Vec<SerializableInstructionUpdate>>()
-    } else {
-        ixs
-    }
-}
-
-fn try_from_tx_meta(
+fn try_from_tx_meta<P: ProgramParser>(
     value: EncodedConfirmedTransactionWithStatusMeta,
-    filters: &Option<LoadFixtureFilters>,
+    parser: &P,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let EncodedConfirmedTransactionWithStatusMeta {
         transaction,
@@ -305,6 +271,7 @@ fn try_from_tx_meta(
     let mut inner_ixs: Option<Vec<UiInnerInstructions>> = None;
 
     let mut account_keys: Vec<String> = Vec::new();
+    let program_id = parser.program_id().to_string();
 
     if let EncodedTransaction::Json(tx_data) = transaction {
         if let UiMessage::Raw(raw_message) = tx_data.message {
@@ -324,29 +291,25 @@ fn try_from_tx_meta(
                 }
             }
 
-            let mut outer_with_inner_ixs =
-                try_from_ui_instructions(&raw_message.instructions, &account_keys, filters)?;
+            // filtering outer instructions by program id
+            let mut program_filtered_ixs =
+                try_from_ui_instructions(&raw_message.instructions, &account_keys, &program_id)?;
 
             if let Some(inner_ixs) = inner_ixs {
                 if inner_ixs.is_empty() {
-                    return Ok(outer_with_inner_ixs);
+                    return Ok(program_filtered_ixs);
                 }
 
                 for ixs in inner_ixs {
-                    let ix_index = ixs.index as usize;
-                    let inner_ixs = try_from_ui_inner_ixs(&ixs, &account_keys, filters)?;
+                    let inner_ixs = try_from_ui_inner_ixs(&ixs, &account_keys, &program_id)?;
                     if inner_ixs.is_empty() {
                         continue;
                     }
-                    outer_with_inner_ixs
-                        .iter_mut()
-                        .find(|x| x.ix_index[0] == ix_index)
-                        .map(|x| {
-                            x.inner = inner_ixs;
-                            Some(())
-                        });
+
+                    program_filtered_ixs.extend(inner_ixs);
                 }
-                return Ok(outer_with_inner_ixs);
+
+                return Ok(program_filtered_ixs);
             }
         } else {
             return Err("Invalid transaction encoding".into());
@@ -358,9 +321,11 @@ fn try_from_tx_meta(
 
 #[macro_export]
 macro_rules! account_fixture {
-    ($pubkey:expr) => {
-        match $crate::load_fixture($pubkey, None).await.unwrap() {
-            FixtureData::Account(a) => a,
+    ($pubkey:expr, $parser:expr) => {
+        match $crate::load_fixture($pubkey, $parser).await.unwrap() {
+            FixtureData::Account(a) => {
+                run_account_parse!($parser, a)
+            },
             f @ _ => panic!("Invalid account fixture {f:?}"),
         }
     };
@@ -368,14 +333,19 @@ macro_rules! account_fixture {
 
 #[macro_export]
 macro_rules! tx_fixture {
-    ($sig:expr, $filters:expr) => {
-        match $crate::load_fixture($sig, $filters).await.unwrap() {
-            FixtureData::Instructions(i) => i,
+    ($sig:expr, $parser:expr) => {
+        match $crate::load_fixture($sig, $parser).await.unwrap() {
+            FixtureData::Instructions(ixs) => {
+                let futures = ixs.iter().map(|ix| {
+                    let parser = $parser.clone();
+                    async move { run_ix_parse!(parser, ix) }
+                });
+                $crate::futures::future::join_all(futures).await
+            },
             f @ _ => panic!("Invalid transaction fixture {f:?}"),
         }
     };
 }
-
 #[macro_export]
 macro_rules! run_account_parse {
     ($parser:expr, $account:expr) => {
@@ -389,22 +359,17 @@ macro_rules! run_ix_parse {
         $parser.parse(&$ix.into()).await.unwrap()
     };
 }
-#[derive(Debug, Clone)]
-pub struct LoadFixtureFilters {
-    pub outer_ixs_programs: Vec<String>,
-    pub inner_ixs_discriminators: Vec<[u8; IX_DISCRIMINATOR_SIZE]>,
-}
 
-pub async fn load_fixture(
+pub async fn load_fixture<P: ProgramParser>(
     fixture: &str,
-    filters: Option<LoadFixtureFilters>,
+    parser: &P,
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
     maybe_create_fixture_dir()?;
     let path = fixture_path(fixture)?;
     if path.is_file() {
         read_fixture(&path)
     } else {
-        fetch_fixture(fixture, filters)
+        fetch_fixture(fixture, parser)
             .await
             .and_then(write_fixture(path))
     }
@@ -433,9 +398,11 @@ pub enum FixtureData {
     Instructions(Vec<SerializableInstructionUpdate>),
 }
 
-async fn fetch_fixture(
+// type MockParser<P> = dyn ProgramParser<Input = InstructionUpdate, Output = P>;
+
+async fn fetch_fixture<P: ProgramParser>(
     fixture: &str,
-    filters: Option<LoadFixtureFilters>,
+    parser: &P,
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
     let fixture_type = get_fixture_type(fixture);
 
@@ -467,7 +434,7 @@ async fn fetch_fixture(
                 .await
                 .map_err(|e| format!("Error fetching tx: {e:?}"))?;
 
-            let instructions = try_from_tx_meta(tx, &filters)?;
+            let instructions = try_from_tx_meta(tx, parser)?;
 
             Ok(FixtureData::Instructions(instructions))
         },

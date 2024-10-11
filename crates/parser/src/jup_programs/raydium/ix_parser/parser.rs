@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use borsh::BorshDeserialize;
 use yellowstone_vixen_core::{
-    instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter,
+    instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
 use super::{
@@ -36,6 +36,13 @@ impl Parser for RaydiumProgramIxParser {
             return RaydiumProgramIxParser::parse_impl(ix_update);
         }
         Err(ParseError::Filtered)
+    }
+}
+
+impl ProgramParser for RaydiumProgramIxParser {
+    #[inline]
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        RADIUM_V3_PROGRAM_ID.to_bytes().into()
     }
 }
 
@@ -105,7 +112,7 @@ impl RaydiumProgramIxParser {
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData, LoadFixtureFilters};
+    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
 
     use super::*;
 
@@ -113,19 +120,10 @@ mod tests {
     async fn test_swap_ix_parsing() {
         let parser = RaydiumProgramIxParser;
 
-        let filters = LoadFixtureFilters {
-            outer_ixs_programs: vec![
-                "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4".to_string(),
-                RADIUM_V3_PROGRAM_ID.to_string(),
-            ],
-            inner_ixs_discriminators: vec![SWAP_IX_DISC],
-        };
+        let ixs = tx_fixture!("MKJhpfmz9ji2HbuP8Fk8s4XCQinWXBY7wcwgzn5PyibcV99RfmCPJt671jtqPFFEXDByYCzrdPh6AKjKgUA4HPY"
+        ,&parser);
 
-        let ixs = tx_fixture!("MKJhpfmz9ji2HbuP8Fk8s4XCQinWXBY7wcwgzn5PyibcV99RfmCPJt671jtqPFFEXDByYCzrdPh6AKjKgUA4HPY",
-            Some(filters));
-
-        let parsed = run_ix_parse!(parser, &ixs[0].inner[0]);
-        if let RaydiumProgramIx::Swap(accounts, data) = parsed {
+        if let RaydiumProgramIx::Swap(accounts, data) = ixs[0] {
             assert_eq!(
                 accounts.amm_config.to_string(),
                 "9iFER3bpjf1PTTCQCfTRu17EJgvsxo9pVyA9QWwEuX4x".to_string()

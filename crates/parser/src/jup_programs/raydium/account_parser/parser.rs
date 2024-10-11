@@ -1,6 +1,6 @@
 use borsh::BorshDeserialize;
 use spl_pod::solana_program::program_error::ProgramError;
-use yellowstone_vixen_core::{ParseError, ParseResult, Parser, Prefilter};
+use yellowstone_vixen_core::{ParseError, ParseResult, Parser, Prefilter, ProgramParser};
 
 use super::accounts::{
     AmmConfig, ObservationState, OperationState, PersonalPositionState, PoolState,
@@ -82,6 +82,13 @@ impl Parser for RaydiumProgramAccParser {
     }
 }
 
+impl ProgramParser for RaydiumProgramAccParser {
+    #[inline]
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        RADIUM_V3_PROGRAM_ID.to_bytes().into()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
@@ -92,13 +99,9 @@ mod tests {
     async fn test_amm_config_account_parsing() {
         let parser = RaydiumProgramAccParser;
 
-        let account = account_fixture!("A1BBtTYJd4i3xU8D6Tc2FzU6ZN4oXZWXKZnCxwbHXr8x");
+        let account = account_fixture!("A1BBtTYJd4i3xU8D6Tc2FzU6ZN4oXZWXKZnCxwbHXr8x", &parser);
 
-        println!("acc:{:?}", account.clone().account.unwrap().data.len());
-
-        let parsed = run_account_parse!(&parser, &account);
-
-        if let RaydiumProgramState::AmmConfig(amm_config) = parsed {
+        if let RaydiumProgramState::AmmConfig(amm_config) = account {
             assert_eq!(
                 amm_config.owner.to_string(),
                 "projjosVCPQH49d5em7VYS7fJZzaqKixqKtus7yk416".to_string()

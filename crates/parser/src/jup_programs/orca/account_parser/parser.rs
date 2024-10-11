@@ -38,6 +38,13 @@ impl OrcaProgramState {
     }
 }
 
+impl ProgramParser for OrcaProgramAccParser {
+    #[inline]
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        orca_whirlpools_client::ID.to_bytes().into()
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct OrcaProgramAccParser;
 
@@ -62,13 +69,6 @@ impl Parser for OrcaProgramAccParser {
     }
 }
 
-impl ProgramParser for OrcaProgramAccParser {
-    #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        orca_whirlpools_client::ID.to_bytes().into()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
@@ -79,11 +79,9 @@ mod tests {
     async fn test_whirlpool_account_parsing() {
         let parser = OrcaProgramAccParser;
 
-        let account = account_fixture!("56Ekyu6uBpTna3LR2qkjHjNbDNkCLWK2Lt3uWh7J2R8Z");
+        let account = account_fixture!("56Ekyu6uBpTna3LR2qkjHjNbDNkCLWK2Lt3uWh7J2R8Z", &parser);
 
-        let parsed = run_account_parse!(&parser, &account);
-
-        if let OrcaProgramState::Whirlpool(whirlpool) = parsed {
+        if let OrcaProgramState::Whirlpool(whirlpool) = account {
             assert_eq!(
                 whirlpool.whirlpools_config.to_string(),
                 "2LecshUwdy9xi7meFgHtFJQNSKk4KdTrcpvaB56dP2NQ".to_string()
