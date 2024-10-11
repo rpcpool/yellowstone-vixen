@@ -21,7 +21,7 @@ impl Parser for RaydiumProgramIxParser {
     type Output = RaydiumProgramIx;
 
     fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::token_program::RaydiumProgramIxParser".into()
+        "yellowstone_vixen_parser::jup_programs::RaydiumProgramIxParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
