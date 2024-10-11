@@ -295,6 +295,7 @@ fn try_from_tx_meta<P: ProgramParser>(
             let mut program_filtered_ixs =
                 try_from_ui_instructions(&raw_message.instructions, &account_keys, &program_id)?;
 
+            // filtering inner instructions by program id
             if let Some(inner_ixs) = inner_ixs {
                 if inner_ixs.is_empty() {
                     return Ok(program_filtered_ixs);
@@ -397,8 +398,6 @@ pub enum FixtureData {
     Account(SubscribeUpdateAccount),
     Instructions(Vec<SerializableInstructionUpdate>),
 }
-
-// type MockParser<P> = dyn ProgramParser<Input = InstructionUpdate, Output = P>;
 
 async fn fetch_fixture<P: ProgramParser>(
     fixture: &str,
