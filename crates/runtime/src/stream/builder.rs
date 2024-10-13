@@ -34,11 +34,11 @@ pub enum BuilderError {
 
 /// Marker type for the [`StreamBuilder`] type.
 #[derive(Debug, Default)]
-pub struct StreamKind(Channels<HashMap<String, Receiver>>);
+pub struct StreamKind<'a>(Vec<&'a [u8]>, Channels<HashMap<String, Receiver>>);
 /// A builder for the [`Server`] type.
-pub type StreamBuilder<M = NullMetrics> = Builder<StreamKind, M>;
+pub type StreamBuilder<'a, M = NullMetrics> = Builder<StreamKind<'a>, M>;
 
-impl BuilderKind for StreamKind {
+impl<'a> BuilderKind for StreamKind<'a> {
     type Error = BuilderError;
 }
 
@@ -53,7 +53,7 @@ where
     Box::new(Pipeline::new(parser, [GrpcHandler(tx)]))
 }
 
-impl<M: MetricsFactory> StreamBuilder<M> {
+impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
     fn insert<
         P: Debug + ProgramParser + Send + Sync + 'static,
         F: FnOnce(&mut Self) -> &mut Vec<BoxPipeline<'static, P::Input>>,
@@ -72,7 +72,7 @@ impl<M: MetricsFactory> StreamBuilder<M> {
             // TODO: configure channel size
             let (tx, rx) = broadcast::channel(64);
 
-            match s.extra.0.entry(parser.program_id()) {
+            match s.extra.1.entry(parser.program_id()) {
                 Entry::Vacant(v) => {
                     v.insert([(parser.id().into_owned(), rx)].into_iter().collect());
                 },
@@ -91,6 +91,10 @@ impl<M: MetricsFactory> StreamBuilder<M> {
             f(s).push(wrap_parser(parser, tx));
             Ok(())
         })
+    }
+
+    pub fn descriptor_set(self, desc: &'a [u8]) -> Self {
+        self.mutate(|s| s.extra.0.push(desc))
     }
 
     /// Add a new account parser to the builder.
@@ -139,14 +143,14 @@ impl<M: MetricsFactory> StreamBuilder<M> {
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
-    pub fn try_build(self, config: StreamConfig<M::Config>) -> Result<Server<M>, BuilderError> {
+    pub fn try_build(self, config: StreamConfig<M::Config>) -> Result<Server<'a, M>, BuilderError> {
         let Self {
             err,
             account,
             transaction,
             instruction,
             metrics,
-            extra: StreamKind(channels),
+            extra: StreamKind(desc_sets, channels),
         } = self;
         let () = err?;
 
@@ -172,6 +176,7 @@ impl<M: MetricsFactory> StreamBuilder<M> {
 
         Ok(Server {
             grpc_cfg,
+            desc_sets,
             channels,
             runtime,
         })
@@ -181,7 +186,7 @@ impl<M: MetricsFactory> StreamBuilder<M> {
     /// provided configuration, terminating the current process if an error
     /// occurs.
     #[inline]
-    pub fn build(self, config: StreamConfig<M::Config>) -> Server<M> {
+    pub fn build(self, config: StreamConfig<M::Config>) -> Server<'a, M> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen stream server")
     }
 }
