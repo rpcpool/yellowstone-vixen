@@ -14,9 +14,12 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen, Pipeline};
 use yellowstone_vixen_parser::{
     token_extension_program::{
-        account_parser::TokenExtensionProgramAccParser, ix_parser::TokenExtensionProgramIxParser,
+        AccountParser as TokenExtensionProgramAccParser,
+        InstructionParser as TokenExtensionProgramIxParser,
     },
-    token_program::{account_parser::TokenProgramAccParser, ix_parser::TokenProgramIxParser},
+    token_program::{
+        AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
+    },
 };
 
 #[derive(clap::Parser)]
