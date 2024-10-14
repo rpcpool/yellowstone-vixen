@@ -15,6 +15,6 @@ yellowstone-vixen = { workspace = true, features = ["prometheus"] }
 yellowstone-vixen-parser = { workspace = true, features = [
   "token-extensions",
   "token-program",
-  "orca-whirlpools-client",
-  "raydium-amm-v3",
+  "orca",
+  "raydium",
 ] }

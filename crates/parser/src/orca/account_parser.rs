@@ -38,7 +38,7 @@ impl OrcaProgramState {
     }
 }
 
-impl ProgramParser for OrcaProgramAccParser {
+impl ProgramParser for AccountParser {
     #[inline]
     fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
         orca_whirlpools_client::ID.to_bytes().into()
@@ -46,14 +46,14 @@ impl ProgramParser for OrcaProgramAccParser {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct OrcaProgramAccParser;
+pub struct AccountParser;
 
-impl Parser for OrcaProgramAccParser {
+impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = OrcaProgramState;
 
     fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::token_program::OrcaProgramAccParser".into()
+        "yellowstone_vixen_parser::token_program::AccountParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
@@ -77,7 +77,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_whirlpool_account_parsing() {
-        let parser = OrcaProgramAccParser;
+        let parser = AccountParser;
 
         let account = account_fixture!("56Ekyu6uBpTna3LR2qkjHjNbDNkCLWK2Lt3uWh7J2R8Z", &parser);
 

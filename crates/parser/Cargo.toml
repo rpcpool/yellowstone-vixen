@@ -48,7 +48,7 @@ token-extensions = [
 token-program = [
   "dep:spl-token",
 ]
-orca-whirlpools-client = [
+orca = [
   "orca_whirlpools_client",
 ]
-raydium-amm-v3 = []
+raydium = []

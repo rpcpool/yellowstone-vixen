@@ -5,23 +5,23 @@ use yellowstone_vixen_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
-use super::{
+use super::instruction_helpers::{
     RaydiumProgramIx, SwapAccounts, SwapIxData, SwapV2Accounts, SWAP_IX_DISC, SWAP_V2_IX_DISC,
 };
 use crate::{
     helpers::{check_min_accounts_req, IX_DISCRIMINATOR_SIZE},
-    jup_programs::raydium::RADIUM_V3_PROGRAM_ID,
+    raydium::RADIUM_V3_PROGRAM_ID,
 };
 
 #[derive(Debug, Clone, Copy)]
-pub struct RaydiumProgramIxParser;
+pub struct InstructionParser;
 
-impl Parser for RaydiumProgramIxParser {
+impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = RaydiumProgramIx;
 
     fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::jup_programs::RaydiumProgramIxParser".into()
+        "yellowstone_vixen_parser::jup_programs::InstructionParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
@@ -33,20 +33,20 @@ impl Parser for RaydiumProgramIxParser {
 
     async fn parse(&self, ix_update: &InstructionUpdate) -> ParseResult<Self::Output> {
         if ix_update.program.equals_ref(RADIUM_V3_PROGRAM_ID) {
-            return RaydiumProgramIxParser::parse_impl(ix_update);
+            return InstructionParser::parse_impl(ix_update);
         }
         Err(ParseError::Filtered)
     }
 }
 
-impl ProgramParser for RaydiumProgramIxParser {
+impl ProgramParser for InstructionParser {
     #[inline]
     fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
         RADIUM_V3_PROGRAM_ID.to_bytes().into()
     }
 }
 
-impl RaydiumProgramIxParser {
+impl InstructionParser {
     #[allow(clippy::too_many_lines)]
     pub(crate) fn parse_impl(ix: &InstructionUpdate) -> Result<RaydiumProgramIx, ParseError> {
         let accounts_len = ix.accounts.len();
@@ -118,7 +118,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_swap_ix_parsing() {
-        let parser = RaydiumProgramIxParser;
+        let parser = InstructionParser;
 
         let ixs = tx_fixture!("MKJhpfmz9ji2HbuP8Fk8s4XCQinWXBY7wcwgzn5PyibcV99RfmCPJt671jtqPFFEXDByYCzrdPh6AKjKgUA4HPY"
         ,&parser);

@@ -5,21 +5,21 @@ use yellowstone_vixen_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, ProgramParser,
 };
 
-use super::ixs::{
+use super::instruction_helpers::{
     OrcaProgramIx, SwapAccounts, SwapIxData, SwapV2Accounts, SwapV2IxData, SWAP_IX_DISC,
     SWAP_V2_IX_DISC,
 };
 use crate::helpers::{check_min_accounts_req, IX_DISCRIMINATOR_SIZE};
 
 #[derive(Debug, Clone, Copy)]
-pub struct OrcaProgramIxParser;
+pub struct InstructionParser;
 
-impl Parser for OrcaProgramIxParser {
+impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = OrcaProgramIx;
 
     fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::jup_programs::orca::OrcaProgramIxParser".into()
+        "yellowstone_vixen_parser::jup_programs::orca::InstructionParser".into()
     }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
@@ -31,21 +31,21 @@ impl Parser for OrcaProgramIxParser {
 
     async fn parse(&self, ix_update: &InstructionUpdate) -> ParseResult<Self::Output> {
         if ix_update.program.equals_ref(orca_whirlpools_client::ID) {
-            OrcaProgramIxParser::parse_impl(ix_update)
+            InstructionParser::parse_impl(ix_update)
         } else {
             Err(ParseError::Filtered)
         }
     }
 }
 
-impl ProgramParser for OrcaProgramIxParser {
+impl ProgramParser for InstructionParser {
     #[inline]
     fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
         orca_whirlpools_client::ID.to_bytes().into()
     }
 }
 
-impl OrcaProgramIxParser {
+impl InstructionParser {
     pub(crate) fn parse_impl(ix: &InstructionUpdate) -> Result<OrcaProgramIx, ParseError> {
         let accounts_len = ix.accounts.len();
         let ix_discriminator: [u8; 8] = ix.data[0..IX_DISCRIMINATOR_SIZE].try_into()?;
@@ -122,7 +122,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_swap_ix_parsing() {
-        let parser = OrcaProgramIxParser;
+        let parser = InstructionParser;
 
         let ixs = tx_fixture!("3WC8LGHHs3wYzWef1YmLsRS96G1s5BV4XJYhzvypgWp1uGG16SxepFCd7FhHaTieW66Yn9JFR4tUPA1HYArgFZaA",&parser);
 

@@ -14,7 +14,11 @@
 pub use error::*;
 
 mod helpers;
-pub mod jup_programs;
+
+#[cfg(feature = "orca")]
+pub mod orca;
+#[cfg(feature = "raydium")]
+pub mod raydium;
 #[cfg(feature = "token-extensions")]
 pub mod token_extension_program;
 #[cfg(feature = "token-program")]

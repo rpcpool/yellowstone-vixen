@@ -2,11 +2,11 @@ use borsh::BorshDeserialize;
 use spl_pod::solana_program::program_error::ProgramError;
 use yellowstone_vixen_core::{ParseError, ParseResult, Parser, Prefilter, ProgramParser};
 
-use super::accounts::{
+use super::account_helpers::{
     AmmConfig, ObservationState, OperationState, PersonalPositionState, PoolState,
     ProtocolPositionState, TickArrayBitmapExtension, TickArrayState,
 };
-use crate::{helpers::ACC_DISCRIMINATOR_SIZE, jup_programs::raydium::RADIUM_V3_PROGRAM_ID};
+use crate::{helpers::ACC_DISCRIMINATOR_SIZE, raydium::RADIUM_V3_PROGRAM_ID};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
@@ -56,14 +56,14 @@ impl RaydiumProgramState {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct RaydiumProgramAccParser;
+pub struct AccountParser;
 
-impl Parser for RaydiumProgramAccParser {
+impl Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = RaydiumProgramState;
 
     fn id(&self) -> std::borrow::Cow<str> {
-        "yellowstone_vixen_parser::jup_programs::raydium::RaydiumProgramAccParser".into()
+        "yellowstone_vixen_parser::jup_programs::raydium::AccountParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
@@ -82,7 +82,7 @@ impl Parser for RaydiumProgramAccParser {
     }
 }
 
-impl ProgramParser for RaydiumProgramAccParser {
+impl ProgramParser for AccountParser {
     #[inline]
     fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
         RADIUM_V3_PROGRAM_ID.to_bytes().into()
@@ -97,7 +97,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_amm_config_account_parsing() {
-        let parser = RaydiumProgramAccParser;
+        let parser = AccountParser;
 
         let account = account_fixture!("A1BBtTYJd4i3xU8D6Tc2FzU6ZN4oXZWXKZnCxwbHXr8x", &parser);
 
