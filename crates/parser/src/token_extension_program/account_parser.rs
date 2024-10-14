@@ -7,7 +7,7 @@ use spl_token_2022::{
 };
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter, ProgramParser};
 
-use super::helpers::{
+use super::account_helpers::{
     mint_account_extensions_data_bytes, token_account_extensions_data_bytes, ExtensionData,
 };
 
@@ -110,15 +110,13 @@ impl TokenExtensionState {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct TokenExtensionProgramAccParser;
+pub struct AccountParser;
 
-impl Parser for TokenExtensionProgramAccParser {
+impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = TokenExtensionState;
 
-    fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::token_extensions::TokenExtensionProgramAccParser".into()
-    }
+    fn id(&self) -> Cow<str> { "yellowstone_vixen_parser::token_extensions::AccountParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -133,7 +131,7 @@ impl Parser for TokenExtensionProgramAccParser {
     }
 }
 
-impl ProgramParser for TokenExtensionProgramAccParser {
+impl ProgramParser for AccountParser {
     #[inline]
     fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
@@ -146,9 +144,7 @@ mod proto_parser {
         ExtensionDataProto, TokenExtensionStateProto,
     };
 
-    use super::{
-        ExtendedMint, ExtendedTokenAccount, TokenExtensionProgramAccParser, TokenExtensionState,
-    };
+    use super::{AccountParser, ExtendedMint, ExtendedTokenAccount, TokenExtensionState};
     use crate::helpers::IntoProto;
 
     impl IntoProto<ExtendedMintProto> for ExtendedMint {
@@ -177,7 +173,7 @@ mod proto_parser {
         }
     }
 
-    impl ParseProto for TokenExtensionProgramAccParser {
+    impl ParseProto for AccountParser {
         type Message = TokenExtensionStateProto;
 
         fn output_into_message(value: Self::Output) -> Self::Message {
@@ -206,11 +202,11 @@ mod tests {
 
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
 
-    use super::{ExtensionData, Parser, TokenExtensionProgramAccParser, TokenExtensionState};
+    use super::{AccountParser, ExtensionData, Parser, TokenExtensionState};
 
     #[tokio::test]
     async fn test_mint_account_parsing() {
-        let parser = TokenExtensionProgramAccParser;
+        let parser = AccountParser;
 
         let account = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu", &parser);
 

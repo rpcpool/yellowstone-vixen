@@ -17,8 +17,8 @@ use opentelemetry_sdk::{
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen, opentelemetry::trace::TracerProvider as _, Pipeline};
 use yellowstone_vixen_parser::{
-    token_extension_program::account_parser::TokenExtensionProgramAccParser,
-    token_program::account_parser::TokenProgramAccParser,
+    token_extension_program::AccountParser as TokenExtensionProgramAccParser,
+    token_program::AccountParser as TokenProgramAccParser,
 };
 
 #[derive(clap::Parser)]

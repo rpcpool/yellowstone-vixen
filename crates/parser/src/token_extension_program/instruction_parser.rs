@@ -11,7 +11,7 @@ use super::{
         helpers, CommonExtensionIxs, ConfidentaltransferFeeIx, ConfidentaltransferIx,
         ExtensionWithCommonIxs, TokenGroupIx, TokenMetadataIx, TransferFeeIx,
     },
-    ixs::{
+    instruction_helpers::{
         CreateNativeMintAccounts, InitializeMintCloseAuthorityAccounts,
         InitializeMintCloseAuthorityData, InitializeNonTransferableMintAccounts,
         InitializePermanentDelegateAccounts, InitializePermanentDelegateData, ReallocateAccounts,
@@ -21,19 +21,19 @@ use super::{
 };
 use crate::{
     helpers::{check_min_accounts_req, into_vixen_pubkey},
-    token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIxParser},
+    token_program::{InstructionParser as TokenProgramIxParser, SetAuthorityAccounts},
     Error, Result, ResultExt,
 };
 
 #[derive(Debug, Clone, Copy)]
-pub struct TokenExtensionProgramIxParser;
+pub struct InstructionParser;
 
-impl Parser for TokenExtensionProgramIxParser {
+impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = TokenExtensionProgramIx;
 
     fn id(&self) -> std::borrow::Cow<str> {
-        "yellowstone_vixen_parser::token_extensions::TokenExtensionProgramIxParser".into()
+        "yellowstone_vixen_parser::token_extensions::InstructionParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
@@ -45,19 +45,18 @@ impl Parser for TokenExtensionProgramIxParser {
 
     async fn parse(&self, ix_update: &InstructionUpdate) -> ParseResult<Self::Output> {
         if ix_update.program.equals_ref(spl_token_2022::ID) {
-            TokenExtensionProgramIxParser::parse_impl(ix_update)
-                .map_err(|e| ParseError::Other(e.into()))
+            InstructionParser::parse_impl(ix_update).map_err(|e| ParseError::Other(e.into()))
         } else {
             Err(ParseError::Filtered)
         }
     }
 }
 
-impl ProgramParser for TokenExtensionProgramIxParser {
+impl ProgramParser for InstructionParser {
     fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
-impl TokenExtensionProgramIxParser {
+impl InstructionParser {
     #[allow(clippy::too_many_lines)]
     fn parse_impl(ix: &InstructionUpdate) -> Result<TokenExtensionProgramIx> {
         let accounts_len = ix.accounts.len();
@@ -260,10 +259,10 @@ mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
     use yellowstone_vixen_proto::parser::TokenExtensionProgramIxProto;
 
-    use super::TokenExtensionProgramIxParser;
+    use super::InstructionParser;
     use crate::helpers::IntoProto;
 
-    impl ParseProto for TokenExtensionProgramIxParser {
+    impl ParseProto for InstructionParser {
         type Message = TokenExtensionProgramIxProto;
 
         fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
@@ -276,11 +275,11 @@ mod tests {
 
     use yellowstone_vixen_mock::tx_fixture;
 
-    use super::{Parser, TokenExtensionProgramIx, TokenExtensionProgramIxParser};
-    use crate::token_program::ix_parser::TokenProgramIx;
+    use super::{InstructionParser, Parser, TokenExtensionProgramIx};
+    use crate::token_program::TokenProgramIx;
     #[tokio::test]
     async fn test_mint_to_checked_ix_parsing() {
-        let parser = TokenExtensionProgramIxParser;
+        let parser = InstructionParser;
 
         let ixs = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt",&parser);
 

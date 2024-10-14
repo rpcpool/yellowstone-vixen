@@ -31,15 +31,13 @@ impl TokenProgramState {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct TokenProgramAccParser;
+pub struct AccountParser;
 
-impl Parser for TokenProgramAccParser {
+impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = TokenProgramState;
 
-    fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::token_program::TokenProgramAccParser".into()
-    }
+    fn id(&self) -> Cow<str> { "yellowstone_vixen_parser::token_program::AccountParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -55,7 +53,7 @@ impl Parser for TokenProgramAccParser {
     }
 }
 
-impl ProgramParser for TokenProgramAccParser {
+impl ProgramParser for AccountParser {
     #[inline]
     fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
@@ -68,7 +66,7 @@ mod proto_parser {
         TokenProgramStateProto,
     };
 
-    use super::{Account, Mint, Multisig, TokenProgramAccParser, TokenProgramState};
+    use super::{Account, AccountParser, Mint, Multisig, TokenProgramState};
     use crate::helpers::{
         proto::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString},
         IntoProto,
@@ -112,7 +110,7 @@ mod proto_parser {
         }
     }
 
-    impl ParseProto for TokenProgramAccParser {
+    impl ParseProto for AccountParser {
         type Message = TokenProgramStateProto;
 
         fn output_into_message(value: Self::Output) -> Self::Message {
@@ -135,11 +133,11 @@ mod proto_parser {
 mod tests {
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
 
-    use super::{Parser, TokenProgramAccParser, TokenProgramState};
+    use super::{AccountParser, Parser, TokenProgramState};
 
     #[tokio::test]
     async fn test_mint_account_parsing() {
-        let parser = TokenProgramAccParser;
+        let parser = AccountParser;
 
         let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK", &parser);
 

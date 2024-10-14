@@ -3,8 +3,7 @@ use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::{decode_extension_ix_type, ExtensionIxParser};
 use crate::{
-    helpers::check_min_accounts_req, token_program::ix_parser::InitializeMintAccounts, Error,
-    Result,
+    helpers::check_min_accounts_req, token_program::InitializeMintAccounts, Error, Result,
 };
 
 const SOLANA_ZK_PROOF_PROGRAM_ID: &str = "ZkTokenProof1111111111111111111111111111111";

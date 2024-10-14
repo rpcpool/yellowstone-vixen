@@ -222,17 +222,15 @@ mod proto_parser {
     };
 
     use super::{
-        InitializeTransferFeeConfigAccounts, InitializeTransferFeeConfigData,
-        SetTransferFeeAccounts, SetTransferFeeData, TransferCheckedWithFeeAccounts,
-        TransferCheckedWithFeeData, TransferFeeIx, WithdrawWithheldTokensFromAccountsAccounts,
-        WithdrawWithheldTokensFromAccountsData, WithdrawWithheldTokensFromMintAccounts,
+        HarvestWithheldTokensToMintAccounts, InitializeTransferFeeConfigAccounts,
+        InitializeTransferFeeConfigData, SetTransferFeeAccounts, SetTransferFeeData,
+        TransferCheckedWithFeeAccounts, TransferCheckedWithFeeData, TransferFeeIx,
+        WithdrawWithheldTokensFromAccountsAccounts, WithdrawWithheldTokensFromAccountsData,
+        WithdrawWithheldTokensFromMintAccounts,
     };
-    use crate::{
-        helpers::{
-            proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
-            IntoProto,
-        },
-        token_extension_program::ix_parser::HarvestWithheldTokensToMintAccounts,
+    use crate::helpers::{
+        proto_helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+        IntoProto,
     };
 
     impl IntoProto<InitializeTransferFeeConfigAccountsProto> for InitializeTransferFeeConfigAccounts {
