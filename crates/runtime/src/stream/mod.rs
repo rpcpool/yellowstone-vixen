@@ -42,13 +42,14 @@ impl From<std::io::Error> for Error {
 }
 
 /// A Vixen program stream server.
-pub struct Server<M: MetricsFactory> {
+pub struct Server<'a, M: MetricsFactory> {
     grpc_cfg: GrpcConfig,
+    desc_sets: Vec<&'a [u8]>,
     channels: Channels,
     runtime: Runtime<M>,
 }
 
-impl<M: MetricsFactory + fmt::Debug> fmt::Debug for Server<M>
+impl<'a, M: MetricsFactory + fmt::Debug> fmt::Debug for Server<'a, M>
 where
     M::Instrumenter: fmt::Debug,
     M::Exporter: fmt::Debug,
@@ -56,23 +57,25 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let Self {
             grpc_cfg,
+            desc_sets,
             channels,
             runtime,
         } = self;
         f.debug_struct("Server")
             .field("grpc_cfg", grpc_cfg)
+            .field("desc_sets", desc_sets)
             .field("channels", channels)
             .field("runtime", runtime)
             .finish()
     }
 }
 
-impl Server<NullMetrics> {
+impl<'a> Server<'a, NullMetrics> {
     /// Create a new stream server builder.
-    pub fn builder() -> StreamBuilder { StreamBuilder::default() }
+    pub fn builder() -> StreamBuilder<'a> { StreamBuilder::default() }
 }
 
-impl<M: MetricsFactory> Server<M> {
+impl<'a, M: MetricsFactory> Server<'a, M> {
     /// Create a new Tokio runtime and run the Vixen stream server within it,
     /// terminating the current process if the runtime or gRPC server crash.
     #[inline]
@@ -116,12 +119,13 @@ impl<M: MetricsFactory> Server<M> {
     pub async fn try_run_local(self) -> Result<(), Error> {
         let Self {
             grpc_cfg,
+            desc_sets,
             channels,
             runtime,
         } = self;
 
         let address = grpc_cfg.address;
-        let grpc = grpc::Server::run(grpc_cfg, channels);
+        let grpc = grpc::Server::run(grpc_cfg, &desc_sets, channels);
         // TODO: check for early server shutdowns
 
         info!(%address, "gRPC server created");

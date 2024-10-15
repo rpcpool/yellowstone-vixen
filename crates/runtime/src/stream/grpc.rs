@@ -175,13 +175,17 @@ impl Future for Server {
 }
 
 impl Server {
-    pub fn run(config: GrpcConfig, channels: Channels) -> Self {
+    pub fn run(config: GrpcConfig, desc_sets: &[&[u8]], channels: Channels) -> Self {
         let GrpcConfig { address } = config;
 
-        let reflection = tonic_reflection::server::Builder::configure()
-            .register_encoded_file_descriptor_set(stream::DESCRIPTOR_SET)
-            .build()
-            .unwrap();
+        let mut reflection = tonic_reflection::server::Builder::configure()
+            .register_encoded_file_descriptor_set(stream::DESCRIPTOR_SET);
+
+        for desc in desc_sets {
+            reflection = reflection.register_encoded_file_descriptor_set(desc);
+        }
+
+        let reflection = reflection.build().unwrap();
 
         let (stop, rx) = stop::channel();
         Self(

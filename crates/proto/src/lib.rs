@@ -18,7 +18,9 @@ mod vixen {
 
         //! Protobuf definitions for the `yellowstone-vixen-parser` crate.
 
-        include!(concat!(env!("OUT_DIR"), concat!("/vixen.parser.rs")));
+        include!(concat!(env!("OUT_DIR"), "/vixen.parser.rs"));
+
+        pub const DESCRIPTOR_SET: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.bin"));
     }
 
     #[cfg(feature = "stream")]
