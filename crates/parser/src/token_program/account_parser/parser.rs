@@ -69,7 +69,10 @@ mod proto_parser {
     };
 
     use super::{Account, Mint, Multisig, TokenProgramAccParser, TokenProgramState};
-    use crate::helpers::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
+    use crate::helpers::{
+        proto::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString},
+        IntoProto,
+    };
 
     impl IntoProto<TokenAccountProto> for Account {
         fn into_proto(self) -> TokenAccountProto {
@@ -132,16 +135,15 @@ mod proto_parser {
 mod tests {
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
 
-    use super::*;
+    use super::{Parser, TokenProgramAccParser, TokenProgramState};
 
     #[tokio::test]
     async fn test_mint_account_parsing() {
         let parser = TokenProgramAccParser;
 
-        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
-        let state = run_account_parse!(parser, account);
+        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK", &parser);
 
-        let TokenProgramState::Mint(mint) = state else {
+        let TokenProgramState::Mint(mint) = account else {
             panic!("Invalid Account");
         };
 

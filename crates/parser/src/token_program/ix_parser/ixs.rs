@@ -291,7 +291,10 @@ pub mod proto_parser {
         TransferCheckedAccounts, TransferCheckedData, TransferData, UiAmountToAmountAccounts,
         UiAmountToAmountData,
     };
-    use crate::helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
+    use crate::helpers::{
+        proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+        IntoProto,
+    };
 
     impl IntoProto<TransferAccountsProto> for TransferAccounts {
         fn into_proto(self) -> TransferAccountsProto {

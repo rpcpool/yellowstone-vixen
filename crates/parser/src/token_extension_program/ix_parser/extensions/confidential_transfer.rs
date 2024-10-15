@@ -390,7 +390,10 @@ mod proto_parser {
         EmptyAccountAccounts, InitializeMintAccounts, TransferWithSplitProofsAccounts,
         UpdateMintAccounts, WithdrawAccounts,
     };
-    use crate::helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
+    use crate::helpers::{
+        proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+        IntoProto,
+    };
 
     impl IntoProto<InitializeConfidentialMintAccountsProto> for InitializeMintAccounts {
         fn into_proto(self) -> InitializeConfidentialMintAccountsProto {

@@ -228,7 +228,10 @@ mod proto_parser {
         WithdrawWithheldTokensFromAccountsData, WithdrawWithheldTokensFromMintAccounts,
     };
     use crate::{
-        helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString, IntoProto},
+        helpers::{
+            proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+            IntoProto,
+        },
         token_extension_program::ix_parser::HarvestWithheldTokensToMintAccounts,
     };
 

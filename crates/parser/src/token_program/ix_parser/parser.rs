@@ -381,10 +381,9 @@ mod tests {
     async fn test_mint_to_checked_ix_parsing() {
         let parser = TokenProgramIxParser;
 
-        let ixs = tx_fixture!("55kpnRufcX9Fo44oRBXtrkxPRww4UWJKxCpgBV39kzAAag8oyJbd9Y3YWdQQUi3TBqtrhjgsMGb9Nw8bUxy7j5rt");
-        let ix = run_ix_parse!(parser, &ixs[0]);
+        let ixs = tx_fixture!("55kpnRufcX9Fo44oRBXtrkxPRww4UWJKxCpgBV39kzAAag8oyJbd9Y3YWdQQUi3TBqtrhjgsMGb9Nw8bUxy7j5rt",&parser);
 
-        let TokenProgramIx::MintToChecked(_accts, data) = ix else {
+        let TokenProgramIx::MintToChecked(_accts, data) = &ixs[0] else {
             panic!("Invalid Instruction");
         };
 
