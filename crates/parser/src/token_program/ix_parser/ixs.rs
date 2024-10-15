@@ -292,7 +292,7 @@ pub mod proto_parser {
         UiAmountToAmountData,
     };
     use crate::helpers::{
-        proto_helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+        proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
         IntoProto,
     };
 

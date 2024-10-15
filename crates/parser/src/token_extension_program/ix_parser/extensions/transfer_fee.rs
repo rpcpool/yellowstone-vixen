@@ -229,7 +229,7 @@ mod proto_parser {
     };
     use crate::{
         helpers::{
-            proto_helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+            proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
             IntoProto,
         },
         token_extension_program::ix_parser::HarvestWithheldTokensToMintAccounts,

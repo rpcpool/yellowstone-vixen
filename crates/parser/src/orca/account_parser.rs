@@ -52,9 +52,7 @@ impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = OrcaProgramState;
 
-    fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::token_program::AccountParser".into()
-    }
+    fn id(&self) -> Cow<str> { "yellowstone_vixen_parser::token_program::AccountParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

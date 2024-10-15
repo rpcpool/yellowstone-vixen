@@ -18,7 +18,7 @@ yellowstone_vixen_core::pubkey_convert_helpers!(spl_pod::solana_program::pubkey:
 yellowstone_vixen_core::proto_helper_traits!();
 
 #[cfg(feature = "proto")]
-pub mod proto_helpers {
+pub mod proto {
     use spl_pod::solana_program::{program_option::COption, pubkey::Pubkey};
     use spl_token::instruction::MAX_SIGNERS;
     use yellowstone_vixen_core::KeyBytes;

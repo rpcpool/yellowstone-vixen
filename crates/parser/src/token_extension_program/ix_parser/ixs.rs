@@ -120,7 +120,7 @@ mod proto_parser {
         ReallocateData, SetAuthorityData, TokenExtensionProgramIx, WithdrawExcessLamportsAccounts,
     };
     use crate::helpers::{
-        proto_helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+        proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
         IntoProto,
     };
 

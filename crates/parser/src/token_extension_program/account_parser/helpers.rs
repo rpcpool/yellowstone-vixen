@@ -205,7 +205,7 @@ pub mod token_extensions_proto_parser {
 
     use super::{extension, ExtensionData};
     use crate::helpers::{
-        proto_helpers::{ElGamalPubkeyBytes, FromCOptionPubkeyToOptString},
+        proto::{ElGamalPubkeyBytes, FromCOptionPubkeyToOptString},
         IntoProto,
     };
 

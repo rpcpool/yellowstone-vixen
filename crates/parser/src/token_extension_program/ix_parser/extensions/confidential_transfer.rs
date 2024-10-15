@@ -391,7 +391,7 @@ mod proto_parser {
         UpdateMintAccounts, WithdrawAccounts,
     };
     use crate::helpers::{
-        proto_helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+        proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
         IntoProto,
     };
 

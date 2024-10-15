@@ -70,7 +70,7 @@ mod proto_parser {
 
     use super::{Account, Mint, Multisig, TokenProgramAccParser, TokenProgramState};
     use crate::helpers::{
-        proto_helpers::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString},
+        proto::{FromCOptionPubkeyToOptString, FromVecPubkeyToVecString},
         IntoProto,
     };
 
