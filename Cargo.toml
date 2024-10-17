@@ -3,8 +3,8 @@ members = ["crates/*", "examples/*"]
 resolver = "2"
 
 [workspace.dependencies]
-yellowstone-grpc-client = { version = "1.16.0", git = "https://github.com/rpcpool/yellowstone-grpc", branch = "master" }
-yellowstone-grpc-proto = { version = "1.15.0", git = "https://github.com/rpcpool/yellowstone-grpc", branch = "master", default-features = false }
+yellowstone-grpc-client = { version = "2.0.0", git = "https://github.com/rpcpool/yellowstone-grpc", branch = "master" }
+yellowstone-grpc-proto = { version = "2.0.0", git = "https://github.com/rpcpool/yellowstone-grpc", branch = "master", default-features = false }
 yellowstone-vixen = { path = "crates/runtime", version = "0.0.0" }
 yellowstone-vixen-core = { path = "crates/core", version = "0.0.0" }
 yellowstone-vixen-mock = { path = "crates/mock", version = "0.0.0" }
