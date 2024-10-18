@@ -229,7 +229,7 @@ mod proto_parser {
         WithdrawWithheldTokensFromMintAccounts,
     };
     use crate::helpers::{
-        proto_helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+        proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
         IntoProto,
     };
 
