@@ -14,58 +14,50 @@ cargo add yellowstone-vixen-mock
 #[cfg(test)]
 mod tests {
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, tx_fixture, run_ix_parse, FixtureData};
+
     // using token program and token extension program parsers
     use yellowstone_vixen_parser::{
         token_extension_program::{
-        ix_parser::{TokenExtensionProgramIxParser,TokenExtensionProgramIx}
+            AccountParser as TokenExtensionProgramAccParser,
+            InstructionParser as TokenExtensionProgramIxParser,
+            TokenExtensionProgramIx
+
         },
-        token_program::{account_parser::{TokenProgramAccParser,TokenProgramState}, ix_parser::{TokenProgramIxParser,TokenProgramIx}},
+        token_program::{
+            AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
+            TokenProgramState
+        };
     };
 
+    // test account parsing
     #[tokio::test]
-    async fn test_mint_parsing() {
-        let parser = TokenProgramParser;
+    async fn test_mint_account_parsing() {
+        let parser = TokenProgramAccParser;
 
-        let fixture_data = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK");
+        let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK", &parser);
 
-        if let FixtureData::Account(account) = fixture_data {
-            let state = run_account_parse!(parser, account);
+        let TokenProgramState::Mint(mint) = account else {
+            panic!("Invalid Account");
+        };
 
-            if let TokenProgramState::Mint(mint) = state {
-                assert_eq!(mint.decimals, 10);
-            } else {
-                panic!("Invalid Account");
-            }
-        } else {
-            panic!("Invalid Fixture Data");
-        }
+        assert_eq!(mint.decimals, 10);
     }
 
-    // Transaction fixture
+    // test instruction parsing
     #[tokio::test]
     async fn test_mint_to_checked_ix_parsing() {
-        let parser = TokenExtensionProgramIxParser;
+        let parser = InstructionParser;
 
-        let fixture_data = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
+        let ixs = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt",&parser);
 
-        if let FixtureData::Instructions(ixs) = fixture_data {
-            let ix = run_ix_parse!(parser, &ixs[0]);
-            match ix {
-                TokenExtensionProgramIx::TokenProgramIx(ix) => {
-                    if let TokenProgramIx::MintToChecked(ix) = ix {
-                        assert!(ix.data.is_some());
-                        let data = ix.data.as_ref().unwrap();
-                        assert_eq!(data.decimals, 9);
-                        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals as u32)));
-                    } else {
-                        panic!("Invalid Instruction")
-                    }
-                },
-                _ => panic!("Invalid Instruction"),
-            }
-        } else {
-            panic!("Invalid Fixture Data")
-        }
+        let TokenExtensionProgramIx::TokenProgramIx(TokenProgramIx::MintToChecked(_accts, data)) =
+            &ixs[0]
+        else {
+            panic!("Invalid Instruction");
+        };
+
+        assert_eq!(data.decimals, 9);
+        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals.into())));
     }
 
 }
