@@ -336,10 +336,10 @@ macro_rules! account_fixture {
 macro_rules! tx_fixture {
     ($sig:expr, $parser:expr) => {
         match $crate::load_fixture($sig, $parser).await.unwrap() {
-            FixtureData::Instructions(ixs) => {
+            $crate::FixtureData::Instructions(ixs) => {
                 let futures = ixs.iter().map(|ix| {
                     let parser = $parser.clone();
-                    async move { run_ix_parse!(parser, ix) }
+                    async move { $crate::run_ix_parse!(parser, ix) }
                 });
                 $crate::futures::future::join_all(futures).await
             },

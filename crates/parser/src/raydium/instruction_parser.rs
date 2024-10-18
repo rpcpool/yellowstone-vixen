@@ -110,7 +110,7 @@ impl InstructionParser {
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
+    use yellowstone_vixen_mock::tx_fixture;
 
     use super::*;
 
