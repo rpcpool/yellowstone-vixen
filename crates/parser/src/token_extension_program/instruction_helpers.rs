@@ -5,7 +5,7 @@ use super::extensions::{
     CommonExtensionIxs, ConfidentaltransferFeeIx, ConfidentaltransferIx, TokenGroupIx,
     TokenMetadataIx, TransferFeeIx,
 };
-use crate::token_program::ix_parser::{SetAuthorityAccounts, TokenProgramIx};
+use crate::token_program::{SetAuthorityAccounts, TokenProgramIx};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
