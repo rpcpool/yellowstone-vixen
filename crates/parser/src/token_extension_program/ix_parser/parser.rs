@@ -274,7 +274,7 @@ mod proto_parser {
 mod tests {
     use std::ops::Mul;
 
-    use yellowstone_vixen_mock::{run_ix_parse, tx_fixture, FixtureData};
+    use yellowstone_vixen_mock::tx_fixture;
 
     use super::{Parser, TokenExtensionProgramIx, TokenExtensionProgramIxParser};
     use crate::token_program::ix_parser::TokenProgramIx;
@@ -282,11 +282,10 @@ mod tests {
     async fn test_mint_to_checked_ix_parsing() {
         let parser = TokenExtensionProgramIxParser;
 
-        let ixs = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt");
-        let ix = run_ix_parse!(parser, &ixs[0]);
+        let ixs = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt",&parser);
 
         let TokenExtensionProgramIx::TokenProgramIx(TokenProgramIx::MintToChecked(_accts, data)) =
-            ix
+            &ixs[0]
         else {
             panic!("Invalid Instruction");
         };

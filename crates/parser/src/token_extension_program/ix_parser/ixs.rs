@@ -119,7 +119,10 @@ mod proto_parser {
         InitializePermanentDelegateAccounts, InitializePermanentDelegateData, ReallocateAccounts,
         ReallocateData, SetAuthorityData, TokenExtensionProgramIx, WithdrawExcessLamportsAccounts,
     };
-    use crate::helpers::{FromOptPubkeyToOptString, FromVecPubkeyToVecString, IntoProto};
+    use crate::helpers::{
+        proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
+        IntoProto,
+    };
 
     impl IntoProto<WithdrawExcessLamportsAccountsProto> for WithdrawExcessLamportsAccounts {
         fn into_proto(self) -> WithdrawExcessLamportsAccountsProto {

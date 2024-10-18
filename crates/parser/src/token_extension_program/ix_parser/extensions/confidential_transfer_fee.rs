@@ -159,7 +159,7 @@ mod proto_parser {
         ConfidentialWithdrawWithheldTokensFromMintAccounts, DisableHarvestToMintAccounts,
         EnableHarvestToMintAccounts, InitializeConfidentialTransferFeeConfigAccounts,
     };
-    use crate::helpers::{FromVecPubkeyToVecString, IntoProto};
+    use crate::helpers::{proto::FromVecPubkeyToVecString, IntoProto};
 
     impl IntoProto<InitializeConfidentialTransferFeeConfigAccountsProto>
         for InitializeConfidentialTransferFeeConfigAccounts

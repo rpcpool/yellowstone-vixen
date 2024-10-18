@@ -238,7 +238,7 @@ pub type Pubkey = KeyBytes<32>;
 /// convertible to or from a base58-encoded string.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
-pub struct KeyBytes<const LEN: usize>([u8; LEN]);
+pub struct KeyBytes<const LEN: usize>(pub [u8; LEN]);
 
 impl<const LEN: usize> Debug for KeyBytes<LEN> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

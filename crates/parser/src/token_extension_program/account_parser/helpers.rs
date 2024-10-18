@@ -204,7 +204,10 @@ pub mod token_extensions_proto_parser {
     };
 
     use super::{extension, ExtensionData};
-    use crate::helpers::{ElGamalPubkeyBytes, FromCOptionPubkeyToOptString, IntoProto};
+    use crate::helpers::{
+        proto::{ElGamalPubkeyBytes, FromCOptionPubkeyToOptString},
+        IntoProto,
+    };
 
     macro_rules! impl_into_proto {
         ($($variant:ident),*) => {

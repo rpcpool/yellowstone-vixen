@@ -149,7 +149,7 @@ mod proto_parser {
     };
 
     use super::{CommonIx, DisableAccounts, EnableAccounts, ExtInitializeAccounts, UpdateAccounts};
-    use crate::helpers::{FromVecPubkeyToVecString, IntoProto};
+    use crate::helpers::{proto::FromVecPubkeyToVecString, IntoProto};
 
     impl IntoProto<ExtInitializeAccountsProto> for ExtInitializeAccounts {
         fn into_proto(self) -> ExtInitializeAccountsProto {
