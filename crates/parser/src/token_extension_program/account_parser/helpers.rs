@@ -186,8 +186,10 @@ pub mod token_extensions_proto_parser {
         group_member_pointer::GroupMemberPointer, group_pointer::GroupPointer,
         immutable_owner::ImmutableOwner, metadata_pointer::MetadataPointer,
     };
-    use solana_zk_token_sdk::zk_token_elgamal::pod::ElGamalPubkey;
-    use spl_token_2022::state::{Account, Mint, Multisig};
+    use spl_token_2022::{
+        solana_zk_token_sdk::zk_token_elgamal::pod::ElGamalPubkey,
+        state::{Account, Mint, Multisig},
+    };
     use spl_token_group_interface::state::{TokenGroup, TokenGroupMember};
     use spl_token_metadata_interface::state::TokenMetadata;
     #[allow(clippy::wildcard_imports)]

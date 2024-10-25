@@ -10,3 +10,8 @@ yellowstone-vixen-core = { path = "crates/core", version = "0.0.0" }
 yellowstone-vixen-mock = { path = "crates/mock", version = "0.0.0" }
 yellowstone-vixen-parser = { path = "crates/parser", version = "0.0.0" }
 yellowstone-vixen-proto = { path = "crates/proto", version = "0.0.0" }
+
+zeroize = { version = "1.7", default-features = false }
+
+[patch.crates-io]
+curve25519-dalek = { git = "https://github.com/anza-xyz/curve25519-dalek.git", rev = "b500cdc2a920cd5bff9e2dd974d7b97349d61464" }

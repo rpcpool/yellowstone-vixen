@@ -3,7 +3,10 @@ use std::time::Duration;
 use futures_channel::mpsc::SendError;
 use futures_util::{Sink, Stream};
 use yellowstone_grpc_client::{GeyserGrpcClient, Interceptor};
-use yellowstone_grpc_proto::{prelude::*, tonic::Status};
+use yellowstone_grpc_proto::{
+    prelude::*,
+    tonic::{transport::ClientTlsConfig, Status},
+};
 use yellowstone_vixen_core::Filters;
 
 use crate::config::YellowstoneConfig;
@@ -47,6 +50,7 @@ pub async fn connect(
         .x_token(x_token)?
         .connect_timeout(timeout)
         .timeout(timeout)
+        .tls_config(ClientTlsConfig::new().with_native_roots())?
         .connect()
         .await?;
 
