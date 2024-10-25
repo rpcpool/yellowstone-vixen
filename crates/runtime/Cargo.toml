@@ -20,7 +20,7 @@ pin-project-lite = { version = "0.2.14", optional = true }
 prometheus = { version = "0.13.4", features = ["push"], optional = true }
 serde = { version = "1.0.198", features = ["derive"] }
 smallvec = "1.13.2"
-thiserror = "1.0.59"
+thiserror = "1.0.64"
 tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
 topograph = { version = "0.4.0", features = [
     "tokio",
