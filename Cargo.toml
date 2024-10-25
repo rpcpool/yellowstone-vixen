@@ -11,6 +11,8 @@ yellowstone-vixen-mock = { path = "crates/mock", version = "0.0.0" }
 yellowstone-vixen-parser = { path = "crates/parser", version = "0.0.0" }
 yellowstone-vixen-proto = { path = "crates/proto", version = "0.0.0" }
 
+# helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 
+# https://github.com/solana-labs/solana/issues/26688
 zeroize = { version = "1.7", default-features = false }
 
 [patch.crates-io]
