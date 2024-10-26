@@ -131,7 +131,7 @@ mod tests {
                 accounts.whirlpool.to_string(),
                 "ENYEHSyduTbFN1xoSEGaLu7c1F8AqKucdscMuV5Yypy2".to_string()
             );
-            assert_eq!(data.a_to_b, false);
+            assert!(!data.a_to_b);
         } else {
             panic!("Invalid Instruction");
         }
