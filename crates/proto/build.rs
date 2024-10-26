@@ -16,7 +16,7 @@ fn main() {
     {
         tonic_build::configure()
             .file_descriptor_set_path(out_dir.join("stream_descriptor.bin"))
-            .compile(&["proto/stream.proto"], &["proto"])
+            .compile_protos(&["proto/stream.proto"], &["proto"])
             .unwrap();
     }
 }
