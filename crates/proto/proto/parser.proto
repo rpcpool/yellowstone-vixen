@@ -5,7 +5,13 @@ package vixen.parser;
 import "solana-token/accounts.proto";
 import "solana-token/ixs.proto";
 import "solana-token/extensions.proto";
+import "orca.proto";
+import "raydium.proto";
 
+
+/// Token Program
+
+// Token Program State
 message TokenProgramStateProto {
   oneof state_oneof {
     TokenAccountProto token_account = 1;
@@ -14,15 +20,7 @@ message TokenProgramStateProto {
   }
 }
 
-message TokenExtensionStateProto {
-  oneof state_oneof {
-    ExtendedTokenAccountProto extended_token_account = 1;
-    ExtendedMintProto extended_mint_account = 2;
-    MultisigProto multisig = 3;
-
-  }
-}
-
+// Token Program Instructions
 message TokenProgramIxProto {
   oneof ix_oneof {
     TransferIxProto transfer = 1;
@@ -51,6 +49,19 @@ message TokenProgramIxProto {
   }
 }
 
+/// Token Extension
+
+// Token Extension State
+message TokenExtensionStateProto {
+  oneof state_oneof {
+    ExtendedTokenAccountProto extended_token_account = 1;
+    ExtendedMintProto extended_mint_account = 2;
+    MultisigProto multisig = 3;
+
+  }
+}
+
+// Token Extension Instructions
 message TokenExtensionProgramIxProto {
   oneof ix_oneof {
     TokenProgramIxProto token_program_ix = 1;
@@ -75,4 +86,50 @@ message TokenExtensionProgramIxProto {
     CreateNativeMintIxProto create_native_mint_ix = 20;
     SetAuthorityIxProto set_authority = 21;
   }
+}
+
+/// Orca Program
+
+// Orca Program State
+message OrcaProgramStateProto{
+  oneof state_oneof {
+    WhirlpoolProto whirlpool = 1;
+    WhirlpoolsConfigProto whirlpools_config = 2;
+    FeeTierProto fee_tier = 3;
+    PositionProto position = 4;
+    OrcaTickArrayProto tick_array = 5;
+  }
+}
+
+// Orca Program Instructions
+message OrcaProgramIxProto {
+  oneof ix_oneof {
+    OrcaSwapInstructionProto swap = 1;
+    OrcaSwapV2InstructionProto swap_v2 = 2;
+  }
+}
+
+
+/// Raydium Program
+
+// Raydium Program State
+message RaydiumProgramStateProto {
+  oneof state_oneof {
+    AmmConfigProto amm_config = 1;
+    OperationStateProto operation_state = 2;
+    ObservationStateProto observation_state = 3;
+    PersonalPositionStateProto personal_position_state = 4;
+    PoolStateProto pool_state = 5;
+    ProtocolPositionStateProto protocol_position_state = 6;
+    RaydiumTickArrayStateProto tick_array_state = 7;
+    TickArrayBitmapExtensionProto tick_array_bitmap_extension = 8;
+  }
+}
+
+// Raydium Program Instructions
+message RaydiumProgramIxProto {
+    oneof ix_oneof {
+      RaydiumSwapInstructionProto swap = 1;
+      RaydiumSwapV2InstructionProto swap_v2 = 2;
+    }
 }

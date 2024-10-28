@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package vixen.parser;
+
+// accounts
+
+message WhirlpoolRewardInfoProto {
+    string mint = 1;
+    string vault = 2;
+    string authority = 3;
+    string emissions_per_second_x64 = 4;
+    string growth_global_x64 = 5;
+}
+
+message WhirlpoolProto {
+    bytes discriminator = 1;
+    string whirlpools_config = 2;
+    uint32 whirlpool_bump = 3;
+    uint32 tick_spacing = 4;
+    bytes tick_spacing_seed = 5;
+    uint32 fee_rate = 6;
+    uint32 protocol_fee_rate = 7;
+    string liquidity = 8;
+    string sqrt_price = 9;
+    int32 tick_current_index = 10;
+    uint64 protocol_fee_owed_a = 11;
+    uint64 protocol_fee_owed_b = 12;
+    string token_mint_a = 13;
+    string token_vault_a = 14;
+    string fee_growth_global_a = 15;
+    string token_mint_b = 16;
+    string token_vault_b = 17;
+    string fee_growth_global_b = 18;
+    uint64 reward_last_updated_timestamp = 19;
+    repeated WhirlpoolRewardInfoProto reward_infos = 20;
+}
+
+message WhirlpoolsConfigProto {
+    bytes discriminator = 1;
+    string fee_authority = 2;
+    string collect_protocol_fees_authority = 3;
+    string reward_emissions_super_authority = 4;
+    uint32 default_protocol_fee_rate = 5;
+}
+
+message FeeTierProto{
+    bytes discriminator = 1;
+    string whirlpools_config = 2;
+    uint32 tick_spacing = 3;
+    uint32 default_fee_rate = 4;
+}
+
+message PositionProto {
+    bytes discriminator = 1;
+    string whirlpool = 2;
+    string position_mint = 3;
+    string liquidity = 4;  
+    int32 tick_lower_index = 5;
+    int32 tick_upper_index = 6;
+    string fee_growth_checkpoint_a = 7;  
+    uint64 fee_owed_a = 8;
+    string fee_growth_checkpoint_b = 9;  
+    uint64 fee_owed_b = 10;
+    repeated OrcaPositionRewardInfoProto reward_infos = 11;
+}
+
+message OrcaPositionRewardInfoProto {
+    string growth_inside_checkpoint = 1;  
+    uint64 amount_owed = 2;
+}
+
+message OrcaTickProto {
+    bool initialized = 1;
+    string liquidity_net = 2;  
+    string liquidity_gross = 3;  
+    string fee_growth_outside_a = 4;  
+    string fee_growth_outside_b = 5;  
+    repeated string reward_growths_outside = 6; 
+}
+
+message OrcaTickArrayProto {
+    bytes discriminator = 1;
+    int32 start_tick_index = 2;
+    repeated OrcaTickProto ticks = 3;
+    string whirlpool = 4;
+}
+
+
+// instructions
+
+message OrcaSwapAccountsProto {
+    string token_program = 1;
+    string token_authority = 2;
+    string whirlpool = 3;
+    string token_owner_account_a = 4;
+    string token_vault_a = 5;
+    string token_owner_account_b = 6;
+    string token_vault_b = 7;
+    string tick_array0 = 8;
+    string tick_array1 = 9;
+    string tick_array2 = 10;
+    string oracle = 11;
+}
+
+message OrcaSwapIxDataProto {
+    uint64 amount = 1;
+    uint64 other_amount_threshold = 2;
+    string sqrt_price_limit = 3;  
+    bool amount_specified_is_input = 4;
+    bool a_to_b = 5;
+}
+
+
+message OrcaSwapV2AccountsProto {
+    string token_program_a = 1;
+    string token_program_b = 2;
+    string memo_program = 3;
+    string token_authority = 4;
+    string whirlpool = 5;
+    string token_mint_a = 6;
+    string token_mint_b = 7;
+    string token_owner_account_a = 8;
+    string token_vault_a = 9;
+    string token_owner_account_b = 10;
+    string token_vault_b = 11;
+    string tick_array0 = 12;
+    string tick_array1 = 13;
+    string tick_array2 = 14;
+    string oracle = 15;
+}
+
+message OrcaSwapV2IxDataProto {
+    uint64 amount = 1;
+    uint64 other_amount_threshold = 2;
+    string sqrt_price_limit = 3;  
+    bool amount_specified_is_input = 4;
+    bool a_to_b = 5;
+}
+
+message OrcaSwapInstructionProto {
+    OrcaSwapAccountsProto accounts = 1;
+    OrcaSwapIxDataProto data = 2;
+}
+
+message OrcaSwapV2InstructionProto {
+    OrcaSwapV2AccountsProto accounts = 1;
+    OrcaSwapV2IxDataProto data = 2;
+}

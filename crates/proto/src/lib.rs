@@ -20,7 +20,8 @@ mod vixen {
 
         include!(concat!(env!("OUT_DIR"), "/vixen.parser.rs"));
 
-        pub const DESCRIPTOR_SET: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.bin"));
+        pub const DESCRIPTOR_SET: &[u8] =
+            include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.bin"));
     }
 
     #[cfg(feature = "stream")]
