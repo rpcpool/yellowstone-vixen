@@ -78,3 +78,84 @@ pub enum RaydiumProgramIx {
     Swap(SwapAccounts, SwapIxData),
     SwapV2(SwapV2Accounts, SwapIxData),
 }
+
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use yellowstone_vixen_proto::parser::{
+        raydium_program_ix_proto::IxOneof, RaydiumProgramIxProto, RaydiumSwapAccountsProto,
+        RaydiumSwapInstructionProto, RaydiumSwapIxDataProto, RaydiumSwapV2AccountsProto,
+        RaydiumSwapV2InstructionProto,
+    };
+
+    use super::{RaydiumProgramIx, SwapAccounts, SwapIxData, SwapV2Accounts};
+    use crate::helpers::IntoProto;
+
+    impl IntoProto<RaydiumSwapAccountsProto> for SwapAccounts {
+        fn into_proto(self) -> RaydiumSwapAccountsProto {
+            RaydiumSwapAccountsProto {
+                payer: self.payer.to_string(),
+                amm_config: self.amm_config.to_string(),
+                pool_state: self.pool_state.to_string(),
+                input_token_account: self.input_token_account.to_string(),
+                output_token_account: self.output_token_account.to_string(),
+                input_vault: self.input_vault.to_string(),
+                output_vault: self.output_vault.to_string(),
+                observation_state: self.observation_state.to_string(),
+                token_program: self.token_program.to_string(),
+                tick_array: self.tick_array.to_string(),
+            }
+        }
+    }
+
+    impl IntoProto<RaydiumSwapIxDataProto> for SwapIxData {
+        fn into_proto(self) -> RaydiumSwapIxDataProto {
+            RaydiumSwapIxDataProto {
+                amount: self.amount,
+                other_amount_threshold: self.other_amount_threshold,
+                sqrt_price_limit_x64: self.sqrt_price_limit_x64.to_string(),
+                is_base_input: self.is_base_input,
+            }
+        }
+    }
+
+    impl IntoProto<RaydiumSwapV2AccountsProto> for SwapV2Accounts {
+        fn into_proto(self) -> RaydiumSwapV2AccountsProto {
+            RaydiumSwapV2AccountsProto {
+                payer: self.payer.to_string(),
+                amm_config: self.amm_config.to_string(),
+                pool_state: self.pool_state.to_string(),
+                input_token_account: self.input_token_account.to_string(),
+                output_token_account: self.output_token_account.to_string(),
+                input_vault: self.input_vault.to_string(),
+                output_vault: self.output_vault.to_string(),
+                observation_state: self.observation_state.to_string(),
+                token_program: self.token_program.to_string(),
+                token_2022_program: self.token_2022_program.to_string(),
+                memo_program: self.memo_program.to_string(),
+                input_vault_mint: self.input_vault_mint.to_string(),
+                output_vault_mint: self.output_vault_mint.to_string(),
+                tick_array: self.tick_array.to_string(),
+            }
+        }
+    }
+
+    impl IntoProto<RaydiumProgramIxProto> for RaydiumProgramIx {
+        fn into_proto(self) -> RaydiumProgramIxProto {
+            match self {
+                RaydiumProgramIx::Swap(accounts, data) => RaydiumProgramIxProto {
+                    ix_oneof: Some(IxOneof::Swap(RaydiumSwapInstructionProto {
+                        accounts: Some(accounts.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+
+                RaydiumProgramIx::SwapV2(accounts, data) => RaydiumProgramIxProto {
+                    ix_oneof: Some(IxOneof::SwapV2(RaydiumSwapV2InstructionProto {
+                        accounts: Some(accounts.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+            }
+        }
+    }
+}

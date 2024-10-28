@@ -114,6 +114,21 @@ impl InstructionParser {
     }
 }
 
+#[cfg(feature = "proto")]
+mod proto_parser {
+    use yellowstone_vixen_core::proto::ParseProto;
+    use yellowstone_vixen_proto::parser::OrcaProgramIxProto;
+
+    use super::InstructionParser;
+    use crate::helpers::IntoProto;
+
+    impl ParseProto for InstructionParser {
+        type Message = OrcaProgramIxProto;
+
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use yellowstone_vixen_mock::tx_fixture;
