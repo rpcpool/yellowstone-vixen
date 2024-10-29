@@ -185,7 +185,7 @@ impl Server {
             reflection = reflection.register_encoded_file_descriptor_set(desc);
         }
 
-        let reflection = reflection.build_v1().unwrap();
+        let reflection = reflection.build_v1alpha().unwrap();
 
         let (stop, rx) = stop::channel();
         Self(
