@@ -20,11 +20,11 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = RaydiumProgramIx;
 
-    fn id(&self) -> Cow<str> { "yellowstone_vixen_parser::jup_programs::InstructionParser".into() }
+    fn id(&self) -> Cow<str> { "yellowstone_vixen_parser::raydium::InstructionParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
-            .account_owners([RADIUM_V3_PROGRAM_ID])
+            .transaction_accounts([RADIUM_V3_PROGRAM_ID])
             .build()
             .unwrap()
     }

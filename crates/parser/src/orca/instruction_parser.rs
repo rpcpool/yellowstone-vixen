@@ -18,13 +18,11 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = OrcaProgramIx;
 
-    fn id(&self) -> Cow<str> {
-        "yellowstone_vixen_parser::jup_programs::orca::InstructionParser".into()
-    }
+    fn id(&self) -> Cow<str> { "yellowstone_vixen_parser::orca::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
-            .account_owners([orca_whirlpools_client::ID])
+            .transaction_accounts([orca_whirlpools_client::ID])
             .build()
             .unwrap()
     }

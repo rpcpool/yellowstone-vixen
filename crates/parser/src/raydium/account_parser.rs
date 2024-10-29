@@ -64,7 +64,7 @@ impl Parser for AccountParser {
     type Output = RaydiumProgramState;
 
     fn id(&self) -> std::borrow::Cow<str> {
-        "yellowstone_vixen_parser::jup_programs::raydium::AccountParser".into()
+        "yellowstone_vixen_parser::raydium::AccountParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
@@ -117,13 +117,13 @@ mod proto_parser {
                 bump: self.bump.into(),
                 index: self.index.into(),
                 owner: self.owner.to_string(),
-                protocol_fee_rate: self.protocol_fee_rate.into(),
-                trade_fee_rate: self.trade_fee_rate.into(),
+                protocol_fee_rate: self.protocol_fee_rate,
+                trade_fee_rate: self.trade_fee_rate,
                 padding: self.padding.to_vec(),
-                padding_u32: self.padding_u32.into(),
+                padding_u32: self.padding_u32,
                 fund_owner: self.fund_owner.to_string(),
                 tick_spacing: self.tick_spacing.into(),
-                fund_fee_rate: self.fund_fee_rate.into(),
+                fund_fee_rate: self.fund_fee_rate,
             }
         }
     }
@@ -141,8 +141,8 @@ mod proto_parser {
     impl IntoProto<ObservationProto> for Observation {
         fn into_proto(self) -> ObservationProto {
             ObservationProto {
-                block_timestamp: self.block_timestamp.into(),
-                tick_cumulative: self.tick_cumulative.into(),
+                block_timestamp: self.block_timestamp,
+                tick_cumulative: self.tick_cumulative,
                 padding: self.padding.to_vec(),
             }
         }
@@ -152,7 +152,7 @@ mod proto_parser {
         fn into_proto(self) -> ObservationStateProto {
             ObservationStateProto {
                 initialized: self.initialized,
-                recent_epoch: self.recent_epoch.into(),
+                recent_epoch: self.recent_epoch,
                 observation_index: self.observation_index.into(),
                 pool_id: self.pool_id.to_string(),
                 observations: self
@@ -232,7 +232,7 @@ mod proto_parser {
                 tick_spacing: self.tick_spacing.into(),
                 liquidity: self.liquidity.to_string(),
                 sqrt_price_x64: self.sqrt_price_x64.to_string(),
-                tick_current: self.tick_current.into(),
+                tick_current: self.tick_current,
                 padding3: self.padding3.into(),
                 padding4: self.padding4.into(),
                 fee_growth_global_0_x64: self.fee_growth_global_0_x64.to_string(),
@@ -314,11 +314,7 @@ mod proto_parser {
                 ticks: self.ticks.into_iter().map(IntoProto::into_proto).collect(),
                 initialized_tick_count: self.initialized_tick_count.into(),
                 recent_epoch: self.recent_epoch,
-                padding: self
-                    .padding
-                    .into_iter()
-                    .map(|x| -> u32 { x.into() })
-                    .collect(),
+                padding: self.padding.to_vec(),
             }
         }
     }

@@ -147,7 +147,7 @@ message RaydiumTickArrayStateProto {
     repeated RaydiumTickStateProto ticks = 3;
     uint32 initialized_tick_count = 4;  // Using uint32 instead of uint8 as Protobuf does not support uint8
     uint64 recent_epoch = 5;
-    repeated uint32 padding = 6;
+    bytes padding = 6;
 }
 
 

@@ -17,7 +17,7 @@ mod vixen {
         #![allow(missing_docs)]
 
         //! Protobuf definitions for the `yellowstone-vixen-parser` crate.
-
+        #![allow(clippy::all)]
         include!(concat!(env!("OUT_DIR"), "/vixen.parser.rs"));
 
         pub const DESCRIPTOR_SET: &[u8] =
