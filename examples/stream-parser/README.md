@@ -15,11 +15,24 @@ RUST_LOG=info cargo run -- --config "$(pwd)/../../Vixen.toml"
 
 ### Client
 
-To subcribe to the stream, navigate to [`crates/proto/proto`](/crates/proto/proto/) and run
+To list all available services, execute the following command
 
 ```bash
-grpcurl -plaintext -import-path ./ -proto stream.proto -proto parser.proto -d '{"program": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"}' 127.0.0.1:3030 vixen.stream.ProgramStreams/Subscribe
+grpcurl -plaintext 127.0.0.1:3030 list
 ```
 
-This example is using Token extensions program to parse Account updates (ixs coming soon).
-replace TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA in request data to parse Token Program
+To introspect the program stream service, execute the following command
+
+```bash
+grpcurl -plaintext 127.0.0.1:3030 describe vixen.stream.ProgramStreams.Subscribe
+```
+
+To subcribe to the stream and receive parsed accounts and ixs, execute the following command
+
+```bash
+# Subscribing to Token extension program stream (replace this pubkey with the desired program pubkey that is supported by vixen)
+grpcurl -plaintext -d '{"program": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"}' 127.0.0.1:3030 vixen.stream.ProgramStreams/Subscribe
+```
+
+This example is using Token extensions program to parse Account updates.
+replace this with other program pubkeys that are supported by vixen.

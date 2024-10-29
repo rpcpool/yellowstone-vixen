@@ -13,6 +13,8 @@ use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen, proto::parser, vixen_core::proto::Proto};
 use yellowstone_vixen_parser::{
+    orca::{AccountParser as OrcaAccParser, InstructionParser as OrcaIxParser},
+    raydium::{AccountParser as RaydiumAccParser, InstructionParser as RaydiumIxParser},
     token_extension_program::{
         AccountParser as TokenExtensionProgramAccParser,
         InstructionParser as TokenExtensionProgramIxParser,
@@ -43,8 +45,12 @@ fn main() {
         .descriptor_set(parser::DESCRIPTOR_SET)
         .account(Proto::new(TokenExtensionProgramAccParser))
         .account(Proto::new(TokenProgramAccParser))
+        .account(Proto::new(OrcaAccParser))
+        .account(Proto::new(RaydiumAccParser))
         .instruction(Proto::new(TokenProgramIxParser))
         .instruction(Proto::new(TokenExtensionProgramIxParser))
+        .instruction(Proto::new(OrcaIxParser))
+        .instruction(Proto::new(RaydiumIxParser))
         .build(config)
         .run();
 }
