@@ -28,14 +28,20 @@ Yellowstone Vixen allows dApp developers to build program-aware change event str
 
 This example demonstrates how a developer can implement a generic parsing pipeline with Vixen. The examples are located in the [`/examples`](/examples) directory.
 
-To run the example, navigate to the desired example directory and execute the following command:
+To run the example, follow these steps:
 
-```
-cd examples/prometheus
-RUST_LOG=info cargo run -- --config "$(pwd)/../../Vixen.toml"
-```
+1. Navigate to the `prometheus` example directory:
 
-You can find an example configuration file at [`Vixen.toml`](/Vixen.toml).
+   ```
+   cd examples/prometheus
+   ```
+
+2. Execute the following command to run the example with the specified configuration:
+   ```
+   RUST_LOG=info cargo run -- --config "$(pwd)/../../Vixen.toml"
+   ```
+
+An example configuration file is available at [`Vixen.example.toml`](/Vixen.example.toml). Copy this file and modify it as needed to create your `Vixen.toml`.
 
 ### Explanation
 
