@@ -465,16 +465,10 @@ impl PrefilterBuilder {
     /// Set the accounts that this prefilter will match.
     pub fn accounts<I: IntoIterator>(self, it: I) -> Self
     where I::Item: AsRef<[u8]> {
-        self.mutate(|this| {
-            set_opt(
-                &mut this.accounts,
-                "accounts",
-                collect_pubkeys(it)?,
-            )
-        })
+        self.mutate(|this| set_opt(&mut this.accounts, "accounts", collect_pubkeys(it)?))
     }
 
-    /// Set the account_owners that this prefilter will match.
+    /// Set the `account_owners` that this prefilter will match.
     pub fn account_owners<I: IntoIterator>(self, it: I) -> Self
     where I::Item: AsRef<[u8]> {
         self.mutate(|this| {

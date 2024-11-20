@@ -184,9 +184,9 @@ mod prometheus_impl {
         /// Prometheus job name.
         pub job: String,
         /// Prometheus username.
-        pub username: String,
+        pub username: Option<String>,
         /// Prometheus password.
-        pub password: PrivateString,
+        pub password: Option<PrivateString>,
         /// Export interval for Prometheus metrics.
         pub export_interval: u64,
     }
@@ -197,6 +197,20 @@ mod prometheus_impl {
         fn default_opt() -> Option<Self> { None }
     }
 
+    impl PrometheusConfig {
+        /// Get the basic authentication credentials, if they exist.
+        #[must_use]
+        pub fn get_basic_auth(&self) -> Option<prometheus::BasicAuthentication> {
+            if let (Some(username), Some(pass)) = (self.username.clone(), self.password.clone()) {
+                Some(prometheus::BasicAuthentication {
+                    username,
+                    password: pass.into(),
+                })
+            } else {
+                None
+            }
+        }
+    }
     // TODO: Don't use hacks to rename clap arguments
     mod clap_hacks {
         use clap::{Args, FromArgMatches};
@@ -211,9 +225,9 @@ mod prometheus_impl {
             #[arg(long, env)]
             prometheus_job: String,
             #[arg(long, env)]
-            prometheus_user: String,
+            prometheus_user: Option<String>,
             #[arg(long, env)]
-            prometheus_pass: String,
+            prometheus_pass: Option<String>,
             #[arg(long, env)]
             prometheus_export_interval: u64,
         }
@@ -231,7 +245,7 @@ mod prometheus_impl {
                     prometheus_endpoint: endpoint,
                     prometheus_job: job,
                     prometheus_user: username,
-                    prometheus_pass: password.into(),
+                    prometheus_pass: password.map(Into::into),
                     prometheus_export_interval: export_interval,
                 }
             }
@@ -250,7 +264,7 @@ mod prometheus_impl {
                     endpoint: prometheus_endpoint,
                     job: prometheus_job,
                     username: prometheus_user,
-                    password: prometheus_pass.into(),
+                    password: prometheus_pass.map(Into::into),
                     export_interval: prometheus_export_interval,
                 }
             }
