@@ -15,7 +15,7 @@ x-token = "<X-TOKEN>"
 timeout = 60
 
 # Metrics configuration section.
-# Uncomment the following lines if you are running Prometheus or OpenTelemetry.
+# Uncomment the following lines if you are running Prometheus 
 
 #[metrics]
 # The endpoint of the metrics stream.
