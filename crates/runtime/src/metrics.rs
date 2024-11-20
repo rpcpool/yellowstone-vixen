@@ -185,10 +185,7 @@ mod prometheus_impl {
                         prometheus::labels! {},
                         &me.1.endpoint,
                         me.0.gather(),
-                        Some(prometheus::BasicAuthentication {
-                            username: me.1.username.clone(),
-                            password: me.1.password.to_string(),
-                        }),
+                        me.1.get_basic_auth(),
                     )
                 })
                 .await
