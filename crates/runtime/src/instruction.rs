@@ -76,7 +76,7 @@ impl<M: Instrumenter> InstructionPipeline<M> {
 
 impl<M: Instrumenter> ParserId for InstructionPipeline<M> {
     fn id(&self) -> std::borrow::Cow<str> {
-        "yellowstone_vixen::instruction::InstructionPipeline".into()
+        "InstructionPipeline".into()
     }
 }
 

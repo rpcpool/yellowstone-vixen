@@ -18,7 +18,7 @@ impl Parser for InstructionParser {
     type Output = TokenProgramIx;
 
     fn id(&self) -> std::borrow::Cow<str> {
-        "yellowstone_vixen_parser::token_program::InstructionParser".into()
+        "token_program::InstructionParser".into()
     }
 
     fn prefilter(&self) -> Prefilter {
@@ -39,7 +39,9 @@ impl Parser for InstructionParser {
 
 impl ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        spl_token::ID.to_bytes().into()
+    }
 }
 
 impl InstructionParser {
@@ -365,7 +367,9 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = TokenProgramIxProto;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            value.into_proto()
+        }
     }
 }
 
