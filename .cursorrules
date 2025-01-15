@@ -1,0 +1,156 @@
+# Yellowstone Vixen Project Rules
+
+## Commit Message Conventions
+```rules
+# Commit Message Format
+type(scope): description
+
+# Types
+- feat: New features or enhancements
+- fix: Bug fixes
+- chore: Maintenance tasks, dependencies, cleanup
+- docs: Documentation updates
+- test: Test-related changes
+- refactor: Code refactoring
+- perf: Performance improvements
+
+# Scopes
+- parser: Transaction parser related changes
+- proto: Protocol buffer definitions
+- config: Configuration related changes
+- metrics: Monitoring and metrics
+- ci: CI/CD related changes
+```
+
+## Code Style Rules
+```rules
+# Rust Formatting
+- Use rustfmt with project's .rustfmt.toml configuration
+- Maximum line length: 100 characters
+- Use 4 spaces for indentation
+- Sort imports alphabetically
+
+# Naming Conventions
+- Use snake_case for functions and variables
+- Use PascalCase for types and traits
+- Use SCREAMING_SNAKE_CASE for constants
+- Prefix trait implementations with trait name
+
+# File Organization
+- Keep modules in separate files
+- Group related functionality in modules
+- Place tests in a tests module
+```
+
+## Project Structure Requirements
+```rules
+# Directory Organization
+/crates/
+  - Separate crates for distinct functionality
+  - Each crate must have its own Cargo.toml
+/examples/
+  - Demonstrate specific use cases
+  - Include documentation
+/docs/
+  - Keep documentation up to date
+  - Use markdown format
+  - Include diagrams where helpful
+
+# Dependencies
+- Pin dependency versions in Cargo.toml
+- Document major dependency updates
+- Keep dependencies up to date
+```
+
+## Testing Requirements
+```rules
+# Test Coverage
+- Unit tests for all public functions
+- Integration tests for parser implementations
+- Documentation tests for public APIs
+- Performance benchmarks for critical paths
+
+# Test Organization
+- Place unit tests in the same file as code
+- Integration tests in tests/ directory
+- Benchmark tests in benches/ directory
+```
+
+## Protocol Buffer Rules
+```rules
+# Proto Files
+- Use proto3 syntax
+- Follow Google's Protocol Buffer style guide
+- Document all messages and fields
+- Version all proto definitions
+
+# Parser Implementation
+- Implement proper error handling
+- Include validation for all fields
+- Support backward compatibility
+- Document breaking changes
+```
+
+## Performance Guidelines
+```rules
+# Optimization Rules
+- Profile before optimizing
+- Document performance improvements
+- Include benchmarks for changes
+- Consider memory usage
+
+# Resource Management
+- Implement proper cleanup
+- Use async/await where appropriate
+- Handle connection pooling efficiently
+```
+
+## Security Requirements
+```rules
+# Security Practices
+- Validate all inputs
+- Handle errors gracefully
+- No hardcoded credentials
+- Use secure defaults
+
+# Code Review Requirements
+- Security review for parser changes
+- Performance review for critical paths
+- Documentation review for public APIs
+```
+
+## Documentation Requirements
+```rules
+# Code Documentation
+- Document all public APIs
+- Include examples in documentation
+- Keep README.md up to date
+- Document breaking changes
+
+# Architecture Documentation
+- Update architecture diagrams
+- Document design decisions
+- Include performance considerations
+```
+
+## CI/CD Requirements
+```rules
+# Build Process
+- Must pass all tests
+- Must pass clippy lints
+- Must pass security checks
+- Must update documentation
+
+# Release Process
+- Update CHANGELOG.md
+- Tag releases with semver
+- Include migration guides
+```
+
+## Monitoring and Metrics
+```rules
+# Observability
+- Include relevant metrics
+- Add tracing for new features
+- Document monitoring points
+- Update dashboards
