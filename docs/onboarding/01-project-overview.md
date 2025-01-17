@@ -89,4 +89,4 @@ yellowstone-vixen/
 ```
 
 ## Getting Started
-For detailed setup instructions, see [Getting Started Guide](04-getting-started.md).
+For detailed setup instructions, see [Getting Started Guide](03-getting-started.md).

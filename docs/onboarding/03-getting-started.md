@@ -293,5 +293,4 @@ git push origin feature/my-feature
 
 - Review [Technical Decisions](02-technical-decisions.md)
 - Explore [Project Overview](01-project-overview.md)
-- Check [Technical Debt](03-technical-debt.md)
 - Join development discussions
