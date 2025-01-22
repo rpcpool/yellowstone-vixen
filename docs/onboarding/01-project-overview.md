@@ -1,92 +1,115 @@
 # Yellowstone Vixen - Project Overview
 
 ## Introduction
-Yellowstone Vixen is a high-performance Rust-based project that provides a gRPC service for parsing Solana transactions. It's designed to work seamlessly with the Yellowstone ecosystem, offering efficient and reliable transaction parsing capabilities.
+Yellowstone Vixen is a framework for building program-aware parsers that process Solana change events from [Dragon's Mouth](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions), part of Project Yellowstone's high-performance blockchain data delivery infrastructure. It enables developers to create custom parsers that decode and process real-time blockchain events for specific Solana programs.
 
-## Architecture Overview
+## Project Yellowstone Context
+Yellowstone Vixen is part of Project Yellowstone, a suite of tools named after Yellowstone National Park's geysers:
+- **Dragon's Mouth**: High-performance gRPC interface for streaming real-time blockchain data
+- **Whirligig**: WebSocket interface for frontend applications
+- **Steamboat**: Custom indexes for enhanced performance
+- **Old Faithful**: Historical archive for transaction and block data
+
+## How Vixen Works with Dragon's Mouth
 
 ```mermaid
 graph TB
-    Client[Client Applications] -->|gRPC Requests| Vixen[Yellowstone Vixen Service]
-    Vixen -->|Parse| Transactions[Solana Transactions]
-    Vixen -->|Metrics| Prometheus[Prometheus Monitoring]
-    Vixen -->|Tracing| OpenTelemetry[OpenTelemetry]
+    DragonsMouth[Dragon's Mouth] -->|Real-time Events| Vixen[Yellowstone Vixen]
     
-    subgraph "Vixen Service Components"
-        Parser[Transaction Parser]
-        ProtoGen[Protocol Buffer Definitions]
-        Metrics[Metrics Collection]
-        Config[Configuration Management]
+    subgraph "Dragon's Mouth Streams"
+        AccountWrites[Account Updates]
+        Transactions[Transactions]
+        Blocks[Block Notifications]
+        Slots[Slot Updates]
     end
-
-    Vixen --> Parser
-    Vixen --> ProtoGen
-    Vixen --> Metrics
-    Vixen --> Config
+    
+    subgraph "Vixen Framework"
+        Registration[Parser Registration]
+        Subscription[Program Subscription]
+        Processing[Event Processing]
+        
+        Registration --> Subscription
+        Subscription --> Processing
+    end
+    
+    DragonsMouth --> AccountWrites
+    DragonsMouth --> Transactions
+    DragonsMouth --> Blocks
+    DragonsMouth --> Slots
+    
+    Vixen -->|1. Register Program Parsers| DragonsMouth
+    Vixen -->|2. Subscribe to Programs| DragonsMouth
+    Processing -->|Decoded Events| Applications[Backend Applications]
 ```
 
 ## Key Components
 
-### 1. gRPC Service
-- Provides a high-performance interface for transaction parsing
-- Uses Protocol Buffers for efficient data serialization
-- Supports bi-directional streaming capabilities
-- Configurable connection pooling and resource management
-
-### 2. Parser System
+### 1. Parser System
 ```mermaid
 flowchart LR
-    TX[Raw Transaction] --> Parser[Transaction Parser]
+    Event[Dragon's Mouth Event] --> PreFilter[Account PreFilter]
+    PreFilter --> Parser[Program Parser]
     Parser --> Accounts[Account Parser]
     Parser --> Instructions[Instruction Parser]
-    Parser --> |Optional| PreFilter[Account PreFilter]
     
-    Accounts --> |Proto| ParsedAccounts[Parsed Accounts]
-    Instructions --> |Proto| ParsedInstructions[Parsed Instructions]
+    Accounts --> Handler[Event Handler]
+    Instructions --> Handler
+    Handler --> |Store/Process| Consumer[Your Application]
 ```
 
-### 3. Monitoring & Observability
-- Prometheus integration for metrics
-- OpenTelemetry support for distributed tracing
-- Configurable logging levels
-- Performance monitoring dashboards
+### 2. Program Parsers
+- Transform raw Solana events into program-specific formats
+- Support for parsing:
+  - Account state changes
+  - Instructions and transactions
+  - Cross-program invocations (CPI)
+- Filter capabilities to process only relevant events
 
-## Technology Stack
-- **Language**: Rust (nightly-2024-02-01)
-- **Framework**: gRPC with Tonic
-- **Serialization**: Protocol Buffers
-- **Monitoring**: Prometheus & OpenTelemetry
-- **Configuration**: TOML-based with dynamic reloading
-
-## Development Environment
-```mermaid
-graph LR
-    Dev[Development] -->|Rust Toolchain| Build[Build Process]
-    Build --> Tests[Testing]
-    Build --> Docker[Docker Image]
-    Docker --> Deploy[Deployment]
-    
-    subgraph "Development Tools"
-        Clippy[Clippy Linter]
-        Fmt[Rustfmt]
-        Proto[Protobuf Compiler]
-        Test[Test Framework]
-    end
-```
-
-## Project Structure
-```
-yellowstone-vixen/
-├── crates/                    # Workspace crates
-│   ├── core/                  # Core types and traits
-│   ├── parser/               # Transaction parsers
-│   ├── proto/                # Protocol buffer definitions
-│   └── test/                 # Testing utilities
-├── docs/                     # Documentation
-│   └── onboarding/          # Onboarding guides
-├── examples/                 # Usage examples
-└── scripts/                  # Development scripts
-```
+### 3. Handler System
+- Flexible event processing pipeline
+- Database integration for event persistence
+- Custom processing logic
+- Real-time event handling
 
 ## Getting Started
-For detailed setup instructions, see [Getting Started Guide](03-getting-started.md).
+
+### Prerequisites
+1. Understanding of Solana programs and account structure
+2. Access to Dragon's Mouth gRPC endpoint
+3. Rust development environment
+
+### Quick Start
+1. Define your program parser:
+   ```rust
+   // Example parser implementation
+   impl Parser for MyProgramParser {
+       // Parse account updates
+       fn parse_account(&self, account: AccountInfo) -> Result<ProgramAccount>;
+       
+       // Parse instructions
+       fn parse_instruction(&self, ix: InstructionInfo) -> Result<ProgramInstruction>;
+   }
+   ```
+
+2. Configure event handlers:
+   ```rust
+   // Example handler setup
+   let handler = MyEventHandler::new()
+       .with_database_connection(db_config)
+       .with_custom_processing(process_fn);
+   ```
+
+3. Run Vixen with your parser:
+   ```rust
+   let vixen = VixenBuilder::new()
+       .with_parser(my_program_parser)
+       .with_handler(handler)
+       .build()?;
+   
+   vixen.start().await?;
+   ```
+
+For detailed setup instructions and examples, see:
+- [Technical Decisions](02-technical-decisions.md)
+- [Getting Started Guide](03-getting-started.md)
+- [Dragon's Mouth Documentation](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions)

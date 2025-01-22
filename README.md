@@ -10,6 +10,14 @@ Yellowstone Vixen allows dApp developers to build program-aware change event str
 4. [Dragon's Mouth](#dragonsmouth)
 5. [Developers](#developers)
 
+## Documentation
+
+For detailed information about getting started with Yellowstone Vixen, please refer to our onboarding documentation:
+
+1. [Project Overview](docs/onboarding/01-project-overview.md)
+2. [Technical Decisions](docs/onboarding/02-technical-decisions.md)
+3. [Getting Started](docs/onboarding/03-getting-started.md)
+
 ## Objectives
 
 1. **Cost Efficiency**: Utilizing Dragon's Mouth, multiple Vixen instances can share a single geyser stream. With various filter options, storage costs focus on what's essential for the dApp.
