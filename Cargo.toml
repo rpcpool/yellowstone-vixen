@@ -1,6 +1,6 @@
 [workspace]
 members = ["crates/*", "examples/*"]
-exclude = ["examples/node-client/"]
+exclude = ["examples/ts-client/"]
 resolver = "2"
 
 [workspace.dependencies]
