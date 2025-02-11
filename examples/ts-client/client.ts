@@ -1,10 +1,10 @@
 import { INamespace, Root } from "protobufjs";
 import { loadPackageDefinition, credentials } from "@grpc/grpc-js";
 import { fromJSON } from "@grpc/proto-loader";
-import { Any__Output } from "./proto/google/protobuf/Any";
-import type { ProtoGrpcType } from "./proto/stream";
-import type { ProtoGrpcType as ProtoGrpcTypeParser } from "./proto/parser";
-import { SubscribeUpdate__Output } from "./proto/vixen/stream/SubscribeUpdate";
+import { Any__Output } from "./proto_types/google/protobuf/Any";
+import type { ProtoGrpcType } from "./proto_types/stream";
+import type { ProtoGrpcType as ProtoGrpcTypeParser } from "./proto_types/parser";
+import { SubscribeUpdate__Output } from "./proto_types/vixen/stream/SubscribeUpdate";
 import root from "./compiled.json";
 
 function decodeVixenParserHelper(parsed: Any__Output) {

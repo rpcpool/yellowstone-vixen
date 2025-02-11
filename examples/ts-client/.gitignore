@@ -1,1 +1,4 @@
 node_modules/
+proto_types/
+proto/
+compiled.json
