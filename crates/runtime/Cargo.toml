@@ -24,7 +24,7 @@ thiserror = "1.0.64"
 tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
 topograph = { version = "0.4.0", features = [
     "tokio",
-], git = "https://github.com/ray-kast/topograph", branch = "v0.4-wip" }
+], git = "https://github.com/ray-kast/topograph", rev = "c91c01c25f605c4bc4461e9b9cbf95d8e4038972" }
 tracing = "0.1.40"
 yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
