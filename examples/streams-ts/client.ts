@@ -1,13 +1,9 @@
 import { INamespace, Root } from "protobufjs";
 import { loadPackageDefinition, credentials } from "@grpc/grpc-js";
 import { fromJSON } from "@grpc/proto-loader";
-import { Any__Output } from "./proto_types/google/protobuf/Any";
-import type { ProtoGrpcType } from "./proto_types/stream";
-import type { ProtoGrpcType as ProtoGrpcTypeParser } from "./proto_types/parser";
-import { SubscribeUpdate__Output } from "./proto_types/vixen/stream/SubscribeUpdate";
 import root from "./compiled.json";
 
-function decodeVixenParserHelper(parsed: Any__Output) {
+function decodeVixenParserHelper(parsed: any) {
   let parser = Root.fromJSON(root as INamespace);
   let anyInnerType = parsed.type_url.slice(1);
 
@@ -15,9 +11,7 @@ function decodeVixenParserHelper(parsed: Any__Output) {
 }
 
 function main() {
-  let proto = loadPackageDefinition(
-    fromJSON(root as INamespace)
-  ) as unknown as ProtoGrpcType & ProtoGrpcTypeParser;
+  let proto = loadPackageDefinition(fromJSON(root as INamespace)) as any;
 
   const client = new proto.vixen.stream.ProgramStreams(
     "127.0.0.1:3030",
@@ -28,7 +22,7 @@ function main() {
     program: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
   });
 
-  stream.on("data", function (update: SubscribeUpdate__Output) {
+  stream.on("data", function (update: any) {
     let decoded = decodeVixenParserHelper(update.parsed!);
     console.log(`decoded = ${JSON.stringify(decoded)}`);
   });
