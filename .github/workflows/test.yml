@@ -42,8 +42,8 @@ jobs:
 
       # fmt
       - name: Check fmt
-        run: cargo fmt --all -- --check
+        run: cargo +nightly fmt --all -- --check
 
       # clippy
       - name: Check clippy
-        run: cargo clippy --all-targets --tests -- -Dwarnings
+        run: cargo +nightly clippy --all-targets --tests -- -Dwarnings

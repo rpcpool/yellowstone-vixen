@@ -267,7 +267,7 @@ impl<M: MetricsFactory> Runtime<M> {
                     );
                 },
                 Ok(Ok(c)) => c.as_unit(),
-            };
+            }
         }
     }
 }

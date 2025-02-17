@@ -201,16 +201,16 @@ where
     }
 }
 
-impl<'h, T> ParserId for BoxPipeline<'h, T> {
+impl<T> ParserId for BoxPipeline<'_, T> {
     fn id(&self) -> Cow<str> { <dyn DynPipeline<T>>::id(&**self) }
 }
 
-impl<'h, T> GetPrefilter for BoxPipeline<'h, T> {
+impl<T> GetPrefilter for BoxPipeline<'_, T> {
     #[inline]
     fn prefilter(&self) -> Prefilter { <dyn DynPipeline<T>>::prefilter(&**self) }
 }
 
-impl<'j, T> DynPipeline<T> for BoxPipeline<'j, T> {
+impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
     #[inline]
     fn handle<'h>(
         &'h self,

@@ -38,7 +38,7 @@ pub struct StreamKind<'a>(Vec<&'a [u8]>, Channels<HashMap<String, Receiver>>);
 /// A builder for the [`Server`] type.
 pub type StreamBuilder<'a, M = NullMetrics> = Builder<StreamKind<'a>, M>;
 
-impl<'a> BuilderKind for StreamKind<'a> {
+impl BuilderKind for StreamKind<'_> {
     type Error = BuilderError;
 }
 
