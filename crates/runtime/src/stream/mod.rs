@@ -49,7 +49,7 @@ pub struct Server<'a, M: MetricsFactory> {
     runtime: Runtime<M>,
 }
 
-impl<'a, M: MetricsFactory + fmt::Debug> fmt::Debug for Server<'a, M>
+impl<M: MetricsFactory + fmt::Debug> fmt::Debug for Server<'_, M>
 where
     M::Instrumenter: fmt::Debug,
     M::Exporter: fmt::Debug,
@@ -70,12 +70,12 @@ where
     }
 }
 
-impl<'a> Server<'a, NullMetrics> {
+impl Server<'_, NullMetrics> {
     /// Create a new stream server builder.
-    pub fn builder() -> StreamBuilder<'a> { StreamBuilder::default() }
+    pub fn builder() -> StreamBuilder<'static> { StreamBuilder::default() }
 }
 
-impl<'a, M: MetricsFactory> Server<'a, M> {
+impl<M: MetricsFactory> Server<'_, M> {
     /// Create a new Tokio runtime and run the Vixen stream server within it,
     /// terminating the current process if the runtime or gRPC server crash.
     #[inline]
