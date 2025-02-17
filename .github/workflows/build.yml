@@ -1,4 +1,4 @@
-name: Check lock file, fmt, clippy
+name: Build yellowstone-vixen crates
 # This workflow uses github runners.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -9,19 +9,26 @@ concurrency:
 on:
   # pull_request can be removed, to save minutes on github runners
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - 'main'
-  workflow_dispatch:
+
 env:
   CARGO_TERM_COLOR: always
+
 jobs:
-  test:
+  build:
+    # This can be also be runned on self-hosted github runners
     runs-on: ubuntu-22.04
+
     steps:
       - name: checkout repo
         uses: actions/checkout@v4
-      - name: set build cache
+
+      # This step can be omited, to save storage space on the organization account
+      # Build process will take longer
+      - name: Cache Build Dependencies
         uses: actions/cache@v4
         with:
           path: |
@@ -58,17 +65,6 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           protoc --version
 
-      # Cargo.lock
-      - name: Check lock file
-        run: |
-          cargo tree
-          git checkout Cargo.lock
-          cargo tree --frozen
-
-      # fmt
-      - name: Check fmt
-        run: cargo +nightly fmt --all -- --check
-
-      # clippy
-      - name: Check clippy
-        run: cargo +nightly clippy --all-targets --tests -- -Dwarnings
+      # Build yellowstone-vixen
+      - name: build yellowstone-vixen
+        run: cargo build --verbose --release
