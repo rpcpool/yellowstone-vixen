@@ -13,9 +13,6 @@ protos:
 json: protos
 	npx pbjs -t json -w commonjs -o compiled.json $(STREAM_PROTO) $(PARSER_PROTO)
 
-types: protos
-	npx proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=proto_types/ $(PARSER_PROTO) $(STREAM_PROTO)
-
 clean:
 	rm -fR ./proto/
 

@@ -16,14 +16,18 @@ RUST_LOG=info cargo run -- --config "$(pwd)/../../Vixen.toml"
 
 Then in order to generate the compiled files and types out of the proto files provided for the stream server reflection service you can run:
 
-```
+```bash
+# Install dependencies
+npm install
+
+# Build the proto files and compiled json package definition out of them.
 make build
 ```
 
-> 💡 The types files in `/proto` have been generated using the [@grpc/proto-loader cli tool](https://github.com/grpc/grpc-node/tree/master/packages/proto-loader#generating-typescript-types) and `compiled.json` was generated using [protobufjs-cli](https://github.com/protobufjs/protobuf.js/tree/master/cli)
+> 💡 `compiled.json` was generated using [protobufjs-cli](https://github.com/protobufjs/protobuf.js/tree/master/cli)
 
 After the server is running and the compiled files are generated you can execute this client to get the streamed results by executing `client.ts`:
 
-```
-npx ts-node ./client.ts
+```bash
+npm start
 ```
