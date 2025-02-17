@@ -18,9 +18,7 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = OrcaProgramIx;
 
-    fn id(&self) -> Cow<str> {
-        "orca::InstructionParser".into()
-    }
+    fn id(&self) -> Cow<str> { "orca::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -125,9 +123,7 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = OrcaProgramIxProto;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }
 

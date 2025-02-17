@@ -45,9 +45,7 @@ impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = OrcaProgramState;
 
-    fn id(&self) -> Cow<str> {
-        "orca::AccountParser".into()
-    }
+    fn id(&self) -> Cow<str> { "orca::AccountParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

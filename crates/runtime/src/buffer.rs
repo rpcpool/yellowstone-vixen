@@ -103,7 +103,7 @@ impl Buffer {
         counters: &Counters<M>,
     ) {
         let span = tracing::trace_span!("process_update", ?update).entered();
-        if let Some(ty) = UpdateType::get(&update.update_oneof) {
+        if let Some(ty) = UpdateType::get(update.update_oneof.as_ref()) {
             counters.inc_received(ty);
         }
         exec.push(Job(span.exit(), update));

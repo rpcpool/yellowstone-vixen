@@ -158,7 +158,6 @@ mod prometheus_impl {
         fn create(self, config: Self::Config, id: &'static str) -> FactoryResult<Self> {
             Registry::new_custom(Some(id.into()), None)
                 .map(|r| Metrics(r.clone(), Some(PrometheusExporter(r, config))))
-                .map_err(Into::into)
         }
     }
 
@@ -353,7 +352,7 @@ pub(crate) enum UpdateType {
 }
 
 impl UpdateType {
-    pub fn get(update: &Option<UpdateOneof>) -> Option<Self> {
+    pub fn get(update: Option<&UpdateOneof>) -> Option<Self> {
         match update {
             Some(UpdateOneof::Account(vixen_core::AccountUpdate { .. })) => Some(Self::Account),
             Some(UpdateOneof::Transaction(vixen_core::TransactionUpdate { .. })) => {

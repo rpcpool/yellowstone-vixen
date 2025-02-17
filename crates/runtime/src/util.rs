@@ -55,7 +55,7 @@ impl From<PrivateString> for String {
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Chain<'a, E>(pub &'a E);
 
-impl<'a, E: Error> fmt::Display for Chain<'a, E> {
+impl<E: Error> fmt::Display for Chain<'_, E> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use fmt::Write;
 
@@ -71,7 +71,7 @@ impl<'a, E: Error> fmt::Display for Chain<'a, E> {
             state: IndentState,
         }
 
-        impl<'a, F: Write> Indented<'a, F> {
+        impl<F: Write> Indented<'_, F> {
             fn write_pad(&mut self) -> fmt::Result {
                 match std::mem::replace(&mut self.state, IndentState::MidLine) {
                     IndentState::NumberStart(i) => write!(self.f, "{i: >5}: "),
@@ -82,7 +82,7 @@ impl<'a, E: Error> fmt::Display for Chain<'a, E> {
             }
         }
 
-        impl<'a, F: Write> Write for Indented<'a, F> {
+        impl<F: Write> Write for Indented<'_, F> {
             fn write_str(&mut self, mut s: &str) -> fmt::Result {
                 while let Some((head, tail)) = s.split_once('\n') {
                     if !head.is_empty() {
