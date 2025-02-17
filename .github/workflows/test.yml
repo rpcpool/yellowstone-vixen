@@ -33,6 +33,14 @@ jobs:
             yellowstone-vixen/target/
           key: cargo-${{ hashFiles('**/Cargo.lock') }}-0001
 
+      # Install Rust Nightly
+      - name: Install Rust Nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+
       # Cargo.lock
       - name: Check lock file
         run: |
