@@ -1303,23 +1303,22 @@ dependencies = [
 
 [[package]]
 name = "dispose"
-version = "0.4.0"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a73c22432c5657d246abd8b3490c0678ed59549c474d96402367be7bd18700d1"
+checksum = "425462ba555fb628fbb7d9750d52f01fc9132d855996f34f02b7164b1b62860f"
 dependencies = [
  "dispose-derive",
 ]
 
 [[package]]
 name = "dispose-derive"
-version = "0.3.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b62e5546deabd472871fc4de055f8d75c0a97c492f1889cc19623e98d20ba294"
+checksum = "c32e3e8ab1b6ee2e06418f40f94f315d82b35157eb1d2322a6e20a4b15106b84"
 dependencies = [
- "proc-macro-error",
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.98",
 ]
 
 [[package]]
@@ -3282,30 +3281,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ecf48c7ca261d60b74ab1a7b20da18bede46776b2e55535cb958eb595c5fa7b"
 dependencies = [
  "toml_edit",
-]
-
-[[package]]
-name = "proc-macro-error"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
-dependencies = [
- "proc-macro-error-attr",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
- "version_check",
-]
-
-[[package]]
-name = "proc-macro-error-attr"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
-dependencies = [
- "proc-macro2",
- "quote",
- "version_check",
 ]
 
 [[package]]
@@ -7615,7 +7590,8 @@ dependencies = [
 [[package]]
 name = "topograph"
 version = "0.4.0"
-source = "git+https://github.com/ray-kast/topograph?rev=c91c01c25f605c4bc4461e9b9cbf95d8e4038972#c91c01c25f605c4bc4461e9b9cbf95d8e4038972"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe4ea92bd6b8d73d7987848398691db79e81e6f77f1f56e959ebcee077adebf3"
 dependencies = [
  "crossbeam",
  "dispose",
