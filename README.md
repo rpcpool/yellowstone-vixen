@@ -135,7 +135,7 @@ Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prome
 
 ```toml
 [dependencies]
-yellowstone-vixen = { version = "0.0.0", features = ["prometheus"] }
+yellowstone-vixen = { version = "0.1.0", features = ["prometheus"] }
 ```
 
 - **Prometheus Setup**:

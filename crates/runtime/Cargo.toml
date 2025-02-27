@@ -1,17 +1,17 @@
 [package]
 name = "yellowstone-vixen"
 description = "An all-in-one consumer runtime library for Yellowstone"
+version = "0.1.0"
 # authors = ["TODO"]
-version = "0.0.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
 clap = { version = "4.5.4", default-features = false, features = [
-    "env",
-    "derive",
-    "std",
+  "env",
+  "derive",
+  "std",
 ] }
 futures-channel = { version = "0.3.30", features = ["sink"] }
 futures-util = { version = "0.3.30", features = ["sink"] }

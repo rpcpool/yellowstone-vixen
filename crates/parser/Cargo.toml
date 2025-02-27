@@ -1,7 +1,7 @@
 [package]
 name = "yellowstone-vixen-parser"
 description = "Vixen program parsers for the solana program library."
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
@@ -10,7 +10,7 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
 spl-pod = { version = "0.3.0" }
-spl-token = { version = "6.0.0",optional = true }
+spl-token = { version = "6.0.0", optional = true }
 spl-token-2022 = { version = "4.0.0", optional = true }
 spl-type-length-value = { version = "0.5.0", optional = true }
 spl-token-group-interface = { version = "0.3.0", optional = true }
@@ -18,7 +18,7 @@ spl-token-metadata-interface = { version = "0.4.0", optional = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, features = [
-    "parser",
+  "parser",
 ], optional = true }
 thiserror = "1.0.64"
 borsh = "1.5.1"
@@ -44,10 +44,6 @@ token-extensions = [
   "dep:spl-token-metadata-interface",
   "token-program",
 ]
-token-program = [
-  "dep:spl-token",
-]
-orca = [
-  "orca_whirlpools_client",
-]
+token-program = ["dep:spl-token"]
+orca = ["orca_whirlpools_client"]
 raydium = []
