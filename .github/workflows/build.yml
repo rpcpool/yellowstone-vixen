@@ -39,22 +39,6 @@ jobs:
             yellowstone-vixen/target/
           key: cargo-${{ hashFiles('**/Cargo.lock') }}-0001
 
-      # Cache Rust Nightly Toolchain
-      - name: Cache Rust Nightly
-        id: cache-rust-nightly
-        uses: actions/cache@v4
-        with:
-          path: ~/.rustup
-          key: rust-nightly-${{ runner.os }}-${{ hashFiles('rust-toolchain') }}
-
-      - name: Install Rust Nightly if Not Cached
-        if: steps.cache-rust-nightly.outputs.cache-hit != 'true'
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
-          components: rustfmt, clippy
-
       - name: Install Latest Protoc
         run: |
           PROTOC_VERSION=26.1

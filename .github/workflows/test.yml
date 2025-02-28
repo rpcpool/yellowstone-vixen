@@ -45,8 +45,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-          override: true
-          components: rustfmt, clippy
+          components: rustfmt
 
       - name: Install Latest Protoc
         run: |
@@ -63,7 +62,7 @@ jobs:
         run: |
           cargo tree
           git checkout Cargo.lock
-          cargo tree --frozen
+          cargo tree
 
       # fmt
       - name: Check fmt
@@ -71,4 +70,4 @@ jobs:
 
       # clippy
       - name: Check clippy
-        run: cargo +nightly clippy --all-targets --tests -- -Dwarnings
+        run: cargo clippy --all-targets --tests -- -Dwarnings
