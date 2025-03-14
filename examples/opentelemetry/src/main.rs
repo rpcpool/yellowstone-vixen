@@ -16,7 +16,7 @@ use opentelemetry_sdk::{
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{
-    self as vixen, builder::ConfirmationLevel, opentelemetry::trace::TracerProvider as _, Pipeline,
+    self as vixen, opentelemetry::trace::TracerProvider as _, CommitmentLevel, Pipeline,
 };
 use yellowstone_vixen_parser::{
     token_extension_program::AccountParser as TokenExtensionProgramAccParser,
@@ -65,7 +65,7 @@ async fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .confirmation_level(ConfirmationLevel::Confirmed)
+        .commitment_level(CommitmentLevel::Confirmed)
         .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
         .account(Pipeline::new(TokenProgramAccParser, [Handler]))
         .metrics(vixen::metrics::OpenTelemetry::new(meter_provider))

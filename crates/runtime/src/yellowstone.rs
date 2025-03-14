@@ -9,7 +9,7 @@ use yellowstone_grpc_proto::{
 };
 use yellowstone_vixen_core::Filters;
 
-use crate::{builder::ConfirmationLevel, config::YellowstoneConfig};
+use crate::config::YellowstoneConfig;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -30,7 +30,7 @@ pub struct YellowstoneStream<I, T, S> {
 pub async fn connect(
     config: YellowstoneConfig,
     filters: Filters<'_>,
-    commitment: Option<ConfirmationLevel>,
+    commitment: Option<CommitmentLevel>,
 ) -> Result<
     YellowstoneStream<
         impl Interceptor,
@@ -57,7 +57,7 @@ pub async fn connect(
 
     let mut subscribe_request: SubscribeRequest = filters.into();
     if let Some(commitment) = commitment {
-        subscribe_request.set_commitment(commitment.into());
+        subscribe_request.set_commitment(commitment);
     }
 
     let (sub_tx, stream) = client
