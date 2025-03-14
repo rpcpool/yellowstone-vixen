@@ -12,7 +12,7 @@
 //! Vixen provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
-use builder::RuntimeBuilder;
+use builder::{ConfirmationLevel, RuntimeBuilder};
 use config::{BufferConfig, YellowstoneConfig};
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
@@ -70,6 +70,7 @@ pub enum Error {
 #[derive(Debug)]
 pub struct Runtime<M: MetricsFactory> {
     yellowstone_cfg: YellowstoneConfig,
+    confirmation_filter: Option<ConfirmationLevel>,
     buffer_cfg: BufferConfig,
     pipelines: handler::PipelineSets,
     counters: Counters<M::Instrumenter>,
@@ -131,6 +132,7 @@ impl<M: MetricsFactory> Runtime<M> {
 
         let Self {
             yellowstone_cfg,
+            confirmation_filter,
             buffer_cfg,
             pipelines,
             counters,
@@ -140,7 +142,8 @@ impl<M: MetricsFactory> Runtime<M> {
         let (stop_exporter, rx) = stop::channel();
         let mut exporter = OptionFuture::from(exporter.map(|e| tokio::spawn(e.run(rx))));
 
-        let client = yellowstone::connect(yellowstone_cfg, pipelines.filters()).await?;
+        let client =
+            yellowstone::connect(yellowstone_cfg, pipelines.filters(), confirmation_filter).await?;
         let signal;
 
         #[cfg(unix)]
