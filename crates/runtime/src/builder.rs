@@ -47,7 +47,7 @@ pub struct Builder<K: BuilderKind, M> {
     pub(crate) account: Vec<BoxPipeline<'static, AccountUpdate>>,
     pub(crate) transaction: Vec<BoxPipeline<'static, TransactionUpdate>>,
     pub(crate) instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
-    pub(crate) confirmation_level: Option<ConfirmationLevel>,
+    pub(crate) commitment_level: Option<CommitmentLevel>,
     pub(crate) metrics: M,
     pub(crate) extra: K,
 }
@@ -59,7 +59,7 @@ impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
             account: vec![],
             transaction: vec![],
             instruction: vec![],
-            confirmation_level: None,
+            commitment_level: None,
             metrics: NullMetrics,
             extra: K::default(),
         }
@@ -104,7 +104,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             account,
             transaction,
             instruction,
-            confirmation_level,
+            commitment_level,
             metrics: _,
             extra,
         } = self;
@@ -114,7 +114,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             account,
             transaction,
             instruction,
-            confirmation_level,
+            commitment_level,
             metrics,
             extra,
         }
@@ -160,8 +160,8 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
     }
 
     /// Set the confirmation level for the Yellowstone client.
-    pub fn confirmation_level(self, confirmation_level: ConfirmationLevel) -> Self {
-        self.mutate(|s| s.confirmation_level = Some(confirmation_level))
+    pub fn commitment_level(self, commitment_level: CommitmentLevel) -> Self {
+        self.mutate(|s| s.commitment_level = Some(commitment_level))
     }
 
     /// Attempt to build a new [`Runtime`] instance from the current builder
@@ -176,7 +176,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             account,
             mut transaction,
             instruction,
-            confirmation_level,
+            commitment_level,
             metrics,
             extra: RuntimeKind,
         } = self;
@@ -221,7 +221,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             yellowstone_cfg,
             buffer_cfg,
             pipelines,
-            confirmation_filter: confirmation_level,
+            commitment_filter: commitment_level,
             counters: Counters::new(&instrumenter),
             exporter,
         })
@@ -233,26 +233,5 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
     #[inline]
     pub fn build(self, config: VixenConfig<M::Config>) -> Runtime<M> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen runtime")
-    }
-}
-
-/// The level of confirmation required for a transaction to be processed.
-#[derive(Debug, Clone, Copy)]
-pub enum ConfirmationLevel {
-    /// Processed transactions.
-    Processed,
-    /// Confirmed transactions.
-    Confirmed,
-    /// Finalized transactions.
-    Finalized,
-}
-
-impl From<ConfirmationLevel> for CommitmentLevel {
-    fn from(value: ConfirmationLevel) -> Self {
-        match value {
-            ConfirmationLevel::Processed => CommitmentLevel::Processed,
-            ConfirmationLevel::Confirmed => CommitmentLevel::Confirmed,
-            ConfirmationLevel::Finalized => CommitmentLevel::Finalized,
-        }
     }
 }

@@ -12,7 +12,7 @@
 //! Vixen provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
-use builder::{ConfirmationLevel, RuntimeBuilder};
+use builder::RuntimeBuilder;
 use config::{BufferConfig, YellowstoneConfig};
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
@@ -42,6 +42,7 @@ mod yellowstone;
 
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use util::*;
+pub use yellowstone_grpc_proto::geyser::CommitmentLevel;
 
 /// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
@@ -70,7 +71,7 @@ pub enum Error {
 #[derive(Debug)]
 pub struct Runtime<M: MetricsFactory> {
     yellowstone_cfg: YellowstoneConfig,
-    confirmation_filter: Option<ConfirmationLevel>,
+    commitment_filter: Option<CommitmentLevel>,
     buffer_cfg: BufferConfig,
     pipelines: handler::PipelineSets,
     counters: Counters<M::Instrumenter>,
@@ -79,14 +80,18 @@ pub struct Runtime<M: MetricsFactory> {
 
 impl Runtime<NullMetrics> {
     /// Create a new runtime builder.
-    pub fn builder() -> RuntimeBuilder { RuntimeBuilder::default() }
+    pub fn builder() -> RuntimeBuilder {
+        RuntimeBuilder::default()
+    }
 }
 
 impl<M: MetricsFactory> Runtime<M> {
     /// Create a new Tokio runtime and run the Vixen runtime within it,
     /// terminating the current process if the runtime crashes.
     #[inline]
-    pub fn run(self) { util::handle_fatal(self.try_run()); }
+    pub fn run(self) {
+        util::handle_fatal(self.try_run());
+    }
 
     /// Create a new Tokio runtime and run the Vixen runtime within it.
     ///
@@ -102,7 +107,9 @@ impl<M: MetricsFactory> Runtime<M> {
     ///
     /// **NOTE:** This function **must** be called from within a Tokio runtime.
     #[inline]
-    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
+    pub async fn run_async(self) {
+        util::handle_fatal(self.try_run_async().await);
+    }
 
     /// Create a new [`LocalSet`] and run the Vixen runtime within it.
     ///
@@ -132,7 +139,7 @@ impl<M: MetricsFactory> Runtime<M> {
 
         let Self {
             yellowstone_cfg,
-            confirmation_filter,
+            commitment_filter,
             buffer_cfg,
             pipelines,
             counters,
@@ -143,7 +150,7 @@ impl<M: MetricsFactory> Runtime<M> {
         let mut exporter = OptionFuture::from(exporter.map(|e| tokio::spawn(e.run(rx))));
 
         let client =
-            yellowstone::connect(yellowstone_cfg, pipelines.filters(), confirmation_filter).await?;
+            yellowstone::connect(yellowstone_cfg, pipelines.filters(), commitment_filter).await?;
         let signal;
 
         #[cfg(unix)]
@@ -178,7 +185,9 @@ impl<M: MetricsFactory> Runtime<M> {
             struct CtrlC;
 
             impl fmt::Debug for CtrlC {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("^C")
+                }
             }
 
             signal = tokio::signal::ctrl_c()
