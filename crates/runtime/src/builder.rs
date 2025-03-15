@@ -2,6 +2,7 @@
 
 use tracing::error;
 use vixen_core::{instruction::InstructionUpdate, AccountUpdate, TransactionUpdate};
+use yellowstone_grpc_proto::geyser::CommitmentLevel;
 
 use crate::{
     config::{MaybeDefault, VixenConfig},
@@ -46,6 +47,7 @@ pub struct Builder<K: BuilderKind, M> {
     pub(crate) account: Vec<BoxPipeline<'static, AccountUpdate>>,
     pub(crate) transaction: Vec<BoxPipeline<'static, TransactionUpdate>>,
     pub(crate) instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
+    pub(crate) commitment_level: Option<CommitmentLevel>,
     pub(crate) metrics: M,
     pub(crate) extra: K,
 }
@@ -57,6 +59,7 @@ impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
             account: vec![],
             transaction: vec![],
             instruction: vec![],
+            commitment_level: None,
             metrics: NullMetrics,
             extra: K::default(),
         }
@@ -101,6 +104,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             account,
             transaction,
             instruction,
+            commitment_level,
             metrics: _,
             extra,
         } = self;
@@ -110,6 +114,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             account,
             transaction,
             instruction,
+            commitment_level,
             metrics,
             extra,
         }
@@ -154,6 +159,11 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.instruction.push(Box::new(instruction)))
     }
 
+    /// Set the confirmation level for the Yellowstone client.
+    pub fn commitment_level(self, commitment_level: CommitmentLevel) -> Self {
+        self.mutate(|s| s.commitment_level = Some(commitment_level))
+    }
+
     /// Attempt to build a new [`Runtime`] instance from the current builder
     /// state and the provided configuration.
     ///
@@ -166,6 +176,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             account,
             mut transaction,
             instruction,
+            commitment_level,
             metrics,
             extra: RuntimeKind,
         } = self;
@@ -210,6 +221,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             yellowstone_cfg,
             buffer_cfg,
             pipelines,
+            commitment_filter: commitment_level,
             counters: Counters::new(&instrumenter),
             exporter,
         })

@@ -42,6 +42,7 @@ mod yellowstone;
 
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use util::*;
+pub use yellowstone_grpc_proto::geyser::CommitmentLevel;
 
 /// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
@@ -70,6 +71,7 @@ pub enum Error {
 #[derive(Debug)]
 pub struct Runtime<M: MetricsFactory> {
     yellowstone_cfg: YellowstoneConfig,
+    commitment_filter: Option<CommitmentLevel>,
     buffer_cfg: BufferConfig,
     pipelines: handler::PipelineSets,
     counters: Counters<M::Instrumenter>,
@@ -131,6 +133,7 @@ impl<M: MetricsFactory> Runtime<M> {
 
         let Self {
             yellowstone_cfg,
+            commitment_filter,
             buffer_cfg,
             pipelines,
             counters,
@@ -140,7 +143,8 @@ impl<M: MetricsFactory> Runtime<M> {
         let (stop_exporter, rx) = stop::channel();
         let mut exporter = OptionFuture::from(exporter.map(|e| tokio::spawn(e.run(rx))));
 
-        let client = yellowstone::connect(yellowstone_cfg, pipelines.filters()).await?;
+        let client =
+            yellowstone::connect(yellowstone_cfg, pipelines.filters(), commitment_filter).await?;
         let signal;
 
         #[cfg(unix)]

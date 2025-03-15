@@ -30,6 +30,7 @@ pub struct YellowstoneStream<I, T, S> {
 pub async fn connect(
     config: YellowstoneConfig,
     filters: Filters<'_>,
+    commitment: Option<CommitmentLevel>,
 ) -> Result<
     YellowstoneStream<
         impl Interceptor,
@@ -54,7 +55,14 @@ pub async fn connect(
         .connect()
         .await?;
 
-    let (sub_tx, stream) = client.subscribe_with_request(Some(filters.into())).await?;
+    let mut subscribe_request: SubscribeRequest = filters.into();
+    if let Some(commitment) = commitment {
+        subscribe_request.set_commitment(commitment);
+    }
+
+    let (sub_tx, stream) = client
+        .subscribe_with_request(Some(subscribe_request))
+        .await?;
 
     Ok(YellowstoneStream {
         client,

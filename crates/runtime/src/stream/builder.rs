@@ -149,6 +149,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             transaction,
             instruction,
             metrics,
+            commitment_level,
             extra: StreamKind(desc_sets, channels),
         } = self;
         let () = err?;
@@ -168,6 +169,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             account,
             transaction,
             instruction,
+            commitment_level,
             metrics,
             extra: RuntimeKind,
         }
