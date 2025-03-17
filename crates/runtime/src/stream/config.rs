@@ -37,6 +37,4 @@ fn default_grpc() -> GrpcConfig {
 }
 
 #[inline]
-fn default_addr() -> SocketAddr {
-    "[::]:3030".parse().unwrap()
-}
+fn default_addr() -> SocketAddr { "[::]:3030".parse().unwrap() }

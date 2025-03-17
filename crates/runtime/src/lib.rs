@@ -80,18 +80,14 @@ pub struct Runtime<M: MetricsFactory> {
 
 impl Runtime<NullMetrics> {
     /// Create a new runtime builder.
-    pub fn builder() -> RuntimeBuilder {
-        RuntimeBuilder::default()
-    }
+    pub fn builder() -> RuntimeBuilder { RuntimeBuilder::default() }
 }
 
 impl<M: MetricsFactory> Runtime<M> {
     /// Create a new Tokio runtime and run the Vixen runtime within it,
     /// terminating the current process if the runtime crashes.
     #[inline]
-    pub fn run(self) {
-        util::handle_fatal(self.try_run());
-    }
+    pub fn run(self) { util::handle_fatal(self.try_run()); }
 
     /// Create a new Tokio runtime and run the Vixen runtime within it.
     ///
@@ -107,9 +103,7 @@ impl<M: MetricsFactory> Runtime<M> {
     ///
     /// **NOTE:** This function **must** be called from within a Tokio runtime.
     #[inline]
-    pub async fn run_async(self) {
-        util::handle_fatal(self.try_run_async().await);
-    }
+    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
 
     /// Create a new [`LocalSet`] and run the Vixen runtime within it.
     ///
@@ -185,9 +179,7 @@ impl<M: MetricsFactory> Runtime<M> {
             struct CtrlC;
 
             impl fmt::Debug for CtrlC {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    f.write_str("^C")
-                }
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
             }
 
             signal = tokio::signal::ctrl_c()

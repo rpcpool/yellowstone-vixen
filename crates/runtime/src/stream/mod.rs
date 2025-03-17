@@ -38,9 +38,7 @@ pub enum Error {
 
 impl From<std::io::Error> for Error {
     #[inline]
-    fn from(value: std::io::Error) -> Self {
-        Self::Runtime(value.into())
-    }
+    fn from(value: std::io::Error) -> Self { Self::Runtime(value.into()) }
 }
 
 /// A Vixen program stream server.
@@ -74,18 +72,14 @@ where
 
 impl Server<'_, NullMetrics> {
     /// Create a new stream server builder.
-    pub fn builder() -> StreamBuilder<'static> {
-        StreamBuilder::default()
-    }
+    pub fn builder() -> StreamBuilder<'static> { StreamBuilder::default() }
 }
 
 impl<M: MetricsFactory> Server<'_, M> {
     /// Create a new Tokio runtime and run the Vixen stream server within it,
     /// terminating the current process if the runtime or gRPC server crash.
     #[inline]
-    pub fn run(self) {
-        util::handle_fatal(self.try_run());
-    }
+    pub fn run(self) { util::handle_fatal(self.try_run()); }
 
     /// Create a new Tokio runtime and run the Vixen stream server within it.
     ///
@@ -101,9 +95,7 @@ impl<M: MetricsFactory> Server<'_, M> {
     ///
     /// **NOTE:** This function **must** be called from within a Tokio runtime.
     #[inline]
-    pub async fn run_async(self) {
-        util::handle_fatal(self.try_run_async().await);
-    }
+    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
 
     /// Create a new [`LocalSet`] and run the Vixen stream server within it.
     ///
