@@ -75,7 +75,9 @@ impl<M: Instrumenter> InstructionPipeline<M> {
 }
 
 impl<M: Instrumenter> ParserId for InstructionPipeline<M> {
-    fn id(&self) -> std::borrow::Cow<str> { "InstructionPipeline".into() }
+    fn id(&self) -> std::borrow::Cow<str> {
+        "InstructionPipeline".into()
+    }
 }
 
 impl<M: Instrumenter> GetPrefilter for InstructionPipeline<M> {

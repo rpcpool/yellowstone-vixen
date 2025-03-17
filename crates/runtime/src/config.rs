@@ -12,7 +12,9 @@ pub trait MaybeDefault: Sized {
 
 impl<T: Default> MaybeDefault for T {
     #[inline]
-    fn default_opt() -> Option<Self> { Some(Self::default()) }
+    fn default_opt() -> Option<Self> {
+        Some(Self::default())
+    }
 }
 
 /// Root configuration for [the Vixen runtime](crate::Runtime).
@@ -77,7 +79,9 @@ pub struct NullConfig;
 
 impl From<Option<NullConfig>> for NullConfig {
     #[inline]
-    fn from(value: Option<NullConfig>) -> Self { value.unwrap_or_default() }
+    fn from(value: Option<NullConfig>) -> Self {
+        value.unwrap_or_default()
+    }
 }
 
 /// Helper type for optional configuration sections.
@@ -87,40 +91,54 @@ pub struct OptConfig<T>(Option<T>);
 
 impl<T> Default for OptConfig<T> {
     #[inline]
-    fn default() -> Self { Self(None) }
+    fn default() -> Self {
+        Self(None)
+    }
 }
 
 impl<T> OptConfig<T> {
     /// Get the underlying `Option`.
     #[inline]
-    pub fn opt(self) -> Option<T> { self.into() }
+    pub fn opt(self) -> Option<T> {
+        self.into()
+    }
 }
 
 impl<T> From<T> for OptConfig<T> {
     #[inline]
-    fn from(value: T) -> Self { Some(value).into() }
+    fn from(value: T) -> Self {
+        Some(value).into()
+    }
 }
 
 impl<T> From<Option<T>> for OptConfig<T> {
     #[inline]
-    fn from(value: Option<T>) -> Self { Self(value) }
+    fn from(value: Option<T>) -> Self {
+        Self(value)
+    }
 }
 
 impl<T> From<OptConfig<T>> for Option<T> {
     #[inline]
-    fn from(OptConfig(value): OptConfig<T>) -> Self { value }
+    fn from(OptConfig(value): OptConfig<T>) -> Self {
+        value
+    }
 }
 
 impl<T> std::ops::Deref for OptConfig<T> {
     type Target = Option<T>;
 
     #[inline]
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl<T> std::ops::DerefMut for OptConfig<T> {
     #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 impl<T: clap::FromArgMatches> clap::FromArgMatches for OptConfig<T> {
@@ -151,9 +169,13 @@ impl<T: clap::FromArgMatches> clap::FromArgMatches for OptConfig<T> {
 }
 
 impl<T: clap::Args> clap::Args for OptConfig<T> {
-    fn group_id() -> Option<clap::Id> { T::group_id() }
+    fn group_id() -> Option<clap::Id> {
+        T::group_id()
+    }
 
-    fn augment_args(cmd: clap::Command) -> clap::Command { T::augment_args(cmd) }
+    fn augment_args(cmd: clap::Command) -> clap::Command {
+        T::augment_args(cmd)
+    }
 
     fn augment_args_for_update(cmd: clap::Command) -> clap::Command {
         T::augment_args_for_update(cmd)
@@ -163,7 +185,9 @@ impl<T: clap::Args> clap::Args for OptConfig<T> {
 // Used for clap hacks below
 #[allow(dead_code)] // Currently unused if feature 'prometheus' is disabled
 fn update_clone<T: ToOwned, U: Into<T>, F: FnOnce(&mut U) -> V, V>(t: &mut T, f: F) -> V
-where T::Owned: Into<U> {
+where
+    T::Owned: Into<U>,
+{
     let mut u = t.to_owned().into();
     let ret = f(&mut u);
     *t = u.into();
@@ -194,7 +218,9 @@ mod prometheus_impl {
     #[cfg(feature = "prometheus")]
     impl MaybeDefault for PrometheusConfig {
         #[inline]
-        fn default_opt() -> Option<Self> { None }
+        fn default_opt() -> Option<Self> {
+            None
+        }
     }
 
     impl PrometheusConfig {
@@ -299,7 +325,9 @@ mod prometheus_impl {
         }
 
         impl Args for super::PrometheusConfig {
-            fn group_id() -> Option<clap::Id> { PrometheusConfig::group_id() }
+            fn group_id() -> Option<clap::Id> {
+                PrometheusConfig::group_id()
+            }
 
             fn augment_args(cmd: clap::Command) -> clap::Command {
                 PrometheusConfig::augment_args_for_update(cmd)

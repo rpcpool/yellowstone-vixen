@@ -38,11 +38,15 @@ pub mod proto {
     }
 
     impl FromOptPubkeyToOptString for KeyBytes<32> {
-        fn to_opt_string(self) -> Option<String> { Some(self.to_string()) }
+        fn to_opt_string(self) -> Option<String> {
+            Some(self.to_string())
+        }
     }
 
     impl<T: ToString> FromVecPubkeyToVecString for Vec<T> {
-        fn to_string_vec(self) -> Vec<String> { self.into_iter().map(|p| p.to_string()).collect() }
+        fn to_string_vec(self) -> Vec<String> {
+            self.into_iter().map(|p| p.to_string()).collect()
+        }
     }
 
     impl FromVecPubkeyToVecString for [Pubkey; MAX_SIGNERS] {
@@ -52,7 +56,9 @@ pub mod proto {
     }
 
     impl<A: ToString> FromOptPubkeyToOptString for Option<A> {
-        fn to_opt_string(self) -> Option<String> { self.map(|p| p.to_string()) }
+        fn to_opt_string(self) -> Option<String> {
+            self.map(|p| p.to_string())
+        }
     }
 
     impl<A: ToString> FromCOptionPubkeyToOptString for COption<A> {

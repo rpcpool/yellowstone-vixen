@@ -20,7 +20,9 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = RaydiumProgramIx;
 
-    fn id(&self) -> Cow<str> { "raydium::InstructionParser".into() }
+    fn id(&self) -> Cow<str> {
+        "raydium::InstructionParser".into()
+    }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -119,7 +121,9 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = RaydiumProgramIxProto;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            value.into_proto()
+        }
     }
 }
 
