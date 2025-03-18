@@ -132,7 +132,11 @@ pub enum AccountKeyError {
 }
 
 impl AccountKeys {
-    fn get<I: TryInto<usize>>(&self, idx: I) -> Result<Pubkey, AccountKeyError>
+    /// Get an Account pubkey by index within the Transaction.
+    ///
+    /// # Errors
+    /// Returns an error if the index is invalid.
+    pub fn get<I: TryInto<usize>>(&self, idx: I) -> Result<Pubkey, AccountKeyError>
     where I::Error: Into<std::num::TryFromIntError> {
         let idx = idx
             .try_into()
