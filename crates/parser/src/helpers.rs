@@ -19,8 +19,9 @@ yellowstone_vixen_core::proto_helper_traits!();
 
 #[cfg(feature = "proto")]
 pub mod proto {
+    pub const MAX_SIGNERS: usize = 11;
+
     use spl_pod::solana_program::{program_option::COption, pubkey::Pubkey};
-    use spl_token::instruction::MAX_SIGNERS;
     use yellowstone_vixen_core::KeyBytes;
     // `ELGAMAL_PUBKEY_LEN` is not publicly exported but is defined to be 32
     pub type ElGamalPubkeyBytes = yellowstone_vixen_core::KeyBytes<32>;
