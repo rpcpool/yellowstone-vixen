@@ -24,6 +24,9 @@ pub mod token_extension_program;
 #[cfg(feature = "token-program")]
 pub mod token_program;
 
+// #[cfg(feature = "meteora")]
+pub mod meteora;
+
 mod error {
     use std::{borrow::Cow, error::Error as StdError};
 

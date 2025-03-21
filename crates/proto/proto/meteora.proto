@@ -1,0 +1,474 @@
+
+//#########################################################
+// ACCOUNTS
+//#########################################################
+
+// ######################## BinArrayBitmapExtension account ########################
+message BinArrayBitmapExtensionProto {
+    bytes discriminator = 1;  // [u8; 8]
+    string lb_pair = 2;  // Pubkey as string
+    repeated PositiveBinArrayBitmapProto positive_bin_array_bitmap = 3;
+    repeated NegativeBinArrayBitmapProto negative_bin_array_bitmap = 4;
+}
+
+// Helper message for positive bitmap array
+message PositiveBinArrayBitmapProto {
+    repeated uint64 bitmap = 1;  // [u64; 8]
+}
+
+// Helper message for negative bitmap array
+message NegativeBinArrayBitmapProto {
+    repeated uint64 bitmap = 1;  // [u64; 8]
+}
+
+// ######################## BinArray account ########################
+message BinArrayProto {
+    bytes discriminator = 1;  // [u8; 8]
+    int64 index = 2;
+    uint32 version = 3;  // u8 as uint32 (protobuf doesn't have uint8)
+    bytes padding = 4;  // [u8; 7]
+    string lb_pair = 5;  // Pubkey as string
+    repeated BinProto bins = 6;  // [Bin; 70]
+}
+
+// Bin structure within BinArray
+message BinProto {
+    uint64 amount_x = 1;  // Amount of token X in the bin
+    uint64 amount_y = 2;  // Amount of token Y in the bin
+    string price = 3;  // u128 as string
+    string liquidity_supply = 4;  // u128 as string
+    repeated string reward_per_token_stored = 5;  // [u128; 2] as strings
+    string fee_amount_x_per_token_stored = 6;  // u128 as string
+    string fee_amount_y_per_token_stored = 7;  // u128 as string
+    string amount_x_in = 8;  // u128 as string
+    string amount_y_in = 9;  // u128 as string
+}
+
+// ######################## LbPair account ########################
+message LbPairProto {
+  bytes discriminator = 1;  // [u8; 8]
+  StaticParametersProto parameters = 2;
+  VariableParametersProto v_parameters = 3;
+  bytes bump_seed = 4;  // [u8; 1]
+  bytes bin_step_seed = 5;  // [u8; 2]
+  uint32 pair_type = 6;  // u8 as uint32
+  int32 active_id = 7;
+  uint32 bin_step = 8;  // u16 as uint32
+  uint32 status = 9;  // u8 as uint32
+  uint32 require_base_factor_seed = 10;  // u8 as uint32
+  bytes base_factor_seed = 11;  // [u8; 2]
+  uint32 activation_type = 12;  // u8 as uint32
+  uint32 padding0 = 13;  // u8 as uint32
+  string token_x_mint = 14;  // Pubkey as string
+  string token_y_mint = 15;  // Pubkey as string
+  string reserve_x = 16;  // Pubkey as string
+  string reserve_y = 17;  // Pubkey as string
+  ProtocolFeeProto protocol_fee = 18;
+  bytes padding1 = 19;  // [u8; 32]
+  repeated RewardInfoProto reward_infos = 20;  // [RewardInfo; 2]
+  string oracle = 21;  // Pubkey as string
+  repeated uint64 bin_array_bitmap = 22;  // [u64; 16]
+  int64 last_updated_at = 23;
+  bytes padding2 = 24;  // [u8; 32]
+  string pre_activation_swap_address = 25;  // Pubkey as string
+  string base_key = 26;  // Pubkey as string
+  uint64 activation_point = 27;
+  uint64 pre_activation_duration = 28;
+  bytes padding3 = 29;  // [u8; 8]
+  uint64 padding4 = 30;
+  string creator = 31;  // Pubkey as string
+  bytes reserved = 32;  // [u8; 24]
+}
+
+// StaticParameters struct
+message StaticParametersProto {
+  uint32 base_factor = 1;  // u16 as uint32
+  uint32 filter_period = 2;  // u16 as uint32
+  uint32 decay_period = 3;  // u16 as uint32
+  uint32 reduction_factor = 4;  // u16 as uint32
+  uint32 variable_fee_control = 5;  // u16 as uint32
+  uint32 max_volatility_accumulator = 6;  // u16 as uint32
+  int32 min_bin_id = 7;
+  int32 max_bin_id = 8;
+  uint32 protocol_share = 9;  // u16 as uint32
+  bytes padding = 10;  // [u8; 6]
+}
+
+// VariableParameters struct
+message VariableParametersProto {
+  uint32 volatility_accumulator = 1;  // u16 as uint32
+  uint32 volatility_reference = 2;  // u16 as uint32
+  int32 index_reference = 3;
+  bytes padding = 4;  // [u8; 4]
+  int64 last_update_timestamp = 5;
+  bytes padding1 = 6;  // [u8; 8]
+}
+
+// ProtocolFee struct
+message ProtocolFeeProto {
+  uint64 amount_x = 1;
+  uint64 amount_y = 2;
+}
+
+// RewardInfo struct
+message RewardInfoProto {
+  string mint = 1;  // Pubkey as string
+  string vault = 2;  // Pubkey as string
+  string funder = 3;  // Pubkey as string
+  uint64 reward_duration = 4;
+  uint64 reward_duration_end = 5;
+  string reward_rate = 6;  // u128 as string
+  uint64 last_update_time = 7;
+  string reward_growth_global_x64 = 8;  // u128 as string
+}
+
+// ######################## Oracle account ########################
+message OracleProto {
+  bytes discriminator = 1;  // [u8; 8]
+  uint64 idx = 2;           // Index of latest observation
+  uint64 active_size = 3;   // Size of active sample. Active sample is initialized observation.
+  uint64 length = 4;        // Number of observations
+}
+
+// ######################## Position account ########################
+message PositionProto {
+  bytes discriminator = 1;  // [u8; 8]
+  string lb_pair = 2;  // Pubkey as string
+  string owner = 3;  // Pubkey as string
+  repeated uint64 liquidity_shares = 4;  // [u64; 70]
+  repeated UserRewardInfoProto reward_infos = 5;  // [UserRewardInfo; 70]
+  repeated FeeInfoProto fee_infos = 6;  // [FeeInfo; 70]
+  int32 lower_bin_id = 7;
+  int32 upper_bin_id = 8;
+  int64 last_updated_at = 9;
+  uint64 total_claimed_fee_x_amount = 10;
+  uint64 total_claimed_fee_y_amount = 11;
+  repeated uint64 total_claimed_rewards = 12;  // [u64; 2]
+  bytes reserved = 13;  // [u8; 160]
+}
+
+// UserRewardInfo struct
+message UserRewardInfoProto {
+  repeated string reward_per_token_completes = 1;  // [u128; 2] as strings
+  repeated uint64 reward_pendings = 2;  // [u64; 2]
+}
+
+// FeeInfo struct
+message FeeInfoProto {
+  string fee_x_per_token_complete = 1;  // u128 as string
+  string fee_y_per_token_complete = 2;  // u128 as string
+  uint64 fee_x_pending = 3;
+  uint64 fee_y_pending = 4;
+}
+
+// ######################## PositionV2 account ########################
+message PositionV2Proto {
+    bytes discriminator = 1;  // [u8; 8]
+    string lb_pair = 2;  // Pubkey as string
+    string owner = 3;  // Pubkey as string
+    repeated string liquidity_shares = 4;  // [u128; 70] as strings
+    repeated UserRewardInfoProto reward_infos = 5;  // [UserRewardInfo; 70]
+    repeated FeeInfoProto fee_infos = 6;  // [FeeInfo; 70]
+    int32 lower_bin_id = 7;
+    int32 upper_bin_id = 8;
+    int64 last_updated_at = 9;
+    uint64 total_claimed_fee_x_amount = 10;
+    uint64 total_claimed_fee_y_amount = 11;
+    repeated uint64 total_claimed_rewards = 12;  // [u64; 2]
+    string operator = 13;  // Pubkey as string
+    uint64 lock_release_point = 14;
+    uint32 padding0 = 15;  // u8 as uint32 (protobuf doesn't have uint8)
+    string fee_owner = 16;  // Pubkey as string
+    bytes reserved = 17;  // [u8; 87]
+}
+
+// ######################## PresetParameter account ########################
+message PresetParameterProto {
+  bytes discriminator = 1;  // [u8; 8]
+  uint32 bin_step = 2;  // u16 as uint32
+  uint32 base_factor = 3;  // u16 as uint32
+  uint32 filter_period = 4;  // u16 as uint32
+  uint32 decay_period = 5;  // u16 as uint32
+  uint32 reduction_factor = 6;  // u16 as uint32
+  uint32 variable_fee_control = 7;  // u32
+  uint32 max_volatility_accumulator = 8;  // u32
+  int32 min_bin_id = 9;
+  int32 max_bin_id = 10;
+  uint32 protocol_share = 11;  // u16 as uint32
+}
+
+//#########################################################
+// INSTRUCTIONS
+//#########################################################
+
+// ######################## InitializeLbPair instruction ########################
+message InitializeLbPairInstructionProto {
+  InitializeLbPairAccountsProto accounts = 1;
+  InitializeLbPairDataProto data = 2;
+}
+
+// Accounts for InitializeLbPair instruction
+// Accounts for InitializeLbPair instruction
+message InitializeLbPairAccountsProto {
+  string lb_pair = 1;                      // Pubkey as string
+  string bin_array_bitmap_extension = 2;   // Optional Pubkey as string
+  string token_mint_x = 3;                 // Pubkey as string
+  string token_mint_y = 4;                 // Pubkey as string
+  string reserve_x = 5;                    // Pubkey as string
+  string reserve_y = 6;                    // Pubkey as string
+  string oracle = 7;                       // Pubkey as string
+  string preset_parameter = 8;             // Pubkey as string
+  string funder = 9;                       // Pubkey as string
+  string token_program = 10;               // Pubkey as string
+  string system_program = 11;              // Pubkey as string
+  string rent = 12;                        // Pubkey as string
+  string event_authority = 13;             // Pubkey as string
+  string program = 14;                     // Pubkey as string
+}
+
+// Data for InitializeLbPair instruction
+message InitializeLbPairDataProto {
+  uint32 active_id = 1;              // i32
+  uint32 bin_step = 2;               // u16 as uint32
+}
+
+// ######################## InitializePermissionLbPair instruction ########################
+message InitializePermissionLbPairInstructionProto {
+  InitializePermissionLbPairAccountsProto accounts = 1;
+  InitializePermissionLbPairDataProto data = 2;
+}
+
+// Accounts for InitializePermissionLbPair instruction
+message InitializePermissionLbPairAccountsProto {
+  string lb_pair = 1;                      // Pubkey as string
+  string bin_array_bitmap_extension = 2;   // Optional Pubkey as string
+  string token_mint_x = 3;                 // Pubkey as string
+  string token_mint_y = 4;                 // Pubkey as string
+  string reserve_x = 5;                    // Pubkey as string
+  string reserve_y = 6;                    // Pubkey as string
+  string oracle = 7;                       // Pubkey as string
+  string preset_parameter = 8;             // Pubkey as string
+  string funder = 9;                       // Pubkey as string
+  string token_program = 10;               // Pubkey as string
+  string system_program = 11;              // Pubkey as string
+  string rent = 12;                        // Pubkey as string
+  string event_authority = 13;             // Pubkey as string
+  string program = 14;                     // Pubkey as string
+}
+
+// Data for InitializePermissionLbPair instruction
+message InitializePermissionLbPairDataProto {
+  int32 active_id = 1;                     // i32
+  uint32 bin_step = 2;                     // u16 as uint32
+  uint32 base_factor = 3;                  // u16 as uint32
+  int32 min_bin_id = 4;                    // i32
+  int32 max_bin_id = 5;                    // i32
+  uint32 activation_type = 6;              // u8 as uint32
+}
+
+// ######################## InitializeCustomizablePermissionlessLbPair instruction ########################
+message InitializeCustomizablePermissionlessLbPairInstructionProto {
+  InitializeCustomizablePermissionlessLbPairAccountsProto accounts = 1;
+  InitializeCustomizablePermissionlessLbPairDataProto data = 2;
+}
+
+// Accounts for InitializeCustomizablePermissionlessLbPair instruction
+message InitializeCustomizablePermissionlessLbPairAccountsProto {
+  string lb_pair = 1;                      // Pubkey as string
+  string bin_array_bitmap_extension = 2;   // Optional Pubkey as string
+  string token_mint_x = 3;                 // Pubkey as string
+  string token_mint_y = 4;                 // Pubkey as string
+  string reserve_x = 5;                    // Pubkey as string
+  string reserve_y = 6;                    // Pubkey as string
+  string oracle = 7;                       // Pubkey as string
+  string user_token_x = 8;                 // Pubkey as string
+  string funder = 9;                       // Pubkey as string
+  string token_program = 10;               // Pubkey as string
+  string system_program = 11;              // Pubkey as string
+  string rent = 12;                        // Pubkey as string
+  string event_authority = 13;             // Pubkey as string
+  string program = 14;                     // Pubkey as string
+}
+
+// Data for InitializeCustomizablePermissionlessLbPair instruction
+message InitializeCustomizablePermissionlessLbPairDataProto {
+  int32 active_id = 1;                     // i32
+  uint32 bin_step = 2;                     // u16 as uint32
+  uint32 base_factor = 3;                  // u16 as uint32
+  uint32 activation_type = 4;              // u8 as uint32
+  bool has_alpha_vault = 5;                // bool
+  uint64 activation_point = 6;             // Optional u64
+  bytes padding = 7;                       // [u8; 64]
+}
+
+// ######################## InitializeBinArrayBitmapExtension instruction ########################
+message InitializeBinArrayBitmapExtensionInstructionProto {
+  InitializeBinArrayBitmapExtensionAccountsProto accounts = 1;
+  // No data for this instruction
+}
+
+// Accounts for InitializeBinArrayBitmapExtension instruction
+message InitializeBinArrayBitmapExtensionAccountsProto {
+  string lb_pair = 1;                      // Pubkey as string
+  string bin_array_bitmap_extension = 2;   // Pubkey as string
+  string funder = 3;                       // Pubkey as string
+  string system_program = 4;               // Pubkey as string
+  string rent = 5;                         // Pubkey as string
+}
+
+// ######################## InitializeBinArray instruction ########################
+message InitializeBinArrayInstructionProto {
+  InitializeBinArrayAccountsProto accounts = 1;
+  InitializeBinArrayDataProto data = 2;
+}
+
+// Accounts for InitializeBinArray instruction
+message InitializeBinArrayAccountsProto {
+  string lb_pair = 1;                      // Pubkey as string
+  string bin_array = 2;                    // Pubkey as string
+  string funder = 3;                       // Pubkey as string
+  string system_program = 4;               // Pubkey as string
+}
+
+// Data for InitializeBinArray instruction
+message InitializeBinArrayDataProto {
+  int64 index = 1;                         // i64
+}
+
+// ######################## AddLiquidity instruction ########################
+message AddLiquidityInstructionProto {
+  AddLiquidityAccountsProto accounts = 1;
+  AddLiquidityDataProto data = 2;
+}
+
+// Accounts for AddLiquidity instruction
+message AddLiquidityAccountsProto {
+  string position = 1;                     // Pubkey as string
+  string lb_pair = 2;                      // Pubkey as string
+  string bin_array_bitmap_extension = 3;   // Optional Pubkey as string
+  string user_token_x = 4;                 // Pubkey as string
+  string user_token_y = 5;                 // Pubkey as string
+  string reserve_x = 6;                    // Pubkey as string
+  string reserve_y = 7;                    // Pubkey as string
+  string token_x_mint = 8;                 // Pubkey as string
+  string token_y_mint = 9;                 // Pubkey as string
+  string bin_array_lower = 10;             // Pubkey as string
+  string bin_array_upper = 11;             // Pubkey as string
+  string sender = 12;                      // Pubkey as string
+  string token_x_program = 13;             // Pubkey as string
+  string token_y_program = 14;             // Pubkey as string
+  string event_authority = 15;             // Pubkey as string
+  string program = 16;                     // Pubkey as string
+}
+
+// Data for AddLiquidity instruction
+message AddLiquidityDataProto {
+  uint64 amount_x = 1;                     // u64
+  uint64 amount_y = 2;                     // u64
+  repeated BinLiquidityDistributionProto bin_liquidity_dist = 3; // Vec<BinLiquidityDistribution>
+}
+
+// BinLiquidityDistribution structure
+message BinLiquidityDistributionProto {
+  int32 bin_id = 1;                        // i32
+  uint32 distribution_x = 2;               // u16 as uint32
+  uint32 distribution_y = 3;               // u16 as uint32
+}
+
+// ######################## AddLiquidityByWeight instruction ########################
+message AddLiquidityByWeightInstructionProto {
+  AddLiquidityByWeightAccountsProto accounts = 1;
+  AddLiquidityByWeightDataProto data = 2;
+}
+
+// Accounts for AddLiquidityByWeight instruction
+message AddLiquidityByWeightAccountsProto {
+  string position = 1;                     // Pubkey as string
+  string lb_pair = 2;                      // Pubkey as string
+  string bin_array_bitmap_extension = 3;   // Optional Pubkey as string
+  string user_token_x = 4;                 // Pubkey as string
+  string user_token_y = 5;                 // Pubkey as string
+  string reserve_x = 6;                    // Pubkey as string
+  string reserve_y = 7;                    // Pubkey as string
+  string token_x_mint = 8;                 // Pubkey as string
+  string token_y_mint = 9;                 // Pubkey as string
+  string bin_array_lower = 10;             // Pubkey as string
+  string bin_array_upper = 11;             // Pubkey as string
+  string sender = 12;                      // Pubkey as string
+  string token_x_program = 13;             // Pubkey as string
+  string token_y_program = 14;             // Pubkey as string
+  string event_authority = 15;             // Pubkey as string
+  string program = 16;                     // Pubkey as string
+}
+
+// Data for AddLiquidityByWeight instruction
+message AddLiquidityByWeightDataProto {
+  uint64 amount_x = 1;                     // u64
+  uint64 amount_y = 2;                     // u64
+  int32 active_id = 3;                     // i32
+  int32 max_active_bin_slippage = 4;       // i32
+  repeated BinLiquidityDistributionByWeightProto bin_liquidity_dist = 5; // Vec<BinLiquidityDistributionByWeight>
+}
+
+// BinLiquidityDistributionByWeight structure
+message BinLiquidityDistributionByWeightProto {
+  int32 bin_id = 1;                        // i32
+  uint32 weight = 2;                       // u16 as uint32
+}
+
+// ######################## AddLiquidityByStrategy instruction ########################
+message AddLiquidityByStrategyInstructionProto {
+  AddLiquidityByStrategyAccountsProto accounts = 1;
+  AddLiquidityByStrategyDataProto data = 2;
+}
+
+// Accounts for AddLiquidityByStrategy instruction
+message AddLiquidityByStrategyAccountsProto {
+  string position = 1;                     // Pubkey as string
+  string lb_pair = 2;                      // Pubkey as string
+  string bin_array_bitmap_extension = 3;   // Optional Pubkey as string
+  string user_token_x = 4;                 // Pubkey as string
+  string user_token_y = 5;                 // Pubkey as string
+  string reserve_x = 6;                    // Pubkey as string
+  string reserve_y = 7;                    // Pubkey as string
+  string token_x_mint = 8;                 // Pubkey as string
+  string token_y_mint = 9;                 // Pubkey as string
+  string bin_array_lower = 10;             // Pubkey as string
+  string bin_array_upper = 11;             // Pubkey as string
+  string sender = 12;                      // Pubkey as string
+  string token_x_program = 13;             // Pubkey as string
+  string token_y_program = 14;             // Pubkey as string
+  string event_authority = 15;             // Pubkey as string
+  string program = 16;                     // Pubkey as string
+}
+
+// Data for AddLiquidityByStrategy instruction
+message AddLiquidityByStrategyDataProto {
+  uint64 amount_x = 1;                     // u64
+  uint64 amount_y = 2;                     // u64
+  int32 active_id = 3;                     // i32
+  int32 max_active_bin_slippage = 4;       // i32
+  StrategyParametersProto strategy_parameters = 5; // StrategyParameters
+}
+
+// StrategyParameters structure
+message StrategyParametersProto {
+  int32 min_bin_id = 1;                    // i32
+  int32 max_bin_id = 2;                    // i32
+  StrategyTypeProto strategy_type = 3;     // StrategyType
+  bytes parameteres = 4;                   // [u8; 64]
+}
+
+// StrategyType enum
+enum StrategyTypeProto {
+  STRATEGY_TYPE_UNSPECIFIED = 0;           // Default value required by protobuf
+  STRATEGY_TYPE_SPOT_ONE_SIDE = 1;         // SpotOneSide
+  STRATEGY_TYPE_CURVE_ONE_SIDE = 2;        // CurveOneSide
+  STRATEGY_TYPE_BID_ASK_ONE_SIDE = 3;      // BidAskOneSide
+  STRATEGY_TYPE_SPOT_BALANCED = 4;         // SpotBalanced
+  STRATEGY_TYPE_CURVE_BALANCED = 5;        // CurveBalanced
+  STRATEGY_TYPE_BID_ASK_BALANCED = 6;      // BidAskBalanced
+  STRATEGY_TYPE_SPOT_IM_BALANCED = 7;      // SpotImBalanced
+  STRATEGY_TYPE_CURVE_IM_BALANCED = 8;     // CurveImBalanced
+  STRATEGY_TYPE_BID_ASK_IM_BALANCED = 9;   // BidAskImBalanced
+}
