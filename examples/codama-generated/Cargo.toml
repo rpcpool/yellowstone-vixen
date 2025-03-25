@@ -1,0 +1,14 @@
+[package]
+name = "example-codama-generated"
+description = "Test bed for basic OpenTelemetry metrics with Vixen"
+publish = false
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+
+[dependencies]
+clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+toml = "0.8.12"
+tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
+yellowstone-vixen = { workspace = true}
+yellowstone-vixen-meteora-parser = { workspace = true }
