@@ -1,16 +1,15 @@
 {
   "name": "yellowstone-vixen",
-  "private": true
+  "private": true,
   "version": "1.0.0",
   "description": "",
-  "main": "codama_parser_generators/meteora.cjs",
   "scripts": {
     "generate": "node codama.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
+  "devDependencies": {
     "@codama/nodes": "^1.2.10",
     "@codama/nodes-from-anchor": "^1.1.10",
     "@codama/renderers-core": "^1.0.12",

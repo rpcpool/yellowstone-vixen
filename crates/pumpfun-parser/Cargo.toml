@@ -1,5 +1,5 @@
 [package]
-name = "yellowstone-vixen-pump-fun-parser"
+name = "yellowstone-vixen-pumpfun-parser"
 version = "0.1.0"
 edition = "2024"
 

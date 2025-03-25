@@ -9,7 +9,7 @@ import { renderVisitor as renderRustVisitor } from "@codama/renderers-rust";
 import { renderVisitor as renderVixenVisitor } from "@codama/renderers-vixen-parser";
 
 function generateProject(project) {
-  const packageName = `yellowstone-vixen-${project}-parser`;
+  const packageName = `${project}-parser`;
   const rootDir = process.cwd();
 
   const idl = readJson(`./idls/${project}.json`);
@@ -21,15 +21,9 @@ function generateProject(project) {
   visit(
     node,
     renderRustVisitor(
-      path.join(
-        rootDir,
-        "crates/parsers_codama",
-        packageName,
-        "src",
-        "generated_sdk"
-      ),
+      path.join(rootDir, "crates", packageName, "src", "generated_sdk"),
       {
-        crateFolder: path.join(rootDir, "crates/parsers_codama", packageName),
+        crateFolder: path.join(rootDir, "crates", packageName),
         formatCode: true,
       }
     )
@@ -39,16 +33,10 @@ function generateProject(project) {
   visit(
     node,
     renderVixenVisitor(
-      path.join(
-        rootDir,
-        "crates/parsers_codama",
-        packageName,
-        "src",
-        "generated_parser"
-      ),
+      path.join(rootDir, "crates", packageName, "src", "generated_parser"),
       {
         sdkName: "crate",
-        crateFolder: path.join(rootDir, "crates/parsers_codama", packageName),
+        crateFolder: path.join(rootDir, "crates", packageName),
         formatCode: true,
       }
     )

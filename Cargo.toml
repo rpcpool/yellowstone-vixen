@@ -1,6 +1,6 @@
 [workspace]
-members = ["crates/*", "examples/*", "crates/parsers_codama/yellowstone-vixen-meteora-parser", "crates/parsers_codama/yellowstone-vixen-pump-fun-parser"]
-exclude = ["examples/streams-ts/", "crates/parsers_codama"]
+members = ["crates/*", "examples/*"]
+exclude = ["examples/streams-ts/"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -12,7 +12,7 @@ yellowstone-vixen-mock = { path = "crates/mock", version = "0.1.0" }
 yellowstone-vixen-parser = { path = "crates/parser", version = "0.1.0" }
 yellowstone-vixen-proto = { path = "crates/proto", version = "0.1.0" }
 
-yellowstone-vixen-meteora-parser = { path = "crates/parsers_codama/yellowstone-vixen-meteora-parser", version = "0.1.0" }
+yellowstone-vixen-meteora-parser = { path = "crates/meteora-parser", version = "0.1.0" }
 
 # helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 
 # https://github.com/solana-labs/solana/issues/26688

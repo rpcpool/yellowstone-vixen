@@ -1,6 +1,6 @@
 [package]
 name = "example-codama-generated"
-description = "Test bed for basic OpenTelemetry metrics with Vixen"
+description = "Test for basic use of Vixen with Codama generated parsers"
 publish = false
 edition = "2021"
 license = "MIT"
