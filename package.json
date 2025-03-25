@@ -1,5 +1,6 @@
 {
   "name": "yellowstone-vixen",
+  "private": true
   "version": "1.0.0",
   "description": "",
   "main": "codama_parser_generators/meteora.cjs",
