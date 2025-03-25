@@ -2480,15 +2480,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kaigan"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ba15de5aeb137f0f65aa3bf82187647f1285abfe5b20c80c2c37f7007ad519a"
-dependencies = [
- "borsh 0.10.4",
-]
-
-[[package]]
 name = "keccak"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2652,18 +2643,6 @@ dependencies = [
  "keccak",
  "rand_core 0.6.4",
  "zeroize",
-]
-
-[[package]]
-name = "meteora_sdk"
-version = "0.1.0"
-dependencies = [
- "borsh 1.5.5",
- "kaigan",
- "num-derive",
- "num-traits",
- "solana-program 2.2.1",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8425,7 +8404,6 @@ version = "0.1.0"
 dependencies = [
  "borsh 1.5.5",
  "bs58 0.5.1",
- "meteora_sdk",
  "orca_whirlpools_client",
  "spl-pod 0.3.1",
  "spl-token 6.0.0",
