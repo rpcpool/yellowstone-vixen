@@ -1,0 +1,653 @@
+{
+  "address": "6m2CDdhRgxpH4WjvdzxAYbGxwdGUz5MziiL5jek2kBma",
+  "metadata": {
+    "name": "dex_solana",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "commission_sol_from_swap",
+      "discriminator": [129, 59, 69, 10, 132, 76, 35, 20],
+      "accounts": [
+        { "name": "payer", "writable": true, "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint", "writable": true },
+        { "name": "bridge_program" },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        { "name": "commission_account", "writable": true }
+      ],
+      "args": [
+        { "name": "args", "type": { "defined": { "name": "SwapArgs" } } },
+        { "name": "commission_rate", "type": "u16" },
+        {
+          "name": "bridge_to_args",
+          "type": { "defined": { "name": "BridgeToArgs" } }
+        },
+        { "name": "offset", "type": "u8" },
+        { "name": "len", "type": "u8" }
+      ]
+    },
+    {
+      "name": "commission_sol_proxy_swap",
+      "discriminator": [30, 33, 208, 91, 31, 157, 37, 18],
+      "accounts": [
+        { "name": "payer", "writable": true, "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint" },
+        { "name": "commission_account", "writable": true },
+        {
+          "name": "sa_authority",
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [111, 107, 120, 95, 115, 97] }
+            ]
+          }
+        },
+        { "name": "source_token_sa", "writable": true, "optional": true },
+        { "name": "destination_token_sa", "writable": true, "optional": true },
+        { "name": "source_token_program" },
+        { "name": "destination_token_program" },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        { "name": "data", "type": { "defined": { "name": "SwapArgs" } } },
+        { "name": "commission_rate", "type": "u16" },
+        { "name": "commission_direction", "type": "bool" },
+        { "name": "order_id", "type": "u64" }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "commission_sol_swap",
+      "discriminator": [81, 128, 134, 73, 114, 73, 45, 94],
+      "accounts": [
+        { "name": "payer", "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint" },
+        { "name": "commission_account", "writable": true },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": { "defined": { "name": "CommissionSwapArgs" } }
+        }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "commission_sol_swap2",
+      "discriminator": [113, 132, 31, 74, 99, 169, 57, 146],
+      "accounts": [
+        { "name": "payer", "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint" },
+        { "name": "commission_account", "writable": true },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": { "defined": { "name": "CommissionSwapArgs" } }
+        },
+        { "name": "order_id", "type": "u64" }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "commission_spl_from_swap",
+      "discriminator": [5, 77, 144, 50, 222, 228, 233, 171],
+      "accounts": [
+        { "name": "payer", "writable": true, "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint", "writable": true },
+        { "name": "bridge_program" },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        { "name": "commission_token_account", "writable": true }
+      ],
+      "args": [
+        { "name": "args", "type": { "defined": { "name": "SwapArgs" } } },
+        { "name": "commission_rate", "type": "u16" },
+        {
+          "name": "bridge_to_args",
+          "type": { "defined": { "name": "BridgeToArgs" } }
+        },
+        { "name": "offset", "type": "u8" },
+        { "name": "len", "type": "u8" }
+      ]
+    },
+    {
+      "name": "commission_spl_proxy_swap",
+      "discriminator": [96, 67, 12, 151, 129, 164, 18, 71],
+      "accounts": [
+        { "name": "payer", "writable": true, "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint" },
+        { "name": "commission_token_account", "writable": true },
+        {
+          "name": "sa_authority",
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [111, 107, 120, 95, 115, 97] }
+            ]
+          }
+        },
+        { "name": "source_token_sa", "writable": true, "optional": true },
+        { "name": "destination_token_sa", "writable": true, "optional": true },
+        { "name": "source_token_program" },
+        { "name": "destination_token_program" },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        { "name": "data", "type": { "defined": { "name": "SwapArgs" } } },
+        { "name": "commission_rate", "type": "u16" },
+        { "name": "commission_direction", "type": "bool" },
+        { "name": "order_id", "type": "u64" }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "commission_spl_swap",
+      "discriminator": [235, 71, 211, 196, 114, 199, 143, 92],
+      "accounts": [
+        { "name": "payer", "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint" },
+        { "name": "commission_token_account", "writable": true },
+        { "name": "token_program" }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": { "defined": { "name": "CommissionSwapArgs" } }
+        }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "commission_spl_swap2",
+      "discriminator": [173, 131, 78, 38, 150, 165, 123, 15],
+      "accounts": [
+        { "name": "payer", "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint" },
+        { "name": "commission_token_account", "writable": true },
+        { "name": "token_program" }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": { "defined": { "name": "CommissionSwapArgs" } }
+        },
+        { "name": "order_id", "type": "u64" }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "from_swap_log",
+      "discriminator": [133, 186, 15, 105, 31, 76, 31, 112],
+      "accounts": [
+        { "name": "payer", "writable": true, "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint", "writable": true },
+        { "name": "bridge_program" },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        { "name": "args", "type": { "defined": { "name": "SwapArgs" } } },
+        {
+          "name": "bridge_to_args",
+          "type": { "defined": { "name": "BridgeToArgs" } }
+        },
+        { "name": "offset", "type": "u8" },
+        { "name": "len", "type": "u8" }
+      ]
+    },
+    {
+      "name": "proxy_swap",
+      "discriminator": [19, 44, 130, 148, 72, 56, 44, 238],
+      "accounts": [
+        { "name": "payer", "writable": true, "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint" },
+        {
+          "name": "sa_authority",
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [111, 107, 120, 95, 115, 97] }
+            ]
+          }
+        },
+        { "name": "source_token_sa", "writable": true, "optional": true },
+        { "name": "destination_token_sa", "writable": true, "optional": true },
+        { "name": "source_token_program" },
+        { "name": "destination_token_program" },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        { "name": "data", "type": { "defined": { "name": "SwapArgs" } } },
+        { "name": "order_id", "type": "u64" }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "swap",
+      "discriminator": [248, 198, 158, 145, 225, 117, 135, 200],
+      "accounts": [
+        { "name": "payer", "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint" }
+      ],
+      "args": [
+        { "name": "data", "type": { "defined": { "name": "SwapArgs" } } }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "swap2",
+      "discriminator": [65, 75, 63, 76, 235, 91, 91, 136],
+      "accounts": [
+        { "name": "payer", "signer": true },
+        { "name": "source_token_account", "writable": true },
+        { "name": "destination_token_account", "writable": true },
+        { "name": "source_mint" },
+        { "name": "destination_mint" }
+      ],
+      "args": [
+        { "name": "data", "type": { "defined": { "name": "SwapArgs" } } },
+        { "name": "order_id", "type": "u64" }
+      ],
+      "returns": "u64"
+    }
+  ],
+  "events": [
+    {
+      "name": "SwapEvent",
+      "discriminator": [64, 198, 205, 232, 38, 8, 113, 226]
+    }
+  ],
+  "errors": [
+    { "code": 6000, "name": "TooManyHops", "msg": "Too many hops" },
+    {
+      "code": 6001,
+      "name": "MinReturnNotReached",
+      "msg": "Min return not reached"
+    },
+    {
+      "code": 6002,
+      "name": "AmountInMustBeGreaterThanZero",
+      "msg": "amount_in must be greater than 0"
+    },
+    {
+      "code": 6003,
+      "name": "MinReturnMustBeGreaterThanZero",
+      "msg": "min_return must be greater than 0"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidExpectAmountOut",
+      "msg": "invalid expect amount out"
+    },
+    {
+      "code": 6005,
+      "name": "AmountsAndRoutesMustHaveTheSameLength",
+      "msg": "amounts and routes must have the same length"
+    },
+    {
+      "code": 6006,
+      "name": "TotalAmountsMustBeEqualToAmountIn",
+      "msg": "total_amounts must be equal to amount_in"
+    },
+    {
+      "code": 6007,
+      "name": "DexesAndWeightsMustHaveTheSameLength",
+      "msg": "dexes and weights must have the same length"
+    },
+    {
+      "code": 6008,
+      "name": "WeightsMustSumTo100",
+      "msg": "weights must sum to 100"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidSourceTokenAccount",
+      "msg": "Invalid source token account"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidDestinationTokenAccount",
+      "msg": "Invalid destination token account"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidCommissionRate",
+      "msg": "Invalid commission rate"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidCommissionTokenAccount",
+      "msg": "Invalid commission token account"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidAccountsLength",
+      "msg": "Invalid accounts length"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidHopAccounts",
+      "msg": "Invalid hop accounts"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidHopFromAccount",
+      "msg": "Invalid hop from account"
+    },
+    {
+      "code": 6016,
+      "name": "SwapAuthorityIsNotSigner",
+      "msg": "Swap authority is not signer"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidAuthorityPda",
+      "msg": "Invalid authority pda"
+    },
+    { "code": 6018, "name": "InvalidProgramId", "msg": "Invalid program id" },
+    { "code": 6019, "name": "InvalidPool", "msg": "Invalid pool" },
+    { "code": 6020, "name": "InvalidTokenMint", "msg": "Invalid token mint" },
+    { "code": 6021, "name": "CalculationError", "msg": "Calculation error" },
+    {
+      "code": 6022,
+      "name": "AuthorityPDACreationFailed",
+      "msg": "Authority pda creation failed"
+    },
+    { "code": 6023, "name": "TransferSolFailed", "msg": "Transfer sol failed" },
+    {
+      "code": 6024,
+      "name": "TransferTokenFailed",
+      "msg": "Transfer token failed"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidSanctumLstStateListData",
+      "msg": "Invalid sanctum lst state list data"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidSanctumLstStateListIndex",
+      "msg": "Invalid sanctum lst state list index"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidSanctumSwapAccounts",
+      "msg": "Invalid sanctum swap accounts"
+    }
+  ],
+  "types": [
+    {
+      "name": "AdaptorID",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "Bridge0" },
+          { "name": "Bridge1" },
+          { "name": "Bridge2" },
+          { "name": "Bridge3" },
+          { "name": "Bridge4" },
+          { "name": "Bridge5" },
+          { "name": "Bridge6" },
+          { "name": "Bridge7" },
+          { "name": "Bridge8" },
+          { "name": "Bridge9" },
+          { "name": "Bridge10" },
+          { "name": "Bridge11" },
+          { "name": "Bridge12" },
+          { "name": "Bridge13" },
+          { "name": "Bridge14" },
+          { "name": "Bridge15" },
+          { "name": "Bridge16" },
+          { "name": "Bridge17" },
+          { "name": "Cctp" },
+          { "name": "Bridge19" },
+          { "name": "Bridge20" },
+          { "name": "Wormhole" },
+          { "name": "Meson" },
+          { "name": "Bridge23" },
+          { "name": "Bridge24" },
+          { "name": "Bridge25" },
+          { "name": "Bridge26" },
+          { "name": "Bridge27" },
+          { "name": "Bridge28" },
+          { "name": "Bridge29" },
+          { "name": "Bridge30" },
+          { "name": "Bridge31" },
+          { "name": "Bridge32" },
+          { "name": "Bridge33" },
+          { "name": "Debridgedln" }
+        ]
+      }
+    },
+    {
+      "name": "BridgeToArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "adaptor_id",
+            "type": { "defined": { "name": "AdaptorID" } }
+          },
+          { "name": "to", "type": "bytes" },
+          { "name": "order_id", "type": "u64" },
+          { "name": "to_chain_id", "type": "u64" },
+          { "name": "amount", "type": "u64" },
+          {
+            "name": "swap_type",
+            "type": { "defined": { "name": "SwapType" } }
+          },
+          { "name": "data", "type": "bytes" },
+          { "name": "ext_data", "type": "bytes" }
+        ]
+      }
+    },
+    {
+      "name": "CommissionSwapArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "amount_in", "type": "u64" },
+          { "name": "expect_amount_out", "type": "u64" },
+          { "name": "min_return", "type": "u64" },
+          { "name": "amounts", "type": { "vec": "u64" } },
+          {
+            "name": "routes",
+            "type": { "vec": { "vec": { "defined": { "name": "Route" } } } }
+          },
+          { "name": "commission_rate", "type": "u16" },
+          { "name": "commission_direction", "type": "bool" }
+        ]
+      }
+    },
+    {
+      "name": "Dex",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "SplTokenSwap" },
+          { "name": "StableSwap" },
+          { "name": "Whirlpool" },
+          { "name": "MeteoraDynamicpool" },
+          { "name": "RaydiumSwap" },
+          { "name": "RaydiumStableSwap" },
+          { "name": "RaydiumClmmSwap" },
+          { "name": "AldrinExchangeV1" },
+          { "name": "AldrinExchangeV2" },
+          { "name": "LifinityV1" },
+          { "name": "LifinityV2" },
+          { "name": "RaydiumClmmSwapV2" },
+          { "name": "FluxBeam" },
+          { "name": "MeteoraDlmm" },
+          { "name": "RaydiumCpmmSwap" },
+          { "name": "OpenBookV2" },
+          { "name": "WhirlpoolV2" },
+          { "name": "Phoenix" },
+          { "name": "ObricV2" },
+          { "name": "SanctumAddLiq" },
+          { "name": "SanctumRemoveLiq" },
+          { "name": "SanctumNonWsolSwap" },
+          { "name": "SanctumWsolSwap" }
+        ]
+      }
+    },
+    {
+      "name": "Route",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "dexes",
+            "type": { "vec": { "defined": { "name": "Dex" } } }
+          },
+          { "name": "weights", "type": "bytes" }
+        ]
+      }
+    },
+    {
+      "name": "SwapArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "amount_in", "type": "u64" },
+          { "name": "expect_amount_out", "type": "u64" },
+          { "name": "min_return", "type": "u64" },
+          { "name": "amounts", "type": { "vec": "u64" } },
+          {
+            "name": "routes",
+            "type": { "vec": { "vec": { "defined": { "name": "Route" } } } }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SwapEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "dex", "type": { "defined": { "name": "Dex" } } },
+          { "name": "amount_in", "type": "u64" },
+          { "name": "amount_out", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "SwapType",
+      "type": {
+        "kind": "enum",
+        "variants": [{ "name": "BRIDGE" }, { "name": "SWAPANDBRIDGE" }]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "SEED_SA",
+      "type": "bytes",
+      "value": "[111, 107, 120, 95, 115, 97]"
+    }
+  ]
+}

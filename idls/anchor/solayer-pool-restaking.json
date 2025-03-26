@@ -1,0 +1,331 @@
+{
+  "version": "0.1.0",
+  "name": "restaking_program",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "solayerAdmin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "lstMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "lstVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rstMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "pool"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "lst_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "restake",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "lstMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "lstAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rstAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rstMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "pool"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "RestakingPool",
+                "path": "pool.lst_mint"
+              }
+            ]
+          },
+          "relations": ["lst_mint", "rst_mint"]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "unrestake",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "lstMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "lstAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rstAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rstMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "pool"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "RestakingPool",
+                "path": "pool.lst_mint"
+              }
+            ]
+          },
+          "relations": ["lst_mint", "rst_mint"]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "batchThawLstAccounts",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "solayerAdmin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "lstMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rstMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "pool"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "RestakingPool",
+                "path": "pool.lst_mint"
+              }
+            ]
+          },
+          "relations": ["lst_mint", "rst_mint"]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "RestakingPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lstMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "rstMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UnsupportedStakingAsset",
+      "msg": "Unsupported Staking Asset"
+    },
+    {
+      "code": 6001,
+      "name": "NonZeroRstMintSupply",
+      "msg": "The RST mint supply must be zero during initialization"
+    },
+    {
+      "code": 6002,
+      "name": "NonLiquidMint",
+      "msg": "This mint is not in the list of liquid mints"
+    },
+    {
+      "code": 6003,
+      "name": "MintMismatch",
+      "msg": "This mint does not match what is expected"
+    }
+  ]
+}

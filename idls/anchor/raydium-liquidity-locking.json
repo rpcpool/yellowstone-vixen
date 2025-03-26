@@ -1,0 +1,611 @@
+{
+  "version": "0.1.0",
+  "name": "raydium_liquidity_locking",
+  "instructions": [
+    {
+      "name": "lockClmmPosition",
+      "docs": [
+        "Lock an existing clmm's position",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` -  The context of accounts",
+        "* `with_metadata` -  Create NFT with metadata or not",
+        ""
+      ],
+      "accounts": [
+        { "name": "authority", "isMut": false, "isSigner": false },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": ["Pay to create account lamports"]
+        },
+        {
+          "name": "positionNftOwner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": ["The position NFT owner"]
+        },
+        { "name": "feeNftOwner", "isMut": false, "isSigner": false },
+        {
+          "name": "positionNftAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The token account for the tokenized position"]
+        },
+        {
+          "name": "personalPosition",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Lock personal position associated with position_nft_account's mint"
+          ]
+        },
+        {
+          "name": "positionNftMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Position NFT mint to create a ATA `locked_nft_account` belongs to program"
+          ]
+        },
+        {
+          "name": "lockedNftAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Program's token account where `position_nft_account` will transfer to"
+          ]
+        },
+        {
+          "name": "lockedPosition",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Store the locked information of the personal position"]
+        },
+        {
+          "name": "feeNftMint",
+          "isMut": true,
+          "isSigner": true,
+          "docs": ["Create a unique fee nft mint"]
+        },
+        {
+          "name": "feeNftAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Token account where fee nft will be minted to"]
+        },
+        {
+          "name": "metadataAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["To store metaplex metadata"]
+        },
+        {
+          "name": "metadataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Program to create NFT metadata account"]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Program to create an ATA for receiving fee NFT"]
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Sysvar for token mint and ATA creation"]
+        },
+        {
+          "name": "feeNftTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Token program fee NFT mint/account belongs to"]
+        },
+        {
+          "name": "lockedNftTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Token program position NFT mint/account belongs to"]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Program to create new account"]
+        }
+      ],
+      "args": [{ "name": "withMetadata", "type": "bool" }]
+    },
+    {
+      "name": "collectClmmFeesAndRewards",
+      "docs": [
+        "collect clmm locked postion fees and rewards",
+        "# Arguments",
+        "",
+        "* `ctx` -  The context of accounts",
+        ""
+      ],
+      "accounts": [
+        { "name": "authority", "isMut": false, "isSigner": false },
+        {
+          "name": "feeNftOwner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": ["The owner who has fee nft account"]
+        },
+        {
+          "name": "feeNftAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Fee token account"]
+        },
+        {
+          "name": "lockedPosition",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Store the locked the information of position"]
+        },
+        {
+          "name": "clmmProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["clmm program"]
+        },
+        {
+          "name": "lockedNftAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Program ATA locked NFT account or user ATA position NFT account"
+          ]
+        },
+        {
+          "name": "personalPosition",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Decrease liquidity for this position"]
+        },
+        { "name": "poolState", "isMut": true, "isSigner": false },
+        { "name": "protocolPosition", "isMut": true, "isSigner": false },
+        {
+          "name": "token0Vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The address that holds pool tokens for token_0"]
+        },
+        {
+          "name": "token1Vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The address that holds pool tokens for token_1"]
+        },
+        {
+          "name": "tickArrayLower",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Stores init state for the lower tick"]
+        },
+        {
+          "name": "tickArrayUpper",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Stores init state for the upper tick"]
+        },
+        {
+          "name": "recipientToken0Account",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The destination token account for receive amount_0"]
+        },
+        {
+          "name": "recipientToken1Account",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The destination token account for receive amount_1"]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["SPL program to transfer out tokens"]
+        },
+        {
+          "name": "tokenProgram2022",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Token program 2022"]
+        },
+        {
+          "name": "memoProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["memo program"]
+        },
+        {
+          "name": "vault0Mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["The mint of token vault 0"]
+        },
+        {
+          "name": "vault1Mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["The mint of token vault 1"]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "lockCpLiquidity",
+      "docs": [
+        "Lock cpSwap liquidity and mint a nft to collect locked liquidity's fee.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` -  The context of accounts",
+        "* `lp_amount` -  The lp amount to lock",
+        "* `with_metadata` -  Create NFT with metadata or not",
+        ""
+      ],
+      "accounts": [
+        { "name": "authority", "isMut": false, "isSigner": false },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": ["Pay to create account lamports"]
+        },
+        {
+          "name": "liquidityOwner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": ["who want to lock liquidity"]
+        },
+        { "name": "feeNftOwner", "isMut": false, "isSigner": false },
+        {
+          "name": "feeNftMint",
+          "isMut": true,
+          "isSigner": true,
+          "docs": ["Create a unique fee nft mint"]
+        },
+        {
+          "name": "feeNftAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Token account where fee nft will be minted to"]
+        },
+        {
+          "name": "poolState",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Indicates which pool the locked liquidity belong to"]
+        },
+        {
+          "name": "lockedLiquidity",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Store the locked information of liquidity"]
+        },
+        {
+          "name": "lpMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["The mint of liquidity token"]
+        },
+        {
+          "name": "liquidityOwnerLp",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["liquidity owner lp token account"]
+        },
+        {
+          "name": "lockedLpVault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Locked lp token deposit to"]
+        },
+        {
+          "name": "token0Vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The address that holds pool tokens for token_0"]
+        },
+        {
+          "name": "token1Vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The address that holds pool tokens for token_1"]
+        },
+        {
+          "name": "metadataAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["To store metaplex metadata"]
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Sysvar for token mint and ATA creation"]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Program to create the new account"]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Program to create/transfer mint/token account"]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Program to create an ATA for receiving fee NFT"]
+        },
+        {
+          "name": "metadataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Program to create NFT metadata accunt"]
+        }
+      ],
+      "args": [
+        { "name": "lpAmount", "type": "u64" },
+        { "name": "withMetadata", "type": "bool" }
+      ]
+    },
+    {
+      "name": "collectCpFees",
+      "docs": [
+        "collect cpSwap locked liquidity's fees",
+        "# Arguments",
+        "",
+        "* `ctx` -  The context of accounts",
+        "* `fee_lp_amount` -  The amount lp want to claim",
+        ""
+      ],
+      "accounts": [
+        { "name": "authority", "isMut": false, "isSigner": false },
+        {
+          "name": "feeNftOwner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": ["Fee nft owner who is allowed to receive fees"]
+        },
+        {
+          "name": "feeNftAccount",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Fee token account"]
+        },
+        {
+          "name": "lockedLiquidity",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Store the locked the information of liquidity"]
+        },
+        {
+          "name": "cpSwapProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["cpswap program"]
+        },
+        { "name": "cpAuthority", "isMut": false, "isSigner": false },
+        {
+          "name": "poolState",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["Pool state account"]
+        },
+        {
+          "name": "lpMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["lp mint"]
+        },
+        {
+          "name": "recipientToken0Account",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The token account for receive token_0"]
+        },
+        {
+          "name": "recipientToken1Account",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The token account for receive token_1"]
+        },
+        {
+          "name": "token0Vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The address that holds pool tokens for token_0"]
+        },
+        {
+          "name": "token1Vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["The address that holds pool tokens for token_1"]
+        },
+        {
+          "name": "vault0Mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["The mint of token_0 vault"]
+        },
+        {
+          "name": "vault1Mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["The mint of token_1 vault"]
+        },
+        {
+          "name": "lockedLpVault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["locked lp token account"]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["token Program"]
+        },
+        {
+          "name": "tokenProgram2022",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Token program 2022"]
+        },
+        {
+          "name": "memoProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["memo program"]
+        }
+      ],
+      "args": [{ "name": "feeLpAmount", "type": "u64" }]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "LockedCpLiquidityState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lockedLpAmount",
+            "docs": ["The Locked liquidity amount without claimed lp fee"],
+            "type": "u64"
+          },
+          {
+            "name": "claimedLpAmount",
+            "docs": ["Claimed lp fee amount"],
+            "type": "u64"
+          },
+          {
+            "name": "unclaimedLpAmount",
+            "docs": ["Unclaimed lp fee amount"],
+            "type": "u64"
+          },
+          {
+            "name": "lastLp",
+            "docs": ["Last updated cp pool lp total supply"],
+            "type": "u64"
+          },
+          {
+            "name": "lastK",
+            "docs": ["Last updated cp pool k"],
+            "type": "u128"
+          },
+          {
+            "name": "recentEpoch",
+            "docs": ["Account update recent epoch"],
+            "type": "u64"
+          },
+          {
+            "name": "poolId",
+            "docs": ["The ID of the pool with which this record is connected"],
+            "type": "publicKey"
+          },
+          {
+            "name": "feeNftMint",
+            "docs": ["nft mint to check who has authority to collect fee"],
+            "type": "publicKey"
+          },
+          {
+            "name": "lockedOwner",
+            "docs": ["The owner who has locked liquidity"],
+            "type": "publicKey"
+          },
+          {
+            "name": "lockedLpMint",
+            "docs": ["The mint of locked lp token"],
+            "type": "publicKey"
+          },
+          {
+            "name": "padding",
+            "docs": ["Unused bytes for future upgrades."],
+            "type": { "array": ["u64", 8] }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LockedClmmPositionState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": ["Bump to identify PDA"],
+            "type": { "array": ["u8", 1] }
+          },
+          {
+            "name": "positionOwner",
+            "docs": ["The owner who has locked clmm NFT"],
+            "type": "publicKey"
+          },
+          {
+            "name": "poolId",
+            "docs": ["The ID of the pool with which this record is connected"],
+            "type": "publicKey"
+          },
+          {
+            "name": "positionId",
+            "docs": [
+              "The ID of the position with which this record is connected"
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "lockedNftAccount",
+            "docs": [
+              "Program ATA locked NFT account or user ATA position NFT account"
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "feeNftMint",
+            "docs": ["nft mint to check who has authority to collect fee"],
+            "type": "publicKey"
+          },
+          {
+            "name": "recentEpoch",
+            "docs": ["account update recent epoch"],
+            "type": "u64"
+          },
+          {
+            "name": "padding",
+            "docs": ["Unused bytes for future upgrades."],
+            "type": { "array": ["u64", 8] }
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "SettleCpFeeEvent",
+      "fields": [
+        { "name": "deltaAmount", "type": "u64", "index": false },
+        { "name": "unclaimedAmount", "type": "u64", "index": false },
+        { "name": "lockedAmount", "type": "u64", "index": false },
+        { "name": "currPoolLp", "type": "u64", "index": false },
+        { "name": "lastPoolLp", "type": "u64", "index": false },
+        { "name": "currK", "type": "u128", "index": false },
+        { "name": "lastK", "type": "u128", "index": false }
+      ]
+    }
+  ]
+}
