@@ -1,0 +1,501 @@
+{
+  "version": "1.17.13",
+  "name": "stake_program",
+  "instructions": [
+    {
+      "name": "Initialize",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to initialize"
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent sysvar"
+        }
+      ],
+      "args": [
+        {
+          "name": "authorized",
+          "type": {
+            "defined": "Authorized"
+          }
+        },
+        {
+          "name": "lockup",
+          "type": {
+            "defined": "Lockup"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authorize",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to be updated"
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Clock sysvar"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "stake's current stake or withdraw authority to change away from. If stake Lockup is active, the signing lockup authority must follow if updating withdrawer"
+        }
+      ],
+      "args": [
+        {
+          "name": "newAuthority",
+          "type": "publicKey"
+        },
+        {
+          "name": "stakeAuthorize",
+          "type": {
+            "defined": "StakeAuthorize"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DelegateStake",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to be delegated"
+        },
+        {
+          "name": "vote",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Vote account to which stake will be delegated"
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Clock sysvar"
+        },
+        {
+          "name": "stakeHistory",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Stake history sysvar"
+        },
+        {
+          "name": "stakeConfig",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Stake config native program"
+        },
+        {
+          "name": "stakeAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "stake's stake authority"
+        }
+      ]
+    },
+    {
+      "name": "Split",
+      "accounts": [
+        {
+          "name": "from",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to split. Must be in the Initialized or Stake state"
+        },
+        {
+          "name": "to",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The uninitialized stake account to split to. Must be rent-exempt starting from solana 1.17."
+        },
+        {
+          "name": "stakeAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "from's stake authority"
+        }
+      ],
+      "args": [{ "name": "lamports", "type": "u64" }]
+    },
+    {
+      "name": "Withdraw",
+      "accounts": [
+        {
+          "name": "from",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to withdraw from"
+        },
+        {
+          "name": "to",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Recipient account"
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Clock sysvar"
+        },
+        {
+          "name": "stakeHistory",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Stake history sysvar"
+        },
+        {
+          "name": "withdrawAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "from's withdraw authority. If stake Lockup is active, the signing lockup authority must follow."
+        }
+      ],
+      "args": [{ "name": "lamports", "type": "u64" }]
+    },
+    {
+      "name": "Deactivate",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to deactivate"
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Clock sysvar"
+        },
+        {
+          "name": "stakeAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "stake's stake authority"
+        }
+      ]
+    },
+    {
+      "name": "SetLockup",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to set the lockup of"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "stake's withdraw authority or lockup authority if lockup is active"
+        }
+      ],
+      "args": [
+        {
+          "name": "unixTimestamp",
+          "type": { "option": "i64" }
+        },
+        {
+          "name": "epoch",
+          "type": { "option": "u64" }
+        },
+        {
+          "name": "custodian",
+          "type": { "option": "publicKey" }
+        }
+      ]
+    },
+    {
+      "name": "Merge",
+      "accounts": [
+        {
+          "name": "to",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The destination stake account to merge into"
+        },
+        {
+          "name": "from",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to merge from. Must have exact same lockup and authority as to. This account will be drained."
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Clock sysvar"
+        },
+        {
+          "name": "stakeHistory",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Stake history sysvar"
+        },
+        {
+          "name": "stakeAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Both from and to's stake authority"
+        }
+      ]
+    },
+    {
+      "name": "AuthorizeWithSeed",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to be updated, with the authority to be updated being an account created with Pubkey::create_with_seed()"
+        },
+        {
+          "name": "authorityBase",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Base account of stake's authority to be updated"
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Clock sysvar. If stake Lockup is active, the signing lockup authority must follow if updating withdrawer."
+        }
+      ],
+      "args": [
+        {
+          "name": "newAuthority",
+          "type": "publicKey"
+        },
+        {
+          "name": "stakeAuthorize",
+          "type": { "defined": "StakeAuthorize" }
+        },
+        {
+          "name": "authoritySeed",
+          "type": "string"
+        },
+        {
+          "name": "authorityOwner",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "InitializeChecked",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to initialize"
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent sysvar"
+        },
+        {
+          "name": "stakeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "stake's new stake authority"
+        },
+        {
+          "name": "withdrawAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "stake's new withdraw authority"
+        }
+      ]
+    },
+    {
+      "name": "AuthorizeChecked",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to be updated"
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Clock sysvar"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "stake's current stake or withdraw authority to change away from"
+        },
+        {
+          "name": "newAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "stake's new stake or withdraw authority to change to. If stake Lockup is active, the signing lockup authority must follow if updating withdrawer."
+        }
+      ],
+      "args": [
+        { "name": "stakeAuthorize", "type": { "defined": "StakeAuthorize" } }
+      ]
+    },
+    {
+      "name": "AuthorizeCheckedWithSeed",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to be updated"
+        },
+        {
+          "name": "authorityBase",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Base account of stake's authority to be updated"
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Clock sysvar"
+        },
+        {
+          "name": "newAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "stake's new stake or withdraw authority to change to. If stake Lockup is active, the signing lockup authority must follow if updating withdrawer."
+        }
+      ],
+      "args": [
+        { "name": "stakeAuthorize", "type": { "defined": "StakeAuthorize" } },
+        { "name": "authoritySeed", "type": "string" },
+        { "name": "authorityOwner", "type": "publicKey" }
+      ]
+    },
+    {
+      "name": "SetLockupChecked",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The stake account to set the lockup of"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "stake's withdraw authority or lockup authority if lockup is active. If setting a new lockup authority, the signing new lockup authority must follow."
+        }
+      ],
+      "args": [
+        { "name": "unixTimestamp", "type": { "option": "i64" } },
+        { "name": "epoch", "type": { "option": "u64" } }
+      ]
+    },
+    {
+      "name": "GetMinimumDelegation"
+    },
+    {
+      "name": "DeactivateDelinquent",
+      "accounts": [
+        {
+          "name": "stake",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The delinquent stake account to deactivate"
+        },
+        {
+          "name": "vote",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "stake's delinquent vote account"
+        },
+        {
+          "name": "referenceVote",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Reference vote account that has voted at least once in the last MINIMUM_DELINQUENT_EPOCHS_FOR_DEACTIVATION epochs"
+        }
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "Authorized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "staker",
+            "type": "publicKey"
+          },
+          {
+            "name": "withdrawer",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Lockup",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "unixTimestamp",
+            "type": "i64"
+          },
+          {
+            "name": "epoch",
+            "type": "u64"
+          },
+          {
+            "name": "custodian",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeAuthorize",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Staker"
+          },
+          {
+            "name": "Withdrawer"
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "origin": "anchor",
+    "address": "Stake11111111111111111111111111111111111111"
+  }
+}

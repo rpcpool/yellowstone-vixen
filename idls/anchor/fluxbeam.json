@@ -1,0 +1,277 @@
+{
+  "version": "0.1.0",
+  "name": "fluxbeam",
+  "accounts": [
+    { "name": "Uninitialized", "type": { "kind": "struct", "fields": [] } },
+    {
+      "name": "SwapPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "SwapPool",
+            "type": {
+              "kind": "struct",
+              "fields": [
+                { "name": "version", "type": "u8" },
+                { "name": "isInitialized", "type": "bool" },
+                { "name": "bumpSeed", "type": "u8" },
+                { "name": "poolTokenProgramId", "type": "publicKey" },
+                { "name": "tokenAccountA", "type": "publicKey" },
+                { "name": "tokenAccountB", "type": "publicKey" },
+                { "name": "tokenPool", "type": "publicKey" },
+                { "name": "mintA", "type": "publicKey" },
+                { "name": "mintB", "type": "publicKey" },
+                { "name": "feeAccount", "type": "publicKey" },
+                { "name": "tradeFeeNumerator", "type": "u64" },
+                { "name": "tradeFeeDenominator", "type": "u64" },
+                { "name": "ownerTradeFeeNumerator", "type": "u64" },
+                { "name": "ownerTradeFeeDenominator", "type": "u64" },
+                { "name": "ownerWithdrawFeeNumerator", "type": "u64" },
+                { "name": "ownerWithdrawFeeDenominator", "type": "u64" },
+                { "name": "hostFeeNumerator", "type": "u64" },
+                { "name": "hostFeeDenominator", "type": "u64" },
+                { "name": "curveType", "type": "u8" },
+                { "name": "curveParameters", "type": { "array": ["u8", 32] } }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "instructions": [
+    {
+      "name": "CreatePool",
+      "accounts": [
+        { "name": "authority" },
+        { "name": "payer" },
+        { "name": "pool" },
+        { "name": "poolAuthority" },
+        { "name": "mintA" },
+        { "name": "mintB" },
+        { "name": "tokenAccountA" },
+        { "name": "tokenAccountB" },
+        { "name": "poolLpMint" },
+        { "name": "feeAccount" },
+        { "name": "tokenAccountPool" },
+        { "name": "mintATokenProgram" },
+        { "name": "mintBTokenProgram" },
+        { "name": "poolTokenProgramId" },
+        { "name": "swapProgramId" },
+        { "name": "associatedTokenProgram" },
+        { "name": "systemProgram" }
+      ],
+      "args": [
+        { "name": "tradeFeeNumerator", "type": "u64" },
+        { "name": "tradeFeeDenominator", "type": "u64" },
+        { "name": "ownerTradeFeeNumerator", "type": "u64" },
+        { "name": "ownerTradeFeeDenominator", "type": "u64" },
+        { "name": "ownerWithdrawFeeNumerator", "type": "u64" },
+        { "name": "ownerWithdrawFeeDenominator", "type": "u64" },
+        { "name": "hostFeeNumerator", "type": "u64" },
+        { "name": "hostFeeDenominator", "type": "u64" },
+        { "name": "curveType", "type": "u8" },
+        { "name": "curveParameters", "type": { "array": ["u8", 32] } }
+      ],
+      "discriminant": { "type": "u8", "value": 0 }
+    },
+    {
+      "name": "Swap",
+      "accounts": [
+        { "name": "tokenSwap" },
+        { "name": "authority" },
+        { "name": "userTransferAuthority" },
+        { "name": "userSource" },
+        { "name": "poolSource" },
+        { "name": "poolDestination" },
+        { "name": "userDestination" },
+        { "name": "poolMint" },
+        { "name": "feeAccount" },
+        { "name": "hostFeeAccount" },
+        { "name": "sourceMint" },
+        { "name": "destinationMint" },
+        { "name": "sourceTokenProgramId" },
+        { "name": "destinationTokenProgramId" },
+        { "name": "poolTokenProgramId" },
+        { "name": "swapProgramId" }
+      ],
+      "args": [
+        { "name": "amountIn", "type": "u64" },
+        { "name": "minimumAmountOut", "type": "u64" }
+      ],
+      "discriminant": { "type": "u8", "value": 1 }
+    },
+    {
+      "name": "AddLiquidity",
+      "accounts": [
+        { "name": "tokenSwap" },
+        { "name": "authority" },
+        { "name": "userTransferAuthority" },
+        { "name": "sourceA" },
+        { "name": "sourceB" },
+        { "name": "intoA" },
+        { "name": "intoB" },
+        { "name": "poolToken" },
+        { "name": "poolAccount" },
+        { "name": "mintA" },
+        { "name": "mintB" },
+        { "name": "tokenProgramIdA" },
+        { "name": "tokenProgramIdB" },
+        { "name": "poolTokenProgramId" },
+        { "name": "swapProgramId" }
+      ],
+      "args": [
+        { "name": "poolTokenAmount", "type": "u64" },
+        { "name": "maximumTokenA", "type": "u64" },
+        { "name": "maximumTokenB", "type": "u64" }
+      ],
+      "discriminant": { "type": "u8", "value": 2 }
+    },
+    {
+      "name": "RemoveLiquidity",
+      "accounts": [
+        { "name": "tokenSwap" },
+        { "name": "authority" },
+        { "name": "userTransferAuthority" },
+        { "name": "poolMint" },
+        { "name": "feeAccount" },
+        { "name": "poolAccount" },
+        { "name": "fromA" },
+        { "name": "fromB" },
+        { "name": "userAccountA" },
+        { "name": "userAccountB" },
+        { "name": "mintA" },
+        { "name": "mintB" },
+        { "name": "poolTokenProgramId" },
+        { "name": "tokenProgramIdA" },
+        { "name": "tokenProgramIdB" },
+        { "name": "swapProgramId" }
+      ],
+      "args": [
+        { "name": "poolTokenAmount", "type": "u64" },
+        { "name": "minimumTokenA", "type": "u64" },
+        { "name": "minimumTokenB", "type": "u64" }
+      ],
+      "discriminant": { "type": "u8", "value": 3 }
+    }
+  ],
+  "types": [
+    {
+      "name": "WithdrawDestToken",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "withdrawAmount", "type": "u64" },
+          { "name": "coinAmount", "type": "u64" },
+          { "name": "pcAmount", "type": "u64" },
+          { "name": "destTokenCoin", "type": "publicKey" },
+          { "name": "destTokenPc", "type": "publicKey" }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawQueue",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "owner", "type": { "array": ["u64", 4] } },
+          { "name": "head", "type": "u64" },
+          { "name": "count", "type": "u64" },
+          {
+            "name": "buf",
+            "type": { "array": [{ "defined": "WithdrawDestToken" }, 64] }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TargetOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "price", "type": "u64" },
+          { "name": "vol", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "OutPutData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "needTakePnlCoin", "type": "u64" },
+          { "name": "needTakePnlPc", "type": "u64" },
+          { "name": "totalPnlPc", "type": "u64" },
+          { "name": "totalPnlCoin", "type": "u64" },
+          { "name": "poolOpenTime", "type": "u64" },
+          { "name": "punishPcAmount", "type": "u64" },
+          { "name": "punishCoinAmount", "type": "u64" },
+          { "name": "orderbookToInitTime", "type": "u64" },
+          { "name": "swapCoinInAmount", "type": "u128" },
+          { "name": "swapPcOutAmount", "type": "u128" },
+          { "name": "swapTakePcFee", "type": "u64" },
+          { "name": "swapPcInAmount", "type": "u128" },
+          { "name": "swapCoinOutAmount", "type": "u128" },
+          { "name": "swapTakeCoinFee", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "AmmConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "pnlOwner", "type": "publicKey" },
+          { "name": "cancelOwner", "type": "publicKey" },
+          { "name": "pending1", "type": { "array": ["u64", 28] } },
+          { "name": "pending2", "type": { "array": ["u64", 32] } }
+        ]
+      }
+    },
+    {
+      "name": "LastOrderDistance",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "lastOrderNumerator", "type": "u64" },
+          { "name": "lastOrderDenominator", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "NeedTake",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "needTakePc", "type": "u64" },
+          { "name": "needTakeCoin", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "SwapInstructionBaseIn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "amountIn", "type": "u64" },
+          { "name": "minimumAmountOut", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "SwapInstructionBaseOut",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "maxAmountIn", "type": "u64" },
+          { "name": "amountOut", "type": "u64" }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "address": "FLUXubRmkEi2q6K3Y9kBPg9248ggaZVsoSFhtJHSrm1X",
+    "origin": "shank"
+  }
+}
