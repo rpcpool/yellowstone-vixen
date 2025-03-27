@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "kamino_vault",
+  "metadata": {
+    "address": "kvauTFR8qm1dhniz6pYuBZkuene3Hfrs1VQhVRgCNrr"
+  },
   "instructions": [
     {
       "name": "initVault",

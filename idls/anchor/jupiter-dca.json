@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "dca",
+  "metadata": {
+    "address": "DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M"
+  },
   "instructions": [
     {
       "name": "openDca",

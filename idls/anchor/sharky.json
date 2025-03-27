@@ -1,6 +1,9 @@
 {
   "version": "6.3.0",
   "name": "sharky",
+  "metadata": {
+    "address": "SHARKobtfF1bHhxD2eqftjHBdVSCbKo9JtgK71FhELP"
+  },
   "instructions": [
     {
       "name": "createOrderBook",

@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "openbook_v2",
+  "metadata": {
+    "address": "opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb"
+  },
   "instructions": [
     {
       "name": "createMarket",

@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "zeta",
+  "metadata": {
+    "address": "ZETAxsqBRek56DhiGXrn75yj2NHU3aYUnxvHXpkf3aD"
+  },
   "instructions": [
     {
       "name": "initializeZetaPricing",

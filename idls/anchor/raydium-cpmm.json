@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "raydium_cp_swap",
+  "metadata": {
+    "address": "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+  },
   "instructions": [
     {
       "name": "createAmmConfig",

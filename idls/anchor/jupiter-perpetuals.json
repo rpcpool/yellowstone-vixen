@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "perpetuals",
+  "metadata": {
+    "address": "PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu"
+  },
   "instructions": [
     {
       "name": "init",

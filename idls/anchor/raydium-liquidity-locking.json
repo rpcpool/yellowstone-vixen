@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "raydium_liquidity_locking",
+  "metadata": {
+    "address": "LockrWmn6K5twhz3y9w1dQERbmgSaRkfnTeTKbpofwE"
+  },
   "instructions": [
     {
       "name": "lockClmmPosition",

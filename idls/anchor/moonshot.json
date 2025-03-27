@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "token_launchpad",
+  "metadata": {
+    "address": "MoonCVVNZFSYkqNXP6bxHLPL6QQJiMagDL3qcqUQTrG"
+  },
   "instructions": [
     {
       "name": "tokenMint",

@@ -1,6 +1,9 @@
 {
   "version": "0.3.4",
   "name": "whirlpool",
+  "metadata": {
+    "address": "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+  },
   "instructions": [
     {
       "name": "initializeConfig",

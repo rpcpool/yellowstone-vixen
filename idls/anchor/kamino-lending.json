@@ -1,6 +1,9 @@
 {
   "version": "1.11.0",
   "name": "kamino_lending",
+  "metadata": {
+    "address": "KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD"
+  },
   "instructions": [
     {
       "name": "initLendingMarket",

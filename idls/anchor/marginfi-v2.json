@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "marginfi",
+  "metadata": {
+    "address": "MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA"
+  },
   "instructions": [
     {
       "name": "marginfiGroupInitialize",

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "init-parser-crates": "./init-parser-crates.sh",
     "generate": "node codama.mjs"
   },
   "keywords": [],

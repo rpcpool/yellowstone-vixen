@@ -1,6 +1,9 @@
 {
   "version": "0.1.1",
   "name": "lifinity_amm_v2",
+  "metadata": {
+    "address": "2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c"
+  },
   "instructions": [
     {
       "name": "swap",

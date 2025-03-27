@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "restaking_program",
+  "metadata": {
+    "address": "sSo1iU21jBrU9VaJ8PJib1MtorefUV4fzC9GURa2KNn"
+  },
   "instructions": [
     {
       "name": "initialize",

@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "node:path";
-// import { rootNode } from "@codama/nodes";
+import { rootNode } from "@codama/nodes";
 import { rootNodeFromAnchor } from "@codama/nodes-from-anchor";
 import { readJson } from "@codama/renderers-core";
 import { visit } from "@codama/visitors-core";
@@ -8,14 +8,10 @@ import { visit } from "@codama/visitors-core";
 import { renderVisitor as renderRustVisitor } from "@codama/renderers-rust";
 import { renderVisitor as renderVixenVisitor } from "@codama/renderers-vixen-parser";
 
-function generateProject(project) {
+function generateProject(file, node) {
+  const project = path.parse(file).name;
   const packageName = `${project}-parser`;
   const rootDir = process.cwd();
-
-  const idl = readJson(`./idls/${project}.json`);
-
-  // const node = rootNode(idl.program);
-  const node = rootNodeFromAnchor(idl);
 
   // #Renderers-rust
   visit(
@@ -44,12 +40,31 @@ function generateProject(project) {
 }
 
 function main() {
-  const files = fs.readdirSync("idls");
+  // const anchorIdls = fs.readdirSync("idls/anchor");
 
-  files.forEach((file) => {
-    const fileNameWithoutExtension = path.parse(file).name;
-    generateProject(fileNameWithoutExtension);
-  });
+  // anchorIdls.forEach((file) => {
+  //   console.log(`#### ${file}:`);
+  //   const idl = readJson(`./idls/anchor/${file}`);
+  //   const node = rootNodeFromAnchor(idl);
+
+  //   generateProject(file, node);
+  // });
+
+  // const shankIdls = fs.readdirSync("idls/shank");
+
+  // shankIdls.forEach((file) => {
+  //   console.log(`#### ${file}:`);
+  //   const idl = readJson(`./idls/shank/${file}`);
+  //   const node = rootNode(idl.program);
+
+  //   generateProject(file, node);
+  // });
+
+  const file = "idls/failing/token.json";
+  const idl = readJson(`./idls/failing/token.json`);
+  const node = rootNodeFromAnchor(idl);
+
+  generateProject(file, node);
 }
 
 main();

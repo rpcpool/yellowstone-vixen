@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "limit_order",
+  "metadata": {
+    "address": "jupoNjAxXgZ4rjzxzPMP4oxduvQsQtZzyknqvzYNrNu"
+  },
   "instructions": [
     {
       "name": "initializeOrder",

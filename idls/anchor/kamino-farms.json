@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "farms",
+  "metadata": {
+    "address": "FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr"
+  },
   "instructions": [
     {
       "name": "initializeGlobalConfig",

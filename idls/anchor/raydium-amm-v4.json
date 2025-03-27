@@ -1,6 +1,9 @@
 {
   "version": "0.3.0",
   "name": "raydium_amm",
+  "metadata": {
+    "address": "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+  },
   "instructions": [
     {
       "name": "initialize",

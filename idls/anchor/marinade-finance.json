@@ -1,6 +1,9 @@
 {
   "version": "0.1.0",
   "name": "marinade_finance",
+  "metadata": {
+    "address": "MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD"
+  },
   "instructions": [
     {
       "name": "initialize",
