@@ -6,11 +6,11 @@ resolver = "2"
 [workspace.dependencies]
 yellowstone-grpc-client = { version = "2.0.0" }
 yellowstone-grpc-proto = { version = "2.0.0", default-features = false }
-yellowstone-vixen = { path = "crates/runtime", version = "0.1.0" }
-yellowstone-vixen-core = { path = "crates/core", version = "0.1.0" }
-yellowstone-vixen-mock = { path = "crates/mock", version = "0.1.0" }
-yellowstone-vixen-parser = { path = "crates/parser", version = "0.1.0" }
-yellowstone-vixen-proto = { path = "crates/proto", version = "0.1.0" }
+yellowstone-vixen = { path = "crates/runtime", version = "0.2.0" }
+yellowstone-vixen-core = { path = "crates/core", version = "0.2.0" }
+yellowstone-vixen-mock = { path = "crates/mock", version = "0.2.0" }
+yellowstone-vixen-parser = { path = "crates/parser", version = "0.2.0" }
+yellowstone-vixen-proto = { path = "crates/proto", version = "0.2.0" }
 
 # helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 
 # https://github.com/solana-labs/solana/issues/26688

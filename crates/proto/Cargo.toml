@@ -2,7 +2,7 @@
 name = "yellowstone-vixen-proto"
 description = "Protobuf definitions for Vixen"
 # authors = ["TODO"]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
