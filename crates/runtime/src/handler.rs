@@ -6,7 +6,7 @@ use std::{borrow::Cow, collections::HashMap, pin::Pin};
 use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
 use tracing::{warn, Instrument, Span};
-use vixen_core::{AccountUpdate, GetPrefilter, ParserId, TransactionUpdate};
+use vixen_core::{AccountUpdate, BlockMetaUpdate, GetPrefilter, ParserId, TransactionUpdate};
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
 use crate::metrics::{Counters, Instrumenter, JobResult, Update};
@@ -224,6 +224,7 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
 pub(crate) struct PipelineSets {
     pub account: PipelineSet<BoxPipeline<'static, AccountUpdate>>,
     pub transaction: PipelineSet<BoxPipeline<'static, TransactionUpdate>>,
+    pub block_meta: PipelineSet<BoxPipeline<'static, BlockMetaUpdate>>,
 }
 
 impl PipelineSets {
@@ -233,6 +234,7 @@ impl PipelineSets {
             self.account
                 .filters()
                 .chain(self.transaction.filters())
+                .chain(self.block_meta.filters())
                 .collect(),
         )
     }
