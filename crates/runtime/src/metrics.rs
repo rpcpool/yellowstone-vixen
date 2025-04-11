@@ -332,6 +332,10 @@ impl Update for vixen_core::TransactionUpdate {
     const TYPE: UpdateType = UpdateType::Transaction;
 }
 
+impl Update for vixen_core::BlockMetaUpdate {
+    const TYPE: UpdateType = UpdateType::BlockMeta;
+}
+
 /// Tuple of `(singular, plural)`
 #[derive(Clone, Copy)]
 struct Noun(&'static str, &'static str);
@@ -349,6 +353,7 @@ macro_rules! noun_formatters {
 pub(crate) enum UpdateType {
     Account,
     Transaction,
+    BlockMeta,
 }
 
 impl UpdateType {
@@ -358,6 +363,9 @@ impl UpdateType {
             Some(UpdateOneof::Transaction(vixen_core::TransactionUpdate { .. })) => {
                 Some(Self::Transaction)
             },
+            Some(UpdateOneof::BlockMeta(vixen_core::BlockMetaUpdate { .. })) => {
+                Some(Self::BlockMeta)
+            },
             _ => None,
         }
     }
@@ -366,6 +374,7 @@ impl UpdateType {
         match self {
             UpdateType::Account => Noun("account", "accounts"),
             UpdateType::Transaction => Noun("transaction", "transactions"),
+            UpdateType::BlockMeta => Noun("block_meta", "block_metas"),
         }
     }
 }
@@ -373,6 +382,7 @@ impl UpdateType {
 struct UpdateCounters<B: Instrumenter> {
     account: B::Counter,
     transaction: B::Counter,
+    block_meta: B::Counter,
 }
 
 impl<B: Instrumenter> UpdateCounters<B> {
@@ -381,6 +391,7 @@ impl<B: Instrumenter> UpdateCounters<B> {
         Self {
             account: f(UpdateType::Account),
             transaction: f(UpdateType::Transaction),
+            block_meta: f(UpdateType::BlockMeta),
         }
     }
 
@@ -388,6 +399,7 @@ impl<B: Instrumenter> UpdateCounters<B> {
         match ty {
             UpdateType::Account => &self.account,
             UpdateType::Transaction => &self.transaction,
+            UpdateType::BlockMeta => &self.block_meta,
         }
     }
 }

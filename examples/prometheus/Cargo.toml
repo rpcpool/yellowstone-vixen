@@ -17,4 +17,5 @@ yellowstone-vixen-parser = { workspace = true, features = [
   "token-program",
   "orca",
   "raydium",
+  "block-meta",
 ] }

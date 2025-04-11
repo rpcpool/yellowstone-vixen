@@ -1,7 +1,9 @@
 //! Builder types for the Vixen runtime and stream server.
 
 use tracing::error;
-use vixen_core::{instruction::InstructionUpdate, AccountUpdate, TransactionUpdate};
+use vixen_core::{
+    instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, TransactionUpdate,
+};
 use yellowstone_grpc_proto::geyser::CommitmentLevel;
 
 use crate::{
@@ -27,6 +29,9 @@ pub enum BuilderError {
     /// Two transaction pipelines were registered with the same parser ID.
     #[error("ID collision detected among transaction pipelines")]
     TransactionPipelineCollision,
+    /// Two block meta pipelines were registered with the same parser ID.
+    #[error("ID collision detected among block meta pipelines")]
+    BlockMetaCollision,
     /// A required field was missing from the builder.
     #[error("Missing field {0:?}")]
     MissingField(&'static str),
@@ -47,6 +52,7 @@ pub struct Builder<K: BuilderKind, M> {
     pub(crate) account: Vec<BoxPipeline<'static, AccountUpdate>>,
     pub(crate) transaction: Vec<BoxPipeline<'static, TransactionUpdate>>,
     pub(crate) instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
+    pub(crate) block_meta: Vec<BoxPipeline<'static, BlockMetaUpdate>>,
     pub(crate) commitment_level: Option<CommitmentLevel>,
     pub(crate) metrics: M,
     pub(crate) extra: K,
@@ -59,6 +65,7 @@ impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
             account: vec![],
             transaction: vec![],
             instruction: vec![],
+            block_meta: vec![],
             commitment_level: None,
             metrics: NullMetrics,
             extra: K::default(),
@@ -104,6 +111,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             account,
             transaction,
             instruction,
+            block_meta,
             commitment_level,
             metrics: _,
             extra,
@@ -114,6 +122,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             account,
             transaction,
             instruction,
+            block_meta,
             commitment_level,
             metrics,
             extra,
@@ -159,6 +168,14 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.instruction.push(Box::new(instruction)))
     }
 
+    /// Add a new block metad pipeline to the builder.
+    pub fn block_meta<T: DynPipeline<BlockMetaUpdate> + Send + Sync + 'static>(
+        self,
+        block_meta: T,
+    ) -> Self {
+        self.mutate(|s| s.block_meta.push(Box::new(block_meta)))
+    }
+
     /// Set the confirmation level for the Yellowstone client.
     pub fn commitment_level(self, commitment_level: CommitmentLevel) -> Self {
         self.mutate(|s| s.commitment_level = Some(commitment_level))
@@ -176,6 +193,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             account,
             mut transaction,
             instruction,
+            block_meta,
             commitment_level,
             metrics,
             extra: RuntimeKind,
@@ -203,10 +221,12 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
 
         let account_len = account.len();
         let transaction_len = transaction.len();
+        let block_meta_len = block_meta.len();
 
         let pipelines = PipelineSets {
             account: account.into_iter().collect(),
             transaction: transaction.into_iter().collect(),
+            block_meta: block_meta.into_iter().collect(),
         };
 
         if pipelines.account.len() != account_len {
@@ -215,6 +235,10 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
 
         if pipelines.transaction.len() != transaction_len {
             return Err(BuilderError::TransactionPipelineCollision);
+        }
+
+        if pipelines.block_meta.len() != block_meta_len {
+            return Err(BuilderError::MissingField("block_meta"));
         }
 
         Ok(Runtime {
