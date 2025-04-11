@@ -2,7 +2,8 @@ use std::{collections::HashMap, fmt::Debug};
 
 use tokio::sync::broadcast;
 use vixen_core::{
-    instruction::InstructionUpdate, AccountUpdate, Parser, ProgramParser, Pubkey, TransactionUpdate,
+    instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, Parser, ProgramParser, Pubkey,
+    TransactionUpdate,
 };
 use yellowstone_vixen_proto::{
     prost::{Message, Name},
@@ -108,6 +109,18 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
         self.insert(account, |s| &mut s.account)
     }
 
+    /// Add a new block metadata parser to the builder.
+    pub fn block_meta<A: Debug + ProgramParser<Input = BlockMetaUpdate> + Send + Sync + 'static>(
+        self,
+        block_meta: A,
+    ) -> Self
+    where
+        A::Input: Sync,
+        A::Output: Message + Name + Send + Sync,
+    {
+        self.insert(block_meta, |s| &mut s.block_meta)
+    }
+
     /// Add a new transaction parser to the builder.
     pub fn transaction<
         T: Debug + ProgramParser<Input = TransactionUpdate> + Send + Sync + 'static,
@@ -148,6 +161,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             account,
             transaction,
             instruction,
+            block_meta,
             metrics,
             commitment_level,
             extra: StreamKind(desc_sets, channels),
@@ -170,6 +184,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             transaction,
             instruction,
             commitment_level,
+            block_meta,
             metrics,
             extra: RuntimeKind,
         }

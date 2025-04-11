@@ -25,8 +25,9 @@ use std::{
 };
 
 use yellowstone_grpc_proto::geyser::{
-    SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterTransactions,
-    SubscribeUpdateAccount, SubscribeUpdateTransaction,
+    SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterBlocksMeta,
+    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateBlockMeta,
+    SubscribeUpdateTransaction,
 };
 
 pub extern crate bs58;
@@ -62,6 +63,8 @@ pub type ParseResult<T> = Result<T, ParseError>;
 pub type AccountUpdate = SubscribeUpdateAccount;
 /// A transaction update from Yellowstone.
 pub type TransactionUpdate = SubscribeUpdateTransaction;
+/// A block meta update from Yellowstone.
+pub type BlockMetaUpdate = SubscribeUpdateBlockMeta;
 
 /// A core trait that defines the parse logic for producing a parsed value from
 /// a Vixen update (typically [`AccountUpdate`], [`TransactionUpdate`], or
@@ -135,6 +138,7 @@ impl<T: Parser> GetPrefilter for T {
 pub struct Prefilter {
     pub(crate) account: Option<AccountPrefilter>,
     pub(crate) transaction: Option<TransactionPrefilter>,
+    pub(crate) block_meta: Option<BlockMetaPrefilter>,
 }
 
 fn merge_opt<T, F: FnOnce(&mut T, T)>(lhs: &mut Option<T>, rhs: Option<T>, f: F) {
@@ -156,9 +160,11 @@ impl Prefilter {
         let Self {
             account,
             transaction,
+            block_meta,
         } = self;
         merge_opt(account, other.account, AccountPrefilter::merge);
         merge_opt(transaction, other.transaction, TransactionPrefilter::merge);
+        merge_opt(block_meta, other.block_meta, BlockMetaPrefilter::merge);
     }
 }
 
@@ -199,6 +205,13 @@ impl TransactionPrefilter {
         let Self { accounts } = self;
         accounts.extend(other.accounts);
     }
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
+pub(crate) struct BlockMetaPrefilter {}
+
+impl BlockMetaPrefilter {
+    pub fn merge(_lhs: &mut Self, _rhs: Self) {}
 }
 
 /// Helper macro for converting Vixen's [`Pubkey`] to a Solana ed25519 public
@@ -448,9 +461,12 @@ impl PrefilterBuilder {
             accounts: transaction_accounts.unwrap_or_default(),
         };
 
+        let block_meta = BlockMetaPrefilter {};
+
         Ok(Prefilter {
             account: (account != AccountPrefilter::default()).then_some(account),
             transaction: (transaction != TransactionPrefilter::default()).then_some(transaction),
+            block_meta: (block_meta != BlockMetaPrefilter::default()).then_some(block_meta),
         })
     }
 
@@ -549,7 +565,10 @@ impl<'a> From<Filters<'a>> for SubscribeRequest {
                 .collect(),
             transactions_status: [].into_iter().collect(),
             blocks: [].into_iter().collect(),
-            blocks_meta: [].into_iter().collect(),
+            blocks_meta: value
+                .iter()
+                .map(|(k, _v)| (k.to_owned().into(), SubscribeRequestFilterBlocksMeta {}))
+                .collect(),
             entry: [].into_iter().collect(),
             commitment: None,
             accounts_data_slice: vec![],

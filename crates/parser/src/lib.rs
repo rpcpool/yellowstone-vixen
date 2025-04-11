@@ -15,6 +15,9 @@ pub use error::*;
 
 mod helpers;
 
+#[cfg(feature = "block-meta")]
+pub mod block_meta;
+
 #[cfg(feature = "orca")]
 pub mod orca;
 #[cfg(feature = "raydium")]
