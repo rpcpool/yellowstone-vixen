@@ -8432,6 +8432,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-pumpfun-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program 2.2.1",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yoke"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
