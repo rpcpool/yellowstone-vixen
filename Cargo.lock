@@ -1539,7 +1539,9 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "yellowstone-vixen",
+ "yellowstone-vixen-meteora-parser",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-pumpfun-parser",
 ]
 
 [[package]]
@@ -8380,6 +8382,21 @@ dependencies = [
  "thiserror 1.0.69",
  "yellowstone-grpc-proto",
  "yellowstone-vixen-proto",
+]
+
+[[package]]
+name = "yellowstone-vixen-meteora-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program 2.2.1",
+ "thiserror 1.0.69",
+ "tonic",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
