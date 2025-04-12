@@ -6,7 +6,11 @@
 //!
 syntax = "proto3";
 
-package proto_def;
+package vixen.parser.pumpfun;
+
+message Descriptor {
+	uint32 descriptor = 1;
+}
 
 message InitializeIx {
 	InitializeIxAccounts accounts = 1;

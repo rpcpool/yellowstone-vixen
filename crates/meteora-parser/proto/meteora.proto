@@ -6,7 +6,11 @@
 //!
 syntax = "proto3";
 
-package proto_def;
+package vixen.parser.meteora;
+
+message Descriptor {
+	uint32 descriptor = 1;
+}
 
 message InitializeLbPairIx {
 	InitializeLbPairIxAccounts accounts = 1;

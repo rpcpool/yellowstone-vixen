@@ -1539,21 +1539,9 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "yellowstone-vixen",
- "yellowstone-vixen-parser",
-]
-
-[[package]]
-name = "example-vixen-stream-parser-test"
-version = "0.0.0"
-dependencies = [
- "clap",
- "prost-build",
- "toml 0.8.20",
- "tracing",
- "tracing-subscriber",
- "yellowstone-vixen",
  "yellowstone-vixen-meteora-parser",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-pumpfun-parser",
 ]
 
 [[package]]
