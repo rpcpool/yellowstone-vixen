@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package vixen.parser;
+package vixen.parser.orca;
 
 // accounts
 
@@ -146,3 +146,22 @@ message OrcaSwapV2InstructionProto {
     OrcaSwapV2AccountsProto accounts = 1;
     OrcaSwapV2IxDataProto data = 2;
 }
+
+// Orca Program State
+message ProgramState {
+    oneof state_oneof {
+      WhirlpoolProto whirlpool = 1;
+      WhirlpoolsConfigProto whirlpools_config = 2;
+      FeeTierProto fee_tier = 3;
+      PositionProto position = 4;
+      OrcaTickArrayProto tick_array = 5;
+    }
+  }
+  
+  // Orca Program Instructions
+  message ProgramIxs {
+    oneof ix_oneof {
+      OrcaSwapInstructionProto swap = 1;
+      OrcaSwapV2InstructionProto swap_v2 = 2;
+    }
+  }

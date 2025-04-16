@@ -72,9 +72,9 @@ mod proto_parser {
 
     use orca_whirlpools_client::types::{PositionRewardInfo, Tick, WhirlpoolRewardInfo};
     use yellowstone_vixen_core::proto::ParseProto;
-    use yellowstone_vixen_proto::parser::{
-        orca_program_state_proto, FeeTierProto, OrcaPositionRewardInfoProto, OrcaProgramStateProto,
-        OrcaTickArrayProto, OrcaTickProto, PositionProto, WhirlpoolProto, WhirlpoolRewardInfoProto,
+    use yellowstone_vixen_proto::parser::orca::{
+        program_state, FeeTierProto, OrcaPositionRewardInfoProto, OrcaTickArrayProto,
+        OrcaTickProto, PositionProto, ProgramState, WhirlpoolProto, WhirlpoolRewardInfoProto,
         WhirlpoolsConfigProto,
     };
 
@@ -209,25 +209,25 @@ mod proto_parser {
     }
 
     impl ParseProto for AccountParser {
-        type Message = OrcaProgramStateProto;
+        type Message = ProgramState;
 
         fn output_into_message(value: Self::Output) -> Self::Message {
             let state_oneof = match value {
-                OrcaProgramState::Whirlpool(data) => Some(
-                    orca_program_state_proto::StateOneof::Whirlpool(data.into_proto()),
-                ),
+                OrcaProgramState::Whirlpool(data) => {
+                    Some(program_state::StateOneof::Whirlpool(data.into_proto()))
+                },
                 OrcaProgramState::WhirlpoolsConfig(data) => Some(
-                    orca_program_state_proto::StateOneof::WhirlpoolsConfig(data.into_proto()),
+                    program_state::StateOneof::WhirlpoolsConfig(data.into_proto()),
                 ),
-                OrcaProgramState::FeeTier(data) => Some(
-                    orca_program_state_proto::StateOneof::FeeTier(data.into_proto()),
-                ),
-                OrcaProgramState::Position(data) => Some(
-                    orca_program_state_proto::StateOneof::Position(data.into_proto()),
-                ),
-                OrcaProgramState::TickArray(data) => Some(
-                    orca_program_state_proto::StateOneof::TickArray(data.into_proto()),
-                ),
+                OrcaProgramState::FeeTier(data) => {
+                    Some(program_state::StateOneof::FeeTier(data.into_proto()))
+                },
+                OrcaProgramState::Position(data) => {
+                    Some(program_state::StateOneof::Position(data.into_proto()))
+                },
+                OrcaProgramState::TickArray(data) => {
+                    Some(program_state::StateOneof::TickArray(data.into_proto()))
+                },
             };
             Self::Message { state_oneof }
         }

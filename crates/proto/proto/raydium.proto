@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package vixen.parser;
+package vixen.parser.raydium;
 
 // accounts
 
@@ -211,3 +211,24 @@ message RaydiumSwapV2InstructionProto {
     RaydiumSwapIxDataProto data = 2;
 }
 
+// Raydium Program State
+message ProgramState {
+    oneof state_oneof {
+      AmmConfigProto amm_config = 1;
+      OperationStateProto operation_state = 2;
+      ObservationStateProto observation_state = 3;
+      PersonalPositionStateProto personal_position_state = 4;
+      PoolStateProto pool_state = 5;
+      ProtocolPositionStateProto protocol_position_state = 6;
+      RaydiumTickArrayStateProto tick_array_state = 7;
+      TickArrayBitmapExtensionProto tick_array_bitmap_extension = 8;
+    }
+  }
+  
+  // Raydium Program Instructions
+  message ProgramIxs {
+      oneof ix_oneof {
+        RaydiumSwapInstructionProto swap = 1;
+        RaydiumSwapV2InstructionProto swap_v2 = 2;
+      }
+  }

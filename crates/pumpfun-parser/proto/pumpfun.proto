@@ -8,10 +8,6 @@ syntax = "proto3";
 
 package vixen.parser.pumpfun;
 
-message Descriptor {
-	uint32 descriptor = 1;
-}
-
 message InitializeIx {
 	InitializeIxAccounts accounts = 1;
 }
@@ -210,14 +206,14 @@ message WithdrawIxAccounts {
 
 
 
-message PumpProgramState {
+message ProgramState {
     oneof state_oneof {
         	BondingCurve bonding_curve = 1;
         	Global global = 2;
         }
 }
 
-message PumpProgramIx {
+message ProgramIxs {
     oneof ix_oneof {
         	InitializeIx initialize = 1;
         	SetParamsIx set_params = 2;

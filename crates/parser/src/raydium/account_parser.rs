@@ -91,12 +91,12 @@ impl ProgramParser for AccountParser {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
-    use yellowstone_vixen_proto::parser::{
-        raydium_program_state_proto, AmmConfigProto, ObservationProto, ObservationStateProto,
-        OperationStateProto, PersonalPositionStateProto, PoolStateProto,
-        ProtocolPositionStateProto, RaydiumPositionRewardInfoProto, RaydiumProgramStateProto,
-        RaydiumTickArrayStateProto, RaydiumTickStateProto, RewardInfoProto,
-        TickArrayBitmapExtensionProto, TickArrayBitmapProto,
+    use yellowstone_vixen_proto::parser::raydium::{
+        program_state as raydium_program_state_proto, AmmConfigProto, ObservationProto,
+        ObservationStateProto, OperationStateProto, PersonalPositionStateProto, PoolStateProto,
+        ProgramState as RaydiumProgramStateProto, ProtocolPositionStateProto,
+        RaydiumPositionRewardInfoProto, RaydiumTickArrayStateProto, RaydiumTickStateProto,
+        RewardInfoProto, TickArrayBitmapExtensionProto, TickArrayBitmapProto,
     };
 
     use super::{AccountParser, RaydiumProgramState};

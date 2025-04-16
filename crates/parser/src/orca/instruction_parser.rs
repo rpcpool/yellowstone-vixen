@@ -115,7 +115,7 @@ impl InstructionParser {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
-    use yellowstone_vixen_proto::parser::OrcaProgramIxProto;
+    use yellowstone_vixen_proto::parser::orca::ProgramIxs as OrcaProgramIxProto;
 
     use super::InstructionParser;
     use crate::helpers::IntoProto;
