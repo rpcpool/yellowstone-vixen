@@ -141,7 +141,7 @@ impl ExtensionIxParser for ConfidentaltransferFeeIx {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use confidential_transfer_fee_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::{
+    use yellowstone_vixen_proto::parser::token_extensions::{
         confidential_transfer_fee_ix_proto, ConfidentialHarvestWithheldTokensToMintAccountsProto,
         ConfidentialHarvestWithheldTokensToMintIxProto, ConfidentialTransferFeeIxProto,
         ConfidentialWithdrawWithheldTokensFromAccountsAccountsProto,

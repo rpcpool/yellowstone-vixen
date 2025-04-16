@@ -52,7 +52,10 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::stream::Server::builder()
-        .descriptor_set(parser::DESCRIPTOR_SET)
+        .descriptor_set(parser::orca::DESCRIPTOR_SET)
+        .descriptor_set(parser::raydium::DESCRIPTOR_SET)
+        .descriptor_set(parser::token::DESCRIPTOR_SET)
+        .descriptor_set(parser::token_extensions::DESCRIPTOR_SET)
         .descriptor_set(METEORA_DESCRIPTOR_SET)
         .descriptor_set(PUMP_DESCRIPTOR_SET)
         .account(Proto::new(MeteoraAccParser))

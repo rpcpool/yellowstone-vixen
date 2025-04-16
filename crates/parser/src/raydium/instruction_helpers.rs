@@ -81,8 +81,8 @@ pub enum RaydiumProgramIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use yellowstone_vixen_proto::parser::{
-        raydium_program_ix_proto::IxOneof, RaydiumProgramIxProto, RaydiumSwapAccountsProto,
+    use yellowstone_vixen_proto::parser::raydium::{
+        program_ixs::IxOneof, ProgramIxs as RaydiumProgramIxProto, RaydiumSwapAccountsProto,
         RaydiumSwapInstructionProto, RaydiumSwapIxDataProto, RaydiumSwapV2AccountsProto,
         RaydiumSwapV2InstructionProto,
     };

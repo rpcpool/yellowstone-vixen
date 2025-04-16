@@ -209,7 +209,7 @@ impl ExtensionIxParser for TransferFeeIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use yellowstone_vixen_proto::parser::{
+    use yellowstone_vixen_proto::parser::token_extensions::{
         transfer_fee_ix_proto, HarvestWithheldTokensToMintAccountsProto,
         HarvestWithheldTokensToMintIxProto, InitializeTransferFeeConfigAccountsProto,
         InitializeTransferFeeConfigDataProto, InitializeTransferFeeConfigIxProto,

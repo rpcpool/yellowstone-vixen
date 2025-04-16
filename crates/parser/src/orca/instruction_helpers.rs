@@ -67,10 +67,10 @@ pub enum OrcaProgramIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use yellowstone_vixen_proto::parser::{
-        orca_program_ix_proto::IxOneof, OrcaProgramIxProto, OrcaSwapAccountsProto,
-        OrcaSwapInstructionProto, OrcaSwapIxDataProto, OrcaSwapV2AccountsProto,
-        OrcaSwapV2InstructionProto, OrcaSwapV2IxDataProto,
+    use yellowstone_vixen_proto::parser::orca::{
+        program_ixs::IxOneof, OrcaSwapAccountsProto, OrcaSwapInstructionProto, OrcaSwapIxDataProto,
+        OrcaSwapV2AccountsProto, OrcaSwapV2InstructionProto, OrcaSwapV2IxDataProto,
+        ProgramIxs as OrcaProgramIxProto,
     };
 
     use super::{OrcaProgramIx, SwapAccounts, SwapIxData, SwapV2Accounts, SwapV2IxData};
