@@ -120,7 +120,7 @@ impl ExtensionIxParser for TokenMetadataIx {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use token_metadata_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::{
+    use yellowstone_vixen_proto::parser::token_extensions::{
         token_metadata_ix_proto, EmitAccountsProto, EmitDataProto, EmitIxProto,
         InitializeAccountsProto, InitializeDataProto, InitializeIxProto, RemoveKeyDataProto,
         RemoveKeyIxProto, RmoveKeyAccountsProto, TokenMetadataIxProto,

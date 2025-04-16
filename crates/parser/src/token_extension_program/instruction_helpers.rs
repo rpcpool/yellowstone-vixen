@@ -99,18 +99,20 @@ pub struct SetAuthorityData {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use token_extension_program_ix_proto::IxOneof;
     use yellowstone_vixen_proto::parser::{
-        token_extension_program_ix_proto, CpiGuardIxProto, CreateNativeMintAccountsProto,
-        CreateNativeMintIxProto, DefaultAccountStateIxProto, GroupMemberPointerIxProto,
-        GroupPointerIxProto, InitializeMintCloseAuthorityAccountsProto,
-        InitializeMintCloseAuthorityDataProto, InitializeMintCloseAuthorityIxProto,
-        InitializeNonTransferableMintAccountsProto, InitializeNonTransferableMintIxProto,
-        InitializePermanentDelegateAccountsProto, InitializePermanentDelegateDataProto,
-        InitializePermanentDelegateIxProto, InterestBearingMintIxProto, MemoTransferIxProto,
-        MetadataPointerIxProto, ReallocateAccountsProto, ReallocateDataProto, ReallocateIxProto,
-        SetAuthorityDataProto, SetAuthorityIxProto, TokenExtensionProgramIxProto,
-        TransferHookIxProto, WithdrawExcessLamportsAccountsProto, WithdrawExcessLamportsIxProto,
+        token::{SetAuthorityDataProto, SetAuthorityIxProto},
+        token_extensions::{
+            program_ixs::IxOneof, CpiGuardIxProto, CreateNativeMintAccountsProto,
+            CreateNativeMintIxProto, DefaultAccountStateIxProto, GroupMemberPointerIxProto,
+            GroupPointerIxProto, InitializeMintCloseAuthorityAccountsProto,
+            InitializeMintCloseAuthorityDataProto, InitializeMintCloseAuthorityIxProto,
+            InitializeNonTransferableMintAccountsProto, InitializeNonTransferableMintIxProto,
+            InitializePermanentDelegateAccountsProto, InitializePermanentDelegateDataProto,
+            InitializePermanentDelegateIxProto, InterestBearingMintIxProto, MemoTransferIxProto,
+            MetadataPointerIxProto, ProgramIxs as TokenExtensionProgramIxProto,
+            ReallocateAccountsProto, ReallocateDataProto, ReallocateIxProto, TransferHookIxProto,
+            WithdrawExcessLamportsAccountsProto, WithdrawExcessLamportsIxProto,
+        },
     };
 
     use super::{

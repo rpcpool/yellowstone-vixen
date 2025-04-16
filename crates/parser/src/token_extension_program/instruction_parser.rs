@@ -255,7 +255,7 @@ impl InstructionParser {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
-    use yellowstone_vixen_proto::parser::TokenExtensionProgramIxProto;
+    use yellowstone_vixen_proto::parser::token_extensions::ProgramIxs as TokenExtensionProgramIxProto;
 
     use super::InstructionParser;
     use crate::helpers::IntoProto;

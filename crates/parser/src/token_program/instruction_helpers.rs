@@ -256,9 +256,8 @@ pub enum TokenProgramIx {
 
 #[cfg(feature = "proto")]
 pub mod proto_parser {
-    use token_program_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::{
-        token_program_ix_proto, AmountToUiAmountAccountsProto, AmountToUiAmountDataProto,
+    use yellowstone_vixen_proto::parser::token::{
+        program_ixs::IxOneof, AmountToUiAmountAccountsProto, AmountToUiAmountDataProto,
         AmountToUiAmountIxProto, ApproveAccountsProto, ApproveCheckedAccountsProto,
         ApproveCheckedDataProto, ApproveCheckedIxProto, ApproveDataProto, ApproveIxProto,
         BurnAccountsProto, BurnCheckedAccountsProto, BurnCheckedDataProto, BurnCheckedIxProto,
@@ -271,11 +270,11 @@ pub mod proto_parser {
         InitializeMintIxProto, InitializeMultisigAccountsProto, InitializeMultisigDataProto,
         InitializeMultisigIxProto, MintToAccountsProto, MintToCheckedAccountsProto,
         MintToCheckedDataProto, MintToCheckedIxProto, MintToDataProto, MintToIxProto,
-        RevokeAccountsProto, RevokeIxProto, SetAuthorityAccountsProto, SetAuthorityDataProto,
-        SetAuthorityIxProto, SyncNativeAccountsProto, SyncNativeIxProto, ThawAccountAccountsProto,
-        ThawAccountIxProto, TokenProgramIxProto, TransferAccountsProto,
-        TransferCheckedAccountsProto, TransferCheckedDataProto, TransferCheckedIxProto,
-        TransferDataProto, TransferIxProto, UiAmountToAmountAccountsProto,
+        ProgramIxs as TokenProgramIxProto, RevokeAccountsProto, RevokeIxProto,
+        SetAuthorityAccountsProto, SetAuthorityDataProto, SetAuthorityIxProto,
+        SyncNativeAccountsProto, SyncNativeIxProto, ThawAccountAccountsProto, ThawAccountIxProto,
+        TransferAccountsProto, TransferCheckedAccountsProto, TransferCheckedDataProto,
+        TransferCheckedIxProto, TransferDataProto, TransferIxProto, UiAmountToAmountAccountsProto,
         UiAmountToAmountDataProto, UiAmountToAmountIxProto,
     };
 

@@ -16,12 +16,42 @@ mod vixen {
     pub mod parser {
         #![allow(missing_docs)]
 
-        //! Protobuf definitions for the `yellowstone-vixen-parser` crate.
-        #![allow(clippy::all)]
-        include!(concat!(env!("OUT_DIR"), "/vixen.parser.rs"));
+        pub mod token {
+            #![allow(clippy::all)]
+            include!(concat!(env!("OUT_DIR"), "/vixen.parser.token.rs"));
 
-        pub const DESCRIPTOR_SET: &[u8] =
-            include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.bin"));
+            pub const DESCRIPTOR_SET: &[u8] =
+                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.token.bin"));
+        }
+
+        pub mod token_extensions {
+            #![allow(clippy::all)]
+            include!(concat!(
+                env!("OUT_DIR"),
+                "/vixen.parser.token_extensions.rs"
+            ));
+
+            pub const DESCRIPTOR_SET: &[u8] = include_bytes!(concat!(
+                env!("OUT_DIR"),
+                "/vixen.parser.token_extensions.bin"
+            ));
+        }
+
+        pub mod raydium {
+            #![allow(clippy::all)]
+            include!(concat!(env!("OUT_DIR"), "/vixen.parser.raydium.rs"));
+
+            pub const DESCRIPTOR_SET: &[u8] =
+                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.raydium.bin"));
+        }
+
+        pub mod orca {
+            #![allow(clippy::all)]
+            include!(concat!(env!("OUT_DIR"), "/vixen.parser.orca.rs"));
+
+            pub const DESCRIPTOR_SET: &[u8] =
+                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.orca.bin"));
+        }
     }
 
     #[cfg(feature = "stream")]

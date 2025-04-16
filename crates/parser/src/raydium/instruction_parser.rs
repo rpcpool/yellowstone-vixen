@@ -111,7 +111,7 @@ impl InstructionParser {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
-    use yellowstone_vixen_proto::parser::RaydiumProgramIxProto;
+    use yellowstone_vixen_proto::parser::raydium::ProgramIxs as RaydiumProgramIxProto;
 
     use super::InstructionParser;
     use crate::helpers::IntoProto;

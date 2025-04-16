@@ -301,55 +301,49 @@ mod proto_parser {
         }
     }
 
-    impl IntoProto<proto_def::LbClmmProgramState> for LbClmmProgramState {
-        fn into_proto(self) -> proto_def::LbClmmProgramState {
+    impl IntoProto<proto_def::ProgramState> for LbClmmProgramState {
+        fn into_proto(self) -> proto_def::ProgramState {
             let state_oneof = match self {
                 LbClmmProgramState::BinArrayBitmapExtension(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::BinArrayBitmapExtension(
-                        data.into_proto(),
-                    )
+                    proto_def::program_state::StateOneof::BinArrayBitmapExtension(data.into_proto())
                 },
                 LbClmmProgramState::BinArray(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::BinArray(data.into_proto())
+                    proto_def::program_state::StateOneof::BinArray(data.into_proto())
                 },
                 LbClmmProgramState::ClaimFeeOperator(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::ClaimFeeOperator(
-                        data.into_proto(),
-                    )
+                    proto_def::program_state::StateOneof::ClaimFeeOperator(data.into_proto())
                 },
                 LbClmmProgramState::LbPair(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::LbPair(data.into_proto())
+                    proto_def::program_state::StateOneof::LbPair(data.into_proto())
                 },
                 LbClmmProgramState::Oracle(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::Oracle(data.into_proto())
+                    proto_def::program_state::StateOneof::Oracle(data.into_proto())
                 },
                 LbClmmProgramState::Position(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::Position(data.into_proto())
+                    proto_def::program_state::StateOneof::Position(data.into_proto())
                 },
                 LbClmmProgramState::PositionV2(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::PositionV2(data.into_proto())
+                    proto_def::program_state::StateOneof::PositionV2(data.into_proto())
                 },
                 LbClmmProgramState::PresetParameter2(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::PresetParameter2(
-                        data.into_proto(),
-                    )
+                    proto_def::program_state::StateOneof::PresetParameter2(data.into_proto())
                 },
                 LbClmmProgramState::PresetParameter(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::PresetParameter(data.into_proto())
+                    proto_def::program_state::StateOneof::PresetParameter(data.into_proto())
                 },
                 LbClmmProgramState::TokenBadge(data) => {
-                    proto_def::lb_clmm_program_state::StateOneof::TokenBadge(data.into_proto())
+                    proto_def::program_state::StateOneof::TokenBadge(data.into_proto())
                 },
             };
 
-            proto_def::LbClmmProgramState {
+            proto_def::ProgramState {
                 state_oneof: Some(state_oneof),
             }
         }
     }
 
     impl ParseProto for AccountParser {
-        type Message = proto_def::LbClmmProgramState;
+        type Message = proto_def::ProgramState;
 
         fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }

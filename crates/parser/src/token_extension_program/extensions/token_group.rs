@@ -102,7 +102,7 @@ impl ExtensionIxParser for TokenGroupIx {
 
 #[cfg(feature = "proto")]
 mod proto_parser {
-    use yellowstone_vixen_proto::parser::{
+    use yellowstone_vixen_proto::parser::token_extensions::{
         token_group_ix_proto, InitializeGroupAccountsProto, InitializeGroupDataProto,
         InitializeGroupIxProto, InitializeMemberAccountsProto, InitializeMemberIxProto,
         TokenGroupIxProto, UpdateGroupAuthorityAccountsProto, UpdateGroupAuthorityDataProto,

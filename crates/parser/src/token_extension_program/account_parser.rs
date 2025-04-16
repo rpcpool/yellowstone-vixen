@@ -139,9 +139,9 @@ impl ProgramParser for AccountParser {
 #[cfg(feature = "proto")]
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
-    use yellowstone_vixen_proto::parser::{
-        token_extension_state_proto, ExtendedMintProto, ExtendedTokenAccountProto,
-        ExtensionDataProto, TokenExtensionStateProto,
+    use yellowstone_vixen_proto::parser::token_extensions::{
+        program_state as token_extension_state_proto, ExtendedMintProto, ExtendedTokenAccountProto,
+        ExtensionDataProto, ProgramState as TokenExtensionStateProto,
     };
 
     use super::{AccountParser, ExtendedMint, ExtendedTokenAccount, TokenExtensionState};

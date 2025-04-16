@@ -369,7 +369,7 @@ impl ExtensionIxParser for ConfidentaltransferIx {
 mod proto_parser {
 
     use confidential_transfer_ext_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::{
+    use yellowstone_vixen_proto::parser::token_extensions::{
         confidential_transfer_ext_ix_proto, ApplyPendingBalanceAccountsProto,
         ApplyPendingBalanceIxProto, ApproveAccountAccountsProto, ApproveAccountIxProto,
         ConfidentialTransferAccountsProto, ConfidentialTransferExtIxProto,

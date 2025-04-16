@@ -6,7 +6,7 @@
 //!
 syntax = "proto3";
 
-package proto_def;
+package vixen.parser.meteora;
 
 message InitializeLbPairIx {
 	InitializeLbPairIxAccounts accounts = 1;
@@ -1727,7 +1727,7 @@ message ClosePositionIfEmptyIxAccounts {
 
 
 
-message LbClmmProgramState {
+message ProgramState {
     oneof state_oneof {
         	BinArrayBitmapExtension bin_array_bitmap_extension = 1;
         	BinArray bin_array = 2;
@@ -1742,7 +1742,7 @@ message LbClmmProgramState {
         }
 }
 
-message LbClmmProgramIx {
+message ProgramIxs {
     oneof ix_oneof {
         	InitializeLbPairIx initialize_lb_pair = 1;
         	InitializePermissionLbPairIx initialize_permission_lb_pair = 2;

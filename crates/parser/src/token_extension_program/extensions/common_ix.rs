@@ -142,7 +142,7 @@ impl CommonExtensionIxs {
 mod proto_parser {
 
     use common_extension_ix_proto::IxOneof;
-    use yellowstone_vixen_proto::parser::{
+    use yellowstone_vixen_proto::parser::token_extensions::{
         common_extension_ix_proto, CommonExtensionIxProto, DisableAccountsProto, DisableIxProto,
         EnableAccountsProto, EnableIxProto, ExtInitializeAccountsProto, ExtInitializeIxProto,
         UpdateAccountsProto, UpdateIxProto,
