@@ -14,6 +14,7 @@ yellowstone-vixen-proto = { path = "crates/proto", version = "0.2.0" }
 
 yellowstone-vixen-meteora-parser = { path = "crates/meteora-parser", version = "0.1.0" }
 yellowstone-vixen-pumpfun-parser = { path = "crates/pumpfun-parser", version = "0.1.0" }
+yellowstone-vixen-jupiter-swap-parser = { path = "crates/jupiter-swap-parser", version = "0.1.0" }
 
 # helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 
 # https://github.com/solana-labs/solana/issues/26688

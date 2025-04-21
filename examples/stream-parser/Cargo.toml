@@ -22,6 +22,7 @@ yellowstone-vixen-parser = { workspace = true, features = [
 
 yellowstone-vixen-meteora-parser = { workspace = true }
 yellowstone-vixen-pumpfun-parser = { workspace = true }
+yellowstone-vixen-jupiter-swap-parser = { workspace = true }
 
 [build-dependencies]
 prost-build = "0.13.1"
