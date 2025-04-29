@@ -13,7 +13,7 @@ fn main() {
     // #[cfg(feature = "proto")]
     prost_build::Config::new()
         .enable_type_names()
-        .file_descriptor_set_path(out_dir.join("proto_def.bin"))
-        .compile_protos(&["proto/proto_def.proto"], &["proto"])
+        .file_descriptor_set_path(out_dir.join("descriptor.bin"))
+        .compile_protos(&["proto/meteora.proto"], &["proto"])
         .unwrap();
 }

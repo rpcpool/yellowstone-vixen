@@ -192,17 +192,18 @@ pub mod token_extensions_proto_parser {
     };
     use spl_token_group_interface::state::{TokenGroup, TokenGroupMember};
     use spl_token_metadata_interface::state::TokenMetadata;
+    use yellowstone_vixen_proto::parser::token::{MintProto, MultisigProto, TokenAccountProto};
     #[allow(clippy::wildcard_imports)]
-    use yellowstone_vixen_proto::parser::{
+    use yellowstone_vixen_proto::parser::token_extensions::{
         extension_data_proto::Data, ConfidentialTransferAccountProto,
         ConfidentialTransferFeeAmountProto, ConfidentialTransferFeeConfigProto,
         ConfidentialTransferMintProto, CpiGuardProto, DefaultAccountStateProto, ExtensionDataProto,
         GroupMemberPointerProto, GroupPointerProto, ImmutableOwnerProto,
         InterestBearingConfigProto, KeyValue, MemoTransferProto, MetadataPointerProto,
-        MintCloseAuthorityProto, MintProto, MultisigProto, NonTransferableAccountProto,
-        NonTransferableProto, PermanentDelegateProto, TokenAccountProto, TokenGroupMemberProto,
-        TokenGroupProto, TokenMetadataProto, TransferFeeAmountProto, TransferFeeConfigProto,
-        TransferFeeProto, TransferHookAccountProto, TransferHookProto,
+        MintCloseAuthorityProto, NonTransferableAccountProto, NonTransferableProto,
+        PermanentDelegateProto, TokenGroupMemberProto, TokenGroupProto, TokenMetadataProto,
+        TransferFeeAmountProto, TransferFeeConfigProto, TransferFeeProto, TransferHookAccountProto,
+        TransferHookProto,
     };
 
     use super::{extension, ExtensionData};

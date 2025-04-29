@@ -1539,7 +1539,9 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "yellowstone-vixen",
+ "yellowstone-vixen-meteora-parser",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-pumpfun-parser",
 ]
 
 [[package]]

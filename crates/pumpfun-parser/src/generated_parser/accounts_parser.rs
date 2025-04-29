@@ -102,25 +102,25 @@ mod proto_parser {
         }
     }
 
-    impl IntoProto<proto_def::PumpProgramState> for PumpProgramState {
-        fn into_proto(self) -> proto_def::PumpProgramState {
+    impl IntoProto<proto_def::ProgramState> for PumpProgramState {
+        fn into_proto(self) -> proto_def::ProgramState {
             let state_oneof = match self {
                 PumpProgramState::BondingCurve(data) => {
-                    proto_def::pump_program_state::StateOneof::BondingCurve(data.into_proto())
+                    proto_def::program_state::StateOneof::BondingCurve(data.into_proto())
                 },
                 PumpProgramState::Global(data) => {
-                    proto_def::pump_program_state::StateOneof::Global(data.into_proto())
+                    proto_def::program_state::StateOneof::Global(data.into_proto())
                 },
             };
 
-            proto_def::PumpProgramState {
+            proto_def::ProgramState {
                 state_oneof: Some(state_oneof),
             }
         }
     }
 
     impl ParseProto for AccountParser {
-        type Message = proto_def::PumpProgramState;
+        type Message = proto_def::ProgramState;
 
         fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }

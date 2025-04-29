@@ -336,48 +336,46 @@ mod proto_parser {
         }
     }
 
-    impl IntoProto<proto_def::PumpProgramIx> for PumpProgramIx {
-        fn into_proto(self) -> proto_def::PumpProgramIx {
+    impl IntoProto<proto_def::ProgramIxs> for PumpProgramIx {
+        fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                PumpProgramIx::Initialize(acc) => proto_def::PumpProgramIx {
-                    ix_oneof: Some(proto_def::pump_program_ix::IxOneof::Initialize(
+                PumpProgramIx::Initialize(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Initialize(
                         proto_def::InitializeIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
                 },
-                PumpProgramIx::SetParams(acc, data) => proto_def::PumpProgramIx {
-                    ix_oneof: Some(proto_def::pump_program_ix::IxOneof::SetParams(
+                PumpProgramIx::SetParams(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetParams(
                         proto_def::SetParamsIx {
                             accounts: Some(acc.into_proto()),
                             data: Some(data.into_proto()),
                         },
                     )),
                 },
-                PumpProgramIx::Create(acc, data) => proto_def::PumpProgramIx {
-                    ix_oneof: Some(proto_def::pump_program_ix::IxOneof::Create(
+                PumpProgramIx::Create(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Create(
                         proto_def::CreateIx {
                             accounts: Some(acc.into_proto()),
                             data: Some(data.into_proto()),
                         },
                     )),
                 },
-                PumpProgramIx::Buy(acc, data) => proto_def::PumpProgramIx {
-                    ix_oneof: Some(proto_def::pump_program_ix::IxOneof::Buy(proto_def::BuyIx {
+                PumpProgramIx::Buy(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Buy(proto_def::BuyIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
                     })),
                 },
-                PumpProgramIx::Sell(acc, data) => proto_def::PumpProgramIx {
-                    ix_oneof: Some(proto_def::pump_program_ix::IxOneof::Sell(
-                        proto_def::SellIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
+                PumpProgramIx::Sell(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Sell(proto_def::SellIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
                 },
-                PumpProgramIx::Withdraw(acc) => proto_def::PumpProgramIx {
-                    ix_oneof: Some(proto_def::pump_program_ix::IxOneof::Withdraw(
+                PumpProgramIx::Withdraw(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Withdraw(
                         proto_def::WithdrawIx {
                             accounts: Some(acc.into_proto()),
                         },
@@ -388,7 +386,7 @@ mod proto_parser {
     }
 
     impl ParseProto for InstructionParser {
-        type Message = proto_def::PumpProgramIx;
+        type Message = proto_def::ProgramIxs;
 
         fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }

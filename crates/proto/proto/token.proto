@@ -1,6 +1,46 @@
 syntax = "proto3";
 
-package vixen.parser;
+// import "solana-token/accounts.proto";
+// import "solana-token/ixs.proto";
+
+package vixen.parser.token;
+
+
+enum AccountStateProto {
+  Uninitialized = 0;
+  Initialized = 1;
+  Frozen = 2;
+}
+
+message TokenAccountProto {
+  string mint = 1;
+  string owner = 2;
+  uint64 amount = 3;
+  optional string delegate = 4;
+  AccountStateProto state = 5;
+  optional uint64 is_native = 6;
+  uint64 delegated_amount = 7;
+  optional string close_authority = 8;
+}
+
+message MintProto {
+  optional string mint_authority = 1;
+  uint64 supply = 2;
+  uint64 decimals = 4;
+  bool is_initialized = 5;
+  optional string freeze_authority = 6;
+}
+
+message MultisigProto {
+  uint64 m = 1;
+  uint64 n = 2;
+  bool is_initialized = 3;
+  repeated string signers = 4;
+}
+
+
+
+
 
 enum AuthorityType {
   MINT_TOKEN = 0;
@@ -319,4 +359,43 @@ message UiAmountToAmountIxProto {
   UiAmountToAmountDataProto data = 2;
 }
 
+
+
+// Token Program State
+message ProgramState {
+  oneof state_oneof {
+    TokenAccountProto token_account = 1;
+    MintProto mint = 2;
+    MultisigProto multisig = 3;
+  }
+}
+
+// Token Program Instructions
+message ProgramIxs {
+  oneof ix_oneof {
+    TransferIxProto transfer = 1;
+    InitializeMintIxProto initialize_mint = 2;
+    InitializeAccountIxProto initialize_account = 3;
+    InitializeAccount2IxProto initialize_account2 = 4;
+    InitializeAccount3IxProto initialize_account3 = 5;
+    InitializeMultisigIxProto initialize_multisig = 6;
+    ApproveIxProto approve = 7;
+    RevokeIxProto revoke = 8;
+    SetAuthorityIxProto set_authority = 9;
+    MintToIxProto mint_to = 10;
+    BurnIxProto burn = 11;
+    CloseAccountIxProto close_account = 12;
+    FreezeAccountIxProto freeze_account = 13;
+    ThawAccountIxProto thaw_account = 14;
+    TransferCheckedIxProto transfer_checked = 15;
+    ApproveCheckedIxProto approve_checked = 16;
+    MintToCheckedIxProto mint_to_checked = 17;
+    BurnCheckedIxProto burn_checked = 18;
+    SyncNativeIxProto sync_native = 19;
+    GetAccountDataSizeIxProto get_account_data_size = 20;
+    InitializeImmutableOwnerIxProto initialize_immutable_owner = 21;
+    AmountToUiAmountIxProto amount_to_ui_amount = 22;
+    UiAmountToAmountIxProto ui_amount_to_amount = 23;
+  }
+}
 
