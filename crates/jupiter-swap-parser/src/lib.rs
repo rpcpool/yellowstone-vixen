@@ -5,13 +5,13 @@ pub use generated_parser::*;
 use generated_sdk as generated;
 use solana_program::pubkey::Pubkey;
 
-pub const ID: Pubkey = LB_CLMM_ID;
+pub const ID: Pubkey = JUPITER_ID;
 
 // #[cfg(feature = "proto")]
 pub mod proto_def {
     #![allow(clippy::large_enum_variant)]
 
-    tonic::include_proto!("vixen.parser.meteora");
+    tonic::include_proto!("vixen.parser.jupiter_swap");
 
     pub const DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("descriptor");
 }

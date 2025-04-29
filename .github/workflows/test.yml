@@ -47,6 +47,12 @@ jobs:
           toolchain: nightly
           components: rustfmt
 
+      - name: Check Rust Toolchain Version
+        run: |
+          rustc +nightly --version
+          rustc --version
+          cargo --version
+
       - name: Install Latest Protoc
         run: |
           PROTOC_VERSION=26.1
