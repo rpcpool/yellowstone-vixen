@@ -9,6 +9,7 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Official Meteora parser (https://github.com/rpcpool/yellowstone-vixen/pull/65)
 - Official Pump Fun parser (https://github.com/rpcpool/yellowstone-vixen/pull/66)
 - Subscribe to block_meta (https://github.com/rpcpool/yellowstone-vixen/pull/67)
 
