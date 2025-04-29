@@ -90,6 +90,13 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
                     .run(span, &t, counters)
                     .await;
             },
+            UpdateOneof::BlockMeta(b) => {
+                pipelines
+                    .block_meta
+                    .get_handlers(&filters)
+                    .run(span, &b, counters)
+                    .await;
+            },
             UpdateOneof::Ping(SubscribeUpdatePing {}) => (),
             var => warn!(?var, "Unknown update variant"),
         }

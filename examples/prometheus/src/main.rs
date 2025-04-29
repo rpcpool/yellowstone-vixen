@@ -9,10 +9,11 @@
 
 use std::path::PathBuf;
 
-use clap::Parser as _;
+use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::{self as vixen, Pipeline};
 use yellowstone_vixen_parser::{
+    block_meta::BlockMetaParser,
     token_extension_program::{
         AccountParser as TokenExtensionProgramAccParser,
         InstructionParser as TokenExtensionProgramIxParser,
@@ -30,9 +31,9 @@ pub struct Opts {
 }
 
 #[derive(Debug)]
-pub struct Handler;
+pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync> vixen::Handler<V> for Handler {
+impl<V: std::fmt::Debug + Sync> vixen::Handler<V> for Logger {
     async fn handle(&self, value: &V) -> vixen::HandlerResult<()> {
         tracing::info!(?value);
         Ok(())
@@ -50,11 +51,13 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
-        .account(Pipeline::new(TokenProgramAccParser, [Handler]))
-        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Handler]))
-        .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
+        .account(Pipeline::new(TokenProgramAccParser, [Logger]))
+        .account(Pipeline::new(TokenExtensionProgramAccParser, [Logger]))
+        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Logger]))
+        .instruction(Pipeline::new(TokenProgramIxParser, [Logger]))
+        .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
         .metrics(vixen::metrics::Prometheus)
+        .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
         .build(config)
         .run();
 }
