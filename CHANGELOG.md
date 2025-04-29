@@ -9,11 +9,14 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- New features under development.
+- Jupiter Swaps Parser (https://github.com/rpcpool/yellowstone-vixen/pull/69)
+- Meteora parser (https://github.com/rpcpool/yellowstone-vixen/pull/65)
+- Pump Fun parser (https://github.com/rpcpool/yellowstone-vixen/pull/66)
+- Subscribe to block_meta (https://github.com/rpcpool/yellowstone-vixen/pull/67)
 
 ### Changed
 
-- Improvements still unreleased.
+- Proto generation with Codama (https://github.com/rpcpool/yellowstone-vixen/pull/68)
 
 ## [0.2.0] - 2025-04-03
 
