@@ -67,6 +67,7 @@ pub mod proto_types_parsers {
     use sdk::types::Swap;
     impl IntoProto<proto_def::Swap> for Swap {
         fn into_proto(self) -> proto_def::Swap {
+            #[allow(clippy::unneeded_struct_pattern)]
             let variant = match self {
                 Swap::Saber {} => Variant::Saber(proto_def::SwapSaber {}),
                 Swap::SaberAddDecimalsDeposit {} => {
