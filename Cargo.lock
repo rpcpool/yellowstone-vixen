@@ -909,7 +909,7 @@ version = "4.5.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf4ced95c6f4a675af3da73304b9ac4ed991640c36374e4b46795c49e17cf1ed"
 dependencies = [
- "heck",
+ "heck 0.5.0",
  "proc-macro2",
  "quote",
  "syn 2.0.98",
@@ -1540,9 +1540,16 @@ dependencies = [
  "tracing-subscriber",
  "yellowstone-vixen",
  "yellowstone-vixen-jupiter-swap-parser",
+ "yellowstone-vixen-meteora-amm-parser",
  "yellowstone-vixen-meteora-parser",
+ "yellowstone-vixen-moonshot-parser",
+ "yellowstone-vixen-orca-whirlpool-parser",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-pump-swaps-parser",
  "yellowstone-vixen-pumpfun-parser",
+ "yellowstone-vixen-raydium-amm-v4-parser",
+ "yellowstone-vixen-raydium-clmm-parser",
+ "yellowstone-vixen-raydium-cpmm-parser",
 ]
 
 [[package]]
@@ -1892,6 +1899,12 @@ name = "hashbrown"
 version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
+
+[[package]]
+name = "heck"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
 name = "heck"
@@ -3328,7 +3341,7 @@ version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be769465445e8c1474e9c5dac2018218498557af32d9ed057325ec9a41ae81bf"
 dependencies = [
- "heck",
+ "heck 0.5.0",
  "itertools 0.14.0",
  "log",
  "multimap",
@@ -7100,6 +7113,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
+name = "strum"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
+
+[[package]]
+name = "strum_macros"
+version = "0.24.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e385be0d24f186b4ce2f9982191e7101bb737312ad61c1f2f984f34bcf85d59"
+dependencies = [
+ "heck 0.4.1",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8401,6 +8433,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-meteora-amm-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program 2.2.1",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen-meteora-parser"
 version = "0.1.0"
 dependencies = [
@@ -8428,6 +8478,42 @@ dependencies = [
  "solana-sdk",
  "solana-transaction-status",
  "yellowstone-grpc-proto",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
+name = "yellowstone-vixen-moonshot-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program 2.2.1",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
+name = "yellowstone-vixen-orca-whirlpool-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program 2.2.1",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
  "yellowstone-vixen-core",
 ]
 
@@ -8465,6 +8551,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-pump-swaps-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program 2.2.1",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen-pumpfun-parser"
 version = "0.1.0"
 dependencies = [
@@ -8474,6 +8578,60 @@ dependencies = [
  "prost",
  "prost-build",
  "solana-program 2.2.1",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
+name = "yellowstone-vixen-raydium-amm-v4-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program 2.2.1",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
+name = "yellowstone-vixen-raydium-clmm-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program 2.2.1",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
+name = "yellowstone-vixen-raydium-cpmm-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program 2.2.1",
+ "strum",
+ "strum_macros",
  "thiserror 1.0.69",
  "tonic",
  "tracing",

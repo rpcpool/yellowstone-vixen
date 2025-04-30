@@ -1,0 +1,32 @@
+
+
+[package]
+name = "yellowstone-vixen-raydium-cpmm-parser"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+prost = "0.13.1"
+yellowstone-vixen-core = { workspace = true, features = ["proto"] }
+tonic = { version = "0.12.1", features = ["gzip", "zstd"] }
+solana-program = "^2.1.6"
+borsh = "^0.10"
+num-derive = "0.4"
+thiserror = "1.0.64"
+num-traits = "^0.2"
+
+tracing = "0.1.40"
+strum = { version = "0.24" }
+strum_macros = { version = "0.24"}
+
+[features]
+anchor = []
+anchor-idl-build = []
+serde = []
+test-sbf = []
+fetch = []
+
+
+[build-dependencies]
+prost-build = "0.13.1"

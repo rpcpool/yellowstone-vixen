@@ -9,6 +9,14 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added new set of pasers: (https://github.com/rpcpool/yellowstone-vixen/pull/70)
+  - meteora-amm
+  - moonshot
+  - orca-whirlpool
+  - pump-swaps
+  - raydium-amm-v4
+  - raydium-clmm
+  - raydium-cpmm
 - Jupiter Swaps Parser (https://github.com/rpcpool/yellowstone-vixen/pull/69)
 - Meteora parser (https://github.com/rpcpool/yellowstone-vixen/pull/65)
 - Pump Fun parser (https://github.com/rpcpool/yellowstone-vixen/pull/66)
