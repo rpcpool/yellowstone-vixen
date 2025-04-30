@@ -1,107 +1,65 @@
 # Yellowstone Vixen
 
-Yellowstone Vixen allows dApp developers to build program-aware change event streams for Solana. It provides the building blocks, such as a runtime, parser specification, and handler specification, to create custom indexes for specific programs, accounts, and transactions. Vixen enables developers to assemble program parsers to process real-time change events from Dragon's Mouth, converting them into program-aware structures. These structures can then be stored in a database or used in other data pipelines.
+Yellowstone Vixen is a framework for building program-aware, real-time Solana data pipelines. It provides the core components—runtime, parser definitions, and handler interfaces—needed to transform raw on-chain events into structured, actionable data.
+
+Vixen consumes Dragon’s Mouth gRPC streams and routes program-specific change events through pluggable parsers, enabling developers to log, store, or stream enriched data for indexing, analytics, and downstream consumption.
 
 ## Table of Contents
 
-1. [Objectives](#objectives)
-2. [Requirements](#requirements)
-3. [Example](#example)
-4. [Dragon's Mouth](#dragonsmouth)
-5. [Developers](#developers)
+1. [Problem Solving](#problem-solving)
+2. [Features](#features)
+3. [Quick Start](#quick-start)
+4. [Examples](#examples)
+5. [Architecture Diagram](#architecture-diagram)
+6. [Dragon’s Mouth Integration](#dragons-mouth)
+7. [Developer Resources](#developer-resources)
+8. [Maintainers](#maintainers)
 
-## Objectives
+## Problem Solving
 
-1. **Cost Efficiency**: Utilizing Dragon's Mouth, multiple Vixen instances can share a single geyser stream. With various filter options, storage costs focus on what's essential for the dApp.
-2. **Operational Simplicity**: Vixen requires minimal configuration and dependency on other systems, making it easy to operate.
-3. **Observability**: Operators can monitor the health of their installation, gaining insights into lag, throughput, and error rates.
-4. **Composability**: Program parsers are developed as separate modules (cargo crates), enabling programs to include other parsers needed to deserialize cross-program invocations (CPI).
+Yellowstone Vixen solves core challenges for Solana dApp developers:
 
-## Requirements
+- **Cost Efficiency**: Share Dragon’s Mouth subscriptions and filter only the data you care about.
+- **Operational Simplicity**: Lightweight setup, minimal external dependencies.
+- **Observability**: Built-in Prometheus metrics for lag, throughput, and error tracking.
+- **Composability**: Independent, reusable parser crates that can deserialize complex cross-program interactions (CPI).
 
-1. **Parser**: A module responsible for transforming raw Solana data into a program-specific format.
-2. **Handler**: A module that processes the parsed data, performing tasks such as logging, storing in a database, or triggering other actions.
-3. **HandlerManager**: Manages multiple handlers for different types of data (e.g., accounts, transactions).
-4. **Configuration**: A TOML file specifying the settings and parameters for Vixen.
+## Features
 
-## Example
+- **🛠 Parser + Handler Architecture**: Build pipelines that transform raw Solana events into structured models and trigger custom logic.
+- **🔥 Dragon’s Mouth Integration**: Subscribe to Solana Geyser streams via gRPC with minimal configuration.
+- **📈 Metrics Support**: Prometheus /metrics endpoint available out-of-the-box.
+- **🧪 Offline Testing with Fixtures**: Test parsers without connecting to live Solana nodes using devnet fixtures.
+- **🔄 gRPC Streaming API**: Serve parsed program events directly to external systems or clients.
 
-This example demonstrates how a developer can implement a generic parsing pipeline with Vixen. The examples are located in the [`/examples`](/examples) directory.
+## Quick Start
 
-To run the example, follow these steps:
-
-1. Navigate to the `prometheus` example directory:
-
-   ```
-   cd examples/prometheus
-   ```
-
-2. Execute the following command to run the example with the specified configuration:
-   ```
-   RUST_LOG=info cargo run -- --config "$(pwd)/../../Vixen.toml"
-   ```
-
-An example configuration file is available at [`Vixen.example.toml`](/Vixen.example.toml). Copy this file and modify it as needed to create your `Vixen.toml`.
-
-### Explanation
-
-In this example, you need to implement specific components to create a functional parsing pipeline:
-
-- **Parser**: Defines the parsing logic for the specific program. The `prefilter` method sets up filters for the accounts owned by the target program, which are used to build the underlying Dragon's Mouth subscription. The `parse` method contains the logic to transform raw account data into the desired structure.
-
-```rust
-pub struct CustomParser;
-
-impl vixen_core::Parser for CustomParser {
-    type Input = AccountUpdate;
-    type Output = CustomParsedData; // Replace with the actual data type
-
-    fn prefilter(&self) -> Prefilter {
-        Prefilter::builder()
-            .account_owners([CUSTOM_PROGRAM_ID]) // Replace with the actual program ID
-            .build()
-            .unwrap()
-    }
-
-    async fn parse(&self, acct: &AccountUpdate) -> ParseResult<Self::Output> {
-        // Implement parsing logic here
-        // Example: Ok(CustomParsedData::from(acct))
-        unimplemented!()
-    }
-}
-```
-
-- **Handler**: Defines how the parsed data should be handled. This could involve logging the data, storing it in a database, or triggering other actions.
-
-```rust
-pub struct CustomHandler;
-
-impl<H: std::fmt::Debug + Sync> vixen::Handler<H> for CustomHandler {
-    async fn handle(&self, value: &H) -> vixen::HandlerResult<()> {
-        // Implement handling logic here
-        // Example: tracing::info!(?value);
-        unimplemented!()
-    }
-}
-```
-
-- **Main**: Sets up the tracing subscriber, reads the configuration file, and runs the Vixen framework with the specified handlers, managers and metrics.
+A minimal example using Token Program parsers and a Logger handler:
 
 ```rust
 use std::path::PathBuf;
 
-use clap::Parser as _;
+use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{self as vixen, Pipeline};
-use yellowstone_vixen_parser::{
-    token_extension_program::{
-        AccountParser as TokenExtensionProgramAccParser,
-        InstructionParser as TokenExtensionProgramIxParser,
-    },
-    token_program::{
-        AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
-    },
-};
+use yellowstone_vixen::Pipeline;
+use yellowstone_vixen_parser::token_program::{AccountParser, InstructionParser};
+
+#[derive(clap::Parser)]
+#[command(version, author, about)]
+pub struct Opts {
+    #[arg(long, short)]
+    config: PathBuf,
+}
+
+#[derive(Debug)]
+pub struct Logger;
+
+impl<V: std::fmt::Debug + Sync> vixen::Handler<V> for Logger {
+    async fn handle(&self, value: &V) -> vixen::HandlerResult<()> {
+        tracing::info!(?value);
+        Ok(())
+    }
+}
 
 fn main() {
     tracing_subscriber::registry()
@@ -113,58 +71,21 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::Runtime::builder()
-        .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
-        .account(Pipeline::new(TokenProgramAccParser, [Handler]))
-        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Handler]))
-        .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
+    yellowstone_vixen::Runtime::builder()
+        .account(Pipeline::new(AccountParser, [Logger]))
+        .account(Pipeline::new(InstructionParser, [Logger]))
+        .metrics(yellowstone_vixen::metrics::Prometheus)
+        .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
         .build(config)
         .run();
 }
 ```
 
-## Yellowstone Vixen Mock
-
-This crate includes a mock feature designed for testing parsers. It is intended solely for testing purposes. For more details, refer to the [mock](crates/mock/README.md) documentation.
-
-## Metrics Support
-
-### Prometheus
-
-Vixen also supports Prometheus for metrics. To enable Prometheus, set the `prometheus` feature in the `Cargo.toml` file:
-
-```toml
-[dependencies]
-yellowstone-vixen = { version = "0.1.0", features = ["prometheus"] }
-```
-
-- **Prometheus Setup**:
-
-```rust
-fn main() {
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::from_default_env())
-        .with(tracing_subscriber::fmt::layer())
-        .init();
-
-    let Opts { config } = Opts::parse();
-    let config = std::fs::read_to_string(config).expect("Error reading config file");
-    let config = toml::from_str(&config).expect("Error parsing config");
-
-    vixen::Runtime::builder()
-        .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
-        .account(Pipeline::new(TokenProgramAccParser, [Handler]))
-        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Handler]))
-        .instruction(Pipeline::new(TokenProgramIxParser, [Handler]))
-        .metrics(vixen::metrics::Prometheus)
-        .build(config)
-        .run();
-}
+```shell
+RUST_LOG=info cargo run -- --config "./Vixen.toml"
 ```
 
 Prometheus metrics are served on the `/metrics` endpoint. To collect metrics, we have setup a prometheus server as a docker container. You can access the metrics at `http://localhost:9090` after running the prometheus server using docker-compose.
-
-### Docker Setup for Metrics
 
 To run prometheus, you need to have docker and docker-compose installed on your machine. To start the services, run the following command:
 
@@ -176,6 +97,12 @@ sudo docker-compose up
 
 Dragon's Mouth can be self-hosted as a Geyser plugin or used via a commercial vendor. For more details, refer to the [Yellowstone Dragon's Mouth documentation](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions) and [Yellowstone repository](https://github.com/rpcpool/yellowstone-grpc).
 
-## Developers
+## Developer Resources
+
+- [**Mock Testing for Parsers**](./crates/mock/README.md): Load and replay devnet accounts or transactions offline.
+- [**Usage Examples**](./examples/): A variety of example projects that demonstrate how to use the features.
+- [**Example Vixen Configuration**](./Vixen.example.toml): Starter TOML file for pipeline configuration.
+
+## Maintainers
 
 This project is developed by [ABK Labs](https://abklabs.com/) and [Triton One](https://triton.one/).

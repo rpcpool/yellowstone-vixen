@@ -1,64 +1,64 @@
 # Yellowstone Vixen Mock
 
-This crate provides a mock implementation of the Yellowstone Vixen Parser. It is intended to be used for testing purposes. The `load_fixture` function takes a fixture name as input, fetches the account on-chain if not already present, stores it as a JSON file inside the fixtures folder, and loads the account from the JSON file for testing purposes. Developers can use the loaded account to test their custom parsers and verify that the parser is correctly parsing the account data.
+Yellowstone Vixen Mock provides tools for testing Vixen parsers without needing a live Solana node.
+It supports offline fixtures, account replay, and instruction replay — helping you validate parsing logic quickly and reliably using devnet data.
+
+## Features
+
+-     🔌 Offline Testing
+  Run parser unit tests without connecting to a live Solana node.
+- 🗂 Fixture Management
+  Load real Solana devnet accounts or transactions as JSON fixtures, reusable across tests.
+- 🧪 Replay Support
+  Replay devnet account updates and transaction instructions into your custom parsers.
+- 🚀 Faster Development
+  Build and debug parsing pipelines locally, with repeatable fixture-based tests.
+
+Fixtures are fetched from Solana Devnet, not Mainnet.
+This ensures safe and reproducible testing environments.
 
 ## Installation
 
-```bash
+```
 cargo add yellowstone-vixen-mock
 ```
 
-## Example
+Example Usage
 
 ```rust
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::{account_fixture, run_account_parse, tx_fixture, run_ix_parse, FixtureData};
-
-    // using token program and token extension program parsers
+    use yellowstone_vixen_mock::{account_fixture, tx_fixture};
     use yellowstone_vixen_parser::{
-        token_extension_program::{
-            AccountParser as TokenExtensionProgramAccParser,
-            InstructionParser as TokenExtensionProgramIxParser,
-            TokenExtensionProgramIx
-
-        },
-        token_program::{
-            AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
-            TokenProgramState
-        };
+        token_extension_program::InstructionParser as TokenExtensionProgramIxParser,
+        token_program::{AccountParser as TokenProgramAccParser, TokenProgramState},
     };
 
-    // test account parsing
     #[tokio::test]
-    async fn test_mint_account_parsing() {
+    async fn test_account_parsing() {
         let parser = TokenProgramAccParser;
-
         let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK", &parser);
 
         let TokenProgramState::Mint(mint) = account else {
-            panic!("Invalid Account");
+            panic!("Unexpected account state");
         };
 
         assert_eq!(mint.decimals, 10);
     }
 
-    // test instruction parsing
     #[tokio::test]
-    async fn test_mint_to_checked_ix_parsing() {
-        let parser = InstructionParser;
+    async fn test_instruction_parsing() {
+        let parser = TokenExtensionProgramIxParser;
+        let ixs = tx_fixture!(
+            "44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt",
+            &parser
+        );
 
-        let ixs = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt",&parser);
-
-        let TokenExtensionProgramIx::TokenProgramIx(TokenProgramIx::MintToChecked(_accts, data)) =
-            &ixs[0]
-        else {
-            panic!("Invalid Instruction");
+        let Some(first_ix) = ixs.get(0) else {
+            panic!("No instructions found");
         };
 
-        assert_eq!(data.decimals, 9);
-        assert_eq!(data.amount, 100.mul(10u64.pow(data.decimals.into())));
+        tracing::info!("Parsed instruction: {:?}", first_ix);
     }
-
 }
 ```
