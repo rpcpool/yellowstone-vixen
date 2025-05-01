@@ -9,6 +9,7 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Added Kamino Limit Orders parser (https://github.com/rpcpool/yellowstone-vixen/pull/72)
 - Added new set of pasers: (https://github.com/rpcpool/yellowstone-vixen/pull/70)
   - meteora-amm
   - moonshot
