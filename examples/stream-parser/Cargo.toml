@@ -16,7 +16,6 @@ yellowstone-vixen-parser = { workspace = true, features = [
   "proto",
   "token-extensions",
   "token-program",
-  "raydium"
 ] }
 
 yellowstone-vixen-meteora-parser = { workspace = true }
@@ -29,6 +28,7 @@ yellowstone-vixen-raydium-cpmm-parser = { workspace = true }
 yellowstone-vixen-pump-swaps-parser = { workspace = true }
 yellowstone-vixen-raydium-amm-v4-parser = { workspace = true }
 yellowstone-vixen-raydium-clmm-parser = { workspace = true }
+yellowstone-vixen-kamino-limit-orders-parser = { workspace = true }
 
 [build-dependencies]
 prost-build = "0.13.1"

@@ -17,6 +17,11 @@ use yellowstone_vixen_jupiter_swap_parser::{
     instructions_parser::InstructionParser as JupiterSwapIxParser,
     proto_def::DESCRIPTOR_SET as JUPITER_SWAP_DESCRIPTOR_SET,
 };
+use yellowstone_vixen_kamino_limit_orders_parser::{
+    accounts_parser::AccountParser as KaminoLimitOrdersAccParser,
+    instructions_parser::InstructionParser as KaminoLimitOrdersIxParser,
+    proto_def::DESCRIPTOR_SET as KAMINO_LIMIT_ORDERS_DESCRIPTOR_SET,
+};
 use yellowstone_vixen_meteora_amm_parser::{
     accounts_parser::AccountParser as MeteoraAmmAccParser,
     instructions_parser::InstructionParser as MeteoraAmmIxParser,
@@ -38,7 +43,6 @@ use yellowstone_vixen_orca_whirlpool_parser::{
     proto_def::DESCRIPTOR_SET as ORCA_WHIRLPOOL_DESCRIPTOR_SET,
 };
 use yellowstone_vixen_parser::{
-    raydium::{AccountParser as RaydiumAccParser, InstructionParser as RaydiumIxParser},
     token_extension_program::{
         AccountParser as TokenExtensionProgramAccParser,
         InstructionParser as TokenExtensionProgramIxParser,
@@ -91,7 +95,6 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::stream::Server::builder()
-        .descriptor_set(parser::raydium::DESCRIPTOR_SET)
         .descriptor_set(parser::token::DESCRIPTOR_SET)
         .descriptor_set(parser::token_extensions::DESCRIPTOR_SET)
         .descriptor_set(METEORA_DESCRIPTOR_SET)
@@ -104,11 +107,11 @@ fn main() {
         .descriptor_set(METEORA_AMM_DESCRIPTOR_SET)
         .descriptor_set(RAYDIUM_AMM_V4_DESCRIPTOR_SET)
         .descriptor_set(RAYDIUM_CLMM_DESCRIPTOR_SET)
+        .descriptor_set(KAMINO_LIMIT_ORDERS_DESCRIPTOR_SET)
         .account(Proto::new(MeteoraAccParser))
         .account(Proto::new(PumpfunAccParser))
         .account(Proto::new(TokenExtensionProgramAccParser))
         .account(Proto::new(TokenProgramAccParser))
-        .account(Proto::new(RaydiumAccParser))
         .account(Proto::new(JupiterSwapAccParser))
         .account(Proto::new(PumpAmmAccParser))
         .account(Proto::new(RaydiumCpmmAccParser))
@@ -117,11 +120,11 @@ fn main() {
         .account(Proto::new(MeteoraAmmAccParser))
         .account(Proto::new(RaydiumAmmV4AccParser))
         .account(Proto::new(RaydiumClmmAccParser))
+        .account(Proto::new(KaminoLimitOrdersAccParser))
         .instruction(Proto::new(MeteoraIxParser))
         .instruction(Proto::new(PumpfunIxParser))
         .instruction(Proto::new(TokenProgramIxParser))
         .instruction(Proto::new(TokenExtensionProgramIxParser))
-        .instruction(Proto::new(RaydiumIxParser))
         .instruction(Proto::new(JupiterSwapIxParser))
         .instruction(Proto::new(PumpAmmIxParser))
         .instruction(Proto::new(RaydiumCpmmIxParser))
@@ -130,6 +133,7 @@ fn main() {
         .instruction(Proto::new(MeteoraAmmIxParser))
         .instruction(Proto::new(RaydiumAmmV4IxParser))
         .instruction(Proto::new(RaydiumClmmIxParser))
+        .instruction(Proto::new(KaminoLimitOrdersIxParser))
         .build(config)
         .run();
 }
