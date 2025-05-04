@@ -78,15 +78,11 @@ impl WithdrawSrm {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct WithdrawSrmInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl WithdrawSrmInstructionData {
-    pub fn new() -> Self {
-        Self {
-            discriminator: [193, 101, 58, 65, 120, 78, 99, 31],
-        }
-    }
+    pub fn new() -> Self { Self { discriminator: [8] } }
 }
 
 impl Default for WithdrawSrmInstructionData {

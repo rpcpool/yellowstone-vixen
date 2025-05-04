@@ -144,13 +144,13 @@ impl AdminCancelOrders {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AdminCancelOrdersInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl AdminCancelOrdersInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [151, 90, 110, 217, 196, 223, 251, 95],
+            discriminator: [13],
         }
     }
 }

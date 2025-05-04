@@ -55,13 +55,13 @@ impl UpdateConfigAccount {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UpdateConfigAccountInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl UpdateConfigAccountInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [240, 32, 10, 152, 8, 45, 87, 58],
+            discriminator: [15],
         }
     }
 }

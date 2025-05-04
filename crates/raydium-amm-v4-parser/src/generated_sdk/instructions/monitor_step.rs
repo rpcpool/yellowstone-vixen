@@ -154,15 +154,11 @@ impl MonitorStep {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MonitorStepInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl MonitorStepInstructionData {
-    pub fn new() -> Self {
-        Self {
-            discriminator: [252, 219, 18, 48, 87, 183, 26, 154],
-        }
-    }
+    pub fn new() -> Self { Self { discriminator: [2] } }
 }
 
 impl Default for MonitorStepInstructionData {

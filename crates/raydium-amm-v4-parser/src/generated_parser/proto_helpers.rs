@@ -73,6 +73,7 @@ pub mod proto_types_parsers {
                 cancel_owner: self.cancel_owner.to_string(),
                 pending1: self.pending1.to_vec(),
                 pending2: self.pending2.to_vec(),
+                create_pool_fee: self.create_pool_fee,
             }
         }
     }

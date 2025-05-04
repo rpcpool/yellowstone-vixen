@@ -126,15 +126,11 @@ impl Deposit {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DepositInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl DepositInstructionData {
-    pub fn new() -> Self {
-        Self {
-            discriminator: [242, 35, 198, 137, 82, 225, 242, 182],
-        }
-    }
+    pub fn new() -> Self { Self { discriminator: [3] } }
 }
 
 impl Default for DepositInstructionData {

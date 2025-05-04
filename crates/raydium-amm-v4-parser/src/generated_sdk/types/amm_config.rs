@@ -22,5 +22,6 @@ pub struct AmmConfig {
     )]
     pub cancel_owner: Pubkey,
     pub pending1: [u64; 28],
-    pub pending2: [u64; 32],
+    pub pending2: [u64; 31],
+    pub create_pool_fee: u64,
 }

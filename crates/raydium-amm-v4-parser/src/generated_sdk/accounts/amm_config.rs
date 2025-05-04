@@ -6,23 +6,27 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Fees {
-    pub min_separate_numerator: u64,
-    pub min_separate_denominator: u64,
-    pub trade_fee_numerator: u64,
-    pub trade_fee_denominator: u64,
-    pub pnl_numerator: u64,
-    pub pnl_denominator: u64,
-    pub swap_fee_numerator: u64,
-    pub swap_fee_denominator: u64,
+pub struct AmmConfig {
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub pnl_owner: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub cancel_owner: Pubkey,
+    pub pending1: [u64; 28],
+    pub pending2: [u64; 31],
+    pub create_pool_fee: u64,
 }
 
-impl Fees {
-    pub const LEN: usize = 72;
-
+impl AmmConfig {
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
         let mut data = data;
@@ -30,7 +34,7 @@ impl Fees {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Fees {
+impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for AmmConfig {
     type Error = std::io::Error;
 
     fn try_from(
@@ -42,30 +46,30 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Fees {
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_fees(
+pub fn fetch_amm_config(
     rpc: &solana_client::rpc_client::RpcClient,
     address: &solana_program::pubkey::Pubkey,
-) -> Result<crate::shared::DecodedAccount<Fees>, std::io::Error> {
-    let accounts = fetch_all_fees(rpc, &[*address])?;
+) -> Result<crate::shared::DecodedAccount<AmmConfig>, std::io::Error> {
+    let accounts = fetch_all_amm_config(rpc, &[*address])?;
     Ok(accounts[0].clone())
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_all_fees(
+pub fn fetch_all_amm_config(
     rpc: &solana_client::rpc_client::RpcClient,
     addresses: &[solana_program::pubkey::Pubkey],
-) -> Result<Vec<crate::shared::DecodedAccount<Fees>>, std::io::Error> {
+) -> Result<Vec<crate::shared::DecodedAccount<AmmConfig>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-    let mut decoded_accounts: Vec<crate::shared::DecodedAccount<Fees>> = Vec::new();
+    let mut decoded_accounts: Vec<crate::shared::DecodedAccount<AmmConfig>> = Vec::new();
     for i in 0..addresses.len() {
         let address = addresses[i];
         let account = accounts[i].as_ref().ok_or(std::io::Error::new(
             std::io::ErrorKind::Other,
             format!("Account not found: {}", address),
         ))?;
-        let data = Fees::from_bytes(&account.data)?;
+        let data = AmmConfig::from_bytes(&account.data)?;
         decoded_accounts.push(crate::shared::DecodedAccount {
             address,
             account: account.clone(),
@@ -76,27 +80,27 @@ pub fn fetch_all_fees(
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_maybe_fees(
+pub fn fetch_maybe_amm_config(
     rpc: &solana_client::rpc_client::RpcClient,
     address: &solana_program::pubkey::Pubkey,
-) -> Result<crate::shared::MaybeAccount<Fees>, std::io::Error> {
-    let accounts = fetch_all_maybe_fees(rpc, &[*address])?;
+) -> Result<crate::shared::MaybeAccount<AmmConfig>, std::io::Error> {
+    let accounts = fetch_all_maybe_amm_config(rpc, &[*address])?;
     Ok(accounts[0].clone())
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_all_maybe_fees(
+pub fn fetch_all_maybe_amm_config(
     rpc: &solana_client::rpc_client::RpcClient,
     addresses: &[solana_program::pubkey::Pubkey],
-) -> Result<Vec<crate::shared::MaybeAccount<Fees>>, std::io::Error> {
+) -> Result<Vec<crate::shared::MaybeAccount<AmmConfig>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-    let mut decoded_accounts: Vec<crate::shared::MaybeAccount<Fees>> = Vec::new();
+    let mut decoded_accounts: Vec<crate::shared::MaybeAccount<AmmConfig>> = Vec::new();
     for i in 0..addresses.len() {
         let address = addresses[i];
         if let Some(account) = accounts[i].as_ref() {
-            let data = Fees::from_bytes(&account.data)?;
+            let data = AmmConfig::from_bytes(&account.data)?;
             decoded_accounts.push(crate::shared::MaybeAccount::Exists(
                 crate::shared::DecodedAccount {
                     address,
@@ -112,24 +116,24 @@ pub fn fetch_all_maybe_fees(
 }
 
 #[cfg(feature = "anchor")]
-impl anchor_lang::AccountDeserialize for Fees {
+impl anchor_lang::AccountDeserialize for AmmConfig {
     fn try_deserialize_unchecked(buf: &mut &[u8]) -> anchor_lang::Result<Self> {
         Ok(Self::deserialize(buf)?)
     }
 }
 
 #[cfg(feature = "anchor")]
-impl anchor_lang::AccountSerialize for Fees {}
+impl anchor_lang::AccountSerialize for AmmConfig {}
 
 #[cfg(feature = "anchor")]
-impl anchor_lang::Owner for Fees {
+impl anchor_lang::Owner for AmmConfig {
     fn owner() -> Pubkey { crate::RAYDIUM_AMM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]
-impl anchor_lang::IdlBuild for Fees {}
+impl anchor_lang::IdlBuild for AmmConfig {}
 
 #[cfg(feature = "anchor-idl-build")]
-impl anchor_lang::Discriminator for Fees {
+impl anchor_lang::Discriminator for AmmConfig {
     const DISCRIMINATOR: [u8; 8] = [0; 8];
 }
