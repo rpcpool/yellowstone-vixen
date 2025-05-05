@@ -1,0 +1,1586 @@
+{
+    "version": "0.1.0",
+    "name": "limo",
+    "metadata": {
+        "address": "LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF"
+    },
+    "instructions": [
+        {
+            "name": "initializeGlobalConfig",
+            "accounts": [
+                {
+                    "name": "adminAuthority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "pdaAuthority",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "initializeVault",
+            "accounts": [
+                {
+                    "name": "payer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "pdaAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "mint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "vault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "createOrder",
+            "accounts": [
+                {
+                    "name": "maker",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "pdaAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "order",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "outputMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "makerAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "outputTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "eventAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "program",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "inputAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "outputAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "orderType",
+                    "type": "u8"
+                }
+            ]
+        },
+        {
+            "name": "closeOrderAndClaimTip",
+            "accounts": [
+                {
+                    "name": "maker",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "order",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "pdaAuthority",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "outputMint",
+                    "isMut": false,
+                    "isSigner": false,
+                    "docs": ["- required only for indexing the order state from the instruction"]
+                },
+                {
+                    "name": "makerInputAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "eventAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "program",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "takeOrder",
+            "accounts": [
+                {
+                    "name": "taker",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "maker",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "pdaAuthority",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "order",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "outputMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "takerInputAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "takerOutputAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "intermediaryOutputTokenAccount",
+                    "isMut": true,
+                    "isSigner": false,
+                    "isOptional": true
+                },
+                {
+                    "name": "makerOutputAta",
+                    "isMut": true,
+                    "isSigner": false,
+                    "isOptional": true
+                },
+                {
+                    "name": "expressRelay",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "expressRelayMetadata",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "sysvarInstructions",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "permission",
+                    "isMut": false,
+                    "isSigner": false,
+                    "isOptional": true
+                },
+                {
+                    "name": "configRouter",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "outputTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "eventAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "program",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "inputAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "minOutputAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "tipAmountPermissionlessTaking",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "flashTakeOrderStart",
+            "accounts": [
+                {
+                    "name": "taker",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "maker",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "pdaAuthority",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "order",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "outputMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "takerInputAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "takerOutputAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "intermediaryOutputTokenAccount",
+                    "isMut": true,
+                    "isSigner": false,
+                    "isOptional": true
+                },
+                {
+                    "name": "makerOutputAta",
+                    "isMut": true,
+                    "isSigner": false,
+                    "isOptional": true
+                },
+                {
+                    "name": "expressRelay",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "expressRelayMetadata",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "sysvarInstructions",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "permission",
+                    "isMut": false,
+                    "isSigner": false,
+                    "isOptional": true
+                },
+                {
+                    "name": "configRouter",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "outputTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "eventAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "program",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "inputAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "minOutputAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "tipAmountPermissionlessTaking",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "flashTakeOrderEnd",
+            "accounts": [
+                {
+                    "name": "taker",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "maker",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "pdaAuthority",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "order",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "outputMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "takerInputAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "takerOutputAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "intermediaryOutputTokenAccount",
+                    "isMut": true,
+                    "isSigner": false,
+                    "isOptional": true
+                },
+                {
+                    "name": "makerOutputAta",
+                    "isMut": true,
+                    "isSigner": false,
+                    "isOptional": true
+                },
+                {
+                    "name": "expressRelay",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "expressRelayMetadata",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "sysvarInstructions",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "permission",
+                    "isMut": false,
+                    "isSigner": false,
+                    "isOptional": true
+                },
+                {
+                    "name": "configRouter",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "inputTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "outputTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "eventAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "program",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "inputAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "minOutputAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "tipAmountPermissionlessTaking",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "updateGlobalConfig",
+            "accounts": [
+                {
+                    "name": "adminAuthority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "mode",
+                    "type": "u16"
+                },
+                {
+                    "name": "value",
+                    "type": {
+                        "array": ["u8", 128]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "updateGlobalConfigAdmin",
+            "accounts": [
+                {
+                    "name": "adminAuthorityCached",
+                    "isMut": false,
+                    "isSigner": true
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "withdrawHostTip",
+            "accounts": [
+                {
+                    "name": "adminAuthority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "globalConfig",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "pdaAuthority",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "logUserSwapBalancesStart",
+            "accounts": [
+                {
+                    "name": "baseAccounts",
+                    "accounts": [
+                        {
+                            "name": "maker",
+                            "isMut": false,
+                            "isSigner": true
+                        },
+                        {
+                            "name": "inputMint",
+                            "isMut": false,
+                            "isSigner": false
+                        },
+                        {
+                            "name": "outputMint",
+                            "isMut": false,
+                            "isSigner": false
+                        },
+                        {
+                            "name": "inputTa",
+                            "isMut": false,
+                            "isSigner": false
+                        },
+                        {
+                            "name": "outputTa",
+                            "isMut": false,
+                            "isSigner": false
+                        },
+                        {
+                            "name": "pdaReferrer",
+                            "isMut": false,
+                            "isSigner": false,
+                            "isOptional": true,
+                            "docs": ["if it's not the pda it doesn't matter"]
+                        },
+                        {
+                            "name": "swapProgramId",
+                            "isMut": false,
+                            "isSigner": false
+                        }
+                    ]
+                },
+                {
+                    "name": "userSwapBalanceState",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "sysvarInstructions",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "eventAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "program",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "logUserSwapBalancesEnd",
+            "accounts": [
+                {
+                    "name": "baseAccounts",
+                    "accounts": [
+                        {
+                            "name": "maker",
+                            "isMut": false,
+                            "isSigner": true
+                        },
+                        {
+                            "name": "inputMint",
+                            "isMut": false,
+                            "isSigner": false
+                        },
+                        {
+                            "name": "outputMint",
+                            "isMut": false,
+                            "isSigner": false
+                        },
+                        {
+                            "name": "inputTa",
+                            "isMut": false,
+                            "isSigner": false
+                        },
+                        {
+                            "name": "outputTa",
+                            "isMut": false,
+                            "isSigner": false
+                        },
+                        {
+                            "name": "pdaReferrer",
+                            "isMut": false,
+                            "isSigner": false,
+                            "isOptional": true,
+                            "docs": ["if it's not the pda it doesn't matter"]
+                        },
+                        {
+                            "name": "swapProgramId",
+                            "isMut": false,
+                            "isSigner": false
+                        }
+                    ]
+                },
+                {
+                    "name": "userSwapBalanceState",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "sysvarInstructions",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "eventAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "program",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "simulatedSwapAmountOut",
+                    "type": "u64"
+                },
+                {
+                    "name": "simulatedTs",
+                    "type": "u64"
+                },
+                {
+                    "name": "minimumAmountOut",
+                    "type": "u64"
+                },
+                {
+                    "name": "swapAmountIn",
+                    "type": "u64"
+                },
+                {
+                    "name": "simulatedAmountOutNextBest",
+                    "type": "u64"
+                },
+                {
+                    "name": "aggregator",
+                    "type": "u8"
+                },
+                {
+                    "name": "nextBestAggregator",
+                    "type": "u8"
+                },
+                {
+                    "name": "padding",
+                    "type": {
+                        "array": ["u8", 2]
+                    }
+                }
+            ]
+        }
+    ],
+    "accounts": [
+        {
+            "name": "Order",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "globalConfig",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "maker",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "inputMint",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "inputMintProgramId",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "outputMint",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "outputMintProgramId",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "initialInputAmount",
+                        "docs": ["The amount of input token the maker wants to swap"],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "expectedOutputAmount",
+                        "docs": ["The amount of output token the maker wants to receive"],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "remainingInputAmount",
+                        "docs": ["The amount of input token remaining to be swapped"],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "filledOutputAmount",
+                        "docs": ["The amount of output token that the maker has received so far"],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "tipAmount",
+                        "docs": [
+                            "The amount of tips the maker is due to receive for this order -",
+                            "in lamports, stored in the pda_authority account"
+                        ],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "numberOfFills",
+                        "docs": ["The number of times the order has been filled"],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "orderType",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "status",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "inVaultBump",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "flashIxLock",
+                        "docs": [
+                            "This is normally set to 0, but can be set to 1 to indicate that the",
+                            "order is part of a flash operation, in whcih case the order can not be",
+                            "modified until the flash operation is completed."
+                        ],
+                        "type": "u8"
+                    },
+                    {
+                        "name": "padding0",
+                        "type": {
+                            "array": ["u8", 4]
+                        }
+                    },
+                    {
+                        "name": "lastUpdatedTimestamp",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "flashStartTakerOutputBalance",
+                        "docs": [
+                            "This is only used for flash operations, and is set to the blanance on the start",
+                            "operation, and than back to 0 on the end operation. It is used to compute the difference",
+                            "between start and end balances in order to compute the amount received from a potential swap"
+                        ],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "padding",
+                        "type": {
+                            "array": ["u64", 19]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "UserSwapBalancesState",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "userLamports",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "inputTaBalance",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "outputTaBalance",
+                        "type": "u64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "GlobalConfig",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "emergencyMode",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "flashTakeOrderBlocked",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "newOrdersBlocked",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "ordersTakingBlocked",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "hostFeeBps",
+                        "type": "u16"
+                    },
+                    {
+                        "name": "isOrderTakingPermissionless",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "padding0",
+                        "type": {
+                            "array": ["u8", 1]
+                        }
+                    },
+                    {
+                        "name": "orderCloseDelaySeconds",
+                        "docs": ["The number of seconds after an order has been updated before it can be closed"],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "padding1",
+                        "type": {
+                            "array": ["u64", 9]
+                        }
+                    },
+                    {
+                        "name": "pdaAuthorityPreviousLamportsBalance",
+                        "docs": [
+                            "The total amount of lamports that were present in the pda_authority last",
+                            "time a program instructions which alters the pda_authority account was",
+                            "executed"
+                        ],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "totalTipAmount",
+                        "docs": [
+                            "The total amount of tips that have been paid out - should be at least",
+                            "as much as the total lamports present in the pda_authority account"
+                        ],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "hostTipAmount",
+                        "docs": [
+                            "The amount of tips the host is due to receive -",
+                            "in lamports, stored in the pda_authority account"
+                        ],
+                        "type": "u64"
+                    },
+                    {
+                        "name": "pdaAuthority",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "pdaAuthorityBump",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "adminAuthority",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "adminAuthorityCached",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "txnFeeCost",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "ataCreationCost",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "padding2",
+                        "type": {
+                            "array": ["u64", 241]
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "types": [
+        {
+            "name": "OrderStatus",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "Active"
+                    },
+                    {
+                        "name": "Filled"
+                    },
+                    {
+                        "name": "Cancelled"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "OrderType",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "Vanilla"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "UpdateGlobalConfigMode",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "UpdateEmergencyMode"
+                    },
+                    {
+                        "name": "UpdateFlashTakeOrderBlocked"
+                    },
+                    {
+                        "name": "UpdateBlockNewOrders"
+                    },
+                    {
+                        "name": "UpdateBlockOrderTaking"
+                    },
+                    {
+                        "name": "UpdateHostFeeBps"
+                    },
+                    {
+                        "name": "UpdateAdminAuthorityCached"
+                    },
+                    {
+                        "name": "UpdateOrderTakingPermissionless"
+                    },
+                    {
+                        "name": "UpdateOrderCloseDelaySeconds"
+                    },
+                    {
+                        "name": "UpdateTxnFeeCost"
+                    },
+                    {
+                        "name": "UpdateAtaCreationCost"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "UpdateGlobalConfigValue",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "Bool",
+                        "fields": ["bool"]
+                    },
+                    {
+                        "name": "U16",
+                        "fields": ["u16"]
+                    },
+                    {
+                        "name": "U64",
+                        "fields": ["u64"]
+                    },
+                    {
+                        "name": "Pubkey",
+                        "fields": ["publicKey"]
+                    }
+                ]
+            }
+        }
+    ],
+    "events": [
+        {
+            "name": "OrderDisplay",
+            "fields": [
+                {
+                    "name": "initialInputAmount",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "expectedOutputAmount",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "remainingInputAmount",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "filledOutputAmount",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "tipAmount",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "numberOfFills",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "onEventOutputAmountFilled",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "onEventTipAmount",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "orderType",
+                    "type": "u8",
+                    "index": false
+                },
+                {
+                    "name": "status",
+                    "type": "u8",
+                    "index": false
+                },
+                {
+                    "name": "lastUpdatedTimestamp",
+                    "type": "u64",
+                    "index": false
+                }
+            ]
+        },
+        {
+            "name": "UserSwapBalanceDiffs",
+            "fields": [
+                {
+                    "name": "userLamportsBefore",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "inputTaBalanceBefore",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "outputTaBalanceBefore",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "userLamportsAfter",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "inputTaBalanceAfter",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "outputTaBalanceAfter",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "swapProgram",
+                    "type": "publicKey",
+                    "index": false
+                },
+                {
+                    "name": "simulatedSwapAmountOut",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "simulatedTs",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "minimumAmountOut",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "swapAmountIn",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "simulatedAmountOutNextBest",
+                    "type": "u64",
+                    "index": false
+                },
+                {
+                    "name": "aggregator",
+                    "type": "u8",
+                    "index": false
+                },
+                {
+                    "name": "nextBestAggregator",
+                    "type": "u8",
+                    "index": false
+                }
+            ]
+        }
+    ],
+    "errors": [
+        {
+            "code": 6000,
+            "name": "OrderCanNotBeCanceled",
+            "msg": "Order can't be canceled"
+        },
+        {
+            "code": 6001,
+            "name": "OrderNotActive",
+            "msg": "Order not active"
+        },
+        {
+            "code": 6002,
+            "name": "InvalidAdminAuthority",
+            "msg": "Invalid admin authority"
+        },
+        {
+            "code": 6003,
+            "name": "InvalidPdaAuthority",
+            "msg": "Invalid pda authority"
+        },
+        {
+            "code": 6004,
+            "name": "InvalidConfigOption",
+            "msg": "Invalid config option"
+        },
+        {
+            "code": 6005,
+            "name": "InvalidOrderOwner",
+            "msg": "Order owner account is not the order owner"
+        },
+        {
+            "code": 6006,
+            "name": "OutOfRangeIntegralConversion",
+            "msg": "Out of range integral conversion attempted"
+        },
+        {
+            "code": 6007,
+            "name": "InvalidFlag",
+            "msg": "Invalid boolean flag, valid values are 0 and 1"
+        },
+        {
+            "code": 6008,
+            "name": "MathOverflow",
+            "msg": "Mathematical operation with overflow"
+        },
+        {
+            "code": 6009,
+            "name": "OrderInputAmountInvalid",
+            "msg": "Order input amount invalid"
+        },
+        {
+            "code": 6010,
+            "name": "OrderOutputAmountInvalid",
+            "msg": "Order output amount invalid"
+        },
+        {
+            "code": 6011,
+            "name": "InvalidHostFee",
+            "msg": "Host fee bps must be between 0 and 10000"
+        },
+        {
+            "code": 6012,
+            "name": "IntegerOverflow",
+            "msg": "Conversion between integers failed"
+        },
+        {
+            "code": 6013,
+            "name": "InvalidTipBalance",
+            "msg": "Tip balance less than accounted tip"
+        },
+        {
+            "code": 6014,
+            "name": "InvalidTipTransferAmount",
+            "msg": "Tip transfer amount is less than expected"
+        },
+        {
+            "code": 6015,
+            "name": "InvalidHostTipBalance",
+            "msg": "Host tup amount is less than accounted for"
+        },
+        {
+            "code": 6016,
+            "name": "OrderWithinFlashOperation",
+            "msg": "Order within flash operation - all otehr actions are blocked"
+        },
+        {
+            "code": 6017,
+            "name": "CPINotAllowed",
+            "msg": "CPI not allowed"
+        },
+        {
+            "code": 6018,
+            "name": "FlashTakeOrderBlocked",
+            "msg": "Flash take_order is blocked"
+        },
+        {
+            "code": 6019,
+            "name": "FlashTxWithUnexpectedIxs",
+            "msg": "Some unexpected instructions are present in the tx. Either before or after the flash ixs, or some ix target the same program between"
+        },
+        {
+            "code": 6020,
+            "name": "FlashIxsNotEnded",
+            "msg": "Flash ixs initiated without the closing ix in the transaction"
+        },
+        {
+            "code": 6021,
+            "name": "FlashIxsNotStarted",
+            "msg": "Flash ixs ended without the starting ix in the transaction"
+        },
+        {
+            "code": 6022,
+            "name": "FlashIxsAccountMismatch",
+            "msg": "Some accounts differ between the two flash ixs"
+        },
+        {
+            "code": 6023,
+            "name": "FlashIxsArgsMismatch",
+            "msg": "Some args differ between the two flash ixs"
+        },
+        {
+            "code": 6024,
+            "name": "OrderNotWithinFlashOperation",
+            "msg": "Order is not within flash operation"
+        },
+        {
+            "code": 6025,
+            "name": "EmergencyModeEnabled",
+            "msg": "Emergency mode is enabled"
+        },
+        {
+            "code": 6026,
+            "name": "CreatingNewOrdersBlocked",
+            "msg": "Creating new ordersis blocked"
+        },
+        {
+            "code": 6027,
+            "name": "OrderTakingBlocked",
+            "msg": "Orders taking is blocked"
+        },
+        {
+            "code": 6028,
+            "name": "OrderInputAmountTooLarge",
+            "msg": "Order input amount larger than the remaining"
+        },
+        {
+            "code": 6029,
+            "name": "PermissionRequiredPermissionlessNotEnabled",
+            "msg": "Permissionless order taking not enabled, please provide permission account"
+        },
+        {
+            "code": 6030,
+            "name": "PermissionDoesNotMatchOrder",
+            "msg": "Permission address does not match order address"
+        },
+        {
+            "code": 6031,
+            "name": "InvalidAtaAddress",
+            "msg": "Invalid ata address"
+        },
+        {
+            "code": 6032,
+            "name": "MakerOutputAtaRequired",
+            "msg": "Maker output ata required when output mint is not WSOL"
+        },
+        {
+            "code": 6033,
+            "name": "IntermediaryOutputTokenAccountRequired",
+            "msg": "Intermediary output token account required when output mint is WSOL"
+        },
+        {
+            "code": 6034,
+            "name": "NotEnoughBalanceForRent",
+            "msg": "Not enough balance for rent"
+        },
+        {
+            "code": 6035,
+            "name": "NotEnoughTimePassedSinceLastUpdate",
+            "msg": "Order can not be closed - Not enough time passed since last update"
+        },
+        {
+            "code": 6036,
+            "name": "OrderSameMint",
+            "msg": "Order input and output mints are the same"
+        },
+        {
+            "code": 6037,
+            "name": "UnsupportedTokenExtension",
+            "msg": "Mint has a token (2022) extension that is not supported"
+        },
+        {
+            "code": 6038,
+            "name": "InvalidTokenAccount",
+            "msg": "Can't have an spl token mint with a t22 account"
+        },
+        {
+            "code": 6039,
+            "name": "OrderTypeInvalid",
+            "msg": "The order type is invalid"
+        },
+        {
+            "code": 6040,
+            "name": "UninitializedTokenAccount",
+            "msg": "Token account is not initialized"
+        },
+        {
+            "code": 6041,
+            "name": "InvalidTokenAccountOwner",
+            "msg": "Account is not owned by the token program"
+        },
+        {
+            "code": 6042,
+            "name": "InvalidAccount",
+            "msg": "Account is not a valid token account"
+        },
+        {
+            "code": 6043,
+            "name": "InvalidTokenMint",
+            "msg": "Token account has incorrect mint"
+        },
+        {
+            "code": 6044,
+            "name": "InvalidTokenAuthority",
+            "msg": "Token account has incorrect authority"
+        }
+    ]
+}
