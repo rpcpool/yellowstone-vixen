@@ -150,15 +150,11 @@ impl SwapBaseIn {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SwapBaseInInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl SwapBaseInInstructionData {
-    pub fn new() -> Self {
-        Self {
-            discriminator: [42, 236, 72, 162, 242, 24, 39, 84],
-        }
-    }
+    pub fn new() -> Self { Self { discriminator: [9] } }
 }
 
 impl Default for SwapBaseInInstructionData {

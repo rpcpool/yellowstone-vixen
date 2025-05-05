@@ -64,13 +64,13 @@ impl CreateConfigAccount {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateConfigAccountInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl CreateConfigAccountInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [190, 227, 122, 84, 73, 166, 40, 100],
+            discriminator: [14],
         }
     }
 }

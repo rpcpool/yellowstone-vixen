@@ -6,7 +6,7 @@
 //!
 
 use crate::{
-    accounts::{AmmInfo, Fees, TargetOrders},
+    accounts::{AmmConfig, AmmInfo, Fees, TargetOrders},
     ID,
 };
 
@@ -18,23 +18,30 @@ pub enum RaydiumAmmProgramState {
     TargetOrders(TargetOrders),
     Fees(Fees),
     AmmInfo(AmmInfo),
+    AmmConfig(AmmConfig),
 }
 
 impl RaydiumAmmProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
-        let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
-        let acc = match acc_discriminator {
-            [113, 225, 140, 255, 65, 144, 239, 231] => Ok(RaydiumAmmProgramState::TargetOrders(
+        let data_len = data_bytes.len();
+        const TARGETORDERS_LEN: usize = std::mem::size_of::<TargetOrders>();
+        const FEES_LEN: usize = std::mem::size_of::<Fees>();
+        const AMMINFO_LEN: usize = std::mem::size_of::<AmmInfo>();
+        const AMMCONFIG_LEN: usize = std::mem::size_of::<AmmConfig>();
+
+        let acc = match data_len {
+            TARGETORDERS_LEN => Ok(RaydiumAmmProgramState::TargetOrders(
                 TargetOrders::from_bytes(data_bytes)?,
             )),
-            [151, 157, 50, 115, 130, 72, 179, 36] => {
-                Ok(RaydiumAmmProgramState::Fees(Fees::from_bytes(data_bytes)?))
-            },
-            [33, 217, 2, 203, 184, 83, 235, 91] => Ok(RaydiumAmmProgramState::AmmInfo(
-                AmmInfo::from_bytes(data_bytes)?,
-            )),
+            FEES_LEN => Ok(RaydiumAmmProgramState::Fees(Fees::from_bytes(data_bytes)?)),
+            AMMINFO_LEN => Ok(RaydiumAmmProgramState::AmmInfo(AmmInfo::from_bytes(
+                data_bytes,
+            )?)),
+            AMMCONFIG_LEN => Ok(RaydiumAmmProgramState::AmmConfig(AmmConfig::from_bytes(
+                data_bytes,
+            )?)),
             _ => Err(yellowstone_vixen_core::ParseError::from(
-                "Invalid Account discriminator".to_owned(),
+                "Invalid Account data length".to_owned(),
             )),
         };
 
@@ -42,6 +49,7 @@ impl RaydiumAmmProgramState {
         match &acc {
             Ok(acc) => {
                 tracing::info!(
+                    name: "correctly_parsed_account",
                     name = "account_update",
                     program = ID.to_string(),
                     account = acc.to_string()
@@ -49,10 +57,11 @@ impl RaydiumAmmProgramState {
             },
             Err(e) => {
                 tracing::info!(
+                    name: "incorrectly_parsed_account",
                     name = "account_update",
                     program = ID.to_string(),
                     account = "error",
-                    discriminator = ?acc_discriminator,
+                    data_len = ?data_len,
                     error = ?e
                 );
             },
@@ -195,6 +204,18 @@ mod proto_parser {
             }
         }
     }
+    use super::AmmConfig;
+    impl IntoProto<proto_def::AmmConfig> for AmmConfig {
+        fn into_proto(self) -> proto_def::AmmConfig {
+            proto_def::AmmConfig {
+                pnl_owner: self.pnl_owner.to_string(),
+                cancel_owner: self.cancel_owner.to_string(),
+                pending1: self.pending1.to_vec(),
+                pending2: self.pending2.to_vec(),
+                create_pool_fee: self.create_pool_fee,
+            }
+        }
+    }
 
     impl IntoProto<proto_def::ProgramState> for RaydiumAmmProgramState {
         fn into_proto(self) -> proto_def::ProgramState {
@@ -207,6 +228,9 @@ mod proto_parser {
                 },
                 RaydiumAmmProgramState::AmmInfo(data) => {
                     proto_def::program_state::StateOneof::AmmInfo(data.into_proto())
+                },
+                RaydiumAmmProgramState::AmmConfig(data) => {
+                    proto_def::program_state::StateOneof::AmmConfig(data.into_proto())
                 },
             };
 

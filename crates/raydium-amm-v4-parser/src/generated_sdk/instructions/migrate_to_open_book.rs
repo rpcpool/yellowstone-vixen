@@ -160,15 +160,11 @@ impl MigrateToOpenBook {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MigrateToOpenBookInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl MigrateToOpenBookInstructionData {
-    pub fn new() -> Self {
-        Self {
-            discriminator: [207, 98, 243, 89, 114, 174, 205, 20],
-        }
-    }
+    pub fn new() -> Self { Self { discriminator: [5] } }
 }
 
 impl Default for MigrateToOpenBookInstructionData {

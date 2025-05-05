@@ -12,7 +12,6 @@ use crate::generated::types::TargetOrder;
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TargetOrders {
-    pub discriminator: [u8; 8],
     pub owner: [u64; 4],
     #[cfg_attr(feature = "serde", serde(with = "serde_big_array::BigArray"))]
     pub buy_orders: [TargetOrder; 50],

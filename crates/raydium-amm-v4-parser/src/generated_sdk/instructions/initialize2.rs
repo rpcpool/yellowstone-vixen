@@ -167,15 +167,11 @@ impl Initialize2 {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Initialize2InstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl Initialize2InstructionData {
-    pub fn new() -> Self {
-        Self {
-            discriminator: [9, 203, 254, 64, 89, 32, 179, 159],
-        }
-    }
+    pub fn new() -> Self { Self { discriminator: [1] } }
 }
 
 impl Default for Initialize2InstructionData {

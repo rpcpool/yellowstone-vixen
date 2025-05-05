@@ -91,10 +91,11 @@ impl InstructionParser {
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<RaydiumAmmProgramIx> {
         let accounts_len = ix.accounts.len();
-        let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+
+        let ix_discriminator: [u8; 1] = ix.data[0..1].try_into()?;
+        let mut ix_data = &ix.data[1..];
         let ix = match ix_discriminator {
-            [175, 175, 109, 31, 13, 152, 155, 237] => {
+            [0] => {
                 check_min_accounts_req(accounts_len, 18)?;
                 let ix_accounts = InitializeIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -119,7 +120,7 @@ impl InstructionParser {
                 let de_ix_data: InitializeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::Initialize(ix_accounts, de_ix_data))
             },
-            [9, 203, 254, 64, 89, 32, 179, 159] => {
+            [1] => {
                 check_min_accounts_req(accounts_len, 21)?;
                 let ix_accounts = Initialize2IxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -147,7 +148,7 @@ impl InstructionParser {
                 let de_ix_data: Initialize2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::Initialize2(ix_accounts, de_ix_data))
             },
-            [252, 219, 18, 48, 87, 183, 26, 154] => {
+            [2] => {
                 check_min_accounts_req(accounts_len, 19)?;
                 let ix_accounts = MonitorStepIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -173,7 +174,7 @@ impl InstructionParser {
                 let de_ix_data: MonitorStepIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::MonitorStep(ix_accounts, de_ix_data))
             },
-            [242, 35, 198, 137, 82, 225, 242, 182] => {
+            [3] => {
                 check_min_accounts_req(accounts_len, 14)?;
                 let ix_accounts = DepositIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -194,7 +195,7 @@ impl InstructionParser {
                 let de_ix_data: DepositIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::Deposit(ix_accounts, de_ix_data))
             },
-            [183, 18, 70, 156, 148, 109, 161, 34] => {
+            [4] => {
                 check_min_accounts_req(accounts_len, 22)?;
                 let ix_accounts = WithdrawIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -223,7 +224,7 @@ impl InstructionParser {
                 let de_ix_data: WithdrawIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
-            [207, 98, 243, 89, 114, 174, 205, 20] => {
+            [5] => {
                 check_min_accounts_req(accounts_len, 21)?;
                 let ix_accounts = MigrateToOpenBookIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -250,7 +251,7 @@ impl InstructionParser {
                 };
                 Ok(RaydiumAmmProgramIx::MigrateToOpenBook(ix_accounts))
             },
-            [27, 234, 178, 52, 147, 2, 187, 141] => {
+            [6] => {
                 check_min_accounts_req(accounts_len, 16)?;
                 let ix_accounts = SetParamsIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -273,7 +274,7 @@ impl InstructionParser {
                 let de_ix_data: SetParamsIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::SetParams(ix_accounts, de_ix_data))
             },
-            [86, 36, 158, 158, 92, 241, 251, 94] => {
+            [7] => {
                 check_min_accounts_req(accounts_len, 17)?;
                 let ix_accounts = WithdrawPnlIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -296,7 +297,7 @@ impl InstructionParser {
                 };
                 Ok(RaydiumAmmProgramIx::WithdrawPnl(ix_accounts))
             },
-            [193, 101, 58, 65, 120, 78, 99, 31] => {
+            [8] => {
                 check_min_accounts_req(accounts_len, 6)?;
                 let ix_accounts = WithdrawSrmIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -309,7 +310,7 @@ impl InstructionParser {
                 let de_ix_data: WithdrawSrmIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::WithdrawSrm(ix_accounts, de_ix_data))
             },
-            [42, 236, 72, 162, 242, 24, 39, 84] => {
+            [9] => {
                 check_min_accounts_req(accounts_len, 18)?;
                 let ix_accounts = SwapBaseInIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -334,7 +335,7 @@ impl InstructionParser {
                 let de_ix_data: SwapBaseInIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::SwapBaseIn(ix_accounts, de_ix_data))
             },
-            [255, 92, 87, 45, 198, 172, 236, 2] => {
+            [10] => {
                 check_min_accounts_req(accounts_len, 14)?;
                 let ix_accounts = PreInitializeIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -355,7 +356,7 @@ impl InstructionParser {
                 let de_ix_data: PreInitializeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::PreInitialize(ix_accounts, de_ix_data))
             },
-            [163, 210, 155, 208, 175, 146, 213, 150] => {
+            [11] => {
                 check_min_accounts_req(accounts_len, 18)?;
                 let ix_accounts = SwapBaseOutIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -380,7 +381,7 @@ impl InstructionParser {
                 let de_ix_data: SwapBaseOutIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::SwapBaseOut(ix_accounts, de_ix_data))
             },
-            [195, 75, 104, 72, 253, 176, 183, 160] => {
+            [12] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = SimulateInfoIxAccounts {
                     amm: ix.accounts[0].0.into(),
@@ -395,7 +396,7 @@ impl InstructionParser {
                 let de_ix_data: SimulateInfoIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(RaydiumAmmProgramIx::SimulateInfo(ix_accounts, de_ix_data))
             },
-            [151, 90, 110, 217, 196, 223, 251, 95] => {
+            [13] => {
                 check_min_accounts_req(accounts_len, 17)?;
                 let ix_accounts = AdminCancelOrdersIxAccounts {
                     token_program: ix.accounts[0].0.into(),
@@ -423,7 +424,7 @@ impl InstructionParser {
                     de_ix_data,
                 ))
             },
-            [190, 227, 122, 84, 73, 166, 40, 100] => {
+            [14] => {
                 check_min_accounts_req(accounts_len, 5)?;
                 let ix_accounts = CreateConfigAccountIxAccounts {
                     admin: ix.accounts[0].0.into(),
@@ -434,7 +435,7 @@ impl InstructionParser {
                 };
                 Ok(RaydiumAmmProgramIx::CreateConfigAccount(ix_accounts))
             },
-            [240, 32, 10, 152, 8, 45, 87, 58] => {
+            [15] => {
                 check_min_accounts_req(accounts_len, 2)?;
                 let ix_accounts = UpdateConfigAccountIxAccounts {
                     admin: ix.accounts[0].0.into(),
@@ -456,6 +457,7 @@ impl InstructionParser {
         match &ix {
             Ok(ix) => {
                 tracing::info!(
+                    name: "correctly_parsed_instruction",
                     name = "ix_update",
                     program = ID.to_string(),
                     ix = ix.to_string()
@@ -463,6 +465,7 @@ impl InstructionParser {
             },
             Err(e) => {
                 tracing::info!(
+                    name: "incorrectly_parsed_instruction",
                     name = "ix_update",
                     program = ID.to_string(),
                     ix = "error",

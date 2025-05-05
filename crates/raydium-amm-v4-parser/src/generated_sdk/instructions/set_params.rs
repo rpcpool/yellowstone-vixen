@@ -141,15 +141,11 @@ impl SetParams {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SetParamsInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl SetParamsInstructionData {
-    pub fn new() -> Self {
-        Self {
-            discriminator: [27, 234, 178, 52, 147, 2, 187, 141],
-        }
-    }
+    pub fn new() -> Self { Self { discriminator: [6] } }
 }
 
 impl Default for SetParamsInstructionData {

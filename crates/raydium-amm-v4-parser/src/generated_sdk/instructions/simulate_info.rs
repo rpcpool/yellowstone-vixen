@@ -92,13 +92,13 @@ impl SimulateInfo {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SimulateInfoInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl SimulateInfoInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [195, 75, 104, 72, 253, 176, 183, 160],
+            discriminator: [12],
         }
     }
 }

@@ -126,13 +126,13 @@ impl PreInitialize {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PreInitializeInstructionData {
-    discriminator: [u8; 8],
+    discriminator: [u8; 1],
 }
 
 impl PreInitializeInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [255, 92, 87, 45, 198, 172, 236, 2],
+            discriminator: [10],
         }
     }
 }

@@ -9,6 +9,7 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Update raydium-amm-v4 discriminators strategy (https://github.com/rpcpool/yellowstone-vixen/pull/73)
 - Added Kamino Limit Orders parser (https://github.com/rpcpool/yellowstone-vixen/pull/72)
 - Added new set of pasers: (https://github.com/rpcpool/yellowstone-vixen/pull/70)
   - meteora-amm
