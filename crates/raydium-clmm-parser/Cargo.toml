@@ -2,8 +2,11 @@
 
 [package]
 name = "yellowstone-vixen-raydium-clmm-parser"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
+description = "Vixen program parser for Raydium CLMM"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 
 [dependencies]
@@ -34,4 +37,3 @@ prost-build = "0.13.1"
 
 # [features]
 # proto = ["dep:tonic"]
-

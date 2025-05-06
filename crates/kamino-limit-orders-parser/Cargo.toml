@@ -2,8 +2,11 @@
 
 [package]
 name = "yellowstone-vixen-kamino-limit-orders-parser"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
+description = "Vixen program parser for Kamino limit orders"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 
 [dependencies]
@@ -31,4 +34,3 @@ tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]
 
 [build-dependencies]
 prost-build = "0.13.1"
-

@@ -6,23 +6,23 @@ resolver = "2"
 [workspace.dependencies]
 yellowstone-grpc-client = { version = "2.0.0" }
 yellowstone-grpc-proto = { version = "2.0.0", default-features = false }
-yellowstone-vixen = { path = "crates/runtime", version = "0.2.0" }
-yellowstone-vixen-core = { path = "crates/core", version = "0.2.0" }
-yellowstone-vixen-mock = { path = "crates/mock", version = "0.2.0" }
-yellowstone-vixen-parser = { path = "crates/parser", version = "0.2.0" }
-yellowstone-vixen-proto = { path = "crates/proto", version = "0.2.0" }
+yellowstone-vixen = { path = "crates/runtime", version = "0.3.0" }
+yellowstone-vixen-core = { path = "crates/core", version = "0.3.0" }
+yellowstone-vixen-mock = { path = "crates/mock", version = "0.3.0" }
+yellowstone-vixen-parser = { path = "crates/parser", version = "0.3.0" }
+yellowstone-vixen-proto = { path = "crates/proto", version = "0.3.0" }
 
-yellowstone-vixen-meteora-parser = { path = "crates/meteora-parser", version = "0.1.0" }
-yellowstone-vixen-pumpfun-parser = { path = "crates/pumpfun-parser", version = "0.1.0" }
-yellowstone-vixen-jupiter-swap-parser = { path = "crates/jupiter-swap-parser", version = "0.1.0" }
-yellowstone-vixen-meteora-amm-parser = { path = "crates/meteora-amm-parser", version = "0.1.0" }
-yellowstone-vixen-moonshot-parser = { path = "crates/moonshot-parser", version = "0.1.0" }
-yellowstone-vixen-orca-whirlpool-parser = { path = "crates/orca-whirlpool-parser", version = "0.1.0" }
-yellowstone-vixen-raydium-cpmm-parser = { path = "crates/raydium-cpmm-parser", version = "0.1.0" }
-yellowstone-vixen-pump-swaps-parser = { path = "crates/pump-swaps-parser", version = "0.1.0" }
-yellowstone-vixen-raydium-clmm-parser = { path = "crates/raydium-clmm-parser", version = "0.1.0" }
-yellowstone-vixen-raydium-amm-v4-parser = { path = "crates/raydium-amm-v4-parser", version = "0.1.0" }
-yellowstone-vixen-kamino-limit-orders-parser = { path = "crates/kamino-limit-orders-parser", version = "0.1.0" }
+yellowstone-vixen-meteora-parser = { path = "crates/meteora-parser", version = "0.3.0" }
+yellowstone-vixen-pumpfun-parser = { path = "crates/pumpfun-parser", version = "0.3.0" }
+yellowstone-vixen-jupiter-swap-parser = { path = "crates/jupiter-swap-parser", version = "0.3.0" }
+yellowstone-vixen-meteora-amm-parser = { path = "crates/meteora-amm-parser", version = "0.3.0" }
+yellowstone-vixen-moonshot-parser = { path = "crates/moonshot-parser", version = "0.3.0" }
+yellowstone-vixen-orca-whirlpool-parser = { path = "crates/orca-whirlpool-parser", version = "0.3.0" }
+yellowstone-vixen-raydium-cpmm-parser = { path = "crates/raydium-cpmm-parser", version = "0.3.0" }
+yellowstone-vixen-pump-swaps-parser = { path = "crates/pump-swaps-parser", version = "0.3.0" }
+yellowstone-vixen-raydium-clmm-parser = { path = "crates/raydium-clmm-parser", version = "0.3.0" }
+yellowstone-vixen-raydium-amm-v4-parser = { path = "crates/raydium-amm-v4-parser", version = "0.3.0" }
+yellowstone-vixen-kamino-limit-orders-parser = { path = "crates/kamino-limit-orders-parser", version = "0.3.0" }
 
 
 # helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 

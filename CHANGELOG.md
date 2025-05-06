@@ -5,11 +5,10 @@ All notable changes to this project will be documented in this file.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.0] - 2025-05-06
 
 ### Added
 
-- Update raydium-amm-v4 discriminators strategy (https://github.com/rpcpool/yellowstone-vixen/pull/73)
 - Added Kamino Limit Orders parser (https://github.com/rpcpool/yellowstone-vixen/pull/72)
 - Added new set of pasers: (https://github.com/rpcpool/yellowstone-vixen/pull/70)
   - meteora-amm
@@ -26,6 +25,8 @@ and adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Remove feature `orca` from `yellowstone-vixen-parser` moved parser to dedicated crate `yellowstone-vixen-orca-whirlpool-parser`
+- Update raydium-amm-v4 discriminators strategy (https://github.com/rpcpool/yellowstone-vixen/pull/73)
 - Proto generation with Codama (https://github.com/rpcpool/yellowstone-vixen/pull/68)
 
 ## [0.2.0] - 2025-04-03

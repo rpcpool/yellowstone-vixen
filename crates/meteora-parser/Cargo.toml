@@ -2,7 +2,10 @@
 
 [package]
 name = "yellowstone-vixen-meteora-parser"
-version = "0.1.0"
+version = "0.3.0"
+description = "Vixen program parser for Meteora"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
 edition = "2021"
 
 
@@ -30,4 +33,3 @@ prost-build = "0.13.1"
 
 # [features]
 # proto = ["dep:tonic"]
-
