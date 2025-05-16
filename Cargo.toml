@@ -26,6 +26,7 @@ yellowstone-vixen-pump-swaps-parser = { path = "crates/pump-swaps-parser", versi
 yellowstone-vixen-raydium-clmm-parser = { path = "crates/raydium-clmm-parser", version = "0.3.0" }
 yellowstone-vixen-raydium-amm-v4-parser = { path = "crates/raydium-amm-v4-parser", version = "0.3.0" }
 yellowstone-vixen-kamino-limit-orders-parser = { path = "crates/kamino-limit-orders-parser", version = "0.3.0" }
+yellowstone-vixen-raydium-launchpad-parser = { path = "crates/raydium-launchpad-parser", version = "0.3.0" }
 
 
 # helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 
