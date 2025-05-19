@@ -73,7 +73,7 @@ fn main() {
 
     yellowstone_vixen::Runtime::builder()
         .account(Pipeline::new(AccountParser, [Logger]))
-        .account(Pipeline::new(InstructionParser, [Logger]))
+        .instruction(Pipeline::new(InstructionParser, [Logger]))
         .metrics(yellowstone_vixen::metrics::Prometheus)
         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
         .build(config)
