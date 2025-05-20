@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -50,6 +49,7 @@ impl RemoveLiquiditySingleSide {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -144,9 +144,7 @@ impl RemoveLiquiditySingleSideInstructionData {
 }
 
 impl Default for RemoveLiquiditySingleSideInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -198,51 +196,57 @@ pub struct RemoveLiquiditySingleSideBuilder {
 }
 
 impl RemoveLiquiditySingleSideBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Pool account (PDA)
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     /// LP token mint of the pool
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     /// User pool lp token account. LP will be burned from this account upon success liquidity removal.
     #[inline(always)]
     pub fn user_pool_lp(&mut self, user_pool_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.user_pool_lp = Some(user_pool_lp);
         self
     }
+
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn b_vault_lp(&mut self, b_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.b_vault_lp = Some(b_vault_lp);
         self
     }
+
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn a_vault(&mut self, a_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_vault = Some(a_vault);
         self
     }
+
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn b_vault(&mut self, b_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.b_vault = Some(b_vault);
         self
     }
+
     /// LP token mint of vault A
     #[inline(always)]
     pub fn a_vault_lp_mint(
@@ -252,6 +256,7 @@ impl RemoveLiquiditySingleSideBuilder {
         self.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
     }
+
     /// LP token mint of vault B
     #[inline(always)]
     pub fn b_vault_lp_mint(
@@ -261,18 +266,21 @@ impl RemoveLiquiditySingleSideBuilder {
         self.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
     }
+
     /// Token vault account of vault A
     #[inline(always)]
     pub fn a_token_vault(&mut self, a_token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_token_vault = Some(a_token_vault);
         self
     }
+
     /// Token vault account of vault B
     #[inline(always)]
     pub fn b_token_vault(&mut self, b_token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.b_token_vault = Some(b_token_vault);
         self
     }
+
     /// User token account to receive token upon success liquidity removal.
     #[inline(always)]
     pub fn user_destination_token(
@@ -282,18 +290,21 @@ impl RemoveLiquiditySingleSideBuilder {
         self.user_destination_token = Some(user_destination_token);
         self
     }
+
     /// User account. Must be owner of the user_pool_lp account.
     #[inline(always)]
     pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
+
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
     #[inline(always)]
     pub fn vault_program(&mut self, vault_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vault_program = Some(vault_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program.
     #[inline(always)]
@@ -301,16 +312,19 @@ impl RemoveLiquiditySingleSideBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn pool_token_amount(&mut self, pool_token_amount: u64) -> &mut Self {
         self.pool_token_amount = Some(pool_token_amount);
         self
     }
+
     #[inline(always)]
     pub fn minimum_out_amount(&mut self, minimum_out_amount: u64) -> &mut Self {
         self.minimum_out_amount = Some(minimum_out_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -320,6 +334,7 @@ impl RemoveLiquiditySingleSideBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -329,6 +344,7 @@ impl RemoveLiquiditySingleSideBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = RemoveLiquiditySingleSide {
@@ -465,10 +481,12 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -480,6 +498,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -487,6 +506,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -654,12 +674,14 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Pool account (PDA)
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     /// LP token mint of the pool
     #[inline(always)]
     pub fn lp_mint(
@@ -669,6 +691,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     /// User pool lp token account. LP will be burned from this account upon success liquidity removal.
     #[inline(always)]
     pub fn user_pool_lp(
@@ -678,6 +701,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.user_pool_lp = Some(user_pool_lp);
         self
     }
+
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn a_vault_lp(
@@ -687,6 +711,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn b_vault_lp(
@@ -696,6 +721,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.b_vault_lp = Some(b_vault_lp);
         self
     }
+
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn a_vault(
@@ -705,6 +731,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.a_vault = Some(a_vault);
         self
     }
+
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn b_vault(
@@ -714,6 +741,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.b_vault = Some(b_vault);
         self
     }
+
     /// LP token mint of vault A
     #[inline(always)]
     pub fn a_vault_lp_mint(
@@ -723,6 +751,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
     }
+
     /// LP token mint of vault B
     #[inline(always)]
     pub fn b_vault_lp_mint(
@@ -732,6 +761,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
     }
+
     /// Token vault account of vault A
     #[inline(always)]
     pub fn a_token_vault(
@@ -741,6 +771,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.a_token_vault = Some(a_token_vault);
         self
     }
+
     /// Token vault account of vault B
     #[inline(always)]
     pub fn b_token_vault(
@@ -750,6 +781,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.b_token_vault = Some(b_token_vault);
         self
     }
+
     /// User token account to receive token upon success liquidity removal.
     #[inline(always)]
     pub fn user_destination_token(
@@ -759,12 +791,14 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.user_destination_token = Some(user_destination_token);
         self
     }
+
     /// User account. Must be owner of the user_pool_lp account.
     #[inline(always)]
     pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
+
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
     #[inline(always)]
     pub fn vault_program(
@@ -774,6 +808,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.vault_program = Some(vault_program);
         self
     }
+
     /// Token program.
     #[inline(always)]
     pub fn token_program(
@@ -783,16 +818,19 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn pool_token_amount(&mut self, pool_token_amount: u64) -> &mut Self {
         self.instruction.pool_token_amount = Some(pool_token_amount);
         self
     }
+
     #[inline(always)]
     pub fn minimum_out_amount(&mut self, minimum_out_amount: u64) -> &mut Self {
         self.instruction.minimum_out_amount = Some(minimum_out_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -806,6 +844,7 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -824,10 +863,10 @@ impl<'a, 'b> RemoveLiquiditySingleSideCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

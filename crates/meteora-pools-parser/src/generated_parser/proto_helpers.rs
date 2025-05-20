@@ -9,9 +9,7 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::proto_def;
-
-    use crate::types::TokenMultiplier;
+    use crate::{proto_def, types::TokenMultiplier};
     impl IntoProto<proto_def::TokenMultiplier> for TokenMultiplier {
         fn into_proto(self) -> proto_def::TokenMultiplier {
             proto_def::TokenMultiplier {
@@ -75,14 +73,15 @@ pub mod proto_types_parsers {
         }
     }
 
-    use crate::types::NewCurveType;
     use proto_def::new_curve_type::Variant;
+
+    use crate::types::NewCurveType;
     impl IntoProto<proto_def::NewCurveType> for NewCurveType {
         fn into_proto(self) -> proto_def::NewCurveType {
             let variant = match self {
                 NewCurveType::ConstantProduct => {
                     Variant::ConstantProduct(proto_def::NewCurveTypeConstantProduct {})
-                }
+                },
                 NewCurveType::Stable {
                     amp,
                     token_multiplier,
@@ -108,14 +107,15 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use crate::types::CurveType;
     use proto_def::curve_type::Variant as CurveTypeVariant;
+
+    use crate::types::CurveType;
     impl IntoProto<proto_def::CurveType> for CurveType {
         fn into_proto(self) -> proto_def::CurveType {
             let variant = match self {
                 CurveType::ConstantProduct => {
                     CurveTypeVariant::ConstantProduct(proto_def::CurveTypeConstantProduct {})
-                }
+                },
                 CurveType::Stable {
                     amp,
                     token_multiplier,

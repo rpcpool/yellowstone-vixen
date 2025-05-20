@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Padding for future pool fields
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::PoolFees;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 /// Accounts.
 #[derive(Debug)]
@@ -25,6 +25,7 @@ impl SetPoolFees {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -68,9 +69,7 @@ impl SetPoolFeesInstructionData {
 }
 
 impl Default for SetPoolFeesInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -96,31 +95,34 @@ pub struct SetPoolFeesBuilder {
 }
 
 impl SetPoolFeesBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Pool account (PDA)
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     /// Fee operator account
     #[inline(always)]
     pub fn fee_operator(&mut self, fee_operator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.fee_operator = Some(fee_operator);
         self
     }
+
     #[inline(always)]
     pub fn fees(&mut self, fees: PoolFees) -> &mut Self {
         self.fees = Some(fees);
         self
     }
+
     #[inline(always)]
     pub fn new_partner_fee_numerator(&mut self, new_partner_fee_numerator: u64) -> &mut Self {
         self.new_partner_fee_numerator = Some(new_partner_fee_numerator);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -130,6 +132,7 @@ impl SetPoolFeesBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -139,6 +142,7 @@ impl SetPoolFeesBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = SetPoolFees {
@@ -190,10 +194,12 @@ impl<'a, 'b> SetPoolFeesCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -205,6 +211,7 @@ impl<'a, 'b> SetPoolFeesCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -212,6 +219,7 @@ impl<'a, 'b> SetPoolFeesCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -288,12 +296,14 @@ impl<'a, 'b> SetPoolFeesCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Pool account (PDA)
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     /// Fee operator account
     #[inline(always)]
     pub fn fee_operator(
@@ -303,16 +313,19 @@ impl<'a, 'b> SetPoolFeesCpiBuilder<'a, 'b> {
         self.instruction.fee_operator = Some(fee_operator);
         self
     }
+
     #[inline(always)]
     pub fn fees(&mut self, fees: PoolFees) -> &mut Self {
         self.instruction.fees = Some(fees);
         self
     }
+
     #[inline(always)]
     pub fn new_partner_fee_numerator(&mut self, new_partner_fee_numerator: u64) -> &mut Self {
         self.instruction.new_partner_fee_numerator = Some(new_partner_fee_numerator);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -326,6 +339,7 @@ impl<'a, 'b> SetPoolFeesCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -344,10 +358,10 @@ impl<'a, 'b> SetPoolFeesCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

@@ -32,29 +32,16 @@ pub(crate) mod r#swap;
 pub(crate) mod r#update_activation_point;
 pub(crate) mod r#withdraw_protocol_fees;
 
-pub use self::r#add_balance_liquidity::*;
-pub use self::r#add_imbalance_liquidity::*;
-pub use self::r#bootstrap_liquidity::*;
-pub use self::r#claim_fee::*;
-pub use self::r#close_config::*;
-pub use self::r#create_config::*;
-pub use self::r#create_lock_escrow::*;
-pub use self::r#create_mint_metadata::*;
-pub use self::r#enable_or_disable_pool::*;
-pub use self::r#get_pool_info::*;
-pub use self::r#initialize_customizable_permissionless_constant_product_pool::*;
-pub use self::r#initialize_permissioned_pool::*;
-pub use self::r#initialize_permissionless_constant_product_pool_with_config::*;
-pub use self::r#initialize_permissionless_constant_product_pool_with_config2::*;
-pub use self::r#initialize_permissionless_pool::*;
-pub use self::r#initialize_permissionless_pool_with_fee_tier::*;
-pub use self::r#lock::*;
-pub use self::r#override_curve_param::*;
-pub use self::r#partner_claim_fee::*;
-pub use self::r#remove_balance_liquidity::*;
-pub use self::r#remove_liquidity_single_side::*;
-pub use self::r#set_pool_fees::*;
-pub use self::r#set_whitelisted_vault::*;
-pub use self::r#swap::*;
-pub use self::r#update_activation_point::*;
-pub use self::r#withdraw_protocol_fees::*;
+pub use self::{
+    r#add_balance_liquidity::*, r#add_imbalance_liquidity::*, r#bootstrap_liquidity::*,
+    r#claim_fee::*, r#close_config::*, r#create_config::*, r#create_lock_escrow::*,
+    r#create_mint_metadata::*, r#enable_or_disable_pool::*, r#get_pool_info::*,
+    r#initialize_customizable_permissionless_constant_product_pool::*,
+    r#initialize_permissioned_pool::*,
+    r#initialize_permissionless_constant_product_pool_with_config::*,
+    r#initialize_permissionless_constant_product_pool_with_config2::*,
+    r#initialize_permissionless_pool::*, r#initialize_permissionless_pool_with_fee_tier::*,
+    r#lock::*, r#override_curve_param::*, r#partner_claim_fee::*, r#remove_balance_liquidity::*,
+    r#remove_liquidity_single_side::*, r#set_pool_fees::*, r#set_whitelisted_vault::*, r#swap::*,
+    r#update_activation_point::*, r#withdraw_protocol_fees::*,
+};

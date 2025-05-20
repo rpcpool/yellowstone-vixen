@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::CurveType;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 /// Accounts.
 #[derive(Debug)]
@@ -70,6 +70,7 @@ impl InitializePermissionedPool {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -199,9 +200,7 @@ impl InitializePermissionedPoolInstructionData {
 }
 
 impl Default for InitializePermissionedPoolInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -269,45 +268,50 @@ pub struct InitializePermissionedPoolBuilder {
 }
 
 impl InitializePermissionedPoolBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Pool account (arbitrary address)
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     /// LP token mint of the pool
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     /// Token A mint of the pool. Eg: USDT
     #[inline(always)]
     pub fn token_a_mint(&mut self, token_a_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_a_mint = Some(token_a_mint);
         self
     }
+
     /// Token B mint of the pool. Eg: USDC
     #[inline(always)]
     pub fn token_b_mint(&mut self, token_b_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_b_mint = Some(token_b_mint);
         self
     }
+
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn a_vault(&mut self, a_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_vault = Some(a_vault);
         self
     }
+
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn b_vault(&mut self, b_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.b_vault = Some(b_vault);
         self
     }
+
     /// LP token mint of vault A
     #[inline(always)]
     pub fn a_vault_lp_mint(
@@ -317,6 +321,7 @@ impl InitializePermissionedPoolBuilder {
         self.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
     }
+
     /// LP token mint of vault B
     #[inline(always)]
     pub fn b_vault_lp_mint(
@@ -326,30 +331,35 @@ impl InitializePermissionedPoolBuilder {
         self.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
     }
+
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     /// LP token account of vault B. Used to receive/burn vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn b_vault_lp(&mut self, b_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.b_vault_lp = Some(b_vault_lp);
         self
     }
+
     /// Admin token account for pool token A mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
     pub fn admin_token_a(&mut self, admin_token_a: solana_program::pubkey::Pubkey) -> &mut Self {
         self.admin_token_a = Some(admin_token_a);
         self
     }
+
     /// Admin token account for pool token B mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
     pub fn admin_token_b(&mut self, admin_token_b: solana_program::pubkey::Pubkey) -> &mut Self {
         self.admin_token_b = Some(admin_token_b);
         self
     }
+
     /// Admin pool LP token account. Used to receive LP during first deposit (initialize pool)
     /// Admin pool LP token account. Used to receive LP during first deposit (initialize pool)
     #[inline(always)]
@@ -357,6 +367,7 @@ impl InitializePermissionedPoolBuilder {
         self.admin_pool_lp = Some(admin_pool_lp);
         self
     }
+
     /// Protocol fee token account for token A. Used to receive trading fee.
     #[inline(always)]
     pub fn protocol_token_a_fee(
@@ -366,6 +377,7 @@ impl InitializePermissionedPoolBuilder {
         self.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
     }
+
     /// Protocol fee token account for token B. Used to receive trading fee.
     #[inline(always)]
     pub fn protocol_token_b_fee(
@@ -375,17 +387,20 @@ impl InitializePermissionedPoolBuilder {
         self.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
     }
+
     /// Admin account. This account will be the admin of the pool, and the payer for PDA during initialize pool.
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
+
     #[inline(always)]
     pub fn fee_owner(&mut self, fee_owner: solana_program::pubkey::Pubkey) -> &mut Self {
         self.fee_owner = Some(fee_owner);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Rent account.
     #[inline(always)]
@@ -393,11 +408,13 @@ impl InitializePermissionedPoolBuilder {
         self.rent = Some(rent);
         self
     }
+
     #[inline(always)]
     pub fn mint_metadata(&mut self, mint_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.mint_metadata = Some(mint_metadata);
         self
     }
+
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
@@ -406,12 +423,14 @@ impl InitializePermissionedPoolBuilder {
         self.metadata_program = Some(metadata_program);
         self
     }
+
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
     #[inline(always)]
     pub fn vault_program(&mut self, vault_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vault_program = Some(vault_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program.
     #[inline(always)]
@@ -419,6 +438,7 @@ impl InitializePermissionedPoolBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// Associated token program.
     #[inline(always)]
     pub fn associated_token_program(
@@ -428,6 +448,7 @@ impl InitializePermissionedPoolBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
@@ -435,11 +456,13 @@ impl InitializePermissionedPoolBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn curve_type(&mut self, curve_type: CurveType) -> &mut Self {
         self.curve_type = Some(curve_type);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -449,6 +472,7 @@ impl InitializePermissionedPoolBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -458,6 +482,7 @@ impl InitializePermissionedPoolBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = InitializePermissionedPool {
@@ -651,10 +676,12 @@ impl<'a, 'b> InitializePermissionedPoolCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -666,6 +693,7 @@ impl<'a, 'b> InitializePermissionedPoolCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -673,6 +701,7 @@ impl<'a, 'b> InitializePermissionedPoolCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -902,12 +931,14 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Pool account (arbitrary address)
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     /// LP token mint of the pool
     #[inline(always)]
     pub fn lp_mint(
@@ -917,6 +948,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     /// Token A mint of the pool. Eg: USDT
     #[inline(always)]
     pub fn token_a_mint(
@@ -926,6 +958,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.token_a_mint = Some(token_a_mint);
         self
     }
+
     /// Token B mint of the pool. Eg: USDC
     #[inline(always)]
     pub fn token_b_mint(
@@ -935,6 +968,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.token_b_mint = Some(token_b_mint);
         self
     }
+
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn a_vault(
@@ -944,6 +978,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.a_vault = Some(a_vault);
         self
     }
+
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn b_vault(
@@ -953,6 +988,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.b_vault = Some(b_vault);
         self
     }
+
     /// LP token mint of vault A
     #[inline(always)]
     pub fn a_vault_lp_mint(
@@ -962,6 +998,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
     }
+
     /// LP token mint of vault B
     #[inline(always)]
     pub fn b_vault_lp_mint(
@@ -971,6 +1008,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
     }
+
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn a_vault_lp(
@@ -980,6 +1018,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     /// LP token account of vault B. Used to receive/burn vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn b_vault_lp(
@@ -989,6 +1028,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.b_vault_lp = Some(b_vault_lp);
         self
     }
+
     /// Admin token account for pool token A mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
     pub fn admin_token_a(
@@ -998,6 +1038,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.admin_token_a = Some(admin_token_a);
         self
     }
+
     /// Admin token account for pool token B mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
     pub fn admin_token_b(
@@ -1007,6 +1048,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.admin_token_b = Some(admin_token_b);
         self
     }
+
     /// Admin pool LP token account. Used to receive LP during first deposit (initialize pool)
     /// Admin pool LP token account. Used to receive LP during first deposit (initialize pool)
     #[inline(always)]
@@ -1017,6 +1059,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.admin_pool_lp = Some(admin_pool_lp);
         self
     }
+
     /// Protocol fee token account for token A. Used to receive trading fee.
     #[inline(always)]
     pub fn protocol_token_a_fee(
@@ -1026,6 +1069,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
     }
+
     /// Protocol fee token account for token B. Used to receive trading fee.
     #[inline(always)]
     pub fn protocol_token_b_fee(
@@ -1035,12 +1079,14 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
     }
+
     /// Admin account. This account will be the admin of the pool, and the payer for PDA during initialize pool.
     #[inline(always)]
     pub fn admin(&mut self, admin: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
+
     #[inline(always)]
     pub fn fee_owner(
         &mut self,
@@ -1049,12 +1095,14 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.fee_owner = Some(fee_owner);
         self
     }
+
     /// Rent account.
     #[inline(always)]
     pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
+
     #[inline(always)]
     pub fn mint_metadata(
         &mut self,
@@ -1063,6 +1111,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.mint_metadata = Some(mint_metadata);
         self
     }
+
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
@@ -1071,6 +1120,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.metadata_program = Some(metadata_program);
         self
     }
+
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
     #[inline(always)]
     pub fn vault_program(
@@ -1080,6 +1130,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.vault_program = Some(vault_program);
         self
     }
+
     /// Token program.
     #[inline(always)]
     pub fn token_program(
@@ -1089,6 +1140,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Associated token program.
     #[inline(always)]
     pub fn associated_token_program(
@@ -1098,6 +1150,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// System program.
     #[inline(always)]
     pub fn system_program(
@@ -1107,11 +1160,13 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn curve_type(&mut self, curve_type: CurveType) -> &mut Self {
         self.instruction.curve_type = Some(curve_type);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1125,6 +1180,7 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1143,10 +1199,10 @@ impl<'a, 'b> InitializePermissionedPoolCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

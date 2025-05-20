@@ -5,15 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::Bootstrapping;
-use crate::generated::types::CurveType;
-use crate::generated::types::Padding;
-use crate::generated::types::PartnerInfo;
-use crate::generated::types::PoolFees;
-use crate::generated::types::PoolType;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
+
+use crate::generated::types::{Bootstrapping, CurveType, Padding, PartnerInfo, PoolFees, PoolType};
 
 /// State of pool account
 
@@ -204,9 +199,7 @@ impl anchor_lang::AccountSerialize for Pool {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Pool {
-    fn owner() -> Pubkey {
-        crate::AMM_ID
-    }
+    fn owner() -> Pubkey { crate::AMM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

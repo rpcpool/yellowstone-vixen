@@ -5,10 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::Depeg;
-use crate::generated::types::TokenMultiplier;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
+
+use crate::generated::types::{Depeg, TokenMultiplier};
 
 /// Type of the swap curve
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

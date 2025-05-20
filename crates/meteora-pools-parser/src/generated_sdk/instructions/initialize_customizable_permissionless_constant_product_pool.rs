@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -70,6 +69,7 @@ impl InitializeCustomizablePermissionlessConstantProductPool {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -206,9 +206,7 @@ impl InitializeCustomizablePermissionlessConstantProductPoolInstructionData {
 }
 
 impl Default for InitializeCustomizablePermissionlessConstantProductPoolInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -290,57 +288,64 @@ pub struct InitializeCustomizablePermissionlessConstantProductPoolBuilder {
 }
 
 impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Pool account (PDA address)
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     /// LP token mint of the pool
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     /// Token A mint of the pool. Eg: USDT
     #[inline(always)]
     pub fn token_a_mint(&mut self, token_a_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_a_mint = Some(token_a_mint);
         self
     }
+
     /// Token B mint of the pool. Eg: USDC
     #[inline(always)]
     pub fn token_b_mint(&mut self, token_b_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_b_mint = Some(token_b_mint);
         self
     }
+
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn a_vault(&mut self, a_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_vault = Some(a_vault);
         self
     }
+
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn b_vault(&mut self, b_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.b_vault = Some(b_vault);
         self
     }
+
     /// Token vault account of vault A
     #[inline(always)]
     pub fn a_token_vault(&mut self, a_token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_token_vault = Some(a_token_vault);
         self
     }
+
     /// Token vault account of vault B
     #[inline(always)]
     pub fn b_token_vault(&mut self, b_token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.b_token_vault = Some(b_token_vault);
         self
     }
+
     /// LP token mint of vault A
     #[inline(always)]
     pub fn a_vault_lp_mint(
@@ -350,6 +355,7 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
     }
+
     /// LP token mint of vault B
     #[inline(always)]
     pub fn b_vault_lp_mint(
@@ -359,35 +365,41 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
     }
+
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     /// LP token account of vault B. Used to receive/burn vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn b_vault_lp(&mut self, b_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.b_vault_lp = Some(b_vault_lp);
         self
     }
+
     /// Payer token account for pool token A mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
     pub fn payer_token_a(&mut self, payer_token_a: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer_token_a = Some(payer_token_a);
         self
     }
+
     /// Admin token account for pool token B mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
     pub fn payer_token_b(&mut self, payer_token_b: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer_token_b = Some(payer_token_b);
         self
     }
+
     #[inline(always)]
     pub fn payer_pool_lp(&mut self, payer_pool_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer_pool_lp = Some(payer_pool_lp);
         self
     }
+
     /// Protocol fee token account for token A. Used to receive trading fee.
     #[inline(always)]
     pub fn protocol_token_a_fee(
@@ -397,6 +409,7 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
     }
+
     /// Protocol fee token account for token B. Used to receive trading fee.
     #[inline(always)]
     pub fn protocol_token_b_fee(
@@ -406,12 +419,14 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
     }
+
     /// Admin account. This account will be the admin of the pool, and the payer for PDA during initialize pool.
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Rent account.
     #[inline(always)]
@@ -419,11 +434,13 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.rent = Some(rent);
         self
     }
+
     #[inline(always)]
     pub fn mint_metadata(&mut self, mint_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.mint_metadata = Some(mint_metadata);
         self
     }
+
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
@@ -432,12 +449,14 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.metadata_program = Some(metadata_program);
         self
     }
+
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
     #[inline(always)]
     pub fn vault_program(&mut self, vault_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vault_program = Some(vault_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program.
     #[inline(always)]
@@ -445,6 +464,7 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// Associated token program.
     #[inline(always)]
     pub fn associated_token_program(
@@ -454,6 +474,7 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
@@ -461,42 +482,50 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn token_a_amount(&mut self, token_a_amount: u64) -> &mut Self {
         self.token_a_amount = Some(token_a_amount);
         self
     }
+
     #[inline(always)]
     pub fn token_b_amount(&mut self, token_b_amount: u64) -> &mut Self {
         self.token_b_amount = Some(token_b_amount);
         self
     }
+
     #[inline(always)]
     pub fn trade_fee_numerator(&mut self, trade_fee_numerator: u32) -> &mut Self {
         self.trade_fee_numerator = Some(trade_fee_numerator);
         self
     }
+
     /// `[optional argument]`
     #[inline(always)]
     pub fn activation_point(&mut self, activation_point: u64) -> &mut Self {
         self.activation_point = Some(activation_point);
         self
     }
+
     #[inline(always)]
     pub fn has_alpha_vault(&mut self, has_alpha_vault: bool) -> &mut Self {
         self.has_alpha_vault = Some(has_alpha_vault);
         self
     }
+
     #[inline(always)]
     pub fn activation_type(&mut self, activation_type: u8) -> &mut Self {
         self.activation_type = Some(activation_type);
         self
     }
+
     #[inline(always)]
     pub fn padding(&mut self, padding: [u8; 90]) -> &mut Self {
         self.padding = Some(padding);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -506,6 +535,7 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -515,6 +545,7 @@ impl InitializeCustomizablePermissionlessConstantProductPoolBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = InitializeCustomizablePermissionlessConstantProductPool {
@@ -733,10 +764,12 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpi<'a, 'b> 
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -748,6 +781,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpi<'a, 'b> 
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -755,6 +789,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpi<'a, 'b> 
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -1003,12 +1038,14 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         );
         Self { instruction }
     }
+
     /// Pool account (PDA address)
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     /// LP token mint of the pool
     #[inline(always)]
     pub fn lp_mint(
@@ -1018,6 +1055,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     /// Token A mint of the pool. Eg: USDT
     #[inline(always)]
     pub fn token_a_mint(
@@ -1027,6 +1065,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.token_a_mint = Some(token_a_mint);
         self
     }
+
     /// Token B mint of the pool. Eg: USDC
     #[inline(always)]
     pub fn token_b_mint(
@@ -1036,6 +1075,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.token_b_mint = Some(token_b_mint);
         self
     }
+
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn a_vault(
@@ -1045,6 +1085,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.a_vault = Some(a_vault);
         self
     }
+
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
     pub fn b_vault(
@@ -1054,6 +1095,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.b_vault = Some(b_vault);
         self
     }
+
     /// Token vault account of vault A
     #[inline(always)]
     pub fn a_token_vault(
@@ -1063,6 +1105,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.a_token_vault = Some(a_token_vault);
         self
     }
+
     /// Token vault account of vault B
     #[inline(always)]
     pub fn b_token_vault(
@@ -1072,6 +1115,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.b_token_vault = Some(b_token_vault);
         self
     }
+
     /// LP token mint of vault A
     #[inline(always)]
     pub fn a_vault_lp_mint(
@@ -1081,6 +1125,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
     }
+
     /// LP token mint of vault B
     #[inline(always)]
     pub fn b_vault_lp_mint(
@@ -1090,6 +1135,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
     }
+
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn a_vault_lp(
@@ -1099,6 +1145,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     /// LP token account of vault B. Used to receive/burn vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
     pub fn b_vault_lp(
@@ -1108,6 +1155,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.b_vault_lp = Some(b_vault_lp);
         self
     }
+
     /// Payer token account for pool token A mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
     pub fn payer_token_a(
@@ -1117,6 +1165,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.payer_token_a = Some(payer_token_a);
         self
     }
+
     /// Admin token account for pool token B mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
     pub fn payer_token_b(
@@ -1126,6 +1175,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.payer_token_b = Some(payer_token_b);
         self
     }
+
     #[inline(always)]
     pub fn payer_pool_lp(
         &mut self,
@@ -1134,6 +1184,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.payer_pool_lp = Some(payer_pool_lp);
         self
     }
+
     /// Protocol fee token account for token A. Used to receive trading fee.
     #[inline(always)]
     pub fn protocol_token_a_fee(
@@ -1143,6 +1194,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
     }
+
     /// Protocol fee token account for token B. Used to receive trading fee.
     #[inline(always)]
     pub fn protocol_token_b_fee(
@@ -1152,18 +1204,21 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
     }
+
     /// Admin account. This account will be the admin of the pool, and the payer for PDA during initialize pool.
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     /// Rent account.
     #[inline(always)]
     pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
+
     #[inline(always)]
     pub fn mint_metadata(
         &mut self,
@@ -1172,6 +1227,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.mint_metadata = Some(mint_metadata);
         self
     }
+
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
@@ -1180,6 +1236,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.metadata_program = Some(metadata_program);
         self
     }
+
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
     #[inline(always)]
     pub fn vault_program(
@@ -1189,6 +1246,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.vault_program = Some(vault_program);
         self
     }
+
     /// Token program.
     #[inline(always)]
     pub fn token_program(
@@ -1198,6 +1256,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Associated token program.
     #[inline(always)]
     pub fn associated_token_program(
@@ -1207,6 +1266,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// System program.
     #[inline(always)]
     pub fn system_program(
@@ -1216,42 +1276,50 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn token_a_amount(&mut self, token_a_amount: u64) -> &mut Self {
         self.instruction.token_a_amount = Some(token_a_amount);
         self
     }
+
     #[inline(always)]
     pub fn token_b_amount(&mut self, token_b_amount: u64) -> &mut Self {
         self.instruction.token_b_amount = Some(token_b_amount);
         self
     }
+
     #[inline(always)]
     pub fn trade_fee_numerator(&mut self, trade_fee_numerator: u32) -> &mut Self {
         self.instruction.trade_fee_numerator = Some(trade_fee_numerator);
         self
     }
+
     /// `[optional argument]`
     #[inline(always)]
     pub fn activation_point(&mut self, activation_point: u64) -> &mut Self {
         self.instruction.activation_point = Some(activation_point);
         self
     }
+
     #[inline(always)]
     pub fn has_alpha_vault(&mut self, has_alpha_vault: bool) -> &mut Self {
         self.instruction.has_alpha_vault = Some(has_alpha_vault);
         self
     }
+
     #[inline(always)]
     pub fn activation_type(&mut self, activation_type: u8) -> &mut Self {
         self.instruction.activation_type = Some(activation_type);
         self
     }
+
     #[inline(always)]
     pub fn padding(&mut self, padding: [u8; 90]) -> &mut Self {
         self.instruction.padding = Some(padding);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1265,6 +1333,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1283,10 +1352,10 @@ impl<'a, 'b> InitializeCustomizablePermissionlessConstantProductPoolCpiBuilder<'
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

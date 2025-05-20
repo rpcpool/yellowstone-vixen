@@ -5,50 +5,55 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::instructions::{
-    AddBalanceLiquidity as AddBalanceLiquidityIxAccounts,
-    AddBalanceLiquidityInstructionArgs as AddBalanceLiquidityIxData,
-    AddImbalanceLiquidity as AddImbalanceLiquidityIxAccounts,
-    AddImbalanceLiquidityInstructionArgs as AddImbalanceLiquidityIxData,
-    BootstrapLiquidity as BootstrapLiquidityIxAccounts,
-    BootstrapLiquidityInstructionArgs as BootstrapLiquidityIxData, ClaimFee as ClaimFeeIxAccounts,
-    ClaimFeeInstructionArgs as ClaimFeeIxData, CloseConfig as CloseConfigIxAccounts,
-    CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
-    CreateLockEscrow as CreateLockEscrowIxAccounts,
-    CreateMintMetadata as CreateMintMetadataIxAccounts,
-    EnableOrDisablePool as EnableOrDisablePoolIxAccounts,
-    EnableOrDisablePoolInstructionArgs as EnableOrDisablePoolIxData,
-    GetPoolInfo as GetPoolInfoIxAccounts,
-    InitializeCustomizablePermissionlessConstantProductPool as InitializeCustomizablePermissionlessConstantProductPoolIxAccounts,
-    InitializeCustomizablePermissionlessConstantProductPoolInstructionArgs as InitializeCustomizablePermissionlessConstantProductPoolIxData,
-    InitializePermissionedPool as InitializePermissionedPoolIxAccounts,
-    InitializePermissionedPoolInstructionArgs as InitializePermissionedPoolIxData,
-    InitializePermissionlessConstantProductPoolWithConfig as InitializePermissionlessConstantProductPoolWithConfigIxAccounts,
-    InitializePermissionlessConstantProductPoolWithConfig2 as InitializePermissionlessConstantProductPoolWithConfig2IxAccounts,
-    InitializePermissionlessConstantProductPoolWithConfig2InstructionArgs as InitializePermissionlessConstantProductPoolWithConfig2IxData,
-    InitializePermissionlessConstantProductPoolWithConfigInstructionArgs as InitializePermissionlessConstantProductPoolWithConfigIxData,
-    InitializePermissionlessPool as InitializePermissionlessPoolIxAccounts,
-    InitializePermissionlessPoolInstructionArgs as InitializePermissionlessPoolIxData,
-    InitializePermissionlessPoolWithFeeTier as InitializePermissionlessPoolWithFeeTierIxAccounts,
-    InitializePermissionlessPoolWithFeeTierInstructionArgs as InitializePermissionlessPoolWithFeeTierIxData,
-    Lock as LockIxAccounts, LockInstructionArgs as LockIxData,
-    OverrideCurveParam as OverrideCurveParamIxAccounts,
-    OverrideCurveParamInstructionArgs as OverrideCurveParamIxData,
-    PartnerClaimFee as PartnerClaimFeeIxAccounts,
-    PartnerClaimFeeInstructionArgs as PartnerClaimFeeIxData,
-    RemoveBalanceLiquidity as RemoveBalanceLiquidityIxAccounts,
-    RemoveBalanceLiquidityInstructionArgs as RemoveBalanceLiquidityIxData,
-    RemoveLiquiditySingleSide as RemoveLiquiditySingleSideIxAccounts,
-    RemoveLiquiditySingleSideInstructionArgs as RemoveLiquiditySingleSideIxData,
-    SetPoolFees as SetPoolFeesIxAccounts, SetPoolFeesInstructionArgs as SetPoolFeesIxData,
-    SetWhitelistedVault as SetWhitelistedVaultIxAccounts,
-    SetWhitelistedVaultInstructionArgs as SetWhitelistedVaultIxData, Swap as SwapIxAccounts,
-    SwapInstructionArgs as SwapIxData, UpdateActivationPoint as UpdateActivationPointIxAccounts,
-    UpdateActivationPointInstructionArgs as UpdateActivationPointIxData,
-    WithdrawProtocolFees as WithdrawProtocolFeesIxAccounts,
-};
-use crate::ID;
 use borsh::BorshDeserialize;
+
+use crate::{
+    instructions::{
+        AddBalanceLiquidity as AddBalanceLiquidityIxAccounts,
+        AddBalanceLiquidityInstructionArgs as AddBalanceLiquidityIxData,
+        AddImbalanceLiquidity as AddImbalanceLiquidityIxAccounts,
+        AddImbalanceLiquidityInstructionArgs as AddImbalanceLiquidityIxData,
+        BootstrapLiquidity as BootstrapLiquidityIxAccounts,
+        BootstrapLiquidityInstructionArgs as BootstrapLiquidityIxData,
+        ClaimFee as ClaimFeeIxAccounts, ClaimFeeInstructionArgs as ClaimFeeIxData,
+        CloseConfig as CloseConfigIxAccounts, CreateConfig as CreateConfigIxAccounts,
+        CreateConfigInstructionArgs as CreateConfigIxData,
+        CreateLockEscrow as CreateLockEscrowIxAccounts,
+        CreateMintMetadata as CreateMintMetadataIxAccounts,
+        EnableOrDisablePool as EnableOrDisablePoolIxAccounts,
+        EnableOrDisablePoolInstructionArgs as EnableOrDisablePoolIxData,
+        GetPoolInfo as GetPoolInfoIxAccounts,
+        InitializeCustomizablePermissionlessConstantProductPool as InitializeCustomizablePermissionlessConstantProductPoolIxAccounts,
+        InitializeCustomizablePermissionlessConstantProductPoolInstructionArgs as InitializeCustomizablePermissionlessConstantProductPoolIxData,
+        InitializePermissionedPool as InitializePermissionedPoolIxAccounts,
+        InitializePermissionedPoolInstructionArgs as InitializePermissionedPoolIxData,
+        InitializePermissionlessConstantProductPoolWithConfig as InitializePermissionlessConstantProductPoolWithConfigIxAccounts,
+        InitializePermissionlessConstantProductPoolWithConfig2 as InitializePermissionlessConstantProductPoolWithConfig2IxAccounts,
+        InitializePermissionlessConstantProductPoolWithConfig2InstructionArgs as InitializePermissionlessConstantProductPoolWithConfig2IxData,
+        InitializePermissionlessConstantProductPoolWithConfigInstructionArgs as InitializePermissionlessConstantProductPoolWithConfigIxData,
+        InitializePermissionlessPool as InitializePermissionlessPoolIxAccounts,
+        InitializePermissionlessPoolInstructionArgs as InitializePermissionlessPoolIxData,
+        InitializePermissionlessPoolWithFeeTier as InitializePermissionlessPoolWithFeeTierIxAccounts,
+        InitializePermissionlessPoolWithFeeTierInstructionArgs as InitializePermissionlessPoolWithFeeTierIxData,
+        Lock as LockIxAccounts, LockInstructionArgs as LockIxData,
+        OverrideCurveParam as OverrideCurveParamIxAccounts,
+        OverrideCurveParamInstructionArgs as OverrideCurveParamIxData,
+        PartnerClaimFee as PartnerClaimFeeIxAccounts,
+        PartnerClaimFeeInstructionArgs as PartnerClaimFeeIxData,
+        RemoveBalanceLiquidity as RemoveBalanceLiquidityIxAccounts,
+        RemoveBalanceLiquidityInstructionArgs as RemoveBalanceLiquidityIxData,
+        RemoveLiquiditySingleSide as RemoveLiquiditySingleSideIxAccounts,
+        RemoveLiquiditySingleSideInstructionArgs as RemoveLiquiditySingleSideIxData,
+        SetPoolFees as SetPoolFeesIxAccounts, SetPoolFeesInstructionArgs as SetPoolFeesIxData,
+        SetWhitelistedVault as SetWhitelistedVaultIxAccounts,
+        SetWhitelistedVaultInstructionArgs as SetWhitelistedVaultIxData, Swap as SwapIxAccounts,
+        SwapInstructionArgs as SwapIxData,
+        UpdateActivationPoint as UpdateActivationPointIxAccounts,
+        UpdateActivationPointInstructionArgs as UpdateActivationPointIxData,
+        WithdrawProtocolFees as WithdrawProtocolFeesIxAccounts,
+    },
+    ID,
+};
 
 /// Amm Instructions
 #[derive(Debug)]
@@ -113,9 +118,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = AmmProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "Amm::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "Amm::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -138,9 +141,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -186,7 +187,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [118, 173, 41, 157, 173, 72, 97, 103] => {
                 check_min_accounts_req(accounts_len, 26)?;
                 let ix_accounts = InitializePermissionlessPoolIxAccounts {
@@ -223,7 +224,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [6, 135, 68, 147, 229, 82, 169, 113] => {
                 check_min_accounts_req(accounts_len, 26)?;
                 let ix_accounts = InitializePermissionlessPoolWithFeeTierIxAccounts {
@@ -260,7 +261,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [128, 6, 228, 131, 55, 161, 52, 169] => {
                 check_min_accounts_req(accounts_len, 2)?;
                 let ix_accounts = EnableOrDisablePoolIxAccounts {
@@ -270,7 +271,7 @@ impl InstructionParser {
                 let de_ix_data: EnableOrDisablePoolIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::EnableOrDisablePool(ix_accounts, de_ix_data))
-            }
+            },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = SwapIxAccounts {
@@ -292,7 +293,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::Swap(ix_accounts, de_ix_data))
-            }
+            },
             [84, 84, 177, 66, 254, 185, 10, 251] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = RemoveLiquiditySingleSideIxAccounts {
@@ -318,7 +319,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [79, 35, 122, 84, 173, 15, 93, 191] => {
                 check_min_accounts_req(accounts_len, 16)?;
                 let ix_accounts = AddImbalanceLiquidityIxAccounts {
@@ -342,7 +343,7 @@ impl InstructionParser {
                 let de_ix_data: AddImbalanceLiquidityIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::AddImbalanceLiquidity(ix_accounts, de_ix_data))
-            }
+            },
             [133, 109, 44, 179, 56, 238, 114, 33] => {
                 check_min_accounts_req(accounts_len, 16)?;
                 let ix_accounts = RemoveBalanceLiquidityIxAccounts {
@@ -369,7 +370,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [168, 227, 50, 62, 189, 171, 84, 176] => {
                 check_min_accounts_req(accounts_len, 16)?;
                 let ix_accounts = AddBalanceLiquidityIxAccounts {
@@ -393,7 +394,7 @@ impl InstructionParser {
                 let de_ix_data: AddBalanceLiquidityIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::AddBalanceLiquidity(ix_accounts, de_ix_data))
-            }
+            },
             [102, 44, 158, 54, 205, 37, 126, 78] => {
                 check_min_accounts_req(accounts_len, 2)?;
                 let ix_accounts = SetPoolFeesIxAccounts {
@@ -402,7 +403,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: SetPoolFeesIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::SetPoolFees(ix_accounts, de_ix_data))
-            }
+            },
             [98, 86, 204, 51, 94, 71, 69, 187] => {
                 check_min_accounts_req(accounts_len, 2)?;
                 let ix_accounts = OverrideCurveParamIxAccounts {
@@ -412,7 +413,7 @@ impl InstructionParser {
                 let de_ix_data: OverrideCurveParamIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::OverrideCurveParam(ix_accounts, de_ix_data))
-            }
+            },
             [9, 48, 220, 101, 22, 240, 78, 200] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = GetPoolInfoIxAccounts {
@@ -426,7 +427,7 @@ impl InstructionParser {
                     b_vault_lp_mint: ix.accounts[7].0.into(),
                 };
                 Ok(AmmProgramIx::GetPoolInfo(ix_accounts))
-            }
+            },
             [4, 228, 215, 71, 225, 253, 119, 206] => {
                 check_min_accounts_req(accounts_len, 16)?;
                 let ix_accounts = BootstrapLiquidityIxAccounts {
@@ -450,7 +451,7 @@ impl InstructionParser {
                 let de_ix_data: BootstrapLiquidityIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::BootstrapLiquidity(ix_accounts, de_ix_data))
-            }
+            },
             [13, 70, 168, 41, 250, 100, 148, 90] => {
                 check_min_accounts_req(accounts_len, 7)?;
                 let ix_accounts = CreateMintMetadataIxAccounts {
@@ -463,7 +464,7 @@ impl InstructionParser {
                     payer: ix.accounts[6].0.into(),
                 };
                 Ok(AmmProgramIx::CreateMintMetadata(ix_accounts))
-            }
+            },
             [54, 87, 165, 19, 69, 227, 218, 224] => {
                 check_min_accounts_req(accounts_len, 6)?;
                 let ix_accounts = CreateLockEscrowIxAccounts {
@@ -475,7 +476,7 @@ impl InstructionParser {
                     system_program: ix.accounts[5].0.into(),
                 };
                 Ok(AmmProgramIx::CreateLockEscrow(ix_accounts))
-            }
+            },
             [21, 19, 208, 43, 237, 62, 255, 87] => {
                 check_min_accounts_req(accounts_len, 13)?;
                 let ix_accounts = LockIxAccounts {
@@ -495,7 +496,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: LockIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::Lock(ix_accounts, de_ix_data))
-            }
+            },
             [169, 32, 79, 137, 136, 232, 70, 137] => {
                 check_min_accounts_req(accounts_len, 18)?;
                 let ix_accounts = ClaimFeeIxAccounts {
@@ -520,7 +521,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: ClaimFeeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::ClaimFee(ix_accounts, de_ix_data))
-            }
+            },
             [201, 207, 243, 114, 75, 111, 47, 189] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = CreateConfigIxAccounts {
@@ -530,7 +531,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: CreateConfigIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::CreateConfig(ix_accounts, de_ix_data))
-            }
+            },
             [145, 9, 72, 157, 95, 125, 61, 85] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = CloseConfigIxAccounts {
@@ -539,7 +540,7 @@ impl InstructionParser {
                     rent_receiver: ix.accounts[2].0.into(),
                 };
                 Ok(AmmProgramIx::CloseConfig(ix_accounts))
-            }
+            },
             [7, 166, 138, 171, 206, 171, 236, 244] => {
                 check_min_accounts_req(accounts_len, 26)?;
                 let ix_accounts = InitializePermissionlessConstantProductPoolWithConfigIxAccounts {
@@ -578,7 +579,7 @@ impl InstructionParser {
                         de_ix_data,
                     ),
                 )
-            }
+            },
             [48, 149, 220, 130, 61, 11, 9, 178] => {
                 check_min_accounts_req(accounts_len, 26)?;
                 let ix_accounts =
@@ -618,7 +619,7 @@ impl InstructionParser {
                         de_ix_data,
                     ),
                 )
-            }
+            },
             [145, 24, 172, 194, 219, 125, 3, 190] => {
                 check_min_accounts_req(accounts_len, 25)?;
                 let ix_accounts =
@@ -657,7 +658,7 @@ impl InstructionParser {
                         de_ix_data,
                     ),
                 )
-            }
+            },
             [150, 62, 125, 219, 171, 220, 26, 237] => {
                 check_min_accounts_req(accounts_len, 2)?;
                 let ix_accounts = UpdateActivationPointIxAccounts {
@@ -667,7 +668,7 @@ impl InstructionParser {
                 let de_ix_data: UpdateActivationPointIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::UpdateActivationPoint(ix_accounts, de_ix_data))
-            }
+            },
             [11, 68, 165, 98, 18, 208, 134, 73] => {
                 check_min_accounts_req(accounts_len, 7)?;
                 let ix_accounts = WithdrawProtocolFeesIxAccounts {
@@ -680,7 +681,7 @@ impl InstructionParser {
                     token_program: ix.accounts[6].0.into(),
                 };
                 Ok(AmmProgramIx::WithdrawProtocolFees(ix_accounts))
-            }
+            },
             [12, 148, 94, 42, 55, 57, 83, 247] => {
                 check_min_accounts_req(accounts_len, 2)?;
                 let ix_accounts = SetWhitelistedVaultIxAccounts {
@@ -690,7 +691,7 @@ impl InstructionParser {
                 let de_ix_data: SetWhitelistedVaultIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::SetWhitelistedVault(ix_accounts, de_ix_data))
-            }
+            },
             [57, 53, 176, 30, 123, 70, 52, 64] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = PartnerClaimFeeIxAccounts {
@@ -706,7 +707,7 @@ impl InstructionParser {
                 let de_ix_data: PartnerClaimFeeIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(AmmProgramIx::PartnerClaimFee(ix_accounts, de_ix_data))
-            }
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
@@ -721,7 +722,7 @@ impl InstructionParser {
                     program = ID.to_string(),
                     ix = ix.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_instruction",
@@ -731,7 +732,7 @@ impl InstructionParser {
                     discriminator = ?ix_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         ix
@@ -753,11 +754,10 @@ pub fn check_min_accounts_req(
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{AmmProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::InitializePermissionedPoolIxAccounts;
+    use super::{AmmProgramIx, InitializePermissionedPoolIxAccounts, InstructionParser};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::InitializePermissionedPoolIxAccounts>
         for InitializePermissionedPoolIxAccounts
     {
@@ -1667,8 +1667,6 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

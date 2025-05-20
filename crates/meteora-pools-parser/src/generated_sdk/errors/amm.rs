@@ -42,22 +42,22 @@ pub enum AmmError {
     MismatchedTokenMint = 0x1779,
     /// 6010 - LP mint mismatched
     #[error("LP mint mismatched")]
-    MismatchedLpMint = 0x177A,
+    MismatchedLpMint = 0x177a,
     /// 6011 - Invalid lp token owner
     #[error("Invalid lp token owner")]
-    MismatchedOwner = 0x177B,
+    MismatchedOwner = 0x177b,
     /// 6012 - Invalid vault account
     #[error("Invalid vault account")]
-    InvalidVaultAccount = 0x177C,
+    InvalidVaultAccount = 0x177c,
     /// 6013 - Invalid vault lp account
     #[error("Invalid vault lp account")]
-    InvalidVaultLpAccount = 0x177D,
+    InvalidVaultLpAccount = 0x177d,
     /// 6014 - Invalid pool lp mint account
     #[error("Invalid pool lp mint account")]
-    InvalidPoolLpMintAccount = 0x177E,
+    InvalidPoolLpMintAccount = 0x177e,
     /// 6015 - Pool disabled
     #[error("Pool disabled")]
-    PoolDisabled = 0x177F,
+    PoolDisabled = 0x177f,
     /// 6016 - Invalid admin account
     #[error("Invalid admin account")]
     InvalidAdminAccount = 0x1780,
@@ -90,22 +90,22 @@ pub enum AmmError {
     UnsupportedOperation = 0x1789,
     /// 6026 - Exceed max amplification changes
     #[error("Exceed max amplification changes")]
-    ExceedMaxAChanges = 0x178A,
+    ExceedMaxAChanges = 0x178a,
     /// 6027 - Invalid remaining accounts length
     #[error("Invalid remaining accounts length")]
-    InvalidRemainingAccountsLen = 0x178B,
+    InvalidRemainingAccountsLen = 0x178b,
     /// 6028 - Invalid remaining account
     #[error("Invalid remaining account")]
-    InvalidRemainingAccounts = 0x178C,
+    InvalidRemainingAccounts = 0x178c,
     /// 6029 - Token mint B doesn't matches depeg type token mint
     #[error("Token mint B doesn't matches depeg type token mint")]
-    MismatchedDepegMint = 0x178D,
+    MismatchedDepegMint = 0x178d,
     /// 6030 - Invalid APY account
     #[error("Invalid APY account")]
-    InvalidApyAccount = 0x178E,
+    InvalidApyAccount = 0x178e,
     /// 6031 - Invalid token multiplier
     #[error("Invalid token multiplier")]
-    InvalidTokenMultiplier = 0x178F,
+    InvalidTokenMultiplier = 0x178f,
     /// 6032 - Invalid depeg information
     #[error("Invalid depeg information")]
     InvalidDepegInformation = 0x1790,
@@ -138,37 +138,37 @@ pub enum AmmError {
     AmountIsZero = 0x1799,
     /// 6042 - Type cast error
     #[error("Type cast error")]
-    TypeCastFailed = 0x179A,
+    TypeCastFailed = 0x179a,
     /// 6043 - Amount is not enough
     #[error("Amount is not enough")]
-    AmountIsNotEnough = 0x179B,
+    AmountIsNotEnough = 0x179b,
     /// 6044 - Invalid activation duration
     #[error("Invalid activation duration")]
-    InvalidActivationDuration = 0x179C,
+    InvalidActivationDuration = 0x179c,
     /// 6045 - Pool is not launch pool
     #[error("Pool is not launch pool")]
-    PoolIsNotLaunchPool = 0x179D,
+    PoolIsNotLaunchPool = 0x179d,
     /// 6046 - Unable to modify activation point
     #[error("Unable to modify activation point")]
-    UnableToModifyActivationPoint = 0x179E,
+    UnableToModifyActivationPoint = 0x179e,
     /// 6047 - Invalid authority to create the pool
     #[error("Invalid authority to create the pool")]
-    InvalidAuthorityToCreateThePool = 0x179F,
+    InvalidAuthorityToCreateThePool = 0x179f,
     /// 6048 - Invalid activation type
     #[error("Invalid activation type")]
-    InvalidActivationType = 0x17A0,
+    InvalidActivationType = 0x17a0,
     /// 6049 - Invalid activation point
     #[error("Invalid activation point")]
-    InvalidActivationPoint = 0x17A1,
+    InvalidActivationPoint = 0x17a1,
     /// 6050 - Pre activation swap window started
     #[error("Pre activation swap window started")]
-    PreActivationSwapStarted = 0x17A2,
+    PreActivationSwapStarted = 0x17a2,
     /// 6051 - Invalid pool type
     #[error("Invalid pool type")]
-    InvalidPoolType = 0x17A3,
+    InvalidPoolType = 0x17a3,
     /// 6052 - Quote token must be SOL,USDC
     #[error("Quote token must be SOL,USDC")]
-    InvalidQuoteMint = 0x17A4,
+    InvalidQuoteMint = 0x17a4,
 }
 
 impl solana_program::program_error::PrintProgramError for AmmError {
@@ -178,7 +178,5 @@ impl solana_program::program_error::PrintProgramError for AmmError {
 }
 
 impl<T> solana_program::decode_error::DecodeError<T> for AmmError {
-    fn type_of() -> &'static str {
-        "AmmError"
-    }
+    fn type_of() -> &'static str { "AmmError" }
 }

@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -29,6 +28,7 @@ impl CreateLockEscrow {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -83,9 +83,7 @@ impl CreateLockEscrowInstructionData {
 }
 
 impl Default for CreateLockEscrowInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `CreateLockEscrow`.
@@ -110,38 +108,42 @@ pub struct CreateLockEscrowBuilder {
 }
 
 impl CreateLockEscrowBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Pool account
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     /// Lock account
     #[inline(always)]
     pub fn lock_escrow(&mut self, lock_escrow: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lock_escrow = Some(lock_escrow);
         self
     }
+
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_program::pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
+
     /// LP token mint of the pool
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     /// Payer account
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
@@ -149,6 +151,7 @@ impl CreateLockEscrowBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -158,6 +161,7 @@ impl CreateLockEscrowBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -167,6 +171,7 @@ impl CreateLockEscrowBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CreateLockEscrow {
@@ -233,10 +238,12 @@ impl<'a, 'b> CreateLockEscrowCpi<'a, 'b> {
             system_program: accounts.system_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -248,6 +255,7 @@ impl<'a, 'b> CreateLockEscrowCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -255,6 +263,7 @@ impl<'a, 'b> CreateLockEscrowCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -355,12 +364,14 @@ impl<'a, 'b> CreateLockEscrowCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Pool account
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     /// Lock account
     #[inline(always)]
     pub fn lock_escrow(
@@ -370,11 +381,13 @@ impl<'a, 'b> CreateLockEscrowCpiBuilder<'a, 'b> {
         self.instruction.lock_escrow = Some(lock_escrow);
         self
     }
+
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
+
     /// LP token mint of the pool
     #[inline(always)]
     pub fn lp_mint(
@@ -384,12 +397,14 @@ impl<'a, 'b> CreateLockEscrowCpiBuilder<'a, 'b> {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     /// Payer account
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     /// System program.
     #[inline(always)]
     pub fn system_program(
@@ -399,6 +414,7 @@ impl<'a, 'b> CreateLockEscrowCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -412,6 +428,7 @@ impl<'a, 'b> CreateLockEscrowCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -430,10 +447,10 @@ impl<'a, 'b> CreateLockEscrowCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

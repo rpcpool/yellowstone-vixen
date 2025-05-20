@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::DepegType;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 /// Contains information for depeg pool
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

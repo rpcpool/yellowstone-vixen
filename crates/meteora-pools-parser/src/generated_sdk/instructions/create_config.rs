@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
 /// Accounts.
@@ -26,6 +25,7 @@ impl CreateConfig {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -73,9 +73,7 @@ impl CreateConfigInstructionData {
 }
 
 impl Default for CreateConfigInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -115,65 +113,75 @@ pub struct CreateConfigBuilder {
 }
 
 impl CreateConfigBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn trade_fee_numerator(&mut self, trade_fee_numerator: u64) -> &mut Self {
         self.trade_fee_numerator = Some(trade_fee_numerator);
         self
     }
+
     #[inline(always)]
     pub fn protocol_trade_fee_numerator(&mut self, protocol_trade_fee_numerator: u64) -> &mut Self {
         self.protocol_trade_fee_numerator = Some(protocol_trade_fee_numerator);
         self
     }
+
     #[inline(always)]
     pub fn activation_duration(&mut self, activation_duration: u64) -> &mut Self {
         self.activation_duration = Some(activation_duration);
         self
     }
+
     #[inline(always)]
     pub fn vault_config_key(&mut self, vault_config_key: Pubkey) -> &mut Self {
         self.vault_config_key = Some(vault_config_key);
         self
     }
+
     #[inline(always)]
     pub fn pool_creator_authority(&mut self, pool_creator_authority: Pubkey) -> &mut Self {
         self.pool_creator_authority = Some(pool_creator_authority);
         self
     }
+
     #[inline(always)]
     pub fn activation_type(&mut self, activation_type: u8) -> &mut Self {
         self.activation_type = Some(activation_type);
         self
     }
+
     #[inline(always)]
     pub fn index(&mut self, index: u64) -> &mut Self {
         self.index = Some(index);
         self
     }
+
     #[inline(always)]
     pub fn partner_fee_numerator(&mut self, partner_fee_numerator: u64) -> &mut Self {
         self.partner_fee_numerator = Some(partner_fee_numerator);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -183,6 +191,7 @@ impl CreateConfigBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -192,6 +201,7 @@ impl CreateConfigBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CreateConfig {
@@ -274,10 +284,12 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -289,6 +301,7 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -296,6 +309,7 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -385,6 +399,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn config(
         &mut self,
@@ -393,11 +408,13 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn admin(&mut self, admin: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -406,46 +423,55 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn trade_fee_numerator(&mut self, trade_fee_numerator: u64) -> &mut Self {
         self.instruction.trade_fee_numerator = Some(trade_fee_numerator);
         self
     }
+
     #[inline(always)]
     pub fn protocol_trade_fee_numerator(&mut self, protocol_trade_fee_numerator: u64) -> &mut Self {
         self.instruction.protocol_trade_fee_numerator = Some(protocol_trade_fee_numerator);
         self
     }
+
     #[inline(always)]
     pub fn activation_duration(&mut self, activation_duration: u64) -> &mut Self {
         self.instruction.activation_duration = Some(activation_duration);
         self
     }
+
     #[inline(always)]
     pub fn vault_config_key(&mut self, vault_config_key: Pubkey) -> &mut Self {
         self.instruction.vault_config_key = Some(vault_config_key);
         self
     }
+
     #[inline(always)]
     pub fn pool_creator_authority(&mut self, pool_creator_authority: Pubkey) -> &mut Self {
         self.instruction.pool_creator_authority = Some(pool_creator_authority);
         self
     }
+
     #[inline(always)]
     pub fn activation_type(&mut self, activation_type: u8) -> &mut Self {
         self.instruction.activation_type = Some(activation_type);
         self
     }
+
     #[inline(always)]
     pub fn index(&mut self, index: u64) -> &mut Self {
         self.instruction.index = Some(index);
         self
     }
+
     #[inline(always)]
     pub fn partner_fee_numerator(&mut self, partner_fee_numerator: u64) -> &mut Self {
         self.instruction.partner_fee_numerator = Some(partner_fee_numerator);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -459,6 +485,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -477,10 +504,10 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

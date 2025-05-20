@@ -9,6 +9,4 @@ pub(crate) mod r#config;
 pub(crate) mod r#lock_escrow;
 pub(crate) mod r#pool;
 
-pub use self::r#config::*;
-pub use self::r#lock_escrow::*;
-pub use self::r#pool::*;
+pub use self::{r#config::*, r#lock_escrow::*, r#pool::*};

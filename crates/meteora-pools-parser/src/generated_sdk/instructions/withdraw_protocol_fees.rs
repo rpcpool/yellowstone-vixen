@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -31,6 +30,7 @@ impl WithdrawProtocolFees {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -91,9 +91,7 @@ impl WithdrawProtocolFeesInstructionData {
 }
 
 impl Default for WithdrawProtocolFeesInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `WithdrawProtocolFees`.
@@ -120,20 +118,21 @@ pub struct WithdrawProtocolFeesBuilder {
 }
 
 impl WithdrawProtocolFeesBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Pool account (PDA)
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_a_fee(
         &mut self,
@@ -142,6 +141,7 @@ impl WithdrawProtocolFeesBuilder {
         self.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_b_fee(
         &mut self,
@@ -150,6 +150,7 @@ impl WithdrawProtocolFeesBuilder {
         self.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
     }
+
     #[inline(always)]
     pub fn treasury_token_a(
         &mut self,
@@ -158,6 +159,7 @@ impl WithdrawProtocolFeesBuilder {
         self.treasury_token_a = Some(treasury_token_a);
         self
     }
+
     #[inline(always)]
     pub fn treasury_token_b(
         &mut self,
@@ -166,12 +168,14 @@ impl WithdrawProtocolFeesBuilder {
         self.treasury_token_b = Some(treasury_token_b);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -181,6 +185,7 @@ impl WithdrawProtocolFeesBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -190,6 +195,7 @@ impl WithdrawProtocolFeesBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = WithdrawProtocolFees {
@@ -266,10 +272,12 @@ impl<'a, 'b> WithdrawProtocolFeesCpi<'a, 'b> {
             token_program: accounts.token_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -281,6 +289,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -288,6 +297,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -395,12 +405,14 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Pool account (PDA)
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn a_vault_lp(
         &mut self,
@@ -409,6 +421,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_a_fee(
         &mut self,
@@ -417,6 +430,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
         self.instruction.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_b_fee(
         &mut self,
@@ -425,6 +439,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
         self.instruction.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
     }
+
     #[inline(always)]
     pub fn treasury_token_a(
         &mut self,
@@ -433,6 +448,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
         self.instruction.treasury_token_a = Some(treasury_token_a);
         self
     }
+
     #[inline(always)]
     pub fn treasury_token_b(
         &mut self,
@@ -441,6 +457,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
         self.instruction.treasury_token_b = Some(treasury_token_b);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -449,6 +466,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -462,6 +480,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -480,10 +499,10 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

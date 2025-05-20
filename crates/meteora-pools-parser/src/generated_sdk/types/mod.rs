@@ -20,17 +20,8 @@ pub(crate) mod r#rounding;
 pub(crate) mod r#token_multiplier;
 pub(crate) mod r#trade_direction;
 
-pub use self::r#activation_type::*;
-pub use self::r#bootstrapping::*;
-pub use self::r#curve_type::*;
-pub use self::r#depeg::*;
-pub use self::r#depeg_type::*;
-pub use self::r#new_curve_type::*;
-pub use self::r#padding::*;
-pub use self::r#partner_info::*;
-pub use self::r#pool_fees::*;
-pub use self::r#pool_type::*;
-pub use self::r#round_direction::*;
-pub use self::r#rounding::*;
-pub use self::r#token_multiplier::*;
-pub use self::r#trade_direction::*;
+pub use self::{
+    r#activation_type::*, r#bootstrapping::*, r#curve_type::*, r#depeg::*, r#depeg_type::*,
+    r#new_curve_type::*, r#padding::*, r#partner_info::*, r#pool_fees::*, r#pool_type::*,
+    r#round_direction::*, r#rounding::*, r#token_multiplier::*, r#trade_direction::*,
+};

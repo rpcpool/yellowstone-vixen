@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -36,6 +35,7 @@ impl PartnerClaimFee {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -103,9 +103,7 @@ impl PartnerClaimFeeInstructionData {
 }
 
 impl Default for PartnerClaimFeeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -143,20 +141,21 @@ pub struct PartnerClaimFeeBuilder {
 }
 
 impl PartnerClaimFeeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Pool account (PDA)
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_a_fee(
         &mut self,
@@ -165,6 +164,7 @@ impl PartnerClaimFeeBuilder {
         self.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_b_fee(
         &mut self,
@@ -173,6 +173,7 @@ impl PartnerClaimFeeBuilder {
         self.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
     }
+
     #[inline(always)]
     pub fn partner_token_a(
         &mut self,
@@ -181,6 +182,7 @@ impl PartnerClaimFeeBuilder {
         self.partner_token_a = Some(partner_token_a);
         self
     }
+
     #[inline(always)]
     pub fn partner_token_b(
         &mut self,
@@ -189,12 +191,14 @@ impl PartnerClaimFeeBuilder {
         self.partner_token_b = Some(partner_token_b);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn partner_authority(
         &mut self,
@@ -203,16 +207,19 @@ impl PartnerClaimFeeBuilder {
         self.partner_authority = Some(partner_authority);
         self
     }
+
     #[inline(always)]
     pub fn max_amount_a(&mut self, max_amount_a: u64) -> &mut Self {
         self.max_amount_a = Some(max_amount_a);
         self
     }
+
     #[inline(always)]
     pub fn max_amount_b(&mut self, max_amount_b: u64) -> &mut Self {
         self.max_amount_b = Some(max_amount_b);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -222,6 +229,7 @@ impl PartnerClaimFeeBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -231,6 +239,7 @@ impl PartnerClaimFeeBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = PartnerClaimFee {
@@ -323,10 +332,12 @@ impl<'a, 'b> PartnerClaimFeeCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -338,6 +349,7 @@ impl<'a, 'b> PartnerClaimFeeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -345,6 +357,7 @@ impl<'a, 'b> PartnerClaimFeeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -463,12 +476,14 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Pool account (PDA)
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn a_vault_lp(
         &mut self,
@@ -477,6 +492,7 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_a_fee(
         &mut self,
@@ -485,6 +501,7 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
         self.instruction.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_b_fee(
         &mut self,
@@ -493,6 +510,7 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
         self.instruction.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
     }
+
     #[inline(always)]
     pub fn partner_token_a(
         &mut self,
@@ -501,6 +519,7 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
         self.instruction.partner_token_a = Some(partner_token_a);
         self
     }
+
     #[inline(always)]
     pub fn partner_token_b(
         &mut self,
@@ -509,6 +528,7 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
         self.instruction.partner_token_b = Some(partner_token_b);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -517,6 +537,7 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn partner_authority(
         &mut self,
@@ -525,16 +546,19 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
         self.instruction.partner_authority = Some(partner_authority);
         self
     }
+
     #[inline(always)]
     pub fn max_amount_a(&mut self, max_amount_a: u64) -> &mut Self {
         self.instruction.max_amount_a = Some(max_amount_a);
         self
     }
+
     #[inline(always)]
     pub fn max_amount_b(&mut self, max_amount_b: u64) -> &mut Self {
         self.instruction.max_amount_b = Some(max_amount_b);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -548,6 +572,7 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -566,10 +591,10 @@ impl<'a, 'b> PartnerClaimFeeCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
