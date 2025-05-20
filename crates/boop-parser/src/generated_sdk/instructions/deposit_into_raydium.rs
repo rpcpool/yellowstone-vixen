@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -61,6 +60,7 @@ impl DepositIntoRaydium {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -181,9 +181,7 @@ impl DepositIntoRaydiumInstructionData {
 }
 
 impl Default for DepositIntoRaydiumInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -249,25 +247,27 @@ pub struct DepositIntoRaydiumBuilder {
 }
 
 impl DepositIntoRaydiumBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     /// Which config the pool belongs to.
     #[inline(always)]
     pub fn amm_config(&mut self, amm_config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.amm_config = Some(amm_config);
         self
     }
+
     #[inline(always)]
     pub fn operator(&mut self, operator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.operator = Some(operator);
         self
     }
+
     #[inline(always)]
     pub fn operator_wsol_account(
         &mut self,
@@ -276,6 +276,7 @@ impl DepositIntoRaydiumBuilder {
         self.operator_wsol_account = Some(operator_wsol_account);
         self
     }
+
     #[inline(always)]
     pub fn vault_authority(
         &mut self,
@@ -284,26 +285,31 @@ impl DepositIntoRaydiumBuilder {
         self.vault_authority = Some(vault_authority);
         self
     }
+
     #[inline(always)]
     pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
+
     #[inline(always)]
     pub fn token0_vault(&mut self, token0_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token0_vault = Some(token0_vault);
         self
     }
+
     #[inline(always)]
     pub fn token1_vault(&mut self, token1_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token1_vault = Some(token1_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_vault(
         &mut self,
@@ -312,6 +318,7 @@ impl DepositIntoRaydiumBuilder {
         self.bonding_curve_vault = Some(bonding_curve_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_wsol_vault(
         &mut self,
@@ -320,6 +327,7 @@ impl DepositIntoRaydiumBuilder {
         self.bonding_curve_wsol_vault = Some(bonding_curve_wsol_vault);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// token Program
     #[inline(always)]
@@ -327,6 +335,7 @@ impl DepositIntoRaydiumBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// Token program 2022
     #[inline(always)]
@@ -337,6 +346,7 @@ impl DepositIntoRaydiumBuilder {
         self.token_program2022 = Some(token_program2022);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program
     #[inline(always)]
@@ -344,6 +354,7 @@ impl DepositIntoRaydiumBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     /// Program to create an ATA for the operator to recoup any potential remaining WSOL
     #[inline(always)]
@@ -354,32 +365,38 @@ impl DepositIntoRaydiumBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     /// `[optional account, default to 'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C']`
     #[inline(always)]
     pub fn cpmm_program(&mut self, cpmm_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.cpmm_program = Some(cpmm_program);
         self
     }
+
     #[inline(always)]
     pub fn owner_lp_token(&mut self, owner_lp_token: solana_program::pubkey::Pubkey) -> &mut Self {
         self.owner_lp_token = Some(owner_lp_token);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve(&mut self, bonding_curve: solana_program::pubkey::Pubkey) -> &mut Self {
         self.bonding_curve = Some(bonding_curve);
         self
     }
+
     #[inline(always)]
     pub fn token0_mint(&mut self, token0_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token0_mint = Some(token0_mint);
         self
     }
+
     /// `[optional account, default to 'So11111111111111111111111111111111111111112']`
     /// token_1 mint, the key must greater than token_0 mint
     #[inline(always)]
@@ -387,21 +404,25 @@ impl DepositIntoRaydiumBuilder {
         self.token1_mint = Some(token1_mint);
         self
     }
+
     #[inline(always)]
     pub fn lp_token_amount(&mut self, lp_token_amount: u64) -> &mut Self {
         self.lp_token_amount = Some(lp_token_amount);
         self
     }
+
     #[inline(always)]
     pub fn maximum_token0_amount(&mut self, maximum_token0_amount: u64) -> &mut Self {
         self.maximum_token0_amount = Some(maximum_token0_amount);
         self
     }
+
     #[inline(always)]
     pub fn maximum_token1_amount(&mut self, maximum_token1_amount: u64) -> &mut Self {
         self.maximum_token1_amount = Some(maximum_token1_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -411,6 +432,7 @@ impl DepositIntoRaydiumBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -420,6 +442,7 @@ impl DepositIntoRaydiumBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = DepositIntoRaydium {
@@ -609,10 +632,12 @@ impl<'a, 'b> DepositIntoRaydiumCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -624,6 +649,7 @@ impl<'a, 'b> DepositIntoRaydiumCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -631,6 +657,7 @@ impl<'a, 'b> DepositIntoRaydiumCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -841,6 +868,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn config(
         &mut self,
@@ -849,6 +877,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.config = Some(config);
         self
     }
+
     /// Which config the pool belongs to.
     #[inline(always)]
     pub fn amm_config(
@@ -858,6 +887,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.amm_config = Some(amm_config);
         self
     }
+
     #[inline(always)]
     pub fn operator(
         &mut self,
@@ -866,6 +896,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.operator = Some(operator);
         self
     }
+
     #[inline(always)]
     pub fn operator_wsol_account(
         &mut self,
@@ -874,6 +905,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.operator_wsol_account = Some(operator_wsol_account);
         self
     }
+
     #[inline(always)]
     pub fn vault_authority(
         &mut self,
@@ -882,6 +914,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.vault_authority = Some(vault_authority);
         self
     }
+
     #[inline(always)]
     pub fn authority(
         &mut self,
@@ -890,6 +923,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.authority = Some(authority);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(
         &mut self,
@@ -898,6 +932,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     #[inline(always)]
     pub fn token0_vault(
         &mut self,
@@ -906,6 +941,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.token0_vault = Some(token0_vault);
         self
     }
+
     #[inline(always)]
     pub fn token1_vault(
         &mut self,
@@ -914,6 +950,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.token1_vault = Some(token1_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_vault(
         &mut self,
@@ -922,6 +959,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve_vault = Some(bonding_curve_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_wsol_vault(
         &mut self,
@@ -930,6 +968,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve_wsol_vault = Some(bonding_curve_wsol_vault);
         self
     }
+
     /// token Program
     #[inline(always)]
     pub fn token_program(
@@ -939,6 +978,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Token program 2022
     #[inline(always)]
     pub fn token_program2022(
@@ -948,6 +988,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.token_program2022 = Some(token_program2022);
         self
     }
+
     /// System program
     #[inline(always)]
     pub fn system_program(
@@ -957,6 +998,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Program to create an ATA for the operator to recoup any potential remaining WSOL
     #[inline(always)]
     pub fn associated_token_program(
@@ -966,6 +1008,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn lp_mint(
         &mut self,
@@ -974,6 +1017,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn cpmm_program(
         &mut self,
@@ -982,6 +1026,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.cpmm_program = Some(cpmm_program);
         self
     }
+
     #[inline(always)]
     pub fn owner_lp_token(
         &mut self,
@@ -990,6 +1035,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.owner_lp_token = Some(owner_lp_token);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve(
         &mut self,
@@ -998,6 +1044,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve = Some(bonding_curve);
         self
     }
+
     #[inline(always)]
     pub fn token0_mint(
         &mut self,
@@ -1006,6 +1053,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.token0_mint = Some(token0_mint);
         self
     }
+
     /// token_1 mint, the key must greater than token_0 mint
     #[inline(always)]
     pub fn token1_mint(
@@ -1015,21 +1063,25 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
         self.instruction.token1_mint = Some(token1_mint);
         self
     }
+
     #[inline(always)]
     pub fn lp_token_amount(&mut self, lp_token_amount: u64) -> &mut Self {
         self.instruction.lp_token_amount = Some(lp_token_amount);
         self
     }
+
     #[inline(always)]
     pub fn maximum_token0_amount(&mut self, maximum_token0_amount: u64) -> &mut Self {
         self.instruction.maximum_token0_amount = Some(maximum_token0_amount);
         self
     }
+
     #[inline(always)]
     pub fn maximum_token1_amount(&mut self, maximum_token1_amount: u64) -> &mut Self {
         self.instruction.maximum_token1_amount = Some(maximum_token1_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1043,6 +1095,7 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1061,10 +1114,10 @@ impl<'a, 'b> DepositIntoRaydiumCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

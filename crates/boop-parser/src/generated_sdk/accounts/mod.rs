@@ -10,7 +10,4 @@ pub(crate) mod r#bonding_curve;
 pub(crate) mod r#config;
 pub(crate) mod r#locked_cp_liquidity_state;
 
-pub use self::r#amm_config::*;
-pub use self::r#bonding_curve::*;
-pub use self::r#config::*;
-pub use self::r#locked_cp_liquidity_state::*;
+pub use self::{r#amm_config::*, r#bonding_curve::*, r#config::*, r#locked_cp_liquidity_state::*};

@@ -5,10 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::BondingCurveStatus;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
+
+use crate::generated::types::BondingCurveStatus;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -139,9 +139,7 @@ impl anchor_lang::AccountSerialize for BondingCurve {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for BondingCurve {
-    fn owner() -> Pubkey {
-        crate::BOOP_ID
-    }
+    fn owner() -> Pubkey { crate::BOOP_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

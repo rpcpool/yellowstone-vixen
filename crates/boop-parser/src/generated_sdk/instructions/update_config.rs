@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
 /// Accounts.
@@ -26,6 +25,7 @@ impl UpdateConfig {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -74,9 +74,7 @@ impl UpdateConfigInstructionData {
 }
 
 impl Default for UpdateConfigInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -122,60 +120,69 @@ pub struct UpdateConfigBuilder {
 }
 
 impl UpdateConfigBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn new_protocol_fee_recipient(&mut self, new_protocol_fee_recipient: Pubkey) -> &mut Self {
         self.new_protocol_fee_recipient = Some(new_protocol_fee_recipient);
         self
     }
+
     #[inline(always)]
     pub fn new_virtual_sol_reserves(&mut self, new_virtual_sol_reserves: u64) -> &mut Self {
         self.new_virtual_sol_reserves = Some(new_virtual_sol_reserves);
         self
     }
+
     #[inline(always)]
     pub fn new_virtual_token_reserves(&mut self, new_virtual_token_reserves: u64) -> &mut Self {
         self.new_virtual_token_reserves = Some(new_virtual_token_reserves);
         self
     }
+
     #[inline(always)]
     pub fn new_graduation_target(&mut self, new_graduation_target: u64) -> &mut Self {
         self.new_graduation_target = Some(new_graduation_target);
         self
     }
+
     #[inline(always)]
     pub fn new_graduation_fee(&mut self, new_graduation_fee: u64) -> &mut Self {
         self.new_graduation_fee = Some(new_graduation_fee);
         self
     }
+
     #[inline(always)]
     pub fn new_damping_term(&mut self, new_damping_term: u8) -> &mut Self {
         self.new_damping_term = Some(new_damping_term);
         self
     }
+
     #[inline(always)]
     pub fn new_swap_fee_basis_points(&mut self, new_swap_fee_basis_points: u8) -> &mut Self {
         self.new_swap_fee_basis_points = Some(new_swap_fee_basis_points);
         self
     }
+
     #[inline(always)]
     pub fn new_token_for_stakers_basis_points(
         &mut self,
@@ -184,6 +191,7 @@ impl UpdateConfigBuilder {
         self.new_token_for_stakers_basis_points = Some(new_token_for_stakers_basis_points);
         self
     }
+
     #[inline(always)]
     pub fn new_token_amount_for_raydium_liquidity(
         &mut self,
@@ -192,6 +200,7 @@ impl UpdateConfigBuilder {
         self.new_token_amount_for_raydium_liquidity = Some(new_token_amount_for_raydium_liquidity);
         self
     }
+
     #[inline(always)]
     pub fn new_max_graduation_price_deviation_basis_points(
         &mut self,
@@ -201,6 +210,7 @@ impl UpdateConfigBuilder {
             Some(new_max_graduation_price_deviation_basis_points);
         self
     }
+
     #[inline(always)]
     pub fn new_max_swap_amount_for_pool_price_correction_basis_points(
         &mut self,
@@ -210,6 +220,7 @@ impl UpdateConfigBuilder {
             Some(new_max_swap_amount_for_pool_price_correction_basis_points);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -219,6 +230,7 @@ impl UpdateConfigBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -228,6 +240,7 @@ impl UpdateConfigBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = UpdateConfig {
@@ -325,10 +338,12 @@ impl<'a, 'b> UpdateConfigCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -340,6 +355,7 @@ impl<'a, 'b> UpdateConfigCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -347,6 +363,7 @@ impl<'a, 'b> UpdateConfigCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -439,6 +456,7 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn config(
         &mut self,
@@ -447,6 +465,7 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
         self.instruction.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn authority(
         &mut self,
@@ -455,6 +474,7 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
         self.instruction.authority = Some(authority);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -463,41 +483,49 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn new_protocol_fee_recipient(&mut self, new_protocol_fee_recipient: Pubkey) -> &mut Self {
         self.instruction.new_protocol_fee_recipient = Some(new_protocol_fee_recipient);
         self
     }
+
     #[inline(always)]
     pub fn new_virtual_sol_reserves(&mut self, new_virtual_sol_reserves: u64) -> &mut Self {
         self.instruction.new_virtual_sol_reserves = Some(new_virtual_sol_reserves);
         self
     }
+
     #[inline(always)]
     pub fn new_virtual_token_reserves(&mut self, new_virtual_token_reserves: u64) -> &mut Self {
         self.instruction.new_virtual_token_reserves = Some(new_virtual_token_reserves);
         self
     }
+
     #[inline(always)]
     pub fn new_graduation_target(&mut self, new_graduation_target: u64) -> &mut Self {
         self.instruction.new_graduation_target = Some(new_graduation_target);
         self
     }
+
     #[inline(always)]
     pub fn new_graduation_fee(&mut self, new_graduation_fee: u64) -> &mut Self {
         self.instruction.new_graduation_fee = Some(new_graduation_fee);
         self
     }
+
     #[inline(always)]
     pub fn new_damping_term(&mut self, new_damping_term: u8) -> &mut Self {
         self.instruction.new_damping_term = Some(new_damping_term);
         self
     }
+
     #[inline(always)]
     pub fn new_swap_fee_basis_points(&mut self, new_swap_fee_basis_points: u8) -> &mut Self {
         self.instruction.new_swap_fee_basis_points = Some(new_swap_fee_basis_points);
         self
     }
+
     #[inline(always)]
     pub fn new_token_for_stakers_basis_points(
         &mut self,
@@ -507,6 +535,7 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
             Some(new_token_for_stakers_basis_points);
         self
     }
+
     #[inline(always)]
     pub fn new_token_amount_for_raydium_liquidity(
         &mut self,
@@ -516,6 +545,7 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
             Some(new_token_amount_for_raydium_liquidity);
         self
     }
+
     #[inline(always)]
     pub fn new_max_graduation_price_deviation_basis_points(
         &mut self,
@@ -526,6 +556,7 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
             Some(new_max_graduation_price_deviation_basis_points);
         self
     }
+
     #[inline(always)]
     pub fn new_max_swap_amount_for_pool_price_correction_basis_points(
         &mut self,
@@ -536,6 +567,7 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
             Some(new_max_swap_amount_for_pool_price_correction_basis_points);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -549,6 +581,7 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -567,10 +600,10 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

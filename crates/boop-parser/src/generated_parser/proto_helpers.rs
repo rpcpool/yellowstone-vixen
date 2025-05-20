@@ -9,9 +9,7 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::proto_def;
-
-    use crate::types::AuthorityTransferCancelledEvent;
+    use crate::{proto_def, types::AuthorityTransferCancelledEvent};
     impl IntoProto<proto_def::AuthorityTransferCancelledEvent> for AuthorityTransferCancelledEvent {
         fn into_proto(self) -> proto_def::AuthorityTransferCancelledEvent {
             proto_def::AuthorityTransferCancelledEvent {}

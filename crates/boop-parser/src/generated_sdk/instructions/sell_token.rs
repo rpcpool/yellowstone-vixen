@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -43,6 +42,7 @@ impl SellToken {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -126,9 +126,7 @@ impl SellTokenInstructionData {
 }
 
 impl Default for SellTokenInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -174,19 +172,20 @@ pub struct SellTokenBuilder {
 }
 
 impl SellTokenBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn mint(&mut self, mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.mint = Some(mint);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve(&mut self, bonding_curve: solana_program::pubkey::Pubkey) -> &mut Self {
         self.bonding_curve = Some(bonding_curve);
         self
     }
+
     #[inline(always)]
     pub fn trading_fees_vault(
         &mut self,
@@ -195,6 +194,7 @@ impl SellTokenBuilder {
         self.trading_fees_vault = Some(trading_fees_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_vault(
         &mut self,
@@ -203,6 +203,7 @@ impl SellTokenBuilder {
         self.bonding_curve_vault = Some(bonding_curve_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_sol_vault(
         &mut self,
@@ -211,6 +212,7 @@ impl SellTokenBuilder {
         self.bonding_curve_sol_vault = Some(bonding_curve_sol_vault);
         self
     }
+
     #[inline(always)]
     pub fn seller_token_account(
         &mut self,
@@ -219,33 +221,39 @@ impl SellTokenBuilder {
         self.seller_token_account = Some(seller_token_account);
         self
     }
+
     #[inline(always)]
     pub fn seller(&mut self, seller: solana_program::pubkey::Pubkey) -> &mut Self {
         self.seller = Some(seller);
         self
     }
+
     #[inline(always)]
     pub fn recipient(&mut self, recipient: solana_program::pubkey::Pubkey) -> &mut Self {
         self.recipient = Some(recipient);
         self
     }
+
     #[inline(always)]
     pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     #[inline(always)]
     pub fn associated_token_program(
@@ -255,16 +263,19 @@ impl SellTokenBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn sell_amount(&mut self, sell_amount: u64) -> &mut Self {
         self.sell_amount = Some(sell_amount);
         self
     }
+
     #[inline(always)]
     pub fn amount_out_min(&mut self, amount_out_min: u64) -> &mut Self {
         self.amount_out_min = Some(amount_out_min);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -274,6 +285,7 @@ impl SellTokenBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -283,6 +295,7 @@ impl SellTokenBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = SellToken {
@@ -407,10 +420,12 @@ impl<'a, 'b> SellTokenCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -422,6 +437,7 @@ impl<'a, 'b> SellTokenCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -429,6 +445,7 @@ impl<'a, 'b> SellTokenCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -575,11 +592,13 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn mint(&mut self, mint: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.mint = Some(mint);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve(
         &mut self,
@@ -588,6 +607,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve = Some(bonding_curve);
         self
     }
+
     #[inline(always)]
     pub fn trading_fees_vault(
         &mut self,
@@ -596,6 +616,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.trading_fees_vault = Some(trading_fees_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_vault(
         &mut self,
@@ -604,6 +625,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve_vault = Some(bonding_curve_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_sol_vault(
         &mut self,
@@ -612,6 +634,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve_sol_vault = Some(bonding_curve_sol_vault);
         self
     }
+
     #[inline(always)]
     pub fn seller_token_account(
         &mut self,
@@ -620,6 +643,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.seller_token_account = Some(seller_token_account);
         self
     }
+
     #[inline(always)]
     pub fn seller(
         &mut self,
@@ -628,6 +652,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.seller = Some(seller);
         self
     }
+
     #[inline(always)]
     pub fn recipient(
         &mut self,
@@ -636,6 +661,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.recipient = Some(recipient);
         self
     }
+
     #[inline(always)]
     pub fn config(
         &mut self,
@@ -644,6 +670,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -652,6 +679,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -660,6 +688,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -668,16 +697,19 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn sell_amount(&mut self, sell_amount: u64) -> &mut Self {
         self.instruction.sell_amount = Some(sell_amount);
         self
     }
+
     #[inline(always)]
     pub fn amount_out_min(&mut self, amount_out_min: u64) -> &mut Self {
         self.instruction.amount_out_min = Some(amount_out_min);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -691,6 +723,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -709,10 +742,10 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

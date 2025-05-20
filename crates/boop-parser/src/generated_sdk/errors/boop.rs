@@ -42,22 +42,22 @@ pub enum BoopError {
     InvalidMint = 0x1779,
     /// 6010 - Invalid protocol fee recipient
     #[error("Invalid protocol fee recipient")]
-    InvalidProtocolFeeRecipient = 0x177A,
+    InvalidProtocolFeeRecipient = 0x177a,
     /// 6011 - Max basis points off graduation price too high
     #[error("Max basis points off graduation price too high")]
-    MaxBasisPointsOffGraduationPriceTooHigh = 0x177B,
+    MaxBasisPointsOffGraduationPriceTooHigh = 0x177b,
     /// 6012 - Max graduation price deviation basis points too high
     #[error("Max graduation price deviation basis points too high")]
-    MaxGraduationPriceDeviationBasisPointsTooHigh = 0x177C,
+    MaxGraduationPriceDeviationBasisPointsTooHigh = 0x177c,
     /// 6013 - Max swap amount for pool price correction basis points too high
     #[error("Max swap amount for pool price correction basis points too high")]
-    MaxSwapAmountForPoolPriceCorrectionBasisPointsTooHigh = 0x177D,
+    MaxSwapAmountForPoolPriceCorrectionBasisPointsTooHigh = 0x177d,
     /// 6014 - Mint is larger than or equal to native mint
     #[error("Mint is larger than or equal to native mint")]
-    MintIsLargerThanOrEqualToNativeMint = 0x177E,
+    MintIsLargerThanOrEqualToNativeMint = 0x177e,
     /// 6015 - No authority transfer in progress
     #[error("No authority transfer in progress")]
-    NoAuthorityTransferInProgress = 0x177F,
+    NoAuthorityTransferInProgress = 0x177f,
     /// 6016 - LP Token amount is too low
     #[error("LP Token amount is too low")]
     NothingToDeposit = 0x1780,
@@ -92,22 +92,22 @@ pub enum BoopError {
     TokenAmountForRaydiumLiquidityTooHigh = 0x1789,
     /// 6026 - Token for stakers basis points too high
     #[error("Token for stakers basis points too high")]
-    TokenForStakersBasisPointsTooHigh = 0x178A,
+    TokenForStakersBasisPointsTooHigh = 0x178a,
     /// 6027 - Token graduated
     #[error("Token graduated")]
-    TokenGraduated = 0x178B,
+    TokenGraduated = 0x178b,
     /// 6028 - Token name too long
     #[error("Token name too long")]
-    TokenNameTooLong = 0x178C,
+    TokenNameTooLong = 0x178c,
     /// 6029 - Token name too short
     #[error("Token name too short")]
-    TokenNameTooShort = 0x178D,
+    TokenNameTooShort = 0x178d,
     /// 6030 - Token symbol too long
     #[error("Token symbol too long")]
-    TokenSymbolTooLong = 0x178E,
+    TokenSymbolTooLong = 0x178e,
     /// 6031 - Token symbol too short
     #[error("Token symbol too short")]
-    TokenSymbolTooShort = 0x178F,
+    TokenSymbolTooShort = 0x178f,
     /// 6032 - Unauthorized
     #[error("Unauthorized")]
     Unauthorized = 0x1790,
@@ -120,7 +120,5 @@ impl solana_program::program_error::PrintProgramError for BoopError {
 }
 
 impl<T> solana_program::decode_error::DecodeError<T> for BoopError {
-    fn type_of() -> &'static str {
-        "BoopError"
-    }
+    fn type_of() -> &'static str { "BoopError" }
 }

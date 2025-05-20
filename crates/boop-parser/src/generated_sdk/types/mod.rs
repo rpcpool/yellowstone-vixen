@@ -30,27 +30,16 @@ pub(crate) mod r#token_sold_event;
 pub(crate) mod r#trading_fees_collected_event;
 pub(crate) mod r#trading_fees_split_event;
 
-pub use self::r#authority_transfer_cancelled_event::*;
-pub use self::r#authority_transfer_completed_event::*;
-pub use self::r#authority_transfer_initiated_event::*;
-pub use self::r#bonding_curve_deployed_event::*;
-pub use self::r#bonding_curve_deployed_fallback_event::*;
-pub use self::r#bonding_curve_status::*;
-pub use self::r#bonding_curve_vault_closed_event::*;
-pub use self::r#config_updated_event::*;
-pub use self::r#liquidity_deposited_into_raydium_event::*;
-pub use self::r#operators_added_event::*;
-pub use self::r#operators_removed_event::*;
-pub use self::r#paused_toggled_event::*;
-pub use self::r#raydium_liquidity_locked_event::*;
-pub use self::r#raydium_pool_created_event::*;
-pub use self::r#raydium_random_pool_created_event::*;
-pub use self::r#swap_sol_for_tokens_on_raydium_event::*;
-pub use self::r#swap_tokens_for_sol_on_raydium_event::*;
-pub use self::r#token_bought_event::*;
-pub use self::r#token_created_event::*;
-pub use self::r#token_created_fallback_event::*;
-pub use self::r#token_graduated_event::*;
-pub use self::r#token_sold_event::*;
-pub use self::r#trading_fees_collected_event::*;
-pub use self::r#trading_fees_split_event::*;
+pub use self::{
+    r#authority_transfer_cancelled_event::*, r#authority_transfer_completed_event::*,
+    r#authority_transfer_initiated_event::*, r#bonding_curve_deployed_event::*,
+    r#bonding_curve_deployed_fallback_event::*, r#bonding_curve_status::*,
+    r#bonding_curve_vault_closed_event::*, r#config_updated_event::*,
+    r#liquidity_deposited_into_raydium_event::*, r#operators_added_event::*,
+    r#operators_removed_event::*, r#paused_toggled_event::*, r#raydium_liquidity_locked_event::*,
+    r#raydium_pool_created_event::*, r#raydium_random_pool_created_event::*,
+    r#swap_sol_for_tokens_on_raydium_event::*, r#swap_tokens_for_sol_on_raydium_event::*,
+    r#token_bought_event::*, r#token_created_event::*, r#token_created_fallback_event::*,
+    r#token_graduated_event::*, r#token_sold_event::*, r#trading_fees_collected_event::*,
+    r#trading_fees_split_event::*,
+};

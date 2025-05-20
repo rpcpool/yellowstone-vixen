@@ -30,27 +30,13 @@ pub(crate) mod r#swap_tokens_for_sol_on_raydium;
 pub(crate) mod r#toggle_paused;
 pub(crate) mod r#update_config;
 
-pub use self::r#add_operators::*;
-pub use self::r#buy_token::*;
-pub use self::r#cancel_authority_transfer::*;
-pub use self::r#close_bonding_curve_vault::*;
-pub use self::r#collect_trading_fees::*;
-pub use self::r#complete_authority_transfer::*;
-pub use self::r#create_raydium_pool::*;
-pub use self::r#create_raydium_random_pool::*;
-pub use self::r#create_token::*;
-pub use self::r#create_token_fallback::*;
-pub use self::r#deploy_bonding_curve::*;
-pub use self::r#deploy_bonding_curve_fallback::*;
-pub use self::r#deposit_into_raydium::*;
-pub use self::r#graduate::*;
-pub use self::r#initialize::*;
-pub use self::r#initiate_authority_transfer::*;
-pub use self::r#lock_raydium_liquidity::*;
-pub use self::r#remove_operators::*;
-pub use self::r#sell_token::*;
-pub use self::r#split_trading_fees::*;
-pub use self::r#swap_sol_for_tokens_on_raydium::*;
-pub use self::r#swap_tokens_for_sol_on_raydium::*;
-pub use self::r#toggle_paused::*;
-pub use self::r#update_config::*;
+pub use self::{
+    r#add_operators::*, r#buy_token::*, r#cancel_authority_transfer::*,
+    r#close_bonding_curve_vault::*, r#collect_trading_fees::*, r#complete_authority_transfer::*,
+    r#create_raydium_pool::*, r#create_raydium_random_pool::*, r#create_token::*,
+    r#create_token_fallback::*, r#deploy_bonding_curve::*, r#deploy_bonding_curve_fallback::*,
+    r#deposit_into_raydium::*, r#graduate::*, r#initialize::*, r#initiate_authority_transfer::*,
+    r#lock_raydium_liquidity::*, r#remove_operators::*, r#sell_token::*, r#split_trading_fees::*,
+    r#swap_sol_for_tokens_on_raydium::*, r#swap_tokens_for_sol_on_raydium::*, r#toggle_paused::*,
+    r#update_config::*,
+};

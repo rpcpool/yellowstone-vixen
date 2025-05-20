@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -65,6 +64,7 @@ impl CollectTradingFees {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -194,9 +194,7 @@ impl CollectTradingFeesInstructionData {
 }
 
 impl Default for CollectTradingFeesInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `CollectTradingFees`.
@@ -257,14 +255,14 @@ pub struct CollectTradingFeesBuilder {
 }
 
 impl CollectTradingFeesBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn operator(&mut self, operator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.operator = Some(operator);
         self
     }
+
     #[inline(always)]
     pub fn protocol_fee_recipient(
         &mut self,
@@ -273,17 +271,20 @@ impl CollectTradingFeesBuilder {
         self.protocol_fee_recipient = Some(protocol_fee_recipient);
         self
     }
+
     #[inline(always)]
     pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     /// `[optional account, default to 'LockrWmn6K5twhz3y9w1dQERbmgSaRkfnTeTKbpofwE']`
     #[inline(always)]
     pub fn lock_program(&mut self, lock_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lock_program = Some(lock_program);
         self
     }
+
     #[inline(always)]
     pub fn vault_authority(
         &mut self,
@@ -292,11 +293,13 @@ impl CollectTradingFeesBuilder {
         self.vault_authority = Some(vault_authority);
         self
     }
+
     #[inline(always)]
     pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
+
     /// Fee token account
     #[inline(always)]
     pub fn fee_nft_account(
@@ -306,6 +309,7 @@ impl CollectTradingFeesBuilder {
         self.fee_nft_account = Some(fee_nft_account);
         self
     }
+
     /// Store the locked the information of liquidity
     #[inline(always)]
     pub fn locked_liquidity(
@@ -315,22 +319,26 @@ impl CollectTradingFeesBuilder {
         self.locked_liquidity = Some(locked_liquidity);
         self
     }
+
     /// `[optional account, default to 'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C']`
     #[inline(always)]
     pub fn cpmm_program(&mut self, cpmm_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.cpmm_program = Some(cpmm_program);
         self
     }
+
     #[inline(always)]
     pub fn cp_authority(&mut self, cp_authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.cp_authority = Some(cp_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// lp mint
     /// address = pool_state.lp_mint
     #[inline(always)]
@@ -338,6 +346,7 @@ impl CollectTradingFeesBuilder {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     /// The token account for receive token_0
     #[inline(always)]
     pub fn recipient_token0_account(
@@ -347,6 +356,7 @@ impl CollectTradingFeesBuilder {
         self.recipient_token0_account = Some(recipient_token0_account);
         self
     }
+
     /// The token account for receive token_1
     #[inline(always)]
     pub fn recipient_token1_account(
@@ -356,30 +366,35 @@ impl CollectTradingFeesBuilder {
         self.recipient_token1_account = Some(recipient_token1_account);
         self
     }
+
     /// The address that holds pool tokens for token_0
     #[inline(always)]
     pub fn token0_vault(&mut self, token0_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token0_vault = Some(token0_vault);
         self
     }
+
     /// The address that holds pool tokens for token_1
     #[inline(always)]
     pub fn token1_vault(&mut self, token1_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token1_vault = Some(token1_vault);
         self
     }
+
     /// The mint of token_0 vault
     #[inline(always)]
     pub fn vault0_mint(&mut self, vault0_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vault0_mint = Some(vault0_mint);
         self
     }
+
     /// The mint of token_1 vault
     #[inline(always)]
     pub fn vault1_mint(&mut self, vault1_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vault1_mint = Some(vault1_mint);
         self
     }
+
     /// locked lp token account
     #[inline(always)]
     pub fn locked_lp_vault(
@@ -389,6 +404,7 @@ impl CollectTradingFeesBuilder {
         self.locked_lp_vault = Some(locked_lp_vault);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program
     #[inline(always)]
@@ -396,6 +412,7 @@ impl CollectTradingFeesBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     /// Associated token program
     #[inline(always)]
@@ -406,6 +423,7 @@ impl CollectTradingFeesBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// token Program
     #[inline(always)]
@@ -413,6 +431,7 @@ impl CollectTradingFeesBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// Token program 2022
     #[inline(always)]
@@ -423,6 +442,7 @@ impl CollectTradingFeesBuilder {
         self.token_program2022 = Some(token_program2022);
         self
     }
+
     /// `[optional account, default to 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr']`
     /// memo program
     #[inline(always)]
@@ -430,6 +450,7 @@ impl CollectTradingFeesBuilder {
         self.memo_program = Some(memo_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -439,6 +460,7 @@ impl CollectTradingFeesBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -448,6 +470,7 @@ impl CollectTradingFeesBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CollectTradingFees {
@@ -641,10 +664,12 @@ impl<'a, 'b> CollectTradingFeesCpi<'a, 'b> {
             memo_program: accounts.memo_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -656,6 +681,7 @@ impl<'a, 'b> CollectTradingFeesCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -663,6 +689,7 @@ impl<'a, 'b> CollectTradingFeesCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -889,6 +916,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn operator(
         &mut self,
@@ -897,6 +925,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.operator = Some(operator);
         self
     }
+
     #[inline(always)]
     pub fn protocol_fee_recipient(
         &mut self,
@@ -905,6 +934,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.protocol_fee_recipient = Some(protocol_fee_recipient);
         self
     }
+
     #[inline(always)]
     pub fn config(
         &mut self,
@@ -913,6 +943,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn lock_program(
         &mut self,
@@ -921,6 +952,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.lock_program = Some(lock_program);
         self
     }
+
     #[inline(always)]
     pub fn vault_authority(
         &mut self,
@@ -929,6 +961,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.vault_authority = Some(vault_authority);
         self
     }
+
     #[inline(always)]
     pub fn authority(
         &mut self,
@@ -937,6 +970,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.authority = Some(authority);
         self
     }
+
     /// Fee token account
     #[inline(always)]
     pub fn fee_nft_account(
@@ -946,6 +980,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.fee_nft_account = Some(fee_nft_account);
         self
     }
+
     /// Store the locked the information of liquidity
     #[inline(always)]
     pub fn locked_liquidity(
@@ -955,6 +990,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.locked_liquidity = Some(locked_liquidity);
         self
     }
+
     #[inline(always)]
     pub fn cpmm_program(
         &mut self,
@@ -963,6 +999,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.cpmm_program = Some(cpmm_program);
         self
     }
+
     #[inline(always)]
     pub fn cp_authority(
         &mut self,
@@ -971,6 +1008,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.cp_authority = Some(cp_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(
         &mut self,
@@ -979,6 +1017,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// lp mint
     /// address = pool_state.lp_mint
     #[inline(always)]
@@ -989,6 +1028,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     /// The token account for receive token_0
     #[inline(always)]
     pub fn recipient_token0_account(
@@ -998,6 +1038,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.recipient_token0_account = Some(recipient_token0_account);
         self
     }
+
     /// The token account for receive token_1
     #[inline(always)]
     pub fn recipient_token1_account(
@@ -1007,6 +1048,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.recipient_token1_account = Some(recipient_token1_account);
         self
     }
+
     /// The address that holds pool tokens for token_0
     #[inline(always)]
     pub fn token0_vault(
@@ -1016,6 +1058,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.token0_vault = Some(token0_vault);
         self
     }
+
     /// The address that holds pool tokens for token_1
     #[inline(always)]
     pub fn token1_vault(
@@ -1025,6 +1068,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.token1_vault = Some(token1_vault);
         self
     }
+
     /// The mint of token_0 vault
     #[inline(always)]
     pub fn vault0_mint(
@@ -1034,6 +1078,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.vault0_mint = Some(vault0_mint);
         self
     }
+
     /// The mint of token_1 vault
     #[inline(always)]
     pub fn vault1_mint(
@@ -1043,6 +1088,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.vault1_mint = Some(vault1_mint);
         self
     }
+
     /// locked lp token account
     #[inline(always)]
     pub fn locked_lp_vault(
@@ -1052,6 +1098,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.locked_lp_vault = Some(locked_lp_vault);
         self
     }
+
     /// System program
     #[inline(always)]
     pub fn system_program(
@@ -1061,6 +1108,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Associated token program
     #[inline(always)]
     pub fn associated_token_program(
@@ -1070,6 +1118,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// token Program
     #[inline(always)]
     pub fn token_program(
@@ -1079,6 +1128,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Token program 2022
     #[inline(always)]
     pub fn token_program2022(
@@ -1088,6 +1138,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.token_program2022 = Some(token_program2022);
         self
     }
+
     /// memo program
     #[inline(always)]
     pub fn memo_program(
@@ -1097,6 +1148,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
         self.instruction.memo_program = Some(memo_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1110,6 +1162,7 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1128,10 +1181,10 @@ impl<'a, 'b> CollectTradingFeesCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

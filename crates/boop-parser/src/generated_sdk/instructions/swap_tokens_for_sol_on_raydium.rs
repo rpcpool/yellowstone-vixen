@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -51,6 +50,7 @@ impl SwapTokensForSolOnRaydium {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -151,9 +151,7 @@ impl SwapTokensForSolOnRaydiumInstructionData {
 }
 
 impl Default for SwapTokensForSolOnRaydiumInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -207,30 +205,33 @@ pub struct SwapTokensForSolOnRaydiumBuilder {
 }
 
 impl SwapTokensForSolOnRaydiumBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve(&mut self, bonding_curve: solana_program::pubkey::Pubkey) -> &mut Self {
         self.bonding_curve = Some(bonding_curve);
         self
     }
+
     /// Which config the pool belongs to.
     #[inline(always)]
     pub fn amm_config(&mut self, amm_config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.amm_config = Some(amm_config);
         self
     }
+
     #[inline(always)]
     pub fn operator(&mut self, operator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.operator = Some(operator);
         self
     }
+
     #[inline(always)]
     pub fn vault_authority(
         &mut self,
@@ -239,26 +240,31 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.vault_authority = Some(vault_authority);
         self
     }
+
     #[inline(always)]
     pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
+
     #[inline(always)]
     pub fn input_vault(&mut self, input_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.input_vault = Some(input_vault);
         self
     }
+
     #[inline(always)]
     pub fn output_vault(&mut self, output_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.output_vault = Some(output_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_vault(
         &mut self,
@@ -267,6 +273,7 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.bonding_curve_vault = Some(bonding_curve_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_wsol_vault(
         &mut self,
@@ -275,6 +282,7 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.bonding_curve_wsol_vault = Some(bonding_curve_wsol_vault);
         self
     }
+
     /// token_0 mint, the key must smaller than token_1 mint
     #[inline(always)]
     pub fn input_token_mint(
@@ -284,6 +292,7 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.input_token_mint = Some(input_token_mint);
         self
     }
+
     /// `[optional account, default to 'So11111111111111111111111111111111111111112']`
     /// token_1 mint, the key must greater than token_0 mint
     #[inline(always)]
@@ -294,6 +303,7 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.output_token_mint = Some(output_token_mint);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// input_token_mint and output_token_mint have the same token program
     #[inline(always)]
@@ -301,6 +311,7 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to 'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C']`
     #[inline(always)]
     pub fn cp_swap_program(
@@ -310,6 +321,7 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.cp_swap_program = Some(cp_swap_program);
         self
     }
+
     #[inline(always)]
     pub fn observation_state(
         &mut self,
@@ -318,16 +330,19 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.observation_state = Some(observation_state);
         self
     }
+
     #[inline(always)]
     pub fn amount_in(&mut self, amount_in: u64) -> &mut Self {
         self.amount_in = Some(amount_in);
         self
     }
+
     #[inline(always)]
     pub fn minimum_amount_out(&mut self, minimum_amount_out: u64) -> &mut Self {
         self.minimum_amount_out = Some(minimum_amount_out);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -337,6 +352,7 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -346,6 +362,7 @@ impl SwapTokensForSolOnRaydiumBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = SwapTokensForSolOnRaydium {
@@ -492,10 +509,12 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -507,6 +526,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -514,6 +534,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -688,6 +709,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn config(
         &mut self,
@@ -696,6 +718,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve(
         &mut self,
@@ -704,6 +727,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve = Some(bonding_curve);
         self
     }
+
     /// Which config the pool belongs to.
     #[inline(always)]
     pub fn amm_config(
@@ -713,6 +737,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.amm_config = Some(amm_config);
         self
     }
+
     #[inline(always)]
     pub fn operator(
         &mut self,
@@ -721,6 +746,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.operator = Some(operator);
         self
     }
+
     #[inline(always)]
     pub fn vault_authority(
         &mut self,
@@ -729,6 +755,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.vault_authority = Some(vault_authority);
         self
     }
+
     #[inline(always)]
     pub fn authority(
         &mut self,
@@ -737,6 +764,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.authority = Some(authority);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(
         &mut self,
@@ -745,6 +773,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     #[inline(always)]
     pub fn input_vault(
         &mut self,
@@ -753,6 +782,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.input_vault = Some(input_vault);
         self
     }
+
     #[inline(always)]
     pub fn output_vault(
         &mut self,
@@ -761,6 +791,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.output_vault = Some(output_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_vault(
         &mut self,
@@ -769,6 +800,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve_vault = Some(bonding_curve_vault);
         self
     }
+
     #[inline(always)]
     pub fn bonding_curve_wsol_vault(
         &mut self,
@@ -777,6 +809,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve_wsol_vault = Some(bonding_curve_wsol_vault);
         self
     }
+
     /// token_0 mint, the key must smaller than token_1 mint
     #[inline(always)]
     pub fn input_token_mint(
@@ -786,6 +819,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.input_token_mint = Some(input_token_mint);
         self
     }
+
     /// token_1 mint, the key must greater than token_0 mint
     #[inline(always)]
     pub fn output_token_mint(
@@ -795,6 +829,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.output_token_mint = Some(output_token_mint);
         self
     }
+
     /// input_token_mint and output_token_mint have the same token program
     #[inline(always)]
     pub fn token_program(
@@ -804,6 +839,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn cp_swap_program(
         &mut self,
@@ -812,6 +848,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.cp_swap_program = Some(cp_swap_program);
         self
     }
+
     #[inline(always)]
     pub fn observation_state(
         &mut self,
@@ -820,16 +857,19 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
         self.instruction.observation_state = Some(observation_state);
         self
     }
+
     #[inline(always)]
     pub fn amount_in(&mut self, amount_in: u64) -> &mut Self {
         self.instruction.amount_in = Some(amount_in);
         self
     }
+
     #[inline(always)]
     pub fn minimum_amount_out(&mut self, minimum_amount_out: u64) -> &mut Self {
         self.instruction.minimum_amount_out = Some(minimum_amount_out);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -843,6 +883,7 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -861,10 +902,10 @@ impl<'a, 'b> SwapTokensForSolOnRaydiumCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

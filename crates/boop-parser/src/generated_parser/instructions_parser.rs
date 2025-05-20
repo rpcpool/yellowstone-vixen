@@ -5,40 +5,45 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::instructions::{
-    AddOperators as AddOperatorsIxAccounts, AddOperatorsInstructionArgs as AddOperatorsIxData,
-    BuyToken as BuyTokenIxAccounts, BuyTokenInstructionArgs as BuyTokenIxData,
-    CancelAuthorityTransfer as CancelAuthorityTransferIxAccounts,
-    CloseBondingCurveVault as CloseBondingCurveVaultIxAccounts,
-    CollectTradingFees as CollectTradingFeesIxAccounts,
-    CompleteAuthorityTransfer as CompleteAuthorityTransferIxAccounts,
-    CreateRaydiumPool as CreateRaydiumPoolIxAccounts,
-    CreateRaydiumRandomPool as CreateRaydiumRandomPoolIxAccounts,
-    CreateToken as CreateTokenIxAccounts, CreateTokenFallback as CreateTokenFallbackIxAccounts,
-    CreateTokenFallbackInstructionArgs as CreateTokenFallbackIxData,
-    CreateTokenInstructionArgs as CreateTokenIxData,
-    DeployBondingCurve as DeployBondingCurveIxAccounts,
-    DeployBondingCurveFallback as DeployBondingCurveFallbackIxAccounts,
-    DeployBondingCurveFallbackInstructionArgs as DeployBondingCurveFallbackIxData,
-    DeployBondingCurveInstructionArgs as DeployBondingCurveIxData,
-    DepositIntoRaydium as DepositIntoRaydiumIxAccounts,
-    DepositIntoRaydiumInstructionArgs as DepositIntoRaydiumIxData, Graduate as GraduateIxAccounts,
-    Initialize as InitializeIxAccounts, InitializeInstructionArgs as InitializeIxData,
-    InitiateAuthorityTransfer as InitiateAuthorityTransferIxAccounts,
-    InitiateAuthorityTransferInstructionArgs as InitiateAuthorityTransferIxData,
-    LockRaydiumLiquidity as LockRaydiumLiquidityIxAccounts,
-    RemoveOperators as RemoveOperatorsIxAccounts,
-    RemoveOperatorsInstructionArgs as RemoveOperatorsIxData, SellToken as SellTokenIxAccounts,
-    SellTokenInstructionArgs as SellTokenIxData, SplitTradingFees as SplitTradingFeesIxAccounts,
-    SwapSolForTokensOnRaydium as SwapSolForTokensOnRaydiumIxAccounts,
-    SwapSolForTokensOnRaydiumInstructionArgs as SwapSolForTokensOnRaydiumIxData,
-    SwapTokensForSolOnRaydium as SwapTokensForSolOnRaydiumIxAccounts,
-    SwapTokensForSolOnRaydiumInstructionArgs as SwapTokensForSolOnRaydiumIxData,
-    TogglePaused as TogglePausedIxAccounts, UpdateConfig as UpdateConfigIxAccounts,
-    UpdateConfigInstructionArgs as UpdateConfigIxData,
-};
-use crate::ID;
 use borsh::BorshDeserialize;
+
+use crate::{
+    instructions::{
+        AddOperators as AddOperatorsIxAccounts, AddOperatorsInstructionArgs as AddOperatorsIxData,
+        BuyToken as BuyTokenIxAccounts, BuyTokenInstructionArgs as BuyTokenIxData,
+        CancelAuthorityTransfer as CancelAuthorityTransferIxAccounts,
+        CloseBondingCurveVault as CloseBondingCurveVaultIxAccounts,
+        CollectTradingFees as CollectTradingFeesIxAccounts,
+        CompleteAuthorityTransfer as CompleteAuthorityTransferIxAccounts,
+        CreateRaydiumPool as CreateRaydiumPoolIxAccounts,
+        CreateRaydiumRandomPool as CreateRaydiumRandomPoolIxAccounts,
+        CreateToken as CreateTokenIxAccounts, CreateTokenFallback as CreateTokenFallbackIxAccounts,
+        CreateTokenFallbackInstructionArgs as CreateTokenFallbackIxData,
+        CreateTokenInstructionArgs as CreateTokenIxData,
+        DeployBondingCurve as DeployBondingCurveIxAccounts,
+        DeployBondingCurveFallback as DeployBondingCurveFallbackIxAccounts,
+        DeployBondingCurveFallbackInstructionArgs as DeployBondingCurveFallbackIxData,
+        DeployBondingCurveInstructionArgs as DeployBondingCurveIxData,
+        DepositIntoRaydium as DepositIntoRaydiumIxAccounts,
+        DepositIntoRaydiumInstructionArgs as DepositIntoRaydiumIxData,
+        Graduate as GraduateIxAccounts, Initialize as InitializeIxAccounts,
+        InitializeInstructionArgs as InitializeIxData,
+        InitiateAuthorityTransfer as InitiateAuthorityTransferIxAccounts,
+        InitiateAuthorityTransferInstructionArgs as InitiateAuthorityTransferIxData,
+        LockRaydiumLiquidity as LockRaydiumLiquidityIxAccounts,
+        RemoveOperators as RemoveOperatorsIxAccounts,
+        RemoveOperatorsInstructionArgs as RemoveOperatorsIxData, SellToken as SellTokenIxAccounts,
+        SellTokenInstructionArgs as SellTokenIxData,
+        SplitTradingFees as SplitTradingFeesIxAccounts,
+        SwapSolForTokensOnRaydium as SwapSolForTokensOnRaydiumIxAccounts,
+        SwapSolForTokensOnRaydiumInstructionArgs as SwapSolForTokensOnRaydiumIxData,
+        SwapTokensForSolOnRaydium as SwapTokensForSolOnRaydiumIxAccounts,
+        SwapTokensForSolOnRaydiumInstructionArgs as SwapTokensForSolOnRaydiumIxData,
+        TogglePaused as TogglePausedIxAccounts, UpdateConfig as UpdateConfigIxAccounts,
+        UpdateConfigInstructionArgs as UpdateConfigIxData,
+    },
+    ID,
+};
 
 /// Boop Instructions
 #[derive(Debug)]
@@ -89,9 +94,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = BoopProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "Boop::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "Boop::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -114,9 +117,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -137,7 +138,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: AddOperatorsIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::AddOperators(ix_accounts, de_ix_data))
-            }
+            },
             [138, 127, 14, 91, 38, 87, 115, 105] => {
                 check_min_accounts_req(accounts_len, 13)?;
                 let ix_accounts = BuyTokenIxAccounts {
@@ -157,7 +158,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: BuyTokenIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::BuyToken(ix_accounts, de_ix_data))
-            }
+            },
             [94, 131, 125, 184, 183, 24, 125, 229] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = CancelAuthorityTransferIxAccounts {
@@ -166,7 +167,7 @@ impl InstructionParser {
                     system_program: ix.accounts[2].0.into(),
                 };
                 Ok(BoopProgramIx::CancelAuthorityTransfer(ix_accounts))
-            }
+            },
             [189, 71, 189, 239, 113, 66, 59, 189] => {
                 check_min_accounts_req(accounts_len, 12)?;
                 let ix_accounts = CloseBondingCurveVaultIxAccounts {
@@ -184,7 +185,7 @@ impl InstructionParser {
                     rent: ix.accounts[11].0.into(),
                 };
                 Ok(BoopProgramIx::CloseBondingCurveVault(ix_accounts))
-            }
+            },
             [189, 38, 205, 234, 81, 77, 25, 1] => {
                 check_min_accounts_req(accounts_len, 24)?;
                 let ix_accounts = CollectTradingFeesIxAccounts {
@@ -214,7 +215,7 @@ impl InstructionParser {
                     memo_program: ix.accounts[23].0.into(),
                 };
                 Ok(BoopProgramIx::CollectTradingFees(ix_accounts))
-            }
+            },
             [81, 233, 91, 132, 175, 31, 151, 141] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = CompleteAuthorityTransferIxAccounts {
@@ -223,7 +224,7 @@ impl InstructionParser {
                     system_program: ix.accounts[2].0.into(),
                 };
                 Ok(BoopProgramIx::CompleteAuthorityTransfer(ix_accounts))
-            }
+            },
             [65, 45, 119, 77, 204, 178, 84, 2] => {
                 check_min_accounts_req(accounts_len, 22)?;
                 let ix_accounts = CreateRaydiumPoolIxAccounts {
@@ -251,7 +252,7 @@ impl InstructionParser {
                     rent: ix.accounts[21].0.into(),
                 };
                 Ok(BoopProgramIx::CreateRaydiumPool(ix_accounts))
-            }
+            },
             [78, 44, 173, 29, 132, 180, 4, 172] => {
                 check_min_accounts_req(accounts_len, 22)?;
                 let ix_accounts = CreateRaydiumRandomPoolIxAccounts {
@@ -279,7 +280,7 @@ impl InstructionParser {
                     rent: ix.accounts[21].0.into(),
                 };
                 Ok(BoopProgramIx::CreateRaydiumRandomPool(ix_accounts))
-            }
+            },
             [84, 52, 204, 228, 24, 140, 234, 75] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = CreateTokenIxAccounts {
@@ -294,7 +295,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: CreateTokenIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::CreateToken(ix_accounts, de_ix_data))
-            }
+            },
             [253, 184, 126, 199, 235, 232, 172, 162] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = CreateTokenFallbackIxAccounts {
@@ -310,7 +311,7 @@ impl InstructionParser {
                 let de_ix_data: CreateTokenFallbackIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::CreateTokenFallback(ix_accounts, de_ix_data))
-            }
+            },
             [180, 89, 199, 76, 168, 236, 217, 138] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = DeployBondingCurveIxAccounts {
@@ -328,7 +329,7 @@ impl InstructionParser {
                 let de_ix_data: DeployBondingCurveIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::DeployBondingCurve(ix_accounts, de_ix_data))
-            }
+            },
             [53, 230, 172, 84, 77, 174, 22, 61] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = DeployBondingCurveFallbackIxAccounts {
@@ -349,7 +350,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [168, 89, 99, 30, 117, 49, 88, 224] => {
                 check_min_accounts_req(accounts_len, 21)?;
                 let ix_accounts = DepositIntoRaydiumIxAccounts {
@@ -378,7 +379,7 @@ impl InstructionParser {
                 let de_ix_data: DepositIntoRaydiumIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::DepositIntoRaydium(ix_accounts, de_ix_data))
-            }
+            },
             [45, 235, 225, 181, 17, 218, 64, 130] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = GraduateIxAccounts {
@@ -399,7 +400,7 @@ impl InstructionParser {
                     associated_token_program: ix.accounts[14].0.into(),
                 };
                 Ok(BoopProgramIx::Graduate(ix_accounts))
-            }
+            },
             [175, 175, 109, 31, 13, 152, 155, 237] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = InitializeIxAccounts {
@@ -409,7 +410,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: InitializeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::Initialize(ix_accounts, de_ix_data))
-            }
+            },
             [210, 43, 101, 215, 119, 140, 106, 218] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = InitiateAuthorityTransferIxAccounts {
@@ -423,7 +424,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [173, 255, 148, 6, 122, 99, 140, 22] => {
                 check_min_accounts_req(accounts_len, 22)?;
                 let ix_accounts = LockRaydiumLiquidityIxAccounts {
@@ -451,7 +452,7 @@ impl InstructionParser {
                     metadata_program: ix.accounts[21].0.into(),
                 };
                 Ok(BoopProgramIx::LockRaydiumLiquidity(ix_accounts))
-            }
+            },
             [42, 20, 89, 83, 222, 37, 4, 109] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = RemoveOperatorsIxAccounts {
@@ -462,7 +463,7 @@ impl InstructionParser {
                 let de_ix_data: RemoveOperatorsIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::RemoveOperators(ix_accounts, de_ix_data))
-            }
+            },
             [109, 61, 40, 187, 230, 176, 135, 174] => {
                 check_min_accounts_req(accounts_len, 12)?;
                 let ix_accounts = SellTokenIxAccounts {
@@ -481,7 +482,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: SellTokenIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::SellToken(ix_accounts, de_ix_data))
-            }
+            },
             [96, 126, 225, 47, 185, 213, 50, 58] => {
                 check_min_accounts_req(accounts_len, 24)?;
                 let ix_accounts = SplitTradingFeesIxAccounts {
@@ -511,7 +512,7 @@ impl InstructionParser {
                     fee_splitter_reward_pool_program: ix.accounts[23].0.into(),
                 };
                 Ok(BoopProgramIx::SplitTradingFees(ix_accounts))
-            }
+            },
             [107, 248, 131, 239, 152, 234, 54, 35] => {
                 check_min_accounts_req(accounts_len, 16)?;
                 let ix_accounts = SwapSolForTokensOnRaydiumIxAccounts {
@@ -538,7 +539,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [216, 172, 130, 148, 34, 98, 215, 163] => {
                 check_min_accounts_req(accounts_len, 16)?;
                 let ix_accounts = SwapTokensForSolOnRaydiumIxAccounts {
@@ -565,7 +566,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [54, 83, 147, 198, 123, 97, 218, 72] => {
                 check_min_accounts_req(accounts_len, 2)?;
                 let ix_accounts = TogglePausedIxAccounts {
@@ -573,7 +574,7 @@ impl InstructionParser {
                     config: ix.accounts[1].0.into(),
                 };
                 Ok(BoopProgramIx::TogglePaused(ix_accounts))
-            }
+            },
             [29, 158, 252, 191, 10, 83, 219, 99] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = UpdateConfigIxAccounts {
@@ -583,7 +584,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: UpdateConfigIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(BoopProgramIx::UpdateConfig(ix_accounts, de_ix_data))
-            }
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
@@ -598,7 +599,7 @@ impl InstructionParser {
                     program = ID.to_string(),
                     ix = ix.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_instruction",
@@ -608,7 +609,7 @@ impl InstructionParser {
                     discriminator = ?ix_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         ix
@@ -630,11 +631,10 @@ pub fn check_min_accounts_req(
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{BoopProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::AddOperatorsIxAccounts;
+    use super::{AddOperatorsIxAccounts, BoopProgramIx, InstructionParser};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::AddOperatorsIxAccounts> for AddOperatorsIxAccounts {
         fn into_proto(self) -> proto_def::AddOperatorsIxAccounts {
             proto_def::AddOperatorsIxAccounts {
@@ -1432,8 +1432,6 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

@@ -5,11 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::accounts::AmmConfig;
-use crate::accounts::BondingCurve;
-use crate::accounts::Config;
-use crate::accounts::LockedCpLiquidityState;
-use crate::ID;
+use crate::{
+    accounts::{AmmConfig, BondingCurve, Config, LockedCpLiquidityState},
+    ID,
+};
 
 /// Boop Program State
 #[allow(clippy::large_enum_variant)]
@@ -34,7 +33,7 @@ impl BoopProgramState {
             )),
             [155, 12, 170, 224, 30, 250, 204, 130] => {
                 Ok(BoopProgramState::Config(Config::from_bytes(data_bytes)?))
-            }
+            },
             [25, 10, 238, 197, 207, 234, 73, 22] => Ok(BoopProgramState::LockedCpLiquidityState(
                 LockedCpLiquidityState::from_bytes(data_bytes)?,
             )),
@@ -52,7 +51,7 @@ impl BoopProgramState {
                     program = ID.to_string(),
                     account = acc.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_account",
@@ -62,7 +61,7 @@ impl BoopProgramState {
                     discriminator = ?acc_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         acc
@@ -76,9 +75,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = BoopProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "boop::AccountParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "boop::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -101,18 +98,15 @@ impl yellowstone_vixen_core::Parser for AccountParser {
 
 impl yellowstone_vixen_core::ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{AccountParser, BoopProgramState};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::AmmConfig;
+    use super::{AccountParser, AmmConfig, BoopProgramState};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::AmmConfig> for AmmConfig {
         fn into_proto(self) -> proto_def::AmmConfig {
             proto_def::AmmConfig {
@@ -199,16 +193,16 @@ mod proto_parser {
             let state_oneof = match self {
                 BoopProgramState::AmmConfig(data) => {
                     proto_def::program_state::StateOneof::AmmConfig(data.into_proto())
-                }
+                },
                 BoopProgramState::BondingCurve(data) => {
                     proto_def::program_state::StateOneof::BondingCurve(data.into_proto())
-                }
+                },
                 BoopProgramState::Config(data) => {
                     proto_def::program_state::StateOneof::Config(data.into_proto())
-                }
+                },
                 BoopProgramState::LockedCpLiquidityState(data) => {
                     proto_def::program_state::StateOneof::LockedCpLiquidityState(data.into_proto())
-                }
+                },
             };
 
             proto_def::ProgramState {
@@ -220,8 +214,6 @@ mod proto_parser {
     impl ParseProto for AccountParser {
         type Message = proto_def::ProgramState;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }
