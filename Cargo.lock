@@ -8145,6 +8145,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-meteora-dbc-parser"
+version = "0.3.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen-meteora-parser"
 version = "0.3.0"
 dependencies = [
