@@ -5,11 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::accounts::GlobalConfig;
-use crate::accounts::PlatformConfig;
-use crate::accounts::PoolState;
-use crate::accounts::VestingRecord;
-use crate::ID;
+use crate::{
+    accounts::{GlobalConfig, PlatformConfig, PoolState, VestingRecord},
+    ID,
+};
 
 /// RaydiumLaunchpad Program State
 #[allow(clippy::large_enum_variant)]
@@ -33,7 +32,7 @@ impl RaydiumLaunchpadProgramState {
                 Ok(RaydiumLaunchpadProgramState::PlatformConfig(
                     PlatformConfig::from_bytes(data_bytes)?,
                 ))
-            }
+            },
             [247, 237, 227, 245, 215, 195, 222, 70] => Ok(RaydiumLaunchpadProgramState::PoolState(
                 PoolState::from_bytes(data_bytes)?,
             )),
@@ -54,7 +53,7 @@ impl RaydiumLaunchpadProgramState {
                     program = ID.to_string(),
                     account = acc.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_account",
@@ -64,7 +63,7 @@ impl RaydiumLaunchpadProgramState {
                     discriminator = ?acc_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         acc
@@ -78,9 +77,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = RaydiumLaunchpadProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "raydium_launchpad::AccountParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "raydium_launchpad::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -103,18 +100,15 @@ impl yellowstone_vixen_core::Parser for AccountParser {
 
 impl yellowstone_vixen_core::ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{AccountParser, RaydiumLaunchpadProgramState};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::GlobalConfig;
+    use super::{AccountParser, GlobalConfig, RaydiumLaunchpadProgramState};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::GlobalConfig> for GlobalConfig {
         fn into_proto(self) -> proto_def::GlobalConfig {
             proto_def::GlobalConfig {
@@ -207,16 +201,16 @@ mod proto_parser {
             let state_oneof = match self {
                 RaydiumLaunchpadProgramState::GlobalConfig(data) => {
                     proto_def::program_state::StateOneof::GlobalConfig(data.into_proto())
-                }
+                },
                 RaydiumLaunchpadProgramState::PlatformConfig(data) => {
                     proto_def::program_state::StateOneof::PlatformConfig(data.into_proto())
-                }
+                },
                 RaydiumLaunchpadProgramState::PoolState(data) => {
                     proto_def::program_state::StateOneof::PoolState(data.into_proto())
-                }
+                },
                 RaydiumLaunchpadProgramState::VestingRecord(data) => {
                     proto_def::program_state::StateOneof::VestingRecord(data.into_proto())
-                }
+                },
             };
 
             proto_def::ProgramState {
@@ -228,8 +222,6 @@ mod proto_parser {
     impl ParseProto for AccountParser {
         type Message = proto_def::ProgramState;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -42,6 +41,7 @@ impl ClaimVestedToken {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -115,9 +115,7 @@ impl ClaimVestedTokenInstructionData {
 }
 
 impl Default for ClaimVestedTokenInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `ClaimVestedToken`.
@@ -150,15 +148,15 @@ pub struct ClaimVestedTokenBuilder {
 }
 
 impl ClaimVestedTokenBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// The beneficiary of the vesting account
     #[inline(always)]
     pub fn beneficiary(&mut self, beneficiary: solana_program::pubkey::Pubkey) -> &mut Self {
         self.beneficiary = Some(beneficiary);
         self
     }
+
     /// PDA that acts as the authority for pool vault and mint operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -166,6 +164,7 @@ impl ClaimVestedTokenBuilder {
         self.authority = Some(authority);
         self
     }
+
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
@@ -173,12 +172,14 @@ impl ClaimVestedTokenBuilder {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// The vesting record account
     #[inline(always)]
     pub fn vesting_record(&mut self, vesting_record: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vesting_record = Some(vesting_record);
         self
     }
+
     /// The pool's vault for base tokens
     /// Will be debited to send tokens to the user
     #[inline(always)]
@@ -186,6 +187,7 @@ impl ClaimVestedTokenBuilder {
         self.base_vault = Some(base_vault);
         self
     }
+
     #[inline(always)]
     pub fn user_base_token(
         &mut self,
@@ -194,6 +196,7 @@ impl ClaimVestedTokenBuilder {
         self.user_base_token = Some(user_base_token);
         self
     }
+
     /// The mint for the base token (token being sold)
     /// Created in this instruction with specified decimals
     #[inline(always)]
@@ -204,6 +207,7 @@ impl ClaimVestedTokenBuilder {
         self.base_token_mint = Some(base_token_mint);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// SPL Token program for the base token
     /// Must be the standard Token program
@@ -215,6 +219,7 @@ impl ClaimVestedTokenBuilder {
         self.base_token_program = Some(base_token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
@@ -222,6 +227,7 @@ impl ClaimVestedTokenBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     /// Required for associated token program
     #[inline(always)]
@@ -232,6 +238,7 @@ impl ClaimVestedTokenBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -241,6 +248,7 @@ impl ClaimVestedTokenBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -250,6 +258,7 @@ impl ClaimVestedTokenBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = ClaimVestedToken {
@@ -354,10 +363,12 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
             associated_token_program: accounts.associated_token_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -369,6 +380,7 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -376,6 +388,7 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -504,6 +517,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// The beneficiary of the vesting account
     #[inline(always)]
     pub fn beneficiary(
@@ -513,6 +527,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.beneficiary = Some(beneficiary);
         self
     }
+
     /// PDA that acts as the authority for pool vault and mint operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -523,6 +538,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.authority = Some(authority);
         self
     }
+
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
@@ -533,6 +549,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// The vesting record account
     #[inline(always)]
     pub fn vesting_record(
@@ -542,6 +559,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.vesting_record = Some(vesting_record);
         self
     }
+
     /// The pool's vault for base tokens
     /// Will be debited to send tokens to the user
     #[inline(always)]
@@ -552,6 +570,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
+
     #[inline(always)]
     pub fn user_base_token(
         &mut self,
@@ -560,6 +579,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.user_base_token = Some(user_base_token);
         self
     }
+
     /// The mint for the base token (token being sold)
     /// Created in this instruction with specified decimals
     #[inline(always)]
@@ -570,6 +590,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.base_token_mint = Some(base_token_mint);
         self
     }
+
     /// SPL Token program for the base token
     /// Must be the standard Token program
     #[inline(always)]
@@ -580,6 +601,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.base_token_program = Some(base_token_program);
         self
     }
+
     /// Required for account creation
     #[inline(always)]
     pub fn system_program(
@@ -589,6 +611,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Required for associated token program
     #[inline(always)]
     pub fn associated_token_program(
@@ -598,6 +621,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -611,6 +635,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -629,10 +654,10 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

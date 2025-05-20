@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -60,6 +59,7 @@ impl SellExactOut {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -155,9 +155,7 @@ impl SellExactOutInstructionData {
 }
 
 impl Default for SellExactOutInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -211,9 +209,8 @@ pub struct SellExactOutBuilder {
 }
 
 impl SellExactOutBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// The user performing the swap operation
     /// Must sign the transaction and pay for fees
     #[inline(always)]
@@ -221,6 +218,7 @@ impl SellExactOutBuilder {
         self.payer = Some(payer);
         self
     }
+
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -228,6 +226,7 @@ impl SellExactOutBuilder {
         self.authority = Some(authority);
         self
     }
+
     /// Global configuration account containing protocol-wide settings
     /// Used to read protocol fee rates and curve type
     #[inline(always)]
@@ -235,6 +234,7 @@ impl SellExactOutBuilder {
         self.global_config = Some(global_config);
         self
     }
+
     /// Platform configuration account containing platform-wide settings
     /// Used to read platform fee rate
     #[inline(always)]
@@ -245,6 +245,7 @@ impl SellExactOutBuilder {
         self.platform_config = Some(platform_config);
         self
     }
+
     /// The pool state account where the swap will be performed
     /// Contains current pool parameters and balances
     #[inline(always)]
@@ -252,6 +253,7 @@ impl SellExactOutBuilder {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// The user's token account for base tokens (tokens being bought)
     /// Will receive the output tokens after the swap
     #[inline(always)]
@@ -262,6 +264,7 @@ impl SellExactOutBuilder {
         self.user_base_token = Some(user_base_token);
         self
     }
+
     /// The user's token account for quote tokens (tokens being sold)
     /// Will be debited for the input amount
     #[inline(always)]
@@ -272,6 +275,7 @@ impl SellExactOutBuilder {
         self.user_quote_token = Some(user_quote_token);
         self
     }
+
     /// The pool's vault for base tokens
     /// Will be debited to send tokens to the user
     #[inline(always)]
@@ -279,6 +283,7 @@ impl SellExactOutBuilder {
         self.base_vault = Some(base_vault);
         self
     }
+
     /// The pool's vault for quote tokens
     /// Will receive the input tokens from the user
     #[inline(always)]
@@ -286,6 +291,7 @@ impl SellExactOutBuilder {
         self.quote_vault = Some(quote_vault);
         self
     }
+
     /// The mint of the base token
     /// Used for transfer fee calculations if applicable
     #[inline(always)]
@@ -296,6 +302,7 @@ impl SellExactOutBuilder {
         self.base_token_mint = Some(base_token_mint);
         self
     }
+
     /// The mint of the quote token
     #[inline(always)]
     pub fn quote_token_mint(
@@ -305,6 +312,7 @@ impl SellExactOutBuilder {
         self.quote_token_mint = Some(quote_token_mint);
         self
     }
+
     /// SPL Token program for base token transfers
     #[inline(always)]
     pub fn base_token_program(
@@ -314,6 +322,7 @@ impl SellExactOutBuilder {
         self.base_token_program = Some(base_token_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// SPL Token program for quote token transfers
     #[inline(always)]
@@ -324,6 +333,7 @@ impl SellExactOutBuilder {
         self.quote_token_program = Some(quote_token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -332,26 +342,31 @@ impl SellExactOutBuilder {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn amount_out(&mut self, amount_out: u64) -> &mut Self {
         self.amount_out = Some(amount_out);
         self
     }
+
     #[inline(always)]
     pub fn maximum_amount_in(&mut self, maximum_amount_in: u64) -> &mut Self {
         self.maximum_amount_in = Some(maximum_amount_in);
         self
     }
+
     #[inline(always)]
     pub fn share_fee_rate(&mut self, share_fee_rate: u64) -> &mut Self {
         self.share_fee_rate = Some(share_fee_rate);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -361,6 +376,7 @@ impl SellExactOutBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -370,6 +386,7 @@ impl SellExactOutBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = SellExactOut {
@@ -527,10 +544,12 @@ impl<'a, 'b> SellExactOutCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -542,6 +561,7 @@ impl<'a, 'b> SellExactOutCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -549,6 +569,7 @@ impl<'a, 'b> SellExactOutCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -717,6 +738,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// The user performing the swap operation
     /// Must sign the transaction and pay for fees
     #[inline(always)]
@@ -724,6 +746,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
+
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -734,6 +757,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.authority = Some(authority);
         self
     }
+
     /// Global configuration account containing protocol-wide settings
     /// Used to read protocol fee rates and curve type
     #[inline(always)]
@@ -744,6 +768,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.global_config = Some(global_config);
         self
     }
+
     /// Platform configuration account containing platform-wide settings
     /// Used to read platform fee rate
     #[inline(always)]
@@ -754,6 +779,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.platform_config = Some(platform_config);
         self
     }
+
     /// The pool state account where the swap will be performed
     /// Contains current pool parameters and balances
     #[inline(always)]
@@ -764,6 +790,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// The user's token account for base tokens (tokens being bought)
     /// Will receive the output tokens after the swap
     #[inline(always)]
@@ -774,6 +801,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.user_base_token = Some(user_base_token);
         self
     }
+
     /// The user's token account for quote tokens (tokens being sold)
     /// Will be debited for the input amount
     #[inline(always)]
@@ -784,6 +812,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.user_quote_token = Some(user_quote_token);
         self
     }
+
     /// The pool's vault for base tokens
     /// Will be debited to send tokens to the user
     #[inline(always)]
@@ -794,6 +823,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
+
     /// The pool's vault for quote tokens
     /// Will receive the input tokens from the user
     #[inline(always)]
@@ -804,6 +834,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.quote_vault = Some(quote_vault);
         self
     }
+
     /// The mint of the base token
     /// Used for transfer fee calculations if applicable
     #[inline(always)]
@@ -814,6 +845,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.base_token_mint = Some(base_token_mint);
         self
     }
+
     /// The mint of the quote token
     #[inline(always)]
     pub fn quote_token_mint(
@@ -823,6 +855,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.quote_token_mint = Some(quote_token_mint);
         self
     }
+
     /// SPL Token program for base token transfers
     #[inline(always)]
     pub fn base_token_program(
@@ -832,6 +865,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.base_token_program = Some(base_token_program);
         self
     }
+
     /// SPL Token program for quote token transfers
     #[inline(always)]
     pub fn quote_token_program(
@@ -841,6 +875,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.quote_token_program = Some(quote_token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -849,6 +884,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(
         &mut self,
@@ -857,21 +893,25 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn amount_out(&mut self, amount_out: u64) -> &mut Self {
         self.instruction.amount_out = Some(amount_out);
         self
     }
+
     #[inline(always)]
     pub fn maximum_amount_in(&mut self, maximum_amount_in: u64) -> &mut Self {
         self.instruction.maximum_amount_in = Some(maximum_amount_in);
         self
     }
+
     #[inline(always)]
     pub fn share_fee_rate(&mut self, share_fee_rate: u64) -> &mut Self {
         self.instruction.share_fee_rate = Some(share_fee_rate);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -885,6 +925,7 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -903,10 +944,10 @@ impl<'a, 'b> SellExactOutCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

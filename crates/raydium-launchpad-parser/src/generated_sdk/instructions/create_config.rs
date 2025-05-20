@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -41,6 +40,7 @@ impl CreateConfig {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -108,9 +108,7 @@ impl CreateConfigInstructionData {
 }
 
 impl Default for CreateConfigInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -152,9 +150,8 @@ pub struct CreateConfigBuilder {
 }
 
 impl CreateConfigBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// `[optional account, default to 'GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ']`
     /// The protocol owner/admin account
     /// Must match the predefined admin address
@@ -164,6 +161,7 @@ impl CreateConfigBuilder {
         self.owner = Some(owner);
         self
     }
+
     /// Global configuration account that stores protocol-wide settings
     /// PDA generated using GLOBAL_CONFIG_SEED, quote token mint, and curve type
     /// Stores fee rates and protocol parameters
@@ -172,6 +170,7 @@ impl CreateConfigBuilder {
         self.global_config = Some(global_config);
         self
     }
+
     /// The mint address of the quote token (token used for buying)
     /// This will be the standard token used for all pools with this config
     #[inline(always)]
@@ -182,6 +181,7 @@ impl CreateConfigBuilder {
         self.quote_token_mint = Some(quote_token_mint);
         self
     }
+
     /// Account that will receive protocol fees
     #[inline(always)]
     pub fn protocol_fee_owner(
@@ -191,6 +191,7 @@ impl CreateConfigBuilder {
         self.protocol_fee_owner = Some(protocol_fee_owner);
         self
     }
+
     /// Account that will receive migrate fees
     #[inline(always)]
     pub fn migrate_fee_owner(
@@ -200,6 +201,7 @@ impl CreateConfigBuilder {
         self.migrate_fee_owner = Some(migrate_fee_owner);
         self
     }
+
     /// The control wallet address for migrating to amm
     #[inline(always)]
     pub fn migrate_to_amm_wallet(
@@ -209,6 +211,7 @@ impl CreateConfigBuilder {
         self.migrate_to_amm_wallet = Some(migrate_to_amm_wallet);
         self
     }
+
     /// The control wallet address for migrating to cpswap
     #[inline(always)]
     pub fn migrate_to_cpswap_wallet(
@@ -218,6 +221,7 @@ impl CreateConfigBuilder {
         self.migrate_to_cpswap_wallet = Some(migrate_to_cpswap_wallet);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
@@ -225,26 +229,31 @@ impl CreateConfigBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn curve_type(&mut self, curve_type: u8) -> &mut Self {
         self.curve_type = Some(curve_type);
         self
     }
+
     #[inline(always)]
     pub fn index(&mut self, index: u16) -> &mut Self {
         self.index = Some(index);
         self
     }
+
     #[inline(always)]
     pub fn migrate_fee(&mut self, migrate_fee: u64) -> &mut Self {
         self.migrate_fee = Some(migrate_fee);
         self
     }
+
     #[inline(always)]
     pub fn trade_fee_rate(&mut self, trade_fee_rate: u64) -> &mut Self {
         self.trade_fee_rate = Some(trade_fee_rate);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -254,6 +263,7 @@ impl CreateConfigBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -263,6 +273,7 @@ impl CreateConfigBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CreateConfig {
@@ -374,10 +385,12 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -389,6 +402,7 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -396,6 +410,7 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -516,6 +531,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// The protocol owner/admin account
     /// Must match the predefined admin address
     /// Has authority to create and modify protocol configurations
@@ -524,6 +540,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.owner = Some(owner);
         self
     }
+
     /// Global configuration account that stores protocol-wide settings
     /// PDA generated using GLOBAL_CONFIG_SEED, quote token mint, and curve type
     /// Stores fee rates and protocol parameters
@@ -535,6 +552,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.global_config = Some(global_config);
         self
     }
+
     /// The mint address of the quote token (token used for buying)
     /// This will be the standard token used for all pools with this config
     #[inline(always)]
@@ -545,6 +563,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.quote_token_mint = Some(quote_token_mint);
         self
     }
+
     /// Account that will receive protocol fees
     #[inline(always)]
     pub fn protocol_fee_owner(
@@ -554,6 +573,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.protocol_fee_owner = Some(protocol_fee_owner);
         self
     }
+
     /// Account that will receive migrate fees
     #[inline(always)]
     pub fn migrate_fee_owner(
@@ -563,6 +583,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.migrate_fee_owner = Some(migrate_fee_owner);
         self
     }
+
     /// The control wallet address for migrating to amm
     #[inline(always)]
     pub fn migrate_to_amm_wallet(
@@ -572,6 +593,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.migrate_to_amm_wallet = Some(migrate_to_amm_wallet);
         self
     }
+
     /// The control wallet address for migrating to cpswap
     #[inline(always)]
     pub fn migrate_to_cpswap_wallet(
@@ -581,6 +603,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.migrate_to_cpswap_wallet = Some(migrate_to_cpswap_wallet);
         self
     }
+
     /// Required for account creation
     #[inline(always)]
     pub fn system_program(
@@ -590,26 +613,31 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn curve_type(&mut self, curve_type: u8) -> &mut Self {
         self.instruction.curve_type = Some(curve_type);
         self
     }
+
     #[inline(always)]
     pub fn index(&mut self, index: u16) -> &mut Self {
         self.instruction.index = Some(index);
         self
     }
+
     #[inline(always)]
     pub fn migrate_fee(&mut self, migrate_fee: u64) -> &mut Self {
         self.instruction.migrate_fee = Some(migrate_fee);
         self
     }
+
     #[inline(always)]
     pub fn trade_fee_rate(&mut self, trade_fee_rate: u64) -> &mut Self {
         self.instruction.trade_fee_rate = Some(trade_fee_rate);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -623,6 +651,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -641,10 +670,10 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

@@ -22,19 +22,9 @@ pub(crate) mod r#sell_exact_out;
 pub(crate) mod r#update_config;
 pub(crate) mod r#update_platform_config;
 
-pub use self::r#buy_exact_in::*;
-pub use self::r#buy_exact_out::*;
-pub use self::r#claim_platform_fee::*;
-pub use self::r#claim_vested_token::*;
-pub use self::r#collect_fee::*;
-pub use self::r#collect_migrate_fee::*;
-pub use self::r#create_config::*;
-pub use self::r#create_platform_config::*;
-pub use self::r#create_vesting_account::*;
-pub use self::r#initialize::*;
-pub use self::r#migrate_to_amm::*;
-pub use self::r#migrate_to_cpswap::*;
-pub use self::r#sell_exact_in::*;
-pub use self::r#sell_exact_out::*;
-pub use self::r#update_config::*;
-pub use self::r#update_platform_config::*;
+pub use self::{
+    r#buy_exact_in::*, r#buy_exact_out::*, r#claim_platform_fee::*, r#claim_vested_token::*,
+    r#collect_fee::*, r#collect_migrate_fee::*, r#create_config::*, r#create_platform_config::*,
+    r#create_vesting_account::*, r#initialize::*, r#migrate_to_amm::*, r#migrate_to_cpswap::*,
+    r#sell_exact_in::*, r#sell_exact_out::*, r#update_config::*, r#update_platform_config::*,
+};

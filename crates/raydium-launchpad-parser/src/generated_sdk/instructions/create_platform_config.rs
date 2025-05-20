@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::MigrateNftInfo;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 /// Accounts.
 #[derive(Debug)]
@@ -31,6 +31,7 @@ impl CreatePlatformConfig {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -87,9 +88,7 @@ impl CreatePlatformConfigInstructionData {
 }
 
 impl Default for CreatePlatformConfigInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -127,15 +126,15 @@ pub struct CreatePlatformConfigBuilder {
 }
 
 impl CreatePlatformConfigBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// The account paying for the initialization costs
     #[inline(always)]
     pub fn platform_admin(&mut self, platform_admin: solana_program::pubkey::Pubkey) -> &mut Self {
         self.platform_admin = Some(platform_admin);
         self
     }
+
     #[inline(always)]
     pub fn platform_fee_wallet(
         &mut self,
@@ -144,6 +143,7 @@ impl CreatePlatformConfigBuilder {
         self.platform_fee_wallet = Some(platform_fee_wallet);
         self
     }
+
     #[inline(always)]
     pub fn platform_nft_wallet(
         &mut self,
@@ -152,6 +152,7 @@ impl CreatePlatformConfigBuilder {
         self.platform_nft_wallet = Some(platform_nft_wallet);
         self
     }
+
     /// The platform config account
     #[inline(always)]
     pub fn platform_config(
@@ -161,6 +162,7 @@ impl CreatePlatformConfigBuilder {
         self.platform_config = Some(platform_config);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
@@ -168,31 +170,37 @@ impl CreatePlatformConfigBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn migrate_nft_info(&mut self, migrate_nft_info: MigrateNftInfo) -> &mut Self {
         self.migrate_nft_info = Some(migrate_nft_info);
         self
     }
+
     #[inline(always)]
     pub fn fee_rate(&mut self, fee_rate: u64) -> &mut Self {
         self.fee_rate = Some(fee_rate);
         self
     }
+
     #[inline(always)]
     pub fn name(&mut self, name: String) -> &mut Self {
         self.name = Some(name);
         self
     }
+
     #[inline(always)]
     pub fn web(&mut self, web: String) -> &mut Self {
         self.web = Some(web);
         self
     }
+
     #[inline(always)]
     pub fn img(&mut self, img: String) -> &mut Self {
         self.img = Some(img);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -202,6 +210,7 @@ impl CreatePlatformConfigBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -211,6 +220,7 @@ impl CreatePlatformConfigBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CreatePlatformConfig {
@@ -289,10 +299,12 @@ impl<'a, 'b> CreatePlatformConfigCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -304,6 +316,7 @@ impl<'a, 'b> CreatePlatformConfigCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -311,6 +324,7 @@ impl<'a, 'b> CreatePlatformConfigCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -411,6 +425,7 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// The account paying for the initialization costs
     #[inline(always)]
     pub fn platform_admin(
@@ -420,6 +435,7 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
         self.instruction.platform_admin = Some(platform_admin);
         self
     }
+
     #[inline(always)]
     pub fn platform_fee_wallet(
         &mut self,
@@ -428,6 +444,7 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
         self.instruction.platform_fee_wallet = Some(platform_fee_wallet);
         self
     }
+
     #[inline(always)]
     pub fn platform_nft_wallet(
         &mut self,
@@ -436,6 +453,7 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
         self.instruction.platform_nft_wallet = Some(platform_nft_wallet);
         self
     }
+
     /// The platform config account
     #[inline(always)]
     pub fn platform_config(
@@ -445,6 +463,7 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
         self.instruction.platform_config = Some(platform_config);
         self
     }
+
     /// Required for account creation
     #[inline(always)]
     pub fn system_program(
@@ -454,31 +473,37 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn migrate_nft_info(&mut self, migrate_nft_info: MigrateNftInfo) -> &mut Self {
         self.instruction.migrate_nft_info = Some(migrate_nft_info);
         self
     }
+
     #[inline(always)]
     pub fn fee_rate(&mut self, fee_rate: u64) -> &mut Self {
         self.instruction.fee_rate = Some(fee_rate);
         self
     }
+
     #[inline(always)]
     pub fn name(&mut self, name: String) -> &mut Self {
         self.instruction.name = Some(name);
         self
     }
+
     #[inline(always)]
     pub fn web(&mut self, web: String) -> &mut Self {
         self.instruction.web = Some(web);
         self
     }
+
     #[inline(always)]
     pub fn img(&mut self, img: String) -> &mut Self {
         self.instruction.img = Some(img);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -492,6 +517,7 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -510,10 +536,10 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

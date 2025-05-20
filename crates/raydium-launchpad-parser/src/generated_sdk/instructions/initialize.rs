@@ -5,11 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::CurveParams;
-use crate::generated::types::MintParams;
-use crate::generated::types::VestingParams;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
+
+use crate::generated::types::{CurveParams, MintParams, VestingParams};
 
 /// Accounts.
 #[derive(Debug)]
@@ -71,6 +69,7 @@ impl Initialize {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -178,9 +177,7 @@ impl InitializeInstructionData {
 }
 
 impl Default for InitializeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -240,9 +237,8 @@ pub struct InitializeBuilder {
 }
 
 impl InitializeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     #[inline(always)]
@@ -250,11 +246,13 @@ impl InitializeBuilder {
         self.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn creator(&mut self, creator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
+
     /// Global configuration account containing protocol-wide settings
     /// Includes settings like quote token mint and fee parameters
     #[inline(always)]
@@ -262,6 +260,7 @@ impl InitializeBuilder {
         self.global_config = Some(global_config);
         self
     }
+
     /// Platform configuration account containing platform info
     /// Includes settings like the fee_rate, name, web, img of the platform
     #[inline(always)]
@@ -272,6 +271,7 @@ impl InitializeBuilder {
         self.platform_config = Some(platform_config);
         self
     }
+
     /// PDA that acts as the authority for pool vault and mint operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -279,6 +279,7 @@ impl InitializeBuilder {
         self.authority = Some(authority);
         self
     }
+
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
@@ -286,6 +287,7 @@ impl InitializeBuilder {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// The mint for the base token (token being sold)
     /// Created in this instruction with specified decimals
     #[inline(always)]
@@ -293,6 +295,7 @@ impl InitializeBuilder {
         self.base_mint = Some(base_mint);
         self
     }
+
     /// The mint for the quote token (token used to buy)
     /// Must match the quote_mint specified in global config
     #[inline(always)]
@@ -300,6 +303,7 @@ impl InitializeBuilder {
         self.quote_mint = Some(quote_mint);
         self
     }
+
     /// Token account that holds the pool's base tokens
     /// PDA generated using POOL_VAULT_SEED
     #[inline(always)]
@@ -307,6 +311,7 @@ impl InitializeBuilder {
         self.base_vault = Some(base_vault);
         self
     }
+
     /// Token account that holds the pool's quote tokens
     /// PDA generated using POOL_VAULT_SEED
     #[inline(always)]
@@ -314,6 +319,7 @@ impl InitializeBuilder {
         self.quote_vault = Some(quote_vault);
         self
     }
+
     /// Account to store the base token's metadata
     /// Created using Metaplex metadata program
     #[inline(always)]
@@ -324,6 +330,7 @@ impl InitializeBuilder {
         self.metadata_account = Some(metadata_account);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// SPL Token program for the base token
     /// Must be the standard Token program
@@ -335,6 +342,7 @@ impl InitializeBuilder {
         self.base_token_program = Some(base_token_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// SPL Token program for the quote token
     #[inline(always)]
@@ -345,6 +353,7 @@ impl InitializeBuilder {
         self.quote_token_program = Some(quote_token_program);
         self
     }
+
     /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
     /// Metaplex Token Metadata program
     /// Used to create metadata for the base token
@@ -356,6 +365,7 @@ impl InitializeBuilder {
         self.metadata_program = Some(metadata_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
@@ -363,6 +373,7 @@ impl InitializeBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Required for rent exempt calculations
     #[inline(always)]
@@ -370,6 +381,7 @@ impl InitializeBuilder {
         self.rent_program = Some(rent_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -378,26 +390,31 @@ impl InitializeBuilder {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn base_mint_param(&mut self, base_mint_param: MintParams) -> &mut Self {
         self.base_mint_param = Some(base_mint_param);
         self
     }
+
     #[inline(always)]
     pub fn curve_param(&mut self, curve_param: CurveParams) -> &mut Self {
         self.curve_param = Some(curve_param);
         self
     }
+
     #[inline(always)]
     pub fn vesting_param(&mut self, vesting_param: VestingParams) -> &mut Self {
         self.vesting_param = Some(vesting_param);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -407,6 +424,7 @@ impl InitializeBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -416,6 +434,7 @@ impl InitializeBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = Initialize {
@@ -601,10 +620,12 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -616,6 +637,7 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -623,6 +645,7 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -812,6 +835,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     #[inline(always)]
@@ -819,6 +843,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn creator(
         &mut self,
@@ -827,6 +852,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.creator = Some(creator);
         self
     }
+
     /// Global configuration account containing protocol-wide settings
     /// Includes settings like quote token mint and fee parameters
     #[inline(always)]
@@ -837,6 +863,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.global_config = Some(global_config);
         self
     }
+
     /// Platform configuration account containing platform info
     /// Includes settings like the fee_rate, name, web, img of the platform
     #[inline(always)]
@@ -847,6 +874,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.platform_config = Some(platform_config);
         self
     }
+
     /// PDA that acts as the authority for pool vault and mint operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -857,6 +885,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.authority = Some(authority);
         self
     }
+
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
@@ -867,6 +896,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// The mint for the base token (token being sold)
     /// Created in this instruction with specified decimals
     #[inline(always)]
@@ -877,6 +907,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.base_mint = Some(base_mint);
         self
     }
+
     /// The mint for the quote token (token used to buy)
     /// Must match the quote_mint specified in global config
     #[inline(always)]
@@ -887,6 +918,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.quote_mint = Some(quote_mint);
         self
     }
+
     /// Token account that holds the pool's base tokens
     /// PDA generated using POOL_VAULT_SEED
     #[inline(always)]
@@ -897,6 +929,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
+
     /// Token account that holds the pool's quote tokens
     /// PDA generated using POOL_VAULT_SEED
     #[inline(always)]
@@ -907,6 +940,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.quote_vault = Some(quote_vault);
         self
     }
+
     /// Account to store the base token's metadata
     /// Created using Metaplex metadata program
     #[inline(always)]
@@ -917,6 +951,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.metadata_account = Some(metadata_account);
         self
     }
+
     /// SPL Token program for the base token
     /// Must be the standard Token program
     #[inline(always)]
@@ -927,6 +962,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.base_token_program = Some(base_token_program);
         self
     }
+
     /// SPL Token program for the quote token
     #[inline(always)]
     pub fn quote_token_program(
@@ -936,6 +972,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.quote_token_program = Some(quote_token_program);
         self
     }
+
     /// Metaplex Token Metadata program
     /// Used to create metadata for the base token
     #[inline(always)]
@@ -946,6 +983,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.metadata_program = Some(metadata_program);
         self
     }
+
     /// Required for account creation
     #[inline(always)]
     pub fn system_program(
@@ -955,6 +993,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Required for rent exempt calculations
     #[inline(always)]
     pub fn rent_program(
@@ -964,6 +1003,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.rent_program = Some(rent_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -972,6 +1012,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(
         &mut self,
@@ -980,21 +1021,25 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn base_mint_param(&mut self, base_mint_param: MintParams) -> &mut Self {
         self.instruction.base_mint_param = Some(base_mint_param);
         self
     }
+
     #[inline(always)]
     pub fn curve_param(&mut self, curve_param: CurveParams) -> &mut Self {
         self.instruction.curve_param = Some(curve_param);
         self
     }
+
     #[inline(always)]
     pub fn vesting_param(&mut self, vesting_param: VestingParams) -> &mut Self {
         self.instruction.vesting_param = Some(vesting_param);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1008,6 +1053,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1026,10 +1072,10 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

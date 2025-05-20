@@ -21,18 +21,9 @@ pub(crate) mod r#trade_event;
 pub(crate) mod r#vesting_params;
 pub(crate) mod r#vesting_schedule;
 
-pub use self::r#claim_vested_event::*;
-pub use self::r#constant_curve::*;
-pub use self::r#create_vesting_event::*;
-pub use self::r#curve_params::*;
-pub use self::r#fixed_curve::*;
-pub use self::r#linear_curve::*;
-pub use self::r#migrate_nft_info::*;
-pub use self::r#mint_params::*;
-pub use self::r#platform_config_param::*;
-pub use self::r#pool_create_event::*;
-pub use self::r#pool_status::*;
-pub use self::r#trade_direction::*;
-pub use self::r#trade_event::*;
-pub use self::r#vesting_params::*;
-pub use self::r#vesting_schedule::*;
+pub use self::{
+    r#claim_vested_event::*, r#constant_curve::*, r#create_vesting_event::*, r#curve_params::*,
+    r#fixed_curve::*, r#linear_curve::*, r#migrate_nft_info::*, r#mint_params::*,
+    r#platform_config_param::*, r#pool_create_event::*, r#pool_status::*, r#trade_direction::*,
+    r#trade_event::*, r#vesting_params::*, r#vesting_schedule::*,
+};

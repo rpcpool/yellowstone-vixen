@@ -5,12 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::CurveParams;
-use crate::generated::types::MintParams;
-use crate::generated::types::VestingParams;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
+
+use crate::generated::types::{CurveParams, MintParams, VestingParams};
 
 /// Emitted when pool created
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

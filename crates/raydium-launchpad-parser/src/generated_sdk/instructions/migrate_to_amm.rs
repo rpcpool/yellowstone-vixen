@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -90,6 +89,7 @@ impl MigrateToAmm {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -251,9 +251,7 @@ impl MigrateToAmmInstructionData {
 }
 
 impl Default for MigrateToAmmInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -341,9 +339,8 @@ pub struct MigrateToAmmBuilder {
 }
 
 impl MigrateToAmmBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Only migrate_to_amm_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_amm_wallet saved in global_config
     #[inline(always)]
@@ -351,18 +348,21 @@ impl MigrateToAmmBuilder {
         self.payer = Some(payer);
         self
     }
+
     /// The mint for the base token (token being sold)
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
+
     /// The mint for the quote token (token used to buy)
     #[inline(always)]
     pub fn quote_mint(&mut self, quote_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
+
     /// `[optional account, default to 'srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX']`
     #[inline(always)]
     pub fn openbook_program(
@@ -372,36 +372,42 @@ impl MigrateToAmmBuilder {
         self.openbook_program = Some(openbook_program);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn market(&mut self, market: solana_program::pubkey::Pubkey) -> &mut Self {
         self.market = Some(market);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn request_queue(&mut self, request_queue: solana_program::pubkey::Pubkey) -> &mut Self {
         self.request_queue = Some(request_queue);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn event_queue(&mut self, event_queue: solana_program::pubkey::Pubkey) -> &mut Self {
         self.event_queue = Some(event_queue);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn bids(&mut self, bids: solana_program::pubkey::Pubkey) -> &mut Self {
         self.bids = Some(bids);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn asks(&mut self, asks: solana_program::pubkey::Pubkey) -> &mut Self {
         self.asks = Some(asks);
         self
     }
+
     #[inline(always)]
     pub fn market_vault_signer(
         &mut self,
@@ -410,6 +416,7 @@ impl MigrateToAmmBuilder {
         self.market_vault_signer = Some(market_vault_signer);
         self
     }
+
     /// Token account that holds the market's base tokens
     #[inline(always)]
     pub fn market_base_vault(
@@ -419,6 +426,7 @@ impl MigrateToAmmBuilder {
         self.market_base_vault = Some(market_base_vault);
         self
     }
+
     /// Token account that holds the market's quote tokens
     #[inline(always)]
     pub fn market_quote_vault(
@@ -428,22 +436,26 @@ impl MigrateToAmmBuilder {
         self.market_quote_vault = Some(market_quote_vault);
         self
     }
+
     /// `[optional account, default to '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8']`
     #[inline(always)]
     pub fn amm_program(&mut self, amm_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.amm_program = Some(amm_program);
         self
     }
+
     #[inline(always)]
     pub fn amm_pool(&mut self, amm_pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.amm_pool = Some(amm_pool);
         self
     }
+
     #[inline(always)]
     pub fn amm_authority(&mut self, amm_authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.amm_authority = Some(amm_authority);
         self
     }
+
     #[inline(always)]
     pub fn amm_open_orders(
         &mut self,
@@ -452,16 +464,19 @@ impl MigrateToAmmBuilder {
         self.amm_open_orders = Some(amm_open_orders);
         self
     }
+
     #[inline(always)]
     pub fn amm_lp_mint(&mut self, amm_lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.amm_lp_mint = Some(amm_lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn amm_base_vault(&mut self, amm_base_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.amm_base_vault = Some(amm_base_vault);
         self
     }
+
     #[inline(always)]
     pub fn amm_quote_vault(
         &mut self,
@@ -470,6 +485,7 @@ impl MigrateToAmmBuilder {
         self.amm_quote_vault = Some(amm_quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn amm_target_orders(
         &mut self,
@@ -478,11 +494,13 @@ impl MigrateToAmmBuilder {
         self.amm_target_orders = Some(amm_target_orders);
         self
     }
+
     #[inline(always)]
     pub fn amm_config(&mut self, amm_config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.amm_config = Some(amm_config);
         self
     }
+
     #[inline(always)]
     pub fn amm_create_fee_destination(
         &mut self,
@@ -491,6 +509,7 @@ impl MigrateToAmmBuilder {
         self.amm_create_fee_destination = Some(amm_create_fee_destination);
         self
     }
+
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -498,6 +517,7 @@ impl MigrateToAmmBuilder {
         self.authority = Some(authority);
         self
     }
+
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
@@ -505,12 +525,14 @@ impl MigrateToAmmBuilder {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// Global config account stores owner
     #[inline(always)]
     pub fn global_config(&mut self, global_config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.global_config = Some(global_config);
         self
     }
+
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
     #[inline(always)]
@@ -518,6 +540,7 @@ impl MigrateToAmmBuilder {
         self.base_vault = Some(base_vault);
         self
     }
+
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
     #[inline(always)]
@@ -525,11 +548,13 @@ impl MigrateToAmmBuilder {
         self.quote_vault = Some(quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn pool_lp_token(&mut self, pool_lp_token: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool_lp_token = Some(pool_lp_token);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// SPL Token program for the base token
     /// Must be the standard Token program
@@ -541,6 +566,7 @@ impl MigrateToAmmBuilder {
         self.spl_token_program = Some(spl_token_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     /// Program to create an ATA for receiving fee NFT
     #[inline(always)]
@@ -551,6 +577,7 @@ impl MigrateToAmmBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
@@ -558,6 +585,7 @@ impl MigrateToAmmBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Required for rent exempt calculations
     #[inline(always)]
@@ -565,21 +593,25 @@ impl MigrateToAmmBuilder {
         self.rent_program = Some(rent_program);
         self
     }
+
     #[inline(always)]
     pub fn base_lot_size(&mut self, base_lot_size: u64) -> &mut Self {
         self.base_lot_size = Some(base_lot_size);
         self
     }
+
     #[inline(always)]
     pub fn quote_lot_size(&mut self, quote_lot_size: u64) -> &mut Self {
         self.quote_lot_size = Some(quote_lot_size);
         self
     }
+
     #[inline(always)]
     pub fn market_vault_signer_nonce(&mut self, market_vault_signer_nonce: u8) -> &mut Self {
         self.market_vault_signer_nonce = Some(market_vault_signer_nonce);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -589,6 +621,7 @@ impl MigrateToAmmBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -598,6 +631,7 @@ impl MigrateToAmmBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = MigrateToAmm {
@@ -870,10 +904,12 @@ impl<'a, 'b> MigrateToAmmCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -885,6 +921,7 @@ impl<'a, 'b> MigrateToAmmCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -892,6 +929,7 @@ impl<'a, 'b> MigrateToAmmCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -1179,6 +1217,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Only migrate_to_amm_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_amm_wallet saved in global_config
     #[inline(always)]
@@ -1186,6 +1225,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
+
     /// The mint for the base token (token being sold)
     #[inline(always)]
     pub fn base_mint(
@@ -1195,6 +1235,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.base_mint = Some(base_mint);
         self
     }
+
     /// The mint for the quote token (token used to buy)
     #[inline(always)]
     pub fn quote_mint(
@@ -1204,6 +1245,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.quote_mint = Some(quote_mint);
         self
     }
+
     #[inline(always)]
     pub fn openbook_program(
         &mut self,
@@ -1212,6 +1254,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.openbook_program = Some(openbook_program);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn market(
@@ -1221,6 +1264,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.market = Some(market);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn request_queue(
@@ -1230,6 +1274,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.request_queue = Some(request_queue);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn event_queue(
@@ -1239,18 +1284,21 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.event_queue = Some(event_queue);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn bids(&mut self, bids: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.bids = Some(bids);
         self
     }
+
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
     pub fn asks(&mut self, asks: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.asks = Some(asks);
         self
     }
+
     #[inline(always)]
     pub fn market_vault_signer(
         &mut self,
@@ -1259,6 +1307,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.market_vault_signer = Some(market_vault_signer);
         self
     }
+
     /// Token account that holds the market's base tokens
     #[inline(always)]
     pub fn market_base_vault(
@@ -1268,6 +1317,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.market_base_vault = Some(market_base_vault);
         self
     }
+
     /// Token account that holds the market's quote tokens
     #[inline(always)]
     pub fn market_quote_vault(
@@ -1277,6 +1327,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.market_quote_vault = Some(market_quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn amm_program(
         &mut self,
@@ -1285,6 +1336,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_program = Some(amm_program);
         self
     }
+
     #[inline(always)]
     pub fn amm_pool(
         &mut self,
@@ -1293,6 +1345,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_pool = Some(amm_pool);
         self
     }
+
     #[inline(always)]
     pub fn amm_authority(
         &mut self,
@@ -1301,6 +1354,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_authority = Some(amm_authority);
         self
     }
+
     #[inline(always)]
     pub fn amm_open_orders(
         &mut self,
@@ -1309,6 +1363,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_open_orders = Some(amm_open_orders);
         self
     }
+
     #[inline(always)]
     pub fn amm_lp_mint(
         &mut self,
@@ -1317,6 +1372,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_lp_mint = Some(amm_lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn amm_base_vault(
         &mut self,
@@ -1325,6 +1381,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_base_vault = Some(amm_base_vault);
         self
     }
+
     #[inline(always)]
     pub fn amm_quote_vault(
         &mut self,
@@ -1333,6 +1390,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_quote_vault = Some(amm_quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn amm_target_orders(
         &mut self,
@@ -1341,6 +1399,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_target_orders = Some(amm_target_orders);
         self
     }
+
     #[inline(always)]
     pub fn amm_config(
         &mut self,
@@ -1349,6 +1408,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_config = Some(amm_config);
         self
     }
+
     #[inline(always)]
     pub fn amm_create_fee_destination(
         &mut self,
@@ -1357,6 +1417,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.amm_create_fee_destination = Some(amm_create_fee_destination);
         self
     }
+
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -1367,6 +1428,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.authority = Some(authority);
         self
     }
+
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
@@ -1377,6 +1439,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// Global config account stores owner
     #[inline(always)]
     pub fn global_config(
@@ -1386,6 +1449,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.global_config = Some(global_config);
         self
     }
+
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
     #[inline(always)]
@@ -1396,6 +1460,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
+
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
     #[inline(always)]
@@ -1406,6 +1471,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.quote_vault = Some(quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn pool_lp_token(
         &mut self,
@@ -1414,6 +1480,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.pool_lp_token = Some(pool_lp_token);
         self
     }
+
     /// SPL Token program for the base token
     /// Must be the standard Token program
     #[inline(always)]
@@ -1424,6 +1491,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.spl_token_program = Some(spl_token_program);
         self
     }
+
     /// Program to create an ATA for receiving fee NFT
     #[inline(always)]
     pub fn associated_token_program(
@@ -1433,6 +1501,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// Required for account creation
     #[inline(always)]
     pub fn system_program(
@@ -1442,6 +1511,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Required for rent exempt calculations
     #[inline(always)]
     pub fn rent_program(
@@ -1451,21 +1521,25 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
         self.instruction.rent_program = Some(rent_program);
         self
     }
+
     #[inline(always)]
     pub fn base_lot_size(&mut self, base_lot_size: u64) -> &mut Self {
         self.instruction.base_lot_size = Some(base_lot_size);
         self
     }
+
     #[inline(always)]
     pub fn quote_lot_size(&mut self, quote_lot_size: u64) -> &mut Self {
         self.instruction.quote_lot_size = Some(quote_lot_size);
         self
     }
+
     #[inline(always)]
     pub fn market_vault_signer_nonce(&mut self, market_vault_signer_nonce: u8) -> &mut Self {
         self.instruction.market_vault_signer_nonce = Some(market_vault_signer_nonce);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1479,6 +1553,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1497,10 +1572,10 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

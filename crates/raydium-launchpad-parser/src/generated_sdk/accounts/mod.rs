@@ -10,7 +10,4 @@ pub(crate) mod r#platform_config;
 pub(crate) mod r#pool_state;
 pub(crate) mod r#vesting_record;
 
-pub use self::r#global_config::*;
-pub use self::r#platform_config::*;
-pub use self::r#pool_state::*;
-pub use self::r#vesting_record::*;
+pub use self::{r#global_config::*, r#platform_config::*, r#pool_state::*, r#vesting_record::*};

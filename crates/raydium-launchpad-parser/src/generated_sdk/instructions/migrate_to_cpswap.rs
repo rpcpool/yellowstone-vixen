@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -89,6 +88,7 @@ impl MigrateToCpswap {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -233,9 +233,7 @@ impl MigrateToCpswapInstructionData {
 }
 
 impl Default for MigrateToCpswapInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `MigrateToCpswap`.
@@ -304,9 +302,8 @@ pub struct MigrateToCpswapBuilder {
 }
 
 impl MigrateToCpswapBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Only migrate_to_cpswap_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_cpswap_wallet saved in global_config
     #[inline(always)]
@@ -314,18 +311,21 @@ impl MigrateToCpswapBuilder {
         self.payer = Some(payer);
         self
     }
+
     /// The mint for the base token (token being sold)
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
+
     /// The mint for the quote token (token used to buy)
     #[inline(always)]
     pub fn quote_mint(&mut self, quote_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
+
     /// Platform configuration account containing platform-wide settings
     /// Used to read platform fee rate
     #[inline(always)]
@@ -336,12 +336,14 @@ impl MigrateToCpswapBuilder {
         self.platform_config = Some(platform_config);
         self
     }
+
     /// `[optional account, default to 'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C']`
     #[inline(always)]
     pub fn cpswap_program(&mut self, cpswap_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.cpswap_program = Some(cpswap_program);
         self
     }
+
     /// PDA account:
     /// seeds = [
     /// b"pool",
@@ -357,6 +359,7 @@ impl MigrateToCpswapBuilder {
         self.cpswap_pool = Some(cpswap_pool);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_authority(
         &mut self,
@@ -365,11 +368,13 @@ impl MigrateToCpswapBuilder {
         self.cpswap_authority = Some(cpswap_authority);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_lp_mint(&mut self, cpswap_lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.cpswap_lp_mint = Some(cpswap_lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_base_vault(
         &mut self,
@@ -378,6 +383,7 @@ impl MigrateToCpswapBuilder {
         self.cpswap_base_vault = Some(cpswap_base_vault);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_quote_vault(
         &mut self,
@@ -386,11 +392,13 @@ impl MigrateToCpswapBuilder {
         self.cpswap_quote_vault = Some(cpswap_quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_config(&mut self, cpswap_config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.cpswap_config = Some(cpswap_config);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_create_pool_fee(
         &mut self,
@@ -399,6 +407,7 @@ impl MigrateToCpswapBuilder {
         self.cpswap_create_pool_fee = Some(cpswap_create_pool_fee);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_observation(
         &mut self,
@@ -407,22 +416,26 @@ impl MigrateToCpswapBuilder {
         self.cpswap_observation = Some(cpswap_observation);
         self
     }
+
     /// `[optional account, default to 'LockrWmn6K5twhz3y9w1dQERbmgSaRkfnTeTKbpofwE']`
     #[inline(always)]
     pub fn lock_program(&mut self, lock_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lock_program = Some(lock_program);
         self
     }
+
     #[inline(always)]
     pub fn lock_authority(&mut self, lock_authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lock_authority = Some(lock_authority);
         self
     }
+
     #[inline(always)]
     pub fn lock_lp_vault(&mut self, lock_lp_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lock_lp_vault = Some(lock_lp_vault);
         self
     }
+
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -430,6 +443,7 @@ impl MigrateToCpswapBuilder {
         self.authority = Some(authority);
         self
     }
+
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
@@ -437,12 +451,14 @@ impl MigrateToCpswapBuilder {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// Global config account stores owner
     #[inline(always)]
     pub fn global_config(&mut self, global_config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.global_config = Some(global_config);
         self
     }
+
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
     #[inline(always)]
@@ -450,6 +466,7 @@ impl MigrateToCpswapBuilder {
         self.base_vault = Some(base_vault);
         self
     }
+
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
     #[inline(always)]
@@ -457,11 +474,13 @@ impl MigrateToCpswapBuilder {
         self.quote_vault = Some(quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn pool_lp_token(&mut self, pool_lp_token: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool_lp_token = Some(pool_lp_token);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// SPL Token program for the base token
     /// Must be the standard Token program
@@ -473,6 +492,7 @@ impl MigrateToCpswapBuilder {
         self.base_token_program = Some(base_token_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// SPL Token program for the quote token
     #[inline(always)]
@@ -483,6 +503,7 @@ impl MigrateToCpswapBuilder {
         self.quote_token_program = Some(quote_token_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     /// Program to create an ATA for receiving fee NFT
     #[inline(always)]
@@ -493,6 +514,7 @@ impl MigrateToCpswapBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
@@ -500,6 +522,7 @@ impl MigrateToCpswapBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Required for rent exempt calculations
     #[inline(always)]
@@ -507,6 +530,7 @@ impl MigrateToCpswapBuilder {
         self.rent_program = Some(rent_program);
         self
     }
+
     /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
     /// Program to create NFT metadata accunt
     #[inline(always)]
@@ -517,6 +541,7 @@ impl MigrateToCpswapBuilder {
         self.metadata_program = Some(metadata_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -526,6 +551,7 @@ impl MigrateToCpswapBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -535,6 +561,7 @@ impl MigrateToCpswapBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = MigrateToCpswap {
@@ -787,10 +814,12 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
             metadata_program: accounts.metadata_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -802,6 +831,7 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -809,6 +839,7 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -1063,6 +1094,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Only migrate_to_cpswap_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_cpswap_wallet saved in global_config
     #[inline(always)]
@@ -1070,6 +1102,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
+
     /// The mint for the base token (token being sold)
     #[inline(always)]
     pub fn base_mint(
@@ -1079,6 +1112,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.base_mint = Some(base_mint);
         self
     }
+
     /// The mint for the quote token (token used to buy)
     #[inline(always)]
     pub fn quote_mint(
@@ -1088,6 +1122,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.quote_mint = Some(quote_mint);
         self
     }
+
     /// Platform configuration account containing platform-wide settings
     /// Used to read platform fee rate
     #[inline(always)]
@@ -1098,6 +1133,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.platform_config = Some(platform_config);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_program(
         &mut self,
@@ -1106,6 +1142,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.cpswap_program = Some(cpswap_program);
         self
     }
+
     /// PDA account:
     /// seeds = [
     /// b"pool",
@@ -1124,6 +1161,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.cpswap_pool = Some(cpswap_pool);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_authority(
         &mut self,
@@ -1132,6 +1170,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.cpswap_authority = Some(cpswap_authority);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_lp_mint(
         &mut self,
@@ -1140,6 +1179,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.cpswap_lp_mint = Some(cpswap_lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_base_vault(
         &mut self,
@@ -1148,6 +1188,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.cpswap_base_vault = Some(cpswap_base_vault);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_quote_vault(
         &mut self,
@@ -1156,6 +1197,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.cpswap_quote_vault = Some(cpswap_quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_config(
         &mut self,
@@ -1164,6 +1206,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.cpswap_config = Some(cpswap_config);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_create_pool_fee(
         &mut self,
@@ -1172,6 +1215,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.cpswap_create_pool_fee = Some(cpswap_create_pool_fee);
         self
     }
+
     #[inline(always)]
     pub fn cpswap_observation(
         &mut self,
@@ -1180,6 +1224,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.cpswap_observation = Some(cpswap_observation);
         self
     }
+
     #[inline(always)]
     pub fn lock_program(
         &mut self,
@@ -1188,6 +1233,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.lock_program = Some(lock_program);
         self
     }
+
     #[inline(always)]
     pub fn lock_authority(
         &mut self,
@@ -1196,6 +1242,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.lock_authority = Some(lock_authority);
         self
     }
+
     #[inline(always)]
     pub fn lock_lp_vault(
         &mut self,
@@ -1204,6 +1251,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.lock_lp_vault = Some(lock_lp_vault);
         self
     }
+
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
@@ -1214,6 +1262,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.authority = Some(authority);
         self
     }
+
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
@@ -1224,6 +1273,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// Global config account stores owner
     #[inline(always)]
     pub fn global_config(
@@ -1233,6 +1283,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.global_config = Some(global_config);
         self
     }
+
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
     #[inline(always)]
@@ -1243,6 +1294,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
+
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
     #[inline(always)]
@@ -1253,6 +1305,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.quote_vault = Some(quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn pool_lp_token(
         &mut self,
@@ -1261,6 +1314,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.pool_lp_token = Some(pool_lp_token);
         self
     }
+
     /// SPL Token program for the base token
     /// Must be the standard Token program
     #[inline(always)]
@@ -1271,6 +1325,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.base_token_program = Some(base_token_program);
         self
     }
+
     /// SPL Token program for the quote token
     #[inline(always)]
     pub fn quote_token_program(
@@ -1280,6 +1335,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.quote_token_program = Some(quote_token_program);
         self
     }
+
     /// Program to create an ATA for receiving fee NFT
     #[inline(always)]
     pub fn associated_token_program(
@@ -1289,6 +1345,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// Required for account creation
     #[inline(always)]
     pub fn system_program(
@@ -1298,6 +1355,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Required for rent exempt calculations
     #[inline(always)]
     pub fn rent_program(
@@ -1307,6 +1365,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.rent_program = Some(rent_program);
         self
     }
+
     /// Program to create NFT metadata accunt
     #[inline(always)]
     pub fn metadata_program(
@@ -1316,6 +1375,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
         self.instruction.metadata_program = Some(metadata_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1329,6 +1389,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1347,10 +1408,10 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

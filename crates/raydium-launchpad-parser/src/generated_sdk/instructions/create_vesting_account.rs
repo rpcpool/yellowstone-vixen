@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -31,6 +30,7 @@ impl CreateVestingAccount {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -87,9 +87,7 @@ impl CreateVestingAccountInstructionData {
 }
 
 impl Default for CreateVestingAccountInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -119,9 +117,8 @@ pub struct CreateVestingAccountBuilder {
 }
 
 impl CreateVestingAccountBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     #[inline(always)]
@@ -129,23 +126,27 @@ impl CreateVestingAccountBuilder {
         self.creator = Some(creator);
         self
     }
+
     #[inline(always)]
     pub fn beneficiary(&mut self, beneficiary: solana_program::pubkey::Pubkey) -> &mut Self {
         self.beneficiary = Some(beneficiary);
         self
     }
+
     /// The pool state account
     #[inline(always)]
     pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// The vesting record account
     #[inline(always)]
     pub fn vesting_record(&mut self, vesting_record: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vesting_record = Some(vesting_record);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
@@ -153,11 +154,13 @@ impl CreateVestingAccountBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn share_amount(&mut self, share_amount: u64) -> &mut Self {
         self.share_amount = Some(share_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -167,6 +170,7 @@ impl CreateVestingAccountBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -176,6 +180,7 @@ impl CreateVestingAccountBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CreateVestingAccount {
@@ -245,10 +250,12 @@ impl<'a, 'b> CreateVestingAccountCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -260,6 +267,7 @@ impl<'a, 'b> CreateVestingAccountCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -267,6 +275,7 @@ impl<'a, 'b> CreateVestingAccountCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -363,6 +372,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     #[inline(always)]
@@ -373,6 +383,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
         self.instruction.creator = Some(creator);
         self
     }
+
     #[inline(always)]
     pub fn beneficiary(
         &mut self,
@@ -381,6 +392,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
         self.instruction.beneficiary = Some(beneficiary);
         self
     }
+
     /// The pool state account
     #[inline(always)]
     pub fn pool_state(
@@ -390,6 +402,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// The vesting record account
     #[inline(always)]
     pub fn vesting_record(
@@ -399,6 +412,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
         self.instruction.vesting_record = Some(vesting_record);
         self
     }
+
     /// Required for account creation
     #[inline(always)]
     pub fn system_program(
@@ -408,11 +422,13 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn share_amount(&mut self, share_amount: u64) -> &mut Self {
         self.instruction.share_amount = Some(share_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -426,6 +442,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -444,10 +461,10 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

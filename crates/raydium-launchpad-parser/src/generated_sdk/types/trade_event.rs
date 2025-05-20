@@ -5,11 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::PoolStatus;
-use crate::generated::types::TradeDirection;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
+
+use crate::generated::types::{PoolStatus, TradeDirection};
 
 /// Emitted when trade process
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

@@ -42,22 +42,22 @@ pub enum RaydiumLaunchpadError {
     NoAssetsToCollect = 0x1779,
     /// 6010 - Vesting ratio too high
     #[error("Vesting ratio too high")]
-    VestingRatioTooHigh = 0x177A,
+    VestingRatioTooHigh = 0x177a,
     /// 6011 - Vesting setting ended
     #[error("Vesting setting ended")]
-    VestingSettingEnded = 0x177B,
+    VestingSettingEnded = 0x177b,
     /// 6012 - Vesting not started
     #[error("Vesting not started")]
-    VestingNotStarted = 0x177C,
+    VestingNotStarted = 0x177c,
     /// 6013 - No vesting schedule
     #[error("No vesting schedule")]
-    NoVestingSchedule = 0x177D,
+    NoVestingSchedule = 0x177d,
     /// 6014 - The platform info input is invalid
     #[error("The platform info input is invalid")]
-    InvalidPlatformInfo = 0x177E,
+    InvalidPlatformInfo = 0x177e,
     /// 6015 - Pool not migrated
     #[error("Pool not migrated")]
-    PoolNotMigrated = 0x177F,
+    PoolNotMigrated = 0x177f,
 }
 
 impl solana_program::program_error::PrintProgramError for RaydiumLaunchpadError {
@@ -67,7 +67,5 @@ impl solana_program::program_error::PrintProgramError for RaydiumLaunchpadError 
 }
 
 impl<T> solana_program::decode_error::DecodeError<T> for RaydiumLaunchpadError {
-    fn type_of() -> &'static str {
-        "RaydiumLaunchpadError"
-    }
+    fn type_of() -> &'static str { "RaydiumLaunchpadError" }
 }

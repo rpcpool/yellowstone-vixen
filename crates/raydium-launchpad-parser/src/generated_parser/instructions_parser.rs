@@ -5,27 +5,31 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::instructions::{
-    BuyExactIn as BuyExactInIxAccounts, BuyExactInInstructionArgs as BuyExactInIxData,
-    BuyExactOut as BuyExactOutIxAccounts, BuyExactOutInstructionArgs as BuyExactOutIxData,
-    ClaimPlatformFee as ClaimPlatformFeeIxAccounts, ClaimVestedToken as ClaimVestedTokenIxAccounts,
-    CollectFee as CollectFeeIxAccounts, CollectMigrateFee as CollectMigrateFeeIxAccounts,
-    CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
-    CreatePlatformConfig as CreatePlatformConfigIxAccounts,
-    CreatePlatformConfigInstructionArgs as CreatePlatformConfigIxData,
-    CreateVestingAccount as CreateVestingAccountIxAccounts,
-    CreateVestingAccountInstructionArgs as CreateVestingAccountIxData,
-    Initialize as InitializeIxAccounts, InitializeInstructionArgs as InitializeIxData,
-    MigrateToAmm as MigrateToAmmIxAccounts, MigrateToAmmInstructionArgs as MigrateToAmmIxData,
-    MigrateToCpswap as MigrateToCpswapIxAccounts, SellExactIn as SellExactInIxAccounts,
-    SellExactInInstructionArgs as SellExactInIxData, SellExactOut as SellExactOutIxAccounts,
-    SellExactOutInstructionArgs as SellExactOutIxData, UpdateConfig as UpdateConfigIxAccounts,
-    UpdateConfigInstructionArgs as UpdateConfigIxData,
-    UpdatePlatformConfig as UpdatePlatformConfigIxAccounts,
-    UpdatePlatformConfigInstructionArgs as UpdatePlatformConfigIxData,
-};
-use crate::ID;
 use borsh::BorshDeserialize;
+
+use crate::{
+    instructions::{
+        BuyExactIn as BuyExactInIxAccounts, BuyExactInInstructionArgs as BuyExactInIxData,
+        BuyExactOut as BuyExactOutIxAccounts, BuyExactOutInstructionArgs as BuyExactOutIxData,
+        ClaimPlatformFee as ClaimPlatformFeeIxAccounts,
+        ClaimVestedToken as ClaimVestedTokenIxAccounts, CollectFee as CollectFeeIxAccounts,
+        CollectMigrateFee as CollectMigrateFeeIxAccounts, CreateConfig as CreateConfigIxAccounts,
+        CreateConfigInstructionArgs as CreateConfigIxData,
+        CreatePlatformConfig as CreatePlatformConfigIxAccounts,
+        CreatePlatformConfigInstructionArgs as CreatePlatformConfigIxData,
+        CreateVestingAccount as CreateVestingAccountIxAccounts,
+        CreateVestingAccountInstructionArgs as CreateVestingAccountIxData,
+        Initialize as InitializeIxAccounts, InitializeInstructionArgs as InitializeIxData,
+        MigrateToAmm as MigrateToAmmIxAccounts, MigrateToAmmInstructionArgs as MigrateToAmmIxData,
+        MigrateToCpswap as MigrateToCpswapIxAccounts, SellExactIn as SellExactInIxAccounts,
+        SellExactInInstructionArgs as SellExactInIxData, SellExactOut as SellExactOutIxAccounts,
+        SellExactOutInstructionArgs as SellExactOutIxData, UpdateConfig as UpdateConfigIxAccounts,
+        UpdateConfigInstructionArgs as UpdateConfigIxData,
+        UpdatePlatformConfig as UpdatePlatformConfigIxAccounts,
+        UpdatePlatformConfigInstructionArgs as UpdatePlatformConfigIxData,
+    },
+    ID,
+};
 
 /// RaydiumLaunchpad Instructions
 #[derive(Debug)]
@@ -56,9 +60,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = RaydiumLaunchpadProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "RaydiumLaunchpad::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "RaydiumLaunchpad::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -81,9 +83,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -119,7 +119,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [24, 211, 116, 40, 105, 3, 153, 56] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = BuyExactOutIxAccounts {
@@ -144,7 +144,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [156, 39, 208, 135, 76, 237, 61, 72] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = ClaimPlatformFeeIxAccounts {
@@ -160,7 +160,7 @@ impl InstructionParser {
                     associated_token_program: ix.accounts[9].0.into(),
                 };
                 Ok(RaydiumLaunchpadProgramIx::ClaimPlatformFee(ix_accounts))
-            }
+            },
             [49, 33, 104, 30, 189, 157, 79, 35] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = ClaimVestedTokenIxAccounts {
@@ -176,7 +176,7 @@ impl InstructionParser {
                     associated_token_program: ix.accounts[9].0.into(),
                 };
                 Ok(RaydiumLaunchpadProgramIx::ClaimVestedToken(ix_accounts))
-            }
+            },
             [60, 173, 247, 103, 4, 93, 130, 48] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = CollectFeeIxAccounts {
@@ -190,7 +190,7 @@ impl InstructionParser {
                     token_program: ix.accounts[7].0.into(),
                 };
                 Ok(RaydiumLaunchpadProgramIx::CollectFee(ix_accounts))
-            }
+            },
             [255, 186, 150, 223, 235, 118, 201, 186] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = CollectMigrateFeeIxAccounts {
@@ -204,7 +204,7 @@ impl InstructionParser {
                     token_program: ix.accounts[7].0.into(),
                 };
                 Ok(RaydiumLaunchpadProgramIx::CollectMigrateFee(ix_accounts))
-            }
+            },
             [201, 207, 243, 114, 75, 111, 47, 189] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = CreateConfigIxAccounts {
@@ -222,7 +222,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [176, 90, 196, 175, 253, 113, 220, 20] => {
                 check_min_accounts_req(accounts_len, 5)?;
                 let ix_accounts = CreatePlatformConfigIxAccounts {
@@ -238,7 +238,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [129, 178, 2, 13, 217, 172, 230, 218] => {
                 check_min_accounts_req(accounts_len, 5)?;
                 let ix_accounts = CreateVestingAccountIxAccounts {
@@ -254,7 +254,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [175, 175, 109, 31, 13, 152, 155, 237] => {
                 check_min_accounts_req(accounts_len, 18)?;
                 let ix_accounts = InitializeIxAccounts {
@@ -282,7 +282,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [207, 82, 192, 145, 254, 207, 145, 223] => {
                 check_min_accounts_req(accounts_len, 32)?;
                 let ix_accounts = MigrateToAmmIxAccounts {
@@ -324,7 +324,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [136, 92, 200, 103, 28, 218, 144, 140] => {
                 check_min_accounts_req(accounts_len, 28)?;
                 let ix_accounts = MigrateToCpswapIxAccounts {
@@ -358,7 +358,7 @@ impl InstructionParser {
                     metadata_program: ix.accounts[27].0.into(),
                 };
                 Ok(RaydiumLaunchpadProgramIx::MigrateToCpswap(ix_accounts))
-            }
+            },
             [149, 39, 222, 155, 211, 124, 152, 26] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = SellExactInIxAccounts {
@@ -383,7 +383,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [95, 200, 71, 34, 8, 9, 11, 166] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = SellExactOutIxAccounts {
@@ -408,7 +408,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [29, 158, 252, 191, 10, 83, 219, 99] => {
                 check_min_accounts_req(accounts_len, 2)?;
                 let ix_accounts = UpdateConfigIxAccounts {
@@ -420,7 +420,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [195, 60, 76, 129, 146, 45, 67, 143] => {
                 check_min_accounts_req(accounts_len, 2)?;
                 let ix_accounts = UpdatePlatformConfigIxAccounts {
@@ -433,7 +433,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
@@ -448,7 +448,7 @@ impl InstructionParser {
                     program = ID.to_string(),
                     ix = ix.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_instruction",
@@ -458,7 +458,7 @@ impl InstructionParser {
                     discriminator = ?ix_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         ix
@@ -480,11 +480,10 @@ pub fn check_min_accounts_req(
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{InstructionParser, RaydiumLaunchpadProgramIx};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::BuyExactInIxAccounts;
+    use super::{BuyExactInIxAccounts, InstructionParser, RaydiumLaunchpadProgramIx};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::BuyExactInIxAccounts> for BuyExactInIxAccounts {
         fn into_proto(self) -> proto_def::BuyExactInIxAccounts {
             proto_def::BuyExactInIxAccounts {
@@ -965,7 +964,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
                 RaydiumLaunchpadProgramIx::CreateVestingAccount(acc, data) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateVestingAccount(
@@ -975,7 +974,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
                 RaydiumLaunchpadProgramIx::Initialize(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Initialize(
                         proto_def::InitializeIx {
@@ -1032,7 +1031,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
             }
         }
     }
@@ -1040,8 +1039,6 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

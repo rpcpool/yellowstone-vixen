@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -152,9 +151,7 @@ impl anchor_lang::AccountSerialize for PlatformConfig {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for PlatformConfig {
-    fn owner() -> Pubkey {
-        crate::RAYDIUM_LAUNCHPAD_ID
-    }
+    fn owner() -> Pubkey { crate::RAYDIUM_LAUNCHPAD_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]
