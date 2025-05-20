@@ -8160,6 +8160,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-meteora-pools-parser"
+version = "0.3.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen-mock"
 version = "0.3.0"
 dependencies = [
