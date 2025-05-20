@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -45,6 +44,7 @@ impl ClaimCreatorTradingFee {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -132,9 +132,7 @@ impl ClaimCreatorTradingFeeInstructionData {
 }
 
 impl Default for ClaimCreatorTradingFeeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -182,20 +180,21 @@ pub struct ClaimCreatorTradingFeeBuilder {
 }
 
 impl ClaimCreatorTradingFeeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// `[optional account, default to 'FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     /// The treasury token a account
     #[inline(always)]
     pub fn token_a_account(
@@ -205,6 +204,7 @@ impl ClaimCreatorTradingFeeBuilder {
         self.token_a_account = Some(token_a_account);
         self
     }
+
     /// The treasury token b account
     #[inline(always)]
     pub fn token_b_account(
@@ -214,35 +214,41 @@ impl ClaimCreatorTradingFeeBuilder {
         self.token_b_account = Some(token_b_account);
         self
     }
+
     /// The vault token account for input token
     #[inline(always)]
     pub fn base_vault(&mut self, base_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.base_vault = Some(base_vault);
         self
     }
+
     /// The vault token account for output token
     #[inline(always)]
     pub fn quote_vault(&mut self, quote_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.quote_vault = Some(quote_vault);
         self
     }
+
     /// The mint of token a
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
+
     /// The mint of token b
     #[inline(always)]
     pub fn quote_mint(&mut self, quote_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
+
     #[inline(always)]
     pub fn creator(&mut self, creator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
+
     /// Token a program
     #[inline(always)]
     pub fn token_base_program(
@@ -252,6 +258,7 @@ impl ClaimCreatorTradingFeeBuilder {
         self.token_base_program = Some(token_base_program);
         self
     }
+
     /// Token b program
     #[inline(always)]
     pub fn token_quote_program(
@@ -261,6 +268,7 @@ impl ClaimCreatorTradingFeeBuilder {
         self.token_quote_program = Some(token_quote_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -269,21 +277,25 @@ impl ClaimCreatorTradingFeeBuilder {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn max_base_amount(&mut self, max_base_amount: u64) -> &mut Self {
         self.max_base_amount = Some(max_base_amount);
         self
     }
+
     #[inline(always)]
     pub fn max_quote_amount(&mut self, max_quote_amount: u64) -> &mut Self {
         self.max_quote_amount = Some(max_quote_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -293,6 +305,7 @@ impl ClaimCreatorTradingFeeBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -302,6 +315,7 @@ impl ClaimCreatorTradingFeeBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = ClaimCreatorTradingFee {
@@ -427,10 +441,12 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -442,6 +458,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -449,6 +466,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -602,6 +620,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -610,11 +629,13 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     /// The treasury token a account
     #[inline(always)]
     pub fn token_a_account(
@@ -624,6 +645,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.token_a_account = Some(token_a_account);
         self
     }
+
     /// The treasury token b account
     #[inline(always)]
     pub fn token_b_account(
@@ -633,6 +655,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.token_b_account = Some(token_b_account);
         self
     }
+
     /// The vault token account for input token
     #[inline(always)]
     pub fn base_vault(
@@ -642,6 +665,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
+
     /// The vault token account for output token
     #[inline(always)]
     pub fn quote_vault(
@@ -651,6 +675,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.quote_vault = Some(quote_vault);
         self
     }
+
     /// The mint of token a
     #[inline(always)]
     pub fn base_mint(
@@ -660,6 +685,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.base_mint = Some(base_mint);
         self
     }
+
     /// The mint of token b
     #[inline(always)]
     pub fn quote_mint(
@@ -669,6 +695,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.quote_mint = Some(quote_mint);
         self
     }
+
     #[inline(always)]
     pub fn creator(
         &mut self,
@@ -677,6 +704,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.creator = Some(creator);
         self
     }
+
     /// Token a program
     #[inline(always)]
     pub fn token_base_program(
@@ -686,6 +714,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.token_base_program = Some(token_base_program);
         self
     }
+
     /// Token b program
     #[inline(always)]
     pub fn token_quote_program(
@@ -695,6 +724,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.token_quote_program = Some(token_quote_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -703,6 +733,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(
         &mut self,
@@ -711,16 +742,19 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn max_base_amount(&mut self, max_base_amount: u64) -> &mut Self {
         self.instruction.max_base_amount = Some(max_base_amount);
         self
     }
+
     #[inline(always)]
     pub fn max_quote_amount(&mut self, max_quote_amount: u64) -> &mut Self {
         self.instruction.max_quote_amount = Some(max_quote_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -734,6 +768,7 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -752,10 +787,10 @@ impl<'a, 'b> ClaimCreatorTradingFeeCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

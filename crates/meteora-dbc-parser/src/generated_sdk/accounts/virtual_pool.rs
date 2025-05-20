@@ -5,11 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::PoolMetrics;
-use crate::generated::types::VolatilityTracker;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
+
+use crate::generated::types::{PoolMetrics, VolatilityTracker};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -194,9 +193,7 @@ impl anchor_lang::AccountSerialize for VirtualPool {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for VirtualPool {
-    fn owner() -> Pubkey {
-        crate::DYNAMIC_BONDING_CURVE_ID
-    }
+    fn owner() -> Pubkey { crate::DYNAMIC_BONDING_CURVE_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

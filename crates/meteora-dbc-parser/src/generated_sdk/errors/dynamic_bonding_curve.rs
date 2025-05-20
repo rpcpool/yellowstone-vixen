@@ -42,22 +42,22 @@ pub enum DynamicBondingCurveError {
     InvalidCollectFeeMode = 0x1779,
     /// 6010 - Invalid migration fee option
     #[error("Invalid migration fee option")]
-    InvalidMigrationFeeOption = 0x177A,
+    InvalidMigrationFeeOption = 0x177a,
     /// 6011 - Invalid input
     #[error("Invalid input")]
-    InvalidInput = 0x177B,
+    InvalidInput = 0x177b,
     /// 6012 - Not enough liquidity
     #[error("Not enough liquidity")]
-    NotEnoughLiquidity = 0x177C,
+    NotEnoughLiquidity = 0x177c,
     /// 6013 - Pool is completed
     #[error("Pool is completed")]
-    PoolIsCompleted = 0x177D,
+    PoolIsCompleted = 0x177d,
     /// 6014 - Pool is incompleted
     #[error("Pool is incompleted")]
-    PoolIsIncompleted = 0x177E,
+    PoolIsIncompleted = 0x177e,
     /// 6015 - Invalid migration option
     #[error("Invalid migration option")]
-    InvalidMigrationOption = 0x177F,
+    InvalidMigrationOption = 0x177f,
     /// 6016 - Invalid activation type
     #[error("Invalid activation type")]
     InvalidTokenDecimals = 0x1780,
@@ -90,22 +90,22 @@ pub enum DynamicBondingCurveError {
     SurplusHasBeenWithdraw = 0x1789,
     /// 6026 - Leftover has been withdraw
     #[error("Leftover has been withdraw")]
-    LeftoverHasBeenWithdraw = 0x178A,
+    LeftoverHasBeenWithdraw = 0x178a,
     /// 6027 - Total base token is exceeded max supply
     #[error("Total base token is exceeded max supply")]
-    TotalBaseTokenExceedMaxSupply = 0x178B,
+    TotalBaseTokenExceedMaxSupply = 0x178b,
     /// 6028 - Unsupport native mint token 2022
     #[error("Unsupport native mint token 2022")]
-    UnsupportNativeMintToken2022 = 0x178C,
+    UnsupportNativeMintToken2022 = 0x178c,
     /// 6029 - Insufficient liquidity for migration
     #[error("Insufficient liquidity for migration")]
-    InsufficientLiquidityForMigration = 0x178D,
+    InsufficientLiquidityForMigration = 0x178d,
     /// 6030 - Missing pool config in remaining account
     #[error("Missing pool config in remaining account")]
-    MissingPoolConfigInRemainingAccount = 0x178E,
+    MissingPoolConfigInRemainingAccount = 0x178e,
     /// 6031 - Invalid vesting parameters
     #[error("Invalid vesting parameters")]
-    InvalidVestingParameters = 0x178F,
+    InvalidVestingParameters = 0x178f,
     /// 6032 - Invalid leftover address
     #[error("Invalid leftover address")]
     InvalidLeftoverAddress = 0x1790,
@@ -127,7 +127,5 @@ impl solana_program::program_error::PrintProgramError for DynamicBondingCurveErr
 }
 
 impl<T> solana_program::decode_error::DecodeError<T> for DynamicBondingCurveError {
-    fn type_of() -> &'static str {
-        "DynamicBondingCurveError"
-    }
+    fn type_of() -> &'static str { "DynamicBondingCurveError" }
 }

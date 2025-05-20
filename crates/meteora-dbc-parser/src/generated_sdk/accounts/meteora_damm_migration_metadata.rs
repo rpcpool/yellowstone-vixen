@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -165,9 +164,7 @@ impl anchor_lang::AccountSerialize for MeteoraDammMigrationMetadata {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for MeteoraDammMigrationMetadata {
-    fn owner() -> Pubkey {
-        crate::DYNAMIC_BONDING_CURVE_ID
-    }
+    fn owner() -> Pubkey { crate::DYNAMIC_BONDING_CURVE_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

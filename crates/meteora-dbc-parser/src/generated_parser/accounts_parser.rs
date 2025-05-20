@@ -5,16 +5,13 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::accounts::ClaimFeeOperator;
-use crate::accounts::Config;
-use crate::accounts::LockEscrow;
-use crate::accounts::MeteoraDammMigrationMetadata;
-use crate::accounts::MeteoraDammV2Metadata;
-use crate::accounts::PartnerMetadata;
-use crate::accounts::PoolConfig;
-use crate::accounts::VirtualPool;
-use crate::accounts::VirtualPoolMetadata;
-use crate::ID;
+use crate::{
+    accounts::{
+        ClaimFeeOperator, Config, LockEscrow, MeteoraDammMigrationMetadata, MeteoraDammV2Metadata,
+        PartnerMetadata, PoolConfig, VirtualPool, VirtualPoolMetadata,
+    },
+    ID,
+};
 
 /// DynamicBondingCurve Program State
 #[allow(clippy::large_enum_variant)]
@@ -40,7 +37,7 @@ impl DynamicBondingCurveProgramState {
                 Ok(DynamicBondingCurveProgramState::ClaimFeeOperator(
                     ClaimFeeOperator::from_bytes(data_bytes)?,
                 ))
-            }
+            },
             [155, 12, 170, 224, 30, 250, 204, 130] => Ok(DynamicBondingCurveProgramState::Config(
                 Config::from_bytes(data_bytes)?,
             )),
@@ -56,12 +53,12 @@ impl DynamicBondingCurveProgramState {
                 Ok(DynamicBondingCurveProgramState::MeteoraDammV2Metadata(
                     MeteoraDammV2Metadata::from_bytes(data_bytes)?,
                 ))
-            }
+            },
             [68, 68, 130, 19, 16, 209, 98, 156] => {
                 Ok(DynamicBondingCurveProgramState::PartnerMetadata(
                     PartnerMetadata::from_bytes(data_bytes)?,
                 ))
-            }
+            },
             [26, 108, 14, 123, 116, 230, 129, 43] => Ok(
                 DynamicBondingCurveProgramState::PoolConfig(PoolConfig::from_bytes(data_bytes)?),
             ),
@@ -72,7 +69,7 @@ impl DynamicBondingCurveProgramState {
                 Ok(DynamicBondingCurveProgramState::VirtualPoolMetadata(
                     VirtualPoolMetadata::from_bytes(data_bytes)?,
                 ))
-            }
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
@@ -87,7 +84,7 @@ impl DynamicBondingCurveProgramState {
                     program = ID.to_string(),
                     account = acc.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_account",
@@ -97,7 +94,7 @@ impl DynamicBondingCurveProgramState {
                     discriminator = ?acc_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         acc
@@ -111,9 +108,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = DynamicBondingCurveProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "dynamic_bonding_curve::AccountParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "dynamic_bonding_curve::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -136,18 +131,15 @@ impl yellowstone_vixen_core::Parser for AccountParser {
 
 impl yellowstone_vixen_core::ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{AccountParser, DynamicBondingCurveProgramState};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::ClaimFeeOperator;
+    use super::{AccountParser, ClaimFeeOperator, DynamicBondingCurveProgramState};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::ClaimFeeOperator> for ClaimFeeOperator {
         fn into_proto(self) -> proto_def::ClaimFeeOperator {
             proto_def::ClaimFeeOperator {
@@ -319,33 +311,33 @@ mod proto_parser {
             let state_oneof = match self {
                 DynamicBondingCurveProgramState::ClaimFeeOperator(data) => {
                     proto_def::program_state::StateOneof::ClaimFeeOperator(data.into_proto())
-                }
+                },
                 DynamicBondingCurveProgramState::Config(data) => {
                     proto_def::program_state::StateOneof::Config(data.into_proto())
-                }
+                },
                 DynamicBondingCurveProgramState::LockEscrow(data) => {
                     proto_def::program_state::StateOneof::LockEscrow(data.into_proto())
-                }
+                },
                 DynamicBondingCurveProgramState::MeteoraDammMigrationMetadata(data) => {
                     proto_def::program_state::StateOneof::MeteoraDammMigrationMetadata(
                         data.into_proto(),
                     )
-                }
+                },
                 DynamicBondingCurveProgramState::MeteoraDammV2Metadata(data) => {
                     proto_def::program_state::StateOneof::MeteoraDammV2Metadata(data.into_proto())
-                }
+                },
                 DynamicBondingCurveProgramState::PartnerMetadata(data) => {
                     proto_def::program_state::StateOneof::PartnerMetadata(data.into_proto())
-                }
+                },
                 DynamicBondingCurveProgramState::PoolConfig(data) => {
                     proto_def::program_state::StateOneof::PoolConfig(data.into_proto())
-                }
+                },
                 DynamicBondingCurveProgramState::VirtualPool(data) => {
                     proto_def::program_state::StateOneof::VirtualPool(data.into_proto())
-                }
+                },
                 DynamicBondingCurveProgramState::VirtualPoolMetadata(data) => {
                     proto_def::program_state::StateOneof::VirtualPoolMetadata(data.into_proto())
-                }
+                },
             };
 
             proto_def::ProgramState {
@@ -357,8 +349,6 @@ mod proto_parser {
     impl ParseProto for AccountParser {
         type Message = proto_def::ProgramState;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

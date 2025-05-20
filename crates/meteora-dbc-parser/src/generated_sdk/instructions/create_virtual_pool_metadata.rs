@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -33,6 +32,7 @@ impl CreateVirtualPoolMetadata {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -96,9 +96,7 @@ impl CreateVirtualPoolMetadataInstructionData {
 }
 
 impl Default for CreateVirtualPoolMetadataInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -138,14 +136,14 @@ pub struct CreateVirtualPoolMetadataBuilder {
 }
 
 impl CreateVirtualPoolMetadataBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn virtual_pool(&mut self, virtual_pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.virtual_pool = Some(virtual_pool);
         self
     }
+
     /// Virtual pool metadata
     #[inline(always)]
     pub fn virtual_pool_metadata(
@@ -155,17 +153,20 @@ impl CreateVirtualPoolMetadataBuilder {
         self.virtual_pool_metadata = Some(virtual_pool_metadata);
         self
     }
+
     #[inline(always)]
     pub fn creator(&mut self, creator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
+
     /// Payer of the virtual pool metadata.
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
@@ -173,6 +174,7 @@ impl CreateVirtualPoolMetadataBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -181,31 +183,37 @@ impl CreateVirtualPoolMetadataBuilder {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn padding(&mut self, padding: [u8; 96]) -> &mut Self {
         self.padding = Some(padding);
         self
     }
+
     #[inline(always)]
     pub fn name(&mut self, name: String) -> &mut Self {
         self.name = Some(name);
         self
     }
+
     #[inline(always)]
     pub fn website(&mut self, website: String) -> &mut Self {
         self.website = Some(website);
         self
     }
+
     #[inline(always)]
     pub fn logo(&mut self, logo: String) -> &mut Self {
         self.logo = Some(logo);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -215,6 +223,7 @@ impl CreateVirtualPoolMetadataBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -224,6 +233,7 @@ impl CreateVirtualPoolMetadataBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CreateVirtualPoolMetadata {
@@ -307,10 +317,12 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -322,6 +334,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -329,6 +342,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -442,6 +456,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn virtual_pool(
         &mut self,
@@ -450,6 +465,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
         self.instruction.virtual_pool = Some(virtual_pool);
         self
     }
+
     /// Virtual pool metadata
     #[inline(always)]
     pub fn virtual_pool_metadata(
@@ -459,6 +475,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
         self.instruction.virtual_pool_metadata = Some(virtual_pool_metadata);
         self
     }
+
     #[inline(always)]
     pub fn creator(
         &mut self,
@@ -467,12 +484,14 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
         self.instruction.creator = Some(creator);
         self
     }
+
     /// Payer of the virtual pool metadata.
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     /// System program.
     #[inline(always)]
     pub fn system_program(
@@ -482,6 +501,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -490,6 +510,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(
         &mut self,
@@ -498,26 +519,31 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn padding(&mut self, padding: [u8; 96]) -> &mut Self {
         self.instruction.padding = Some(padding);
         self
     }
+
     #[inline(always)]
     pub fn name(&mut self, name: String) -> &mut Self {
         self.instruction.name = Some(name);
         self
     }
+
     #[inline(always)]
     pub fn website(&mut self, website: String) -> &mut Self {
         self.instruction.website = Some(website);
         self
     }
+
     #[inline(always)]
     pub fn logo(&mut self, logo: String) -> &mut Self {
         self.instruction.logo = Some(logo);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -531,6 +557,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -549,10 +576,10 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

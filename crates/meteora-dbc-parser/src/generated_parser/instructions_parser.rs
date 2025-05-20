@@ -5,36 +5,40 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::instructions::{
-    ClaimCreatorTradingFee as ClaimCreatorTradingFeeIxAccounts,
-    ClaimCreatorTradingFeeInstructionArgs as ClaimCreatorTradingFeeIxData,
-    ClaimProtocolFee as ClaimProtocolFeeIxAccounts, ClaimTradingFee as ClaimTradingFeeIxAccounts,
-    ClaimTradingFeeInstructionArgs as ClaimTradingFeeIxData,
-    CloseClaimFeeOperator as CloseClaimFeeOperatorIxAccounts,
-    CreateClaimFeeOperator as CreateClaimFeeOperatorIxAccounts,
-    CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
-    CreateLocker as CreateLockerIxAccounts,
-    CreatePartnerMetadata as CreatePartnerMetadataIxAccounts,
-    CreatePartnerMetadataInstructionArgs as CreatePartnerMetadataIxData,
-    CreateVirtualPoolMetadata as CreateVirtualPoolMetadataIxAccounts,
-    CreateVirtualPoolMetadataInstructionArgs as CreateVirtualPoolMetadataIxData,
-    CreatorWithdrawSurplus as CreatorWithdrawSurplusIxAccounts,
-    InitializeVirtualPoolWithSplToken as InitializeVirtualPoolWithSplTokenIxAccounts,
-    InitializeVirtualPoolWithSplTokenInstructionArgs as InitializeVirtualPoolWithSplTokenIxData,
-    InitializeVirtualPoolWithToken2022 as InitializeVirtualPoolWithToken2022IxAccounts,
-    InitializeVirtualPoolWithToken2022InstructionArgs as InitializeVirtualPoolWithToken2022IxData,
-    MigrateMeteoraDamm as MigrateMeteoraDammIxAccounts,
-    MigrateMeteoraDammClaimLpToken as MigrateMeteoraDammClaimLpTokenIxAccounts,
-    MigrateMeteoraDammLockLpToken as MigrateMeteoraDammLockLpTokenIxAccounts,
-    MigrationDammV2 as MigrationDammV2IxAccounts,
-    MigrationDammV2CreateMetadata as MigrationDammV2CreateMetadataIxAccounts,
-    MigrationMeteoraDammCreateMetadata as MigrationMeteoraDammCreateMetadataIxAccounts,
-    PartnerWithdrawSurplus as PartnerWithdrawSurplusIxAccounts,
-    ProtocolWithdrawSurplus as ProtocolWithdrawSurplusIxAccounts, Swap as SwapIxAccounts,
-    SwapInstructionArgs as SwapIxData, WithdrawLeftover as WithdrawLeftoverIxAccounts,
-};
-use crate::ID;
 use borsh::BorshDeserialize;
+
+use crate::{
+    instructions::{
+        ClaimCreatorTradingFee as ClaimCreatorTradingFeeIxAccounts,
+        ClaimCreatorTradingFeeInstructionArgs as ClaimCreatorTradingFeeIxData,
+        ClaimProtocolFee as ClaimProtocolFeeIxAccounts,
+        ClaimTradingFee as ClaimTradingFeeIxAccounts,
+        ClaimTradingFeeInstructionArgs as ClaimTradingFeeIxData,
+        CloseClaimFeeOperator as CloseClaimFeeOperatorIxAccounts,
+        CreateClaimFeeOperator as CreateClaimFeeOperatorIxAccounts,
+        CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
+        CreateLocker as CreateLockerIxAccounts,
+        CreatePartnerMetadata as CreatePartnerMetadataIxAccounts,
+        CreatePartnerMetadataInstructionArgs as CreatePartnerMetadataIxData,
+        CreateVirtualPoolMetadata as CreateVirtualPoolMetadataIxAccounts,
+        CreateVirtualPoolMetadataInstructionArgs as CreateVirtualPoolMetadataIxData,
+        CreatorWithdrawSurplus as CreatorWithdrawSurplusIxAccounts,
+        InitializeVirtualPoolWithSplToken as InitializeVirtualPoolWithSplTokenIxAccounts,
+        InitializeVirtualPoolWithSplTokenInstructionArgs as InitializeVirtualPoolWithSplTokenIxData,
+        InitializeVirtualPoolWithToken2022 as InitializeVirtualPoolWithToken2022IxAccounts,
+        InitializeVirtualPoolWithToken2022InstructionArgs as InitializeVirtualPoolWithToken2022IxData,
+        MigrateMeteoraDamm as MigrateMeteoraDammIxAccounts,
+        MigrateMeteoraDammClaimLpToken as MigrateMeteoraDammClaimLpTokenIxAccounts,
+        MigrateMeteoraDammLockLpToken as MigrateMeteoraDammLockLpTokenIxAccounts,
+        MigrationDammV2 as MigrationDammV2IxAccounts,
+        MigrationDammV2CreateMetadata as MigrationDammV2CreateMetadataIxAccounts,
+        MigrationMeteoraDammCreateMetadata as MigrationMeteoraDammCreateMetadataIxAccounts,
+        PartnerWithdrawSurplus as PartnerWithdrawSurplusIxAccounts,
+        ProtocolWithdrawSurplus as ProtocolWithdrawSurplusIxAccounts, Swap as SwapIxAccounts,
+        SwapInstructionArgs as SwapIxData, WithdrawLeftover as WithdrawLeftoverIxAccounts,
+    },
+    ID,
+};
 
 /// DynamicBondingCurve Instructions
 #[derive(Debug)]
@@ -83,9 +87,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = DynamicBondingCurveProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "DynamicBondingCurve::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "DynamicBondingCurve::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -108,9 +110,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -145,7 +145,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [165, 228, 133, 48, 99, 249, 255, 33] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = ClaimProtocolFeeIxAccounts {
@@ -166,7 +166,7 @@ impl InstructionParser {
                     program: ix.accounts[14].0.into(),
                 };
                 Ok(DynamicBondingCurveProgramIx::ClaimProtocolFee(ix_accounts))
-            }
+            },
             [8, 236, 89, 49, 152, 125, 177, 81] => {
                 check_min_accounts_req(accounts_len, 14)?;
                 let ix_accounts = ClaimTradingFeeIxAccounts {
@@ -191,7 +191,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [38, 134, 82, 216, 95, 124, 17, 99] => {
                 check_min_accounts_req(accounts_len, 5)?;
                 let ix_accounts = CloseClaimFeeOperatorIxAccounts {
@@ -204,7 +204,7 @@ impl InstructionParser {
                 Ok(DynamicBondingCurveProgramIx::CloseClaimFeeOperator(
                     ix_accounts,
                 ))
-            }
+            },
             [169, 62, 207, 107, 58, 187, 162, 109] => {
                 check_min_accounts_req(accounts_len, 6)?;
                 let ix_accounts = CreateClaimFeeOperatorIxAccounts {
@@ -218,7 +218,7 @@ impl InstructionParser {
                 Ok(DynamicBondingCurveProgramIx::CreateClaimFeeOperator(
                     ix_accounts,
                 ))
-            }
+            },
             [201, 207, 243, 114, 75, 111, 47, 189] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = CreateConfigIxAccounts {
@@ -236,7 +236,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [167, 90, 137, 154, 75, 47, 17, 84] => {
                 check_min_accounts_req(accounts_len, 14)?;
                 let ix_accounts = CreateLockerIxAccounts {
@@ -256,7 +256,7 @@ impl InstructionParser {
                     system_program: ix.accounts[13].0.into(),
                 };
                 Ok(DynamicBondingCurveProgramIx::CreateLocker(ix_accounts))
-            }
+            },
             [192, 168, 234, 191, 188, 226, 227, 255] => {
                 check_min_accounts_req(accounts_len, 6)?;
                 let ix_accounts = CreatePartnerMetadataIxAccounts {
@@ -273,7 +273,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [45, 97, 187, 103, 254, 109, 124, 134] => {
                 check_min_accounts_req(accounts_len, 7)?;
                 let ix_accounts = CreateVirtualPoolMetadataIxAccounts {
@@ -291,7 +291,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [165, 3, 137, 7, 28, 134, 76, 80] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = CreatorWithdrawSurplusIxAccounts {
@@ -309,7 +309,7 @@ impl InstructionParser {
                 Ok(DynamicBondingCurveProgramIx::CreatorWithdrawSurplus(
                     ix_accounts,
                 ))
-            }
+            },
             [140, 85, 215, 176, 102, 54, 104, 79] => {
                 check_min_accounts_req(accounts_len, 16)?;
                 let ix_accounts = InitializeVirtualPoolWithSplTokenIxAccounts {
@@ -338,7 +338,7 @@ impl InstructionParser {
                         de_ix_data,
                     ),
                 )
-            }
+            },
             [169, 118, 51, 78, 145, 110, 220, 155] => {
                 check_min_accounts_req(accounts_len, 14)?;
                 let ix_accounts = InitializeVirtualPoolWithToken2022IxAccounts {
@@ -365,7 +365,7 @@ impl InstructionParser {
                         de_ix_data,
                     ),
                 )
-            }
+            },
             [27, 1, 48, 22, 180, 63, 118, 217] => {
                 check_min_accounts_req(accounts_len, 31)?;
                 let ix_accounts = MigrateMeteoraDammIxAccounts {
@@ -404,7 +404,7 @@ impl InstructionParser {
                 Ok(DynamicBondingCurveProgramIx::MigrateMeteoraDamm(
                     ix_accounts,
                 ))
-            }
+            },
             [139, 133, 2, 30, 91, 145, 127, 154] => {
                 check_min_accounts_req(accounts_len, 9)?;
                 let ix_accounts = MigrateMeteoraDammClaimLpTokenIxAccounts {
@@ -419,7 +419,7 @@ impl InstructionParser {
                     token_program: ix.accounts[8].0.into(),
                 };
                 Ok(DynamicBondingCurveProgramIx::MigrateMeteoraDammClaimLpToken(ix_accounts))
-            }
+            },
             [177, 55, 238, 157, 251, 88, 165, 42] => {
                 check_min_accounts_req(accounts_len, 17)?;
                 let ix_accounts = MigrateMeteoraDammLockLpTokenIxAccounts {
@@ -444,7 +444,7 @@ impl InstructionParser {
                 Ok(DynamicBondingCurveProgramIx::MigrateMeteoraDammLockLpToken(
                     ix_accounts,
                 ))
-            }
+            },
             [156, 169, 230, 103, 53, 228, 80, 64] => {
                 check_min_accounts_req(accounts_len, 25)?;
                 let ix_accounts = MigrationDammV2IxAccounts {
@@ -493,7 +493,7 @@ impl InstructionParser {
                     system_program: ix.accounts[24].0.into(),
                 };
                 Ok(DynamicBondingCurveProgramIx::MigrationDammV2(ix_accounts))
-            }
+            },
             [109, 189, 19, 36, 195, 183, 222, 82] => {
                 check_min_accounts_req(accounts_len, 7)?;
                 let ix_accounts = MigrationDammV2CreateMetadataIxAccounts {
@@ -508,7 +508,7 @@ impl InstructionParser {
                 Ok(DynamicBondingCurveProgramIx::MigrationDammV2CreateMetadata(
                     ix_accounts,
                 ))
-            }
+            },
             [47, 94, 126, 115, 221, 226, 194, 133] => {
                 check_min_accounts_req(accounts_len, 7)?;
                 let ix_accounts = MigrationMeteoraDammCreateMetadataIxAccounts {
@@ -521,7 +521,7 @@ impl InstructionParser {
                     program: ix.accounts[6].0.into(),
                 };
                 Ok(DynamicBondingCurveProgramIx::MigrationMeteoraDammCreateMetadata(ix_accounts))
-            }
+            },
             [168, 173, 72, 100, 201, 98, 38, 92] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = PartnerWithdrawSurplusIxAccounts {
@@ -539,7 +539,7 @@ impl InstructionParser {
                 Ok(DynamicBondingCurveProgramIx::PartnerWithdrawSurplus(
                     ix_accounts,
                 ))
-            }
+            },
             [54, 136, 225, 138, 172, 182, 214, 167] => {
                 check_min_accounts_req(accounts_len, 9)?;
                 let ix_accounts = ProtocolWithdrawSurplusIxAccounts {
@@ -556,7 +556,7 @@ impl InstructionParser {
                 Ok(DynamicBondingCurveProgramIx::ProtocolWithdrawSurplus(
                     ix_accounts,
                 ))
-            }
+            },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = SwapIxAccounts {
@@ -584,7 +584,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(DynamicBondingCurveProgramIx::Swap(ix_accounts, de_ix_data))
-            }
+            },
             [20, 198, 202, 237, 235, 243, 183, 66] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = WithdrawLeftoverIxAccounts {
@@ -600,7 +600,7 @@ impl InstructionParser {
                     program: ix.accounts[9].0.into(),
                 };
                 Ok(DynamicBondingCurveProgramIx::WithdrawLeftover(ix_accounts))
-            }
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
@@ -615,7 +615,7 @@ impl InstructionParser {
                     program = ID.to_string(),
                     ix = ix.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_instruction",
@@ -625,7 +625,7 @@ impl InstructionParser {
                     discriminator = ?ix_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         ix
@@ -647,11 +647,12 @@ pub fn check_min_accounts_req(
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{DynamicBondingCurveProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::ClaimCreatorTradingFeeIxAccounts;
+    use super::{
+        ClaimCreatorTradingFeeIxAccounts, DynamicBondingCurveProgramIx, InstructionParser,
+    };
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::ClaimCreatorTradingFeeIxAccounts> for ClaimCreatorTradingFeeIxAccounts {
         fn into_proto(self) -> proto_def::ClaimCreatorTradingFeeIxAccounts {
             proto_def::ClaimCreatorTradingFeeIxAccounts {
@@ -1196,7 +1197,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::ClaimProtocolFee(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimProtocolFee(
                         proto_def::ClaimProtocolFeeIx {
@@ -1227,7 +1228,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::CreateConfig(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateConfig(
                         proto_def::CreateConfigIx {
@@ -1252,7 +1253,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::CreateVirtualPoolMetadata(acc, data) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateVirtualPoolMetadata(
@@ -1262,7 +1263,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::CreatorWithdrawSurplus(acc) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(proto_def::program_ixs::IxOneof::CreatorWithdrawSurplus(
@@ -1271,7 +1272,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::InitializeVirtualPoolWithSplToken(acc, data) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(
@@ -1283,7 +1284,7 @@ mod proto_parser {
                             ),
                         ),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::InitializeVirtualPoolWithToken2022(acc, data) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(
@@ -1295,7 +1296,7 @@ mod proto_parser {
                             ),
                         ),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::MigrateMeteoraDamm(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::MigrateMeteoraDamm(
                         proto_def::MigrateMeteoraDammIx {
@@ -1313,7 +1314,7 @@ mod proto_parser {
                             ),
                         ),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::MigrateMeteoraDammLockLpToken(acc) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(
@@ -1324,7 +1325,7 @@ mod proto_parser {
                             ),
                         ),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::MigrationDammV2(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::MigrationDammV2(
                         proto_def::MigrationDammV2Ix {
@@ -1342,7 +1343,7 @@ mod proto_parser {
                             ),
                         ),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::MigrationMeteoraDammCreateMetadata(acc) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(
@@ -1353,7 +1354,7 @@ mod proto_parser {
                             ),
                         ),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::PartnerWithdrawSurplus(acc) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(proto_def::program_ixs::IxOneof::PartnerWithdrawSurplus(
@@ -1362,7 +1363,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::ProtocolWithdrawSurplus(acc) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(proto_def::program_ixs::IxOneof::ProtocolWithdrawSurplus(
@@ -1371,7 +1372,7 @@ mod proto_parser {
                             },
                         )),
                     }
-                }
+                },
                 DynamicBondingCurveProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
                         accounts: Some(acc.into_proto()),
@@ -1392,8 +1393,6 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -127,9 +126,7 @@ impl anchor_lang::AccountSerialize for ClaimFeeOperator {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for ClaimFeeOperator {
-    fn owner() -> Pubkey {
-        crate::DYNAMIC_BONDING_CURVE_ID
-    }
+    fn owner() -> Pubkey { crate::DYNAMIC_BONDING_CURVE_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]
