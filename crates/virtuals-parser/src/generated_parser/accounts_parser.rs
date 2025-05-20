@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::accounts::VirtualsPool;
-use crate::ID;
+use crate::{accounts::VirtualsPool, ID};
 
 /// VirtualsProgram Program State
 #[allow(clippy::large_enum_variant)]
@@ -37,7 +36,7 @@ impl VirtualsProgramProgramState {
                     program = ID.to_string(),
                     account = acc.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_account",
@@ -47,7 +46,7 @@ impl VirtualsProgramProgramState {
                     discriminator = ?acc_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         acc
@@ -61,9 +60,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = VirtualsProgramProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "virtuals_program::AccountParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "virtuals_program::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -86,18 +83,15 @@ impl yellowstone_vixen_core::Parser for AccountParser {
 
 impl yellowstone_vixen_core::ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{AccountParser, VirtualsProgramProgramState};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::VirtualsPool;
+    use super::{AccountParser, VirtualsPool, VirtualsProgramProgramState};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::VirtualsPool> for VirtualsPool {
         fn into_proto(self) -> proto_def::VirtualsPool {
             proto_def::VirtualsPool {
@@ -116,7 +110,7 @@ mod proto_parser {
             let state_oneof = match self {
                 VirtualsProgramProgramState::VirtualsPool(data) => {
                     proto_def::program_state::StateOneof::VirtualsPool(data.into_proto())
-                }
+                },
             };
 
             proto_def::ProgramState {
@@ -128,8 +122,6 @@ mod proto_parser {
     impl ParseProto for AccountParser {
         type Message = proto_def::ProgramState;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

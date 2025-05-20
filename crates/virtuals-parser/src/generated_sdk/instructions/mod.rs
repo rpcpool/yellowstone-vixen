@@ -14,11 +14,7 @@ pub(crate) mod r#launch;
 pub(crate) mod r#sell;
 pub(crate) mod r#update_pool_creator;
 
-pub use self::r#buy::*;
-pub use self::r#claim_fees::*;
-pub use self::r#create_meteora_pool::*;
-pub use self::r#initialize::*;
-pub use self::r#initialize_meteora_accounts::*;
-pub use self::r#launch::*;
-pub use self::r#sell::*;
-pub use self::r#update_pool_creator::*;
+pub use self::{
+    r#buy::*, r#claim_fees::*, r#create_meteora_pool::*, r#initialize::*,
+    r#initialize_meteora_accounts::*, r#launch::*, r#sell::*, r#update_pool_creator::*,
+};

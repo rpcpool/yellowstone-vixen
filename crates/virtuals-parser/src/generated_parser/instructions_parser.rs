@@ -5,15 +5,18 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::instructions::{
-    Buy as BuyIxAccounts, BuyInstructionArgs as BuyIxData, ClaimFees as ClaimFeesIxAccounts,
-    CreateMeteoraPool as CreateMeteoraPoolIxAccounts, Initialize as InitializeIxAccounts,
-    InitializeMeteoraAccounts as InitializeMeteoraAccountsIxAccounts, Launch as LaunchIxAccounts,
-    LaunchInstructionArgs as LaunchIxData, Sell as SellIxAccounts,
-    SellInstructionArgs as SellIxData, UpdatePoolCreator as UpdatePoolCreatorIxAccounts,
-};
-use crate::ID;
 use borsh::BorshDeserialize;
+
+use crate::{
+    instructions::{
+        Buy as BuyIxAccounts, BuyInstructionArgs as BuyIxData, ClaimFees as ClaimFeesIxAccounts,
+        CreateMeteoraPool as CreateMeteoraPoolIxAccounts, Initialize as InitializeIxAccounts,
+        InitializeMeteoraAccounts as InitializeMeteoraAccountsIxAccounts,
+        Launch as LaunchIxAccounts, LaunchInstructionArgs as LaunchIxData, Sell as SellIxAccounts,
+        SellInstructionArgs as SellIxData, UpdatePoolCreator as UpdatePoolCreatorIxAccounts,
+    },
+    ID,
+};
 
 /// VirtualsProgram Instructions
 #[derive(Debug)]
@@ -36,9 +39,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = VirtualsProgramProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "VirtualsProgram::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "VirtualsProgram::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -61,9 +62,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -91,7 +90,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: BuyIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(VirtualsProgramProgramIx::Buy(ix_accounts, de_ix_data))
-            }
+            },
             [82, 251, 233, 156, 12, 52, 184, 202] => {
                 check_min_accounts_req(accounts_len, 28)?;
                 let ix_accounts = ClaimFeesIxAccounts {
@@ -125,7 +124,7 @@ impl InstructionParser {
                     dynamic_amm_program: ix.accounts[27].0.into(),
                 };
                 Ok(VirtualsProgramProgramIx::ClaimFees(ix_accounts))
-            }
+            },
             [246, 254, 33, 37, 225, 176, 41, 232] => {
                 check_min_accounts_req(accounts_len, 36)?;
                 let ix_accounts = CreateMeteoraPoolIxAccounts {
@@ -167,7 +166,7 @@ impl InstructionParser {
                     dynamic_amm_program: ix.accounts[35].0.into(),
                 };
                 Ok(VirtualsProgramProgramIx::CreateMeteoraPool(ix_accounts))
-            }
+            },
             [175, 175, 109, 31, 13, 152, 155, 237] => {
                 check_min_accounts_req(accounts_len, 9)?;
                 let ix_accounts = InitializeIxAccounts {
@@ -182,7 +181,7 @@ impl InstructionParser {
                     system_program: ix.accounts[8].0.into(),
                 };
                 Ok(VirtualsProgramProgramIx::Initialize(ix_accounts))
-            }
+            },
             [53, 12, 118, 158, 253, 239, 185, 214] => {
                 check_min_accounts_req(accounts_len, 36)?;
                 let ix_accounts = InitializeMeteoraAccountsIxAccounts {
@@ -226,7 +225,7 @@ impl InstructionParser {
                 Ok(VirtualsProgramProgramIx::InitializeMeteoraAccounts(
                     ix_accounts,
                 ))
-            }
+            },
             [153, 241, 93, 225, 22, 69, 74, 61] => {
                 check_min_accounts_req(accounts_len, 12)?;
                 let ix_accounts = LaunchIxAccounts {
@@ -245,7 +244,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: LaunchIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(VirtualsProgramProgramIx::Launch(ix_accounts, de_ix_data))
-            }
+            },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = SellIxAccounts {
@@ -262,7 +261,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: SellIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(VirtualsProgramProgramIx::Sell(ix_accounts, de_ix_data))
-            }
+            },
             [113, 225, 166, 185, 94, 231, 96, 28] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = UpdatePoolCreatorIxAccounts {
@@ -278,7 +277,7 @@ impl InstructionParser {
                     system_program: ix.accounts[9].0.into(),
                 };
                 Ok(VirtualsProgramProgramIx::UpdatePoolCreator(ix_accounts))
-            }
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
@@ -293,7 +292,7 @@ impl InstructionParser {
                     program = ID.to_string(),
                     ix = ix.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_instruction",
@@ -303,7 +302,7 @@ impl InstructionParser {
                     discriminator = ?ix_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         ix
@@ -325,11 +324,10 @@ pub fn check_min_accounts_req(
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{InstructionParser, VirtualsProgramProgramIx};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::BuyIxAccounts;
+    use super::{BuyIxAccounts, InstructionParser, VirtualsProgramProgramIx};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::BuyIxAccounts> for BuyIxAccounts {
         fn into_proto(self) -> proto_def::BuyIxAccounts {
             proto_def::BuyIxAccounts {
@@ -632,8 +630,6 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

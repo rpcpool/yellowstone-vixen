@@ -11,8 +11,6 @@ pub(crate) mod r#launch_event;
 pub(crate) mod r#pool_state;
 pub(crate) mod r#sell_event;
 
-pub use self::r#buy_event::*;
-pub use self::r#graduation_event::*;
-pub use self::r#launch_event::*;
-pub use self::r#pool_state::*;
-pub use self::r#sell_event::*;
+pub use self::{
+    r#buy_event::*, r#graduation_event::*, r#launch_event::*, r#pool_state::*, r#sell_event::*,
+};

@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -36,6 +35,7 @@ impl UpdatePoolCreator {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -108,9 +108,7 @@ impl UpdatePoolCreatorInstructionData {
 }
 
 impl Default for UpdatePoolCreatorInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `UpdatePoolCreator`.
@@ -143,30 +141,33 @@ pub struct UpdatePoolCreatorBuilder {
 }
 
 impl UpdatePoolCreatorBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn creator(&mut self, creator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
+
     #[inline(always)]
     pub fn new_creator(&mut self, new_creator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.new_creator = Some(new_creator);
         self
     }
+
     /// `[optional account, default to '3iQL8BFS2vE7mww4ehAqQHAsbmRNCrPxizWAT2Zfyr9y']`
     #[inline(always)]
     pub fn virtuals_mint(&mut self, virtuals_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.virtuals_mint = Some(virtuals_mint);
         self
     }
+
     #[inline(always)]
     pub fn token_mint(&mut self, token_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_mint = Some(token_mint);
         self
     }
+
     #[inline(always)]
     pub fn new_creator_virtuals_ata(
         &mut self,
@@ -175,6 +176,7 @@ impl UpdatePoolCreatorBuilder {
         self.new_creator_virtuals_ata = Some(new_creator_virtuals_ata);
         self
     }
+
     #[inline(always)]
     pub fn new_creator_token_ata(
         &mut self,
@@ -183,17 +185,20 @@ impl UpdatePoolCreatorBuilder {
         self.new_creator_token_ata = Some(new_creator_token_ata);
         self
     }
+
     #[inline(always)]
     pub fn vpool(&mut self, vpool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vpool = Some(vpool);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     #[inline(always)]
     pub fn associated_token_program(
@@ -203,12 +208,14 @@ impl UpdatePoolCreatorBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -218,6 +225,7 @@ impl UpdatePoolCreatorBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -227,6 +235,7 @@ impl UpdatePoolCreatorBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = UpdatePoolCreator {
@@ -326,10 +335,12 @@ impl<'a, 'b> UpdatePoolCreatorCpi<'a, 'b> {
             system_program: accounts.system_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -341,6 +352,7 @@ impl<'a, 'b> UpdatePoolCreatorCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -348,6 +360,7 @@ impl<'a, 'b> UpdatePoolCreatorCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -476,6 +489,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn creator(
         &mut self,
@@ -484,6 +498,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         self.instruction.creator = Some(creator);
         self
     }
+
     #[inline(always)]
     pub fn new_creator(
         &mut self,
@@ -492,6 +507,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         self.instruction.new_creator = Some(new_creator);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_mint(
         &mut self,
@@ -500,6 +516,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         self.instruction.virtuals_mint = Some(virtuals_mint);
         self
     }
+
     #[inline(always)]
     pub fn token_mint(
         &mut self,
@@ -508,6 +525,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         self.instruction.token_mint = Some(token_mint);
         self
     }
+
     #[inline(always)]
     pub fn new_creator_virtuals_ata(
         &mut self,
@@ -516,6 +534,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         self.instruction.new_creator_virtuals_ata = Some(new_creator_virtuals_ata);
         self
     }
+
     #[inline(always)]
     pub fn new_creator_token_ata(
         &mut self,
@@ -524,11 +543,13 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         self.instruction.new_creator_token_ata = Some(new_creator_token_ata);
         self
     }
+
     #[inline(always)]
     pub fn vpool(&mut self, vpool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vpool = Some(vpool);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -537,6 +558,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -545,6 +567,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -553,6 +576,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -566,6 +590,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -584,10 +609,10 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

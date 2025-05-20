@@ -5,10 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::PoolState;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
+
+use crate::generated::types::PoolState;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -133,9 +133,7 @@ impl anchor_lang::AccountSerialize for VirtualsPool {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for VirtualsPool {
-    fn owner() -> Pubkey {
-        crate::VIRTUALS_PROGRAM_ID
-    }
+    fn owner() -> Pubkey { crate::VIRTUALS_PROGRAM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

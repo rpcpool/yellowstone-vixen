@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -88,6 +87,7 @@ impl CreateMeteoraPool {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -261,9 +261,7 @@ impl CreateMeteoraPoolInstructionData {
 }
 
 impl Default for CreateMeteoraPoolInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `CreateMeteoraPool`.
@@ -348,14 +346,14 @@ pub struct CreateMeteoraPoolBuilder {
 }
 
 impl CreateMeteoraPoolBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn vpool(&mut self, vpool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vpool = Some(vpool);
         self
     }
+
     #[inline(always)]
     pub fn meteora_deployer(
         &mut self,
@@ -364,6 +362,7 @@ impl CreateMeteoraPoolBuilder {
         self.meteora_deployer = Some(meteora_deployer);
         self
     }
+
     #[inline(always)]
     pub fn meteora_deployer_virtuals_ata(
         &mut self,
@@ -372,6 +371,7 @@ impl CreateMeteoraPoolBuilder {
         self.meteora_deployer_virtuals_ata = Some(meteora_deployer_virtuals_ata);
         self
     }
+
     #[inline(always)]
     pub fn meteora_deployer_token_ata(
         &mut self,
@@ -380,6 +380,7 @@ impl CreateMeteoraPoolBuilder {
         self.meteora_deployer_token_ata = Some(meteora_deployer_token_ata);
         self
     }
+
     #[inline(always)]
     pub fn vpool_virtuals_ata(
         &mut self,
@@ -388,6 +389,7 @@ impl CreateMeteoraPoolBuilder {
         self.vpool_virtuals_ata = Some(vpool_virtuals_ata);
         self
     }
+
     #[inline(always)]
     pub fn vpool_token_ata(
         &mut self,
@@ -396,53 +398,63 @@ impl CreateMeteoraPoolBuilder {
         self.vpool_token_ata = Some(vpool_token_ata);
         self
     }
+
     #[inline(always)]
     pub fn lock_escrow(&mut self, lock_escrow: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lock_escrow = Some(lock_escrow);
         self
     }
+
     #[inline(always)]
     pub fn escrow_vault(&mut self, escrow_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.escrow_vault = Some(escrow_vault);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     /// `[optional account, default to 'B6FT4AHhQJ7BttrC1i223km5bYRUA2nVwBR7k5TVwLtx']`
     #[inline(always)]
     pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     /// `[optional account, default to '3iQL8BFS2vE7mww4ehAqQHAsbmRNCrPxizWAT2Zfyr9y']`
     #[inline(always)]
     pub fn virtuals_mint(&mut self, virtuals_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.virtuals_mint = Some(virtuals_mint);
         self
     }
+
     #[inline(always)]
     pub fn token_mint(&mut self, token_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_mint = Some(token_mint);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_vault(&mut self, virtuals_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.virtuals_vault = Some(virtuals_vault);
         self
     }
+
     #[inline(always)]
     pub fn token_vault(&mut self, token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_vault = Some(token_vault);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_token_vault(
         &mut self,
@@ -451,6 +463,7 @@ impl CreateMeteoraPoolBuilder {
         self.virtuals_token_vault = Some(virtuals_token_vault);
         self
     }
+
     #[inline(always)]
     pub fn token_token_vault(
         &mut self,
@@ -459,6 +472,7 @@ impl CreateMeteoraPoolBuilder {
         self.token_token_vault = Some(token_token_vault);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_vault_lp_mint(
         &mut self,
@@ -467,6 +481,7 @@ impl CreateMeteoraPoolBuilder {
         self.virtuals_vault_lp_mint = Some(virtuals_vault_lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn token_vault_lp_mint(
         &mut self,
@@ -475,6 +490,7 @@ impl CreateMeteoraPoolBuilder {
         self.token_vault_lp_mint = Some(token_vault_lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_vault_lp(
         &mut self,
@@ -483,11 +499,13 @@ impl CreateMeteoraPoolBuilder {
         self.virtuals_vault_lp = Some(virtuals_vault_lp);
         self
     }
+
     #[inline(always)]
     pub fn token_vault_lp(&mut self, token_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_vault_lp = Some(token_vault_lp);
         self
     }
+
     #[inline(always)]
     pub fn pool_virtuals_ata(
         &mut self,
@@ -496,11 +514,13 @@ impl CreateMeteoraPoolBuilder {
         self.pool_virtuals_ata = Some(pool_virtuals_ata);
         self
     }
+
     #[inline(always)]
     pub fn pool_token_ata(&mut self, pool_token_ata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.pool_token_ata = Some(pool_token_ata);
         self
     }
+
     #[inline(always)]
     pub fn meteora_deployer_pool_lp(
         &mut self,
@@ -509,6 +529,7 @@ impl CreateMeteoraPoolBuilder {
         self.meteora_deployer_pool_lp = Some(meteora_deployer_pool_lp);
         self
     }
+
     #[inline(always)]
     pub fn protocol_virtuals_fee(
         &mut self,
@@ -517,6 +538,7 @@ impl CreateMeteoraPoolBuilder {
         self.protocol_virtuals_fee = Some(protocol_virtuals_fee);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_fee(
         &mut self,
@@ -525,16 +547,19 @@ impl CreateMeteoraPoolBuilder {
         self.protocol_token_fee = Some(protocol_token_fee);
         self
     }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn token_metadata(&mut self, token_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_metadata = Some(token_metadata);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Rent account.
     #[inline(always)]
@@ -542,11 +567,13 @@ impl CreateMeteoraPoolBuilder {
         self.rent = Some(rent);
         self
     }
+
     #[inline(always)]
     pub fn mint_metadata(&mut self, mint_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.mint_metadata = Some(mint_metadata);
         self
     }
+
     /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
     #[inline(always)]
     pub fn metadata_program(
@@ -556,12 +583,14 @@ impl CreateMeteoraPoolBuilder {
         self.metadata_program = Some(metadata_program);
         self
     }
+
     /// `[optional account, default to '24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi']`
     #[inline(always)]
     pub fn vault_program(&mut self, vault_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vault_program = Some(vault_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program.
     #[inline(always)]
@@ -569,6 +598,7 @@ impl CreateMeteoraPoolBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     /// Associated token program.
     #[inline(always)]
@@ -579,6 +609,7 @@ impl CreateMeteoraPoolBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
@@ -586,6 +617,7 @@ impl CreateMeteoraPoolBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB']`
     #[inline(always)]
     pub fn dynamic_amm_program(
@@ -595,6 +627,7 @@ impl CreateMeteoraPoolBuilder {
         self.dynamic_amm_program = Some(dynamic_amm_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -604,6 +637,7 @@ impl CreateMeteoraPoolBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -613,6 +647,7 @@ impl CreateMeteoraPoolBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CreateMeteoraPool {
@@ -898,10 +933,12 @@ impl<'a, 'b> CreateMeteoraPoolCpi<'a, 'b> {
             dynamic_amm_program: accounts.dynamic_amm_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -913,6 +950,7 @@ impl<'a, 'b> CreateMeteoraPoolCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -920,6 +958,7 @@ impl<'a, 'b> CreateMeteoraPoolCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -1230,11 +1269,13 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn vpool(&mut self, vpool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vpool = Some(vpool);
         self
     }
+
     #[inline(always)]
     pub fn meteora_deployer(
         &mut self,
@@ -1243,6 +1284,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.meteora_deployer = Some(meteora_deployer);
         self
     }
+
     #[inline(always)]
     pub fn meteora_deployer_virtuals_ata(
         &mut self,
@@ -1251,6 +1293,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.meteora_deployer_virtuals_ata = Some(meteora_deployer_virtuals_ata);
         self
     }
+
     #[inline(always)]
     pub fn meteora_deployer_token_ata(
         &mut self,
@@ -1259,6 +1302,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.meteora_deployer_token_ata = Some(meteora_deployer_token_ata);
         self
     }
+
     #[inline(always)]
     pub fn vpool_virtuals_ata(
         &mut self,
@@ -1267,6 +1311,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.vpool_virtuals_ata = Some(vpool_virtuals_ata);
         self
     }
+
     #[inline(always)]
     pub fn vpool_token_ata(
         &mut self,
@@ -1275,6 +1320,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.vpool_token_ata = Some(vpool_token_ata);
         self
     }
+
     #[inline(always)]
     pub fn lock_escrow(
         &mut self,
@@ -1283,6 +1329,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.lock_escrow = Some(lock_escrow);
         self
     }
+
     #[inline(always)]
     pub fn escrow_vault(
         &mut self,
@@ -1291,11 +1338,13 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.escrow_vault = Some(escrow_vault);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn config(
         &mut self,
@@ -1304,6 +1353,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn lp_mint(
         &mut self,
@@ -1312,6 +1362,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_mint(
         &mut self,
@@ -1320,6 +1371,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.virtuals_mint = Some(virtuals_mint);
         self
     }
+
     #[inline(always)]
     pub fn token_mint(
         &mut self,
@@ -1328,6 +1380,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.token_mint = Some(token_mint);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_vault(
         &mut self,
@@ -1336,6 +1389,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.virtuals_vault = Some(virtuals_vault);
         self
     }
+
     #[inline(always)]
     pub fn token_vault(
         &mut self,
@@ -1344,6 +1398,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.token_vault = Some(token_vault);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_token_vault(
         &mut self,
@@ -1352,6 +1407,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.virtuals_token_vault = Some(virtuals_token_vault);
         self
     }
+
     #[inline(always)]
     pub fn token_token_vault(
         &mut self,
@@ -1360,6 +1416,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.token_token_vault = Some(token_token_vault);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_vault_lp_mint(
         &mut self,
@@ -1368,6 +1425,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.virtuals_vault_lp_mint = Some(virtuals_vault_lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn token_vault_lp_mint(
         &mut self,
@@ -1376,6 +1434,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.token_vault_lp_mint = Some(token_vault_lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn virtuals_vault_lp(
         &mut self,
@@ -1384,6 +1443,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.virtuals_vault_lp = Some(virtuals_vault_lp);
         self
     }
+
     #[inline(always)]
     pub fn token_vault_lp(
         &mut self,
@@ -1392,6 +1452,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.token_vault_lp = Some(token_vault_lp);
         self
     }
+
     #[inline(always)]
     pub fn pool_virtuals_ata(
         &mut self,
@@ -1400,6 +1461,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.pool_virtuals_ata = Some(pool_virtuals_ata);
         self
     }
+
     #[inline(always)]
     pub fn pool_token_ata(
         &mut self,
@@ -1408,6 +1470,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.pool_token_ata = Some(pool_token_ata);
         self
     }
+
     #[inline(always)]
     pub fn meteora_deployer_pool_lp(
         &mut self,
@@ -1416,6 +1479,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.meteora_deployer_pool_lp = Some(meteora_deployer_pool_lp);
         self
     }
+
     #[inline(always)]
     pub fn protocol_virtuals_fee(
         &mut self,
@@ -1424,6 +1488,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.protocol_virtuals_fee = Some(protocol_virtuals_fee);
         self
     }
+
     #[inline(always)]
     pub fn protocol_token_fee(
         &mut self,
@@ -1432,11 +1497,13 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.protocol_token_fee = Some(protocol_token_fee);
         self
     }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn token_metadata(
         &mut self,
@@ -1445,12 +1512,14 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.token_metadata = Some(token_metadata);
         self
     }
+
     /// Rent account.
     #[inline(always)]
     pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
+
     #[inline(always)]
     pub fn mint_metadata(
         &mut self,
@@ -1459,6 +1528,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.mint_metadata = Some(mint_metadata);
         self
     }
+
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
@@ -1467,6 +1537,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.metadata_program = Some(metadata_program);
         self
     }
+
     #[inline(always)]
     pub fn vault_program(
         &mut self,
@@ -1475,6 +1546,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.vault_program = Some(vault_program);
         self
     }
+
     /// Token program.
     #[inline(always)]
     pub fn token_program(
@@ -1484,6 +1556,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Associated token program.
     #[inline(always)]
     pub fn associated_token_program(
@@ -1493,6 +1566,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// System program.
     #[inline(always)]
     pub fn system_program(
@@ -1502,6 +1576,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn dynamic_amm_program(
         &mut self,
@@ -1510,6 +1585,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
         self.instruction.dynamic_amm_program = Some(dynamic_amm_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1523,6 +1599,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1541,10 +1618,10 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

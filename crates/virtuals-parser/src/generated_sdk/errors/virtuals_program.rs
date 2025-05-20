@@ -42,13 +42,13 @@ pub enum VirtualsProgramError {
     InvalidVPoolState = 0x1779,
     /// 6010 - Invalid name
     #[error("Invalid name")]
-    InvalidName = 0x177A,
+    InvalidName = 0x177a,
     /// 6011 - Invalid symbol
     #[error("Invalid symbol")]
-    InvalidSymbol = 0x177B,
+    InvalidSymbol = 0x177b,
     /// 6012 - Invalid URI
     #[error("Invalid URI")]
-    InvalidURI = 0x177C,
+    InvalidURI = 0x177c,
 }
 
 impl solana_program::program_error::PrintProgramError for VirtualsProgramError {
@@ -58,7 +58,5 @@ impl solana_program::program_error::PrintProgramError for VirtualsProgramError {
 }
 
 impl<T> solana_program::decode_error::DecodeError<T> for VirtualsProgramError {
-    fn type_of() -> &'static str {
-        "VirtualsProgramError"
-    }
+    fn type_of() -> &'static str { "VirtualsProgramError" }
 }
