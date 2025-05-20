@@ -8079,8 +8079,8 @@ dependencies = [
  "tracing",
  "yellowstone-grpc-client",
  "yellowstone-grpc-proto",
- "yellowstone-vixen-core 0.3.0",
- "yellowstone-vixen-proto 0.3.0",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-proto",
 ]
 
 [[package]]
@@ -8134,7 +8134,7 @@ dependencies = [
  "solana-program",
  "thiserror 1.0.69",
  "tonic",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8152,7 +8152,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8170,7 +8170,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8203,7 +8203,7 @@ dependencies = [
  "solana-program",
  "thiserror 1.0.69",
  "tonic",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8237,7 +8237,7 @@ dependencies = [
  "solana-sdk",
  "solana-transaction-status",
  "yellowstone-grpc-proto",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8255,7 +8255,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8273,7 +8273,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8291,9 +8291,9 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "yellowstone-grpc-proto",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
- "yellowstone-vixen-proto 0.3.0",
+ "yellowstone-vixen-proto",
 ]
 
 [[package]]
@@ -8331,7 +8331,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8347,7 +8347,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8365,7 +8365,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8383,7 +8383,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8401,7 +8401,25 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
+name = "yellowstone-vixen-virtuals-parser"
+version = "0.3.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
