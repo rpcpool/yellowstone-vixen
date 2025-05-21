@@ -8098,7 +8098,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8108,18 +8108,7 @@ dependencies = [
  "bs58",
  "thiserror 1.0.69",
  "yellowstone-grpc-proto",
- "yellowstone-vixen-proto 0.3.0",
-]
-
-[[package]]
-name = "yellowstone-vixen-core"
-version = "0.3.0"
-source = "git+https://github.com/rpcpool/yellowstone-vixen?branch=main#4dc25ef18ea1d0db66e9f2b573e806a10124e0c6"
-dependencies = [
- "bs58",
- "thiserror 1.0.69",
- "yellowstone-grpc-proto",
- "yellowstone-vixen-proto 0.3.0 (git+https://github.com/rpcpool/yellowstone-vixen?branch=main)",
+ "yellowstone-vixen-proto",
 ]
 
 [[package]]
@@ -8188,7 +8177,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8221,7 +8210,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8306,14 +8295,6 @@ dependencies = [
  "tonic",
  "tonic-build",
  "tonic-reflection",
-]
-
-[[package]]
-name = "yellowstone-vixen-proto"
-version = "0.3.0"
-source = "git+https://github.com/rpcpool/yellowstone-vixen?branch=main#4dc25ef18ea1d0db66e9f2b573e806a10124e0c6"
-dependencies = [
- "prost",
 ]
 
 [[package]]
@@ -8405,7 +8386,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "yellowstone-vixen-virtuals-parser"
+name = "yellowstone-vixen-raydium-launchpad-parser"
 version = "0.3.0"
 dependencies = [
  "borsh 0.10.4",
@@ -8423,7 +8404,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "yellowstone-vixen-raydium-launchpad-parser"
+name = "yellowstone-vixen-virtuals-parser"
 version = "0.3.0"
 dependencies = [
  "borsh 0.10.4",
@@ -8437,25 +8418,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
- "yellowstone-vixen-core 0.3.0",
-]
-
-[[package]]
-name = "yellowstone-vixen-virtuals-parser"
-version = "0.1.0"
-dependencies = [
- "borsh 0.10.4",
- "num-derive",
- "num-traits",
- "prost",
- "prost-build",
- "solana-program",
- "strum",
- "strum_macros",
- "thiserror 1.0.69",
- "tonic",
- "tracing",
- "yellowstone-vixen-core 0.3.0 (git+https://github.com/rpcpool/yellowstone-vixen?branch=main)",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
