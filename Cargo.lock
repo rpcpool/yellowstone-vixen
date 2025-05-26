@@ -8215,7 +8215,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-vault-parser"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
