@@ -11,7 +11,12 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{self as vixen, Pipeline};
+use yellowstone_vixen::{
+    self as vixen,
+    config::{NullConfig, VixenConfig},
+    datasources::yellowstone_grpc::YellowstoneGrpcDataSource,
+    Pipeline,
+};
 use yellowstone_vixen_parser::{
     block_meta::BlockMetaParser,
     token_extension_program::{
@@ -48,9 +53,16 @@ fn main() {
 
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
-    let config = toml::from_str(&config).expect("Error parsing config");
+    let mut config: VixenConfig<_> = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
+        .datasource(
+            YellowstoneGrpcDataSource::new(
+                config.datasources.remove("my_yellowstone").unwrap().into(),
+            ), //
+               // This is optional, if not set the runtime filters will be used.
+               // .add_filter(TokenProgramAccParser),
+        )
         .account(Pipeline::new(TokenProgramAccParser, [Logger]))
         .account(Pipeline::new(TokenExtensionProgramAccParser, [Logger]))
         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Logger]))
@@ -58,6 +70,6 @@ fn main() {
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
         .metrics(vixen::metrics::Prometheus)
         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
-        .build(config)
+        .build(config.runtime)
         .run();
 }

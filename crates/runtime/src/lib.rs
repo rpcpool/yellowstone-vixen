@@ -12,12 +12,24 @@
 //! Vixen provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
+use std::collections::HashMap;
+
 use builder::RuntimeBuilder;
 use config::{BufferConfig, YellowstoneConfig};
+use datasources::DataSource;
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
+
+use yellowstone_grpc_proto::{
+    // prelude::*,
+    tonic::Status,
+};
+
 use stop::{StopCode, StopTx};
-use tokio::task::LocalSet;
+use tokio::{
+    sync::mpsc::{self, Receiver},
+    task::LocalSet,
+};
 
 #[cfg(feature = "opentelemetry")]
 pub extern crate opentelemetry;
@@ -32,6 +44,7 @@ pub extern crate yellowstone_vixen_proto as proto;
 mod buffer;
 pub mod builder;
 pub mod config;
+pub mod datasources;
 pub mod handler;
 pub mod instruction;
 pub mod metrics;
@@ -42,7 +55,9 @@ mod yellowstone;
 
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use util::*;
+use vixen_core::{Filters, Prefilter};
 pub use yellowstone_grpc_proto::geyser::CommitmentLevel;
+use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 
 /// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
@@ -65,12 +80,16 @@ pub enum Error {
     /// An error caused by the metrics exporter.
     #[error("Error exporting metrics")]
     MetricsExporter(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
+    /// An error occurring when a datasource is not configured correctly.
+    #[error("Yellowstone stream config error")]
+    ConfigError,
 }
 
 /// The main runtime for Vixen.
 #[derive(Debug)]
 pub struct Runtime<M: MetricsFactory> {
-    yellowstone_cfg: YellowstoneConfig,
+    // yellowstone_cfg: YellowstoneConfig,
+    datasources: Vec<Box<dyn DataSource>>,
     commitment_filter: Option<CommitmentLevel>,
     buffer_cfg: BufferConfig,
     pipelines: handler::PipelineSets,
@@ -80,14 +99,18 @@ pub struct Runtime<M: MetricsFactory> {
 
 impl Runtime<NullMetrics> {
     /// Create a new runtime builder.
-    pub fn builder() -> RuntimeBuilder { RuntimeBuilder::default() }
+    pub fn builder() -> RuntimeBuilder {
+        RuntimeBuilder::default()
+    }
 }
 
 impl<M: MetricsFactory> Runtime<M> {
     /// Create a new Tokio runtime and run the Vixen runtime within it,
     /// terminating the current process if the runtime crashes.
     #[inline]
-    pub fn run(self) { util::handle_fatal(self.try_run()); }
+    pub fn run(self) {
+        util::handle_fatal(self.try_run());
+    }
 
     /// Create a new Tokio runtime and run the Vixen runtime within it.
     ///
@@ -103,7 +126,9 @@ impl<M: MetricsFactory> Runtime<M> {
     ///
     /// **NOTE:** This function **must** be called from within a Tokio runtime.
     #[inline]
-    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
+    pub async fn run_async(self) {
+        util::handle_fatal(self.try_run_async().await);
+    }
 
     /// Create a new [`LocalSet`] and run the Vixen runtime within it.
     ///
@@ -113,7 +138,8 @@ impl<M: MetricsFactory> Runtime<M> {
     /// This function returns an error if the runtime crashes.
     #[inline]
     pub async fn try_run_async(self) -> Result<(), Error> {
-        LocalSet::new().run_until(self.try_run_local()).await
+        // LocalSet::new().run_until(self.try_run_local()).await
+        self.try_run_local().await
     }
 
     /// Run the Vixen runtime.
@@ -132,7 +158,7 @@ impl<M: MetricsFactory> Runtime<M> {
         }
 
         let Self {
-            yellowstone_cfg,
+            mut datasources,
             commitment_filter,
             buffer_cfg,
             pipelines,
@@ -143,8 +169,38 @@ impl<M: MetricsFactory> Runtime<M> {
         let (stop_exporter, rx) = stop::channel();
         let mut exporter = OptionFuture::from(exporter.map(|e| tokio::spawn(e.run(rx))));
 
-        let client =
-            yellowstone::connect(yellowstone_cfg, pipelines.filters(), commitment_filter).await?;
+        // let client = yellowstone::connect(
+        //     YellowstoneConfig {
+        //         endpoint: "".to_string(),
+        //         x_token: None,
+        //         timeout: 0,
+        //     },
+        //     pipelines.filters(),
+        //     commitment_filter,
+        // )
+        // .await?;
+
+        // TODO: fix lifetimes
+        // ###################################################################
+        // let filters = pipelines
+        //     .filters()
+        //     .iter()
+        //     .map(|(k, v)| (k.to_string(), v.clone()))
+        //     .collect::<HashMap<String, Prefilter>>();
+        // let filters = filters
+        //     .iter()
+        //     .map(|(k, v)| (k.as_str(), v.clone()))
+        //     .collect::<HashMap<&str, Prefilter>>();
+
+        // let filters = Filters::new(filters);
+
+        // for datasource in &mut datasources {
+        //     datasource.filters(filters);
+        // }
+        // ###################################################################
+
+        let rx = Self::connect_to_datasources(datasources);
+
         let signal;
 
         #[cfg(unix)]
@@ -179,7 +235,9 @@ impl<M: MetricsFactory> Runtime<M> {
             struct CtrlC;
 
             impl fmt::Debug for CtrlC {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("^C")
+                }
             }
 
             signal = tokio::signal::ctrl_c()
@@ -187,7 +245,7 @@ impl<M: MetricsFactory> Runtime<M> {
                 .map_err(Into::into);
         }
 
-        let mut buffer = buffer::Buffer::run_yellowstone(buffer_cfg, client, pipelines, counters);
+        let mut buffer = buffer::Buffer::run_yellowstone(buffer_cfg, rx, pipelines, counters);
 
         let stop_ty = tokio::select! {
             s = signal => StopType::Signal(s),
@@ -273,5 +331,21 @@ impl<M: MetricsFactory> Runtime<M> {
                 Ok(Ok(c)) => c.as_unit(),
             }
         }
+    }
+
+    fn connect_to_datasources(
+        datasources: Vec<Box<dyn DataSource>>,
+    ) -> Receiver<Result<SubscribeUpdate, Status>> {
+        // TODO: Make channel size configurable & use task handlers
+        let (tx, rx) = mpsc::channel::<Result<SubscribeUpdate, Status>>(100);
+
+        for datasource in datasources {
+            let tx = tx.clone();
+            let handle = tokio::spawn(async move {
+                datasource.connect(tx).await.unwrap();
+            });
+        }
+
+        rx
     }
 }

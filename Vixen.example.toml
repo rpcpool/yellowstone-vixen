@@ -1,18 +1,25 @@
 # This is an example TOML configuration file for Yellowstone Vixen.
 # Copy to Vixen.toml and them modify as needed.
 
-[yellowstone]
-# The endpoint of the dragon's mouth stream.
-# This is the URL where the stream can be accessed.
-endpoint = "https://index.rpcpool.com"
+[datasources]
+  [datasources.my_yellowstone]
+  type = "yellowstone"
+  # The endpoint of the dragon's mouth stream.
+  # This is the URL where the stream can be accessed.
+  endpoint = "https://index.rpcpool.com"
 
-# The x-token for the dragon's mouth stream.
-# Replace <X-TOKEN> with your actual token.
-x-token = "<X-TOKEN>"
+  # The x-token for the dragon's mouth stream.
+  # Replace <X-TOKEN> with your actual token.
+  x-token = "<X-TOKEN>"
 
-# The connection timeout for the dragon's mouth stream in seconds.
-# This defines how long to wait for a connection before timing out.
-timeout = 60
+  # The connection timeout for the dragon's mouth stream in seconds.
+  # This defines how long to wait for a connection before timing out.
+  timeout = 60
+
+  # Example of a custom RPC datasource.
+  # [datasources.my_rpc]
+  # type = "rpc"
+  # url = "https://rpc.example.com"
 
 # Metrics configuration section.
 # Uncomment the following lines if you are running Prometheus 

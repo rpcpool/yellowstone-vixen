@@ -2,7 +2,7 @@
 
 use std::net::SocketAddr;
 
-use crate::config::VixenConfig;
+use crate::config::VixenRuntimeConfig;
 
 /// Root configuration type for [the Vixen stream server](super::Server).
 #[derive(Debug, clap::Args, serde::Deserialize)]
@@ -16,7 +16,7 @@ pub struct StreamConfig<M: clap::Args> {
     /// Configuration for the underlying Vixen runtime.
     #[command(flatten)]
     #[serde(flatten)]
-    pub runtime: VixenConfig<M>,
+    pub runtime: VixenRuntimeConfig<M>,
 }
 
 /// gRPC server configuration.
@@ -37,4 +37,6 @@ fn default_grpc() -> GrpcConfig {
 }
 
 #[inline]
-fn default_addr() -> SocketAddr { "[::]:3030".parse().unwrap() }
+fn default_addr() -> SocketAddr {
+    "[::]:3030".parse().unwrap()
+}

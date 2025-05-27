@@ -1,6 +1,7 @@
 use std::{pin::pin, sync::Arc};
 
 use futures_util::{Stream, StreamExt};
+use tokio::sync::mpsc::Receiver;
 use topograph::{
     executor::{self, Executor, Nonblock, Tokio},
     prelude::*,
@@ -77,6 +78,11 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
 
         match update {
             UpdateOneof::Account(a) => {
+                // tracing::info!(
+                //     name: "account_update_received",
+                //     name = "account_update_received",
+                // );
+
                 pipelines
                     .account
                     .get_handlers(&filters)
@@ -84,6 +90,11 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
                     .await;
             },
             UpdateOneof::Transaction(t) => {
+                // tracing::info!(
+                //     name: "tx_update_received",
+                //     name = "tx_update_received",
+                // );
+
                 pipelines
                     .transaction
                     .get_handlers(&filters)
@@ -145,13 +156,14 @@ impl Buffer {
     }
 
     pub fn run_yellowstone<
-        I,
-        T,
-        S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static,
+        // I,
+        // T,
+        // S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static + Send,
         M: Instrumenter,
     >(
         config: BufferConfig,
-        client: yellowstone::YellowstoneStream<I, T, S>,
+        // client: yellowstone::YellowstoneStream<I, T, S>,
+        mut stream: Receiver<Result<SubscribeUpdate, Status>>,
         pipelines: PipelineSets,
         counters: Counters<M>,
     ) -> Self {
@@ -161,20 +173,21 @@ impl Buffer {
             counters,
             std::convert::identity,
             |exec, mut stop_rx, counters| {
-                tokio::task::spawn_local(async move {
+                tokio::task::spawn(async move {
                     enum Event {
                         Update(Option<Result<SubscribeUpdate, Status>>),
                         Stop(StopCode),
                     }
 
-                    let mut stream = pin!(client.stream);
+                    // let mut stream = pin!(client.stream);
                     loop {
                         let event = tokio::select! {
-                            u = stream
-                                .next()
-                                .instrument(tracing::trace_span!("await_update"))
-                                => Event::Update(u),
-                                c = &mut stop_rx => Event::Stop(c),
+                            // u = stream
+                            //     .next()
+                            //     .instrument(tracing::trace_span!("await_update"))
+                            //     => Event::Update(u),
+                            u = stream.recv() => Event::Update(u),
+                            c = &mut stop_rx => Event::Stop(c),
                         };
 
                         let update = match event {

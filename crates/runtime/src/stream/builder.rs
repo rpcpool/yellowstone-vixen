@@ -95,7 +95,9 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
     }
 
     /// Add a new descriptor set to the builder.
-    pub fn descriptor_set(self, desc: &'a [u8]) -> Self { self.mutate(|s| s.extra.0.push(desc)) }
+    pub fn descriptor_set(self, desc: &'a [u8]) -> Self {
+        self.mutate(|s| s.extra.0.push(desc))
+    }
 
     /// Add a new account parser to the builder.
     pub fn account<A: Debug + ProgramParser<Input = AccountUpdate> + Send + Sync + 'static>(
@@ -163,6 +165,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             instruction,
             block_meta,
             metrics,
+            datasources,
             commitment_level,
             extra: StreamKind(desc_sets, channels),
         } = self;
@@ -186,6 +189,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             commitment_level,
             block_meta,
             metrics,
+            datasources,
             extra: RuntimeKind,
         }
         .try_build(runtime_cfg)?;

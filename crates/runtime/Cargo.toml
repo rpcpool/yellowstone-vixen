@@ -8,6 +8,7 @@ license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
+async-trait = "0.1.88"
 clap = { version = "4.5.4", default-features = false, features = [
   "env",
   "derive",

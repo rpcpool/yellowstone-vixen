@@ -7,7 +7,8 @@ use vixen_core::{
 use yellowstone_grpc_proto::geyser::CommitmentLevel;
 
 use crate::{
-    config::{MaybeDefault, VixenConfig},
+    config::{MaybeDefault, VixenConfig, VixenRuntimeConfig},
+    datasources::DataSource,
     handler::{BoxPipeline, DynPipeline, PipelineSets},
     instruction::InstructionPipeline,
     metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
@@ -55,6 +56,7 @@ pub struct Builder<K: BuilderKind, M> {
     pub(crate) block_meta: Vec<BoxPipeline<'static, BlockMetaUpdate>>,
     pub(crate) commitment_level: Option<CommitmentLevel>,
     pub(crate) metrics: M,
+    pub(crate) datasources: Vec<Box<dyn DataSource>>,
     pub(crate) extra: K,
 }
 
@@ -68,6 +70,7 @@ impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
             block_meta: vec![],
             commitment_level: None,
             metrics: NullMetrics,
+            datasources: vec![],
             extra: K::default(),
         }
     }
@@ -114,6 +117,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             block_meta,
             commitment_level,
             metrics: _,
+            datasources,
             extra,
         } = self;
 
@@ -125,6 +129,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             block_meta,
             commitment_level,
             metrics,
+            datasources,
             extra,
         }
     }
@@ -181,13 +186,23 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.commitment_level = Some(commitment_level))
     }
 
+    /// Add a new datasource to which the runtime will subscribe.
+    ///
+    /// **NOTE:** All added datasources are going to be processed concurrently
+    pub fn datasource<T: DataSource>(self, datasource: T) -> Self {
+        self.mutate(|s| s.datasources.push(Box::new(datasource)))
+    }
+
     /// Attempt to build a new [`Runtime`] instance from the current builder
     /// state and the provided configuration.
     ///
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
-    pub fn try_build(self, config: VixenConfig<M::Config>) -> Result<Runtime<M>, BuilderError> {
+    pub fn try_build(
+        self,
+        config: VixenRuntimeConfig<M::Config>,
+    ) -> Result<Runtime<M>, BuilderError> {
         let Self {
             err,
             account,
@@ -196,12 +211,13 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             block_meta,
             commitment_level,
             metrics,
+            datasources,
             extra: RuntimeKind,
         } = self;
         let () = err?;
 
-        let VixenConfig {
-            yellowstone: yellowstone_cfg,
+        let VixenRuntimeConfig {
+            // yellowstone: yellowstone_cfg,
             buffer: buffer_cfg,
             metrics: metrics_cfg,
         } = config;
@@ -241,8 +257,13 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             return Err(BuilderError::MissingField("block_meta"));
         }
 
+        if datasources.is_empty() {
+            return Err(BuilderError::MissingField("datasources"));
+        }
+
         Ok(Runtime {
-            yellowstone_cfg,
+            // yellowstone_cfg,
+            datasources,
             buffer_cfg,
             pipelines,
             commitment_filter: commitment_level,
@@ -255,7 +276,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
     /// provided configuration, terminating the current process if an error
     /// occurs.
     #[inline]
-    pub fn build(self, config: VixenConfig<M::Config>) -> Runtime<M> {
+    pub fn build(self, config: VixenRuntimeConfig<M::Config>) -> Runtime<M> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen runtime")
     }
 }
