@@ -96,8 +96,6 @@ sudo docker-compose up
 
 ## Supported Programs
 
-there are **17** 3rd-party programs:
-
 | Address                                        | Public Name                        | Parser                                                                                                                                   |
 | ---------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `boop8hVGQGqehUK2iVEMEnMrL5RbjywRzHKBmBE7ry4`  | **Boop.fun**                       | [yellowstone-vixen-boop-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/boop-parser)                               |
