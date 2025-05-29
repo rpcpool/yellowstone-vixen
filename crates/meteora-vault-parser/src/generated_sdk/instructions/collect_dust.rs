@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -27,6 +26,7 @@ impl CollectDust {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -78,9 +78,7 @@ impl CollectDustInstructionData {
 }
 
 impl Default for CollectDustInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `CollectDust`.
@@ -103,33 +101,36 @@ pub struct CollectDustBuilder {
 }
 
 impl CollectDustBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// vault
     #[inline(always)]
     pub fn vault(&mut self, vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vault = Some(vault);
         self
     }
+
     /// Token vault, must be different from vault.token_vault
     #[inline(always)]
     pub fn token_vault(&mut self, token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_vault = Some(token_vault);
         self
     }
+
     /// token admin, enforce owner is admin to avoid mistake
     #[inline(always)]
     pub fn token_admin(&mut self, token_admin: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_admin = Some(token_admin);
         self
     }
+
     /// admin
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// token_program
     #[inline(always)]
@@ -137,6 +138,7 @@ impl CollectDustBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -146,6 +148,7 @@ impl CollectDustBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -155,6 +158,7 @@ impl CollectDustBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = CollectDust {
@@ -215,10 +219,12 @@ impl<'a, 'b> CollectDustCpi<'a, 'b> {
             token_program: accounts.token_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -230,6 +236,7 @@ impl<'a, 'b> CollectDustCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -237,6 +244,7 @@ impl<'a, 'b> CollectDustCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -330,12 +338,14 @@ impl<'a, 'b> CollectDustCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// vault
     #[inline(always)]
     pub fn vault(&mut self, vault: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vault = Some(vault);
         self
     }
+
     /// Token vault, must be different from vault.token_vault
     #[inline(always)]
     pub fn token_vault(
@@ -345,6 +355,7 @@ impl<'a, 'b> CollectDustCpiBuilder<'a, 'b> {
         self.instruction.token_vault = Some(token_vault);
         self
     }
+
     /// token admin, enforce owner is admin to avoid mistake
     #[inline(always)]
     pub fn token_admin(
@@ -354,12 +365,14 @@ impl<'a, 'b> CollectDustCpiBuilder<'a, 'b> {
         self.instruction.token_admin = Some(token_admin);
         self
     }
+
     /// admin
     #[inline(always)]
     pub fn admin(&mut self, admin: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
+
     /// token_program
     #[inline(always)]
     pub fn token_program(
@@ -369,6 +382,7 @@ impl<'a, 'b> CollectDustCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -382,6 +396,7 @@ impl<'a, 'b> CollectDustCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -400,10 +415,10 @@ impl<'a, 'b> CollectDustCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -40,6 +39,7 @@ impl WithdrawStrategy {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -115,9 +115,7 @@ impl WithdrawStrategyInstructionData {
 }
 
 impl Default for WithdrawStrategyInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -157,39 +155,43 @@ pub struct WithdrawStrategyBuilder {
 }
 
 impl WithdrawStrategyBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// vault
     #[inline(always)]
     pub fn vault(&mut self, vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vault = Some(vault);
         self
     }
+
     /// strategy
     #[inline(always)]
     pub fn strategy(&mut self, strategy: solana_program::pubkey::Pubkey) -> &mut Self {
         self.strategy = Some(strategy);
         self
     }
+
     /// token_vault
     #[inline(always)]
     pub fn token_vault(&mut self, token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_vault = Some(token_vault);
         self
     }
+
     /// fee_vault
     #[inline(always)]
     pub fn fee_vault(&mut self, fee_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.fee_vault = Some(fee_vault);
         self
     }
+
     /// lp_mint
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn strategy_program(
         &mut self,
@@ -198,6 +200,7 @@ impl WithdrawStrategyBuilder {
         self.strategy_program = Some(strategy_program);
         self
     }
+
     /// collateral_vault
     #[inline(always)]
     pub fn collateral_vault(
@@ -207,11 +210,13 @@ impl WithdrawStrategyBuilder {
         self.collateral_vault = Some(collateral_vault);
         self
     }
+
     #[inline(always)]
     pub fn reserve(&mut self, reserve: solana_program::pubkey::Pubkey) -> &mut Self {
         self.reserve = Some(reserve);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// token_program
     #[inline(always)]
@@ -219,17 +224,20 @@ impl WithdrawStrategyBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// operator
     #[inline(always)]
     pub fn operator(&mut self, operator: solana_program::pubkey::Pubkey) -> &mut Self {
         self.operator = Some(operator);
         self
     }
+
     #[inline(always)]
     pub fn amount(&mut self, amount: u64) -> &mut Self {
         self.amount = Some(amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -239,6 +247,7 @@ impl WithdrawStrategyBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -248,6 +257,7 @@ impl WithdrawStrategyBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = WithdrawStrategy {
@@ -345,10 +355,12 @@ impl<'a, 'b> WithdrawStrategyCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -360,6 +372,7 @@ impl<'a, 'b> WithdrawStrategyCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -367,6 +380,7 @@ impl<'a, 'b> WithdrawStrategyCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -498,12 +512,14 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// vault
     #[inline(always)]
     pub fn vault(&mut self, vault: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vault = Some(vault);
         self
     }
+
     /// strategy
     #[inline(always)]
     pub fn strategy(
@@ -513,6 +529,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         self.instruction.strategy = Some(strategy);
         self
     }
+
     /// token_vault
     #[inline(always)]
     pub fn token_vault(
@@ -522,6 +539,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         self.instruction.token_vault = Some(token_vault);
         self
     }
+
     /// fee_vault
     #[inline(always)]
     pub fn fee_vault(
@@ -531,6 +549,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         self.instruction.fee_vault = Some(fee_vault);
         self
     }
+
     /// lp_mint
     #[inline(always)]
     pub fn lp_mint(
@@ -540,6 +559,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn strategy_program(
         &mut self,
@@ -548,6 +568,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         self.instruction.strategy_program = Some(strategy_program);
         self
     }
+
     /// collateral_vault
     #[inline(always)]
     pub fn collateral_vault(
@@ -557,6 +578,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         self.instruction.collateral_vault = Some(collateral_vault);
         self
     }
+
     #[inline(always)]
     pub fn reserve(
         &mut self,
@@ -565,6 +587,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         self.instruction.reserve = Some(reserve);
         self
     }
+
     /// token_program
     #[inline(always)]
     pub fn token_program(
@@ -574,6 +597,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// operator
     #[inline(always)]
     pub fn operator(
@@ -583,11 +607,13 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
         self.instruction.operator = Some(operator);
         self
     }
+
     #[inline(always)]
     pub fn amount(&mut self, amount: u64) -> &mut Self {
         self.instruction.amount = Some(amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -601,6 +627,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -619,10 +646,10 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

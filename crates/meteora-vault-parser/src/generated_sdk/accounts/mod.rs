@@ -8,5 +8,4 @@
 pub(crate) mod r#strategy;
 pub(crate) mod r#vault;
 
-pub use self::r#strategy::*;
-pub use self::r#vault::*;
+pub use self::{r#strategy::*, r#vault::*};

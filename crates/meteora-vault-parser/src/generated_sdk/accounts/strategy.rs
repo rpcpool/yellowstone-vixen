@@ -5,10 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::StrategyType;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
+
+use crate::generated::types::StrategyType;
 
 /// Strategy struct
 
@@ -147,9 +147,7 @@ impl anchor_lang::AccountSerialize for Strategy {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Strategy {
-    fn owner() -> Pubkey {
-        crate::VAULT_ID
-    }
+    fn owner() -> Pubkey { crate::VAULT_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

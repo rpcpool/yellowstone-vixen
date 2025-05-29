@@ -5,25 +5,28 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::instructions::{
-    AddStrategy as AddStrategyIxAccounts, CollectDust as CollectDustIxAccounts,
-    Deposit as DepositIxAccounts, DepositInstructionArgs as DepositIxData,
-    DepositStrategy as DepositStrategyIxAccounts,
-    DepositStrategyInstructionArgs as DepositStrategyIxData, EnableVault as EnableVaultIxAccounts,
-    EnableVaultInstructionArgs as EnableVaultIxData, Initialize as InitializeIxAccounts,
-    InitializeStrategy as InitializeStrategyIxAccounts,
-    InitializeStrategyInstructionArgs as InitializeStrategyIxData,
-    RemoveStrategy as RemoveStrategyIxAccounts, RemoveStrategy2 as RemoveStrategy2IxAccounts,
-    RemoveStrategy2InstructionArgs as RemoveStrategy2IxData, SetOperator as SetOperatorIxAccounts,
-    Withdraw as WithdrawIxAccounts, Withdraw2 as Withdraw2IxAccounts,
-    Withdraw2InstructionArgs as Withdraw2IxData,
-    WithdrawDirectlyFromStrategy as WithdrawDirectlyFromStrategyIxAccounts,
-    WithdrawDirectlyFromStrategyInstructionArgs as WithdrawDirectlyFromStrategyIxData,
-    WithdrawInstructionArgs as WithdrawIxData, WithdrawStrategy as WithdrawStrategyIxAccounts,
-    WithdrawStrategyInstructionArgs as WithdrawStrategyIxData,
-};
-use crate::ID;
 use borsh::BorshDeserialize;
+
+use crate::{
+    instructions::{
+        AddStrategy as AddStrategyIxAccounts, CollectDust as CollectDustIxAccounts,
+        Deposit as DepositIxAccounts, DepositInstructionArgs as DepositIxData,
+        DepositStrategy as DepositStrategyIxAccounts,
+        DepositStrategyInstructionArgs as DepositStrategyIxData,
+        EnableVault as EnableVaultIxAccounts, EnableVaultInstructionArgs as EnableVaultIxData,
+        Initialize as InitializeIxAccounts, InitializeStrategy as InitializeStrategyIxAccounts,
+        InitializeStrategyInstructionArgs as InitializeStrategyIxData,
+        RemoveStrategy as RemoveStrategyIxAccounts, RemoveStrategy2 as RemoveStrategy2IxAccounts,
+        RemoveStrategy2InstructionArgs as RemoveStrategy2IxData,
+        SetOperator as SetOperatorIxAccounts, Withdraw as WithdrawIxAccounts,
+        Withdraw2 as Withdraw2IxAccounts, Withdraw2InstructionArgs as Withdraw2IxData,
+        WithdrawDirectlyFromStrategy as WithdrawDirectlyFromStrategyIxAccounts,
+        WithdrawDirectlyFromStrategyInstructionArgs as WithdrawDirectlyFromStrategyIxData,
+        WithdrawInstructionArgs as WithdrawIxData, WithdrawStrategy as WithdrawStrategyIxAccounts,
+        WithdrawStrategyInstructionArgs as WithdrawStrategyIxData,
+    },
+    ID,
+};
 
 /// Vault Instructions
 #[derive(Debug)]
@@ -55,9 +58,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = VaultProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "Vault::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "Vault::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -80,9 +81,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -347,11 +346,10 @@ pub fn check_min_accounts_req(
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{InstructionParser, VaultProgramIx};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::InitializeIxAccounts;
+    use super::{InitializeIxAccounts, InstructionParser, VaultProgramIx};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::InitializeIxAccounts> for InitializeIxAccounts {
         fn into_proto(self) -> proto_def::InitializeIxAccounts {
             proto_def::InitializeIxAccounts {
@@ -757,8 +755,6 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

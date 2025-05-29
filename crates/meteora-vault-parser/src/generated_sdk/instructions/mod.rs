@@ -20,17 +20,9 @@ pub(crate) mod r#withdraw2;
 pub(crate) mod r#withdraw_directly_from_strategy;
 pub(crate) mod r#withdraw_strategy;
 
-pub use self::r#add_strategy::*;
-pub use self::r#collect_dust::*;
-pub use self::r#deposit::*;
-pub use self::r#deposit_strategy::*;
-pub use self::r#enable_vault::*;
-pub use self::r#initialize::*;
-pub use self::r#initialize_strategy::*;
-pub use self::r#remove_strategy::*;
-pub use self::r#remove_strategy2::*;
-pub use self::r#set_operator::*;
-pub use self::r#withdraw::*;
-pub use self::r#withdraw2::*;
-pub use self::r#withdraw_directly_from_strategy::*;
-pub use self::r#withdraw_strategy::*;
+pub use self::{
+    r#add_strategy::*, r#collect_dust::*, r#deposit::*, r#deposit_strategy::*, r#enable_vault::*,
+    r#initialize::*, r#initialize_strategy::*, r#remove_strategy::*, r#remove_strategy2::*,
+    r#set_operator::*, r#withdraw::*, r#withdraw2::*, r#withdraw_directly_from_strategy::*,
+    r#withdraw_strategy::*,
+};

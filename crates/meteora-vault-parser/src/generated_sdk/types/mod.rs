@@ -9,6 +9,4 @@ pub(crate) mod r#locked_profit_tracker;
 pub(crate) mod r#strategy_type;
 pub(crate) mod r#vault_bumps;
 
-pub use self::r#locked_profit_tracker::*;
-pub use self::r#strategy_type::*;
-pub use self::r#vault_bumps::*;
+pub use self::{r#locked_profit_tracker::*, r#strategy_type::*, r#vault_bumps::*};

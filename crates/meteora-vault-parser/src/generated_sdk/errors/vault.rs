@@ -42,22 +42,22 @@ pub enum VaultError {
     StrategyExisted = 0x1779,
     /// 6010 - Invalid unmint amount
     #[error("Invalid unmint amount")]
-    InvalidUnmintAmount = 0x177A,
+    InvalidUnmintAmount = 0x177a,
     /// 6011 - Invalid accounts for strategy
     #[error("Invalid accounts for strategy")]
-    InvalidAccountsForStrategy = 0x177B,
+    InvalidAccountsForStrategy = 0x177b,
     /// 6012 - Invalid bump
     #[error("Invalid bump")]
-    InvalidBump = 0x177C,
+    InvalidBump = 0x177c,
     /// 6013 - Amount must be greater than 0
     #[error("Amount must be greater than 0")]
-    AmountMustGreaterThanZero = 0x177D,
+    AmountMustGreaterThanZero = 0x177d,
     /// 6014 - Mango is not supported anymore
     #[error("Mango is not supported anymore")]
-    MangoIsNotSupportedAnymore = 0x177E,
+    MangoIsNotSupportedAnymore = 0x177e,
     /// 6015 - Strategy is not supported
     #[error("Strategy is not supported")]
-    StrategyIsNotSupported = 0x177F,
+    StrategyIsNotSupported = 0x177f,
     /// 6016 - Pay amount is exceeded
     #[error("Pay amount is exceeded")]
     PayAmountIsExeeced = 0x1780,
@@ -79,7 +79,5 @@ impl solana_program::program_error::PrintProgramError for VaultError {
 }
 
 impl<T> solana_program::decode_error::DecodeError<T> for VaultError {
-    fn type_of() -> &'static str {
-        "VaultError"
-    }
+    fn type_of() -> &'static str { "VaultError" }
 }

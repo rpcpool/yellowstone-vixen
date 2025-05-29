@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -35,6 +34,7 @@ impl Initialize {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -97,9 +97,7 @@ impl InitializeInstructionData {
 }
 
 impl Default for InitializeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `Initialize`.
@@ -128,9 +126,8 @@ pub struct InitializeBuilder {
 }
 
 impl InitializeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// This is base account for all vault
     /// No need base key now because we only allow 1 vault per token now
     /// Vault account
@@ -139,29 +136,34 @@ impl InitializeBuilder {
         self.vault = Some(vault);
         self
     }
+
     /// Payer can be anyone
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     /// Token vault account
     #[inline(always)]
     pub fn token_vault(&mut self, token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_vault = Some(token_vault);
         self
     }
+
     /// Token mint account
     #[inline(always)]
     pub fn token_mint(&mut self, token_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_mint = Some(token_mint);
         self
     }
+
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// rent
     #[inline(always)]
@@ -169,6 +171,7 @@ impl InitializeBuilder {
         self.rent = Some(rent);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// token_program
     #[inline(always)]
@@ -176,6 +179,7 @@ impl InitializeBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// system_program
     #[inline(always)]
@@ -183,6 +187,7 @@ impl InitializeBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -192,6 +197,7 @@ impl InitializeBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -201,6 +207,7 @@ impl InitializeBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = Initialize {
@@ -287,10 +294,12 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
             system_program: accounts.system_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -302,6 +311,7 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -309,6 +319,7 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -423,6 +434,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// This is base account for all vault
     /// No need base key now because we only allow 1 vault per token now
     /// Vault account
@@ -431,12 +443,14 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.vault = Some(vault);
         self
     }
+
     /// Payer can be anyone
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     /// Token vault account
     #[inline(always)]
     pub fn token_vault(
@@ -446,6 +460,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.token_vault = Some(token_vault);
         self
     }
+
     /// Token mint account
     #[inline(always)]
     pub fn token_mint(
@@ -455,6 +470,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.token_mint = Some(token_mint);
         self
     }
+
     #[inline(always)]
     pub fn lp_mint(
         &mut self,
@@ -463,12 +479,14 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     /// rent
     #[inline(always)]
     pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
+
     /// token_program
     #[inline(always)]
     pub fn token_program(
@@ -478,6 +496,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// system_program
     #[inline(always)]
     pub fn system_program(
@@ -487,6 +506,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -500,6 +520,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -518,10 +539,10 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

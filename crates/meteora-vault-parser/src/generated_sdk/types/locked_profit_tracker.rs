@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// LockedProfitTracker struct
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

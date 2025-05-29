@@ -5,9 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::accounts::Strategy;
-use crate::accounts::Vault;
-use crate::ID;
+use crate::{
+    accounts::{Strategy, Vault},
+    ID,
+};
 
 /// Vault Program State
 #[allow(clippy::large_enum_variant)]
@@ -66,9 +67,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = VaultProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        "vault::AccountParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "vault::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -91,18 +90,15 @@ impl yellowstone_vixen_core::Parser for AccountParser {
 
 impl yellowstone_vixen_core::ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{AccountParser, VaultProgramState};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::Vault;
+    use super::{AccountParser, Vault, VaultProgramState};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::Vault> for Vault {
         fn into_proto(self) -> proto_def::Vault {
             proto_def::Vault {
@@ -156,8 +152,6 @@ mod proto_parser {
     impl ParseProto for AccountParser {
         type Message = proto_def::ProgramState;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

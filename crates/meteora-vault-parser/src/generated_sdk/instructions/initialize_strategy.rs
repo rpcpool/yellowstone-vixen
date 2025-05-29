@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::StrategyType;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 /// Accounts.
 #[derive(Debug)]
@@ -41,6 +41,7 @@ impl InitializeStrategy {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -114,9 +115,7 @@ impl InitializeStrategyInstructionData {
 }
 
 impl Default for InitializeStrategyInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -160,15 +159,15 @@ pub struct InitializeStrategyBuilder {
 }
 
 impl InitializeStrategyBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Vault account
     #[inline(always)]
     pub fn vault(&mut self, vault: solana_program::pubkey::Pubkey) -> &mut Self {
         self.vault = Some(vault);
         self
     }
+
     #[inline(always)]
     pub fn strategy_program(
         &mut self,
@@ -177,17 +176,20 @@ impl InitializeStrategyBuilder {
         self.strategy_program = Some(strategy_program);
         self
     }
+
     /// Strategy account
     #[inline(always)]
     pub fn strategy(&mut self, strategy: solana_program::pubkey::Pubkey) -> &mut Self {
         self.strategy = Some(strategy);
         self
     }
+
     #[inline(always)]
     pub fn reserve(&mut self, reserve: solana_program::pubkey::Pubkey) -> &mut Self {
         self.reserve = Some(reserve);
         self
     }
+
     /// Collateral vault account
     #[inline(always)]
     pub fn collateral_vault(
@@ -197,6 +199,7 @@ impl InitializeStrategyBuilder {
         self.collateral_vault = Some(collateral_vault);
         self
     }
+
     /// Collateral mint account
     #[inline(always)]
     pub fn collateral_mint(
@@ -206,12 +209,14 @@ impl InitializeStrategyBuilder {
         self.collateral_mint = Some(collateral_mint);
         self
     }
+
     /// Admin account
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program account
     #[inline(always)]
@@ -219,6 +224,7 @@ impl InitializeStrategyBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Rent account
     #[inline(always)]
@@ -226,6 +232,7 @@ impl InitializeStrategyBuilder {
         self.rent = Some(rent);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program account
     #[inline(always)]
@@ -233,21 +240,25 @@ impl InitializeStrategyBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn strategy_index(&mut self, strategy_index: u8) -> &mut Self {
         self.strategy_index = Some(strategy_index);
         self
     }
+
     #[inline(always)]
     pub fn other_bumps(&mut self, other_bumps: [u8; 10]) -> &mut Self {
         self.other_bumps = Some(other_bumps);
         self
     }
+
     #[inline(always)]
     pub fn strategy_type(&mut self, strategy_type: StrategyType) -> &mut Self {
         self.strategy_type = Some(strategy_type);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -257,6 +268,7 @@ impl InitializeStrategyBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -266,6 +278,7 @@ impl InitializeStrategyBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = InitializeStrategy {
@@ -375,10 +388,12 @@ impl<'a, 'b> InitializeStrategyCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -390,6 +405,7 @@ impl<'a, 'b> InitializeStrategyCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -397,6 +413,7 @@ impl<'a, 'b> InitializeStrategyCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -530,12 +547,14 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Vault account
     #[inline(always)]
     pub fn vault(&mut self, vault: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vault = Some(vault);
         self
     }
+
     #[inline(always)]
     pub fn strategy_program(
         &mut self,
@@ -544,6 +563,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
         self.instruction.strategy_program = Some(strategy_program);
         self
     }
+
     /// Strategy account
     #[inline(always)]
     pub fn strategy(
@@ -553,6 +573,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
         self.instruction.strategy = Some(strategy);
         self
     }
+
     #[inline(always)]
     pub fn reserve(
         &mut self,
@@ -561,6 +582,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
         self.instruction.reserve = Some(reserve);
         self
     }
+
     /// Collateral vault account
     #[inline(always)]
     pub fn collateral_vault(
@@ -570,6 +592,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
         self.instruction.collateral_vault = Some(collateral_vault);
         self
     }
+
     /// Collateral mint account
     #[inline(always)]
     pub fn collateral_mint(
@@ -579,12 +602,14 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
         self.instruction.collateral_mint = Some(collateral_mint);
         self
     }
+
     /// Admin account
     #[inline(always)]
     pub fn admin(&mut self, admin: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
+
     /// System program account
     #[inline(always)]
     pub fn system_program(
@@ -594,12 +619,14 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Rent account
     #[inline(always)]
     pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
+
     /// Token program account
     #[inline(always)]
     pub fn token_program(
@@ -609,21 +636,25 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn strategy_index(&mut self, strategy_index: u8) -> &mut Self {
         self.instruction.strategy_index = Some(strategy_index);
         self
     }
+
     #[inline(always)]
     pub fn other_bumps(&mut self, other_bumps: [u8; 10]) -> &mut Self {
         self.instruction.other_bumps = Some(other_bumps);
         self
     }
+
     #[inline(always)]
     pub fn strategy_type(&mut self, strategy_type: StrategyType) -> &mut Self {
         self.instruction.strategy_type = Some(strategy_type);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -637,6 +668,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -655,10 +687,10 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

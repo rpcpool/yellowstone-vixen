@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Vault bumps struct
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
