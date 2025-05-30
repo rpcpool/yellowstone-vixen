@@ -147,7 +147,7 @@ impl Buffer {
     pub fn run_yellowstone<
         I,
         T,
-        S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static,
+        S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static + Send,
         M: Instrumenter,
     >(
         config: BufferConfig,
@@ -161,7 +161,7 @@ impl Buffer {
             counters,
             std::convert::identity,
             |exec, mut stop_rx, counters| {
-                tokio::task::spawn_local(async move {
+                tokio::task::spawn(async move {
                     enum Event {
                         Update(Option<Result<SubscribeUpdate, Status>>),
                         Stop(StopCode),
