@@ -20,6 +20,7 @@ pub mod block_meta;
 
 #[cfg(feature = "raydium")]
 pub mod raydium;
+pub mod stake_pool;
 #[cfg(feature = "token-extensions")]
 pub mod token_extension_program;
 #[cfg(feature = "token-program")]
