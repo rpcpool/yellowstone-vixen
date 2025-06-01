@@ -1,43 +1,47 @@
 use borsh::BorshDeserialize;
 // use yellowstone_vixen_core::Pubkey;
-use spl_stake_pool::solana_program::pubkey::Pubkey;
+use spl_stake_pool::{
+    instruction::{FundingType, PreferredValidatorType},
+    solana_program::pubkey::Pubkey,
+    state::{Fee, FeeType},
+};
 
-/// Fee rate as a ratio, minted on `UpdateStakePoolBalance` as a proportion of
-/// the rewards
-/// If either the numerator or the denominator is 0, the fee is considered to be
-/// 0
-#[derive(Debug, BorshDeserialize)]
-pub struct Fee {
-    /// denominator of the fee ratio
-    pub denominator: u64,
+// Fee rate as a ratio, minted on `UpdateStakePoolBalance` as a proportion of
+// the rewards
+// If either the numerator or the denominator is 0, the fee is considered to be
+// 0
+// #[derive(Debug, BorshDeserialize)]
+// pub struct Fee {
+//     /// denominator of the fee ratio
+//     pub denominator: u64,
+//
+//     /// numerator of the fee ratio
+//     pub numerator: u64,
+// }
 
-    /// numerator of the fee ratio
-    pub numerator: u64,
-}
+// #[derive(Debug, BorshDeserialize)]
+// pub enum PreferredValidatorType {
+//     Deposit,
+//     Withdraw,
+// }
 
-#[derive(Debug, BorshDeserialize)]
-pub enum PreferredValidatorType {
-    Deposit,
-    Withdraw,
-}
+// #[derive(Debug, BorshDeserialize)]
+// pub enum FeeType {
+//     SolReferral(u8),
+//     StakeReferral(u8),
+//     Epoch(Fee),
+//     StakeWithdrawal(Fee),
+//     SolDeposit(Fee),
+//     StakeDeposit(Fee),
+//     SolWithdrawal(Fee),
+// }
 
-#[derive(Debug, BorshDeserialize)]
-pub enum FeeType {
-    SolReferral(u8),
-    StakeReferral(u8),
-    Epoch(Fee),
-    StakeWithdrawal(Fee),
-    SolDeposit(Fee),
-    StakeDeposit(Fee),
-    SolWithdrawal(Fee),
-}
-
-#[derive(Debug, BorshDeserialize)]
-pub enum FundingType {
-    StakeDeposit,
-    SolDeposit,
-    SolWithdraw,
-}
+// #[derive(Debug, BorshDeserialize)]
+// pub enum FundingType {
+//     StakeDeposit,
+//     SolDeposit,
+//     SolWithdraw,
+// }
 
 ///   (Staker only) Adds stake account delegated to validator to the pool's
 ///   list of managed validators.
@@ -93,13 +97,13 @@ pub struct AddValidatorToPoolAccounts {
     pub stake_program: Pubkey,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct AddValidatorToPoolData {
-    raw_validator_seed: u32,
+    pub raw_validator_seed: u32,
 }
 
 /// Cleans up validator stake account entries marked as `ReadyForRemoval`
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct CleanupRemovedValidatorEntriesAccounts {
     /// 0. `[]` Stake pool
     pub stake_pool: Pubkey,
@@ -110,7 +114,7 @@ pub struct CleanupRemovedValidatorEntriesAccounts {
 
 /// Create token metadata for the stake-pool token in the
 /// metaplex-token program
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct CreateTokenMetadataAccounts {
     /// 0. `[]` Stake pool
     pub stake_pool: Pubkey,
@@ -196,7 +200,7 @@ pub struct DecreaseValidatorStakeAccounts {
     pub stake_program: Pubkey,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct DecreaseValidatorStakeData {
     /// amount of lamports to split into the transient stake account
     pub lamports: u64,
@@ -244,7 +248,7 @@ pub struct DepositSolAccounts {
     pub deposit_authority: Option<Pubkey>,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct DepositSolData {
     pub arg: u64,
 }
@@ -368,7 +372,7 @@ pub struct IncreaseValidatorStakeAccounts {
     pub stake_program: Pubkey,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct IncreaseValidatorStakeData {
     /// amount of lamports to increase on the given validator
     pub lamports: u64,
@@ -416,7 +420,7 @@ pub struct InitializeAccounts {
     pub deposit_authority: Option<Pubkey>,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct InitializeData {
     /// Fee assessed as percentage of perceived rewards
     pub fee: Fee,
@@ -440,7 +444,7 @@ pub struct InitializeData {
 ///   `max(crate::MINIMUM_ACTIVE_STAKE,
 /// solana_program::stake::tools::get_minimum_delegation())`.   plus the
 /// rent-exempt amount.
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct RemoveValidatorFromPoolAccounts {
     ///   0. `[w]` Stake pool
     pub stake_pool: Pubkey,
@@ -468,7 +472,7 @@ pub struct RemoveValidatorFromPoolAccounts {
 }
 
 ///  (Manager only) Update fee
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct SetFeeAccounts {
     ///  0. `[w]` Stake pool
     pub stake_pool: Pubkey,
@@ -485,7 +489,7 @@ pub struct SetFeeData {
 
 ///  (Manager only) Update SOL deposit, stake deposit, or SOL withdrawal
 /// authority.
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct SetFundingAuthorityAccounts {
     ///  0. `[w]` Stake pool
     pub stake_pool: Pubkey,
@@ -503,7 +507,7 @@ pub struct SetFundingAuthorityData {
 }
 
 ///  (Manager only) Update manager
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct SetManagerAccounts {
     ///  0. `[w]` Stake pool
     pub stake_pool: Pubkey,
@@ -527,7 +531,7 @@ pub struct SetManagerAccounts {
 /// account.
 ///
 /// Fails if the validator is not part of the stake pool.
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct SetPreferredValidatorAccounts {
     /// 0. `[w]` Stake pool
     pub stake_pool_address: Pubkey,
@@ -550,7 +554,7 @@ pub struct SetPreferredValidatorData {
 }
 
 ///  (Manager or staker only) Update staker
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct SetStakerAccounts {
     ///  0. `[w]` Stake pool
     pub stake_pool: Pubkey,
@@ -564,7 +568,7 @@ pub struct SetStakerAccounts {
 
 ///   Updates total pool balance based on balances in the reserve and
 ///   validator list
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct UpdateStakePoolBalanceAccounts {
     ///   0. `[w]` Stake pool
     pub stake_pool: Pubkey,
@@ -590,7 +594,7 @@ pub struct UpdateStakePoolBalanceAccounts {
 
 /// Update token metadata for the stake-pool token in the
 /// metaplex-token program
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct UpdateTokenMetadataAccounts {
     /// 0. `[]` Stake pool
     pub stake_pool: Pubkey,
@@ -623,7 +627,7 @@ pub struct UpdateTokenMetadataData {
 ///  matching credits observed, it is merged into the canonical
 ///  validator stake account. In all other states, nothing is done, and
 ///  the balance is simply added to the canonical stake account balance.
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct UpdateValidatorListBalanceAccounts {
     ///  0. `[]` Stake pool
     pub stake_pool: Pubkey,
@@ -647,7 +651,7 @@ pub struct UpdateValidatorListBalanceAccounts {
     pub stake_program: Pubkey,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct UpdateValidatorListBalanceData {
     /// Index to start updating on the validator list
     pub start_index: u32,
@@ -704,7 +708,7 @@ pub struct WithdrawSolAccounts {
     pub sol_withdraw_authority: Option<Pubkey>,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct WithdrawSolData {
     pub arg: u64,
 }
@@ -773,7 +777,7 @@ pub struct WithdrawStakeAccounts {
     pub stake_program: Pubkey,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct WithdrawStakeData {
     /// amount of pool tokens to withdraw
     pub arg: u64,
@@ -844,16 +848,16 @@ pub struct IncreaseAdditionalValidatorStakeAccounts {
 ///
 /// The rent-exemption of the stake account is withdrawn back to the
 /// reserve after it is merged.
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct IncreaseAdditionalValidatorStakeData {
     /// amount of lamports to increase on the given validator
-    lamports: u64,
+    pub lamports: u64,
 
     /// seed used to create transient stake account
-    transient_stake_seed: u64,
+    pub transient_stake_seed: u64,
 
     /// seed used to create ephemeral account.
-    ephemeral_stake_seed: u64,
+    pub ephemeral_stake_seed: u64,
 }
 
 /// (Staker only) Decrease active stake again from a validator, eventually
@@ -873,7 +877,7 @@ pub struct IncreaseAdditionalValidatorStakeData {
 /// `max(crate::MINIMUM_ACTIVE_STAKE,
 /// solana_program::stake::tools::get_minimum_delegation())`.
 #[derive(Debug, BorshDeserialize)]
-pub struct DecreaseAdditionalValidatorStake {
+pub struct DecreaseAdditionalValidatorStakeAccounts {
     ///  0. `[]` Stake pool
     pub stake_pool: Pubkey,
 
@@ -911,16 +915,16 @@ pub struct DecreaseAdditionalValidatorStake {
     pub stake_program: Pubkey,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct DecreaseAdditionalValidatorStakeData {
     /// amount of lamports to increase on the given validator
-    lamports: u64,
+    pub lamports: u64,
 
     /// seed used to create transient stake account
-    transient_stake_seed: u64,
+    pub transient_stake_seed: u64,
 
     /// seed used to create ephemeral account.
-    ephemeral_stake_seed: u64,
+    pub ephemeral_stake_seed: u64,
 }
 
 /// (Staker only) Decrease active stake on a validator, eventually moving it
@@ -977,13 +981,13 @@ pub struct DecreaseValidatorStakeWithReserveAccounts {
     pub stake_program: Pubkey,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct DecreaseValidatorStakeWithReserveData {
     /// amount of lamports to split into the transient stake account
-    lamports: u64,
+    pub lamports: u64,
 
     /// seed used to create transient stake account
-    transient_stake_seed: u64,
+    pub transient_stake_seed: u64,
 }
 
 // #[derive(Debug)]
@@ -1081,10 +1085,10 @@ pub struct DepositStakeWithSlippageAccounts {
     pub stake_program: Pubkey,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct DepositStakeWithSlippageData {
     /// Minimum amount of pool tokens that must be received
-    minimum_pool_tokens_out: u64,
+    pub minimum_pool_tokens_out: u64,
 }
 
 #[derive(Debug, BorshDeserialize)]
@@ -1129,13 +1133,13 @@ pub struct WithdrawStakeWithSlippageAccounts {
     pub stake_program: Pubkey,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct WithdrawStakeWithSlippageData {
     /// Pool tokens to burn in exchange for lamports
-    pool_tokens_in: u64,
+    pub pool_tokens_in: u64,
 
     /// Minimum amount of lamports that must be received
-    minimum_lamports_out: u64,
+    pub minimum_lamports_out: u64,
 }
 
 ///   Deposit SOL directly into the pool's reserve account, with a
@@ -1178,13 +1182,13 @@ pub struct DepositSolWithSlippageAccounts {
     pub deposit_authority: Option<Pubkey>,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct DepositSolWithSlippageData {
     /// Amount of lamports to deposit into the reserve
-    lamports_in: u64,
+    pub lamports_in: u64,
 
     /// Minimum amount of pool tokens that must be received
-    minimum_pool_tokens_out: u64,
+    pub minimum_pool_tokens_out: u64,
 }
 
 ///   Withdraw SOL directly from the pool's reserve account. Fails if the
@@ -1233,13 +1237,13 @@ pub struct WithdrawSolWithSlippageAccounts {
     pub sol_withdraw_authority: Option<Pubkey>,
 }
 
-#[derive(Debug, BorshDeserialize)]
+#[derive(Clone, Copy, Debug, BorshDeserialize)]
 pub struct WithdrawSolWithSlippageData {
     /// Pool tokens to burn in exchange for lamports
-    pool_tokens_in: u64,
+    pub pool_tokens_in: u64,
 
     /// Minimum amount of lamports that must be received
-    minimum_lamports_out: u64,
+    pub minimum_lamports_out: u64,
 }
 
 #[derive(Debug, BorshDeserialize)]
@@ -1271,7 +1275,7 @@ pub enum StakePoolProgramIx {
         IncreaseAdditionalValidatorStakeData,
     ),
     DecreaseAdditionalValidatorStake(
-        DecreaseAdditionalValidatorStake,
+        DecreaseAdditionalValidatorStakeAccounts,
         DecreaseAdditionalValidatorStakeData,
     ),
     DecreaseValidatorStakeWithReserve(
