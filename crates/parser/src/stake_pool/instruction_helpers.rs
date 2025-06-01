@@ -1,47 +1,9 @@
 use borsh::BorshDeserialize;
-// use yellowstone_vixen_core::Pubkey;
 use spl_stake_pool::{
     instruction::{FundingType, PreferredValidatorType},
     solana_program::pubkey::Pubkey,
     state::{Fee, FeeType},
 };
-
-// Fee rate as a ratio, minted on `UpdateStakePoolBalance` as a proportion of
-// the rewards
-// If either the numerator or the denominator is 0, the fee is considered to be
-// 0
-// #[derive(Debug, BorshDeserialize)]
-// pub struct Fee {
-//     /// denominator of the fee ratio
-//     pub denominator: u64,
-//
-//     /// numerator of the fee ratio
-//     pub numerator: u64,
-// }
-
-// #[derive(Debug, BorshDeserialize)]
-// pub enum PreferredValidatorType {
-//     Deposit,
-//     Withdraw,
-// }
-
-// #[derive(Debug, BorshDeserialize)]
-// pub enum FeeType {
-//     SolReferral(u8),
-//     StakeReferral(u8),
-//     Epoch(Fee),
-//     StakeWithdrawal(Fee),
-//     SolDeposit(Fee),
-//     StakeDeposit(Fee),
-//     SolWithdrawal(Fee),
-// }
-
-// #[derive(Debug, BorshDeserialize)]
-// pub enum FundingType {
-//     StakeDeposit,
-//     SolDeposit,
-//     SolWithdraw,
-// }
 
 ///   (Staker only) Adds stake account delegated to validator to the pool's
 ///   list of managed validators.
@@ -989,26 +951,6 @@ pub struct DecreaseValidatorStakeWithReserveData {
     /// seed used to create transient stake account
     pub transient_stake_seed: u64,
 }
-
-// #[derive(Debug)]
-// pub struct Redelegate {
-//     pub stake_pool: Pubkey,
-//     pub staker: Pubkey,
-//     pub stake_pool_withdraw_authority: Pubkey,
-//     pub validator_list: Pubkey,
-//     pub reserve_stake: Pubkey,
-//     pub source_validator_stake: Pubkey,
-//     pub source_transient_stake: Pubkey,
-//     pub ephemeral_stake: Pubkey,
-//     pub destination_transient_stake: Pubkey,
-//     pub destination_validator_stake: Pubkey,
-//     pub validator: Pubkey,
-//     pub clock: Pubkey,
-//     pub stake_history: Pubkey,
-//     pub stake_config: Pubkey,
-//     pub system_program: Pubkey,
-//     pub stake_program: Pubkey,
-// }
 
 ///   Deposit some stake into the pool, with a specified slippage
 ///   constraint. The output is a "pool" token representing ownership
