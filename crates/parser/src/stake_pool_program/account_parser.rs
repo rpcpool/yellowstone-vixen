@@ -2,10 +2,6 @@ use borsh::BorshDeserialize;
 use spl_pod::solana_program;
 use spl_stake_pool::state::{StakePool, ValidatorList, ValidatorStakeInfo};
 
-const VALIDATOR_STAKE_INFO_LEN: usize = std::mem::size_of::<ValidatorStakeInfo>() + 8;
-const STAKEPOOL_LEN: usize = std::mem::size_of::<StakePool>() + 8;
-const VALIDATORLIST_LEN: usize = std::mem::size_of::<ValidatorList>() + 8;
-
 /// SplStakePool Program State
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
@@ -17,21 +13,23 @@ pub enum SplStakePoolProgramState {
 
 impl SplStakePoolProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
-        let data_len = data_bytes.len();
-        match data_len {
-            STAKEPOOL_LEN => Ok(SplStakePoolProgramState::StakePool(
-                StakePool::try_from_slice(data_bytes)?,
-            )),
-            VALIDATOR_STAKE_INFO_LEN => Ok(SplStakePoolProgramState::ValidatorStakeInfo(
-                ValidatorStakeInfo::try_from_slice(data_bytes)?,
-            )),
-            VALIDATORLIST_LEN => Ok(SplStakePoolProgramState::ValidatorList(
-                ValidatorList::try_from_slice(data_bytes)?,
-            )),
-            _ => Err(yellowstone_vixen_core::ParseError::from(
-                "Invalid Account data length".to_owned(),
-            )),
+        if let Ok(stake_pool) = StakePool::try_from_slice(data_bytes) {
+            return Ok(SplStakePoolProgramState::StakePool(stake_pool));
         }
+
+        if let Ok(validator_stake_info) = ValidatorStakeInfo::try_from_slice(data_bytes) {
+            return Ok(SplStakePoolProgramState::ValidatorStakeInfo(
+                validator_stake_info,
+            ));
+        }
+
+        if let Ok(validator_list) = ValidatorList::try_from_slice(data_bytes) {
+            return Ok(SplStakePoolProgramState::ValidatorList(validator_list));
+        }
+
+        Err(yellowstone_vixen_core::ParseError::from(
+            "Invalid Account data length".to_owned(),
+        ))
     }
 }
 
