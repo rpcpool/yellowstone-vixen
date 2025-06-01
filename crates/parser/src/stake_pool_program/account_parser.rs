@@ -2,6 +2,10 @@ use borsh::BorshDeserialize;
 use spl_pod::solana_program;
 use spl_stake_pool::state::{StakePool, ValidatorList, ValidatorStakeInfo};
 
+const VALIDATOR_STAKE_INFO_LEN: usize = std::mem::size_of::<ValidatorStakeInfo>() + 8;
+const STAKEPOOL_LEN: usize = std::mem::size_of::<StakePool>() + 8;
+const VALIDATORLIST_LEN: usize = std::mem::size_of::<ValidatorList>() + 8;
+
 /// SplStakePool Program State
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
@@ -14,9 +18,6 @@ pub enum SplStakePoolProgramState {
 impl SplStakePoolProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let data_len = data_bytes.len();
-        const VALIDATOR_STAKE_INFO_LEN: usize = std::mem::size_of::<ValidatorStakeInfo>();
-        const STAKEPOOL_LEN: usize = std::mem::size_of::<StakePool>();
-        const VALIDATORLIST_LEN: usize = std::mem::size_of::<ValidatorList>();
         match data_len {
             STAKEPOOL_LEN => Ok(SplStakePoolProgramState::StakePool(
                 StakePool::try_from_slice(data_bytes)?,
