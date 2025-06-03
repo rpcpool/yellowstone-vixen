@@ -15,12 +15,6 @@ pub(crate) fn handle_fatal_msg<T, E: Error>(res: Result<T, E>, msg: &str) -> T {
     }
 }
 
-pub(crate) fn tokio_runtime() -> Result<tokio::runtime::Runtime, std::io::Error> {
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-}
-
 /// A helper type for preventing sensitive strings from being printed.
 #[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
 #[repr(transparent)]
