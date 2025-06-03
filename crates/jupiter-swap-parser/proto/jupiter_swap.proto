@@ -287,15 +287,15 @@ message SharedAccountsRouteWithTokenLedgerIx {
 
 
 enum AccountsType {
-	TransferHookA = 0;
-	TransferHookB = 1;
-	TransferHookReward = 2;
-	TransferHookInput = 3;
-	TransferHookIntermediate = 4;
-	TransferHookOutput = 5;
-	SupplementalTickArrays = 6;
-	SupplementalTickArraysOne = 7;
-	SupplementalTickArraysTwo = 8;
+	AccountsTypeTransferHookA = 0;
+	AccountsTypeTransferHookB = 1;
+	AccountsTypeTransferHookReward = 2;
+	AccountsTypeTransferHookInput = 3;
+	AccountsTypeTransferHookIntermediate = 4;
+	AccountsTypeTransferHookOutput = 5;
+	AccountsTypeSupplementalTickArrays = 6;
+	AccountsTypeSupplementalTickArraysOne = 7;
+	AccountsTypeSupplementalTickArraysTwo = 8;
 }
 
 message FeeEvent {
@@ -321,8 +321,8 @@ message RoutePlanStep {
 }
 
 enum Side {
-	Bid = 0;
-	Ask = 1;
+	SideBid = 0;
+	SideAsk = 1;
 }
 
 message Swap {

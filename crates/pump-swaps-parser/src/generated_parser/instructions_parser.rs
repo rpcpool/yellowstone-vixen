@@ -23,9 +23,10 @@ use crate::{
     ID,
 };
 
-/// PumpAmm Instructions
-#[derive(Debug, strum_macros::Display)]
-pub enum PumpAmmProgramIx {
+/// PumpSwap Instructions
+#[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
+pub enum PumpSwapProgramIx {
     Buy(BuyIxAccounts, BuyIxData),
     CreateConfig(CreateConfigIxAccounts, CreateConfigIxData),
     CreatePool(CreatePoolIxAccounts, CreatePoolIxData),
@@ -43,9 +44,9 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-    type Output = PumpAmmProgramIx;
+    type Output = PumpSwapProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> { "PumpAmm::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<str> { "PumpSwap::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -74,11 +75,12 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<PumpAmmProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<PumpSwapProgramIx> {
         let accounts_len = ix.accounts.len();
+
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let mut ix_data = &ix.data[8..];
-        match ix_discriminator {
+        let ix = match ix_discriminator {
             [102, 6, 61, 18, 1, 218, 235, 234] => {
                 check_min_accounts_req(accounts_len, 17)?;
                 let ix_accounts = BuyIxAccounts {
@@ -101,7 +103,7 @@ impl InstructionParser {
                     program: ix.accounts[16].0.into(),
                 };
                 let de_ix_data: BuyIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpAmmProgramIx::Buy(ix_accounts, de_ix_data))
+                Ok(PumpSwapProgramIx::Buy(ix_accounts, de_ix_data))
             },
             [201, 207, 243, 114, 75, 111, 47, 189] => {
                 check_min_accounts_req(accounts_len, 5)?;
@@ -113,7 +115,7 @@ impl InstructionParser {
                     program: ix.accounts[4].0.into(),
                 };
                 let de_ix_data: CreateConfigIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpAmmProgramIx::CreateConfig(ix_accounts, de_ix_data))
+                Ok(PumpSwapProgramIx::CreateConfig(ix_accounts, de_ix_data))
             },
             [233, 146, 209, 142, 207, 104, 64, 188] => {
                 check_min_accounts_req(accounts_len, 18)?;
@@ -138,7 +140,7 @@ impl InstructionParser {
                     program: ix.accounts[17].0.into(),
                 };
                 let de_ix_data: CreatePoolIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpAmmProgramIx::CreatePool(ix_accounts, de_ix_data))
+                Ok(PumpSwapProgramIx::CreatePool(ix_accounts, de_ix_data))
             },
             [242, 35, 198, 137, 82, 225, 242, 182] => {
                 check_min_accounts_req(accounts_len, 15)?;
@@ -160,7 +162,7 @@ impl InstructionParser {
                     program: ix.accounts[14].0.into(),
                 };
                 let de_ix_data: DepositIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpAmmProgramIx::Deposit(ix_accounts, de_ix_data))
+                Ok(PumpSwapProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [185, 173, 187, 90, 216, 15, 238, 233] => {
                 check_min_accounts_req(accounts_len, 4)?;
@@ -171,7 +173,7 @@ impl InstructionParser {
                     program: ix.accounts[3].0.into(),
                 };
                 let de_ix_data: DisableIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpAmmProgramIx::Disable(ix_accounts, de_ix_data))
+                Ok(PumpSwapProgramIx::Disable(ix_accounts, de_ix_data))
             },
             [234, 102, 194, 203, 150, 72, 62, 229] => {
                 check_min_accounts_req(accounts_len, 5)?;
@@ -182,7 +184,7 @@ impl InstructionParser {
                     event_authority: ix.accounts[3].0.into(),
                     program: ix.accounts[4].0.into(),
                 };
-                Ok(PumpAmmProgramIx::ExtendAccount(ix_accounts))
+                Ok(PumpSwapProgramIx::ExtendAccount(ix_accounts))
             },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
                 check_min_accounts_req(accounts_len, 17)?;
@@ -206,7 +208,7 @@ impl InstructionParser {
                     program: ix.accounts[16].0.into(),
                 };
                 let de_ix_data: SellIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpAmmProgramIx::Sell(ix_accounts, de_ix_data))
+                Ok(PumpSwapProgramIx::Sell(ix_accounts, de_ix_data))
             },
             [161, 176, 40, 213, 60, 184, 179, 228] => {
                 check_min_accounts_req(accounts_len, 5)?;
@@ -217,7 +219,7 @@ impl InstructionParser {
                     event_authority: ix.accounts[3].0.into(),
                     program: ix.accounts[4].0.into(),
                 };
-                Ok(PumpAmmProgramIx::UpdateAdmin(ix_accounts))
+                Ok(PumpSwapProgramIx::UpdateAdmin(ix_accounts))
             },
             [104, 184, 103, 242, 88, 151, 107, 20] => {
                 check_min_accounts_req(accounts_len, 4)?;
@@ -229,7 +231,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: UpdateFeeConfigIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpAmmProgramIx::UpdateFeeConfig(ix_accounts, de_ix_data))
+                Ok(PumpSwapProgramIx::UpdateFeeConfig(ix_accounts, de_ix_data))
             },
             [183, 18, 70, 156, 148, 109, 161, 34] => {
                 check_min_accounts_req(accounts_len, 15)?;
@@ -251,12 +253,36 @@ impl InstructionParser {
                     program: ix.accounts[14].0.into(),
                 };
                 let de_ix_data: WithdrawIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpAmmProgramIx::Withdraw(ix_accounts, de_ix_data))
+                Ok(PumpSwapProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
+        };
+
+        #[cfg(feature = "tracing")]
+        match &ix {
+            Ok(ix) => {
+                tracing::info!(
+                    name: "correctly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = ix.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            },
         }
+
+        ix
     }
 }
 
@@ -277,7 +303,7 @@ pub fn check_min_accounts_req(
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{BuyIxAccounts, InstructionParser, PumpAmmProgramIx};
+    use super::{BuyIxAccounts, InstructionParser, PumpSwapProgramIx};
     use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::BuyIxAccounts> for BuyIxAccounts {
         fn into_proto(self) -> proto_def::BuyIxAccounts {
@@ -333,8 +359,8 @@ mod proto_parser {
                 protocol_fee_basis_points: self.protocol_fee_basis_points,
                 protocol_fee_recipients: self
                     .protocol_fee_recipients
-                    .iter()
-                    .map(|p| p.to_string())
+                    .into_iter()
+                    .map(|x| x.to_string())
                     .collect(),
             }
         }
@@ -507,8 +533,8 @@ mod proto_parser {
                 protocol_fee_basis_points: self.protocol_fee_basis_points,
                 protocol_fee_recipients: self
                     .protocol_fee_recipients
-                    .iter()
-                    .map(|p| p.to_string())
+                    .into_iter()
+                    .map(|x| x.to_string())
                     .collect(),
             }
         }
@@ -546,16 +572,16 @@ mod proto_parser {
         }
     }
 
-    impl IntoProto<proto_def::ProgramIxs> for PumpAmmProgramIx {
+    impl IntoProto<proto_def::ProgramIxs> for PumpSwapProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                PumpAmmProgramIx::Buy(acc, data) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::Buy(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Buy(proto_def::BuyIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
                     })),
                 },
-                PumpAmmProgramIx::CreateConfig(acc, data) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::CreateConfig(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateConfig(
                         proto_def::CreateConfigIx {
                             accounts: Some(acc.into_proto()),
@@ -563,7 +589,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                PumpAmmProgramIx::CreatePool(acc, data) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::CreatePool(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::CreatePool(
                         proto_def::CreatePoolIx {
                             accounts: Some(acc.into_proto()),
@@ -571,7 +597,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                PumpAmmProgramIx::Deposit(acc, data) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::Deposit(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Deposit(
                         proto_def::DepositIx {
                             accounts: Some(acc.into_proto()),
@@ -579,7 +605,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                PumpAmmProgramIx::Disable(acc, data) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::Disable(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Disable(
                         proto_def::DisableIx {
                             accounts: Some(acc.into_proto()),
@@ -587,27 +613,27 @@ mod proto_parser {
                         },
                     )),
                 },
-                PumpAmmProgramIx::ExtendAccount(acc) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::ExtendAccount(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::ExtendAccount(
                         proto_def::ExtendAccountIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
                 },
-                PumpAmmProgramIx::Sell(acc, data) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::Sell(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Sell(proto_def::SellIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
                     })),
                 },
-                PumpAmmProgramIx::UpdateAdmin(acc) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::UpdateAdmin(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateAdmin(
                         proto_def::UpdateAdminIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
                 },
-                PumpAmmProgramIx::UpdateFeeConfig(acc, data) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::UpdateFeeConfig(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateFeeConfig(
                         proto_def::UpdateFeeConfigIx {
                             accounts: Some(acc.into_proto()),
@@ -615,7 +641,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                PumpAmmProgramIx::Withdraw(acc, data) => proto_def::ProgramIxs {
+                PumpSwapProgramIx::Withdraw(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Withdraw(
                         proto_def::WithdrawIx {
                             accounts: Some(acc.into_proto()),

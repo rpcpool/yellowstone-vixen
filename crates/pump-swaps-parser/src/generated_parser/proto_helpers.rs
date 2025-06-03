@@ -9,10 +9,7 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use sdk::types::BuyEvent;
-
-    use crate as sdk;
-    use crate::proto_def;
+    use crate::{proto_def, types::BuyEvent};
     impl IntoProto<proto_def::BuyEvent> for BuyEvent {
         fn into_proto(self) -> proto_def::BuyEvent {
             proto_def::BuyEvent {
@@ -41,7 +38,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::CreateConfigEvent;
+    use crate::types::CreateConfigEvent;
     impl IntoProto<proto_def::CreateConfigEvent> for CreateConfigEvent {
         fn into_proto(self) -> proto_def::CreateConfigEvent {
             proto_def::CreateConfigEvent {
@@ -51,13 +48,13 @@ pub mod proto_types_parsers {
                 protocol_fee_basis_points: self.protocol_fee_basis_points,
                 protocol_fee_recipients: self
                     .protocol_fee_recipients
-                    .iter()
-                    .map(|p| p.to_string())
+                    .into_iter()
+                    .map(|x| x.to_string())
                     .collect(),
             }
         }
     }
-    use sdk::types::CreatePoolEvent;
+    use crate::types::CreatePoolEvent;
     impl IntoProto<proto_def::CreatePoolEvent> for CreatePoolEvent {
         fn into_proto(self) -> proto_def::CreatePoolEvent {
             proto_def::CreatePoolEvent {
@@ -83,7 +80,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::DepositEvent;
+    use crate::types::DepositEvent;
     impl IntoProto<proto_def::DepositEvent> for DepositEvent {
         fn into_proto(self) -> proto_def::DepositEvent {
             proto_def::DepositEvent {
@@ -106,7 +103,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::DisableEvent;
+    use crate::types::DisableEvent;
     impl IntoProto<proto_def::DisableEvent> for DisableEvent {
         fn into_proto(self) -> proto_def::DisableEvent {
             proto_def::DisableEvent {
@@ -120,7 +117,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::ExtendAccountEvent;
+    use crate::types::ExtendAccountEvent;
     impl IntoProto<proto_def::ExtendAccountEvent> for ExtendAccountEvent {
         fn into_proto(self) -> proto_def::ExtendAccountEvent {
             proto_def::ExtendAccountEvent {
@@ -132,7 +129,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::SellEvent;
+    use crate::types::SellEvent;
     impl IntoProto<proto_def::SellEvent> for SellEvent {
         fn into_proto(self) -> proto_def::SellEvent {
             proto_def::SellEvent {
@@ -161,7 +158,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::UpdateAdminEvent;
+    use crate::types::UpdateAdminEvent;
     impl IntoProto<proto_def::UpdateAdminEvent> for UpdateAdminEvent {
         fn into_proto(self) -> proto_def::UpdateAdminEvent {
             proto_def::UpdateAdminEvent {
@@ -171,7 +168,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::UpdateFeeConfigEvent;
+    use crate::types::UpdateFeeConfigEvent;
     impl IntoProto<proto_def::UpdateFeeConfigEvent> for UpdateFeeConfigEvent {
         fn into_proto(self) -> proto_def::UpdateFeeConfigEvent {
             proto_def::UpdateFeeConfigEvent {
@@ -181,13 +178,13 @@ pub mod proto_types_parsers {
                 protocol_fee_basis_points: self.protocol_fee_basis_points,
                 protocol_fee_recipients: self
                     .protocol_fee_recipients
-                    .iter()
-                    .map(|p| p.to_string())
+                    .into_iter()
+                    .map(|x| x.to_string())
                     .collect(),
             }
         }
     }
-    use sdk::types::WithdrawEvent;
+    use crate::types::WithdrawEvent;
     impl IntoProto<proto_def::WithdrawEvent> for WithdrawEvent {
         fn into_proto(self) -> proto_def::WithdrawEvent {
             proto_def::WithdrawEvent {

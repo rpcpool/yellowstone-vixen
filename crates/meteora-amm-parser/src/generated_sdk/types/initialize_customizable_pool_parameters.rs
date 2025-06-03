@@ -6,33 +6,28 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
 
 use crate::generated::types::PoolFeeParameters;
 
-/// Create static config
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct EvtCreateConfig {
+pub struct InitializeCustomizablePoolParameters {
+    /// pool fees
     pub pool_fees: PoolFeeParameters,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub vault_config_key: Pubkey,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub pool_creator_authority: Pubkey,
-    pub activation_type: u8,
+    /// sqrt min price
     pub sqrt_min_price: u128,
+    /// sqrt max price
     pub sqrt_max_price: u128,
+    /// has alpha vault
+    pub has_alpha_vault: bool,
+    /// initialize liquidity
+    pub liquidity: u128,
+    /// The init price of the pool as a sqrt(token_b/token_a) Q64.64 value
+    pub sqrt_price: u128,
+    /// activation type
+    pub activation_type: u8,
+    /// collect fee mode
     pub collect_fee_mode: u8,
-    pub index: u64,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub config: Pubkey,
+    /// activation point
+    pub activation_point: Option<u64>,
 }

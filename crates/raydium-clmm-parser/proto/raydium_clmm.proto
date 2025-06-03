@@ -137,7 +137,7 @@ message Observation {
 }
 
 message PositionRewardInfo {
-	bytes growth_inside_last_x64 = 1;
+	string growth_inside_last_x64 = 1;
 	uint64 reward_amount_owed = 2;
 }
 
@@ -146,45 +146,44 @@ message RewardInfo {
 	uint64 open_time = 2;
 	uint64 end_time = 3;
 	uint64 last_update_time = 4;
-	bytes emissions_per_second_x64 = 5;
+	string emissions_per_second_x64 = 5;
 	uint64 reward_total_emissioned = 6;
 	uint64 reward_claimed = 7;
 	string token_mint = 8;
 	string token_vault = 9;
 	string authority = 10;
-	bytes reward_growth_global_x64 = 11;
+	string reward_growth_global_x64 = 11;
 }
 
 message TickState {
 	int32 tick = 1;
-	bytes liquidity_net = 2;
-	bytes liquidity_gross = 3;
-	bytes fee_growth_outside0_x64 = 4;
-	bytes fee_growth_outside1_x64 = 5;
-	repeated bytes reward_growths_outside_x64 = 6;
-	bytes padding = 7;
+	string liquidity_net = 2;
+	string liquidity_gross = 3;
+	string fee_growth_outside0_x64 = 4;
+	string fee_growth_outside1_x64 = 5;
+	repeated string reward_growths_outside_x64 = 6;
+	repeated uint32 padding = 7;
 }
 
 enum PoolStatusBitIndex {
-	OpenPositionOrIncreaseLiquidity = 0;
-	DecreaseLiquidity = 1;
-	CollectFee = 2;
-	CollectReward = 3;
-	Swap = 4;
+	PoolStatusBitIndexOpenPositionOrIncreaseLiquidity = 0;
+	PoolStatusBitIndexDecreaseLiquidity = 1;
+	PoolStatusBitIndexCollectFee = 2;
+	PoolStatusBitIndexCollectReward = 3;
+	PoolStatusBitIndexSwap = 4;
 }
 
 enum PoolStatusBitFlag {
-	Enable = 0;
-	Disable = 1;
+	PoolStatusBitFlagEnable = 0;
+	PoolStatusBitFlagDisable = 1;
 }
 
 enum RewardState {
-	Uninitialized = 0;
-	Initialized = 1;
-	Opening = 2;
-	Ended = 3;
+	RewardStateUninitialized = 0;
+	RewardStateInitialized = 1;
+	RewardStateOpening = 2;
+	RewardStateEnded = 3;
 }
-
 
 message AmmConfig {
 	uint32 bump = 1;
@@ -215,14 +214,14 @@ message ObservationState {
 }
 
 message PersonalPositionState {
-	bytes bump = 1;
+	repeated uint32 bump = 1;
 	string nft_mint = 2;
 	string pool_id = 3;
 	int32 tick_lower_index = 4;
 	int32 tick_upper_index = 5;
-	bytes liquidity = 6;
-	bytes fee_growth_inside0_last_x64 = 7;
-	bytes fee_growth_inside1_last_x64 = 8;
+	string liquidity = 6;
+	string fee_growth_inside0_last_x64 = 7;
+	string fee_growth_inside1_last_x64 = 8;
 	uint64 token_fees_owed0 = 9;
 	uint64 token_fees_owed1 = 10;
 	repeated PositionRewardInfo reward_infos = 11;
@@ -231,7 +230,7 @@ message PersonalPositionState {
 }
 
 message PoolState {
-	bytes bump = 1;
+	repeated uint32 bump = 1;
 	string amm_config = 2;
 	string owner = 3;
 	string token_mint0 = 4;
@@ -242,21 +241,21 @@ message PoolState {
 	uint32 mint_decimals0 = 9;
 	uint32 mint_decimals1 = 10;
 	uint32 tick_spacing = 11;
-	bytes liquidity = 12;
-	bytes sqrt_price_x64 = 13;
+	string liquidity = 12;
+	string sqrt_price_x64 = 13;
 	int32 tick_current = 14;
 	uint32 padding3 = 15;
 	uint32 padding4 = 16;
-	bytes fee_growth_global0_x64 = 17;
-	bytes fee_growth_global1_x64 = 18;
+	string fee_growth_global0_x64 = 17;
+	string fee_growth_global1_x64 = 18;
 	uint64 protocol_fees_token0 = 19;
 	uint64 protocol_fees_token1 = 20;
-	bytes swap_in_amount_token0 = 21;
-	bytes swap_out_amount_token1 = 22;
-	bytes swap_in_amount_token1 = 23;
-	bytes swap_out_amount_token0 = 24;
+	string swap_in_amount_token0 = 21;
+	string swap_out_amount_token1 = 22;
+	string swap_in_amount_token1 = 23;
+	string swap_out_amount_token0 = 24;
 	uint32 status = 25;
-	bytes padding = 26;
+	repeated uint32 padding = 26;
 	repeated RewardInfo reward_infos = 27;
 	repeated uint64 tick_array_bitmap = 28;
 	uint64 total_fees_token0 = 29;
@@ -276,12 +275,12 @@ message ProtocolPositionState {
 	string pool_id = 2;
 	int32 tick_lower_index = 3;
 	int32 tick_upper_index = 4;
-	bytes liquidity = 5;
-	bytes fee_growth_inside0_last_x64 = 6;
-	bytes fee_growth_inside1_last_x64 = 7;
+	string liquidity = 5;
+	string fee_growth_inside0_last_x64 = 6;
+	string fee_growth_inside1_last_x64 = 7;
 	uint64 token_fees_owed0 = 8;
 	uint64 token_fees_owed1 = 9;
-	repeated bytes reward_growth_inside = 10;
+	repeated string reward_growth_inside = 10;
 	uint64 recent_epoch = 11;
 	repeated uint64 padding = 12;
 }
@@ -292,7 +291,7 @@ message TickArrayState {
 	repeated TickState ticks = 3;
 	uint32 initialized_tick_count = 4;
 	uint64 recent_epoch = 5;
-	bytes padding = 6;
+	repeated uint32 padding = 6;
 }
 
 message TickArrayBitmapExtension {
@@ -343,7 +342,7 @@ message CreatePoolIxAccounts {
 }
 
 message CreatePoolIxData {
-	bytes sqrt_price_x64 = 1;
+	string sqrt_price_x64 = 1;
 	uint64 open_time = 2;
 }
 
@@ -399,7 +398,7 @@ message InitializeRewardIxAccounts {
 message InitializeRewardIxData {
 	uint64 open_time = 1;
 	uint64 end_time = 2;
-	bytes emissions_per_second_x64 = 3;
+	string emissions_per_second_x64 = 3;
 }
 
 message CollectRemainingRewardsIxAccounts {
@@ -433,7 +432,7 @@ message SetRewardParamsIxAccounts {
 
 message SetRewardParamsIxData {
 	uint32 reward_index = 1;
-	bytes emissions_per_second_x64 = 2;
+	string emissions_per_second_x64 = 2;
 	uint64 open_time = 3;
 	uint64 end_time = 4;
 }
@@ -503,7 +502,7 @@ message OpenPositionIxData {
 	int32 tick_upper_index = 2;
 	int32 tick_array_lower_start_index = 3;
 	int32 tick_array_upper_start_index = 4;
-	bytes liquidity = 5;
+	string liquidity = 5;
 	uint64 amount0_max = 6;
 	uint64 amount1_max = 7;
 }
@@ -538,7 +537,7 @@ message OpenPositionV2IxData {
 	int32 tick_upper_index = 2;
 	int32 tick_array_lower_start_index = 3;
 	int32 tick_array_upper_start_index = 4;
-	bytes liquidity = 5;
+	string liquidity = 5;
 	uint64 amount0_max = 6;
 	uint64 amount1_max = 7;
 	bool with_metadata = 8;
@@ -573,7 +572,7 @@ message OpenPositionWithToken22NftIxData {
 	int32 tick_upper_index = 2;
 	int32 tick_array_lower_start_index = 3;
 	int32 tick_array_upper_start_index = 4;
-	bytes liquidity = 5;
+	string liquidity = 5;
 	uint64 amount0_max = 6;
 	uint64 amount1_max = 7;
 	bool with_metadata = 8;
@@ -606,7 +605,7 @@ message IncreaseLiquidityIxAccounts {
 }
 
 message IncreaseLiquidityIxData {
-	bytes liquidity = 1;
+	string liquidity = 1;
 	uint64 amount0_max = 2;
 	uint64 amount1_max = 3;
 }
@@ -630,7 +629,7 @@ message IncreaseLiquidityV2IxAccounts {
 }
 
 message IncreaseLiquidityV2IxData {
-	bytes liquidity = 1;
+	string liquidity = 1;
 	uint64 amount0_max = 2;
 	uint64 amount1_max = 3;
 	optional bool base_flag = 4;
@@ -652,7 +651,7 @@ message DecreaseLiquidityIxAccounts {
 }
 
 message DecreaseLiquidityIxData {
-	bytes liquidity = 1;
+	string liquidity = 1;
 	uint64 amount0_min = 2;
 	uint64 amount1_min = 3;
 }
@@ -677,7 +676,7 @@ message DecreaseLiquidityV2IxAccounts {
 }
 
 message DecreaseLiquidityV2IxData {
-	bytes liquidity = 1;
+	string liquidity = 1;
 	uint64 amount0_min = 2;
 	uint64 amount1_min = 3;
 }
@@ -698,7 +697,7 @@ message SwapIxAccounts {
 message SwapIxData {
 	uint64 amount = 1;
 	uint64 other_amount_threshold = 2;
-	bytes sqrt_price_limit_x64 = 3;
+	string sqrt_price_limit_x64 = 3;
 	bool is_base_input = 4;
 }
 
@@ -721,7 +720,7 @@ message SwapV2IxAccounts {
 message SwapV2IxData {
 	uint64 amount = 1;
 	uint64 other_amount_threshold = 2;
-	bytes sqrt_price_limit_x64 = 3;
+	string sqrt_price_limit_x64 = 3;
 	bool is_base_input = 4;
 }
 

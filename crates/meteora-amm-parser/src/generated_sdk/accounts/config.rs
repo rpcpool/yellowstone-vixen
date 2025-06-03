@@ -32,8 +32,10 @@ pub struct Config {
     pub activation_type: u8,
     /// Collect fee mode
     pub collect_fee_mode: u8,
+    /// Config type mode, 0 for static, 1 for dynamic
+    pub config_type: u8,
     /// padding 0
-    pub padding0: [u8; 6],
+    pub padding0: [u8; 5],
     /// config index
     pub index: u64,
     /// sqrt min price
