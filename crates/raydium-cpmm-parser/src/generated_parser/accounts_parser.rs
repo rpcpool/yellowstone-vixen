@@ -12,7 +12,8 @@ use crate::{
 
 /// RaydiumCpSwap Program State
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, strum_macros::Display)]
+#[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum RaydiumCpSwapProgramState {
     AmmConfig(AmmConfig),
     ObservationState(ObservationState),
@@ -22,7 +23,7 @@ pub enum RaydiumCpSwapProgramState {
 impl RaydiumCpSwapProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
-        match acc_discriminator {
+        let acc = match acc_discriminator {
             [218, 244, 33, 104, 203, 203, 43, 111] => Ok(RaydiumCpSwapProgramState::AmmConfig(
                 AmmConfig::from_bytes(data_bytes)?,
             )),
@@ -37,7 +38,31 @@ impl RaydiumCpSwapProgramState {
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
+        };
+
+        #[cfg(feature = "tracing")]
+        match &acc {
+            Ok(acc) => {
+                tracing::info!(
+                    name: "correctly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = acc.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = "error",
+                    discriminator = ?acc_discriminator,
+                    error = ?e
+                );
+            },
         }
+
+        acc
     }
 }
 

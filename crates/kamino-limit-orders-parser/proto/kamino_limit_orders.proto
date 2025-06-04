@@ -80,26 +80,26 @@ message LogUserSwapBalancesEndIx {
 
 
 enum OrderStatus {
-	Active = 0;
-	Filled = 1;
-	Cancelled = 2;
+	OrderStatusActive = 0;
+	OrderStatusFilled = 1;
+	OrderStatusCancelled = 2;
 }
 
 enum OrderType {
-	Vanilla = 0;
+	OrderTypeVanilla = 0;
 }
 
 enum UpdateGlobalConfigMode {
-	UpdateEmergencyMode = 0;
-	UpdateFlashTakeOrderBlocked = 1;
-	UpdateBlockNewOrders = 2;
-	UpdateBlockOrderTaking = 3;
-	UpdateHostFeeBps = 4;
-	UpdateAdminAuthorityCached = 5;
-	UpdateOrderTakingPermissionless = 6;
-	UpdateOrderCloseDelaySeconds = 7;
-	UpdateTxnFeeCost = 8;
-	UpdateAtaCreationCost = 9;
+	UpdateGlobalConfigModeUpdateEmergencyMode = 0;
+	UpdateGlobalConfigModeUpdateFlashTakeOrderBlocked = 1;
+	UpdateGlobalConfigModeUpdateBlockNewOrders = 2;
+	UpdateGlobalConfigModeUpdateBlockOrderTaking = 3;
+	UpdateGlobalConfigModeUpdateHostFeeBps = 4;
+	UpdateGlobalConfigModeUpdateAdminAuthorityCached = 5;
+	UpdateGlobalConfigModeUpdateOrderTakingPermissionless = 6;
+	UpdateGlobalConfigModeUpdateOrderCloseDelaySeconds = 7;
+	UpdateGlobalConfigModeUpdateTxnFeeCost = 8;
+	UpdateGlobalConfigModeUpdateAtaCreationCost = 9;
 }
 
 message UpdateGlobalConfigValue {
@@ -129,7 +129,7 @@ message Order {
 	uint32 status = 14;
 	uint32 in_vault_bump = 15;
 	uint32 flash_ix_lock = 16;
-	bytes padding0 = 17;
+	repeated uint32 padding0 = 17;
 	uint64 last_updated_timestamp = 18;
 	uint64 flash_start_taker_output_balance = 19;
 	repeated uint64 padding = 20;
@@ -148,7 +148,7 @@ message GlobalConfig {
 	uint32 orders_taking_blocked = 4;
 	uint32 host_fee_bps = 5;
 	uint32 is_order_taking_permissionless = 6;
-	bytes padding0 = 7;
+	repeated uint32 padding0 = 7;
 	uint64 order_close_delay_seconds = 8;
 	repeated uint64 padding1 = 9;
 	uint64 pda_authority_previous_lamports_balance = 10;
@@ -323,7 +323,7 @@ message UpdateGlobalConfigIxAccounts {
 
 message UpdateGlobalConfigIxData {
 	uint32 mode = 1;
-	bytes value = 2;
+	repeated uint32 value = 2;
 }
 
 message UpdateGlobalConfigAdminIxAccounts {
@@ -381,7 +381,7 @@ message LogUserSwapBalancesEndIxData {
 	uint64 simulated_amount_out_next_best = 5;
 	uint32 aggregator = 6;
 	uint32 next_best_aggregator = 7;
-	bytes padding = 8;
+	repeated uint32 padding = 8;
 }
 
 

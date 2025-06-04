@@ -52,6 +52,11 @@ message CreateConfigIx {
 	CreateConfigIxData data = 2;
 }
 
+message CreateDynamicConfigIx {
+	CreateDynamicConfigIxAccounts accounts = 1;
+	CreateDynamicConfigIxData data = 2;
+}
+
 message CreatePositionIx {
 	CreatePositionIxAccounts accounts = 1;
 }
@@ -73,6 +78,11 @@ message InitializeCustomizablePoolIx {
 message InitializePoolIx {
 	InitializePoolIxAccounts accounts = 1;
 	InitializePoolIxData data = 2;
+}
+
+message InitializePoolWithDynamicConfigIx {
+	InitializePoolWithDynamicConfigIxAccounts accounts = 1;
+	InitializePoolWithDynamicConfigIxData data = 2;
 }
 
 message InitializeRewardIx {
@@ -131,7 +141,7 @@ message WithdrawIneligibleRewardIx {
 
 
 message AddLiquidityParameters {
-	bytes liquidity_delta = 1;
+	string liquidity_delta = 1;
 	uint64 token_a_amount_threshold = 2;
 	uint64 token_b_amount_threshold = 3;
 }
@@ -139,7 +149,7 @@ message AddLiquidityParameters {
 message BaseFeeConfig {
 	uint64 cliff_fee_numerator = 1;
 	uint32 fee_scheduler_mode = 2;
-	bytes padding = 3;
+	repeated uint32 padding = 3;
 	uint32 number_of_period = 4;
 	uint64 period_frequency = 5;
 	uint64 reduction_factor = 6;
@@ -156,7 +166,7 @@ message BaseFeeParameters {
 message BaseFeeStruct {
 	uint64 cliff_fee_numerator = 1;
 	uint32 fee_scheduler_mode = 2;
-	bytes padding0 = 3;
+	repeated uint32 padding0 = 3;
 	uint32 number_of_period = 4;
 	uint64 period_frequency = 5;
 	uint64 reduction_factor = 6;
@@ -165,20 +175,20 @@ message BaseFeeStruct {
 
 message DynamicFeeConfig {
 	uint32 initialized = 1;
-	bytes padding = 2;
+	repeated uint32 padding = 2;
 	uint32 max_volatility_accumulator = 3;
 	uint32 variable_fee_control = 4;
 	uint32 bin_step = 5;
 	uint32 filter_period = 6;
 	uint32 decay_period = 7;
 	uint32 reduction_factor = 8;
-	bytes padding1 = 9;
-	bytes bin_step_u128 = 10;
+	repeated uint32 padding1 = 9;
+	string bin_step_u128 = 10;
 }
 
 message DynamicFeeParameters {
 	uint32 bin_step = 1;
-	bytes bin_step_u128 = 2;
+	string bin_step_u128 = 2;
 	uint32 filter_period = 3;
 	uint32 decay_period = 4;
 	uint32 reduction_factor = 5;
@@ -188,7 +198,7 @@ message DynamicFeeParameters {
 
 message DynamicFeeStruct {
 	uint32 initialized = 1;
-	bytes padding = 2;
+	repeated uint32 padding = 2;
 	uint32 max_volatility_accumulator = 3;
 	uint32 variable_fee_control = 4;
 	uint32 bin_step = 5;
@@ -196,10 +206,10 @@ message DynamicFeeStruct {
 	uint32 decay_period = 7;
 	uint32 reduction_factor = 8;
 	uint64 last_update_timestamp = 9;
-	bytes bin_step_u128 = 10;
-	bytes sqrt_price_reference = 11;
-	bytes volatility_accumulator = 12;
-	bytes volatility_reference = 13;
+	string bin_step_u128 = 10;
+	string sqrt_price_reference = 11;
+	string volatility_accumulator = 12;
+	string volatility_reference = 13;
 }
 
 message EvtAddLiquidity {
@@ -268,11 +278,17 @@ message EvtCreateConfig {
 	string vault_config_key = 2;
 	string pool_creator_authority = 3;
 	uint32 activation_type = 4;
-	bytes sqrt_min_price = 5;
-	bytes sqrt_max_price = 6;
+	string sqrt_min_price = 5;
+	string sqrt_max_price = 6;
 	uint32 collect_fee_mode = 7;
 	uint64 index = 8;
 	string config = 9;
+}
+
+message EvtCreateDynamicConfig {
+	string config = 1;
+	string pool_creator_authority = 2;
+	uint64 index = 3;
 }
 
 message EvtCreatePosition {
@@ -303,12 +319,12 @@ message EvtInitializePool {
 	string payer = 5;
 	string alpha_vault = 6;
 	PoolFeeParameters pool_fees = 7;
-	bytes sqrt_min_price = 8;
-	bytes sqrt_max_price = 9;
+	string sqrt_min_price = 8;
+	string sqrt_max_price = 9;
 	uint32 activation_type = 10;
 	uint32 collect_fee_mode = 11;
-	bytes liquidity = 12;
-	bytes sqrt_price = 13;
+	string liquidity = 12;
+	string sqrt_price = 13;
 	uint64 activation_point = 14;
 	uint32 token_a_flag = 15;
 	uint32 token_b_flag = 16;
@@ -334,16 +350,16 @@ message EvtLockPosition {
 	string vesting = 4;
 	uint64 cliff_point = 5;
 	uint64 period_frequency = 6;
-	bytes cliff_unlock_liquidity = 7;
-	bytes liquidity_per_period = 8;
+	string cliff_unlock_liquidity = 7;
+	string liquidity_per_period = 8;
 	uint32 number_of_period = 9;
 }
 
 message EvtPermanentLockPosition {
 	string pool = 1;
 	string position = 2;
-	bytes lock_liquidity_amount = 3;
-	bytes total_permanent_locked_liquidity = 4;
+	string lock_liquidity_amount = 3;
+	string total_permanent_locked_liquidity = 4;
 }
 
 message EvtRemoveLiquidity {
@@ -390,6 +406,18 @@ message EvtWithdrawIneligibleReward {
 	uint64 amount = 3;
 }
 
+message InitializeCustomizablePoolParameters {
+	PoolFeeParameters pool_fees = 1;
+	string sqrt_min_price = 2;
+	string sqrt_max_price = 3;
+	bool has_alpha_vault = 4;
+	string liquidity = 5;
+	string sqrt_price = 6;
+	uint32 activation_type = 7;
+	uint32 collect_fee_mode = 8;
+	optional uint64 activation_point = 9;
+}
+
 message PoolFeeParameters {
 	BaseFeeParameters base_fee = 1;
 	uint32 protocol_fee_percent = 2;
@@ -404,7 +432,7 @@ message PoolFeesConfig {
 	uint32 protocol_fee_percent = 3;
 	uint32 partner_fee_percent = 4;
 	uint32 referral_fee_percent = 5;
-	bytes padding0 = 6;
+	repeated uint32 padding0 = 6;
 	repeated uint64 padding1 = 7;
 }
 
@@ -413,14 +441,14 @@ message PoolFeesStruct {
 	uint32 protocol_fee_percent = 2;
 	uint32 partner_fee_percent = 3;
 	uint32 referral_fee_percent = 4;
-	bytes padding0 = 5;
+	repeated uint32 padding0 = 5;
 	DynamicFeeStruct dynamic_fee = 6;
 	repeated uint64 padding1 = 7;
 }
 
 message PoolMetrics {
-	bytes total_lp_a_fee = 1;
-	bytes total_lp_b_fee = 2;
+	string total_lp_a_fee = 1;
+	string total_lp_b_fee = 2;
 	uint64 total_protocol_a_fee = 3;
 	uint64 total_protocol_b_fee = 4;
 	uint64 total_partner_a_fee = 5;
@@ -435,7 +463,7 @@ message PositionMetrics {
 }
 
 message RemoveLiquidityParameters {
-	bytes liquidity_delta = 1;
+	string liquidity_delta = 1;
 	uint64 token_a_amount_threshold = 2;
 	uint64 token_b_amount_threshold = 3;
 }
@@ -443,15 +471,15 @@ message RemoveLiquidityParameters {
 message RewardInfo {
 	uint32 initialized = 1;
 	uint32 reward_token_flag = 2;
-	bytes padding0 = 3;
-	bytes padding1 = 4;
+	repeated uint32 padding0 = 3;
+	repeated uint32 padding1 = 4;
 	string mint = 5;
 	string vault = 6;
 	string funder = 7;
 	uint64 reward_duration = 8;
 	uint64 reward_duration_end = 9;
-	bytes reward_rate = 10;
-	bytes reward_per_token_stored = 11;
+	string reward_rate = 10;
+	repeated uint32 reward_per_token_stored = 11;
 	uint64 last_update_time = 12;
 	uint64 cumulative_seconds_with_empty_liquidity_reward = 13;
 }
@@ -463,7 +491,7 @@ message SwapParameters {
 
 message SwapResult {
 	uint64 output_amount = 1;
-	bytes next_sqrt_price = 2;
+	string next_sqrt_price = 2;
 	uint64 lp_fee = 3;
 	uint64 protocol_fee = 4;
 	uint64 partner_fee = 5;
@@ -471,7 +499,7 @@ message SwapResult {
 }
 
 message UserRewardInfo {
-	bytes reward_per_token_checkpoint = 1;
+	repeated uint32 reward_per_token_checkpoint = 1;
 	uint64 reward_pendings = 2;
 	uint64 total_claimed_rewards = 3;
 }
@@ -479,7 +507,7 @@ message UserRewardInfo {
 
 message ClaimFeeOperator {
 	string operator = 1;
-	bytes padding = 2;
+	repeated uint32 padding = 2;
 }
 
 message Config {
@@ -488,11 +516,12 @@ message Config {
 	PoolFeesConfig pool_fees = 3;
 	uint32 activation_type = 4;
 	uint32 collect_fee_mode = 5;
-	bytes padding0 = 6;
-	uint64 index = 7;
-	bytes sqrt_min_price = 8;
-	bytes sqrt_max_price = 9;
-	repeated uint64 padding1 = 10;
+	uint32 config_type = 6;
+	repeated uint32 padding0 = 7;
+	uint64 index = 8;
+	string sqrt_min_price = 9;
+	string sqrt_max_price = 10;
+	repeated uint64 padding1 = 11;
 }
 
 message Pool {
@@ -503,62 +532,61 @@ message Pool {
 	string token_b_vault = 5;
 	string whitelisted_vault = 6;
 	string partner = 7;
-	bytes liquidity = 8;
-	uint64 token_a_reserve = 9;
-	uint64 token_b_reserve = 10;
-	uint64 protocol_a_fee = 11;
-	uint64 protocol_b_fee = 12;
-	uint64 partner_a_fee = 13;
-	uint64 partner_b_fee = 14;
-	bytes sqrt_min_price = 15;
-	bytes sqrt_max_price = 16;
-	bytes sqrt_price = 17;
-	uint64 activation_point = 18;
-	uint32 activation_type = 19;
-	uint32 pool_status = 20;
-	uint32 token_a_flag = 21;
-	uint32 token_b_flag = 22;
-	uint32 collect_fee_mode = 23;
-	uint32 pool_type = 24;
-	bytes padding0 = 25;
-	bytes fee_a_per_liquidity = 26;
-	bytes fee_b_per_liquidity = 27;
-	bytes permanent_lock_liquidity = 28;
-	PoolMetrics metrics = 29;
-	repeated uint64 padding1 = 30;
-	repeated RewardInfo reward_infos = 31;
+	string liquidity = 8;
+	string padding = 9;
+	uint64 protocol_a_fee = 10;
+	uint64 protocol_b_fee = 11;
+	uint64 partner_a_fee = 12;
+	uint64 partner_b_fee = 13;
+	string sqrt_min_price = 14;
+	string sqrt_max_price = 15;
+	string sqrt_price = 16;
+	uint64 activation_point = 17;
+	uint32 activation_type = 18;
+	uint32 pool_status = 19;
+	uint32 token_a_flag = 20;
+	uint32 token_b_flag = 21;
+	uint32 collect_fee_mode = 22;
+	uint32 pool_type = 23;
+	repeated uint32 padding0 = 24;
+	repeated uint32 fee_a_per_liquidity = 25;
+	repeated uint32 fee_b_per_liquidity = 26;
+	string permanent_lock_liquidity = 27;
+	PoolMetrics metrics = 28;
+	repeated uint64 padding1 = 29;
+	repeated RewardInfo reward_infos = 30;
 }
 
 message Position {
 	string pool = 1;
 	string nft_mint = 2;
-	bytes fee_a_per_token_checkpoint = 3;
-	bytes fee_b_per_token_checkpoint = 4;
+	repeated uint32 fee_a_per_token_checkpoint = 3;
+	repeated uint32 fee_b_per_token_checkpoint = 4;
 	uint64 fee_a_pending = 5;
 	uint64 fee_b_pending = 6;
-	bytes unlocked_liquidity = 7;
-	bytes vested_liquidity = 8;
-	bytes permanent_locked_liquidity = 9;
+	string unlocked_liquidity = 7;
+	string vested_liquidity = 8;
+	string permanent_locked_liquidity = 9;
 	PositionMetrics metrics = 10;
 	repeated UserRewardInfo reward_infos = 11;
-	repeated bytes padding = 12;
+	repeated string padding = 12;
 }
 
 message TokenBadge {
 	string token_mint = 1;
-	bytes padding = 2;
+	repeated uint32 padding = 2;
 }
 
 message Vesting {
 	string position = 1;
 	uint64 cliff_point = 2;
 	uint64 period_frequency = 3;
-	bytes cliff_unlock_liquidity = 4;
-	bytes liquidity_per_period = 5;
-	bytes total_released_liquidity = 6;
+	string cliff_unlock_liquidity = 4;
+	string liquidity_per_period = 5;
+	string total_released_liquidity = 6;
 	uint32 number_of_period = 7;
-	bytes padding = 8;
-	repeated bytes padding2 = 9;
+	repeated uint32 padding = 8;
+	repeated string padding2 = 9;
 }
 
 
@@ -710,14 +738,27 @@ message CreateConfigIxAccounts {
 }
 
 message CreateConfigIxData {
-	PoolFeeParameters pool_fees = 1;
-	bytes sqrt_min_price = 2;
-	bytes sqrt_max_price = 3;
-	string vault_config_key = 4;
-	string pool_creator_authority = 5;
-	uint32 activation_type = 6;
-	uint32 collect_fee_mode = 7;
-	uint64 index = 8;
+	uint64 index = 1;
+	PoolFeeParameters pool_fees = 2;
+	string sqrt_min_price = 3;
+	string sqrt_max_price = 4;
+	string vault_config_key = 5;
+	string pool_creator_authority = 6;
+	uint32 activation_type = 7;
+	uint32 collect_fee_mode = 8;
+}
+
+message CreateDynamicConfigIxAccounts {
+	string config = 1;
+	string admin = 2;
+	string system_program = 3;
+	string event_authority = 4;
+	string program = 5;
+}
+
+message CreateDynamicConfigIxData {
+	uint64 index = 1;
+	string pool_creator_authority = 2;
 }
 
 message CreatePositionIxAccounts {
@@ -785,15 +826,7 @@ message InitializeCustomizablePoolIxAccounts {
 }
 
 message InitializeCustomizablePoolIxData {
-	PoolFeeParameters pool_fees = 1;
-	bytes sqrt_min_price = 2;
-	bytes sqrt_max_price = 3;
-	bool has_alpha_vault = 4;
-	bytes liquidity = 5;
-	bytes sqrt_price = 6;
-	uint32 activation_type = 7;
-	uint32 collect_fee_mode = 8;
-	optional uint64 activation_point = 9;
+	InitializeCustomizablePoolParameters params = 1;
 }
 
 message InitializePoolIxAccounts {
@@ -820,9 +853,37 @@ message InitializePoolIxAccounts {
 }
 
 message InitializePoolIxData {
-	bytes liquidity = 1;
-	bytes sqrt_price = 2;
+	string liquidity = 1;
+	string sqrt_price = 2;
 	optional uint64 activation_point = 3;
+}
+
+message InitializePoolWithDynamicConfigIxAccounts {
+	string creator = 1;
+	string position_nft_mint = 2;
+	string position_nft_account = 3;
+	string payer = 4;
+	string pool_creator_authority = 5;
+	string config = 6;
+	string pool_authority = 7;
+	string pool = 8;
+	string position = 9;
+	string token_a_mint = 10;
+	string token_b_mint = 11;
+	string token_a_vault = 12;
+	string token_b_vault = 13;
+	string payer_token_a = 14;
+	string payer_token_b = 15;
+	string token_a_program = 16;
+	string token_b_program = 17;
+	string token2022_program = 18;
+	string system_program = 19;
+	string event_authority = 20;
+	string program = 21;
+}
+
+message InitializePoolWithDynamicConfigIxData {
+	InitializeCustomizablePoolParameters params = 1;
 }
 
 message InitializeRewardIxAccounts {
@@ -858,8 +919,8 @@ message LockPositionIxAccounts {
 message LockPositionIxData {
 	optional uint64 cliff_point = 1;
 	uint64 period_frequency = 2;
-	bytes cliff_unlock_liquidity = 3;
-	bytes liquidity_per_period = 4;
+	string cliff_unlock_liquidity = 3;
+	string liquidity_per_period = 4;
 	uint32 number_of_period = 5;
 }
 
@@ -873,7 +934,7 @@ message PermanentLockPositionIxAccounts {
 }
 
 message PermanentLockPositionIxData {
-	bytes permanent_lock_liquidity = 1;
+	string permanent_lock_liquidity = 1;
 }
 
 message RefreshVestingIxAccounts {
@@ -1025,22 +1086,24 @@ message ProgramIxs {
         	ClosePositionIx close_position = 8;
         	CreateClaimFeeOperatorIx create_claim_fee_operator = 9;
         	CreateConfigIx create_config = 10;
-        	CreatePositionIx create_position = 11;
-        	CreateTokenBadgeIx create_token_badge = 12;
-        	FundRewardIx fund_reward = 13;
-        	InitializeCustomizablePoolIx initialize_customizable_pool = 14;
-        	InitializePoolIx initialize_pool = 15;
-        	InitializeRewardIx initialize_reward = 16;
-        	LockPositionIx lock_position = 17;
-        	PermanentLockPositionIx permanent_lock_position = 18;
-        	RefreshVestingIx refresh_vesting = 19;
-        	RemoveAllLiquidityIx remove_all_liquidity = 20;
-        	RemoveLiquidityIx remove_liquidity = 21;
-        	SetPoolStatusIx set_pool_status = 22;
-        	SwapIx swap = 23;
-        	UpdateRewardDurationIx update_reward_duration = 24;
-        	UpdateRewardFunderIx update_reward_funder = 25;
-        	WithdrawIneligibleRewardIx withdraw_ineligible_reward = 26;
+        	CreateDynamicConfigIx create_dynamic_config = 11;
+        	CreatePositionIx create_position = 12;
+        	CreateTokenBadgeIx create_token_badge = 13;
+        	FundRewardIx fund_reward = 14;
+        	InitializeCustomizablePoolIx initialize_customizable_pool = 15;
+        	InitializePoolIx initialize_pool = 16;
+        	InitializePoolWithDynamicConfigIx initialize_pool_with_dynamic_config = 17;
+        	InitializeRewardIx initialize_reward = 18;
+        	LockPositionIx lock_position = 19;
+        	PermanentLockPositionIx permanent_lock_position = 20;
+        	RefreshVestingIx refresh_vesting = 21;
+        	RemoveAllLiquidityIx remove_all_liquidity = 22;
+        	RemoveLiquidityIx remove_liquidity = 23;
+        	SetPoolStatusIx set_pool_status = 24;
+        	SwapIx swap = 25;
+        	UpdateRewardDurationIx update_reward_duration = 26;
+        	UpdateRewardFunderIx update_reward_funder = 27;
+        	WithdrawIneligibleRewardIx withdraw_ineligible_reward = 28;
         }
 }
 

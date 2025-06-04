@@ -12,7 +12,8 @@ use crate::{
 
 /// CpAmm Program State
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, strum_macros::Display)]
+#[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum CpAmmProgramState {
     ClaimFeeOperator(ClaimFeeOperator),
     Config(Config),
@@ -25,7 +26,7 @@ pub enum CpAmmProgramState {
 impl CpAmmProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
-        match acc_discriminator {
+        let acc = match acc_discriminator {
             [166, 48, 134, 86, 34, 200, 188, 150] => Ok(CpAmmProgramState::ClaimFeeOperator(
                 ClaimFeeOperator::from_bytes(data_bytes)?,
             )),
@@ -47,7 +48,31 @@ impl CpAmmProgramState {
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
+        };
+
+        #[cfg(feature = "tracing")]
+        match &acc {
+            Ok(acc) => {
+                tracing::info!(
+                    name: "correctly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = acc.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = "error",
+                    discriminator = ?acc_discriminator,
+                    error = ?e
+                );
+            },
         }
+
+        acc
     }
 }
 
@@ -94,7 +119,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::ClaimFeeOperator {
             proto_def::ClaimFeeOperator {
                 operator: self.operator.to_string(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
@@ -107,10 +132,11 @@ mod proto_parser {
                 pool_fees: Some(self.pool_fees.into_proto()),
                 activation_type: self.activation_type.into(),
                 collect_fee_mode: self.collect_fee_mode.into(),
-                padding0: self.padding0.to_vec(),
+                config_type: self.config_type.into(),
+                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
                 index: self.index,
-                sqrt_min_price: self.sqrt_min_price.to_le_bytes().to_vec(),
-                sqrt_max_price: self.sqrt_max_price.to_le_bytes().to_vec(),
+                sqrt_min_price: self.sqrt_min_price.to_string(),
+                sqrt_max_price: self.sqrt_max_price.to_string(),
                 padding1: self.padding1.to_vec(),
             }
         }
@@ -126,16 +152,15 @@ mod proto_parser {
                 token_b_vault: self.token_b_vault.to_string(),
                 whitelisted_vault: self.whitelisted_vault.to_string(),
                 partner: self.partner.to_string(),
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
-                token_a_reserve: self.token_a_reserve,
-                token_b_reserve: self.token_b_reserve,
+                liquidity: self.liquidity.to_string(),
+                padding: self.padding.to_string(),
                 protocol_a_fee: self.protocol_a_fee,
                 protocol_b_fee: self.protocol_b_fee,
                 partner_a_fee: self.partner_a_fee,
                 partner_b_fee: self.partner_b_fee,
-                sqrt_min_price: self.sqrt_min_price.to_le_bytes().to_vec(),
-                sqrt_max_price: self.sqrt_max_price.to_le_bytes().to_vec(),
-                sqrt_price: self.sqrt_price.to_le_bytes().to_vec(),
+                sqrt_min_price: self.sqrt_min_price.to_string(),
+                sqrt_max_price: self.sqrt_max_price.to_string(),
+                sqrt_price: self.sqrt_price.to_string(),
                 activation_point: self.activation_point,
                 activation_type: self.activation_type.into(),
                 pool_status: self.pool_status.into(),
@@ -143,10 +168,18 @@ mod proto_parser {
                 token_b_flag: self.token_b_flag.into(),
                 collect_fee_mode: self.collect_fee_mode.into(),
                 pool_type: self.pool_type.into(),
-                padding0: self.padding0.to_vec(),
-                fee_a_per_liquidity: self.fee_a_per_liquidity.to_vec(),
-                fee_b_per_liquidity: self.fee_b_per_liquidity.to_vec(),
-                permanent_lock_liquidity: self.permanent_lock_liquidity.to_le_bytes().to_vec(),
+                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
+                fee_a_per_liquidity: self
+                    .fee_a_per_liquidity
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
+                fee_b_per_liquidity: self
+                    .fee_b_per_liquidity
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
+                permanent_lock_liquidity: self.permanent_lock_liquidity.to_string(),
                 metrics: Some(self.metrics.into_proto()),
                 padding1: self.padding1.to_vec(),
                 reward_infos: self
@@ -163,24 +196,28 @@ mod proto_parser {
             proto_def::Position {
                 pool: self.pool.to_string(),
                 nft_mint: self.nft_mint.to_string(),
-                fee_a_per_token_checkpoint: self.fee_a_per_token_checkpoint.to_vec(),
-                fee_b_per_token_checkpoint: self.fee_b_per_token_checkpoint.to_vec(),
+                fee_a_per_token_checkpoint: self
+                    .fee_a_per_token_checkpoint
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
+                fee_b_per_token_checkpoint: self
+                    .fee_b_per_token_checkpoint
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
                 fee_a_pending: self.fee_a_pending,
                 fee_b_pending: self.fee_b_pending,
-                unlocked_liquidity: self.unlocked_liquidity.to_le_bytes().to_vec(),
-                vested_liquidity: self.vested_liquidity.to_le_bytes().to_vec(),
-                permanent_locked_liquidity: self.permanent_locked_liquidity.to_le_bytes().to_vec(),
+                unlocked_liquidity: self.unlocked_liquidity.to_string(),
+                vested_liquidity: self.vested_liquidity.to_string(),
+                permanent_locked_liquidity: self.permanent_locked_liquidity.to_string(),
                 metrics: Some(self.metrics.into_proto()),
                 reward_infos: self
                     .reward_infos
                     .into_iter()
                     .map(|x| x.into_proto())
                     .collect(),
-                padding: self
-                    .padding
-                    .into_iter()
-                    .map(|x| x.to_le_bytes().to_vec())
-                    .collect(),
+                padding: self.padding.into_iter().map(|x| x.to_string()).collect(),
             }
         }
     }
@@ -189,7 +226,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::TokenBadge {
             proto_def::TokenBadge {
                 token_mint: self.token_mint.to_string(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
@@ -200,16 +237,12 @@ mod proto_parser {
                 position: self.position.to_string(),
                 cliff_point: self.cliff_point,
                 period_frequency: self.period_frequency,
-                cliff_unlock_liquidity: self.cliff_unlock_liquidity.to_le_bytes().to_vec(),
-                liquidity_per_period: self.liquidity_per_period.to_le_bytes().to_vec(),
-                total_released_liquidity: self.total_released_liquidity.to_le_bytes().to_vec(),
+                cliff_unlock_liquidity: self.cliff_unlock_liquidity.to_string(),
+                liquidity_per_period: self.liquidity_per_period.to_string(),
+                total_released_liquidity: self.total_released_liquidity.to_string(),
                 number_of_period: self.number_of_period.into(),
-                padding: self.padding.to_vec(),
-                padding2: self
-                    .padding2
-                    .into_iter()
-                    .map(|x| x.to_le_bytes().to_vec())
-                    .collect(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
+                padding2: self.padding2.into_iter().map(|x| x.to_string()).collect(),
             }
         }
     }

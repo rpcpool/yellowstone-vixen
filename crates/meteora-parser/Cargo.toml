@@ -3,10 +3,10 @@
 [package]
 name = "yellowstone-vixen-meteora-parser"
 version = "0.3.0"
+edition = "2021"
 description = "Vixen program parser for Meteora"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
-edition = "2021"
 
 
 [dependencies]
@@ -18,7 +18,9 @@ borsh = "^0.10"
 num-derive = "0.4"
 thiserror = "1.0.64"
 num-traits = "^0.2"
-
+tracing = { version = "0.1.40", optional = true }
+strum = { version = "0.24", optional = true }
+strum_macros = { version = "0.24", optional = true }
 
 [features]
 anchor = []
@@ -26,10 +28,7 @@ anchor-idl-build = []
 serde = []
 test-sbf = []
 fetch = []
-
+tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]
 
 [build-dependencies]
 prost-build = "0.13.1"
-
-# [features]
-# proto = ["dep:tonic"]

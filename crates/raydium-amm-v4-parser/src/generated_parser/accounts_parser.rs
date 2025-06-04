@@ -6,7 +6,7 @@
 //!
 
 use crate::{
-    accounts::{AmmConfig, AmmInfo, Fees, TargetOrders},
+    accounts::{AmmConfig, AmmInfo, TargetOrders},
     ID,
 };
 
@@ -16,7 +16,6 @@ use crate::{
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum RaydiumAmmProgramState {
     TargetOrders(TargetOrders),
-    Fees(Fees),
     AmmInfo(AmmInfo),
     AmmConfig(AmmConfig),
 }
@@ -25,7 +24,6 @@ impl RaydiumAmmProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let data_len = data_bytes.len();
         const TARGETORDERS_LEN: usize = std::mem::size_of::<TargetOrders>();
-        const FEES_LEN: usize = std::mem::size_of::<Fees>();
         const AMMINFO_LEN: usize = std::mem::size_of::<AmmInfo>();
         const AMMCONFIG_LEN: usize = std::mem::size_of::<AmmConfig>();
 
@@ -33,7 +31,6 @@ impl RaydiumAmmProgramState {
             TARGETORDERS_LEN => Ok(RaydiumAmmProgramState::TargetOrders(
                 TargetOrders::from_bytes(data_bytes)?,
             )),
-            FEES_LEN => Ok(RaydiumAmmProgramState::Fees(Fees::from_bytes(data_bytes)?)),
             AMMINFO_LEN => Ok(RaydiumAmmProgramState::AmmInfo(AmmInfo::from_bytes(
                 data_bytes,
             )?)),
@@ -120,16 +117,16 @@ mod proto_parser {
                     .map(|x| x.into_proto())
                     .collect(),
                 padding1: self.padding1.to_vec(),
-                target_x: self.target_x.to_le_bytes().to_vec(),
-                target_y: self.target_y.to_le_bytes().to_vec(),
-                plan_x_buy: self.plan_x_buy.to_le_bytes().to_vec(),
-                plan_y_buy: self.plan_y_buy.to_le_bytes().to_vec(),
-                plan_x_sell: self.plan_x_sell.to_le_bytes().to_vec(),
-                plan_y_sell: self.plan_y_sell.to_le_bytes().to_vec(),
-                placed_x: self.placed_x.to_le_bytes().to_vec(),
-                placed_y: self.placed_y.to_le_bytes().to_vec(),
-                calc_pnl_x: self.calc_pnl_x.to_le_bytes().to_vec(),
-                calc_pnl_y: self.calc_pnl_y.to_le_bytes().to_vec(),
+                target_x: self.target_x.to_string(),
+                target_y: self.target_y.to_string(),
+                plan_x_buy: self.plan_x_buy.to_string(),
+                plan_y_buy: self.plan_y_buy.to_string(),
+                plan_x_sell: self.plan_x_sell.to_string(),
+                plan_y_sell: self.plan_y_sell.to_string(),
+                placed_x: self.placed_x.to_string(),
+                placed_y: self.placed_y.to_string(),
+                calc_pnl_x: self.calc_pnl_x.to_string(),
+                calc_pnl_y: self.calc_pnl_y.to_string(),
                 sell_orders: self
                     .sell_orders
                     .into_iter()
@@ -145,22 +142,7 @@ mod proto_parser {
                 valid_buy_order_num: self.valid_buy_order_num,
                 valid_sell_order_num: self.valid_sell_order_num,
                 padding3: self.padding3.to_vec(),
-                free_slot_bits: self.free_slot_bits.to_le_bytes().to_vec(),
-            }
-        }
-    }
-    use super::Fees;
-    impl IntoProto<proto_def::Fees> for Fees {
-        fn into_proto(self) -> proto_def::Fees {
-            proto_def::Fees {
-                min_separate_numerator: self.min_separate_numerator,
-                min_separate_denominator: self.min_separate_denominator,
-                trade_fee_numerator: self.trade_fee_numerator,
-                trade_fee_denominator: self.trade_fee_denominator,
-                pnl_numerator: self.pnl_numerator,
-                pnl_denominator: self.pnl_denominator,
-                swap_fee_numerator: self.swap_fee_numerator,
-                swap_fee_denominator: self.swap_fee_denominator,
+                free_slot_bits: self.free_slot_bits.to_string(),
             }
         }
     }
@@ -222,9 +204,6 @@ mod proto_parser {
             let state_oneof = match self {
                 RaydiumAmmProgramState::TargetOrders(data) => {
                     proto_def::program_state::StateOneof::TargetOrders(data.into_proto())
-                },
-                RaydiumAmmProgramState::Fees(data) => {
-                    proto_def::program_state::StateOneof::Fees(data.into_proto())
                 },
                 RaydiumAmmProgramState::AmmInfo(data) => {
                     proto_def::program_state::StateOneof::AmmInfo(data.into_proto())

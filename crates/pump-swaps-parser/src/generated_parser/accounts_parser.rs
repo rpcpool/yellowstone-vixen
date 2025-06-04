@@ -10,28 +10,53 @@ use crate::{
     ID,
 };
 
-/// PumpAmm Program State
+/// PumpSwap Program State
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, strum_macros::Display)]
-pub enum PumpAmmProgramState {
+#[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
+pub enum PumpSwapProgramState {
     GlobalConfig(GlobalConfig),
     Pool(Pool),
 }
 
-impl PumpAmmProgramState {
+impl PumpSwapProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
-        match acc_discriminator {
-            [149, 8, 156, 202, 160, 252, 176, 217] => Ok(PumpAmmProgramState::GlobalConfig(
+        let acc = match acc_discriminator {
+            [149, 8, 156, 202, 160, 252, 176, 217] => Ok(PumpSwapProgramState::GlobalConfig(
                 GlobalConfig::from_bytes(data_bytes)?,
             )),
             [241, 154, 109, 4, 17, 177, 109, 188] => {
-                Ok(PumpAmmProgramState::Pool(Pool::from_bytes(data_bytes)?))
+                Ok(PumpSwapProgramState::Pool(Pool::from_bytes(data_bytes)?))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
+        };
+
+        #[cfg(feature = "tracing")]
+        match &acc {
+            Ok(acc) => {
+                tracing::info!(
+                    name: "correctly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = acc.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = "error",
+                    discriminator = ?acc_discriminator,
+                    error = ?e
+                );
+            },
         }
+
+        acc
     }
 }
 
@@ -40,9 +65,9 @@ pub struct AccountParser;
 
 impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
-    type Output = PumpAmmProgramState;
+    type Output = PumpSwapProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> { "pump_amm::AccountParser".into() }
+    fn id(&self) -> std::borrow::Cow<str> { "pump_swap::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -59,7 +84,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
             .account
             .as_ref()
             .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        PumpAmmProgramState::try_unpack(&inner.data)
+        PumpSwapProgramState::try_unpack(&inner.data)
     }
 }
 
@@ -72,7 +97,7 @@ impl yellowstone_vixen_core::ProgramParser for AccountParser {
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{AccountParser, GlobalConfig, PumpAmmProgramState};
+    use super::{AccountParser, GlobalConfig, PumpSwapProgramState};
     use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::GlobalConfig> for GlobalConfig {
         fn into_proto(self) -> proto_def::GlobalConfig {
@@ -83,8 +108,8 @@ mod proto_parser {
                 disable_flags: self.disable_flags.into(),
                 protocol_fee_recipients: self
                     .protocol_fee_recipients
-                    .iter()
-                    .map(|p| p.to_string())
+                    .into_iter()
+                    .map(|x| x.to_string())
                     .collect(),
             }
         }
@@ -106,13 +131,13 @@ mod proto_parser {
         }
     }
 
-    impl IntoProto<proto_def::ProgramState> for PumpAmmProgramState {
+    impl IntoProto<proto_def::ProgramState> for PumpSwapProgramState {
         fn into_proto(self) -> proto_def::ProgramState {
             let state_oneof = match self {
-                PumpAmmProgramState::GlobalConfig(data) => {
+                PumpSwapProgramState::GlobalConfig(data) => {
                     proto_def::program_state::StateOneof::GlobalConfig(data.into_proto())
                 },
-                PumpAmmProgramState::Pool(data) => {
+                PumpSwapProgramState::Pool(data) => {
                     proto_def::program_state::StateOneof::Pool(data.into_proto())
                 },
             };

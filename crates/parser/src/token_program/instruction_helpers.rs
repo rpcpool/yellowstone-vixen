@@ -228,6 +228,7 @@ pub struct UiAmountToAmountData {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum TokenProgramIx {
     Transfer(TransferAccounts, TransferData),
     InitializeMint(InitializeMintAccounts, InitializeMintData),

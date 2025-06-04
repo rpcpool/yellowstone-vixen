@@ -22,6 +22,7 @@ pub(crate) mod r#evt_close_config;
 pub(crate) mod r#evt_close_position;
 pub(crate) mod r#evt_create_claim_fee_operator;
 pub(crate) mod r#evt_create_config;
+pub(crate) mod r#evt_create_dynamic_config;
 pub(crate) mod r#evt_create_position;
 pub(crate) mod r#evt_create_token_badge;
 pub(crate) mod r#evt_fund_reward;
@@ -35,6 +36,7 @@ pub(crate) mod r#evt_swap;
 pub(crate) mod r#evt_update_reward_duration;
 pub(crate) mod r#evt_update_reward_funder;
 pub(crate) mod r#evt_withdraw_ineligible_reward;
+pub(crate) mod r#initialize_customizable_pool_parameters;
 pub(crate) mod r#pool_fee_parameters;
 pub(crate) mod r#pool_fees_config;
 pub(crate) mod r#pool_fees_struct;
@@ -52,13 +54,13 @@ pub use self::{
     r#dynamic_fee_struct::*, r#evt_add_liquidity::*, r#evt_claim_partner_fee::*,
     r#evt_claim_position_fee::*, r#evt_claim_protocol_fee::*, r#evt_claim_reward::*,
     r#evt_close_claim_fee_operator::*, r#evt_close_config::*, r#evt_close_position::*,
-    r#evt_create_claim_fee_operator::*, r#evt_create_config::*, r#evt_create_position::*,
-    r#evt_create_token_badge::*, r#evt_fund_reward::*, r#evt_initialize_pool::*,
-    r#evt_initialize_reward::*, r#evt_lock_position::*, r#evt_permanent_lock_position::*,
-    r#evt_remove_liquidity::*, r#evt_set_pool_status::*, r#evt_swap::*,
-    r#evt_update_reward_duration::*, r#evt_update_reward_funder::*,
-    r#evt_withdraw_ineligible_reward::*, r#pool_fee_parameters::*, r#pool_fees_config::*,
-    r#pool_fees_struct::*, r#pool_metrics::*, r#position_metrics::*,
-    r#remove_liquidity_parameters::*, r#reward_info::*, r#swap_parameters::*, r#swap_result::*,
-    r#user_reward_info::*,
+    r#evt_create_claim_fee_operator::*, r#evt_create_config::*, r#evt_create_dynamic_config::*,
+    r#evt_create_position::*, r#evt_create_token_badge::*, r#evt_fund_reward::*,
+    r#evt_initialize_pool::*, r#evt_initialize_reward::*, r#evt_lock_position::*,
+    r#evt_permanent_lock_position::*, r#evt_remove_liquidity::*, r#evt_set_pool_status::*,
+    r#evt_swap::*, r#evt_update_reward_duration::*, r#evt_update_reward_funder::*,
+    r#evt_withdraw_ineligible_reward::*, r#initialize_customizable_pool_parameters::*,
+    r#pool_fee_parameters::*, r#pool_fees_config::*, r#pool_fees_struct::*, r#pool_metrics::*,
+    r#position_metrics::*, r#remove_liquidity_parameters::*, r#reward_info::*,
+    r#swap_parameters::*, r#swap_result::*, r#user_reward_info::*,
 };

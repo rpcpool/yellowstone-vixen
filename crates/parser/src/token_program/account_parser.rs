@@ -9,6 +9,7 @@ use yellowstone_vixen_core::{
 };
 
 #[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum TokenProgramState {
     TokenAccount(Account),
     Mint(Mint),
@@ -17,7 +18,7 @@ pub enum TokenProgramState {
 
 impl TokenProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> ParseResult<Self> {
-        match data_bytes.len() {
+        let acc = match data_bytes.len() {
             Mint::LEN => Mint::unpack(data_bytes).map(Self::Mint).map_err(Into::into),
             Account::LEN => Account::unpack(data_bytes)
                 .map(Self::TokenAccount)
@@ -26,7 +27,31 @@ impl TokenProgramState {
                 .map(Self::Multisig)
                 .map_err(Into::into),
             _ => Err(ParseError::from("Invalid Account data length".to_owned())),
+        };
+
+        #[cfg(feature = "tracing")]
+        match &acc {
+            Ok(acc) => {
+                tracing::info!(
+                    name: "correctly_parsed_account",
+                    name = "account_update",
+                    program = spl_token::ID.to_string(),
+                    account = acc.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_account",
+                    name = "account_update",
+                    program = spl_token::ID.to_string(),
+                    account = "error",
+                    discriminator = ?data_bytes.len(),
+                    error = ?e
+                );
+            },
         }
+
+        acc
     }
 }
 

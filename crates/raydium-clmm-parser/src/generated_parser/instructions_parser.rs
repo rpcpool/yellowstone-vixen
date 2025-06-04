@@ -129,6 +129,7 @@ impl InstructionParser {
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<AmmV3ProgramIx> {
         let accounts_len = ix.accounts.len();
+
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let mut ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
@@ -556,6 +557,7 @@ impl InstructionParser {
         match &ix {
             Ok(ix) => {
                 tracing::info!(
+                    name: "correctly_parsed_instruction",
                     name = "ix_update",
                     program = ID.to_string(),
                     ix = ix.to_string()
@@ -563,6 +565,7 @@ impl InstructionParser {
             },
             Err(e) => {
                 tracing::info!(
+                    name: "incorrectly_parsed_instruction",
                     name = "ix_update",
                     program = ID.to_string(),
                     ix = "error",
@@ -658,7 +661,7 @@ mod proto_parser {
     impl IntoProto<proto_def::CreatePoolIxData> for CreatePoolIxData {
         fn into_proto(self) -> proto_def::CreatePoolIxData {
             proto_def::CreatePoolIxData {
-                sqrt_price_x64: self.sqrt_price_x64.to_le_bytes().to_vec(),
+                sqrt_price_x64: self.sqrt_price_x64.to_string(),
                 open_time: self.open_time,
             }
         }
@@ -705,7 +708,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::UpdateOperationAccountIxData {
             proto_def::UpdateOperationAccountIxData {
                 param: self.param.into(),
-                keys: self.keys.iter().map(|x| x.to_string()).collect(),
+                keys: self.keys.into_iter().map(|x| x.to_string()).collect(),
             }
         }
     }
@@ -749,7 +752,7 @@ mod proto_parser {
             proto_def::InitializeRewardIxData {
                 open_time: self.open_time,
                 end_time: self.end_time,
-                emissions_per_second_x64: self.emissions_per_second_x64.to_le_bytes().to_vec(),
+                emissions_per_second_x64: self.emissions_per_second_x64.to_string(),
             }
         }
     }
@@ -802,7 +805,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::SetRewardParamsIxData {
             proto_def::SetRewardParamsIxData {
                 reward_index: self.reward_index.into(),
-                emissions_per_second_x64: self.emissions_per_second_x64.to_le_bytes().to_vec(),
+                emissions_per_second_x64: self.emissions_per_second_x64.to_string(),
                 open_time: self.open_time,
                 end_time: self.end_time,
             }
@@ -896,7 +899,7 @@ mod proto_parser {
                 tick_upper_index: self.tick_upper_index,
                 tick_array_lower_start_index: self.tick_array_lower_start_index,
                 tick_array_upper_start_index: self.tick_array_upper_start_index,
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
                 amount0_max: self.amount0_max,
                 amount1_max: self.amount1_max,
             }
@@ -939,7 +942,7 @@ mod proto_parser {
                 tick_upper_index: self.tick_upper_index,
                 tick_array_lower_start_index: self.tick_array_lower_start_index,
                 tick_array_upper_start_index: self.tick_array_upper_start_index,
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
                 amount0_max: self.amount0_max,
                 amount1_max: self.amount1_max,
                 with_metadata: self.with_metadata,
@@ -984,7 +987,7 @@ mod proto_parser {
                 tick_upper_index: self.tick_upper_index,
                 tick_array_lower_start_index: self.tick_array_lower_start_index,
                 tick_array_upper_start_index: self.tick_array_upper_start_index,
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
                 amount0_max: self.amount0_max,
                 amount1_max: self.amount1_max,
                 with_metadata: self.with_metadata,
@@ -1028,7 +1031,7 @@ mod proto_parser {
     impl IntoProto<proto_def::IncreaseLiquidityIxData> for IncreaseLiquidityIxData {
         fn into_proto(self) -> proto_def::IncreaseLiquidityIxData {
             proto_def::IncreaseLiquidityIxData {
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
                 amount0_max: self.amount0_max,
                 amount1_max: self.amount1_max,
             }
@@ -1060,7 +1063,7 @@ mod proto_parser {
     impl IntoProto<proto_def::IncreaseLiquidityV2IxData> for IncreaseLiquidityV2IxData {
         fn into_proto(self) -> proto_def::IncreaseLiquidityV2IxData {
             proto_def::IncreaseLiquidityV2IxData {
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
                 amount0_max: self.amount0_max,
                 amount1_max: self.amount1_max,
                 base_flag: self.base_flag,
@@ -1090,7 +1093,7 @@ mod proto_parser {
     impl IntoProto<proto_def::DecreaseLiquidityIxData> for DecreaseLiquidityIxData {
         fn into_proto(self) -> proto_def::DecreaseLiquidityIxData {
             proto_def::DecreaseLiquidityIxData {
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
                 amount0_min: self.amount0_min,
                 amount1_min: self.amount1_min,
             }
@@ -1123,7 +1126,7 @@ mod proto_parser {
     impl IntoProto<proto_def::DecreaseLiquidityV2IxData> for DecreaseLiquidityV2IxData {
         fn into_proto(self) -> proto_def::DecreaseLiquidityV2IxData {
             proto_def::DecreaseLiquidityV2IxData {
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
                 amount0_min: self.amount0_min,
                 amount1_min: self.amount1_min,
             }
@@ -1152,7 +1155,7 @@ mod proto_parser {
             proto_def::SwapIxData {
                 amount: self.amount,
                 other_amount_threshold: self.other_amount_threshold,
-                sqrt_price_limit_x64: self.sqrt_price_limit_x64.to_le_bytes().to_vec(),
+                sqrt_price_limit_x64: self.sqrt_price_limit_x64.to_string(),
                 is_base_input: self.is_base_input,
             }
         }
@@ -1183,7 +1186,7 @@ mod proto_parser {
             proto_def::SwapV2IxData {
                 amount: self.amount,
                 other_amount_threshold: self.other_amount_threshold,
-                sqrt_price_limit_x64: self.sqrt_price_limit_x64.to_le_bytes().to_vec(),
+                sqrt_price_limit_x64: self.sqrt_price_limit_x64.to_string(),
                 is_base_input: self.is_base_input,
             }
         }

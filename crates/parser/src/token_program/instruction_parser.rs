@@ -46,7 +46,7 @@ impl InstructionParser {
         let ix_type = TokenInstruction::unpack(&ix.data)
             .parse_err("Error unpacking token instruction data")?;
         let accounts_len = ix.accounts.len();
-        match ix_type {
+        let ix = match ix_type {
             TokenInstruction::Transfer { amount } => {
                 check_min_accounts_req(accounts_len, 3)?;
                 Ok(TokenProgramIx::Transfer(
@@ -348,7 +348,31 @@ impl InstructionParser {
                     },
                 ))
             },
+        };
+
+        #[cfg(feature = "tracing")]
+        match &ix {
+            Ok(ix) => {
+                tracing::info!(
+                    name: "correctly_parsed_instruction",
+                    name = "ix_update",
+                    program = spl_token::ID.to_string(),
+                    ix = ix.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = spl_token::ID.to_string(),
+                    ix = "error",
+                    // discriminator = ix_type,
+                    error = ?e
+                );
+            },
         }
+
+        ix
     }
 }
 

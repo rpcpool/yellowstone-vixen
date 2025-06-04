@@ -9,10 +9,7 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use sdk::types::FeeEvent;
-
-    use crate as sdk;
-    use crate::proto_def;
+    use crate::{proto_def, types::FeeEvent};
     impl IntoProto<proto_def::FeeEvent> for FeeEvent {
         fn into_proto(self) -> proto_def::FeeEvent {
             proto_def::FeeEvent {
@@ -22,7 +19,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::RemainingAccountsInfo;
+    use crate::types::RemainingAccountsInfo;
     impl IntoProto<proto_def::RemainingAccountsInfo> for RemainingAccountsInfo {
         fn into_proto(self) -> proto_def::RemainingAccountsInfo {
             proto_def::RemainingAccountsInfo {
@@ -30,7 +27,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::RemainingAccountsSlice;
+    use crate::types::RemainingAccountsSlice;
     impl IntoProto<proto_def::RemainingAccountsSlice> for RemainingAccountsSlice {
         fn into_proto(self) -> proto_def::RemainingAccountsSlice {
             proto_def::RemainingAccountsSlice {
@@ -39,7 +36,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::RoutePlanStep;
+    use crate::types::RoutePlanStep;
     impl IntoProto<proto_def::RoutePlanStep> for RoutePlanStep {
         fn into_proto(self) -> proto_def::RoutePlanStep {
             proto_def::RoutePlanStep {
@@ -50,7 +47,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::SwapEvent;
+    use crate::types::SwapEvent;
     impl IntoProto<proto_def::SwapEvent> for SwapEvent {
         fn into_proto(self) -> proto_def::SwapEvent {
             proto_def::SwapEvent {
@@ -64,32 +61,32 @@ pub mod proto_types_parsers {
     }
 
     use proto_def::swap::Variant;
-    use sdk::types::Swap;
+
+    use crate::types::Swap;
     impl IntoProto<proto_def::Swap> for Swap {
         fn into_proto(self) -> proto_def::Swap {
-            #[allow(clippy::unneeded_struct_pattern)]
             let variant = match self {
-                Swap::Saber {} => Variant::Saber(proto_def::SwapSaber {}),
-                Swap::SaberAddDecimalsDeposit {} => {
+                Swap::Saber => Variant::Saber(proto_def::SwapSaber {}),
+                Swap::SaberAddDecimalsDeposit => {
                     Variant::SaberAddDecimalsDeposit(proto_def::SwapSaberAddDecimalsDeposit {})
                 },
-                Swap::SaberAddDecimalsWithdraw {} => {
+                Swap::SaberAddDecimalsWithdraw => {
                     Variant::SaberAddDecimalsWithdraw(proto_def::SwapSaberAddDecimalsWithdraw {})
                 },
-                Swap::TokenSwap {} => Variant::TokenSwap(proto_def::SwapTokenSwap {}),
-                Swap::Sencha {} => Variant::Sencha(proto_def::SwapSencha {}),
-                Swap::Step {} => Variant::Step(proto_def::SwapStep {}),
-                Swap::Cropper {} => Variant::Cropper(proto_def::SwapCropper {}),
-                Swap::Raydium {} => Variant::Raydium(proto_def::SwapRaydium {}),
+                Swap::TokenSwap => Variant::TokenSwap(proto_def::SwapTokenSwap {}),
+                Swap::Sencha => Variant::Sencha(proto_def::SwapSencha {}),
+                Swap::Step => Variant::Step(proto_def::SwapStep {}),
+                Swap::Cropper => Variant::Cropper(proto_def::SwapCropper {}),
+                Swap::Raydium => Variant::Raydium(proto_def::SwapRaydium {}),
                 Swap::Crema { a_to_b } => Variant::Crema(proto_def::SwapCrema { a_to_b }),
-                Swap::Lifinity {} => Variant::Lifinity(proto_def::SwapLifinity {}),
-                Swap::Mercurial {} => Variant::Mercurial(proto_def::SwapMercurial {}),
-                Swap::Cykura {} => Variant::Cykura(proto_def::SwapCykura {}),
+                Swap::Lifinity => Variant::Lifinity(proto_def::SwapLifinity {}),
+                Swap::Mercurial => Variant::Mercurial(proto_def::SwapMercurial {}),
+                Swap::Cykura => Variant::Cykura(proto_def::SwapCykura {}),
                 Swap::Serum { side } => Variant::Serum(proto_def::SwapSerum { side: side as i32 }),
-                Swap::MarinadeDeposit {} => {
+                Swap::MarinadeDeposit => {
                     Variant::MarinadeDeposit(proto_def::SwapMarinadeDeposit {})
                 },
-                Swap::MarinadeUnstake {} => {
+                Swap::MarinadeUnstake => {
                     Variant::MarinadeUnstake(proto_def::SwapMarinadeUnstake {})
                 },
                 Swap::Aldrin { side } => {
@@ -104,18 +101,18 @@ pub mod proto_types_parsers {
                 Swap::Invariant { x_to_y } => {
                     Variant::Invariant(proto_def::SwapInvariant { x_to_y })
                 },
-                Swap::Meteora {} => Variant::Meteora(proto_def::SwapMeteora {}),
-                Swap::GooseFX {} => Variant::GooseFX(proto_def::SwapGooseFx {}),
+                Swap::Meteora => Variant::Meteora(proto_def::SwapMeteora {}),
+                Swap::GooseFX => Variant::GooseFX(proto_def::SwapGooseFx {}),
                 Swap::DeltaFi { stable } => Variant::DeltaFi(proto_def::SwapDeltaFi { stable }),
-                Swap::Balansol {} => Variant::Balansol(proto_def::SwapBalansol {}),
+                Swap::Balansol => Variant::Balansol(proto_def::SwapBalansol {}),
                 Swap::MarcoPolo { x_to_y } => {
                     Variant::MarcoPolo(proto_def::SwapMarcoPolo { x_to_y })
                 },
                 Swap::Dradex { side } => {
                     Variant::Dradex(proto_def::SwapDradex { side: side as i32 })
                 },
-                Swap::LifinityV2 {} => Variant::LifinityV2(proto_def::SwapLifinityV2 {}),
-                Swap::RaydiumClmm {} => Variant::RaydiumClmm(proto_def::SwapRaydiumClmm {}),
+                Swap::LifinityV2 => Variant::LifinityV2(proto_def::SwapLifinityV2 {}),
+                Swap::RaydiumClmm => Variant::RaydiumClmm(proto_def::SwapRaydiumClmm {}),
                 Swap::Openbook { side } => {
                     Variant::Openbook(proto_def::SwapOpenbook { side: side as i32 })
                 },
@@ -129,13 +126,13 @@ pub mod proto_types_parsers {
                     from_token_id,
                     to_token_id,
                 }),
-                Swap::TokenSwapV2 {} => Variant::TokenSwapV2(proto_def::SwapTokenSwapV2 {}),
-                Swap::HeliumTreasuryManagementRedeemV0 {} => {
+                Swap::TokenSwapV2 => Variant::TokenSwapV2(proto_def::SwapTokenSwapV2 {}),
+                Swap::HeliumTreasuryManagementRedeemV0 => {
                     Variant::HeliumTreasuryManagementRedeemV0(
                         proto_def::SwapHeliumTreasuryManagementRedeemV0 {},
                     )
                 },
-                Swap::StakeDexStakeWrappedSol {} => {
+                Swap::StakeDexStakeWrappedSol => {
                     Variant::StakeDexStakeWrappedSol(proto_def::SwapStakeDexStakeWrappedSol {})
                 },
                 Swap::StakeDexSwapViaStake { bridge_stake_seed } => {
@@ -143,19 +140,19 @@ pub mod proto_types_parsers {
                         bridge_stake_seed,
                     })
                 },
-                Swap::GooseFXV2 {} => Variant::GooseFXV2(proto_def::SwapGooseFxv2 {}),
-                Swap::Perps {} => Variant::Perps(proto_def::SwapPerps {}),
-                Swap::PerpsAddLiquidity {} => {
+                Swap::GooseFXV2 => Variant::GooseFXV2(proto_def::SwapGooseFxv2 {}),
+                Swap::Perps => Variant::Perps(proto_def::SwapPerps {}),
+                Swap::PerpsAddLiquidity => {
                     Variant::PerpsAddLiquidity(proto_def::SwapPerpsAddLiquidity {})
                 },
-                Swap::PerpsRemoveLiquidity {} => {
+                Swap::PerpsRemoveLiquidity => {
                     Variant::PerpsRemoveLiquidity(proto_def::SwapPerpsRemoveLiquidity {})
                 },
-                Swap::MeteoraDlmm {} => Variant::MeteoraDlmm(proto_def::SwapMeteoraDlmm {}),
+                Swap::MeteoraDlmm => Variant::MeteoraDlmm(proto_def::SwapMeteoraDlmm {}),
                 Swap::OpenBookV2 { side } => {
                     Variant::OpenBookV2(proto_def::SwapOpenBookV2 { side: side as i32 })
                 },
-                Swap::RaydiumClmmV2 {} => Variant::RaydiumClmmV2(proto_def::SwapRaydiumClmmV2 {}),
+                Swap::RaydiumClmmV2 => Variant::RaydiumClmmV2(proto_def::SwapRaydiumClmmV2 {}),
                 Swap::StakeDexPrefundWithdrawStakeAndDepositStake { bridge_stake_seed } => {
                     Variant::StakeDexPrefundWithdrawStakeAndDepositStake(
                         proto_def::SwapStakeDexPrefundWithdrawStakeAndDepositStake {
@@ -197,7 +194,7 @@ pub mod proto_types_parsers {
                     lst_value_calc_accs: lst_value_calc_accs.into(),
                     lst_index,
                 }),
-                Swap::RaydiumCP {} => Variant::RaydiumCP(proto_def::SwapRaydiumCp {}),
+                Swap::RaydiumCP => Variant::RaydiumCP(proto_def::SwapRaydiumCp {}),
                 Swap::WhirlpoolSwapV2 {
                     a_to_b,
                     remaining_accounts_info,
@@ -205,34 +202,34 @@ pub mod proto_types_parsers {
                     a_to_b,
                     remaining_accounts_info: remaining_accounts_info.map(|x| x.into_proto()),
                 }),
-                Swap::OneIntro {} => Variant::OneIntro(proto_def::SwapOneIntro {}),
-                Swap::PumpdotfunWrappedBuy {} => {
+                Swap::OneIntro => Variant::OneIntro(proto_def::SwapOneIntro {}),
+                Swap::PumpdotfunWrappedBuy => {
                     Variant::PumpdotfunWrappedBuy(proto_def::SwapPumpdotfunWrappedBuy {})
                 },
-                Swap::PumpdotfunWrappedSell {} => {
+                Swap::PumpdotfunWrappedSell => {
                     Variant::PumpdotfunWrappedSell(proto_def::SwapPumpdotfunWrappedSell {})
                 },
-                Swap::PerpsV2 {} => Variant::PerpsV2(proto_def::SwapPerpsV2 {}),
-                Swap::PerpsV2AddLiquidity {} => {
+                Swap::PerpsV2 => Variant::PerpsV2(proto_def::SwapPerpsV2 {}),
+                Swap::PerpsV2AddLiquidity => {
                     Variant::PerpsV2AddLiquidity(proto_def::SwapPerpsV2AddLiquidity {})
                 },
-                Swap::PerpsV2RemoveLiquidity {} => {
+                Swap::PerpsV2RemoveLiquidity => {
                     Variant::PerpsV2RemoveLiquidity(proto_def::SwapPerpsV2RemoveLiquidity {})
                 },
-                Swap::MoonshotWrappedBuy {} => {
+                Swap::MoonshotWrappedBuy => {
                     Variant::MoonshotWrappedBuy(proto_def::SwapMoonshotWrappedBuy {})
                 },
-                Swap::MoonshotWrappedSell {} => {
+                Swap::MoonshotWrappedSell => {
                     Variant::MoonshotWrappedSell(proto_def::SwapMoonshotWrappedSell {})
                 },
-                Swap::StabbleStableSwap {} => {
+                Swap::StabbleStableSwap => {
                     Variant::StabbleStableSwap(proto_def::SwapStabbleStableSwap {})
                 },
-                Swap::StabbleWeightedSwap {} => {
+                Swap::StabbleWeightedSwap => {
                     Variant::StabbleWeightedSwap(proto_def::SwapStabbleWeightedSwap {})
                 },
                 Swap::Obric { x_to_y } => Variant::Obric(proto_def::SwapObric { x_to_y }),
-                Swap::FoxBuyFromEstimatedCost {} => {
+                Swap::FoxBuyFromEstimatedCost => {
                     Variant::FoxBuyFromEstimatedCost(proto_def::SwapFoxBuyFromEstimatedCost {})
                 },
                 Swap::FoxClaimPartial { is_y } => {
@@ -241,23 +238,23 @@ pub mod proto_types_parsers {
                 Swap::SolFi { is_quote_to_base } => {
                     Variant::SolFi(proto_def::SwapSolFi { is_quote_to_base })
                 },
-                Swap::SolayerDelegateNoInit {} => {
+                Swap::SolayerDelegateNoInit => {
                     Variant::SolayerDelegateNoInit(proto_def::SwapSolayerDelegateNoInit {})
                 },
-                Swap::SolayerUndelegateNoInit {} => {
+                Swap::SolayerUndelegateNoInit => {
                     Variant::SolayerUndelegateNoInit(proto_def::SwapSolayerUndelegateNoInit {})
                 },
                 Swap::TokenMill { side } => {
                     Variant::TokenMill(proto_def::SwapTokenMill { side: side as i32 })
                 },
-                Swap::DaosFunBuy {} => Variant::DaosFunBuy(proto_def::SwapDaosFunBuy {}),
-                Swap::DaosFunSell {} => Variant::DaosFunSell(proto_def::SwapDaosFunSell {}),
-                Swap::ZeroFi {} => Variant::ZeroFi(proto_def::SwapZeroFi {}),
-                Swap::StakeDexWithdrawWrappedSol {} => Variant::StakeDexWithdrawWrappedSol(
+                Swap::DaosFunBuy => Variant::DaosFunBuy(proto_def::SwapDaosFunBuy {}),
+                Swap::DaosFunSell => Variant::DaosFunSell(proto_def::SwapDaosFunSell {}),
+                Swap::ZeroFi => Variant::ZeroFi(proto_def::SwapZeroFi {}),
+                Swap::StakeDexWithdrawWrappedSol => Variant::StakeDexWithdrawWrappedSol(
                     proto_def::SwapStakeDexWithdrawWrappedSol {},
                 ),
-                Swap::VirtualsBuy {} => Variant::VirtualsBuy(proto_def::SwapVirtualsBuy {}),
-                Swap::VirtualsSell {} => Variant::VirtualsSell(proto_def::SwapVirtualsSell {}),
+                Swap::VirtualsBuy => Variant::VirtualsBuy(proto_def::SwapVirtualsBuy {}),
+                Swap::VirtualsSell => Variant::VirtualsSell(proto_def::SwapVirtualsSell {}),
                 Swap::Perena {
                     in_index,
                     out_index,
@@ -265,13 +262,13 @@ pub mod proto_types_parsers {
                     in_index: in_index.into(),
                     out_index: out_index.into(),
                 }),
-                Swap::PumpdotfunAmmBuy {} => {
+                Swap::PumpdotfunAmmBuy => {
                     Variant::PumpdotfunAmmBuy(proto_def::SwapPumpdotfunAmmBuy {})
                 },
-                Swap::PumpdotfunAmmSell {} => {
+                Swap::PumpdotfunAmmSell => {
                     Variant::PumpdotfunAmmSell(proto_def::SwapPumpdotfunAmmSell {})
                 },
-                Swap::Gamma {} => Variant::Gamma(proto_def::SwapGamma {}),
+                Swap::Gamma => Variant::Gamma(proto_def::SwapGamma {}),
             };
 
             proto_def::Swap {

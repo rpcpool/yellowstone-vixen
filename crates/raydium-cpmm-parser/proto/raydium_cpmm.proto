@@ -61,29 +61,29 @@ message SwapBaseOutputIx {
 
 message Observation {
 	uint64 block_timestamp = 1;
-	bytes cumulative_token0_price_x32 = 2;
-	bytes cumulative_token1_price_x32 = 3;
+	string cumulative_token0_price_x32 = 2;
+	string cumulative_token1_price_x32 = 3;
 }
 
 enum TradeDirection {
-	ZeroForOne = 0;
-	OneForZero = 1;
+	TradeDirectionZeroForOne = 0;
+	TradeDirectionOneForZero = 1;
 }
 
 enum RoundDirection {
-	Floor = 0;
-	Ceiling = 1;
+	RoundDirectionFloor = 0;
+	RoundDirectionCeiling = 1;
 }
 
 enum PoolStatusBitIndex {
-	Deposit = 0;
-	Withdraw = 1;
-	Swap = 2;
+	PoolStatusBitIndexDeposit = 0;
+	PoolStatusBitIndexWithdraw = 1;
+	PoolStatusBitIndexSwap = 2;
 }
 
 enum PoolStatusBitFlag {
-	Enable = 0;
-	Disable = 1;
+	PoolStatusBitFlagEnable = 0;
+	PoolStatusBitFlagDisable = 1;
 }
 
 

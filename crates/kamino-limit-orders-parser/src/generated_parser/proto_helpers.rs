@@ -10,10 +10,8 @@ pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
     use proto_def::update_global_config_value::Variant;
-    use sdk::types::UpdateGlobalConfigValue;
 
-    use crate as sdk;
-    use crate::proto_def;
+    use crate::{proto_def, types::UpdateGlobalConfigValue};
     impl IntoProto<proto_def::UpdateGlobalConfigValue> for UpdateGlobalConfigValue {
         fn into_proto(self) -> proto_def::UpdateGlobalConfigValue {
             let variant = match self {

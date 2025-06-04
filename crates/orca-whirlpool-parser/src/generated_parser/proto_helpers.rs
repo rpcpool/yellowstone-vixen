@@ -9,48 +9,45 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use sdk::types::PositionRewardInfo;
-
-    use crate as sdk;
-    use crate::proto_def;
+    use crate::{proto_def, types::PositionRewardInfo};
     impl IntoProto<proto_def::PositionRewardInfo> for PositionRewardInfo {
         fn into_proto(self) -> proto_def::PositionRewardInfo {
             proto_def::PositionRewardInfo {
-                growth_inside_checkpoint: self.growth_inside_checkpoint.to_le_bytes().to_vec(),
+                growth_inside_checkpoint: self.growth_inside_checkpoint.to_string(),
                 amount_owed: self.amount_owed,
             }
         }
     }
-    use sdk::types::Tick;
+    use crate::types::Tick;
     impl IntoProto<proto_def::Tick> for Tick {
         fn into_proto(self) -> proto_def::Tick {
             proto_def::Tick {
                 initialized: self.initialized,
-                liquidity_net: self.liquidity_net.to_le_bytes().to_vec(),
-                liquidity_gross: self.liquidity_gross.to_le_bytes().to_vec(),
-                fee_growth_outside_a: self.fee_growth_outside_a.to_le_bytes().to_vec(),
-                fee_growth_outside_b: self.fee_growth_outside_b.to_le_bytes().to_vec(),
+                liquidity_net: self.liquidity_net.to_string(),
+                liquidity_gross: self.liquidity_gross.to_string(),
+                fee_growth_outside_a: self.fee_growth_outside_a.to_string(),
+                fee_growth_outside_b: self.fee_growth_outside_b.to_string(),
                 reward_growths_outside: self
                     .reward_growths_outside
                     .into_iter()
-                    .map(|x| x.to_le_bytes().to_vec())
+                    .map(|x| x.to_string())
                     .collect(),
             }
         }
     }
-    use sdk::types::WhirlpoolRewardInfo;
+    use crate::types::WhirlpoolRewardInfo;
     impl IntoProto<proto_def::WhirlpoolRewardInfo> for WhirlpoolRewardInfo {
         fn into_proto(self) -> proto_def::WhirlpoolRewardInfo {
             proto_def::WhirlpoolRewardInfo {
                 mint: self.mint.to_string(),
                 vault: self.vault.to_string(),
                 authority: self.authority.to_string(),
-                emissions_per_second_x64: self.emissions_per_second_x64.to_le_bytes().to_vec(),
-                growth_global_x64: self.growth_global_x64.to_le_bytes().to_vec(),
+                emissions_per_second_x64: self.emissions_per_second_x64.to_string(),
+                growth_global_x64: self.growth_global_x64.to_string(),
             }
         }
     }
-    use sdk::types::RemainingAccountsInfo;
+    use crate::types::RemainingAccountsInfo;
     impl IntoProto<proto_def::RemainingAccountsInfo> for RemainingAccountsInfo {
         fn into_proto(self) -> proto_def::RemainingAccountsInfo {
             proto_def::RemainingAccountsInfo {
@@ -58,7 +55,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::RemainingAccountsSlice;
+    use crate::types::RemainingAccountsSlice;
     impl IntoProto<proto_def::RemainingAccountsSlice> for RemainingAccountsSlice {
         fn into_proto(self) -> proto_def::RemainingAccountsSlice {
             proto_def::RemainingAccountsSlice {

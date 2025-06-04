@@ -6,42 +6,47 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::pubkey::Pubkey;
 
 /// Accounts.
 #[derive(Debug)]
-pub struct UpdateAdmin {
+pub struct CreateDynamicConfig {
+    pub config: solana_program::pubkey::Pubkey,
+
     pub admin: solana_program::pubkey::Pubkey,
 
-    pub global_config: solana_program::pubkey::Pubkey,
-
-    pub new_admin: solana_program::pubkey::Pubkey,
+    pub system_program: solana_program::pubkey::Pubkey,
 
     pub event_authority: solana_program::pubkey::Pubkey,
 
     pub program: solana_program::pubkey::Pubkey,
 }
 
-impl UpdateAdmin {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        self.instruction_with_remaining_accounts(&[])
+impl CreateDynamicConfig {
+    pub fn instruction(
+        &self,
+        args: CreateDynamicConfigInstructionArgs,
+    ) -> solana_program::instruction::Instruction {
+        self.instruction_with_remaining_accounts(args, &[])
     }
 
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
+        args: CreateDynamicConfigInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.admin, true,
-        ));
         accounts.push(solana_program::instruction::AccountMeta::new(
-            self.global_config,
+            self.config,
             false,
         ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.admin, true,
+        ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.new_admin,
+            self.system_program,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -53,10 +58,12 @@ impl UpdateAdmin {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = borsh::to_vec(&UpdateAdminInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateDynamicConfigInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&args).unwrap();
+        data.append(&mut args);
 
         solana_program::instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::CP_AMM_ID,
             accounts,
             data,
         }
@@ -65,43 +72,58 @@ impl UpdateAdmin {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UpdateAdminInstructionData {
+pub struct CreateDynamicConfigInstructionData {
     discriminator: [u8; 8],
 }
 
-impl UpdateAdminInstructionData {
+impl CreateDynamicConfigInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [161, 176, 40, 213, 60, 184, 179, 228],
+            discriminator: [81, 251, 122, 78, 66, 57, 208, 82],
         }
     }
 }
 
-impl Default for UpdateAdminInstructionData {
+impl Default for CreateDynamicConfigInstructionData {
     fn default() -> Self { Self::new() }
 }
 
-/// Instruction builder for `UpdateAdmin`.
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct CreateDynamicConfigInstructionArgs {
+    pub index: u64,
+    pub pool_creator_authority: Pubkey,
+}
+
+/// Instruction builder for `CreateDynamicConfig`.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` admin
-///   1. `[writable]` global_config
-///   2. `[]` new_admin
+///   0. `[writable]` config
+///   1. `[writable, signer]` admin
+///   2. `[optional]` system_program (default to `11111111111111111111111111111111`)
 ///   3. `[]` event_authority
 ///   4. `[]` program
 #[derive(Clone, Debug, Default)]
-pub struct UpdateAdminBuilder {
+pub struct CreateDynamicConfigBuilder {
+    config: Option<solana_program::pubkey::Pubkey>,
     admin: Option<solana_program::pubkey::Pubkey>,
-    global_config: Option<solana_program::pubkey::Pubkey>,
-    new_admin: Option<solana_program::pubkey::Pubkey>,
+    system_program: Option<solana_program::pubkey::Pubkey>,
     event_authority: Option<solana_program::pubkey::Pubkey>,
     program: Option<solana_program::pubkey::Pubkey>,
+    index: Option<u64>,
+    pool_creator_authority: Option<Pubkey>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl UpdateAdminBuilder {
+impl CreateDynamicConfigBuilder {
     pub fn new() -> Self { Self::default() }
+
+    #[inline(always)]
+    pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.config = Some(config);
+        self
+    }
 
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
@@ -109,15 +131,10 @@ impl UpdateAdminBuilder {
         self
     }
 
+    /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn global_config(&mut self, global_config: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.global_config = Some(global_config);
-        self
-    }
-
-    #[inline(always)]
-    pub fn new_admin(&mut self, new_admin: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.new_admin = Some(new_admin);
+    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.system_program = Some(system_program);
         self
     }
 
@@ -133,6 +150,18 @@ impl UpdateAdminBuilder {
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
+        self
+    }
+
+    #[inline(always)]
+    pub fn index(&mut self, index: u64) -> &mut Self {
+        self.index = Some(index);
+        self
+    }
+
+    #[inline(always)]
+    pub fn pool_creator_authority(&mut self, pool_creator_authority: Pubkey) -> &mut Self {
+        self.pool_creator_authority = Some(pool_creator_authority);
         self
     }
 
@@ -158,59 +187,72 @@ impl UpdateAdminBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = UpdateAdmin {
+        let accounts = CreateDynamicConfig {
+            config: self.config.expect("config is not set"),
             admin: self.admin.expect("admin is not set"),
-            global_config: self.global_config.expect("global_config is not set"),
-            new_admin: self.new_admin.expect("new_admin is not set"),
+            system_program: self
+                .system_program
+                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
+        let args = CreateDynamicConfigInstructionArgs {
+            index: self.index.clone().expect("index is not set"),
+            pool_creator_authority: self
+                .pool_creator_authority
+                .clone()
+                .expect("pool_creator_authority is not set"),
+        };
 
-        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
+        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `update_admin` CPI accounts.
-pub struct UpdateAdminCpiAccounts<'a, 'b> {
+/// `create_dynamic_config` CPI accounts.
+pub struct CreateDynamicConfigCpiAccounts<'a, 'b> {
+    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+
     pub admin: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub new_admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `update_admin` CPI instruction.
-pub struct UpdateAdminCpi<'a, 'b> {
+/// `create_dynamic_config` CPI instruction.
+pub struct CreateDynamicConfigCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
+    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+
     pub admin: &'b solana_program::account_info::AccountInfo<'a>,
 
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
-
-    pub new_admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The arguments for the instruction.
+    pub __args: CreateDynamicConfigInstructionArgs,
 }
 
-impl<'a, 'b> UpdateAdminCpi<'a, 'b> {
+impl<'a, 'b> CreateDynamicConfigCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: UpdateAdminCpiAccounts<'a, 'b>,
+        accounts: CreateDynamicConfigCpiAccounts<'a, 'b>,
+        args: CreateDynamicConfigInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
+            config: accounts.config,
             admin: accounts.admin,
-            global_config: accounts.global_config,
-            new_admin: accounts.new_admin,
+            system_program: accounts.system_program,
             event_authority: accounts.event_authority,
             program: accounts.program,
+            __args: args,
         }
     }
 
@@ -252,16 +294,16 @@ impl<'a, 'b> UpdateAdminCpi<'a, 'b> {
         )],
     ) -> solana_program::entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.config.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
             *self.admin.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.global_config.key,
-            false,
-        ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.new_admin.key,
+            *self.system_program.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -279,18 +321,20 @@ impl<'a, 'b> UpdateAdminCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = borsh::to_vec(&UpdateAdminInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateDynamicConfigInstructionData::new()).unwrap();
+        let mut args = borsh::to_vec(&self.__args).unwrap();
+        data.append(&mut args);
 
         let instruction = solana_program::instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::CP_AMM_ID,
             accounts,
             data,
         };
         let mut account_infos = Vec::with_capacity(6 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
+        account_infos.push(self.config.clone());
         account_infos.push(self.admin.clone());
-        account_infos.push(self.global_config.clone());
-        account_infos.push(self.new_admin.clone());
+        account_infos.push(self.system_program.clone());
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
         remaining_accounts
@@ -305,32 +349,43 @@ impl<'a, 'b> UpdateAdminCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `UpdateAdmin` via CPI.
+/// Instruction builder for `CreateDynamicConfig` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` admin
-///   1. `[writable]` global_config
-///   2. `[]` new_admin
+///   0. `[writable]` config
+///   1. `[writable, signer]` admin
+///   2. `[]` system_program
 ///   3. `[]` event_authority
 ///   4. `[]` program
 #[derive(Clone, Debug)]
-pub struct UpdateAdminCpiBuilder<'a, 'b> {
-    instruction: Box<UpdateAdminCpiBuilderInstruction<'a, 'b>>,
+pub struct CreateDynamicConfigCpiBuilder<'a, 'b> {
+    instruction: Box<CreateDynamicConfigCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> UpdateAdminCpiBuilder<'a, 'b> {
+impl<'a, 'b> CreateDynamicConfigCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(UpdateAdminCpiBuilderInstruction {
+        let instruction = Box::new(CreateDynamicConfigCpiBuilderInstruction {
             __program: program,
+            config: None,
             admin: None,
-            global_config: None,
-            new_admin: None,
+            system_program: None,
             event_authority: None,
             program: None,
+            index: None,
+            pool_creator_authority: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
+    }
+
+    #[inline(always)]
+    pub fn config(
+        &mut self,
+        config: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.config = Some(config);
+        self
     }
 
     #[inline(always)]
@@ -340,20 +395,11 @@ impl<'a, 'b> UpdateAdminCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn global_config(
+    pub fn system_program(
         &mut self,
-        global_config: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.global_config = Some(global_config);
-        self
-    }
-
-    #[inline(always)]
-    pub fn new_admin(
-        &mut self,
-        new_admin: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.new_admin = Some(new_admin);
+        self.instruction.system_program = Some(system_program);
         self
     }
 
@@ -372,6 +418,18 @@ impl<'a, 'b> UpdateAdminCpiBuilder<'a, 'b> {
         program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.program = Some(program);
+        self
+    }
+
+    #[inline(always)]
+    pub fn index(&mut self, index: u64) -> &mut Self {
+        self.instruction.index = Some(index);
+        self
+    }
+
+    #[inline(always)]
+    pub fn pool_creator_authority(&mut self, pool_creator_authority: Pubkey) -> &mut Self {
+        self.instruction.pool_creator_authority = Some(pool_creator_authority);
         self
     }
 
@@ -417,17 +475,25 @@ impl<'a, 'b> UpdateAdminCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let instruction = UpdateAdminCpi {
+        let args = CreateDynamicConfigInstructionArgs {
+            index: self.instruction.index.clone().expect("index is not set"),
+            pool_creator_authority: self
+                .instruction
+                .pool_creator_authority
+                .clone()
+                .expect("pool_creator_authority is not set"),
+        };
+        let instruction = CreateDynamicConfigCpi {
             __program: self.instruction.__program,
+
+            config: self.instruction.config.expect("config is not set"),
 
             admin: self.instruction.admin.expect("admin is not set"),
 
-            global_config: self
+            system_program: self
                 .instruction
-                .global_config
-                .expect("global_config is not set"),
-
-            new_admin: self.instruction.new_admin.expect("new_admin is not set"),
+                .system_program
+                .expect("system_program is not set"),
 
             event_authority: self
                 .instruction
@@ -435,6 +501,7 @@ impl<'a, 'b> UpdateAdminCpiBuilder<'a, 'b> {
                 .expect("event_authority is not set"),
 
             program: self.instruction.program.expect("program is not set"),
+            __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -444,13 +511,15 @@ impl<'a, 'b> UpdateAdminCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct UpdateAdminCpiBuilderInstruction<'a, 'b> {
+struct CreateDynamicConfigCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
+    config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     admin: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    global_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    new_admin: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    index: Option<u64>,
+    pool_creator_authority: Option<Pubkey>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

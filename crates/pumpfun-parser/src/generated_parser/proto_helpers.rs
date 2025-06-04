@@ -9,10 +9,7 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use sdk::types::LastWithdraw;
-
-    use crate as sdk;
-    use crate::proto_def;
+    use crate::{proto_def, types::LastWithdraw};
     impl IntoProto<proto_def::LastWithdraw> for LastWithdraw {
         fn into_proto(self) -> proto_def::LastWithdraw {
             proto_def::LastWithdraw {
@@ -20,7 +17,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::CreateEvent;
+    use crate::types::CreateEvent;
     impl IntoProto<proto_def::CreateEvent> for CreateEvent {
         fn into_proto(self) -> proto_def::CreateEvent {
             proto_def::CreateEvent {
@@ -33,7 +30,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::TradeEvent;
+    use crate::types::TradeEvent;
     impl IntoProto<proto_def::TradeEvent> for TradeEvent {
         fn into_proto(self) -> proto_def::TradeEvent {
             proto_def::TradeEvent {
@@ -50,7 +47,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::CompleteEvent;
+    use crate::types::CompleteEvent;
     impl IntoProto<proto_def::CompleteEvent> for CompleteEvent {
         fn into_proto(self) -> proto_def::CompleteEvent {
             proto_def::CompleteEvent {
@@ -61,7 +58,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::SetParamsEvent;
+    use crate::types::SetParamsEvent;
     impl IntoProto<proto_def::SetParamsEvent> for SetParamsEvent {
         fn into_proto(self) -> proto_def::SetParamsEvent {
             proto_def::SetParamsEvent {

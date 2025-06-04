@@ -54,10 +54,8 @@ pub struct Pool {
     pub partner: Pubkey,
     /// liquidity share
     pub liquidity: u128,
-    /// token a reserve
-    pub token_a_reserve: u64,
-    /// token b reserve
-    pub token_b_reserve: u64,
+    /// padding, previous reserve amount, be careful to use that field
+    pub padding: u128,
     /// protocol a fee
     pub protocol_a_fee: u64,
     /// protocol b fee

@@ -130,6 +130,12 @@ pub enum CpAmmError {
     /// 6039 - Position is not empty
     #[error("Position is not empty")]
     PositionIsNotEmpty = 0x1797,
+    /// 6040 - Invalid pool creator authority
+    #[error("Invalid pool creator authority")]
+    InvalidPoolCreatorAuthority = 0x1798,
+    /// 6041 - Invalid config type
+    #[error("Invalid config type")]
+    InvalidConfigType = 0x1799,
 }
 
 impl solana_program::program_error::PrintProgramError for CpAmmError {

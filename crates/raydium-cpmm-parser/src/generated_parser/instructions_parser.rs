@@ -30,7 +30,8 @@ use crate::{
 };
 
 /// RaydiumCpSwap Instructions
-#[derive(Debug, strum_macros::Display)]
+#[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum RaydiumCpSwapProgramIx {
     CreateAmmConfig(CreateAmmConfigIxAccounts, CreateAmmConfigIxData),
     UpdateAmmConfig(UpdateAmmConfigIxAccounts, UpdateAmmConfigIxData),
@@ -82,9 +83,10 @@ impl InstructionParser {
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<RaydiumCpSwapProgramIx> {
         let accounts_len = ix.accounts.len();
+
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let mut ix_data = &ix.data[8..];
-        match ix_discriminator {
+        let ix = match ix_discriminator {
             [137, 52, 237, 212, 215, 117, 108, 104] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = CreateAmmConfigIxAccounts {
@@ -287,7 +289,31 @@ impl InstructionParser {
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
+        };
+
+        #[cfg(feature = "tracing")]
+        match &ix {
+            Ok(ix) => {
+                tracing::info!(
+                    name: "correctly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = ix.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            },
         }
+
+        ix
     }
 }
 

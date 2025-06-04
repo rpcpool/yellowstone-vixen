@@ -69,6 +69,7 @@ impl AmmV3ProgramState {
         match &acc {
             Ok(acc) => {
                 tracing::info!(
+                    name: "correctly_parsed_account",
                     name = "account_update",
                     program = ID.to_string(),
                     account = acc.to_string()
@@ -76,6 +77,7 @@ impl AmmV3ProgramState {
             },
             Err(e) => {
                 tracing::info!(
+                    name: "incorrectly_parsed_account",
                     name = "account_update",
                     program = ID.to_string(),
                     account = "error",
@@ -151,10 +153,14 @@ mod proto_parser {
                 bump: self.bump.into(),
                 operation_owners: self
                     .operation_owners
-                    .iter()
+                    .into_iter()
                     .map(|x| x.to_string())
                     .collect(),
-                whitelist_mints: self.whitelist_mints.iter().map(|x| x.to_string()).collect(),
+                whitelist_mints: self
+                    .whitelist_mints
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
             }
         }
     }
@@ -179,20 +185,14 @@ mod proto_parser {
     impl IntoProto<proto_def::PersonalPositionState> for PersonalPositionState {
         fn into_proto(self) -> proto_def::PersonalPositionState {
             proto_def::PersonalPositionState {
-                bump: self.bump.to_vec(),
+                bump: self.bump.into_iter().map(|x| x.into()).collect(),
                 nft_mint: self.nft_mint.to_string(),
                 pool_id: self.pool_id.to_string(),
                 tick_lower_index: self.tick_lower_index,
                 tick_upper_index: self.tick_upper_index,
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
-                fee_growth_inside0_last_x64: self
-                    .fee_growth_inside0_last_x64
-                    .to_le_bytes()
-                    .to_vec(),
-                fee_growth_inside1_last_x64: self
-                    .fee_growth_inside1_last_x64
-                    .to_le_bytes()
-                    .to_vec(),
+                liquidity: self.liquidity.to_string(),
+                fee_growth_inside0_last_x64: self.fee_growth_inside0_last_x64.to_string(),
+                fee_growth_inside1_last_x64: self.fee_growth_inside1_last_x64.to_string(),
                 token_fees_owed0: self.token_fees_owed0,
                 token_fees_owed1: self.token_fees_owed1,
                 reward_infos: self
@@ -209,7 +209,7 @@ mod proto_parser {
     impl IntoProto<proto_def::PoolState> for PoolState {
         fn into_proto(self) -> proto_def::PoolState {
             proto_def::PoolState {
-                bump: self.bump.to_vec(),
+                bump: self.bump.into_iter().map(|x| x.into()).collect(),
                 amm_config: self.amm_config.to_string(),
                 owner: self.owner.to_string(),
                 token_mint0: self.token_mint0.to_string(),
@@ -220,21 +220,21 @@ mod proto_parser {
                 mint_decimals0: self.mint_decimals0.into(),
                 mint_decimals1: self.mint_decimals1.into(),
                 tick_spacing: self.tick_spacing.into(),
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
-                sqrt_price_x64: self.sqrt_price_x64.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
+                sqrt_price_x64: self.sqrt_price_x64.to_string(),
                 tick_current: self.tick_current,
                 padding3: self.padding3.into(),
                 padding4: self.padding4.into(),
-                fee_growth_global0_x64: self.fee_growth_global0_x64.to_le_bytes().to_vec(),
-                fee_growth_global1_x64: self.fee_growth_global1_x64.to_le_bytes().to_vec(),
+                fee_growth_global0_x64: self.fee_growth_global0_x64.to_string(),
+                fee_growth_global1_x64: self.fee_growth_global1_x64.to_string(),
                 protocol_fees_token0: self.protocol_fees_token0,
                 protocol_fees_token1: self.protocol_fees_token1,
-                swap_in_amount_token0: self.swap_in_amount_token0.to_le_bytes().to_vec(),
-                swap_out_amount_token1: self.swap_out_amount_token1.to_le_bytes().to_vec(),
-                swap_in_amount_token1: self.swap_in_amount_token1.to_le_bytes().to_vec(),
-                swap_out_amount_token0: self.swap_out_amount_token0.to_le_bytes().to_vec(),
+                swap_in_amount_token0: self.swap_in_amount_token0.to_string(),
+                swap_out_amount_token1: self.swap_out_amount_token1.to_string(),
+                swap_in_amount_token1: self.swap_in_amount_token1.to_string(),
+                swap_out_amount_token0: self.swap_out_amount_token0.to_string(),
                 status: self.status.into(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
                 reward_infos: self
                     .reward_infos
                     .into_iter()
@@ -262,21 +262,15 @@ mod proto_parser {
                 pool_id: self.pool_id.to_string(),
                 tick_lower_index: self.tick_lower_index,
                 tick_upper_index: self.tick_upper_index,
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
-                fee_growth_inside0_last_x64: self
-                    .fee_growth_inside0_last_x64
-                    .to_le_bytes()
-                    .to_vec(),
-                fee_growth_inside1_last_x64: self
-                    .fee_growth_inside1_last_x64
-                    .to_le_bytes()
-                    .to_vec(),
+                liquidity: self.liquidity.to_string(),
+                fee_growth_inside0_last_x64: self.fee_growth_inside0_last_x64.to_string(),
+                fee_growth_inside1_last_x64: self.fee_growth_inside1_last_x64.to_string(),
                 token_fees_owed0: self.token_fees_owed0,
                 token_fees_owed1: self.token_fees_owed1,
                 reward_growth_inside: self
                     .reward_growth_inside
                     .into_iter()
-                    .map(|x| x.to_le_bytes().to_vec())
+                    .map(|x| x.to_string())
                     .collect(),
                 recent_epoch: self.recent_epoch,
                 padding: self.padding.to_vec(),
@@ -292,7 +286,7 @@ mod proto_parser {
                 ticks: self.ticks.into_iter().map(|x| x.into_proto()).collect(),
                 initialized_tick_count: self.initialized_tick_count.into(),
                 recent_epoch: self.recent_epoch,
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
             }
         }
     }

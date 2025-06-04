@@ -8,6 +8,7 @@ description = "Vixen program parser for Raydium CPMM"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
+
 [dependencies]
 prost = "0.13.1"
 yellowstone-vixen-core = { workspace = true, features = ["proto"] }
@@ -17,10 +18,9 @@ borsh = "^0.10"
 num-derive = "0.4"
 thiserror = "1.0.64"
 num-traits = "^0.2"
-
-tracing = "0.1.40"
-strum = { version = "0.24" }
-strum_macros = { version = "0.24" }
+tracing = { version = "0.1.40", optional = true }
+strum = { version = "0.24", optional = true }
+strum_macros = { version = "0.24", optional = true }
 
 [features]
 anchor = []
@@ -28,7 +28,7 @@ anchor-idl-build = []
 serde = []
 test-sbf = []
 fetch = []
-
+tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]
 
 [build-dependencies]
 prost-build = "0.13.1"

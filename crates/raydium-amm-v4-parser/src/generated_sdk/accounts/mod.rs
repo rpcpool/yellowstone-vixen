@@ -7,7 +7,6 @@
 
 pub(crate) mod r#amm_config;
 pub(crate) mod r#amm_info;
-pub(crate) mod r#fees;
 pub(crate) mod r#target_orders;
 
-pub use self::{r#amm_config::*, r#amm_info::*, r#fees::*, r#target_orders::*};
+pub use self::{r#amm_config::*, r#amm_info::*, r#target_orders::*};

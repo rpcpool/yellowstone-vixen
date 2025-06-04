@@ -4,7 +4,7 @@
 //!
 //! <https://github.com/codama-idl/codama>
 //!
-//!
+
 use std::{env, path::PathBuf};
 
 fn main() {

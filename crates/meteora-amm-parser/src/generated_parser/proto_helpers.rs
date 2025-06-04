@@ -9,33 +9,30 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use sdk::types::AddLiquidityParameters;
-
-    use crate as sdk;
-    use crate::proto_def;
+    use crate::{proto_def, types::AddLiquidityParameters};
     impl IntoProto<proto_def::AddLiquidityParameters> for AddLiquidityParameters {
         fn into_proto(self) -> proto_def::AddLiquidityParameters {
             proto_def::AddLiquidityParameters {
-                liquidity_delta: self.liquidity_delta.to_le_bytes().to_vec(),
+                liquidity_delta: self.liquidity_delta.to_string(),
                 token_a_amount_threshold: self.token_a_amount_threshold,
                 token_b_amount_threshold: self.token_b_amount_threshold,
             }
         }
     }
-    use sdk::types::BaseFeeConfig;
+    use crate::types::BaseFeeConfig;
     impl IntoProto<proto_def::BaseFeeConfig> for BaseFeeConfig {
         fn into_proto(self) -> proto_def::BaseFeeConfig {
             proto_def::BaseFeeConfig {
                 cliff_fee_numerator: self.cliff_fee_numerator,
                 fee_scheduler_mode: self.fee_scheduler_mode.into(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
                 number_of_period: self.number_of_period.into(),
                 period_frequency: self.period_frequency,
                 reduction_factor: self.reduction_factor,
             }
         }
     }
-    use sdk::types::BaseFeeParameters;
+    use crate::types::BaseFeeParameters;
     impl IntoProto<proto_def::BaseFeeParameters> for BaseFeeParameters {
         fn into_proto(self) -> proto_def::BaseFeeParameters {
             proto_def::BaseFeeParameters {
@@ -47,13 +44,13 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::BaseFeeStruct;
+    use crate::types::BaseFeeStruct;
     impl IntoProto<proto_def::BaseFeeStruct> for BaseFeeStruct {
         fn into_proto(self) -> proto_def::BaseFeeStruct {
             proto_def::BaseFeeStruct {
                 cliff_fee_numerator: self.cliff_fee_numerator,
                 fee_scheduler_mode: self.fee_scheduler_mode.into(),
-                padding0: self.padding0.to_vec(),
+                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
                 number_of_period: self.number_of_period.into(),
                 period_frequency: self.period_frequency,
                 reduction_factor: self.reduction_factor,
@@ -61,29 +58,29 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::DynamicFeeConfig;
+    use crate::types::DynamicFeeConfig;
     impl IntoProto<proto_def::DynamicFeeConfig> for DynamicFeeConfig {
         fn into_proto(self) -> proto_def::DynamicFeeConfig {
             proto_def::DynamicFeeConfig {
                 initialized: self.initialized.into(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
                 max_volatility_accumulator: self.max_volatility_accumulator,
                 variable_fee_control: self.variable_fee_control,
                 bin_step: self.bin_step.into(),
                 filter_period: self.filter_period.into(),
                 decay_period: self.decay_period.into(),
                 reduction_factor: self.reduction_factor.into(),
-                padding1: self.padding1.to_vec(),
-                bin_step_u128: self.bin_step_u128.to_le_bytes().to_vec(),
+                padding1: self.padding1.into_iter().map(|x| x.into()).collect(),
+                bin_step_u128: self.bin_step_u128.to_string(),
             }
         }
     }
-    use sdk::types::DynamicFeeParameters;
+    use crate::types::DynamicFeeParameters;
     impl IntoProto<proto_def::DynamicFeeParameters> for DynamicFeeParameters {
         fn into_proto(self) -> proto_def::DynamicFeeParameters {
             proto_def::DynamicFeeParameters {
                 bin_step: self.bin_step.into(),
-                bin_step_u128: self.bin_step_u128.to_le_bytes().to_vec(),
+                bin_step_u128: self.bin_step_u128.to_string(),
                 filter_period: self.filter_period.into(),
                 decay_period: self.decay_period.into(),
                 reduction_factor: self.reduction_factor.into(),
@@ -92,12 +89,12 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::DynamicFeeStruct;
+    use crate::types::DynamicFeeStruct;
     impl IntoProto<proto_def::DynamicFeeStruct> for DynamicFeeStruct {
         fn into_proto(self) -> proto_def::DynamicFeeStruct {
             proto_def::DynamicFeeStruct {
                 initialized: self.initialized.into(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
                 max_volatility_accumulator: self.max_volatility_accumulator,
                 variable_fee_control: self.variable_fee_control,
                 bin_step: self.bin_step.into(),
@@ -105,14 +102,14 @@ pub mod proto_types_parsers {
                 decay_period: self.decay_period.into(),
                 reduction_factor: self.reduction_factor.into(),
                 last_update_timestamp: self.last_update_timestamp,
-                bin_step_u128: self.bin_step_u128.to_le_bytes().to_vec(),
-                sqrt_price_reference: self.sqrt_price_reference.to_le_bytes().to_vec(),
-                volatility_accumulator: self.volatility_accumulator.to_le_bytes().to_vec(),
-                volatility_reference: self.volatility_reference.to_le_bytes().to_vec(),
+                bin_step_u128: self.bin_step_u128.to_string(),
+                sqrt_price_reference: self.sqrt_price_reference.to_string(),
+                volatility_accumulator: self.volatility_accumulator.to_string(),
+                volatility_reference: self.volatility_reference.to_string(),
             }
         }
     }
-    use sdk::types::EvtAddLiquidity;
+    use crate::types::EvtAddLiquidity;
     impl IntoProto<proto_def::EvtAddLiquidity> for EvtAddLiquidity {
         fn into_proto(self) -> proto_def::EvtAddLiquidity {
             proto_def::EvtAddLiquidity {
@@ -127,7 +124,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtClaimPartnerFee;
+    use crate::types::EvtClaimPartnerFee;
     impl IntoProto<proto_def::EvtClaimPartnerFee> for EvtClaimPartnerFee {
         fn into_proto(self) -> proto_def::EvtClaimPartnerFee {
             proto_def::EvtClaimPartnerFee {
@@ -137,7 +134,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtClaimPositionFee;
+    use crate::types::EvtClaimPositionFee;
     impl IntoProto<proto_def::EvtClaimPositionFee> for EvtClaimPositionFee {
         fn into_proto(self) -> proto_def::EvtClaimPositionFee {
             proto_def::EvtClaimPositionFee {
@@ -149,7 +146,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtClaimProtocolFee;
+    use crate::types::EvtClaimProtocolFee;
     impl IntoProto<proto_def::EvtClaimProtocolFee> for EvtClaimProtocolFee {
         fn into_proto(self) -> proto_def::EvtClaimProtocolFee {
             proto_def::EvtClaimProtocolFee {
@@ -159,7 +156,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtClaimReward;
+    use crate::types::EvtClaimReward;
     impl IntoProto<proto_def::EvtClaimReward> for EvtClaimReward {
         fn into_proto(self) -> proto_def::EvtClaimReward {
             proto_def::EvtClaimReward {
@@ -172,7 +169,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtCloseClaimFeeOperator;
+    use crate::types::EvtCloseClaimFeeOperator;
     impl IntoProto<proto_def::EvtCloseClaimFeeOperator> for EvtCloseClaimFeeOperator {
         fn into_proto(self) -> proto_def::EvtCloseClaimFeeOperator {
             proto_def::EvtCloseClaimFeeOperator {
@@ -181,7 +178,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtCloseConfig;
+    use crate::types::EvtCloseConfig;
     impl IntoProto<proto_def::EvtCloseConfig> for EvtCloseConfig {
         fn into_proto(self) -> proto_def::EvtCloseConfig {
             proto_def::EvtCloseConfig {
@@ -190,7 +187,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtClosePosition;
+    use crate::types::EvtClosePosition;
     impl IntoProto<proto_def::EvtClosePosition> for EvtClosePosition {
         fn into_proto(self) -> proto_def::EvtClosePosition {
             proto_def::EvtClosePosition {
@@ -201,7 +198,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtCreateClaimFeeOperator;
+    use crate::types::EvtCreateClaimFeeOperator;
     impl IntoProto<proto_def::EvtCreateClaimFeeOperator> for EvtCreateClaimFeeOperator {
         fn into_proto(self) -> proto_def::EvtCreateClaimFeeOperator {
             proto_def::EvtCreateClaimFeeOperator {
@@ -209,7 +206,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtCreateConfig;
+    use crate::types::EvtCreateConfig;
     impl IntoProto<proto_def::EvtCreateConfig> for EvtCreateConfig {
         fn into_proto(self) -> proto_def::EvtCreateConfig {
             proto_def::EvtCreateConfig {
@@ -217,15 +214,25 @@ pub mod proto_types_parsers {
                 vault_config_key: self.vault_config_key.to_string(),
                 pool_creator_authority: self.pool_creator_authority.to_string(),
                 activation_type: self.activation_type.into(),
-                sqrt_min_price: self.sqrt_min_price.to_le_bytes().to_vec(),
-                sqrt_max_price: self.sqrt_max_price.to_le_bytes().to_vec(),
+                sqrt_min_price: self.sqrt_min_price.to_string(),
+                sqrt_max_price: self.sqrt_max_price.to_string(),
                 collect_fee_mode: self.collect_fee_mode.into(),
                 index: self.index,
                 config: self.config.to_string(),
             }
         }
     }
-    use sdk::types::EvtCreatePosition;
+    use crate::types::EvtCreateDynamicConfig;
+    impl IntoProto<proto_def::EvtCreateDynamicConfig> for EvtCreateDynamicConfig {
+        fn into_proto(self) -> proto_def::EvtCreateDynamicConfig {
+            proto_def::EvtCreateDynamicConfig {
+                config: self.config.to_string(),
+                pool_creator_authority: self.pool_creator_authority.to_string(),
+                index: self.index,
+            }
+        }
+    }
+    use crate::types::EvtCreatePosition;
     impl IntoProto<proto_def::EvtCreatePosition> for EvtCreatePosition {
         fn into_proto(self) -> proto_def::EvtCreatePosition {
             proto_def::EvtCreatePosition {
@@ -236,7 +243,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtCreateTokenBadge;
+    use crate::types::EvtCreateTokenBadge;
     impl IntoProto<proto_def::EvtCreateTokenBadge> for EvtCreateTokenBadge {
         fn into_proto(self) -> proto_def::EvtCreateTokenBadge {
             proto_def::EvtCreateTokenBadge {
@@ -244,7 +251,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtFundReward;
+    use crate::types::EvtFundReward;
     impl IntoProto<proto_def::EvtFundReward> for EvtFundReward {
         fn into_proto(self) -> proto_def::EvtFundReward {
             proto_def::EvtFundReward {
@@ -257,7 +264,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtInitializePool;
+    use crate::types::EvtInitializePool;
     impl IntoProto<proto_def::EvtInitializePool> for EvtInitializePool {
         fn into_proto(self) -> proto_def::EvtInitializePool {
             proto_def::EvtInitializePool {
@@ -268,12 +275,12 @@ pub mod proto_types_parsers {
                 payer: self.payer.to_string(),
                 alpha_vault: self.alpha_vault.to_string(),
                 pool_fees: Some(self.pool_fees.into_proto()),
-                sqrt_min_price: self.sqrt_min_price.to_le_bytes().to_vec(),
-                sqrt_max_price: self.sqrt_max_price.to_le_bytes().to_vec(),
+                sqrt_min_price: self.sqrt_min_price.to_string(),
+                sqrt_max_price: self.sqrt_max_price.to_string(),
                 activation_type: self.activation_type.into(),
                 collect_fee_mode: self.collect_fee_mode.into(),
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
-                sqrt_price: self.sqrt_price.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
+                sqrt_price: self.sqrt_price.to_string(),
                 activation_point: self.activation_point,
                 token_a_flag: self.token_a_flag.into(),
                 token_b_flag: self.token_b_flag.into(),
@@ -285,7 +292,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtInitializeReward;
+    use crate::types::EvtInitializeReward;
     impl IntoProto<proto_def::EvtInitializeReward> for EvtInitializeReward {
         fn into_proto(self) -> proto_def::EvtInitializeReward {
             proto_def::EvtInitializeReward {
@@ -297,7 +304,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtLockPosition;
+    use crate::types::EvtLockPosition;
     impl IntoProto<proto_def::EvtLockPosition> for EvtLockPosition {
         fn into_proto(self) -> proto_def::EvtLockPosition {
             proto_def::EvtLockPosition {
@@ -307,27 +314,24 @@ pub mod proto_types_parsers {
                 vesting: self.vesting.to_string(),
                 cliff_point: self.cliff_point,
                 period_frequency: self.period_frequency,
-                cliff_unlock_liquidity: self.cliff_unlock_liquidity.to_le_bytes().to_vec(),
-                liquidity_per_period: self.liquidity_per_period.to_le_bytes().to_vec(),
+                cliff_unlock_liquidity: self.cliff_unlock_liquidity.to_string(),
+                liquidity_per_period: self.liquidity_per_period.to_string(),
                 number_of_period: self.number_of_period.into(),
             }
         }
     }
-    use sdk::types::EvtPermanentLockPosition;
+    use crate::types::EvtPermanentLockPosition;
     impl IntoProto<proto_def::EvtPermanentLockPosition> for EvtPermanentLockPosition {
         fn into_proto(self) -> proto_def::EvtPermanentLockPosition {
             proto_def::EvtPermanentLockPosition {
                 pool: self.pool.to_string(),
                 position: self.position.to_string(),
-                lock_liquidity_amount: self.lock_liquidity_amount.to_le_bytes().to_vec(),
-                total_permanent_locked_liquidity: self
-                    .total_permanent_locked_liquidity
-                    .to_le_bytes()
-                    .to_vec(),
+                lock_liquidity_amount: self.lock_liquidity_amount.to_string(),
+                total_permanent_locked_liquidity: self.total_permanent_locked_liquidity.to_string(),
             }
         }
     }
-    use sdk::types::EvtRemoveLiquidity;
+    use crate::types::EvtRemoveLiquidity;
     impl IntoProto<proto_def::EvtRemoveLiquidity> for EvtRemoveLiquidity {
         fn into_proto(self) -> proto_def::EvtRemoveLiquidity {
             proto_def::EvtRemoveLiquidity {
@@ -340,7 +344,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtSetPoolStatus;
+    use crate::types::EvtSetPoolStatus;
     impl IntoProto<proto_def::EvtSetPoolStatus> for EvtSetPoolStatus {
         fn into_proto(self) -> proto_def::EvtSetPoolStatus {
             proto_def::EvtSetPoolStatus {
@@ -349,7 +353,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtSwap;
+    use crate::types::EvtSwap;
     impl IntoProto<proto_def::EvtSwap> for EvtSwap {
         fn into_proto(self) -> proto_def::EvtSwap {
             proto_def::EvtSwap {
@@ -363,7 +367,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtUpdateRewardDuration;
+    use crate::types::EvtUpdateRewardDuration;
     impl IntoProto<proto_def::EvtUpdateRewardDuration> for EvtUpdateRewardDuration {
         fn into_proto(self) -> proto_def::EvtUpdateRewardDuration {
             proto_def::EvtUpdateRewardDuration {
@@ -374,7 +378,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtUpdateRewardFunder;
+    use crate::types::EvtUpdateRewardFunder;
     impl IntoProto<proto_def::EvtUpdateRewardFunder> for EvtUpdateRewardFunder {
         fn into_proto(self) -> proto_def::EvtUpdateRewardFunder {
             proto_def::EvtUpdateRewardFunder {
@@ -385,7 +389,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::EvtWithdrawIneligibleReward;
+    use crate::types::EvtWithdrawIneligibleReward;
     impl IntoProto<proto_def::EvtWithdrawIneligibleReward> for EvtWithdrawIneligibleReward {
         fn into_proto(self) -> proto_def::EvtWithdrawIneligibleReward {
             proto_def::EvtWithdrawIneligibleReward {
@@ -395,7 +399,25 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::PoolFeeParameters;
+    use crate::types::InitializeCustomizablePoolParameters;
+    impl IntoProto<proto_def::InitializeCustomizablePoolParameters>
+        for InitializeCustomizablePoolParameters
+    {
+        fn into_proto(self) -> proto_def::InitializeCustomizablePoolParameters {
+            proto_def::InitializeCustomizablePoolParameters {
+                pool_fees: Some(self.pool_fees.into_proto()),
+                sqrt_min_price: self.sqrt_min_price.to_string(),
+                sqrt_max_price: self.sqrt_max_price.to_string(),
+                has_alpha_vault: self.has_alpha_vault,
+                liquidity: self.liquidity.to_string(),
+                sqrt_price: self.sqrt_price.to_string(),
+                activation_type: self.activation_type.into(),
+                collect_fee_mode: self.collect_fee_mode.into(),
+                activation_point: self.activation_point,
+            }
+        }
+    }
+    use crate::types::PoolFeeParameters;
     impl IntoProto<proto_def::PoolFeeParameters> for PoolFeeParameters {
         fn into_proto(self) -> proto_def::PoolFeeParameters {
             proto_def::PoolFeeParameters {
@@ -407,7 +429,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::PoolFeesConfig;
+    use crate::types::PoolFeesConfig;
     impl IntoProto<proto_def::PoolFeesConfig> for PoolFeesConfig {
         fn into_proto(self) -> proto_def::PoolFeesConfig {
             proto_def::PoolFeesConfig {
@@ -416,12 +438,12 @@ pub mod proto_types_parsers {
                 protocol_fee_percent: self.protocol_fee_percent.into(),
                 partner_fee_percent: self.partner_fee_percent.into(),
                 referral_fee_percent: self.referral_fee_percent.into(),
-                padding0: self.padding0.to_vec(),
+                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
                 padding1: self.padding1.to_vec(),
             }
         }
     }
-    use sdk::types::PoolFeesStruct;
+    use crate::types::PoolFeesStruct;
     impl IntoProto<proto_def::PoolFeesStruct> for PoolFeesStruct {
         fn into_proto(self) -> proto_def::PoolFeesStruct {
             proto_def::PoolFeesStruct {
@@ -429,18 +451,18 @@ pub mod proto_types_parsers {
                 protocol_fee_percent: self.protocol_fee_percent.into(),
                 partner_fee_percent: self.partner_fee_percent.into(),
                 referral_fee_percent: self.referral_fee_percent.into(),
-                padding0: self.padding0.to_vec(),
+                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
                 dynamic_fee: Some(self.dynamic_fee.into_proto()),
                 padding1: self.padding1.to_vec(),
             }
         }
     }
-    use sdk::types::PoolMetrics;
+    use crate::types::PoolMetrics;
     impl IntoProto<proto_def::PoolMetrics> for PoolMetrics {
         fn into_proto(self) -> proto_def::PoolMetrics {
             proto_def::PoolMetrics {
-                total_lp_a_fee: self.total_lp_a_fee.to_le_bytes().to_vec(),
-                total_lp_b_fee: self.total_lp_b_fee.to_le_bytes().to_vec(),
+                total_lp_a_fee: self.total_lp_a_fee.to_string(),
+                total_lp_b_fee: self.total_lp_b_fee.to_string(),
                 total_protocol_a_fee: self.total_protocol_a_fee,
                 total_protocol_b_fee: self.total_protocol_b_fee,
                 total_partner_a_fee: self.total_partner_a_fee,
@@ -450,7 +472,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::PositionMetrics;
+    use crate::types::PositionMetrics;
     impl IntoProto<proto_def::PositionMetrics> for PositionMetrics {
         fn into_proto(self) -> proto_def::PositionMetrics {
             proto_def::PositionMetrics {
@@ -459,38 +481,42 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::RemoveLiquidityParameters;
+    use crate::types::RemoveLiquidityParameters;
     impl IntoProto<proto_def::RemoveLiquidityParameters> for RemoveLiquidityParameters {
         fn into_proto(self) -> proto_def::RemoveLiquidityParameters {
             proto_def::RemoveLiquidityParameters {
-                liquidity_delta: self.liquidity_delta.to_le_bytes().to_vec(),
+                liquidity_delta: self.liquidity_delta.to_string(),
                 token_a_amount_threshold: self.token_a_amount_threshold,
                 token_b_amount_threshold: self.token_b_amount_threshold,
             }
         }
     }
-    use sdk::types::RewardInfo;
+    use crate::types::RewardInfo;
     impl IntoProto<proto_def::RewardInfo> for RewardInfo {
         fn into_proto(self) -> proto_def::RewardInfo {
             proto_def::RewardInfo {
                 initialized: self.initialized.into(),
                 reward_token_flag: self.reward_token_flag.into(),
-                padding0: self.padding0.to_vec(),
-                padding1: self.padding1.to_vec(),
+                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
+                padding1: self.padding1.into_iter().map(|x| x.into()).collect(),
                 mint: self.mint.to_string(),
                 vault: self.vault.to_string(),
                 funder: self.funder.to_string(),
                 reward_duration: self.reward_duration,
                 reward_duration_end: self.reward_duration_end,
-                reward_rate: self.reward_rate.to_le_bytes().to_vec(),
-                reward_per_token_stored: self.reward_per_token_stored.to_vec(),
+                reward_rate: self.reward_rate.to_string(),
+                reward_per_token_stored: self
+                    .reward_per_token_stored
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
                 last_update_time: self.last_update_time,
                 cumulative_seconds_with_empty_liquidity_reward: self
                     .cumulative_seconds_with_empty_liquidity_reward,
             }
         }
     }
-    use sdk::types::SwapParameters;
+    use crate::types::SwapParameters;
     impl IntoProto<proto_def::SwapParameters> for SwapParameters {
         fn into_proto(self) -> proto_def::SwapParameters {
             proto_def::SwapParameters {
@@ -499,12 +525,12 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::SwapResult;
+    use crate::types::SwapResult;
     impl IntoProto<proto_def::SwapResult> for SwapResult {
         fn into_proto(self) -> proto_def::SwapResult {
             proto_def::SwapResult {
                 output_amount: self.output_amount,
-                next_sqrt_price: self.next_sqrt_price.to_le_bytes().to_vec(),
+                next_sqrt_price: self.next_sqrt_price.to_string(),
                 lp_fee: self.lp_fee,
                 protocol_fee: self.protocol_fee,
                 partner_fee: self.partner_fee,
@@ -512,11 +538,15 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::UserRewardInfo;
+    use crate::types::UserRewardInfo;
     impl IntoProto<proto_def::UserRewardInfo> for UserRewardInfo {
         fn into_proto(self) -> proto_def::UserRewardInfo {
             proto_def::UserRewardInfo {
-                reward_per_token_checkpoint: self.reward_per_token_checkpoint.to_vec(),
+                reward_per_token_checkpoint: self
+                    .reward_per_token_checkpoint
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
                 reward_pendings: self.reward_pendings,
                 total_claimed_rewards: self.total_claimed_rewards,
             }

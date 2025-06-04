@@ -8,20 +8,19 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
+/// Create dynamic config
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct AmmConfig {
+pub struct EvtCreateDynamicConfig {
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    pub pnl_owner: Pubkey,
+    pub config: Pubkey,
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    pub cancel_owner: Pubkey,
-    pub pending1: [u64; 28],
-    pub pending2: [u64; 31],
-    pub create_pool_fee: u64,
+    pub pool_creator_authority: Pubkey,
+    pub index: u64,
 }

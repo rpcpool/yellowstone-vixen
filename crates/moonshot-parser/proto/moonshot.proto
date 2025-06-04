@@ -64,27 +64,27 @@ message ConfigParams {
 }
 
 enum Currency {
-	Sol = 0;
+	CurrencySol = 0;
 }
 
 enum CurveType {
-	LinearV1 = 0;
-	ConstantProductV1 = 1;
+	CurveTypeLinearV1 = 0;
+	CurveTypeConstantProductV1 = 1;
 }
 
 enum MigrationTarget {
-	Raydium = 0;
-	Meteora = 1;
+	MigrationTargetRaydium = 0;
+	MigrationTargetMeteora = 1;
 }
 
 enum TradeType {
-	Buy = 0;
-	Sell = 1;
+	TradeTypeBuy = 0;
+	TradeTypeSell = 1;
 }
 
 enum FixedSide {
-	ExactIn = 0;
-	ExactOut = 1;
+	FixedSideExactIn = 0;
+	FixedSideExactOut = 1;
 }
 
 

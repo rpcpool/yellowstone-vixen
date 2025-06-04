@@ -9,7 +9,7 @@ use num_derive::FromPrimitive;
 use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
-pub enum PumpAmmError {
+pub enum PumpSwapError {
     /// 6000 -
     #[error("")]
     FeeBasisPointsExceedsMaximum = 0x1770,
@@ -96,12 +96,12 @@ pub enum PumpAmmError {
     AccountTypeNotSupported = 0x178b,
 }
 
-impl solana_program::program_error::PrintProgramError for PumpAmmError {
+impl solana_program::program_error::PrintProgramError for PumpSwapError {
     fn print<E>(&self) {
         solana_program::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for PumpAmmError {
-    fn type_of() -> &'static str { "PumpAmmError" }
+impl<T> solana_program::decode_error::DecodeError<T> for PumpSwapError {
+    fn type_of() -> &'static str { "PumpSwapError" }
 }

@@ -88,6 +88,7 @@ impl InstructionParser {
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<LimoProgramIx> {
         let accounts_len = ix.accounts.len();
+
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let mut ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
@@ -389,6 +390,7 @@ impl InstructionParser {
         match &ix {
             Ok(ix) => {
                 tracing::info!(
+                    name: "correctly_parsed_instruction",
                     name = "ix_update",
                     program = ID.to_string(),
                     ix = ix.to_string()
@@ -396,6 +398,7 @@ impl InstructionParser {
             },
             Err(e) => {
                 tracing::info!(
+                    name: "incorrectly_parsed_instruction",
                     name = "ix_update",
                     program = ID.to_string(),
                     ix = "error",
@@ -640,7 +643,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::UpdateGlobalConfigIxData {
             proto_def::UpdateGlobalConfigIxData {
                 mode: self.mode.into(),
-                value: self.value.to_vec(),
+                value: self.value.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
@@ -717,7 +720,7 @@ mod proto_parser {
                 simulated_amount_out_next_best: self.simulated_amount_out_next_best,
                 aggregator: self.aggregator.into(),
                 next_best_aggregator: self.next_best_aggregator.into(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
             }
         }
     }

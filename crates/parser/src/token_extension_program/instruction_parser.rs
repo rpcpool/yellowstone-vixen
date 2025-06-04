@@ -58,7 +58,7 @@ impl InstructionParser {
     #[allow(clippy::too_many_lines)]
     fn parse_impl(ix: &InstructionUpdate) -> Result<TokenExtensionProgramIx> {
         let accounts_len = ix.accounts.len();
-        match TokenInstruction::unpack(&ix.data) {
+        let ix = match TokenInstruction::unpack(&ix.data) {
             Ok(token_ix) => match token_ix {
                 TokenInstruction::TransferFeeExtension => {
                     Ok(TokenExtensionProgramIx::TransferFeeIx(
@@ -248,7 +248,30 @@ impl InstructionParser {
 
                 Err(Error::from_inner("Error unpacking instruction data", e))
             },
+        };
+
+        #[cfg(feature = "tracing")]
+        match &ix {
+            Ok(ix) => {
+                tracing::info!(
+                    name: "correctly_parsed_instruction",
+                    name = "ix_update",
+                    program = spl_token_2022::ID.to_string(),
+                    ix = ix.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = spl_token_2022::ID.to_string(),
+                    ix = "error",
+                    error = ?e
+                );
+            },
         }
+
+        ix
     }
 }
 
