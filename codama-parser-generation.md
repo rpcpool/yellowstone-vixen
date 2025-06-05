@@ -98,6 +98,11 @@ example-parser/
 ```
 
 **3. Build and Verify**
+Before building you project, check the pubkey in the generated_sdk/programs.rs 
+Keepint the pubkey is correct like this
+```rust
+pub const DCA_ID: Pubkey = pubkey!("DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M");
+```
 
 ```bash
 cargo build
