@@ -45,4 +45,3 @@ token-extensions = [
   "token-program",
 ]
 token-program = ["dep:spl-token"]
-raydium = []
