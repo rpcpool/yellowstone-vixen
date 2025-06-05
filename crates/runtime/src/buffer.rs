@@ -71,6 +71,7 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
             SubscribeUpdate {
                 filters,
                 update_oneof,
+                created_at: _,
             },
         ) = update;
         let Some(update) = update_oneof else { return };

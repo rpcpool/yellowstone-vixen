@@ -71,6 +71,7 @@ pub enum Error {
 pub struct Runtime<M: MetricsFactory> {
     yellowstone_cfg: YellowstoneConfig,
     commitment_filter: Option<CommitmentLevel>,
+    from_slot_filter: Option<u64>,
     buffer_cfg: BufferConfig,
     pipelines: handler::PipelineSets,
     counters: Counters<M::Instrumenter>,
@@ -188,6 +189,7 @@ impl<M: MetricsFactory> Runtime<M> {
         let Self {
             yellowstone_cfg,
             commitment_filter,
+            from_slot_filter,
             buffer_cfg,
             pipelines,
             counters,
@@ -197,8 +199,13 @@ impl<M: MetricsFactory> Runtime<M> {
         let (stop_exporter, rx) = stop::channel();
         let mut exporter = OptionFuture::from(exporter.map(|e| tokio::spawn(e.run(rx))));
 
-        let client =
-            yellowstone::connect(yellowstone_cfg, pipelines.filters(), commitment_filter).await?;
+        let client = yellowstone::connect(
+            yellowstone_cfg,
+            pipelines.filters(),
+            commitment_filter,
+            from_slot_filter,
+        )
+        .await?;
         let signal;
 
         #[cfg(unix)]
