@@ -20,22 +20,6 @@ fn main() {
             .file_descriptor_set_path(out_dir.join("vixen.parser.token_extensions.bin"))
             .compile_protos(&["proto/token_extensions.proto"], &["proto"])
             .unwrap();
-
-        // Raydium
-        prost_build::Config::new()
-            .enable_type_names()
-            .protoc_arg("--experimental_allow_proto3_optional")
-            .file_descriptor_set_path(out_dir.join("vixen.parser.raydium.bin"))
-            .compile_protos(&["proto/raydium.proto"], &["proto"])
-            .unwrap();
-
-        // Orca
-        prost_build::Config::new()
-            .enable_type_names()
-            .protoc_arg("--experimental_allow_proto3_optional")
-            .file_descriptor_set_path(out_dir.join("vixen.parser.orca.bin"))
-            .compile_protos(&["proto/orca.proto"], &["proto"])
-            .unwrap();
     }
 
     #[cfg(feature = "stream")]

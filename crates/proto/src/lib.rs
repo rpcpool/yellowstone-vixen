@@ -36,22 +36,6 @@ mod vixen {
                 "/vixen.parser.token_extensions.bin"
             ));
         }
-
-        pub mod raydium {
-            #![allow(clippy::all)]
-            include!(concat!(env!("OUT_DIR"), "/vixen.parser.raydium.rs"));
-
-            pub const DESCRIPTOR_SET: &[u8] =
-                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.raydium.bin"));
-        }
-
-        pub mod orca {
-            #![allow(clippy::all)]
-            include!(concat!(env!("OUT_DIR"), "/vixen.parser.orca.rs"));
-
-            pub const DESCRIPTOR_SET: &[u8] =
-                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.orca.bin"));
-        }
     }
 
     #[cfg(feature = "stream")]
