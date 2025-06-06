@@ -1,5 +1,6 @@
-use spl_pod::solana_program::{self, borsh1::try_from_slice_unchecked};
-use spl_stake_pool::state::{StakePool, ValidatorList, ValidatorStakeInfo};
+use borsh::BorshDeserialize;
+use spl_pod::solana_program::{self};
+use spl_stake_pool::state::{AccountType, StakePool, ValidatorList, ValidatorStakeInfo};
 
 /// SplStakePool Program State
 #[allow(clippy::large_enum_variant)]
@@ -12,24 +13,22 @@ pub enum SplStakePoolProgramState {
 
 impl SplStakePoolProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
-        if let Ok(stake_pool) = try_from_slice_unchecked::<StakePool>(data_bytes) {
-            return Ok(SplStakePoolProgramState::StakePool(stake_pool));
-        }
+        let first_slice = &[data_bytes[0]];
+        let account_type = AccountType::try_from_slice(first_slice)?;
 
-        if let Ok(validator_stake_info) = try_from_slice_unchecked::<ValidatorStakeInfo>(data_bytes)
-        {
-            return Ok(SplStakePoolProgramState::ValidatorStakeInfo(
-                validator_stake_info,
-            ));
+        match account_type {
+            AccountType::StakePool => {
+                let stake_pool = StakePool::try_from_slice(data_bytes)?;
+                return Ok(SplStakePoolProgramState::StakePool(stake_pool));
+            },
+            AccountType::ValidatorList => {
+                let validator_list = ValidatorList::try_from_slice(data_bytes)?;
+                return Ok(SplStakePoolProgramState::ValidatorList(validator_list));
+            },
+            _ => Err(yellowstone_vixen_core::ParseError::from(
+                "Invalid Account".to_owned(),
+            )),
         }
-
-        if let Ok(validator_list) = try_from_slice_unchecked::<ValidatorList>(data_bytes) {
-            return Ok(SplStakePoolProgramState::ValidatorList(validator_list));
-        }
-
-        Err(yellowstone_vixen_core::ParseError::from(
-            "Invalid Account".to_owned(),
-        ))
     }
 }
 
