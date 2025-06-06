@@ -62,7 +62,7 @@ impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<StakePoolProgramIx> {
-        let ix_type = StakePoolInstruction::deserialize(&mut ix.data.as_slice()).unwrap();
+        let ix_type = StakePoolInstruction::try_from_slice(&mut ix.data.as_slice())?;
         let accounts_len = ix.accounts.len();
 
         match ix_type {
