@@ -11,7 +11,6 @@ use std::fmt;
 
 use config::GrpcConfig;
 use grpc::Channels;
-use tokio::task::LocalSet;
 use tracing::info;
 
 use crate::{
@@ -78,45 +77,99 @@ impl Server<'_, NullMetrics> {
 impl<M: MetricsFactory> Server<'_, M> {
     /// Create a new Tokio runtime and run the Vixen stream server within it,
     /// terminating the current process if the runtime or gRPC server crash.
+    ///
+    /// For error handling, use the recoverable variant [`Self::try_run`].
+    ///
+    /// If you want to provide your own tokio Runtime because you need to run
+    /// async code outside of the Vixen stream server, use the [`Self::run_async`]
+    /// method.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use yellowstone_vixen::stream;
+    /// use yellowstone_vixen_meteora_parser::{
+    ///     accounts_parser::AccountParser as MeteoraAccParser,
+    ///     instructions_parser::InstructionParser as MeteoraIxParser,
+    ///     proto_def::DESCRIPTOR_SET as METEORA_DESCRIPTOR_SET,
+    /// };
+    /// use yellowstone_vixen_pumpfun_parser::{
+    ///     accounts_parser::AccountParser as PumpfunAccParser,
+    ///     instructions_parser::InstructionParser as PumpfunIxParser,
+    ///     proto_def::DESCRIPTOR_SET as PUMP_DESCRIPTOR_SET,
+    /// };
+    ///
+    /// // NOTE: The main function is not async
+    /// fn main() {
+    ///     stream::Server::builder()
+    ///         .descriptor_set(METEORA_DESCRIPTOR_SET)
+    ///         .descriptor_set(PUMP_DESCRIPTOR_SET)
+    ///         .account(Proto::new(MeteoraAccParser))
+    ///         .instruction(Proto::new(MeteoraIxParser))
+    ///         .instruction(Proto::new(PumpfunIxParser))
+    ///         .build(config)
+    ///         .run(); // Process will exit if an error occurs
+    /// }
+    /// ```
     #[inline]
     pub fn run(self) { util::handle_fatal(self.try_run()); }
 
-    /// Create a new Tokio runtime and run the Vixen stream server within it.
+    /// Error returning variant of [`Self::run`].
     ///
     /// # Errors
     /// This function returns an error if the runtime or gRPC server crash.
     #[inline]
     pub fn try_run(self) -> Result<(), Error> {
-        util::tokio_runtime()?.block_on(self.try_run_async())
+        tokio::runtime::Runtime::new()?.block_on(self.try_run_async())
     }
 
-    /// Create a new [`LocalSet`] and run the Vixen stream server within it,
-    /// terminating the current process if the runtime or gRPC server crash.
+    /// Run the Vixen stream server asynchronously, terminating the current process
+    /// if the runtime or gRPC server crash.
     ///
-    /// **NOTE:** This function **must** be called from within a Tokio runtime.
+    /// For error handling, use the recoverable variant [`Self::try_run_async`].
+    ///
+    /// If you don't need to run any async code outside the Vixen stream server, you
+    /// can use the [`Self::run`] method instead, which takes care of creating
+    /// a tokio Runtime for you.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use yellowstone_vixen::stream;
+    /// use yellowstone_vixen_meteora_parser::{
+    ///     accounts_parser::AccountParser as MeteoraAccParser,
+    ///     instructions_parser::InstructionParser as MeteoraIxParser,
+    ///     proto_def::DESCRIPTOR_SET as METEORA_DESCRIPTOR_SET,
+    /// };
+    /// use yellowstone_vixen_pumpfun_parser::{
+    ///     accounts_parser::AccountParser as PumpfunAccParser,
+    ///     instructions_parser::InstructionParser as PumpfunIxParser,
+    ///     proto_def::DESCRIPTOR_SET as PUMP_DESCRIPTOR_SET,
+    /// };
+    ///
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     stream::Server::builder()
+    ///         .descriptor_set(METEORA_DESCRIPTOR_SET)
+    ///         .descriptor_set(PUMP_DESCRIPTOR_SET)
+    ///         .account(Proto::new(MeteoraAccParser))
+    ///         .instruction(Proto::new(MeteoraIxParser))
+    ///         .instruction(Proto::new(PumpfunIxParser))
+    ///         .build(config)
+    ///         .run_async()
+    ///         .await;
+    /// }
+    /// ```
     #[inline]
     pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
 
-    /// Create a new [`LocalSet`] and run the Vixen stream server within it.
-    ///
-    /// **NOTE:** This function **must** be called from within a Tokio runtime.
-    ///
-    /// # Errors
-    /// This function returns an error if the runtime or gRPC server crash.
-    #[inline]
-    pub async fn try_run_async(self) -> Result<(), Error> {
-        LocalSet::new().run_until(self.try_run_local()).await
-    }
-
-    /// Run the Vixen stream server.
-    ///
-    /// **NOTE:** This function **must** be called from within a Tokio
-    /// [`LocalSet`].
+    /// Error returning variant of [`Self::run_async`].
     ///
     /// # Errors
     /// This function returns an error if the runtime or gRPC server crash.
     #[tracing::instrument("stream::Server::run", skip(self), err)]
-    pub async fn try_run_local(self) -> Result<(), Error> {
+    pub async fn try_run_async(self) -> Result<(), Error> {
         let Self {
             grpc_cfg,
             desc_sets,
@@ -130,7 +183,7 @@ impl<M: MetricsFactory> Server<'_, M> {
 
         info!(%address, "gRPC server created");
 
-        runtime.try_run_local().await?;
+        runtime.try_run_async().await?;
         grpc.stop().await?;
         Ok(())
     }

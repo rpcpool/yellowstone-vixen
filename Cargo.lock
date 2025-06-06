@@ -3144,9 +3144,9 @@ dependencies = [
 
 [[package]]
 name = "prometheus"
-version = "0.13.4"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d33c28a30771f7f96db69893f78b857f7450d7e0237e9c8fc6427a81bae7ed1"
+checksum = "3ca5326d8d0b950a9acd87e6a3f94745394f62e4dae1b1ee22b2bc0c394af43a"
 dependencies = [
  "cfg-if",
  "fnv",
@@ -3156,7 +3156,7 @@ dependencies = [
  "parking_lot 0.12.3",
  "protobuf",
  "reqwest 0.12.12",
- "thiserror 1.0.69",
+ "thiserror 2.0.11",
 ]
 
 [[package]]
@@ -3213,9 +3213,14 @@ dependencies = [
 
 [[package]]
 name = "protobuf"
-version = "2.28.0"
+version = "3.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "106dd99e98437432fed6519dedecfade6a06a73bb7b2a1e019fdd2bee5778d94"
+checksum = "d65a1d4ddae7d8b5de68153b48f6aa3bba8cb002b243dbdbc55a5afbc98f99f4"
+dependencies = [
+ "once_cell",
+ "protobuf-support",
+ "thiserror 1.0.69",
+]
 
 [[package]]
 name = "protobuf-src"
@@ -3224,6 +3229,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7ac8852baeb3cc6fb83b93646fb93c0ffe5d14bf138c945ceb4b9948ee0e3c1"
 dependencies = [
  "autotools",
+]
+
+[[package]]
+name = "protobuf-support"
+version = "3.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e36c2f31e0a47f9280fb347ef5e461ffcd2c52dd520d8e216b52f93b0b0d7d6"
+dependencies = [
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -8219,6 +8233,24 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-pools-parser"
+version = "0.3.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost",
+ "prost-build",
+ "solana-program",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
+name = "yellowstone-vixen-meteora-vault-parser"
 version = "0.3.0"
 dependencies = [
  "borsh 0.10.4",
