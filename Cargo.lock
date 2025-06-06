@@ -8459,6 +8459,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-stake-pool-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 1.5.5",
+ "bs58",
+ "spl-pod 0.3.1",
+ "spl-stake-pool",
+ "spl-token 6.0.0",
+ "spl-token-2022 4.0.1",
+ "spl-token-group-interface 0.3.0",
+ "spl-token-metadata-interface 0.4.0",
+ "spl-type-length-value 0.5.0",
+ "thiserror 1.0.69",
+ "tokio",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-mock",
+ "yellowstone-vixen-proto",
+]
+
+[[package]]
 name = "yellowstone-vixen-virtuals-parser"
 version = "0.3.0"
 dependencies = [
