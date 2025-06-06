@@ -1,6 +1,6 @@
 use borsh::BorshDeserialize;
 use spl_pod::solana_program::{self};
-use spl_stake_pool::state::{AccountType, StakePool, ValidatorList, ValidatorStakeInfo};
+use spl_stake_pool::state::{StakePool, ValidatorList, ValidatorStakeInfo};
 
 /// SplStakePool Program State
 #[allow(clippy::large_enum_variant)]
@@ -13,15 +13,17 @@ pub enum SplStakePoolProgramState {
 
 impl SplStakePoolProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
-        let slices = &data_bytes[0..=3];
-        let account_type = AccountType::try_from_slice(slices)?;
+        let first_byte = data_bytes[0];
 
-        match account_type {
-            AccountType::StakePool => {
+        match first_byte {
+            0 => Err(yellowstone_vixen_core::ParseError::from(
+                "Invalid Account".to_owned(),
+            )),
+            1 => {
                 let stake_pool = StakePool::try_from_slice(data_bytes)?;
                 return Ok(SplStakePoolProgramState::StakePool(stake_pool));
             },
-            AccountType::ValidatorList => {
+            2 => {
                 let validator_list = ValidatorList::try_from_slice(data_bytes)?;
                 return Ok(SplStakePoolProgramState::ValidatorList(validator_list));
             },
