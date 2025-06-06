@@ -13,8 +13,8 @@ pub enum SplStakePoolProgramState {
 
 impl SplStakePoolProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
-        let first_slice = &data_bytes[0..3];
-        let account_type = AccountType::try_from_slice(first_slice)?;
+        let slices = &data_bytes[0..=3];
+        let account_type = AccountType::try_from_slice(slices)?;
 
         match account_type {
             AccountType::StakePool => {
