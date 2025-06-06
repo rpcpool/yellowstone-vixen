@@ -1,5 +1,4 @@
-use borsh::BorshDeserialize;
-use spl_pod::solana_program::{self};
+use spl_pod::solana_program::{self, borsh1::try_from_slice_unchecked};
 use spl_stake_pool::state::{StakePool, ValidatorList, ValidatorStakeInfo};
 
 /// SplStakePool Program State
@@ -20,11 +19,11 @@ impl SplStakePoolProgramState {
                 "Invalid Account".to_owned(),
             )),
             1 => {
-                let stake_pool = StakePool::try_from_slice(data_bytes)?;
+                let stake_pool = try_from_slice_unchecked(data_bytes)?;
                 return Ok(SplStakePoolProgramState::StakePool(stake_pool));
             },
             2 => {
-                let validator_list = ValidatorList::try_from_slice(data_bytes)?;
+                let validator_list = try_from_slice_unchecked(data_bytes)?;
                 return Ok(SplStakePoolProgramState::ValidatorList(validator_list));
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
