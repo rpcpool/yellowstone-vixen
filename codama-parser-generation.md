@@ -98,6 +98,10 @@ example-parser/
 ```
 
 **3. Build and Verify**
+Before building you project, ensure there is a const export of the program address in `generated_sdk/programs.rs`:
+
+```rust
+pub const DCA_ID: Pubkey = pubkey!("DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M");
 
 ```bash
 cargo build
