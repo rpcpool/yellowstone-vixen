@@ -11,7 +11,9 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{self as vixen, Pipeline};
+use yellowstone_vixen::{
+    self as vixen, sources::yellowstone_grpc::YellowstoneGrpcSource, Pipeline,
+};
 use yellowstone_vixen_parser::{
     block_meta::BlockMetaParser,
     token_extension_program::{
@@ -51,6 +53,7 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
+        .source(YellowstoneGrpcSource::new())
         .account(Pipeline::new(TokenProgramAccParser, [Logger]))
         .account(Pipeline::new(TokenExtensionProgramAccParser, [Logger]))
         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Logger]))
