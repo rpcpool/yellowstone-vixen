@@ -16,8 +16,16 @@ use builder::RuntimeBuilder;
 use config::{BufferConfig, YellowstoneConfig};
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
+use sources::Source;
 use stop::{StopCode, StopTx};
-use tokio::task::LocalSet;
+use tokio::{
+    sync::mpsc::{self, Receiver},
+    task::JoinSet,
+};
+use yellowstone_grpc_proto::{
+    // prelude::*,
+    tonic::Status,
+};
 
 #[cfg(feature = "opentelemetry")]
 pub extern crate opentelemetry;
@@ -35,14 +43,15 @@ pub mod config;
 pub mod handler;
 pub mod instruction;
 pub mod metrics;
+pub mod sources;
 #[cfg(feature = "stream")]
 pub mod stream;
 mod util;
-mod yellowstone;
 
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use util::*;
 pub use yellowstone_grpc_proto::geyser::CommitmentLevel;
+use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 
 /// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
@@ -51,8 +60,11 @@ pub enum Error {
     #[error("I/O error")]
     Io(#[from] std::io::Error),
     /// An error returned by a Yellowstone server.
-    #[error("Yellowstone gRPC error")]
-    Yellowstone(#[from] yellowstone::Error),
+    #[error("Yellowstone client builder error")]
+    YellowstoneBuilder(#[from] yellowstone_grpc_client::GeyserGrpcBuilderError),
+    /// An error returned by a Yellowstone client.
+    #[error("Yellowstone client error")]
+    YellowstoneClient(#[from] yellowstone_grpc_client::GeyserGrpcClientError),
     /// An error occurring when the Yellowstone client stops early.
     #[error("Yellowstone client crashed")]
     ClientHangup,
@@ -65,12 +77,16 @@ pub enum Error {
     /// An error caused by the metrics exporter.
     #[error("Error exporting metrics")]
     MetricsExporter(#[source] Box<dyn std::error::Error + Send + Sync + 'static>),
+    /// An error occurring when a datasource is not configured correctly.
+    #[error("Yellowstone stream config error")]
+    ConfigError,
 }
 
 /// The main runtime for Vixen.
 #[derive(Debug)]
 pub struct Runtime<M: MetricsFactory> {
     yellowstone_cfg: YellowstoneConfig,
+    sources: Vec<Box<dyn Source>>,
     commitment_filter: Option<CommitmentLevel>,
     buffer_cfg: BufferConfig,
     pipelines: handler::PipelineSets,
@@ -112,9 +128,7 @@ impl<M: MetricsFactory> Runtime<M> {
     /// # Errors
     /// This function returns an error if the runtime crashes.
     #[inline]
-    pub async fn try_run_async(self) -> Result<(), Error> {
-        LocalSet::new().run_until(self.try_run_local()).await
-    }
+    pub async fn try_run_async(self) -> Result<(), Error> { self.try_run_local().await }
 
     /// Run the Vixen runtime.
     ///
@@ -131,20 +145,21 @@ impl<M: MetricsFactory> Runtime<M> {
             Exporter(Result<Result<stop::StopCode, X>, tokio::task::JoinError>),
         }
 
+        let (runtime, updates_rx, _set_handles) = self.connect_to_sources();
+
         let Self {
-            yellowstone_cfg,
-            commitment_filter,
+            yellowstone_cfg: _,
+            sources: _,
+            commitment_filter: _,
             buffer_cfg,
             pipelines,
             counters,
             exporter,
-        } = self;
+        } = runtime;
 
         let (stop_exporter, rx) = stop::channel();
         let mut exporter = OptionFuture::from(exporter.map(|e| tokio::spawn(e.run(rx))));
 
-        let client =
-            yellowstone::connect(yellowstone_cfg, pipelines.filters(), commitment_filter).await?;
         let signal;
 
         #[cfg(unix)]
@@ -187,7 +202,8 @@ impl<M: MetricsFactory> Runtime<M> {
                 .map_err(Into::into);
         }
 
-        let mut buffer = buffer::Buffer::run_yellowstone(buffer_cfg, client, pipelines, counters);
+        let mut buffer =
+            buffer::Buffer::run_yellowstone(buffer_cfg, updates_rx, pipelines, counters);
 
         let stop_ty = tokio::select! {
             s = signal => StopType::Signal(s),
@@ -273,5 +289,28 @@ impl<M: MetricsFactory> Runtime<M> {
                 Ok(Ok(c)) => c.as_unit(),
             }
         }
+    }
+
+    /// Connect to the sources and return the runtime, the receiver for the updates, and the join set for the sources.
+    fn connect_to_sources(
+        mut self,
+    ) -> (Self, Receiver<Result<SubscribeUpdate, Status>>, JoinSet<()>) {
+        let (tx, rx) =
+            mpsc::channel::<Result<SubscribeUpdate, Status>>(self.buffer_cfg.sources_channel_size);
+
+        let filters = self.pipelines.filters().commitment(self.commitment_filter);
+        let mut set = JoinSet::new();
+
+        while let Some(mut source) = self.sources.pop() {
+            let tx = tx.clone();
+            source.config(self.yellowstone_cfg.clone());
+            source.filters(filters.clone());
+
+            set.spawn(async move {
+                source.connect(tx).await.expect("Source connection failed");
+            });
+        }
+
+        (self, rx, set)
     }
 }

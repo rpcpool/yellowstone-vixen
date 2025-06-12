@@ -8,6 +8,7 @@ license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
+async-trait = "0.1.88"
 clap = { version = "4.5.4", default-features = false, features = [
   "env",
   "derive",
@@ -28,6 +29,9 @@ yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, optional = true }
+solana-client = "2.2"
+solana-commitment-config = "2.2"
+solana-pubkey = { version = "2.2", features = ["serde", "borsh", "curve25519"] }
 
 [features]
 opentelemetry = ["dep:opentelemetry"]

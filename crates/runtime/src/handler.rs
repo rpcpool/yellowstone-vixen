@@ -251,8 +251,13 @@ impl<P> PipelineSet<P> {
 
 impl<P: GetPrefilter> PipelineSet<P> {
     #[inline]
-    fn filters(&self) -> impl Iterator<Item = (&str, Prefilter)> {
-        self.0.iter().map(|(k, v)| (&**k, v.prefilter()))
+    fn filters(&self) -> impl Iterator<Item = (String, Prefilter)> {
+        // # Each filter key is going to be the parser::id()
+        self.0
+            .iter()
+            .map(|(k, v)| (k.clone(), v.prefilter()))
+            .collect::<Vec<_>>()
+            .into_iter()
     }
 }
 

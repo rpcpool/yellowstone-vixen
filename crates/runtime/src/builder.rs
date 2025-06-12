@@ -11,6 +11,7 @@ use crate::{
     handler::{BoxPipeline, DynPipeline, PipelineSets},
     instruction::InstructionPipeline,
     metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
+    sources::Source,
     util, Runtime,
 };
 
@@ -55,6 +56,7 @@ pub struct Builder<K: BuilderKind, M> {
     pub(crate) block_meta: Vec<BoxPipeline<'static, BlockMetaUpdate>>,
     pub(crate) commitment_level: Option<CommitmentLevel>,
     pub(crate) metrics: M,
+    pub(crate) sources: Vec<Box<dyn Source>>,
     pub(crate) extra: K,
 }
 
@@ -68,6 +70,7 @@ impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
             block_meta: vec![],
             commitment_level: None,
             metrics: NullMetrics,
+            sources: vec![],
             extra: K::default(),
         }
     }
@@ -114,6 +117,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             block_meta,
             commitment_level,
             metrics: _,
+            sources,
             extra,
         } = self;
 
@@ -125,6 +129,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             block_meta,
             commitment_level,
             metrics,
+            sources,
             extra,
         }
     }
@@ -181,6 +186,13 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.commitment_level = Some(commitment_level))
     }
 
+    /// Add a new data `Source` to which the runtime will subscribe.
+    ///
+    /// **NOTE:** All added Sources are going to be processed concurrently
+    pub fn source<T: Source>(self, source: T) -> Self {
+        self.mutate(|s| s.sources.push(Box::new(source)))
+    }
+
     /// Attempt to build a new [`Runtime`] instance from the current builder
     /// state and the provided configuration.
     ///
@@ -196,6 +208,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             block_meta,
             commitment_level,
             metrics,
+            sources,
             extra: RuntimeKind,
         } = self;
         let () = err?;
@@ -241,8 +254,13 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             return Err(BuilderError::MissingField("block_meta"));
         }
 
+        if sources.is_empty() {
+            return Err(BuilderError::MissingField("sources"));
+        }
+
         Ok(Runtime {
             yellowstone_cfg,
+            sources,
             buffer_cfg,
             pipelines,
             commitment_filter: commitment_level,
