@@ -108,7 +108,9 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 pub struct SerializablePubkey(pub [u8; 32]);
 
 impl Debug for SerializablePubkey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { Display::fmt(self, f) }
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(self, f)
+    }
 }
 
 impl Display for SerializablePubkey {
@@ -118,18 +120,22 @@ impl Display for SerializablePubkey {
 }
 
 impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self { Self(value.into_bytes()) }
+    fn from(value: VixenPubkey) -> Self {
+        Self(value.into_bytes())
+    }
 }
 
 impl From<SerializablePubkey> for VixenPubkey {
-    fn from(value: SerializablePubkey) -> Self { Self::new(value.0) }
+    fn from(value: SerializablePubkey) -> Self {
+        Self::new(value.0)
+    }
 }
 
 pub type IxIndex = [usize; 2]; // [outer_ix_index, inner_ix_index]
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SerializableInstructionUpdate {
-    pub ix_index: IxIndex,
+    pub ix_index: u16,
     pub program: SerializablePubkey,
     pub accounts: Vec<SerializablePubkey>,
     pub data: Vec<u8>,
@@ -139,7 +145,7 @@ pub struct SerializableInstructionUpdate {
 impl From<&InstructionUpdate> for SerializableInstructionUpdate {
     fn from(value: &InstructionUpdate) -> Self {
         Self {
-            ix_index: [0; 2],
+            ix_index: value.ix_index,
             program: SerializablePubkey(value.program.0),
             accounts: value
                 .accounts
@@ -160,6 +166,7 @@ impl From<&SerializableInstructionUpdate> for InstructionUpdate {
             data: value.data.clone(),
             shared: Arc::new(InstructionShared::default()),
             inner: value.inner.iter().map(Into::into).collect(),
+            ix_index: value.ix_index,
         }
     }
 }
@@ -201,7 +208,7 @@ fn try_from_ui_instructions(
         let program = get_account_pubkey_from_index(ix.program_id_index as usize, accounts)?;
 
         let ix = SerializableInstructionUpdate {
-            ix_index: [idx, 0],
+            ix_index: idx as u16,
             data: decode_bs58_to_bytes(&ix.data)?,
             accounts: accounts_out,
             program,
@@ -217,9 +224,10 @@ fn try_from_ui_inner_ixs(
     ui_inner_ixs: &UiInnerInstructions,
     accounts: &[String],
     program_id: &str,
+    next_idx: &mut u16,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
-    for (idx, ix) in ui_inner_ixs.instructions.iter().enumerate() {
+    for ix in ui_inner_ixs.instructions.iter() {
         if let UiInstruction::Compiled(compiled_ix) = ix {
             let accounts_out = compiled_ix
                 .accounts
@@ -230,12 +238,13 @@ fn try_from_ui_inner_ixs(
                 get_account_pubkey_from_index(compiled_ix.program_id_index as usize, accounts)?;
 
             let ix = SerializableInstructionUpdate {
-                ix_index: [ui_inner_ixs.index.into(), idx],
+                ix_index: *next_idx,
                 data: decode_bs58_to_bytes(&compiled_ix.data)?,
                 accounts: accounts_out,
                 program,
                 inner: Vec::new(),
             };
+            *next_idx += 1;
             ixs.push(ix);
         } else {
             return Err("Invalid inner instruction".into());
@@ -301,8 +310,10 @@ fn try_from_tx_meta<P: ProgramParser>(
                     return Ok(program_filtered_ixs);
                 }
 
+                let mut next_idx = program_filtered_ixs.len() as u16;
                 for ixs in inner_ixs {
-                    let inner_ixs = try_from_ui_inner_ixs(&ixs, &account_keys, &program_id)?;
+                    let inner_ixs =
+                        try_from_ui_inner_ixs(&ixs, &account_keys, &program_id, &mut next_idx)?;
                     if inner_ixs.is_empty() {
                         continue;
                     }
@@ -391,7 +402,9 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
 }
 
 #[must_use]
-pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) }
+pub fn get_rpc_client() -> RpcClient {
+    RpcClient::new(RPC_ENDPOINT.to_string())
+}
 
 #[derive(Debug, Clone)]
 pub enum FixtureData {
