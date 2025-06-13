@@ -57,7 +57,9 @@ impl Missing {
 
 impl From<Missing> for ParseError {
     #[inline]
-    fn from(value: Missing) -> Self { Self::Missing(value) }
+    fn from(value: Missing) -> Self {
+        Self::Missing(value)
+    }
 }
 
 /// Shared data between all instructions in a transaction.
@@ -110,6 +112,8 @@ pub struct InstructionUpdate {
     pub shared: Arc<InstructionShared>,
     /// Inner instructions invoked by this instruction.
     pub inner: Vec<InstructionUpdate>,
+    /// The unique index of this instruction within the transaction
+    pub ix_index: u16,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -143,7 +147,9 @@ impl AccountKeys {
     /// # Errors
     /// Returns an error if the index is invalid.
     pub fn get<I: TryInto<usize>>(&self, idx: I) -> Result<Pubkey, AccountKeyError>
-    where I::Error: Into<std::num::TryFromIntError> {
+    where
+        I::Error: Into<std::num::TryFromIntError>,
+    {
         let idx = idx
             .try_into()
             .map_err(|e| AccountKeyError::IndexConvert(e.into()))?;
@@ -236,10 +242,12 @@ impl InstructionUpdate {
 
         let mut outer = instructions
             .into_iter()
-            .map(|i| Self::parse_one(Arc::clone(&shared), i))
+            .enumerate()
+            .map(|(idx, i)| Self::parse_one(Arc::clone(&shared), i, idx as u16))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Self::parse_inner(&shared, inner_instructions, &mut outer)?;
+        let mut next_idx = outer.len() as u16;
+        Self::parse_inner(&shared, inner_instructions, &mut outer, &mut next_idx)?;
 
         Ok(outer)
     }
@@ -248,6 +256,7 @@ impl InstructionUpdate {
         shared: &Arc<InstructionShared>,
         inner_instructions: Vec<InnerInstructions>,
         outer: &mut [Self],
+        next_idx: &mut u16,
     ) -> Result<(), ParseError> {
         for insn in inner_instructions {
             let InnerInstructions {
@@ -261,7 +270,11 @@ impl InstructionUpdate {
 
             let mut inner = instructions
                 .into_iter()
-                .map(|i| Self::parse_one_inner(Arc::clone(shared), i))
+                .map(|i| {
+                    let idx = *next_idx;
+                    *next_idx += 1;
+                    Self::parse_one_inner(Arc::clone(shared), i, idx)
+                })
                 .collect::<Result<Vec<_>, _>>()?;
 
             if let Some(mut i) = inner.len().checked_sub(1) {
@@ -297,18 +310,20 @@ impl InstructionUpdate {
     fn parse_one(
         shared: Arc<InstructionShared>,
         ins: CompiledInstruction,
+        ix_index: u16,
     ) -> Result<Self, ParseError> {
         let CompiledInstruction {
             program_id_index,
             ref accounts,
             data,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data)
+        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index)
     }
 
     fn parse_one_inner(
         shared: Arc<InstructionShared>,
         ins: InnerInstruction,
+        ix_index: u16,
     ) -> Result<(Self, Option<u32>), ParseError> {
         let InnerInstruction {
             program_id_index,
@@ -316,7 +331,8 @@ impl InstructionUpdate {
             data,
             stack_height,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data).map(|i| (i, stack_height))
+        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index)
+            .map(|i| (i, stack_height))
     }
 
     fn parse_from_parts(
@@ -324,6 +340,7 @@ impl InstructionUpdate {
         program_id_index: u32,
         accounts: &[u8],
         data: Vec<u8>,
+        ix_index: u16,
     ) -> Result<Self, ParseError> {
         Ok(Self {
             program: shared.accounts.get(program_id_index)?,
@@ -334,12 +351,15 @@ impl InstructionUpdate {
             data,
             shared,
             inner: vec![],
+            ix_index,
         })
     }
 
     /// Iterate over all inner instructions stored in this instruction.
     #[inline]
-    pub fn visit_all(&self) -> VisitAll<'_> { VisitAll::new(self) }
+    pub fn visit_all(&self) -> VisitAll<'_> {
+        VisitAll::new(self)
+    }
 }
 
 /// An iterator over all inner instructions stored in an instruction update.
@@ -355,7 +375,9 @@ enum VisitAllState<'a> {
 
 impl<'a> VisitAll<'a> {
     #[inline]
-    fn new(ixs: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(ixs)) }
+    fn new(ixs: &'a InstructionUpdate) -> Self {
+        Self(VisitAllState::Init(ixs))
+    }
 }
 
 impl<'a> Iterator for VisitAll<'a> {
