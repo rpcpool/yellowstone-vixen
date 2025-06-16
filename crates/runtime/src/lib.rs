@@ -88,6 +88,7 @@ pub struct Runtime<M: MetricsFactory> {
     yellowstone_cfg: YellowstoneConfig,
     sources: Vec<Box<dyn Source>>,
     commitment_filter: Option<CommitmentLevel>,
+    from_slot_filter: Option<u64>,
     buffer_cfg: BufferConfig,
     pipelines: handler::PipelineSets,
     counters: Counters<M::Instrumenter>,
@@ -96,49 +97,112 @@ pub struct Runtime<M: MetricsFactory> {
 
 impl Runtime<NullMetrics> {
     /// Create a new runtime builder.
-    pub fn builder() -> RuntimeBuilder { RuntimeBuilder::default() }
+    pub fn builder() -> RuntimeBuilder {
+        RuntimeBuilder::default()
+    }
 }
 
 impl<M: MetricsFactory> Runtime<M> {
     /// Create a new Tokio runtime and run the Vixen runtime within it,
     /// terminating the current process if the runtime crashes.
+    ///
+    /// For error handling, use the recoverable variant [`Self::try_run`].
+    ///
+    /// If you want to provide your own tokio Runtime because you need to run
+    /// async code outside of the Vixen runtime, use the [`Self::run_async`]
+    /// method.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use yellowstone_vixen::Pipeline;
+    /// use yellowstone_vixen_parser::{
+    ///     token_extension_program::{
+    ///         AccountParser as TokenExtensionProgramAccParser,
+    ///         InstructionParser as TokenExtensionProgramIxParser,
+    ///     },
+    ///     token_program::{
+    ///         AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
+    ///     },
+    /// };
+    ///
+    /// // MyHandler is a handler that implements the Handler trait
+    /// // NOTE: The main function is not async
+    /// fn main() {
+    ///     Runtime::builder()
+    ///         .account(Pipeline::new(TokenProgramAccParser, [MyHandler]))
+    ///         .account(Pipeline::new(TokenExtensionProgramAccParser, [MyHandler]))
+    ///         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [MyHandler]))
+    ///         .instruction(Pipeline::new(TokenProgramIxParser, [MyHandler]))
+    ///         .metrics(yellowstone_vixen::metrics::Prometheus)
+    ///         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
+    ///         .build(config)
+    ///         .run(); // Process will exit if an error occurs
+    /// }
+    /// ```
     #[inline]
-    pub fn run(self) { util::handle_fatal(self.try_run()); }
+    pub fn run(self) {
+        util::handle_fatal(self.try_run());
+    }
 
-    /// Create a new Tokio runtime and run the Vixen runtime within it.
+    /// Error returning variant of [`Self::run`].
     ///
     /// # Errors
     /// This function returns an error if the runtime crashes.
     #[inline]
     pub fn try_run(self) -> Result<(), Error> {
-        util::tokio_runtime()?.block_on(self.try_run_async())
+        tokio::runtime::Runtime::new()?.block_on(self.try_run_async())
     }
 
-    /// Create a new [`LocalSet`] and run the Vixen runtime within it,
-    /// terminating the current process if the runtime crashes.
+    /// Run the Vixen runtime asynchronously, terminating the current process
+    /// if the runtime crashes.
     ///
-    /// **NOTE:** This function **must** be called from within a Tokio runtime.
+    /// For error handling, use the recoverable variant [`Self::try_run_async`].
+    ///
+    /// If you don't need to run any async code outside the Vixen runtime, you
+    /// can use the [`Self::run`] method instead, which takes care of creating
+    /// a tokio Runtime for you.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use yellowstone_vixen_parser::{
+    ///     token_extension_program::{
+    ///         AccountParser as TokenExtensionProgramAccParser,
+    ///         InstructionParser as TokenExtensionProgramIxParser,
+    ///     },
+    ///     token_program::{
+    ///         AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
+    ///     },
+    /// };
+    ///
+    /// // MyHandler is a handler that implements the Handler trait
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     Runtime::builder()
+    ///         .account(Pipeline::new(TokenProgramAccParser, [MyHandler]))
+    ///         .account(Pipeline::new(TokenExtensionProgramAccParser, [MyHandler]))
+    ///         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [MyHandler]))
+    ///         .instruction(Pipeline::new(TokenProgramIxParser, [MyHandler]))
+    ///         .metrics(yellowstone_vixen::metrics::Prometheus)
+    ///         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
+    ///         .build(config)
+    ///         .run_async()
+    ///         .await;
+    /// }
+    /// ```
     #[inline]
-    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
+    pub async fn run_async(self) {
+        util::handle_fatal(self.try_run_async().await);
+    }
 
-    /// Create a new [`LocalSet`] and run the Vixen runtime within it.
-    ///
-    /// **NOTE:** This function **must** be called from within a Tokio runtime.
-    ///
-    /// # Errors
-    /// This function returns an error if the runtime crashes.
-    #[inline]
-    pub async fn try_run_async(self) -> Result<(), Error> { self.try_run_local().await }
-
-    /// Run the Vixen runtime.
-    ///
-    /// **NOTE:** This function **must** be called from within a Tokio
-    /// [`LocalSet`].
+    /// Error returning variant of [`Self::run_async`].
     ///
     /// # Errors
     /// This function returns an error if the runtime crashes.
     #[tracing::instrument("Runtime::run", skip(self))]
-    pub async fn try_run_local(self) -> Result<(), Error> {
+    pub async fn try_run_async(self) -> Result<(), Error> {
         enum StopType<S, X> {
             Signal(S),
             Buffer(Result<std::convert::Infallible, Error>),
@@ -151,6 +215,7 @@ impl<M: MetricsFactory> Runtime<M> {
             yellowstone_cfg: _,
             sources: _,
             commitment_filter: _,
+            from_slot_filter,
             buffer_cfg,
             pipelines,
             counters,
@@ -194,7 +259,9 @@ impl<M: MetricsFactory> Runtime<M> {
             struct CtrlC;
 
             impl fmt::Debug for CtrlC {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("^C")
+                }
             }
 
             signal = tokio::signal::ctrl_c()

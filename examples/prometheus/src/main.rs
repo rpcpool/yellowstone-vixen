@@ -60,6 +60,7 @@ fn main() {
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
         .metrics(vixen::metrics::Prometheus)
         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
+        // .from_slot(slot_number)
         .build(config)
         .run();
 }

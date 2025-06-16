@@ -6,14 +6,15 @@ Vixen consumes Dragon’s Mouth gRPC streams and routes program-specific change 
 
 ## Table of Contents
 
-1. [Problem Solving](#problem-solving)
-2. [Features](#features)
-3. [Quick Start](#quick-start)
-4. [Examples](#examples)
-5. [Architecture Diagram](#architecture-diagram)
-6. [Dragon’s Mouth Integration](#dragons-mouth)
-7. [Developer Resources](#developer-resources)
-8. [Maintainers](#maintainers)
+- [Yellowstone Vixen](#yellowstone-vixen)
+  - [Table of Contents](#table-of-contents)
+  - [Problem Solving](#problem-solving)
+  - [Features](#features)
+  - [Quick Start](#quick-start)
+  - [Supported Programs](#supported-programs)
+  - [Dragon's Mouth](#dragons-mouth)
+  - [Developer Resources](#developer-resources)
+  - [Maintainers](#maintainers)
 
 ## Problem Solving
 
@@ -73,7 +74,7 @@ fn main() {
 
     yellowstone_vixen::Runtime::builder()
         .account(Pipeline::new(AccountParser, [Logger]))
-        .account(Pipeline::new(InstructionParser, [Logger]))
+        .instruction(Pipeline::new(InstructionParser, [Logger]))
         .metrics(yellowstone_vixen::metrics::Prometheus)
         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
         .build(config)
@@ -92,6 +93,28 @@ To run prometheus, you need to have docker and docker-compose installed on your 
 ```bash
 sudo docker-compose up
 ```
+
+## Supported Programs
+
+| Address                                        | Public Name                        | Parser                                                                                                                                   |
+| ---------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `boop8hVGQGqehUK2iVEMEnMrL5RbjywRzHKBmBE7ry4`  | **Boop.fun**                       | [yellowstone-vixen-boop-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/boop-parser)                               |
+| `JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4`  | **Jupiter Aggregator v6**          | [yellowstone-vixen-jupiter-swap-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/jupiter-swap-parser)               |
+| `LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF`  | **Kamino Limit Order**             | [yellowstone-vixen-kamino-limit-orders-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/kamino-limit-orders-parser) |
+| `cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG`  | **Meteora DAMM v2**                | [yellowstone-vixen-meteora-amm-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/meteora-amm-parser)                 |
+| `dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN`  | **Meteora Dynamic Bonding Curve**  | [yellowstone-vixen-meteora-dbc-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/meteora-dbc-parser)                 |
+| `LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo`  | **Meteora DLMM**                   | [yellowstone-vixen-meteora-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/meteora-parser)                         |
+| `Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB` | **Meteora Pools**                  | [yellowstone-vixen-meteora-pools-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/meteora-pools-parser)             |
+| `24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi` | **Meteora Vault**                  | [yellowstone-vixen-meteora-vault-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/meteora-vault-parser)             |
+| `MoonCVVNZFSYkqNXP6bxHLPL6QQJiMagDL3qcqUQTrG`  | **Moonshot**                       | [yellowstone-vixen-moonshot-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/moonshot-parser)                       |
+| `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc`  | **Whirlpools**                     | [yellowstone-vixen-orca-whirlpool-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/orca-whirlpool-parser)           |
+| `pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA`  | **Pump.fun AMM**                   | [yellowstone-vixen-pump-swaps-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/pump-swaps-parser)                   |
+| `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`  | **Pump.fun**                       | [yellowstone-vixen-pumpfun-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/pumpfun-parser)                         |
+| `675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8` | **Raydium Liquidity Pool V4**      | [yellowstone-vixen-raydium-amm-v4-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/raydium-amm-v4-parser)           |
+| `CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK` | **Raydium Concentrated Liquidity** | [yellowstone-vixen-raydium-clmm-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/raydium-clmm-parser)               |
+| `CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C` | **Raydium CPMM**                   | [yellowstone-vixen-raydium-cpmm-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/raydium-cpmm-parser)               |
+| `LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj`  | **Raydium Launchpad**              | [yellowstone-vixen-raydium-launchpad-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/raydium-launchpad-parser)     |
+| `5U3EU2ubXtK84QcRjWVmYt9RaDyA8gKxdUrPFXmZyaki` | **Virtuals**                       | [yellowstone-vixen-virtuals-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/virtuals-parser)                       |
 
 ## Dragon's Mouth
 

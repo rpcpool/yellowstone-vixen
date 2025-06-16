@@ -165,6 +165,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             metrics,
             sources,
             commitment_level,
+            from_slot_filter,
             extra: StreamKind(desc_sets, channels),
         } = self;
         let () = err?;
@@ -189,6 +190,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             metrics,
             sources,
             extra: RuntimeKind,
+            from_slot_filter,
         }
         .try_build(runtime_cfg)?;
 
