@@ -1,0 +1,14 @@
+[package]
+name = "yellowstone-grpc-source"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+async-trait = "0.1.88"
+tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
+tracing = "0.1.40"
+futures-util = { version = "0.3.30", features = ["sink"] }
+yellowstone-vixen = { workspace = true }
+yellowstone-vixen-core = { workspace = true }
+yellowstone-grpc-proto = { workspace = true }
+yellowstone-grpc-client = { workspace = true }

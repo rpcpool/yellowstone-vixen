@@ -1434,6 +1434,7 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
 ]
@@ -4135,6 +4136,21 @@ dependencies = [
  "solana-program-error",
  "solana-program-memory",
  "solana-pubkey",
+]
+
+[[package]]
+name = "solana-accounts-rpc-source"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "solana-client",
+ "solana-commitment-config",
+ "solana-pubkey",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8062,6 +8078,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-grpc-source"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures-util",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen"
 version = "0.3.0"
 dependencies = [
@@ -8074,9 +8104,6 @@ dependencies = [
  "prometheus",
  "serde",
  "smallvec",
- "solana-client",
- "solana-commitment-config",
- "solana-pubkey",
  "thiserror 1.0.69",
  "tokio",
  "topograph",

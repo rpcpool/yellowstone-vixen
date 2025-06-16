@@ -11,9 +11,8 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{
-    self as vixen, sources::yellowstone_grpc::YellowstoneGrpcSource, Pipeline,
-};
+use yellowstone_grpc_source::YellowstoneGrpcSource;
+use yellowstone_vixen::{self as vixen, Pipeline};
 use yellowstone_vixen_parser::{
     block_meta::BlockMetaParser,
     token_extension_program::{

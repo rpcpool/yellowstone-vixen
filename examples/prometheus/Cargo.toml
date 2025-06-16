@@ -18,3 +18,4 @@ yellowstone-vixen-parser = { workspace = true, features = [
   "raydium",
   "block-meta",
 ] }
+yellowstone-grpc-source = { workspace = true }

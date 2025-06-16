@@ -6,17 +6,11 @@
 //! The `Source` trait is implemented by the `yellowstone_grpc` module.
 
 use async_trait::async_trait;
-use tokio::sync::mpsc::Sender;
+use tokio::{sync::mpsc::Sender, task::JoinSet};
 use vixen_core::Filters;
 use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
 
 use crate::config::YellowstoneConfig;
-
-/// A `Source` implementation for the Yellowstone gRPC API.
-pub mod yellowstone_grpc;
-
-/// A `Source` implementation for Solana Accounts backfilling through the RPC API.
-pub mod solana_accounts_rpc;
 
 /// This trait defines the behavior for data `Sources` that can be used to connect to it and
 ///  send the updates to a channel.
@@ -26,7 +20,7 @@ pub trait Source: std::fmt::Debug + Send + 'static {
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
-    ) -> Result<(), crate::Error>;
+    ) -> Result<JoinSet<()>, crate::Error>;
 
     /// Set the filters to use for the `Source`. In general you define the implementations here but then the method
     ///  the users call is `filters`, which has a check to not override the filters if they are already set on top of this method.
