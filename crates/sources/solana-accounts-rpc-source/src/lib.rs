@@ -28,9 +28,7 @@ pub struct SolanaAccountsRpcSource {
 impl SolanaAccountsRpcSource {
     /// Create a new `SolanaAccountsRpcSource`.
     #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     fn get_commitment_config(&self) -> CommitmentConfig {
         match self.filters {
@@ -38,6 +36,7 @@ impl SolanaAccountsRpcSource {
                 global_filters:
                     GlobalFilters {
                         commitment: Some(CommitmentLevel::Finalized),
+                        ..
                     },
                 ..
             }) => CommitmentConfig::finalized(),
@@ -45,6 +44,7 @@ impl SolanaAccountsRpcSource {
                 global_filters:
                     GlobalFilters {
                         commitment: Some(CommitmentLevel::Processed),
+                        ..
                     },
                 ..
             }) => CommitmentConfig::processed(),
@@ -151,17 +151,13 @@ impl Source for SolanaAccountsRpcSource {
         Ok(tasks_set)
     }
 
-    fn set_filters_unchecked(&mut self, filters: Filters) {
-        self.filters = Some(filters);
-    }
+    fn set_filters_unchecked(&mut self, filters: Filters) { self.filters = Some(filters); }
 
     fn set_config_unchecked(&mut self, config: YellowstoneConfig) {
         self.config = Some(config.into());
     }
 
-    fn get_filters(&self) -> &Option<Filters> {
-        &self.filters
-    }
+    fn get_filters(&self) -> &Option<Filters> { &self.filters }
 
     fn get_config(&self) -> Option<YellowstoneConfig> {
         self.config.clone().map(SolanaAccountsRpcConfig::into)

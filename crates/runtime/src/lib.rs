@@ -97,9 +97,7 @@ pub struct Runtime<M: MetricsFactory> {
 
 impl Runtime<NullMetrics> {
     /// Create a new runtime builder.
-    pub fn builder() -> RuntimeBuilder {
-        RuntimeBuilder::default()
-    }
+    pub fn builder() -> RuntimeBuilder { RuntimeBuilder::default() }
 }
 
 impl<M: MetricsFactory> Runtime<M> {
@@ -141,9 +139,7 @@ impl<M: MetricsFactory> Runtime<M> {
     /// }
     /// ```
     #[inline]
-    pub fn run(self) {
-        util::handle_fatal(self.try_run());
-    }
+    pub fn run(self) { util::handle_fatal(self.try_run()); }
 
     /// Error returning variant of [`Self::run`].
     ///
@@ -193,9 +189,7 @@ impl<M: MetricsFactory> Runtime<M> {
     /// }
     /// ```
     #[inline]
-    pub async fn run_async(self) {
-        util::handle_fatal(self.try_run_async().await);
-    }
+    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
 
     /// Error returning variant of [`Self::run_async`].
     ///
@@ -215,7 +209,7 @@ impl<M: MetricsFactory> Runtime<M> {
             yellowstone_cfg: _,
             sources: _,
             commitment_filter: _,
-            from_slot_filter,
+            from_slot_filter: _,
             buffer_cfg,
             pipelines,
             counters,
@@ -259,9 +253,7 @@ impl<M: MetricsFactory> Runtime<M> {
             struct CtrlC;
 
             impl fmt::Debug for CtrlC {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    f.write_str("^C")
-                }
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
             }
 
             signal = tokio::signal::ctrl_c()
@@ -365,7 +357,12 @@ impl<M: MetricsFactory> Runtime<M> {
         let (tx, rx) =
             mpsc::channel::<Result<SubscribeUpdate, Status>>(self.buffer_cfg.sources_channel_size);
 
-        let filters = self.pipelines.filters().commitment(self.commitment_filter);
+        let filters = self
+            .pipelines
+            .filters()
+            .commitment(self.commitment_filter)
+            .from_slot(self.from_slot_filter);
+
         let mut set = JoinSet::new();
 
         while let Some(mut source) = self.sources.pop() {

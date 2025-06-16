@@ -535,6 +535,8 @@ pub struct Filters {
 pub struct GlobalFilters {
     /// The commitment level for the subscription.
     pub commitment: Option<CommitmentLevel>,
+    /// The from slot filter for the subscription.
+    pub from_slot: Option<u64>,
 }
 
 impl Filters {
@@ -553,6 +555,15 @@ impl Filters {
     #[must_use]
     pub fn commitment(mut self, commitment: Option<CommitmentLevel>) -> Self {
         self.global_filters.commitment = commitment;
+
+        self
+    }
+
+    /// Set the from slot filter.
+    #[inline]
+    #[must_use]
+    pub fn from_slot(mut self, from_slot: Option<u64>) -> Self {
+        self.global_filters.from_slot = from_slot;
 
         self
     }
@@ -610,7 +621,7 @@ impl From<Filters> for SubscribeRequest {
                 .map(|commitment| commitment as i32),
             accounts_data_slice: vec![],
             ping: None,
-            from_slot: None,
+            from_slot: value.global_filters.from_slot,
         }
     }
 }
