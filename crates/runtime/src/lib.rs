@@ -365,7 +365,7 @@ impl<M: MetricsFactory> Runtime<M> {
 
         let mut set = JoinSet::new();
 
-        while let Some(mut source) = self.sources.pop() {
+    for mut source in self.sources.drain(..) {
             let tx = tx.clone();
             source.config(self.yellowstone_cfg.clone());
             source.filters(filters.clone());
