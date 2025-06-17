@@ -11,6 +11,7 @@ use std::path::PathBuf;
 
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use yellowstone_grpc_source::YellowstoneGrpcSource;
 use yellowstone_vixen::{self as vixen, vixen_core};
 
 mod account {
@@ -74,6 +75,7 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::stream::Server::builder()
+        .source(YellowstoneGrpcSource::new())
         .account(Parser)
         .build(config)
         .run();

@@ -128,6 +128,7 @@ impl<M: MetricsFactory> Runtime<M> {
     /// // NOTE: The main function is not async
     /// fn main() {
     ///     Runtime::builder()
+    ///         .source(YellowstoneGrpcSource::new())
     ///         .account(Pipeline::new(TokenProgramAccParser, [MyHandler]))
     ///         .account(Pipeline::new(TokenExtensionProgramAccParser, [MyHandler]))
     ///         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [MyHandler]))
@@ -177,6 +178,7 @@ impl<M: MetricsFactory> Runtime<M> {
     /// #[tokio::main]
     /// async fn main() {
     ///     Runtime::builder()
+    ///         .source(YellowstoneGrpcSource::new())
     ///         .account(Pipeline::new(TokenProgramAccParser, [MyHandler]))
     ///         .account(Pipeline::new(TokenExtensionProgramAccParser, [MyHandler]))
     ///         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [MyHandler]))
@@ -365,13 +367,15 @@ impl<M: MetricsFactory> Runtime<M> {
 
         let mut set = JoinSet::new();
 
-    for mut source in self.sources.drain(..) {
+        for mut source in self.sources.drain(..) {
             let tx = tx.clone();
             source.config(self.yellowstone_cfg.clone());
             source.filters(filters.clone());
 
             set.spawn(async move {
-                source.connect(tx).await.expect("Source connection failed");
+                source.connect(tx).await.unwrap_or_else(|_| {
+                    panic!("Source connection failed for: {}", source.name());
+                });
             });
         }
 

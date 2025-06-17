@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
+use solana_account_decoder_client_types::UiAccountEncoding;
 use solana_client::{
     nonblocking::rpc_client::RpcClient,
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
@@ -64,10 +65,9 @@ pub struct SolanaAccountsRpcConfig {
 
 #[async_trait]
 impl Source for SolanaAccountsRpcSource {
-    async fn connect(
-        &self,
-        tx: Sender<Result<SubscribeUpdate, Status>>,
-    ) -> Result<JoinSet<()>, VixenError> {
+    fn name(&self) -> String { "solana-accounts-rpc".to_string() }
+
+    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
         // // We require that config and filters are set before connecting to the `Source`
         let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
         let config = self.config.clone().ok_or(VixenError::ConfigError)?;
@@ -81,6 +81,7 @@ impl Source for SolanaAccountsRpcSource {
                     let config = config.clone();
                     let tx = tx.clone();
                     let filter_id = filter_id.clone();
+                    let source_name = self.name();
 
                     let client = RpcClient::new_with_timeout_and_commitment(
                         config.endpoint,
@@ -89,20 +90,30 @@ impl Source for SolanaAccountsRpcSource {
                     );
 
                     tasks_set.spawn(async move {
-                        // TODO: Only get pubkey from get_program_accounts_with_config() using data_slice
-                        //  and then use get_multiple_accounts() for ~batching (process batches concurrently)
+                        let slot = client.get_slot().await;
+
+                        if let Err(e) = &slot {
+                            tracing::error!(
+                                "Failed to get slot: {} for source: {}, filter: {}",
+                                e,
+                                source_name,
+                                filter_id
+                            );
+                        }
+                        let slot = slot.unwrap();
+
                         let accounts = client
                             .get_program_accounts_with_config(
                                 &program_id,
                                 RpcProgramAccountsConfig {
                                     filters: None,
                                     account_config: RpcAccountInfoConfig {
-                                        encoding: None,
+                                        encoding: Some(UiAccountEncoding::Base64),
                                         data_slice: None,
                                         commitment: None, // Already set in the client
                                         min_context_slot: None,
                                     },
-                                    with_context: Some(false),
+                                    with_context: Some(true),
                                     sort_results: Some(false),
                                 },
                             )
@@ -115,7 +126,12 @@ impl Source for SolanaAccountsRpcSource {
                             });
 
                         if let Err(e) = &accounts {
-                            tracing::error!("Failed to get program accounts: {}", e);
+                            tracing::error!(
+                                "Failed to get program accounts: {} for source: {}, filter: {}",
+                                e,
+                                source_name,
+                                filter_id
+                            );
                         }
 
                         for (acc_pubkey, account) in accounts.unwrap() {
@@ -133,14 +149,19 @@ impl Source for SolanaAccountsRpcSource {
                                         write_version: 0,
                                         txn_signature: None,
                                     }),
-                                    slot: 0,
+                                    slot,
                                     is_startup: true,
                                 })),
                             };
 
                             let res = tx.send(Ok(update)).await;
+
                             if res.is_err() {
-                                tracing::error!("Failed to send update to buffer");
+                                tracing::error!(
+                                    "Failed to send update to buffer for source: {}, filter: {}",
+                                    source_name,
+                                    filter_id
+                                );
                             }
                         }
                     });
@@ -148,7 +169,9 @@ impl Source for SolanaAccountsRpcSource {
             }
         }
 
-        Ok(tasks_set)
+        tasks_set.join_all().await;
+
+        Ok(())
     }
 
     fn set_filters_unchecked(&mut self, filters: Filters) { self.filters = Some(filters); }

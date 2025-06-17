@@ -1,6 +1,6 @@
 [workspace]
-members = ["crates/*", "examples/*", "crates/sources/solana-accounts-rpc-source", "crates/sources/yellowstone-grpc-source"]
-exclude = ["examples/streams-ts/", "crates/sources/"]
+members = ["crates/*", "examples/*"]
+exclude = ["examples/streams-ts/"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -31,8 +31,8 @@ yellowstone-vixen-raydium-launchpad-parser = { path = "crates/raydium-launchpad-
 yellowstone-vixen-virtuals-parser = { path = "crates/virtuals-parser", version = "0.3.0" }
 
 # Sources
-solana-accounts-rpc-source = { path = "crates/sources/solana-accounts-rpc-source", version = "0.1.0" }
-yellowstone-grpc-source = { path = "crates/sources/yellowstone-grpc-source", version = "0.1.0" }
+solana-accounts-rpc-source = { path = "crates/solana-accounts-rpc-source", version = "0.1.0" }
+yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.1.0" }
 
 
 # helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 

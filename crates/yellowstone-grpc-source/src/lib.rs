@@ -26,10 +26,9 @@ impl YellowstoneGrpcSource {
 
 #[async_trait]
 impl Source for YellowstoneGrpcSource {
-    async fn connect(
-        &self,
-        tx: Sender<Result<SubscribeUpdate, Status>>,
-    ) -> Result<JoinSet<()>, VixenError> {
+    fn name(&self) -> String { "yellowstone-grpc".to_string() }
+
+    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
         // We require that config and filters are set before connecting to the `Source`
         let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
         let config = self.config.clone().ok_or(VixenError::ConfigError)?;
@@ -67,7 +66,9 @@ impl Source for YellowstoneGrpcSource {
             });
         }
 
-        Ok(tasks_set)
+        tasks_set.join_all().await;
+
+        Ok(())
     }
 
     fn set_filters_unchecked(&mut self, filters: Filters) { self.filters = Some(filters); }

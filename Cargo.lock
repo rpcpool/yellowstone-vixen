@@ -1422,6 +1422,7 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
 ]
@@ -1431,12 +1432,14 @@ name = "example-vixen-prometheus"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "solana-accounts-rpc-source",
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
  "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-raydium-amm-v4-parser",
 ]
 
 [[package]]
@@ -1449,6 +1452,7 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
 ]
 
@@ -1461,6 +1465,7 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-jupiter-swap-parser",
  "yellowstone-vixen-kamino-limit-orders-parser",
@@ -4157,6 +4162,7 @@ name = "solana-accounts-rpc-source"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "solana-account-decoder-client-types",
  "solana-client",
  "solana-commitment-config",
  "solana-pubkey",
