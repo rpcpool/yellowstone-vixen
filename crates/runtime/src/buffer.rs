@@ -30,12 +30,11 @@ impl Buffer {
             .and_then(std::convert::identity)
     }
 
-    // TODO: use never
-    pub async fn wait_for_stop(&mut self) -> Result<std::convert::Infallible, crate::Error> {
+    pub async fn wait_for_stop(&mut self) -> Result<(), crate::Error> {
         (&mut self.0)
             .await
             .map_err(|e| std::io::Error::from(e).into())
-            .and_then(|r| r.and(Err(crate::Error::ClientHangup)))
+            .map(|_| ())
     }
 }
 
@@ -173,7 +172,10 @@ impl Buffer {
 
                         let update = match event {
                             Event::Update(Some(u)) => u,
-                            Event::Update(None) => break Err(crate::Error::ServerHangup),
+                            Event::Update(None) => {
+                                tracing::warn!("Server stopped sending updates");
+                                break Ok(StopCode::default());
+                            },
                             Event::Stop(c) => break Ok(c),
                         };
 

@@ -201,7 +201,7 @@ impl<M: MetricsFactory> Runtime<M> {
     pub async fn try_run_async(self) -> Result<(), Error> {
         enum StopType<S, X> {
             Signal(S),
-            Buffer(Result<std::convert::Infallible, Error>),
+            Buffer(Result<(), Error>),
             Exporter(Result<Result<stop::StopCode, X>, tokio::task::JoinError>),
         }
 
@@ -268,7 +268,11 @@ impl<M: MetricsFactory> Runtime<M> {
 
         let stop_ty = tokio::select! {
             s = signal => StopType::Signal(s),
-            b = buffer.wait_for_stop() => StopType::Buffer(b),
+            b = buffer.wait_for_stop() => {
+                println!("stop type buffer");
+
+                StopType::Buffer(b)
+            },
             Some(x) = &mut exporter => StopType::Exporter(x),
         };
 
@@ -285,9 +289,8 @@ impl<M: MetricsFactory> Runtime<M> {
                 "Signal handler returned None",
             )
             .into()),
-            // Not sure why the compiler couldn't figure this one out
-            StopType::Buffer(Ok(o)) => match o {},
-            StopType::Signal(Err(e)) | StopType::Buffer(Err(e)) => Err(e),
+            StopType::Buffer(result) => result,
+            StopType::Signal(Err(e)) => Err(e),
             StopType::Exporter(Ok(Ok(..))) => {
                 Err(Error::MetricsExporter("Exporter stopped early".into()))
             },

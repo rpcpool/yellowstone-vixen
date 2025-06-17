@@ -142,7 +142,7 @@ pub mod stop {
     use tokio::sync::oneshot;
 
     /// A signal that a task has received a request to stop.
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     #[must_use = "Consider calling .as_unit()"]
     #[allow(missing_copy_implementations)]
     #[repr(transparent)]
