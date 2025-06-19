@@ -10,9 +10,6 @@ pub fn check_min_accounts_req(actual: usize, expected: usize) -> Result<()> {
     }
 }
 
-pub const IX_DISCRIMINATOR_SIZE: usize = 8;
-pub const ACC_DISCRIMINATOR_SIZE: usize = 8;
-
 yellowstone_vixen_core::pubkey_convert_helpers!(spl_pod::solana_program::pubkey::Pubkey);
 #[cfg(feature = "proto")]
 yellowstone_vixen_core::proto_helper_traits!();

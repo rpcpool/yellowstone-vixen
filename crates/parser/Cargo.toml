@@ -47,5 +47,4 @@ token-extensions = [
   "token-program",
 ]
 token-program = ["dep:spl-token"]
-raydium = []
 tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]
