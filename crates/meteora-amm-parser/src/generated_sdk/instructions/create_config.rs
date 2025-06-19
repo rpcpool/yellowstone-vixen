@@ -93,6 +93,7 @@ impl Default for CreateConfigInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateConfigInstructionArgs {
+    pub index: u64,
     pub pool_fees: PoolFeeParameters,
     pub sqrt_min_price: u128,
     pub sqrt_max_price: u128,
@@ -100,7 +101,6 @@ pub struct CreateConfigInstructionArgs {
     pub pool_creator_authority: Pubkey,
     pub activation_type: u8,
     pub collect_fee_mode: u8,
-    pub index: u64,
 }
 
 /// Instruction builder for `CreateConfig`.
@@ -119,6 +119,7 @@ pub struct CreateConfigBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     event_authority: Option<solana_program::pubkey::Pubkey>,
     program: Option<solana_program::pubkey::Pubkey>,
+    index: Option<u64>,
     pool_fees: Option<PoolFeeParameters>,
     sqrt_min_price: Option<u128>,
     sqrt_max_price: Option<u128>,
@@ -126,7 +127,6 @@ pub struct CreateConfigBuilder {
     pool_creator_authority: Option<Pubkey>,
     activation_type: Option<u8>,
     collect_fee_mode: Option<u8>,
-    index: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -164,6 +164,12 @@ impl CreateConfigBuilder {
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
+        self
+    }
+
+    #[inline(always)]
+    pub fn index(&mut self, index: u64) -> &mut Self {
+        self.index = Some(index);
         self
     }
 
@@ -209,12 +215,6 @@ impl CreateConfigBuilder {
         self
     }
 
-    #[inline(always)]
-    pub fn index(&mut self, index: u64) -> &mut Self {
-        self.index = Some(index);
-        self
-    }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -247,6 +247,7 @@ impl CreateConfigBuilder {
             program: self.program.expect("program is not set"),
         };
         let args = CreateConfigInstructionArgs {
+            index: self.index.clone().expect("index is not set"),
             pool_fees: self.pool_fees.clone().expect("pool_fees is not set"),
             sqrt_min_price: self
                 .sqrt_min_price
@@ -272,7 +273,6 @@ impl CreateConfigBuilder {
                 .collect_fee_mode
                 .clone()
                 .expect("collect_fee_mode is not set"),
-            index: self.index.clone().expect("index is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -443,6 +443,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             system_program: None,
             event_authority: None,
             program: None,
+            index: None,
             pool_fees: None,
             sqrt_min_price: None,
             sqrt_max_price: None,
@@ -450,7 +451,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             pool_creator_authority: None,
             activation_type: None,
             collect_fee_mode: None,
-            index: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -499,6 +499,12 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
+    pub fn index(&mut self, index: u64) -> &mut Self {
+        self.instruction.index = Some(index);
+        self
+    }
+
+    #[inline(always)]
     pub fn pool_fees(&mut self, pool_fees: PoolFeeParameters) -> &mut Self {
         self.instruction.pool_fees = Some(pool_fees);
         self
@@ -537,12 +543,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn collect_fee_mode(&mut self, collect_fee_mode: u8) -> &mut Self {
         self.instruction.collect_fee_mode = Some(collect_fee_mode);
-        self
-    }
-
-    #[inline(always)]
-    pub fn index(&mut self, index: u64) -> &mut Self {
-        self.instruction.index = Some(index);
         self
     }
 
@@ -589,6 +589,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = CreateConfigInstructionArgs {
+            index: self.instruction.index.clone().expect("index is not set"),
             pool_fees: self
                 .instruction
                 .pool_fees
@@ -624,7 +625,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
                 .collect_fee_mode
                 .clone()
                 .expect("collect_fee_mode is not set"),
-            index: self.instruction.index.clone().expect("index is not set"),
         };
         let instruction = CreateConfigCpi {
             __program: self.instruction.__program,
@@ -661,6 +661,7 @@ struct CreateConfigCpiBuilderInstruction<'a, 'b> {
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    index: Option<u64>,
     pool_fees: Option<PoolFeeParameters>,
     sqrt_min_price: Option<u128>,
     sqrt_max_price: Option<u128>,
@@ -668,7 +669,6 @@ struct CreateConfigCpiBuilderInstruction<'a, 'b> {
     pool_creator_authority: Option<Pubkey>,
     activation_type: Option<u8>,
     collect_fee_mode: Option<u8>,
-    index: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,
