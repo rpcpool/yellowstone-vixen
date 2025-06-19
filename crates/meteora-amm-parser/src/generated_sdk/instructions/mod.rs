@@ -15,11 +15,13 @@ pub(crate) mod r#close_config;
 pub(crate) mod r#close_position;
 pub(crate) mod r#create_claim_fee_operator;
 pub(crate) mod r#create_config;
+pub(crate) mod r#create_dynamic_config;
 pub(crate) mod r#create_position;
 pub(crate) mod r#create_token_badge;
 pub(crate) mod r#fund_reward;
 pub(crate) mod r#initialize_customizable_pool;
 pub(crate) mod r#initialize_pool;
+pub(crate) mod r#initialize_pool_with_dynamic_config;
 pub(crate) mod r#initialize_reward;
 pub(crate) mod r#lock_position;
 pub(crate) mod r#permanent_lock_position;
@@ -35,10 +37,11 @@ pub(crate) mod r#withdraw_ineligible_reward;
 pub use self::{
     r#add_liquidity::*, r#claim_partner_fee::*, r#claim_position_fee::*, r#claim_protocol_fee::*,
     r#claim_reward::*, r#close_claim_fee_operator::*, r#close_config::*, r#close_position::*,
-    r#create_claim_fee_operator::*, r#create_config::*, r#create_position::*,
-    r#create_token_badge::*, r#fund_reward::*, r#initialize_customizable_pool::*,
-    r#initialize_pool::*, r#initialize_reward::*, r#lock_position::*, r#permanent_lock_position::*,
-    r#refresh_vesting::*, r#remove_all_liquidity::*, r#remove_liquidity::*, r#set_pool_status::*,
-    r#swap::*, r#update_reward_duration::*, r#update_reward_funder::*,
-    r#withdraw_ineligible_reward::*,
+    r#create_claim_fee_operator::*, r#create_config::*, r#create_dynamic_config::*,
+    r#create_position::*, r#create_token_badge::*, r#fund_reward::*,
+    r#initialize_customizable_pool::*, r#initialize_pool::*,
+    r#initialize_pool_with_dynamic_config::*, r#initialize_reward::*, r#lock_position::*,
+    r#permanent_lock_position::*, r#refresh_vesting::*, r#remove_all_liquidity::*,
+    r#remove_liquidity::*, r#set_pool_status::*, r#swap::*, r#update_reward_duration::*,
+    r#update_reward_funder::*, r#withdraw_ineligible_reward::*,
 };

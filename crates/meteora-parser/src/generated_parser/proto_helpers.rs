@@ -9,10 +9,7 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use sdk::types::LiquidityParameterByStrategy;
-
-    use crate as sdk;
-    use crate::proto_def;
+    use crate::{proto_def, types::LiquidityParameterByStrategy};
     impl IntoProto<proto_def::LiquidityParameterByStrategy> for LiquidityParameterByStrategy {
         fn into_proto(self) -> proto_def::LiquidityParameterByStrategy {
             proto_def::LiquidityParameterByStrategy {
@@ -24,18 +21,18 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::StrategyParameters;
+    use crate::types::StrategyParameters;
     impl IntoProto<proto_def::StrategyParameters> for StrategyParameters {
         fn into_proto(self) -> proto_def::StrategyParameters {
             proto_def::StrategyParameters {
                 min_bin_id: self.min_bin_id,
                 max_bin_id: self.max_bin_id,
                 strategy_type: self.strategy_type as i32,
-                parameteres: self.parameteres.to_vec(),
+                parameteres: self.parameteres.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
-    use sdk::types::BinLiquidityDistributionByWeight;
+    use crate::types::BinLiquidityDistributionByWeight;
     impl IntoProto<proto_def::BinLiquidityDistributionByWeight> for BinLiquidityDistributionByWeight {
         fn into_proto(self) -> proto_def::BinLiquidityDistributionByWeight {
             proto_def::BinLiquidityDistributionByWeight {
@@ -44,7 +41,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::CompressedBinDepositAmount;
+    use crate::types::CompressedBinDepositAmount;
     impl IntoProto<proto_def::CompressedBinDepositAmount> for CompressedBinDepositAmount {
         fn into_proto(self) -> proto_def::CompressedBinDepositAmount {
             proto_def::CompressedBinDepositAmount {
@@ -53,7 +50,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::BinLiquidityDistribution;
+    use crate::types::BinLiquidityDistribution;
     impl IntoProto<proto_def::BinLiquidityDistribution> for BinLiquidityDistribution {
         fn into_proto(self) -> proto_def::BinLiquidityDistribution {
             proto_def::BinLiquidityDistribution {
@@ -63,7 +60,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::LiquidityParameter;
+    use crate::types::LiquidityParameter;
     impl IntoProto<proto_def::LiquidityParameter> for LiquidityParameter {
         fn into_proto(self) -> proto_def::LiquidityParameter {
             proto_def::LiquidityParameter {
@@ -77,7 +74,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::CustomizableParams;
+    use crate::types::CustomizableParams;
     impl IntoProto<proto_def::CustomizableParams> for CustomizableParams {
         fn into_proto(self) -> proto_def::CustomizableParams {
             proto_def::CustomizableParams {
@@ -89,11 +86,11 @@ pub mod proto_types_parsers {
                 activation_point: self.activation_point,
                 creator_pool_on_off_control: self.creator_pool_on_off_control,
                 base_fee_power_factor: self.base_fee_power_factor.into(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
-    use sdk::types::CompressedBinDepositAmount2;
+    use crate::types::CompressedBinDepositAmount2;
     impl IntoProto<proto_def::CompressedBinDepositAmount2> for CompressedBinDepositAmount2 {
         fn into_proto(self) -> proto_def::CompressedBinDepositAmount2 {
             proto_def::CompressedBinDepositAmount2 {
@@ -102,7 +99,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::BinLiquidityReduction;
+    use crate::types::BinLiquidityReduction;
     impl IntoProto<proto_def::BinLiquidityReduction> for BinLiquidityReduction {
         fn into_proto(self) -> proto_def::BinLiquidityReduction {
             proto_def::BinLiquidityReduction {
@@ -111,33 +108,27 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::Bin;
+    use crate::types::Bin;
     impl IntoProto<proto_def::Bin> for Bin {
         fn into_proto(self) -> proto_def::Bin {
             proto_def::Bin {
                 amount_x: self.amount_x,
                 amount_y: self.amount_y,
-                price: self.price.to_le_bytes().to_vec(),
-                liquidity_supply: self.liquidity_supply.to_le_bytes().to_vec(),
+                price: self.price.to_string(),
+                liquidity_supply: self.liquidity_supply.to_string(),
                 reward_per_token_stored: self
                     .reward_per_token_stored
                     .into_iter()
-                    .map(|x| x.to_le_bytes().to_vec())
+                    .map(|x| x.to_string())
                     .collect(),
-                fee_amount_x_per_token_stored: self
-                    .fee_amount_x_per_token_stored
-                    .to_le_bytes()
-                    .to_vec(),
-                fee_amount_y_per_token_stored: self
-                    .fee_amount_y_per_token_stored
-                    .to_le_bytes()
-                    .to_vec(),
-                amount_x_in: self.amount_x_in.to_le_bytes().to_vec(),
-                amount_y_in: self.amount_y_in.to_le_bytes().to_vec(),
+                fee_amount_x_per_token_stored: self.fee_amount_x_per_token_stored.to_string(),
+                fee_amount_y_per_token_stored: self.fee_amount_y_per_token_stored.to_string(),
+                amount_x_in: self.amount_x_in.to_string(),
+                amount_y_in: self.amount_y_in.to_string(),
             }
         }
     }
-    use sdk::types::ProtocolFee;
+    use crate::types::ProtocolFee;
     impl IntoProto<proto_def::ProtocolFee> for ProtocolFee {
         fn into_proto(self) -> proto_def::ProtocolFee {
             proto_def::ProtocolFee {
@@ -146,7 +137,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::RewardInfo;
+    use crate::types::RewardInfo;
     impl IntoProto<proto_def::RewardInfo> for RewardInfo {
         fn into_proto(self) -> proto_def::RewardInfo {
             proto_def::RewardInfo {
@@ -155,24 +146,24 @@ pub mod proto_types_parsers {
                 funder: self.funder.to_string(),
                 reward_duration: self.reward_duration,
                 reward_duration_end: self.reward_duration_end,
-                reward_rate: self.reward_rate.to_le_bytes().to_vec(),
+                reward_rate: self.reward_rate.to_string(),
                 last_update_time: self.last_update_time,
                 cumulative_seconds_with_empty_liquidity_reward: self
                     .cumulative_seconds_with_empty_liquidity_reward,
             }
         }
     }
-    use sdk::types::Observation;
+    use crate::types::Observation;
     impl IntoProto<proto_def::Observation> for Observation {
         fn into_proto(self) -> proto_def::Observation {
             proto_def::Observation {
-                cumulative_active_bin_id: self.cumulative_active_bin_id.to_le_bytes().to_vec(),
+                cumulative_active_bin_id: self.cumulative_active_bin_id.to_string(),
                 created_at: self.created_at,
                 last_updated_at: self.last_updated_at,
             }
         }
     }
-    use sdk::types::StaticParameters;
+    use crate::types::StaticParameters;
     impl IntoProto<proto_def::StaticParameters> for StaticParameters {
         fn into_proto(self) -> proto_def::StaticParameters {
             proto_def::StaticParameters {
@@ -186,48 +177,48 @@ pub mod proto_types_parsers {
                 max_bin_id: self.max_bin_id,
                 protocol_share: self.protocol_share.into(),
                 base_fee_power_factor: self.base_fee_power_factor.into(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
-    use sdk::types::VariableParameters;
+    use crate::types::VariableParameters;
     impl IntoProto<proto_def::VariableParameters> for VariableParameters {
         fn into_proto(self) -> proto_def::VariableParameters {
             proto_def::VariableParameters {
                 volatility_accumulator: self.volatility_accumulator,
                 volatility_reference: self.volatility_reference,
                 index_reference: self.index_reference,
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
                 last_update_timestamp: self.last_update_timestamp,
-                padding1: self.padding1.to_vec(),
+                padding1: self.padding1.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
-    use sdk::types::FeeInfo;
+    use crate::types::FeeInfo;
     impl IntoProto<proto_def::FeeInfo> for FeeInfo {
         fn into_proto(self) -> proto_def::FeeInfo {
             proto_def::FeeInfo {
-                fee_x_per_token_complete: self.fee_x_per_token_complete.to_le_bytes().to_vec(),
-                fee_y_per_token_complete: self.fee_y_per_token_complete.to_le_bytes().to_vec(),
+                fee_x_per_token_complete: self.fee_x_per_token_complete.to_string(),
+                fee_y_per_token_complete: self.fee_y_per_token_complete.to_string(),
                 fee_x_pending: self.fee_x_pending,
                 fee_y_pending: self.fee_y_pending,
             }
         }
     }
-    use sdk::types::UserRewardInfo;
+    use crate::types::UserRewardInfo;
     impl IntoProto<proto_def::UserRewardInfo> for UserRewardInfo {
         fn into_proto(self) -> proto_def::UserRewardInfo {
             proto_def::UserRewardInfo {
                 reward_per_token_completes: self
                     .reward_per_token_completes
                     .into_iter()
-                    .map(|x| x.to_le_bytes().to_vec())
+                    .map(|x| x.to_string())
                     .collect(),
                 reward_pendings: self.reward_pendings.to_vec(),
             }
         }
     }
-    use sdk::types::RemainingAccountsSlice;
+    use crate::types::RemainingAccountsSlice;
     impl IntoProto<proto_def::RemainingAccountsSlice> for RemainingAccountsSlice {
         fn into_proto(self) -> proto_def::RemainingAccountsSlice {
             proto_def::RemainingAccountsSlice {
@@ -236,7 +227,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::RemainingAccountsInfo;
+    use crate::types::RemainingAccountsInfo;
     impl IntoProto<proto_def::RemainingAccountsInfo> for RemainingAccountsInfo {
         fn into_proto(self) -> proto_def::RemainingAccountsInfo {
             proto_def::RemainingAccountsInfo {

@@ -83,6 +83,7 @@ fn extension_account_type(data_bytes: &[u8]) -> Result<TokenExtensionAccountType
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum TokenExtensionState {
     ExtendedTokenAccount(ExtendedTokenAccount),
     ExtendedMint(ExtendedMint),
@@ -93,7 +94,7 @@ impl TokenExtensionState {
     pub fn try_unpack(data_bytes: &[u8]) -> ParseResult<Self> {
         let account_type = extension_account_type(data_bytes)?;
 
-        match account_type {
+        let acc = match account_type {
             TokenExtensionAccountType::Mint => Ok(TokenExtensionState::ExtendedMint(
                 ExtendedMint::try_from_data(data_bytes)?,
             )),
@@ -105,7 +106,30 @@ impl TokenExtensionState {
             TokenExtensionAccountType::Multisig => {
                 Ok(TokenExtensionState::Multisig(Multisig::unpack(data_bytes)?))
             },
+        };
+
+        #[cfg(feature = "tracing")]
+        match &acc {
+            Ok(acc) => {
+                tracing::info!(
+                    name: "correctly_parsed_account",
+                    name = "account_update",
+                    program = spl_token_2022::ID.to_string(),
+                    account = acc.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_account",
+                    name = "account_update",
+                    program = spl_token_2022::ID.to_string(),
+                    account = "error",
+                    error = ?e
+                );
+            },
         }
+
+        acc
     }
 }
 

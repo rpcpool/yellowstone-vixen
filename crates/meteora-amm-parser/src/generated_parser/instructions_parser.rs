@@ -19,12 +19,16 @@ use crate::{
         CloseConfig as CloseConfigIxAccounts, ClosePosition as ClosePositionIxAccounts,
         CreateClaimFeeOperator as CreateClaimFeeOperatorIxAccounts,
         CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
+        CreateDynamicConfig as CreateDynamicConfigIxAccounts,
+        CreateDynamicConfigInstructionArgs as CreateDynamicConfigIxData,
         CreatePosition as CreatePositionIxAccounts, CreateTokenBadge as CreateTokenBadgeIxAccounts,
         FundReward as FundRewardIxAccounts, FundRewardInstructionArgs as FundRewardIxData,
         InitializeCustomizablePool as InitializeCustomizablePoolIxAccounts,
         InitializeCustomizablePoolInstructionArgs as InitializeCustomizablePoolIxData,
         InitializePool as InitializePoolIxAccounts,
         InitializePoolInstructionArgs as InitializePoolIxData,
+        InitializePoolWithDynamicConfig as InitializePoolWithDynamicConfigIxAccounts,
+        InitializePoolWithDynamicConfigInstructionArgs as InitializePoolWithDynamicConfigIxData,
         InitializeReward as InitializeRewardIxAccounts,
         InitializeRewardInstructionArgs as InitializeRewardIxData,
         LockPosition as LockPositionIxAccounts, LockPositionInstructionArgs as LockPositionIxData,
@@ -48,7 +52,8 @@ use crate::{
 };
 
 /// CpAmm Instructions
-#[derive(Debug, strum_macros::Display)]
+#[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum CpAmmProgramIx {
     AddLiquidity(AddLiquidityIxAccounts, AddLiquidityIxData),
     ClaimPartnerFee(ClaimPartnerFeeIxAccounts, ClaimPartnerFeeIxData),
@@ -60,6 +65,7 @@ pub enum CpAmmProgramIx {
     ClosePosition(ClosePositionIxAccounts),
     CreateClaimFeeOperator(CreateClaimFeeOperatorIxAccounts),
     CreateConfig(CreateConfigIxAccounts, CreateConfigIxData),
+    CreateDynamicConfig(CreateDynamicConfigIxAccounts, CreateDynamicConfigIxData),
     CreatePosition(CreatePositionIxAccounts),
     CreateTokenBadge(CreateTokenBadgeIxAccounts),
     FundReward(FundRewardIxAccounts, FundRewardIxData),
@@ -68,6 +74,10 @@ pub enum CpAmmProgramIx {
         InitializeCustomizablePoolIxData,
     ),
     InitializePool(InitializePoolIxAccounts, InitializePoolIxData),
+    InitializePoolWithDynamicConfig(
+        InitializePoolWithDynamicConfigIxAccounts,
+        InitializePoolWithDynamicConfigIxData,
+    ),
     InitializeReward(InitializeRewardIxAccounts, InitializeRewardIxData),
     LockPosition(LockPositionIxAccounts, LockPositionIxData),
     PermanentLockPosition(PermanentLockPositionIxAccounts, PermanentLockPositionIxData),
@@ -122,9 +132,10 @@ impl InstructionParser {
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<CpAmmProgramIx> {
         let accounts_len = ix.accounts.len();
+
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let mut ix_data = &ix.data[8..];
-        match ix_discriminator {
+        let ix = match ix_discriminator {
             [181, 157, 89, 67, 143, 182, 52, 72] => {
                 check_min_accounts_req(accounts_len, 14)?;
                 let ix_accounts = AddLiquidityIxAccounts {
@@ -288,6 +299,19 @@ impl InstructionParser {
                 let de_ix_data: CreateConfigIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(CpAmmProgramIx::CreateConfig(ix_accounts, de_ix_data))
             },
+            [81, 251, 122, 78, 66, 57, 208, 82] => {
+                check_min_accounts_req(accounts_len, 5)?;
+                let ix_accounts = CreateDynamicConfigIxAccounts {
+                    config: ix.accounts[0].0.into(),
+                    admin: ix.accounts[1].0.into(),
+                    system_program: ix.accounts[2].0.into(),
+                    event_authority: ix.accounts[3].0.into(),
+                    program: ix.accounts[4].0.into(),
+                };
+                let de_ix_data: CreateDynamicConfigIxData =
+                    BorshDeserialize::deserialize(&mut ix_data)?;
+                Ok(CpAmmProgramIx::CreateDynamicConfig(ix_accounts, de_ix_data))
+            },
             [48, 215, 197, 153, 96, 203, 180, 133] => {
                 check_min_accounts_req(accounts_len, 11)?;
                 let ix_accounts = CreatePositionIxAccounts {
@@ -388,6 +412,38 @@ impl InstructionParser {
                 };
                 let de_ix_data: InitializePoolIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(CpAmmProgramIx::InitializePool(ix_accounts, de_ix_data))
+            },
+            [149, 82, 72, 197, 253, 252, 68, 15] => {
+                check_min_accounts_req(accounts_len, 21)?;
+                let ix_accounts = InitializePoolWithDynamicConfigIxAccounts {
+                    creator: ix.accounts[0].0.into(),
+                    position_nft_mint: ix.accounts[1].0.into(),
+                    position_nft_account: ix.accounts[2].0.into(),
+                    payer: ix.accounts[3].0.into(),
+                    pool_creator_authority: ix.accounts[4].0.into(),
+                    config: ix.accounts[5].0.into(),
+                    pool_authority: ix.accounts[6].0.into(),
+                    pool: ix.accounts[7].0.into(),
+                    position: ix.accounts[8].0.into(),
+                    token_a_mint: ix.accounts[9].0.into(),
+                    token_b_mint: ix.accounts[10].0.into(),
+                    token_a_vault: ix.accounts[11].0.into(),
+                    token_b_vault: ix.accounts[12].0.into(),
+                    payer_token_a: ix.accounts[13].0.into(),
+                    payer_token_b: ix.accounts[14].0.into(),
+                    token_a_program: ix.accounts[15].0.into(),
+                    token_b_program: ix.accounts[16].0.into(),
+                    token2022_program: ix.accounts[17].0.into(),
+                    system_program: ix.accounts[18].0.into(),
+                    event_authority: ix.accounts[19].0.into(),
+                    program: ix.accounts[20].0.into(),
+                };
+                let de_ix_data: InitializePoolWithDynamicConfigIxData =
+                    BorshDeserialize::deserialize(&mut ix_data)?;
+                Ok(CpAmmProgramIx::InitializePoolWithDynamicConfig(
+                    ix_accounts,
+                    de_ix_data,
+                ))
             },
             [95, 135, 192, 196, 242, 129, 230, 68] => {
                 check_min_accounts_req(accounts_len, 9)?;
@@ -583,7 +639,31 @@ impl InstructionParser {
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
+        };
+
+        #[cfg(feature = "tracing")]
+        match &ix {
+            Ok(ix) => {
+                tracing::info!(
+                    name: "correctly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = ix.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            },
         }
+
+        ix
     }
 }
 
@@ -802,14 +882,35 @@ mod proto_parser {
     impl IntoProto<proto_def::CreateConfigIxData> for CreateConfigIxData {
         fn into_proto(self) -> proto_def::CreateConfigIxData {
             proto_def::CreateConfigIxData {
+                index: self.index,
                 pool_fees: Some(self.pool_fees.into_proto()),
-                sqrt_min_price: self.sqrt_min_price.to_le_bytes().to_vec(),
-                sqrt_max_price: self.sqrt_max_price.to_le_bytes().to_vec(),
+                sqrt_min_price: self.sqrt_min_price.to_string(),
+                sqrt_max_price: self.sqrt_max_price.to_string(),
                 vault_config_key: self.vault_config_key.to_string(),
                 pool_creator_authority: self.pool_creator_authority.to_string(),
                 activation_type: self.activation_type.into(),
                 collect_fee_mode: self.collect_fee_mode.into(),
+            }
+        }
+    }
+    use super::CreateDynamicConfigIxAccounts;
+    impl IntoProto<proto_def::CreateDynamicConfigIxAccounts> for CreateDynamicConfigIxAccounts {
+        fn into_proto(self) -> proto_def::CreateDynamicConfigIxAccounts {
+            proto_def::CreateDynamicConfigIxAccounts {
+                config: self.config.to_string(),
+                admin: self.admin.to_string(),
+                system_program: self.system_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::CreateDynamicConfigIxData;
+    impl IntoProto<proto_def::CreateDynamicConfigIxData> for CreateDynamicConfigIxData {
+        fn into_proto(self) -> proto_def::CreateDynamicConfigIxData {
+            proto_def::CreateDynamicConfigIxData {
                 index: self.index,
+                pool_creator_authority: self.pool_creator_authority.to_string(),
             }
         }
     }
@@ -901,15 +1002,7 @@ mod proto_parser {
     impl IntoProto<proto_def::InitializeCustomizablePoolIxData> for InitializeCustomizablePoolIxData {
         fn into_proto(self) -> proto_def::InitializeCustomizablePoolIxData {
             proto_def::InitializeCustomizablePoolIxData {
-                pool_fees: Some(self.pool_fees.into_proto()),
-                sqrt_min_price: self.sqrt_min_price.to_le_bytes().to_vec(),
-                sqrt_max_price: self.sqrt_max_price.to_le_bytes().to_vec(),
-                has_alpha_vault: self.has_alpha_vault,
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
-                sqrt_price: self.sqrt_price.to_le_bytes().to_vec(),
-                activation_type: self.activation_type.into(),
-                collect_fee_mode: self.collect_fee_mode.into(),
-                activation_point: self.activation_point,
+                params: Some(self.params.into_proto()),
             }
         }
     }
@@ -944,9 +1037,49 @@ mod proto_parser {
     impl IntoProto<proto_def::InitializePoolIxData> for InitializePoolIxData {
         fn into_proto(self) -> proto_def::InitializePoolIxData {
             proto_def::InitializePoolIxData {
-                liquidity: self.liquidity.to_le_bytes().to_vec(),
-                sqrt_price: self.sqrt_price.to_le_bytes().to_vec(),
+                liquidity: self.liquidity.to_string(),
+                sqrt_price: self.sqrt_price.to_string(),
                 activation_point: self.activation_point,
+            }
+        }
+    }
+    use super::InitializePoolWithDynamicConfigIxAccounts;
+    impl IntoProto<proto_def::InitializePoolWithDynamicConfigIxAccounts>
+        for InitializePoolWithDynamicConfigIxAccounts
+    {
+        fn into_proto(self) -> proto_def::InitializePoolWithDynamicConfigIxAccounts {
+            proto_def::InitializePoolWithDynamicConfigIxAccounts {
+                creator: self.creator.to_string(),
+                position_nft_mint: self.position_nft_mint.to_string(),
+                position_nft_account: self.position_nft_account.to_string(),
+                payer: self.payer.to_string(),
+                pool_creator_authority: self.pool_creator_authority.to_string(),
+                config: self.config.to_string(),
+                pool_authority: self.pool_authority.to_string(),
+                pool: self.pool.to_string(),
+                position: self.position.to_string(),
+                token_a_mint: self.token_a_mint.to_string(),
+                token_b_mint: self.token_b_mint.to_string(),
+                token_a_vault: self.token_a_vault.to_string(),
+                token_b_vault: self.token_b_vault.to_string(),
+                payer_token_a: self.payer_token_a.to_string(),
+                payer_token_b: self.payer_token_b.to_string(),
+                token_a_program: self.token_a_program.to_string(),
+                token_b_program: self.token_b_program.to_string(),
+                token2022_program: self.token2022_program.to_string(),
+                system_program: self.system_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::InitializePoolWithDynamicConfigIxData;
+    impl IntoProto<proto_def::InitializePoolWithDynamicConfigIxData>
+        for InitializePoolWithDynamicConfigIxData
+    {
+        fn into_proto(self) -> proto_def::InitializePoolWithDynamicConfigIxData {
+            proto_def::InitializePoolWithDynamicConfigIxData {
+                params: Some(self.params.into_proto()),
             }
         }
     }
@@ -998,8 +1131,8 @@ mod proto_parser {
             proto_def::LockPositionIxData {
                 cliff_point: self.cliff_point,
                 period_frequency: self.period_frequency,
-                cliff_unlock_liquidity: self.cliff_unlock_liquidity.to_le_bytes().to_vec(),
-                liquidity_per_period: self.liquidity_per_period.to_le_bytes().to_vec(),
+                cliff_unlock_liquidity: self.cliff_unlock_liquidity.to_string(),
+                liquidity_per_period: self.liquidity_per_period.to_string(),
                 number_of_period: self.number_of_period.into(),
             }
         }
@@ -1021,7 +1154,7 @@ mod proto_parser {
     impl IntoProto<proto_def::PermanentLockPositionIxData> for PermanentLockPositionIxData {
         fn into_proto(self) -> proto_def::PermanentLockPositionIxData {
             proto_def::PermanentLockPositionIxData {
-                permanent_lock_liquidity: self.permanent_lock_liquidity.to_le_bytes().to_vec(),
+                permanent_lock_liquidity: self.permanent_lock_liquidity.to_string(),
             }
         }
     }
@@ -1289,6 +1422,14 @@ mod proto_parser {
                         },
                     )),
                 },
+                CpAmmProgramIx::CreateDynamicConfig(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateDynamicConfig(
+                        proto_def::CreateDynamicConfigIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
                 CpAmmProgramIx::CreatePosition(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::CreatePosition(
                         proto_def::CreatePositionIx {
@@ -1326,6 +1467,18 @@ mod proto_parser {
                             data: Some(data.into_proto()),
                         },
                     )),
+                },
+                CpAmmProgramIx::InitializePoolWithDynamicConfig(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::InitializePoolWithDynamicConfig(
+                                proto_def::InitializePoolWithDynamicConfigIx {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
+                        ),
+                    }
                 },
                 CpAmmProgramIx::InitializeReward(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeReward(

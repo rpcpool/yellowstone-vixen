@@ -9,6 +9,7 @@ use crate::token_program::{SetAuthorityAccounts, TokenProgramIx};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum TokenExtensionProgramIx {
     TokenProgramIx(TokenProgramIx),
     SetAuthority(SetAuthorityAccounts, SetAuthorityData),

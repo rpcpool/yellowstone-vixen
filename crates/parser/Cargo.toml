@@ -23,7 +23,9 @@ yellowstone-vixen-proto = { workspace = true, features = [
 thiserror = "1.0.64"
 borsh = "1.5.1"
 bs58 = "0.5.1"
-
+tracing = { version = "0.1.40", optional = true }
+strum = { version = "0.24", optional = true }
+strum_macros = { version = "0.24", optional = true }
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
@@ -45,3 +47,4 @@ token-extensions = [
   "token-program",
 ]
 token-program = ["dep:spl-token"]
+tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]

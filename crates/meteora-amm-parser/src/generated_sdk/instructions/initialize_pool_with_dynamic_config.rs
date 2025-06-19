@@ -11,7 +11,7 @@ use crate::generated::types::InitializeCustomizablePoolParameters;
 
 /// Accounts.
 #[derive(Debug)]
-pub struct InitializeCustomizablePool {
+pub struct InitializePoolWithDynamicConfig {
     pub creator: solana_program::pubkey::Pubkey,
     /// position_nft_mint
     pub position_nft_mint: solana_program::pubkey::Pubkey,
@@ -19,6 +19,10 @@ pub struct InitializeCustomizablePool {
     pub position_nft_account: solana_program::pubkey::Pubkey,
     /// Address paying to create the pool. Can be anyone
     pub payer: solana_program::pubkey::Pubkey,
+
+    pub pool_creator_authority: solana_program::pubkey::Pubkey,
+    /// Which config the pool belongs to.
+    pub config: solana_program::pubkey::Pubkey,
 
     pub pool_authority: solana_program::pubkey::Pubkey,
     /// Initialize an account to store the pool state
@@ -51,10 +55,10 @@ pub struct InitializeCustomizablePool {
     pub program: solana_program::pubkey::Pubkey,
 }
 
-impl InitializeCustomizablePool {
+impl InitializePoolWithDynamicConfig {
     pub fn instruction(
         &self,
-        args: InitializeCustomizablePoolInstructionArgs,
+        args: InitializePoolWithDynamicConfigInstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
@@ -63,10 +67,10 @@ impl InitializeCustomizablePool {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: InitializeCustomizablePoolInstructionArgs,
+        args: InitializePoolWithDynamicConfigInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(19 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(21 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.creator,
             false,
@@ -81,6 +85,14 @@ impl InitializeCustomizablePool {
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.payer, true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.pool_creator_authority,
+            true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.config,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.pool_authority,
@@ -142,7 +154,8 @@ impl InitializeCustomizablePool {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&InitializeCustomizablePoolInstructionData::new()).unwrap();
+        let mut data =
+            borsh::to_vec(&InitializePoolWithDynamicConfigInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
@@ -156,29 +169,29 @@ impl InitializeCustomizablePool {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct InitializeCustomizablePoolInstructionData {
+pub struct InitializePoolWithDynamicConfigInstructionData {
     discriminator: [u8; 8],
 }
 
-impl InitializeCustomizablePoolInstructionData {
+impl InitializePoolWithDynamicConfigInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [20, 161, 241, 24, 189, 221, 180, 2],
+            discriminator: [149, 82, 72, 197, 253, 252, 68, 15],
         }
     }
 }
 
-impl Default for InitializeCustomizablePoolInstructionData {
+impl Default for InitializePoolWithDynamicConfigInstructionData {
     fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct InitializeCustomizablePoolInstructionArgs {
+pub struct InitializePoolWithDynamicConfigInstructionArgs {
     pub params: InitializeCustomizablePoolParameters,
 }
 
-/// Instruction builder for `InitializeCustomizablePool`.
+/// Instruction builder for `InitializePoolWithDynamicConfig`.
 ///
 /// ### Accounts:
 ///
@@ -186,27 +199,31 @@ pub struct InitializeCustomizablePoolInstructionArgs {
 ///   1. `[writable, signer]` position_nft_mint
 ///   2. `[writable]` position_nft_account
 ///   3. `[writable, signer]` payer
-///   4. `[]` pool_authority
-///   5. `[writable]` pool
-///   6. `[writable]` position
-///   7. `[]` token_a_mint
-///   8. `[]` token_b_mint
-///   9. `[writable]` token_a_vault
-///   10. `[writable]` token_b_vault
-///   11. `[writable]` payer_token_a
-///   12. `[writable]` payer_token_b
-///   13. `[]` token_a_program
-///   14. `[]` token_b_program
-///   15. `[optional]` token2022_program (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
-///   16. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   17. `[]` event_authority
-///   18. `[]` program
+///   4. `[signer]` pool_creator_authority
+///   5. `[]` config
+///   6. `[]` pool_authority
+///   7. `[writable]` pool
+///   8. `[writable]` position
+///   9. `[]` token_a_mint
+///   10. `[]` token_b_mint
+///   11. `[writable]` token_a_vault
+///   12. `[writable]` token_b_vault
+///   13. `[writable]` payer_token_a
+///   14. `[writable]` payer_token_b
+///   15. `[]` token_a_program
+///   16. `[]` token_b_program
+///   17. `[optional]` token2022_program (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
+///   18. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   19. `[]` event_authority
+///   20. `[]` program
 #[derive(Clone, Debug, Default)]
-pub struct InitializeCustomizablePoolBuilder {
+pub struct InitializePoolWithDynamicConfigBuilder {
     creator: Option<solana_program::pubkey::Pubkey>,
     position_nft_mint: Option<solana_program::pubkey::Pubkey>,
     position_nft_account: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
+    pool_creator_authority: Option<solana_program::pubkey::Pubkey>,
+    config: Option<solana_program::pubkey::Pubkey>,
     pool_authority: Option<solana_program::pubkey::Pubkey>,
     pool: Option<solana_program::pubkey::Pubkey>,
     position: Option<solana_program::pubkey::Pubkey>,
@@ -226,7 +243,7 @@ pub struct InitializeCustomizablePoolBuilder {
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl InitializeCustomizablePoolBuilder {
+impl InitializePoolWithDynamicConfigBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
@@ -259,6 +276,22 @@ impl InitializeCustomizablePoolBuilder {
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
+        self
+    }
+
+    #[inline(always)]
+    pub fn pool_creator_authority(
+        &mut self,
+        pool_creator_authority: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.pool_creator_authority = Some(pool_creator_authority);
+        self
+    }
+
+    /// Which config the pool belongs to.
+    #[inline(always)]
+    pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.config = Some(config);
         self
     }
 
@@ -404,7 +437,7 @@ impl InitializeCustomizablePoolBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = InitializeCustomizablePool {
+        let accounts = InitializePoolWithDynamicConfig {
             creator: self.creator.expect("creator is not set"),
             position_nft_mint: self
                 .position_nft_mint
@@ -413,6 +446,10 @@ impl InitializeCustomizablePoolBuilder {
                 .position_nft_account
                 .expect("position_nft_account is not set"),
             payer: self.payer.expect("payer is not set"),
+            pool_creator_authority: self
+                .pool_creator_authority
+                .expect("pool_creator_authority is not set"),
+            config: self.config.expect("config is not set"),
             pool_authority: self.pool_authority.expect("pool_authority is not set"),
             pool: self.pool.expect("pool is not set"),
             position: self.position.expect("position is not set"),
@@ -433,7 +470,7 @@ impl InitializeCustomizablePoolBuilder {
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
-        let args = InitializeCustomizablePoolInstructionArgs {
+        let args = InitializePoolWithDynamicConfigInstructionArgs {
             params: self.params.clone().expect("params is not set"),
         };
 
@@ -441,8 +478,8 @@ impl InitializeCustomizablePoolBuilder {
     }
 }
 
-/// `initialize_customizable_pool` CPI accounts.
-pub struct InitializeCustomizablePoolCpiAccounts<'a, 'b> {
+/// `initialize_pool_with_dynamic_config` CPI accounts.
+pub struct InitializePoolWithDynamicConfigCpiAccounts<'a, 'b> {
     pub creator: &'b solana_program::account_info::AccountInfo<'a>,
     /// position_nft_mint
     pub position_nft_mint: &'b solana_program::account_info::AccountInfo<'a>,
@@ -450,6 +487,10 @@ pub struct InitializeCustomizablePoolCpiAccounts<'a, 'b> {
     pub position_nft_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// Address paying to create the pool. Can be anyone
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub pool_creator_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Which config the pool belongs to.
+    pub config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub pool_authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// Initialize an account to store the pool state
@@ -482,8 +523,8 @@ pub struct InitializeCustomizablePoolCpiAccounts<'a, 'b> {
     pub program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `initialize_customizable_pool` CPI instruction.
-pub struct InitializeCustomizablePoolCpi<'a, 'b> {
+/// `initialize_pool_with_dynamic_config` CPI instruction.
+pub struct InitializePoolWithDynamicConfigCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
@@ -494,6 +535,10 @@ pub struct InitializeCustomizablePoolCpi<'a, 'b> {
     pub position_nft_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// Address paying to create the pool. Can be anyone
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub pool_creator_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Which config the pool belongs to.
+    pub config: &'b solana_program::account_info::AccountInfo<'a>,
 
     pub pool_authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// Initialize an account to store the pool state
@@ -525,14 +570,14 @@ pub struct InitializeCustomizablePoolCpi<'a, 'b> {
 
     pub program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: InitializeCustomizablePoolInstructionArgs,
+    pub __args: InitializePoolWithDynamicConfigInstructionArgs,
 }
 
-impl<'a, 'b> InitializeCustomizablePoolCpi<'a, 'b> {
+impl<'a, 'b> InitializePoolWithDynamicConfigCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: InitializeCustomizablePoolCpiAccounts<'a, 'b>,
-        args: InitializeCustomizablePoolInstructionArgs,
+        accounts: InitializePoolWithDynamicConfigCpiAccounts<'a, 'b>,
+        args: InitializePoolWithDynamicConfigInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -540,6 +585,8 @@ impl<'a, 'b> InitializeCustomizablePoolCpi<'a, 'b> {
             position_nft_mint: accounts.position_nft_mint,
             position_nft_account: accounts.position_nft_account,
             payer: accounts.payer,
+            pool_creator_authority: accounts.pool_creator_authority,
+            config: accounts.config,
             pool_authority: accounts.pool_authority,
             pool: accounts.pool,
             position: accounts.position,
@@ -596,7 +643,7 @@ impl<'a, 'b> InitializeCustomizablePoolCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(19 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(21 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.creator.key,
             false,
@@ -612,6 +659,14 @@ impl<'a, 'b> InitializeCustomizablePoolCpi<'a, 'b> {
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.payer.key,
             true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.pool_creator_authority.key,
+            true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.config.key,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.pool_authority.key,
@@ -680,7 +735,8 @@ impl<'a, 'b> InitializeCustomizablePoolCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&InitializeCustomizablePoolInstructionData::new()).unwrap();
+        let mut data =
+            borsh::to_vec(&InitializePoolWithDynamicConfigInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
@@ -689,12 +745,14 @@ impl<'a, 'b> InitializeCustomizablePoolCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(20 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(22 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.creator.clone());
         account_infos.push(self.position_nft_mint.clone());
         account_infos.push(self.position_nft_account.clone());
         account_infos.push(self.payer.clone());
+        account_infos.push(self.pool_creator_authority.clone());
+        account_infos.push(self.config.clone());
         account_infos.push(self.pool_authority.clone());
         account_infos.push(self.pool.clone());
         account_infos.push(self.position.clone());
@@ -722,7 +780,7 @@ impl<'a, 'b> InitializeCustomizablePoolCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `InitializeCustomizablePool` via CPI.
+/// Instruction builder for `InitializePoolWithDynamicConfig` via CPI.
 ///
 /// ### Accounts:
 ///
@@ -730,34 +788,38 @@ impl<'a, 'b> InitializeCustomizablePoolCpi<'a, 'b> {
 ///   1. `[writable, signer]` position_nft_mint
 ///   2. `[writable]` position_nft_account
 ///   3. `[writable, signer]` payer
-///   4. `[]` pool_authority
-///   5. `[writable]` pool
-///   6. `[writable]` position
-///   7. `[]` token_a_mint
-///   8. `[]` token_b_mint
-///   9. `[writable]` token_a_vault
-///   10. `[writable]` token_b_vault
-///   11. `[writable]` payer_token_a
-///   12. `[writable]` payer_token_b
-///   13. `[]` token_a_program
-///   14. `[]` token_b_program
-///   15. `[]` token2022_program
-///   16. `[]` system_program
-///   17. `[]` event_authority
-///   18. `[]` program
+///   4. `[signer]` pool_creator_authority
+///   5. `[]` config
+///   6. `[]` pool_authority
+///   7. `[writable]` pool
+///   8. `[writable]` position
+///   9. `[]` token_a_mint
+///   10. `[]` token_b_mint
+///   11. `[writable]` token_a_vault
+///   12. `[writable]` token_b_vault
+///   13. `[writable]` payer_token_a
+///   14. `[writable]` payer_token_b
+///   15. `[]` token_a_program
+///   16. `[]` token_b_program
+///   17. `[]` token2022_program
+///   18. `[]` system_program
+///   19. `[]` event_authority
+///   20. `[]` program
 #[derive(Clone, Debug)]
-pub struct InitializeCustomizablePoolCpiBuilder<'a, 'b> {
-    instruction: Box<InitializeCustomizablePoolCpiBuilderInstruction<'a, 'b>>,
+pub struct InitializePoolWithDynamicConfigCpiBuilder<'a, 'b> {
+    instruction: Box<InitializePoolWithDynamicConfigCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> InitializeCustomizablePoolCpiBuilder<'a, 'b> {
+impl<'a, 'b> InitializePoolWithDynamicConfigCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(InitializeCustomizablePoolCpiBuilderInstruction {
+        let instruction = Box::new(InitializePoolWithDynamicConfigCpiBuilderInstruction {
             __program: program,
             creator: None,
             position_nft_mint: None,
             position_nft_account: None,
             payer: None,
+            pool_creator_authority: None,
+            config: None,
             pool_authority: None,
             pool: None,
             position: None,
@@ -812,6 +874,25 @@ impl<'a, 'b> InitializeCustomizablePoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
+        self
+    }
+
+    #[inline(always)]
+    pub fn pool_creator_authority(
+        &mut self,
+        pool_creator_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.pool_creator_authority = Some(pool_creator_authority);
+        self
+    }
+
+    /// Which config the pool belongs to.
+    #[inline(always)]
+    pub fn config(
+        &mut self,
+        config: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.config = Some(config);
         self
     }
 
@@ -1005,10 +1086,10 @@ impl<'a, 'b> InitializeCustomizablePoolCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = InitializeCustomizablePoolInstructionArgs {
+        let args = InitializePoolWithDynamicConfigInstructionArgs {
             params: self.instruction.params.clone().expect("params is not set"),
         };
-        let instruction = InitializeCustomizablePoolCpi {
+        let instruction = InitializePoolWithDynamicConfigCpi {
             __program: self.instruction.__program,
 
             creator: self.instruction.creator.expect("creator is not set"),
@@ -1024,6 +1105,13 @@ impl<'a, 'b> InitializeCustomizablePoolCpiBuilder<'a, 'b> {
                 .expect("position_nft_account is not set"),
 
             payer: self.instruction.payer.expect("payer is not set"),
+
+            pool_creator_authority: self
+                .instruction
+                .pool_creator_authority
+                .expect("pool_creator_authority is not set"),
+
+            config: self.instruction.config.expect("config is not set"),
 
             pool_authority: self
                 .instruction
@@ -1100,12 +1188,14 @@ impl<'a, 'b> InitializeCustomizablePoolCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct InitializeCustomizablePoolCpiBuilderInstruction<'a, 'b> {
+struct InitializePoolWithDynamicConfigCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     position_nft_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     position_nft_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pool_creator_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     pool_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     position: Option<&'b solana_program::account_info::AccountInfo<'a>>,
