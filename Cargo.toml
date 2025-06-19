@@ -30,6 +30,10 @@ yellowstone-vixen-kamino-limit-orders-parser = { path = "crates/kamino-limit-ord
 yellowstone-vixen-raydium-launchpad-parser = { path = "crates/raydium-launchpad-parser", version = "0.3.0" }
 yellowstone-vixen-virtuals-parser = { path = "crates/virtuals-parser", version = "0.3.0" }
 
+# Sources
+solana-accounts-rpc-source = { path = "crates/solana-accounts-rpc-source", version = "0.1.0" }
+yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.1.0" }
+
 
 # helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 
 # https://github.com/solana-labs/solana/issues/26688

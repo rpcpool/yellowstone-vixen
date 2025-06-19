@@ -19,6 +19,7 @@ use crate::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
     handler::{BoxPipeline, Pipeline},
     metrics::{MetricsFactory, NullMetrics},
+    sources::Source,
     util,
 };
 
@@ -149,6 +150,11 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
         self.insert(instruction, |s| &mut s.instruction)
     }
 
+    /// Add a new data `Source` to which the Vixen runtime will subscribe.
+    pub fn source<T: Source>(self, source: T) -> Self {
+        self.mutate(|s| s.sources.push(Box::new(source)))
+    }
+
     /// Attempt to build a new [`Server`] instance from the current builder
     /// state and the provided configuration.
     ///
@@ -163,6 +169,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             instruction,
             block_meta,
             metrics,
+            sources,
             commitment_level,
             from_slot_filter,
             extra: StreamKind(desc_sets, channels),
@@ -187,6 +194,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             commitment_level,
             block_meta,
             metrics,
+            sources,
             extra: RuntimeKind,
             from_slot_filter,
         }

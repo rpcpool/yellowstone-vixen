@@ -405,9 +405,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.86"
+version = "0.1.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "644dd749086bf3771a2fbc5f256fdb982d53f011c7d5d560304eafeecebce79d"
+checksum = "e539d3fca749fcee5236ab05e93a52867dd549cc157c8cb7f99595f3cedffdb5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1422,6 +1422,7 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
 ]
@@ -1431,11 +1432,14 @@ name = "example-vixen-prometheus"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "solana-accounts-rpc-source",
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-raydium-amm-v4-parser",
 ]
 
 [[package]]
@@ -1448,6 +1452,7 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
 ]
 
@@ -1460,6 +1465,7 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-jupiter-swap-parser",
  "yellowstone-vixen-kamino-limit-orders-parser",
@@ -4149,6 +4155,22 @@ dependencies = [
  "solana-program-error",
  "solana-program-memory",
  "solana-pubkey",
+]
+
+[[package]]
+name = "solana-accounts-rpc-source"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "solana-account-decoder-client-types",
+ "solana-client",
+ "solana-commitment-config",
+ "solana-pubkey",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8076,9 +8098,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-grpc-source"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures-util",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen"
 version = "0.3.0"
 dependencies = [
+ "async-trait",
  "clap",
  "futures-channel",
  "futures-util",

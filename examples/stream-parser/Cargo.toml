@@ -17,6 +17,7 @@ yellowstone-vixen-parser = { workspace = true, features = [
   "token-extensions",
   "token-program",
 ] }
+yellowstone-grpc-source = { workspace = true }
 
 yellowstone-vixen-meteora-parser = { workspace = true }
 yellowstone-vixen-pumpfun-parser = { workspace = true }

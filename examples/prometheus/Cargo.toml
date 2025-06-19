@@ -17,3 +17,7 @@ yellowstone-vixen-parser = { workspace = true, features = [
   "token-program",
   "block-meta",
 ] }
+yellowstone-vixen-raydium-amm-v4-parser = { workspace = true }
+
+yellowstone-grpc-source = { workspace = true }
+solana-accounts-rpc-source = { workspace = true }
