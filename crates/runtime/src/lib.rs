@@ -268,11 +268,7 @@ impl<M: MetricsFactory> Runtime<M> {
 
         let stop_ty = tokio::select! {
             s = signal => StopType::Signal(s),
-            b = buffer.wait_for_stop() => {
-                println!("stop type buffer");
-
-                StopType::Buffer(b)
-            },
+            b = buffer.wait_for_stop() => StopType::Buffer(b),
             Some(x) = &mut exporter => StopType::Exporter(x),
         };
 
