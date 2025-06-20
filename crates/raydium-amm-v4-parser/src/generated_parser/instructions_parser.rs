@@ -56,9 +56,16 @@ pub enum RaydiumAmmProgramIx {
 #[derive(Debug, Copy, Clone)]
 pub struct InstructionParser;
 
+#[derive(Debug)]
+pub struct InstructionUpdateOutput {
+    pub parsed_ix: RaydiumAmmProgramIx,
+    pub tx_signature: Vec<u8>,
+    pub slot: u64,
+}
+
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-    type Output = RaydiumAmmProgramIx;
+    type Output = InstructionUpdateOutput;
 
     fn id(&self) -> std::borrow::Cow<str> { "RaydiumAmm::InstructionParser".into() }
 
@@ -89,8 +96,10 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<RaydiumAmmProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<InstructionUpdateOutput> {
         let accounts_len = ix.accounts.len();
+        let tx_signature = ix.shared.signature.clone();
+        let slot = ix.shared.slot;
 
         let ix_discriminator: [u8; 1] = ix.data[0..1].try_into()?;
         let mut ix_data = &ix.data[1..];
@@ -475,7 +484,11 @@ impl InstructionParser {
             },
         }
 
-        ix
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            tx_signature,
+            slot,
+        })
     }
 }
 
@@ -1103,6 +1116,8 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            value.parsed_ix.into_proto()
+        }
     }
 }
