@@ -2,11 +2,12 @@
 
 use std::{collections::VecDeque, sync::Arc};
 
+pub use yellowstone_grpc_proto::solana::storage::confirmed_block::TokenBalance;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     solana::storage::confirmed_block::{
-        CompiledInstruction, InnerInstruction, InnerInstructions, Message, Reward, TokenBalance,
-        Transaction, TransactionError, TransactionStatusMeta,
+        CompiledInstruction, InnerInstruction, InnerInstructions, Message, Reward, Transaction,
+        TransactionError, TransactionStatusMeta,
     },
 };
 
