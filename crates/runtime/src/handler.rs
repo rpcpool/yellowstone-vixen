@@ -279,7 +279,8 @@ where I::Item: AsRef<str> + Send + 'm
             let pipeline = pipelines.0.get(filter);
 
             if pipeline.is_none() {
-                warn!(filter, "No pipeline matched filter on incoming update");
+                let msg = format!("No pipeline matched filter on incoming update. Existing pipelines: {:?}", pipelines.0.keys());
+                warn!(filter, msg);
             }
 
             pipeline.map(|p| (f, p))
