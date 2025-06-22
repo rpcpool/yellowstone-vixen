@@ -5,7 +5,7 @@ use std::{borrow::Cow, collections::HashMap, pin::Pin};
 
 use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
-use tracing::{warn, Instrument, Span};
+use tracing::{Instrument, Span};
 use vixen_core::{AccountUpdate, BlockMetaUpdate, GetPrefilter, ParserId, TransactionUpdate};
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
@@ -279,10 +279,11 @@ where I::Item: AsRef<str> + Send + 'm
             let filter = f.as_ref();
             let pipeline = pipelines.0.get(filter);
 
-            if pipeline.is_none() {
-                let msg = format!("No pipeline matched filter on incoming update. Existing pipelines: {:?}", pipelines.0.keys());
-                warn!(filter, msg);
-            }
+            // too noisy
+            // if pipeline.is_none() {
+            //     let msg = format!("No pipeline matched filter on incoming update. Existing pipelines: {:?}", pipelines.0.keys());
+            //     warn!(filter, msg);
+            // }
 
             pipeline.map(|p| (f, p))
         })
