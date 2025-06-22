@@ -2,3 +2,4 @@ target/
 crates/mock/fixtures
 *.env*
 Vixen.toml
+parser-generator/node_modules/
