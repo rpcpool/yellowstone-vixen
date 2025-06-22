@@ -58,15 +58,16 @@ mod pipeline_error {
             Self::Parse(Box::new(e))
         }
 
-        pub fn handle<T>(self, handler: &str) -> Handled {
-            for e in self {
-                tracing::error!(
-                    err = %crate::Chain(&e),
-                    handler,
-                    r#type = std::any::type_name::<T>(),
-                    "Handler failed",
-                );
-            }
+        pub fn handle<T>(self, _handler: &str) -> Handled {
+            // TODO: uncomment when we find it useful
+            // for e in self {
+            //     tracing::error!(
+            //         err = %crate::Chain(&e),
+            //         handler,
+            //         r#type = std::any::type_name::<T>(),
+            //         "Handler failed",
+            //     );
+            // }
 
             Handled(())
         }
