@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use std::sync::Arc;
+
 use borsh::BorshDeserialize;
+use yellowstone_vixen_core::instruction::InstructionShared;
 
 use crate::{
     instructions::{
@@ -248,9 +251,15 @@ pub enum LbClmmProgramIx {
 #[derive(Debug, Copy, Clone)]
 pub struct InstructionParser;
 
+#[derive(Debug)]
+pub struct InstructionUpdateOutput {
+    pub parsed_ix: LbClmmProgramIx,
+    pub shared_data: Arc<InstructionShared>,
+}
+
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-    type Output = LbClmmProgramIx;
+    type Output = InstructionUpdateOutput;
 
     fn id(&self) -> std::borrow::Cow<str> { "LbClmm::InstructionParser".into() }
 
@@ -281,11 +290,13 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<LbClmmProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<InstructionUpdateOutput> {
         let accounts_len = ix.accounts.len();
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let mut ix_data = &ix.data[8..];
+        let shared_data = Arc::clone(&ix.shared);
+
         let ix = match ix_discriminator {
             [45, 154, 237, 210, 221, 15, 166, 92] => {
                 check_min_accounts_req(accounts_len, 14)?;
@@ -1724,7 +1735,10 @@ impl InstructionParser {
             },
         }
 
-        ix
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -3859,6 +3873,8 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            value.parsed_ix.into_proto()
+        }
     }
 }
