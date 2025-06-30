@@ -5,7 +5,7 @@ pub use generated_parser::*;
 use generated_sdk as generated;
 use solana_program::pubkey::Pubkey;
 
-pub const ID: Pubkey = PUMP_AMM_ID;
+pub const ID: Pubkey = PUMP_SWAP_ID;
 
 // #[cfg(feature = "proto")]
 pub mod proto_def {

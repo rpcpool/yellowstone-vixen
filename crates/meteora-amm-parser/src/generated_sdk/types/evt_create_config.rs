@@ -10,7 +10,7 @@ use solana_program::pubkey::Pubkey;
 
 use crate::generated::types::PoolFeeParameters;
 
-/// Create config
+/// Create static config
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EvtCreateConfig {

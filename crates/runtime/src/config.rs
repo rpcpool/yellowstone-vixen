@@ -36,7 +36,7 @@ pub struct VixenConfig<M: clap::Args> {
 }
 
 /// Yellowstone connection configuration.
-#[derive(Debug, clap::Args, serde::Deserialize)]
+#[derive(Debug, clap::Args, serde::Deserialize, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct YellowstoneConfig {
     /// The endpoint of the Yellowstone server.
@@ -51,12 +51,24 @@ pub struct YellowstoneConfig {
 }
 
 /// Job scheduler configuration.
-#[derive(Default, Debug, Clone, Copy, clap::Args, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, clap::Args, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct BufferConfig {
     /// The maximum number of concurrent jobs to run.  If unset, defaults to
     /// the number of CPUs.
     pub jobs: Option<usize>,
+    /// The maximum number of concurrent sources to run.
+    /// Defaults to 100.
+    pub sources_channel_size: usize,
+}
+
+impl Default for BufferConfig {
+    fn default() -> Self {
+        Self {
+            jobs: None,
+            sources_channel_size: 100,
+        }
+    }
 }
 
 /// Helper type for blank configuration sections.

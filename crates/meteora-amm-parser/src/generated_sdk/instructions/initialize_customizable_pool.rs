@@ -7,7 +7,7 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::generated::types::PoolFeeParameters;
+use crate::generated::types::InitializeCustomizablePoolParameters;
 
 /// Accounts.
 #[derive(Debug)]
@@ -175,15 +175,7 @@ impl Default for InitializeCustomizablePoolInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct InitializeCustomizablePoolInstructionArgs {
-    pub pool_fees: PoolFeeParameters,
-    pub sqrt_min_price: u128,
-    pub sqrt_max_price: u128,
-    pub has_alpha_vault: bool,
-    pub liquidity: u128,
-    pub sqrt_price: u128,
-    pub activation_type: u8,
-    pub collect_fee_mode: u8,
-    pub activation_point: Option<u64>,
+    pub params: InitializeCustomizablePoolParameters,
 }
 
 /// Instruction builder for `InitializeCustomizablePool`.
@@ -230,15 +222,7 @@ pub struct InitializeCustomizablePoolBuilder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     event_authority: Option<solana_program::pubkey::Pubkey>,
     program: Option<solana_program::pubkey::Pubkey>,
-    pool_fees: Option<PoolFeeParameters>,
-    sqrt_min_price: Option<u128>,
-    sqrt_max_price: Option<u128>,
-    has_alpha_vault: Option<bool>,
-    liquidity: Option<u128>,
-    sqrt_price: Option<u128>,
-    activation_type: Option<u8>,
-    collect_fee_mode: Option<u8>,
-    activation_point: Option<u64>,
+    params: Option<InitializeCustomizablePoolParameters>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -393,57 +377,8 @@ impl InitializeCustomizablePoolBuilder {
     }
 
     #[inline(always)]
-    pub fn pool_fees(&mut self, pool_fees: PoolFeeParameters) -> &mut Self {
-        self.pool_fees = Some(pool_fees);
-        self
-    }
-
-    #[inline(always)]
-    pub fn sqrt_min_price(&mut self, sqrt_min_price: u128) -> &mut Self {
-        self.sqrt_min_price = Some(sqrt_min_price);
-        self
-    }
-
-    #[inline(always)]
-    pub fn sqrt_max_price(&mut self, sqrt_max_price: u128) -> &mut Self {
-        self.sqrt_max_price = Some(sqrt_max_price);
-        self
-    }
-
-    #[inline(always)]
-    pub fn has_alpha_vault(&mut self, has_alpha_vault: bool) -> &mut Self {
-        self.has_alpha_vault = Some(has_alpha_vault);
-        self
-    }
-
-    #[inline(always)]
-    pub fn liquidity(&mut self, liquidity: u128) -> &mut Self {
-        self.liquidity = Some(liquidity);
-        self
-    }
-
-    #[inline(always)]
-    pub fn sqrt_price(&mut self, sqrt_price: u128) -> &mut Self {
-        self.sqrt_price = Some(sqrt_price);
-        self
-    }
-
-    #[inline(always)]
-    pub fn activation_type(&mut self, activation_type: u8) -> &mut Self {
-        self.activation_type = Some(activation_type);
-        self
-    }
-
-    #[inline(always)]
-    pub fn collect_fee_mode(&mut self, collect_fee_mode: u8) -> &mut Self {
-        self.collect_fee_mode = Some(collect_fee_mode);
-        self
-    }
-
-    /// `[optional argument]`
-    #[inline(always)]
-    pub fn activation_point(&mut self, activation_point: u64) -> &mut Self {
-        self.activation_point = Some(activation_point);
+    pub fn params(&mut self, params: InitializeCustomizablePoolParameters) -> &mut Self {
+        self.params = Some(params);
         self
     }
 
@@ -499,30 +434,7 @@ impl InitializeCustomizablePoolBuilder {
             program: self.program.expect("program is not set"),
         };
         let args = InitializeCustomizablePoolInstructionArgs {
-            pool_fees: self.pool_fees.clone().expect("pool_fees is not set"),
-            sqrt_min_price: self
-                .sqrt_min_price
-                .clone()
-                .expect("sqrt_min_price is not set"),
-            sqrt_max_price: self
-                .sqrt_max_price
-                .clone()
-                .expect("sqrt_max_price is not set"),
-            has_alpha_vault: self
-                .has_alpha_vault
-                .clone()
-                .expect("has_alpha_vault is not set"),
-            liquidity: self.liquidity.clone().expect("liquidity is not set"),
-            sqrt_price: self.sqrt_price.clone().expect("sqrt_price is not set"),
-            activation_type: self
-                .activation_type
-                .clone()
-                .expect("activation_type is not set"),
-            collect_fee_mode: self
-                .collect_fee_mode
-                .clone()
-                .expect("collect_fee_mode is not set"),
-            activation_point: self.activation_point.clone(),
+            params: self.params.clone().expect("params is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -861,15 +773,7 @@ impl<'a, 'b> InitializeCustomizablePoolCpiBuilder<'a, 'b> {
             system_program: None,
             event_authority: None,
             program: None,
-            pool_fees: None,
-            sqrt_min_price: None,
-            sqrt_max_price: None,
-            has_alpha_vault: None,
-            liquidity: None,
-            sqrt_price: None,
-            activation_type: None,
-            collect_fee_mode: None,
-            activation_point: None,
+            params: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -1054,57 +958,8 @@ impl<'a, 'b> InitializeCustomizablePoolCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn pool_fees(&mut self, pool_fees: PoolFeeParameters) -> &mut Self {
-        self.instruction.pool_fees = Some(pool_fees);
-        self
-    }
-
-    #[inline(always)]
-    pub fn sqrt_min_price(&mut self, sqrt_min_price: u128) -> &mut Self {
-        self.instruction.sqrt_min_price = Some(sqrt_min_price);
-        self
-    }
-
-    #[inline(always)]
-    pub fn sqrt_max_price(&mut self, sqrt_max_price: u128) -> &mut Self {
-        self.instruction.sqrt_max_price = Some(sqrt_max_price);
-        self
-    }
-
-    #[inline(always)]
-    pub fn has_alpha_vault(&mut self, has_alpha_vault: bool) -> &mut Self {
-        self.instruction.has_alpha_vault = Some(has_alpha_vault);
-        self
-    }
-
-    #[inline(always)]
-    pub fn liquidity(&mut self, liquidity: u128) -> &mut Self {
-        self.instruction.liquidity = Some(liquidity);
-        self
-    }
-
-    #[inline(always)]
-    pub fn sqrt_price(&mut self, sqrt_price: u128) -> &mut Self {
-        self.instruction.sqrt_price = Some(sqrt_price);
-        self
-    }
-
-    #[inline(always)]
-    pub fn activation_type(&mut self, activation_type: u8) -> &mut Self {
-        self.instruction.activation_type = Some(activation_type);
-        self
-    }
-
-    #[inline(always)]
-    pub fn collect_fee_mode(&mut self, collect_fee_mode: u8) -> &mut Self {
-        self.instruction.collect_fee_mode = Some(collect_fee_mode);
-        self
-    }
-
-    /// `[optional argument]`
-    #[inline(always)]
-    pub fn activation_point(&mut self, activation_point: u64) -> &mut Self {
-        self.instruction.activation_point = Some(activation_point);
+    pub fn params(&mut self, params: InitializeCustomizablePoolParameters) -> &mut Self {
+        self.instruction.params = Some(params);
         self
     }
 
@@ -1151,47 +1006,7 @@ impl<'a, 'b> InitializeCustomizablePoolCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = InitializeCustomizablePoolInstructionArgs {
-            pool_fees: self
-                .instruction
-                .pool_fees
-                .clone()
-                .expect("pool_fees is not set"),
-            sqrt_min_price: self
-                .instruction
-                .sqrt_min_price
-                .clone()
-                .expect("sqrt_min_price is not set"),
-            sqrt_max_price: self
-                .instruction
-                .sqrt_max_price
-                .clone()
-                .expect("sqrt_max_price is not set"),
-            has_alpha_vault: self
-                .instruction
-                .has_alpha_vault
-                .clone()
-                .expect("has_alpha_vault is not set"),
-            liquidity: self
-                .instruction
-                .liquidity
-                .clone()
-                .expect("liquidity is not set"),
-            sqrt_price: self
-                .instruction
-                .sqrt_price
-                .clone()
-                .expect("sqrt_price is not set"),
-            activation_type: self
-                .instruction
-                .activation_type
-                .clone()
-                .expect("activation_type is not set"),
-            collect_fee_mode: self
-                .instruction
-                .collect_fee_mode
-                .clone()
-                .expect("collect_fee_mode is not set"),
-            activation_point: self.instruction.activation_point.clone(),
+            params: self.instruction.params.clone().expect("params is not set"),
         };
         let instruction = InitializeCustomizablePoolCpi {
             __program: self.instruction.__program,
@@ -1306,15 +1121,7 @@ struct InitializeCustomizablePoolCpiBuilderInstruction<'a, 'b> {
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_fees: Option<PoolFeeParameters>,
-    sqrt_min_price: Option<u128>,
-    sqrt_max_price: Option<u128>,
-    has_alpha_vault: Option<bool>,
-    liquidity: Option<u128>,
-    sqrt_price: Option<u128>,
-    activation_type: Option<u8>,
-    collect_fee_mode: Option<u8>,
-    activation_point: Option<u64>,
+    params: Option<InitializeCustomizablePoolParameters>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

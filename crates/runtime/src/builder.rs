@@ -11,6 +11,7 @@ use crate::{
     handler::{BoxPipeline, DynPipeline, PipelineSets},
     instruction::InstructionPipeline,
     metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
+    sources::Source,
     util, Runtime,
 };
 
@@ -54,7 +55,9 @@ pub struct Builder<K: BuilderKind, M> {
     pub(crate) instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
     pub(crate) block_meta: Vec<BoxPipeline<'static, BlockMetaUpdate>>,
     pub(crate) commitment_level: Option<CommitmentLevel>,
+    pub(crate) from_slot_filter: Option<u64>,
     pub(crate) metrics: M,
+    pub(crate) sources: Vec<Box<dyn Source>>,
     pub(crate) extra: K,
 }
 
@@ -67,7 +70,9 @@ impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
             instruction: vec![],
             block_meta: vec![],
             commitment_level: None,
+            from_slot_filter: None,
             metrics: NullMetrics,
+            sources: vec![],
             extra: K::default(),
         }
     }
@@ -113,7 +118,9 @@ impl<K: BuilderKind, M> Builder<K, M> {
             instruction,
             block_meta,
             commitment_level,
+            from_slot_filter,
             metrics: _,
+            sources,
             extra,
         } = self;
 
@@ -124,7 +131,9 @@ impl<K: BuilderKind, M> Builder<K, M> {
             instruction,
             block_meta,
             commitment_level,
+            from_slot_filter,
             metrics,
+            sources,
             extra,
         }
     }
@@ -181,6 +190,19 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.commitment_level = Some(commitment_level))
     }
 
+    /// Add a new data `Source` to which the runtime will subscribe.
+    ///
+    /// **NOTE:** All added Sources are going to be processed concurrently
+    pub fn source<T: Source>(self, source: T) -> Self {
+        self.mutate(|s| s.sources.push(Box::new(source)))
+    }
+
+    /// Set the from slot filter for the Yellowstone client. The server will attempt to replay
+    /// messages from the specified slot onward
+    pub fn from_slot(self, from_slot: u64) -> Self {
+        self.mutate(|s| s.from_slot_filter = Some(from_slot))
+    }
+
     /// Attempt to build a new [`Runtime`] instance from the current builder
     /// state and the provided configuration.
     ///
@@ -195,7 +217,9 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             instruction,
             block_meta,
             commitment_level,
+            from_slot_filter,
             metrics,
+            sources,
             extra: RuntimeKind,
         } = self;
         let () = err?;
@@ -241,11 +265,17 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             return Err(BuilderError::MissingField("block_meta"));
         }
 
+        if sources.is_empty() {
+            return Err(BuilderError::MissingField("sources"));
+        }
+
         Ok(Runtime {
             yellowstone_cfg,
+            sources,
             buffer_cfg,
             pipelines,
             commitment_filter: commitment_level,
+            from_slot_filter,
             counters: Counters::new(&instrumenter),
             exporter,
         })

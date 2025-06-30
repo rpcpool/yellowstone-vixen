@@ -20,14 +20,13 @@ use std::{
     collections::{HashMap, HashSet},
     fmt::{self, Debug},
     future::Future,
-    ops,
     str::FromStr,
 };
 
 use yellowstone_grpc_proto::geyser::{
-    SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterBlocksMeta,
-    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateBlockMeta,
-    SubscribeUpdateTransaction,
+    CommitmentLevel, SubscribeRequest, SubscribeRequestFilterAccounts,
+    SubscribeRequestFilterBlocksMeta, SubscribeRequestFilterTransactions, SubscribeUpdateAccount,
+    SubscribeUpdateBlockMeta, SubscribeUpdateTransaction,
 };
 
 pub extern crate bs58;
@@ -134,10 +133,13 @@ impl<T: Parser> GetPrefilter for T {
 
 // TODO: why are so many fields on the prefilters and prefilter builder optional???
 /// A prefilter for narrowing down the updates that a parser will receive.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Prefilter {
-    pub(crate) account: Option<AccountPrefilter>,
-    pub(crate) transaction: Option<TransactionPrefilter>,
+    /// Filters for account updates.
+    pub account: Option<AccountPrefilter>,
+    /// Filters for transaction updates.
+    pub transaction: Option<TransactionPrefilter>,
+    /// Filters for block meta updates.
     pub(crate) block_meta: Option<BlockMetaPrefilter>,
 }
 
@@ -181,13 +183,18 @@ impl FromIterator<Prefilter> for Prefilter {
     }
 }
 
+/// A prefilter for matching accounts.
 #[derive(Debug, Default, Clone, PartialEq)]
-pub(crate) struct AccountPrefilter {
+pub struct AccountPrefilter {
+    /// The accounts that this prefilter will match.
     pub accounts: HashSet<Pubkey>,
+    /// The owners that this prefilter will match.
     pub owners: HashSet<Pubkey>,
 }
 
 impl AccountPrefilter {
+    /// Merge another account prefilter into this one, producing a prefilter
+    /// that describes the union of the two.
     pub fn merge(&mut self, other: AccountPrefilter) {
         let Self { accounts, owners } = self;
         accounts.extend(other.accounts);
@@ -195,12 +202,16 @@ impl AccountPrefilter {
     }
 }
 
+/// A prefilter for matching transactions.
 #[derive(Debug, Default, Clone, PartialEq)]
-pub(crate) struct TransactionPrefilter {
+pub struct TransactionPrefilter {
+    /// The accounts that this prefilter will match.
     pub accounts: HashSet<Pubkey>,
 }
 
 impl TransactionPrefilter {
+    /// Merge another transaction prefilter into this one, producing a prefilter
+    /// that describes the union of the two.
     pub fn merge(&mut self, other: TransactionPrefilter) {
         let Self { accounts } = self;
         accounts.extend(other.accounts);
@@ -511,47 +522,80 @@ impl PrefilterBuilder {
 }
 
 /// A collection of filters for a Vixen subscription.
-#[derive(Debug)]
-#[repr(transparent)]
-pub struct Filters<'a>(HashMap<&'a str, Prefilter>);
+#[derive(Debug, Clone)]
+pub struct Filters {
+    /// Filters for each parser.
+    pub parsers_filters: HashMap<String, Prefilter>,
+    /// Global filters for the subscription.
+    pub global_filters: GlobalFilters,
+}
 
-impl<'a> Filters<'a> {
+/// A collection of global filters shared by all parsers for a Vixen subscription.
+#[derive(Debug, Clone, Default, Copy)]
+pub struct GlobalFilters {
+    /// The commitment level for the subscription.
+    pub commitment: Option<CommitmentLevel>,
+    /// The from slot filter for the subscription.
+    pub from_slot: Option<u64>,
+}
+
+impl Filters {
     /// Construct a new collection of filters.
     #[inline]
     #[must_use]
-    pub const fn new(filters: HashMap<&'a str, Prefilter>) -> Self { Self(filters) }
-}
+    pub fn new(filters: HashMap<String, Prefilter>) -> Self {
+        Self {
+            parsers_filters: filters,
+            global_filters: GlobalFilters::default(),
+        }
+    }
 
-impl<'a> ops::Deref for Filters<'a> {
-    type Target = HashMap<&'a str, Prefilter>;
-
+    /// Set the commitment level filter.
     #[inline]
-    fn deref(&self) -> &Self::Target { &self.0 }
+    #[must_use]
+    pub fn commitment(mut self, commitment: Option<CommitmentLevel>) -> Self {
+        self.global_filters.commitment = commitment;
+
+        self
+    }
+
+    /// Set the from slot filter.
+    #[inline]
+    #[must_use]
+    pub fn from_slot(mut self, from_slot: Option<u64>) -> Self {
+        self.global_filters.from_slot = from_slot;
+
+        self
+    }
 }
 
-impl<'a> From<Filters<'a>> for SubscribeRequest {
-    fn from(value: Filters<'a>) -> Self {
+impl From<Filters> for SubscribeRequest {
+    fn from(value: Filters) -> Self {
         SubscribeRequest {
             accounts: value
+                .parsers_filters
                 .iter()
                 .filter_map(|(k, v)| {
                     let v = v.account.as_ref()?;
 
-                    Some((k.to_owned().into(), SubscribeRequestFilterAccounts {
+                    Some((k.clone(), SubscribeRequestFilterAccounts {
                         account: v.accounts.iter().map(ToString::to_string).collect(),
                         owner: v.owners.iter().map(ToString::to_string).collect(),
                         // TODO: probably a good thing to look into
                         filters: vec![],
+                        // We receive all accounts updates
+                        nonempty_txn_signature: None,
                     }))
                 })
                 .collect(),
             slots: [].into_iter().collect(),
             transactions: value
+                .parsers_filters
                 .iter()
                 .filter_map(|(k, v)| {
                     let v = v.transaction.as_ref()?;
 
-                    Some((k.to_owned().into(), SubscribeRequestFilterTransactions {
+                    Some((k.clone(), SubscribeRequestFilterTransactions {
                         vote: None,
                         // TODO: make this configurable
                         failed: Some(false),
@@ -566,13 +610,18 @@ impl<'a> From<Filters<'a>> for SubscribeRequest {
             transactions_status: [].into_iter().collect(),
             blocks: [].into_iter().collect(),
             blocks_meta: value
-                .iter()
-                .map(|(k, _v)| (k.to_owned().into(), SubscribeRequestFilterBlocksMeta {}))
+                .parsers_filters
+                .keys()
+                .map(|k| (k.clone(), SubscribeRequestFilterBlocksMeta {}))
                 .collect(),
             entry: [].into_iter().collect(),
-            commitment: None,
+            commitment: value
+                .global_filters
+                .commitment
+                .map(|commitment| commitment as i32),
             accounts_data_slice: vec![],
             ping: None,
+            from_slot: value.global_filters.from_slot,
         }
     }
 }

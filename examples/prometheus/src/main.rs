@@ -10,17 +10,14 @@
 use std::path::PathBuf;
 
 use clap::Parser;
+use solana_accounts_rpc_source::SolanaAccountsRpcSource;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use yellowstone_grpc_source::YellowstoneGrpcSource;
 use yellowstone_vixen::{self as vixen, Pipeline};
-use yellowstone_vixen_parser::{
-    block_meta::BlockMetaParser,
-    token_extension_program::{
-        AccountParser as TokenExtensionProgramAccParser,
-        InstructionParser as TokenExtensionProgramIxParser,
-    },
-    token_program::{
-        AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
-    },
+use yellowstone_vixen_parser::block_meta::BlockMetaParser;
+use yellowstone_vixen_raydium_amm_v4_parser::{
+    accounts_parser::AccountParser as RaydiumAmmV4AccParser,
+    instructions_parser::InstructionParser as RaydiumAmmV4IxParser,
 };
 
 #[derive(clap::Parser)]
@@ -51,13 +48,14 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .account(Pipeline::new(TokenProgramAccParser, [Logger]))
-        .account(Pipeline::new(TokenExtensionProgramAccParser, [Logger]))
-        .instruction(Pipeline::new(TokenExtensionProgramIxParser, [Logger]))
-        .instruction(Pipeline::new(TokenProgramIxParser, [Logger]))
+        .source(YellowstoneGrpcSource::new())
+        .source(SolanaAccountsRpcSource::new())
+        .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
+        .instruction(Pipeline::new(RaydiumAmmV4IxParser, [Logger]))
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
         .metrics(vixen::metrics::Prometheus)
         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
+        // .from_slot(slot_number)
         .build(config)
         .run();
 }

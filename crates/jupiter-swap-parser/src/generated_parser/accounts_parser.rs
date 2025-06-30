@@ -10,6 +10,7 @@ use crate::{accounts::TokenLedger, ID};
 /// Jupiter Program State
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum JupiterProgramState {
     TokenLedger(TokenLedger),
 }
@@ -17,14 +18,38 @@ pub enum JupiterProgramState {
 impl JupiterProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
-        match acc_discriminator {
+        let acc = match acc_discriminator {
             [156, 247, 9, 188, 54, 108, 85, 77] => Ok(JupiterProgramState::TokenLedger(
                 TokenLedger::from_bytes(data_bytes)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
+        };
+
+        #[cfg(feature = "tracing")]
+        match &acc {
+            Ok(acc) => {
+                tracing::info!(
+                    name: "correctly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = acc.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = "error",
+                    discriminator = ?acc_discriminator,
+                    error = ?e
+                );
+            },
         }
+
+        acc
     }
 }
 
@@ -52,7 +77,6 @@ impl yellowstone_vixen_core::Parser for AccountParser {
             .account
             .as_ref()
             .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-
         JupiterProgramState::try_unpack(&inner.data)
     }
 }

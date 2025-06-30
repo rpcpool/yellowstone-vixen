@@ -9,22 +9,13 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use sdk::types::Observation;
-
-    use crate as sdk;
-    use crate::proto_def;
+    use crate::{proto_def, types::Observation};
     impl IntoProto<proto_def::Observation> for Observation {
         fn into_proto(self) -> proto_def::Observation {
             proto_def::Observation {
                 block_timestamp: self.block_timestamp,
-                cumulative_token0_price_x32: self
-                    .cumulative_token0_price_x32
-                    .to_le_bytes()
-                    .to_vec(),
-                cumulative_token1_price_x32: self
-                    .cumulative_token1_price_x32
-                    .to_le_bytes()
-                    .to_vec(),
+                cumulative_token0_price_x32: self.cumulative_token0_price_x32.to_string(),
+                cumulative_token1_price_x32: self.cumulative_token1_price_x32.to_string(),
             }
         }
     }
