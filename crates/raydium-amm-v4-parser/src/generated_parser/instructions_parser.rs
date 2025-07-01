@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use std::sync::Arc;
+
 use borsh::BorshDeserialize;
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     instructions::{
@@ -56,16 +59,9 @@ pub enum RaydiumAmmProgramIx {
 #[derive(Debug, Copy, Clone)]
 pub struct InstructionParser;
 
-#[derive(Debug)]
-pub struct InstructionUpdateOutput {
-    pub parsed_ix: RaydiumAmmProgramIx,
-    pub tx_signature: Vec<u8>,
-    pub slot: u64,
-}
-
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-    type Output = InstructionUpdateOutput;
+    type Output = InstructionUpdateOutput<RaydiumAmmProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "RaydiumAmm::InstructionParser".into() }
 
@@ -96,10 +92,9 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<InstructionUpdateOutput> {
+    ) -> yellowstone_vixen_core::ParseResult<InstructionUpdateOutput<RaydiumAmmProgramIx>> {
         let accounts_len = ix.accounts.len();
-        let tx_signature = ix.shared.signature.clone();
-        let slot = ix.shared.slot;
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 1] = ix.data[0..1].try_into()?;
         let mut ix_data = &ix.data[1..];
@@ -486,8 +481,7 @@ impl InstructionParser {
 
         ix.map(|ix| InstructionUpdateOutput {
             parsed_ix: ix,
-            tx_signature,
-            slot,
+            shared_data,
         })
     }
 }

@@ -21,6 +21,7 @@ use std::{
     fmt::{self, Debug},
     future::Future,
     str::FromStr,
+    sync::Arc,
 };
 
 use yellowstone_grpc_proto::geyser::{
@@ -64,6 +65,19 @@ pub type AccountUpdate = SubscribeUpdateAccount;
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 /// A block meta update from Yellowstone.
 pub type BlockMetaUpdate = SubscribeUpdateBlockMeta;
+
+/// Generic output type for instruction parsers that wraps shared data for all instructions
+/// in the given transaction.
+///
+/// This is the recommended structure for an `Parser::Output` associated type, for the case that the parser
+/// wants to expose the `InstructionShared` data to the `Handler`s
+#[derive(Debug)]
+pub struct InstructionUpdateOutput<T> {
+    /// The parsed instruction.
+    pub parsed_ix: T,
+    /// Shared data for all instructions in the given transaction.
+    pub shared_data: Arc<instruction::InstructionShared>,
+}
 
 /// A core trait that defines the parse logic for producing a parsed value from
 /// a Vixen update (typically [`AccountUpdate`], [`TransactionUpdate`], or
