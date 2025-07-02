@@ -147,8 +147,10 @@ impl<M: MetricsFactory> Runtime<M> {
     /// # Errors
     /// This function returns an error if the runtime crashes.
     #[inline]
-    pub fn try_run(self) -> Result<(), Error> {
-        tokio::runtime::Runtime::new()?.block_on(self.try_run_async())
+    pub fn try_run(self) -> Result<(), Box<Error>> {
+        tokio::runtime::Runtime::new()
+            .map_err(|e| Box::new(e.into()))?
+            .block_on(self.try_run_async())
     }
 
     /// Run the Vixen runtime asynchronously, terminating the current process
@@ -198,7 +200,7 @@ impl<M: MetricsFactory> Runtime<M> {
     /// # Errors
     /// This function returns an error if the runtime crashes.
     #[tracing::instrument("Runtime::run", skip(self))]
-    pub async fn try_run_async(self) -> Result<(), Error> {
+    pub async fn try_run_async(self) -> Result<(), Box<Error>> {
         enum StopType<S, X> {
             Signal(S),
             Buffer(Result<(), Error>),
@@ -241,7 +243,8 @@ impl<M: MetricsFactory> Runtime<M> {
                     Ok(k)
                 })
             })
-            .collect::<Result<FuturesUnordered<_>, _>>()?;
+            .collect::<Result<FuturesUnordered<_>, _>>()
+            .map_err(|e| Box::new(e.into()))?;
 
             signal = async move { stream.next().await.transpose() }
         }
