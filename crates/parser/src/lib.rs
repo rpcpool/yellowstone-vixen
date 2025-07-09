@@ -18,8 +18,6 @@ mod helpers;
 #[cfg(feature = "block-meta")]
 pub mod block_meta;
 
-#[cfg(feature = "raydium")]
-pub mod raydium;
 #[cfg(feature = "token-extensions")]
 pub mod token_extension_program;
 #[cfg(feature = "token-program")]

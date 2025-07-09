@@ -16,6 +16,7 @@ use crate::{
 /// LbClmm Program State
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
+#[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum LbClmmProgramState {
     BinArrayBitmapExtension(BinArrayBitmapExtension),
     BinArray(BinArray),
@@ -32,7 +33,7 @@ pub enum LbClmmProgramState {
 impl LbClmmProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
-        match acc_discriminator {
+        let acc = match acc_discriminator {
             [80, 111, 124, 113, 55, 237, 18, 5] => Ok(LbClmmProgramState::BinArrayBitmapExtension(
                 BinArrayBitmapExtension::from_bytes(data_bytes)?,
             )),
@@ -66,7 +67,31 @@ impl LbClmmProgramState {
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
+        };
+
+        #[cfg(feature = "tracing")]
+        match &acc {
+            Ok(acc) => {
+                tracing::info!(
+                    name: "correctly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = acc.to_string()
+                );
+            },
+            Err(e) => {
+                tracing::info!(
+                    name: "incorrectly_parsed_account",
+                    name = "account_update",
+                    program = ID.to_string(),
+                    account = "error",
+                    discriminator = ?acc_discriminator,
+                    error = ?e
+                );
+            },
         }
+
+        acc
     }
 }
 
@@ -132,7 +157,7 @@ mod proto_parser {
             proto_def::BinArray {
                 index: self.index,
                 version: self.version.into(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
                 lb_pair: self.lb_pair.to_string(),
                 bins: self.bins.into_iter().map(|x| x.into_proto()).collect(),
             }
@@ -143,7 +168,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::ClaimFeeOperator {
             proto_def::ClaimFeeOperator {
                 operator: self.operator.to_string(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
@@ -153,14 +178,18 @@ mod proto_parser {
             proto_def::LbPair {
                 parameters: Some(self.parameters.into_proto()),
                 v_parameters: Some(self.v_parameters.into_proto()),
-                bump_seed: self.bump_seed.to_vec(),
-                bin_step_seed: self.bin_step_seed.to_vec(),
+                bump_seed: self.bump_seed.into_iter().map(|x| x.into()).collect(),
+                bin_step_seed: self.bin_step_seed.into_iter().map(|x| x.into()).collect(),
                 pair_type: self.pair_type.into(),
                 active_id: self.active_id,
                 bin_step: self.bin_step.into(),
                 status: self.status.into(),
                 require_base_factor_seed: self.require_base_factor_seed.into(),
-                base_factor_seed: self.base_factor_seed.to_vec(),
+                base_factor_seed: self
+                    .base_factor_seed
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
                 activation_type: self.activation_type.into(),
                 creator_pool_on_off_control: self.creator_pool_on_off_control.into(),
                 token_x_mint: self.token_x_mint.to_string(),
@@ -168,7 +197,7 @@ mod proto_parser {
                 reserve_x: self.reserve_x.to_string(),
                 reserve_y: self.reserve_y.to_string(),
                 protocol_fee: Some(self.protocol_fee.into_proto()),
-                padding1: self.padding1.to_vec(),
+                padding1: self.padding1.into_iter().map(|x| x.into()).collect(),
                 reward_infos: self
                     .reward_infos
                     .into_iter()
@@ -177,17 +206,17 @@ mod proto_parser {
                 oracle: self.oracle.to_string(),
                 bin_array_bitmap: self.bin_array_bitmap.to_vec(),
                 last_updated_at: self.last_updated_at,
-                padding2: self.padding2.to_vec(),
+                padding2: self.padding2.into_iter().map(|x| x.into()).collect(),
                 pre_activation_swap_address: self.pre_activation_swap_address.to_string(),
                 base_key: self.base_key.to_string(),
                 activation_point: self.activation_point,
                 pre_activation_duration: self.pre_activation_duration,
-                padding3: self.padding3.to_vec(),
+                padding3: self.padding3.into_iter().map(|x| x.into()).collect(),
                 padding4: self.padding4,
                 creator: self.creator.to_string(),
                 token_mint_x_program_flag: self.token_mint_x_program_flag.into(),
                 token_mint_y_program_flag: self.token_mint_y_program_flag.into(),
-                reserved: self.reserved.to_vec(),
+                reserved: self.reserved.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
@@ -220,7 +249,7 @@ mod proto_parser {
                 total_claimed_fee_x_amount: self.total_claimed_fee_x_amount,
                 total_claimed_fee_y_amount: self.total_claimed_fee_y_amount,
                 total_claimed_rewards: self.total_claimed_rewards.to_vec(),
-                reserved: self.reserved.to_vec(),
+                reserved: self.reserved.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
@@ -233,7 +262,7 @@ mod proto_parser {
                 liquidity_shares: self
                     .liquidity_shares
                     .into_iter()
-                    .map(|x| x.to_le_bytes().to_vec())
+                    .map(|x| x.to_string())
                     .collect(),
                 reward_infos: self
                     .reward_infos
@@ -251,7 +280,7 @@ mod proto_parser {
                 lock_release_point: self.lock_release_point,
                 padding0: self.padding0.into(),
                 fee_owner: self.fee_owner.to_string(),
-                reserved: self.reserved.to_vec(),
+                reserved: self.reserved.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
@@ -296,7 +325,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::TokenBadge {
             proto_def::TokenBadge {
                 token_mint: self.token_mint.to_string(),
-                padding: self.padding.to_vec(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
             }
         }
     }

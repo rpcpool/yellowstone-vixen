@@ -119,8 +119,10 @@ impl<M: MetricsFactory> Server<'_, M> {
     /// # Errors
     /// This function returns an error if the runtime or gRPC server crash.
     #[inline]
-    pub fn try_run(self) -> Result<(), Error> {
-        tokio::runtime::Runtime::new()?.block_on(self.try_run_async())
+    pub fn try_run(self) -> Result<(), Box<Error>> {
+        tokio::runtime::Runtime::new()
+            .map_err(|e| Box::new(e.into()))?
+            .block_on(self.try_run_async())
     }
 
     /// Run the Vixen stream server asynchronously, terminating the current process
@@ -169,7 +171,7 @@ impl<M: MetricsFactory> Server<'_, M> {
     /// # Errors
     /// This function returns an error if the runtime or gRPC server crash.
     #[tracing::instrument("stream::Server::run", skip(self), err)]
-    pub async fn try_run_async(self) -> Result<(), Error> {
+    pub async fn try_run_async(self) -> Result<(), Box<Error>> {
         let Self {
             grpc_cfg,
             desc_sets,
@@ -183,8 +185,11 @@ impl<M: MetricsFactory> Server<'_, M> {
 
         info!(%address, "gRPC server created");
 
-        runtime.try_run_async().await?;
-        grpc.stop().await?;
+        runtime
+            .try_run_async()
+            .await
+            .map_err(|e| Box::new(Error::Runtime(*e)))?;
+        grpc.stop().await.map_err(|e| Box::new(e.into()))?;
         Ok(())
     }
 }

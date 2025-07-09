@@ -405,9 +405,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.86"
+version = "0.1.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "644dd749086bf3771a2fbc5f256fdb982d53f011c7d5d560304eafeecebce79d"
+checksum = "e539d3fca749fcee5236ab05e93a52867dd549cc157c8cb7f99595f3cedffdb5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1422,6 +1422,7 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
 ]
@@ -1431,11 +1432,14 @@ name = "example-vixen-prometheus"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "solana-accounts-rpc-source",
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-raydium-amm-v4-parser",
 ]
 
 [[package]]
@@ -1448,6 +1452,7 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
 ]
 
@@ -1460,6 +1465,7 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-jupiter-swap-parser",
  "yellowstone-vixen-kamino-limit-orders-parser",
@@ -4149,6 +4155,22 @@ dependencies = [
  "solana-program-error",
  "solana-program-memory",
  "solana-pubkey",
+]
+
+[[package]]
+name = "solana-accounts-rpc-source"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "solana-account-decoder-client-types",
+ "solana-client",
+ "solana-commitment-config",
+ "solana-pubkey",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8049,9 +8071,9 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-grpc-client"
-version = "2.0.0"
+version = "6.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c73838262cb899d64e2c94ac6ca2fb5bc5d565aa4f04a68b969645a40a06c2c"
+checksum = "9cd33c93a1f521fa586f5fdf7772b846b61c8434dd803ba991e63c235c64690a"
 dependencies = [
  "bytes",
  "futures",
@@ -8063,22 +8085,37 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-grpc-proto"
-version = "2.0.0"
+version = "6.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b740e0601335c649640732e4cb4061a4ef4bb27017e8e76e4caa3c03566dd0e"
+checksum = "e48021fc734917bb7d0891dd9fccfacc4dfeec533d6bcd130fcbc934dd2b4429"
 dependencies = [
  "anyhow",
- "bincode",
  "prost",
+ "prost-types",
  "protobuf-src",
  "tonic",
  "tonic-build",
 ]
 
 [[package]]
+name = "yellowstone-grpc-source"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures-util",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen"
 version = "0.3.0"
 dependencies = [
+ "async-trait",
  "clap",
  "futures-channel",
  "futures-util",
@@ -8135,8 +8172,11 @@ dependencies = [
  "prost",
  "prost-build",
  "solana-program",
+ "strum",
+ "strum_macros",
  "thiserror 1.0.69",
  "tonic",
+ "tracing",
  "yellowstone-vixen-core",
 ]
 
@@ -8204,8 +8244,11 @@ dependencies = [
  "prost",
  "prost-build",
  "solana-program",
+ "strum",
+ "strum_macros",
  "thiserror 1.0.69",
  "tonic",
+ "tracing",
  "yellowstone-vixen-core",
 ]
 
@@ -8309,8 +8352,11 @@ dependencies = [
  "spl-token-group-interface 0.3.0",
  "spl-token-metadata-interface 0.4.0",
  "spl-type-length-value 0.5.0",
+ "strum",
+ "strum_macros",
  "thiserror 1.0.69",
  "tokio",
+ "tracing",
  "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
@@ -8357,6 +8403,8 @@ dependencies = [
  "prost",
  "prost-build",
  "solana-program",
+ "strum",
+ "strum_macros",
  "thiserror 1.0.69",
  "tonic",
  "tracing",

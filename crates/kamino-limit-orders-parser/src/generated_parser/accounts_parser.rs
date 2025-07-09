@@ -42,6 +42,7 @@ impl LimoProgramState {
         match &acc {
             Ok(acc) => {
                 tracing::info!(
+                    name: "correctly_parsed_account",
                     name = "account_update",
                     program = ID.to_string(),
                     account = acc.to_string()
@@ -49,6 +50,7 @@ impl LimoProgramState {
             },
             Err(e) => {
                 tracing::info!(
+                    name: "incorrectly_parsed_account",
                     name = "account_update",
                     program = ID.to_string(),
                     account = "error",
@@ -120,7 +122,7 @@ mod proto_parser {
                 status: self.status.into(),
                 in_vault_bump: self.in_vault_bump.into(),
                 flash_ix_lock: self.flash_ix_lock.into(),
-                padding0: self.padding0.to_vec(),
+                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
                 last_updated_timestamp: self.last_updated_timestamp,
                 flash_start_taker_output_balance: self.flash_start_taker_output_balance,
                 padding: self.padding.to_vec(),
@@ -147,7 +149,7 @@ mod proto_parser {
                 orders_taking_blocked: self.orders_taking_blocked.into(),
                 host_fee_bps: self.host_fee_bps.into(),
                 is_order_taking_permissionless: self.is_order_taking_permissionless.into(),
-                padding0: self.padding0.to_vec(),
+                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
                 order_close_delay_seconds: self.order_close_delay_seconds,
                 padding1: self.padding1.to_vec(),
                 pda_authority_previous_lamports_balance: self

@@ -1,11 +1,11 @@
-use std::{pin::pin, sync::Arc};
+use std::sync::Arc;
 
-use futures_util::{Stream, StreamExt};
+use tokio::sync::mpsc::Receiver;
 use topograph::{
     executor::{self, Executor, Nonblock, Tokio},
     prelude::*,
 };
-use tracing::{warn, Instrument};
+use tracing::warn;
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdatePing},
     tonic::Status,
@@ -16,7 +16,6 @@ use crate::{
     handler::PipelineSets,
     metrics::{Counters, Instrumenter, UpdateType},
     stop::{self, StopCode, StopRx, StopTx},
-    yellowstone,
 };
 
 type TaskHandle = tokio::task::JoinHandle<Result<StopCode, crate::Error>>;
@@ -31,12 +30,11 @@ impl Buffer {
             .and_then(std::convert::identity)
     }
 
-    // TODO: use never
-    pub async fn wait_for_stop(&mut self) -> Result<std::convert::Infallible, crate::Error> {
+    pub async fn wait_for_stop(&mut self) -> Result<(), crate::Error> {
         (&mut self.0)
             .await
             .map_err(|e| std::io::Error::from(e).into())
-            .and_then(|r| r.and(Err(crate::Error::ClientHangup)))
+            .map(|_| ())
     }
 }
 
@@ -71,6 +69,7 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
             SubscribeUpdate {
                 filters,
                 update_oneof,
+                created_at: _,
             },
         ) = update;
         let Some(update) = update_oneof else { return };
@@ -127,7 +126,10 @@ impl Buffer {
         build: B,
         spawn: S,
     ) -> Self {
-        let BufferConfig { jobs } = config;
+        let BufferConfig {
+            jobs,
+            sources_channel_size: _,
+        } = config;
 
         let pipelines = Arc::new(pipelines);
         let counters = Arc::new(counters);
@@ -144,14 +146,10 @@ impl Buffer {
         Self(task, stop_tx)
     }
 
-    pub fn run_yellowstone<
-        I,
-        T,
-        S: Stream<Item = Result<SubscribeUpdate, Status>> + 'static + Send,
-        M: Instrumenter,
-    >(
+    #[allow(clippy::large_enum_variant)]
+    pub fn run_yellowstone<M: Instrumenter>(
         config: BufferConfig,
-        client: yellowstone::YellowstoneStream<I, T, S>,
+        mut stream: Receiver<Result<SubscribeUpdate, Status>>,
         pipelines: PipelineSets,
         counters: Counters<M>,
     ) -> Self {
@@ -167,19 +165,18 @@ impl Buffer {
                         Stop(StopCode),
                     }
 
-                    let mut stream = pin!(client.stream);
                     loop {
                         let event = tokio::select! {
-                            u = stream
-                                .next()
-                                .instrument(tracing::trace_span!("await_update"))
-                                => Event::Update(u),
-                                c = &mut stop_rx => Event::Stop(c),
+                            u = stream.recv() => Event::Update(u),
+                            c = &mut stop_rx => Event::Stop(c),
                         };
 
                         let update = match event {
                             Event::Update(Some(u)) => u,
-                            Event::Update(None) => break Err(crate::Error::ServerHangup),
+                            Event::Update(None) => {
+                                tracing::warn!("Server stopped sending updates");
+                                break Ok(StopCode::default());
+                            },
                             Event::Stop(c) => break Ok(c),
                         };
 

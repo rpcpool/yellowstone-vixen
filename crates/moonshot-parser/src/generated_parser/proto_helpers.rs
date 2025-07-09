@@ -9,10 +9,7 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use sdk::types::TradeParams;
-
-    use crate as sdk;
-    use crate::proto_def;
+    use crate::{proto_def, types::TradeParams};
     impl IntoProto<proto_def::TradeParams> for TradeParams {
         fn into_proto(self) -> proto_def::TradeParams {
             proto_def::TradeParams {
@@ -23,7 +20,7 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use sdk::types::ConfigParams;
+    use crate::types::ConfigParams;
     impl IntoProto<proto_def::ConfigParams> for ConfigParams {
         fn into_proto(self) -> proto_def::ConfigParams {
             proto_def::ConfigParams {
