@@ -5,6 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+#[cfg(feature = "prefilters")]
+use std::str::FromStr;
 use std::sync::Arc;
 
 use borsh::BorshDeserialize;
@@ -56,8 +58,16 @@ pub enum RaydiumAmmProgramIx {
     UpdateConfigAccount(UpdateConfigAccountIxAccounts, UpdateConfigAccountIxData),
 }
 
+#[cfg(not(feature = "prefilters"))]
 #[derive(Debug, Copy, Clone)]
 pub struct InstructionParser;
+
+#[cfg(feature = "prefilters")]
+#[derive(Debug, Clone)]
+pub struct InstructionParser {
+    include_accounts: Vec<yellowstone_vixen_core::Pubkey>,
+    required_accounts: Vec<yellowstone_vixen_core::Pubkey>,
+}
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
@@ -66,10 +76,21 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     fn id(&self) -> std::borrow::Cow<str> { "RaydiumAmm::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
-        yellowstone_vixen_core::Prefilter::builder()
-            .transaction_accounts([ID])
-            .build()
-            .unwrap()
+        let prefilters = yellowstone_vixen_core::Prefilter::builder();
+
+        #[cfg(not(feature = "prefilters"))]
+        let prefilters = prefilters.transaction_accounts([ID]);
+
+        #[cfg(feature = "prefilters")]
+        let prefilters = prefilters
+            .transaction_accounts(
+                self.required_accounts
+                    .iter()
+                    .chain(yellowstone_vixen_core::Pubkey::from_str(&ID.to_string()).iter()),
+            )
+            .transaction_accounts_include(self.include_accounts.iter());
+
+        prefilters.build().unwrap()
     }
 
     async fn parse(
@@ -525,6 +546,45 @@ impl InstructionParser {
             parsed_ix: ix,
             shared_data,
         })
+    }
+
+    #[cfg(feature = "prefilters")]
+    pub fn new() -> Self {
+        Self {
+            include_accounts: vec![],
+            required_accounts: vec![],
+        }
+    }
+
+    #[cfg(feature = "prefilters")]
+    /// Set the included accounts for this transaction prefilter.
+    ///
+    /// **Note:** If the transaction does not include at least ONE of the accounts set here, the
+    /// transaction will not be retrieved.
+    pub fn include_accounts(
+        mut self,
+        include_accounts: impl IntoIterator<Item = yellowstone_vixen_core::Pubkey>,
+    ) -> Self {
+        self.include_accounts.extend(include_accounts);
+
+        self
+    }
+
+    #[cfg(feature = "prefilters")]
+    /// Set the required accounts for this transaction prefilter.
+    ///  The accounts set here **must** be present in the transaction.
+    ///
+    /// **Note:** If the transaction does not include ALL of the accounts set here, the
+    /// transaction will not be retrieved.
+    ///
+    /// **The Program ID of the Parser program will always be included in this list
+    pub fn required_accounts(
+        mut self,
+        required_accounts: impl IntoIterator<Item = yellowstone_vixen_core::Pubkey>,
+    ) -> Self {
+        self.required_accounts.extend(required_accounts);
+
+        self
     }
 }
 
