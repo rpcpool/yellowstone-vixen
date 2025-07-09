@@ -146,6 +146,7 @@ impl Buffer {
         Self(task, stop_tx)
     }
 
+    #[allow(clippy::large_enum_variant)]
     pub fn run_yellowstone<M: Instrumenter>(
         config: BufferConfig,
         mut stream: Receiver<Result<SubscribeUpdate, Status>>,

@@ -118,12 +118,7 @@ impl Source for SolanaAccountsRpcSource {
                                 },
                             )
                             .await
-                            .map_err(|e| {
-                                VixenError::Io(std::io::Error::new(
-                                    std::io::ErrorKind::Other,
-                                    e.to_string(),
-                                ))
-                            });
+                            .map_err(|e| VixenError::Io(std::io::Error::other(e.to_string())));
 
                         if let Err(e) = &accounts {
                             tracing::error!(
