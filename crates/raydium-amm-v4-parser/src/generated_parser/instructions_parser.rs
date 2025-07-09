@@ -110,6 +110,8 @@ impl InstructionParser {
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<InstructionUpdateOutput<RaydiumAmmProgramIx>> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
         let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 1] = ix.data[0..1].try_into()?;
