@@ -1,4 +1,6 @@
-use crate::{ParseResult, Parser, Prefilter, Pubkey, TransactionPrefilter};
+use std::str::FromStr;
+
+use crate::{ParseResult, Parser, Prefilter, ProgramParser, Pubkey, TransactionPrefilter};
 
 /// A marker trait that enables custom prefilters to be applied to a parser.
 pub trait CustomPrefilters: Parser + Sized {
@@ -12,9 +14,18 @@ pub trait CustomPrefilters: Parser + Sized {
     ///
     /// impl CustomPrefilters for MyParser {}
     ///
-    /// let parser = MyParser::filter()
-    ///     .include_accounts([Pubkey::from_str("").unwrap()]) // Optional  
-    ///     .required_accounts([Pubkey::from_str("").unwrap()]); //Optional
+    /// let parser = MyParser.filter()
+    ///     .include_accounts([TokenProgramIxParser]) // Optional  
+    ///     .required_accounts([PumpAmmAccParser]); //Optional
+    /// ```
+    ///
+    /// ---
+    ///
+    /// ### Note: You can also use strings or `Pubkey` directly:
+    /// ```rust
+    /// let parser = MyParser.filter()
+    ///  .include_accounts(["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"])
+    ///  .required_accounts([Pubkey::from_str("").unwrap()]);
     /// ```
     fn filter(self) -> InstructionParserWithCustomPrefilters<Self> {
         InstructionParserWithCustomPrefilters {
@@ -41,7 +52,9 @@ where
     type Input = T::Input;
     type Output = T::Output;
 
-    fn id(&self) -> std::borrow::Cow<str> { self.parser.id() }
+    fn id(&self) -> std::borrow::Cow<str> {
+        self.parser.id()
+    }
 
     fn prefilter(&self) -> Prefilter {
         let mut prefilter = self.parser.prefilter();
@@ -74,8 +87,13 @@ where
     /// **Note:** If the transaction does not include at least ONE of the accounts set here, the
     /// transaction will not be retrieved.
     #[must_use]
-    pub fn include_accounts(mut self, include_accounts: impl IntoIterator<Item = Pubkey>) -> Self {
-        self.include_accounts.extend(include_accounts);
+    #[allow(private_bounds)] // CustomPrefiltersAccount is meant to be used internally
+    pub fn include_accounts<F: CustomPrefiltersAccount>(
+        mut self,
+        include_accounts: impl IntoIterator<Item = F>,
+    ) -> Self {
+        self.include_accounts
+            .extend(include_accounts.into_iter().map(|f| f.get_pubkey()));
 
         self
     }
@@ -88,12 +106,36 @@ where
     ///
     /// **The Program ID of the Parser program will always be included in this list
     #[must_use]
-    pub fn required_accounts(
+    #[allow(private_bounds)] // CustomPrefiltersAccount is meant to be used internally
+    pub fn required_accounts<F: CustomPrefiltersAccount>(
         mut self,
-        required_accounts: impl IntoIterator<Item = Pubkey>,
+        required_accounts: impl IntoIterator<Item = F>,
     ) -> Self {
-        self.required_accounts.extend(required_accounts);
+        self.required_accounts
+            .extend(required_accounts.into_iter().map(|f| f.get_pubkey()));
 
         self
+    }
+}
+
+pub(crate) trait CustomPrefiltersAccount {
+    fn get_pubkey(&self) -> Pubkey;
+}
+
+impl CustomPrefiltersAccount for Pubkey {
+    fn get_pubkey(&self) -> Pubkey {
+        *self
+    }
+}
+
+impl<T: ProgramParser> CustomPrefiltersAccount for T {
+    fn get_pubkey(&self) -> Pubkey {
+        self.program_id()
+    }
+}
+
+impl CustomPrefiltersAccount for &'static str {
+    fn get_pubkey(&self) -> Pubkey {
+        Pubkey::from_str(self).unwrap()
     }
 }
