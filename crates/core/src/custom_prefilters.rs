@@ -52,9 +52,7 @@ where
     type Input = T::Input;
     type Output = T::Output;
 
-    fn id(&self) -> std::borrow::Cow<str> {
-        self.parser.id()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { self.parser.id() }
 
     fn prefilter(&self) -> Prefilter {
         let mut prefilter = self.parser.prefilter();
@@ -123,19 +121,13 @@ pub(crate) trait CustomPrefiltersAccount {
 }
 
 impl CustomPrefiltersAccount for Pubkey {
-    fn get_pubkey(&self) -> Pubkey {
-        *self
-    }
+    fn get_pubkey(&self) -> Pubkey { *self }
 }
 
 impl<T: ProgramParser> CustomPrefiltersAccount for T {
-    fn get_pubkey(&self) -> Pubkey {
-        self.program_id()
-    }
+    fn get_pubkey(&self) -> Pubkey { self.program_id() }
 }
 
 impl CustomPrefiltersAccount for &'static str {
-    fn get_pubkey(&self) -> Pubkey {
-        Pubkey::from_str(self).unwrap()
-    }
+    fn get_pubkey(&self) -> Pubkey { Pubkey::from_str(self).unwrap() }
 }
