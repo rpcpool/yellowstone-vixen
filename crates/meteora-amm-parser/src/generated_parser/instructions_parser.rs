@@ -5,7 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
 use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     instructions::{
@@ -99,7 +104,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = CpAmmProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<CpAmmProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "CpAmm::InstructionParser".into() }
 
@@ -115,7 +123,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -130,507 +154,530 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<CpAmmProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [181, 157, 89, 67, 143, 182, 52, 72] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidityIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    token_a_account: ix.accounts[2].0.into(),
-                    token_b_account: ix.accounts[3].0.into(),
-                    token_a_vault: ix.accounts[4].0.into(),
-                    token_b_vault: ix.accounts[5].0.into(),
-                    token_a_mint: ix.accounts[6].0.into(),
-                    token_b_mint: ix.accounts[7].0.into(),
-                    position_nft_account: ix.accounts[8].0.into(),
-                    owner: ix.accounts[9].0.into(),
-                    token_a_program: ix.accounts[10].0.into(),
-                    token_b_program: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    token_a_account: next_account(accounts)?,
+                    token_b_account: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: AddLiquidityIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: AddLiquidityIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::AddLiquidity(ix_accounts, de_ix_data))
             },
             [97, 206, 39, 105, 94, 94, 126, 148] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimPartnerFeeIxAccounts {
-                    pool_authority: ix.accounts[0].0.into(),
-                    pool: ix.accounts[1].0.into(),
-                    token_a_account: ix.accounts[2].0.into(),
-                    token_b_account: ix.accounts[3].0.into(),
-                    token_a_vault: ix.accounts[4].0.into(),
-                    token_b_vault: ix.accounts[5].0.into(),
-                    token_a_mint: ix.accounts[6].0.into(),
-                    token_b_mint: ix.accounts[7].0.into(),
-                    partner: ix.accounts[8].0.into(),
-                    token_a_program: ix.accounts[9].0.into(),
-                    token_b_program: ix.accounts[10].0.into(),
-                    event_authority: ix.accounts[11].0.into(),
-                    program: ix.accounts[12].0.into(),
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    token_a_account: next_account(accounts)?,
+                    token_b_account: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    partner: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimPartnerFeeIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ClaimPartnerFeeIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::ClaimPartnerFee(ix_accounts, de_ix_data))
             },
             [180, 38, 154, 17, 133, 33, 162, 211] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimPositionFeeIxAccounts {
-                    pool_authority: ix.accounts[0].0.into(),
-                    pool: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    token_a_account: ix.accounts[3].0.into(),
-                    token_b_account: ix.accounts[4].0.into(),
-                    token_a_vault: ix.accounts[5].0.into(),
-                    token_b_vault: ix.accounts[6].0.into(),
-                    token_a_mint: ix.accounts[7].0.into(),
-                    token_b_mint: ix.accounts[8].0.into(),
-                    position_nft_account: ix.accounts[9].0.into(),
-                    owner: ix.accounts[10].0.into(),
-                    token_a_program: ix.accounts[11].0.into(),
-                    token_b_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    token_a_account: next_account(accounts)?,
+                    token_b_account: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::ClaimPositionFee(ix_accounts))
             },
             [165, 228, 133, 48, 99, 249, 255, 33] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimProtocolFeeIxAccounts {
-                    pool_authority: ix.accounts[0].0.into(),
-                    pool: ix.accounts[1].0.into(),
-                    token_a_vault: ix.accounts[2].0.into(),
-                    token_b_vault: ix.accounts[3].0.into(),
-                    token_a_mint: ix.accounts[4].0.into(),
-                    token_b_mint: ix.accounts[5].0.into(),
-                    token_a_account: ix.accounts[6].0.into(),
-                    token_b_account: ix.accounts[7].0.into(),
-                    claim_fee_operator: ix.accounts[8].0.into(),
-                    operator: ix.accounts[9].0.into(),
-                    token_a_program: ix.accounts[10].0.into(),
-                    token_b_program: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    token_a_account: next_account(accounts)?,
+                    token_b_account: next_account(accounts)?,
+                    claim_fee_operator: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::ClaimProtocolFee(ix_accounts))
             },
             [149, 95, 181, 242, 94, 90, 158, 162] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimRewardIxAccounts {
-                    pool_authority: ix.accounts[0].0.into(),
-                    pool: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    reward_vault: ix.accounts[3].0.into(),
-                    reward_mint: ix.accounts[4].0.into(),
-                    user_token_account: ix.accounts[5].0.into(),
-                    position_nft_account: ix.accounts[6].0.into(),
-                    owner: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    event_authority: ix.accounts[9].0.into(),
-                    program: ix.accounts[10].0.into(),
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    user_token_account: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimRewardIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ClaimRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::ClaimReward(ix_accounts, de_ix_data))
             },
             [38, 134, 82, 216, 95, 124, 17, 99] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CloseClaimFeeOperatorIxAccounts {
-                    claim_fee_operator: ix.accounts[0].0.into(),
-                    rent_receiver: ix.accounts[1].0.into(),
-                    admin: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    claim_fee_operator: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::CloseClaimFeeOperator(ix_accounts))
             },
             [145, 9, 72, 157, 95, 125, 61, 85] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CloseConfigIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    rent_receiver: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    config: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::CloseConfig(ix_accounts))
             },
             [123, 134, 81, 0, 49, 68, 98, 98] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClosePositionIxAccounts {
-                    position_nft_mint: ix.accounts[0].0.into(),
-                    position_nft_account: ix.accounts[1].0.into(),
-                    pool: ix.accounts[2].0.into(),
-                    position: ix.accounts[3].0.into(),
-                    pool_authority: ix.accounts[4].0.into(),
-                    rent_receiver: ix.accounts[5].0.into(),
-                    owner: ix.accounts[6].0.into(),
-                    token_program: ix.accounts[7].0.into(),
-                    event_authority: ix.accounts[8].0.into(),
-                    program: ix.accounts[9].0.into(),
+                    position_nft_mint: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    pool_authority: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::ClosePosition(ix_accounts))
             },
             [169, 62, 207, 107, 58, 187, 162, 109] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateClaimFeeOperatorIxAccounts {
-                    claim_fee_operator: ix.accounts[0].0.into(),
-                    operator: ix.accounts[1].0.into(),
-                    admin: ix.accounts[2].0.into(),
-                    system_program: ix.accounts[3].0.into(),
-                    event_authority: ix.accounts[4].0.into(),
-                    program: ix.accounts[5].0.into(),
+                    claim_fee_operator: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::CreateClaimFeeOperator(ix_accounts))
             },
             [201, 207, 243, 114, 75, 111, 47, 189] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateConfigIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    config: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateConfigIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: CreateConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::CreateConfig(ix_accounts, de_ix_data))
             },
             [81, 251, 122, 78, 66, 57, 208, 82] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateDynamicConfigIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    config: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: CreateDynamicConfigIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::CreateDynamicConfig(ix_accounts, de_ix_data))
             },
             [48, 215, 197, 153, 96, 203, 180, 133] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreatePositionIxAccounts {
-                    owner: ix.accounts[0].0.into(),
-                    position_nft_mint: ix.accounts[1].0.into(),
-                    position_nft_account: ix.accounts[2].0.into(),
-                    pool: ix.accounts[3].0.into(),
-                    position: ix.accounts[4].0.into(),
-                    pool_authority: ix.accounts[5].0.into(),
-                    payer: ix.accounts[6].0.into(),
-                    token_program: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    event_authority: ix.accounts[9].0.into(),
-                    program: ix.accounts[10].0.into(),
+                    owner: next_account(accounts)?,
+                    position_nft_mint: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    pool_authority: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::CreatePosition(ix_accounts))
             },
             [88, 206, 0, 91, 60, 175, 151, 118] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateTokenBadgeIxAccounts {
-                    token_badge: ix.accounts[0].0.into(),
-                    token_mint: ix.accounts[1].0.into(),
-                    admin: ix.accounts[2].0.into(),
-                    system_program: ix.accounts[3].0.into(),
-                    event_authority: ix.accounts[4].0.into(),
-                    program: ix.accounts[5].0.into(),
+                    token_badge: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::CreateTokenBadge(ix_accounts))
             },
             [188, 50, 249, 165, 93, 151, 38, 63] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = FundRewardIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    reward_vault: ix.accounts[1].0.into(),
-                    reward_mint: ix.accounts[2].0.into(),
-                    funder_token_account: ix.accounts[3].0.into(),
-                    funder: ix.accounts[4].0.into(),
-                    token_program: ix.accounts[5].0.into(),
-                    event_authority: ix.accounts[6].0.into(),
-                    program: ix.accounts[7].0.into(),
+                    pool: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    funder_token_account: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: FundRewardIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: FundRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::FundReward(ix_accounts, de_ix_data))
             },
             [20, 161, 241, 24, 189, 221, 180, 2] => {
-                check_min_accounts_req(accounts_len, 19)?;
+                let expected_accounts_len = 19;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeCustomizablePoolIxAccounts {
-                    creator: ix.accounts[0].0.into(),
-                    position_nft_mint: ix.accounts[1].0.into(),
-                    position_nft_account: ix.accounts[2].0.into(),
-                    payer: ix.accounts[3].0.into(),
-                    pool_authority: ix.accounts[4].0.into(),
-                    pool: ix.accounts[5].0.into(),
-                    position: ix.accounts[6].0.into(),
-                    token_a_mint: ix.accounts[7].0.into(),
-                    token_b_mint: ix.accounts[8].0.into(),
-                    token_a_vault: ix.accounts[9].0.into(),
-                    token_b_vault: ix.accounts[10].0.into(),
-                    payer_token_a: ix.accounts[11].0.into(),
-                    payer_token_b: ix.accounts[12].0.into(),
-                    token_a_program: ix.accounts[13].0.into(),
-                    token_b_program: ix.accounts[14].0.into(),
-                    token2022_program: ix.accounts[15].0.into(),
-                    system_program: ix.accounts[16].0.into(),
-                    event_authority: ix.accounts[17].0.into(),
-                    program: ix.accounts[18].0.into(),
+                    creator: next_account(accounts)?,
+                    position_nft_mint: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    payer_token_a: next_account(accounts)?,
+                    payer_token_b: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeCustomizablePoolIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::InitializeCustomizablePool(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [95, 180, 10, 172, 84, 174, 232, 40] => {
-                check_min_accounts_req(accounts_len, 20)?;
+                let expected_accounts_len = 20;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePoolIxAccounts {
-                    creator: ix.accounts[0].0.into(),
-                    position_nft_mint: ix.accounts[1].0.into(),
-                    position_nft_account: ix.accounts[2].0.into(),
-                    payer: ix.accounts[3].0.into(),
-                    config: ix.accounts[4].0.into(),
-                    pool_authority: ix.accounts[5].0.into(),
-                    pool: ix.accounts[6].0.into(),
-                    position: ix.accounts[7].0.into(),
-                    token_a_mint: ix.accounts[8].0.into(),
-                    token_b_mint: ix.accounts[9].0.into(),
-                    token_a_vault: ix.accounts[10].0.into(),
-                    token_b_vault: ix.accounts[11].0.into(),
-                    payer_token_a: ix.accounts[12].0.into(),
-                    payer_token_b: ix.accounts[13].0.into(),
-                    token_a_program: ix.accounts[14].0.into(),
-                    token_b_program: ix.accounts[15].0.into(),
-                    token2022_program: ix.accounts[16].0.into(),
-                    system_program: ix.accounts[17].0.into(),
-                    event_authority: ix.accounts[18].0.into(),
-                    program: ix.accounts[19].0.into(),
+                    creator: next_account(accounts)?,
+                    position_nft_mint: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    payer_token_a: next_account(accounts)?,
+                    payer_token_b: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: InitializePoolIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: InitializePoolIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::InitializePool(ix_accounts, de_ix_data))
             },
             [149, 82, 72, 197, 253, 252, 68, 15] => {
-                check_min_accounts_req(accounts_len, 21)?;
+                let expected_accounts_len = 21;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePoolWithDynamicConfigIxAccounts {
-                    creator: ix.accounts[0].0.into(),
-                    position_nft_mint: ix.accounts[1].0.into(),
-                    position_nft_account: ix.accounts[2].0.into(),
-                    payer: ix.accounts[3].0.into(),
-                    pool_creator_authority: ix.accounts[4].0.into(),
-                    config: ix.accounts[5].0.into(),
-                    pool_authority: ix.accounts[6].0.into(),
-                    pool: ix.accounts[7].0.into(),
-                    position: ix.accounts[8].0.into(),
-                    token_a_mint: ix.accounts[9].0.into(),
-                    token_b_mint: ix.accounts[10].0.into(),
-                    token_a_vault: ix.accounts[11].0.into(),
-                    token_b_vault: ix.accounts[12].0.into(),
-                    payer_token_a: ix.accounts[13].0.into(),
-                    payer_token_b: ix.accounts[14].0.into(),
-                    token_a_program: ix.accounts[15].0.into(),
-                    token_b_program: ix.accounts[16].0.into(),
-                    token2022_program: ix.accounts[17].0.into(),
-                    system_program: ix.accounts[18].0.into(),
-                    event_authority: ix.accounts[19].0.into(),
-                    program: ix.accounts[20].0.into(),
+                    creator: next_account(accounts)?,
+                    position_nft_mint: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    pool_creator_authority: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    payer_token_a: next_account(accounts)?,
+                    payer_token_b: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePoolWithDynamicConfigIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::InitializePoolWithDynamicConfig(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [95, 135, 192, 196, 242, 129, 230, 68] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeRewardIxAccounts {
-                    pool_authority: ix.accounts[0].0.into(),
-                    pool: ix.accounts[1].0.into(),
-                    reward_vault: ix.accounts[2].0.into(),
-                    reward_mint: ix.accounts[3].0.into(),
-                    admin: ix.accounts[4].0.into(),
-                    token_program: ix.accounts[5].0.into(),
-                    system_program: ix.accounts[6].0.into(),
-                    event_authority: ix.accounts[7].0.into(),
-                    program: ix.accounts[8].0.into(),
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeRewardIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: InitializeRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::InitializeReward(ix_accounts, de_ix_data))
             },
             [227, 62, 2, 252, 247, 10, 171, 185] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = LockPositionIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    vesting: ix.accounts[2].0.into(),
-                    position_nft_account: ix.accounts[3].0.into(),
-                    owner: ix.accounts[4].0.into(),
-                    payer: ix.accounts[5].0.into(),
-                    system_program: ix.accounts[6].0.into(),
-                    event_authority: ix.accounts[7].0.into(),
-                    program: ix.accounts[8].0.into(),
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    vesting: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: LockPositionIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: LockPositionIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::LockPosition(ix_accounts, de_ix_data))
             },
             [165, 176, 125, 6, 231, 171, 186, 213] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = PermanentLockPositionIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    position_nft_account: ix.accounts[2].0.into(),
-                    owner: ix.accounts[3].0.into(),
-                    event_authority: ix.accounts[4].0.into(),
-                    program: ix.accounts[5].0.into(),
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: PermanentLockPositionIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::PermanentLockPosition(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [9, 94, 216, 14, 116, 204, 247, 0] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RefreshVestingIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    position_nft_account: ix.accounts[2].0.into(),
-                    owner: ix.accounts[3].0.into(),
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    owner: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::RefreshVesting(ix_accounts))
             },
             [10, 51, 61, 35, 112, 105, 24, 85] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveAllLiquidityIxAccounts {
-                    pool_authority: ix.accounts[0].0.into(),
-                    pool: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    token_a_account: ix.accounts[3].0.into(),
-                    token_b_account: ix.accounts[4].0.into(),
-                    token_a_vault: ix.accounts[5].0.into(),
-                    token_b_vault: ix.accounts[6].0.into(),
-                    token_a_mint: ix.accounts[7].0.into(),
-                    token_b_mint: ix.accounts[8].0.into(),
-                    position_nft_account: ix.accounts[9].0.into(),
-                    owner: ix.accounts[10].0.into(),
-                    token_a_program: ix.accounts[11].0.into(),
-                    token_b_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    token_a_account: next_account(accounts)?,
+                    token_b_account: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: RemoveAllLiquidityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::RemoveAllLiquidity(ix_accounts, de_ix_data))
             },
             [80, 85, 209, 72, 24, 206, 177, 108] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveLiquidityIxAccounts {
-                    pool_authority: ix.accounts[0].0.into(),
-                    pool: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    token_a_account: ix.accounts[3].0.into(),
-                    token_b_account: ix.accounts[4].0.into(),
-                    token_a_vault: ix.accounts[5].0.into(),
-                    token_b_vault: ix.accounts[6].0.into(),
-                    token_a_mint: ix.accounts[7].0.into(),
-                    token_b_mint: ix.accounts[8].0.into(),
-                    position_nft_account: ix.accounts[9].0.into(),
-                    owner: ix.accounts[10].0.into(),
-                    token_a_program: ix.accounts[11].0.into(),
-                    token_b_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    token_a_account: next_account(accounts)?,
+                    token_b_account: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    position_nft_account: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: RemoveLiquidityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: RemoveLiquidityIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::RemoveLiquidity(ix_accounts, de_ix_data))
             },
             [112, 87, 135, 223, 83, 204, 132, 53] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetPoolStatusIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    event_authority: ix.accounts[2].0.into(),
-                    program: ix.accounts[3].0.into(),
+                    pool: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: SetPoolStatusIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SetPoolStatusIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::SetPoolStatus(ix_accounts, de_ix_data))
             },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapIxAccounts {
-                    pool_authority: ix.accounts[0].0.into(),
-                    pool: ix.accounts[1].0.into(),
-                    input_token_account: ix.accounts[2].0.into(),
-                    output_token_account: ix.accounts[3].0.into(),
-                    token_a_vault: ix.accounts[4].0.into(),
-                    token_b_vault: ix.accounts[5].0.into(),
-                    token_a_mint: ix.accounts[6].0.into(),
-                    token_b_mint: ix.accounts[7].0.into(),
-                    payer: ix.accounts[8].0.into(),
-                    token_a_program: ix.accounts[9].0.into(),
-                    token_b_program: ix.accounts[10].0.into(),
-                    referral_token_account: if ix.accounts[11]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[11].0.into())
-                    },
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    input_token_account: next_account(accounts)?,
+                    output_token_account: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    referral_token_account: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SwapIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::Swap(ix_accounts, de_ix_data))
             },
             [138, 174, 196, 169, 213, 235, 254, 107] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateRewardDurationIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    event_authority: ix.accounts[2].0.into(),
-                    program: ix.accounts[3].0.into(),
+                    pool: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateRewardDurationIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::UpdateRewardDuration(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [211, 28, 48, 32, 215, 160, 35, 23] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateRewardFunderIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    event_authority: ix.accounts[2].0.into(),
-                    program: ix.accounts[3].0.into(),
+                    pool: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateRewardFunderIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::UpdateRewardFunder(ix_accounts, de_ix_data))
             },
             [148, 206, 42, 195, 247, 49, 103, 8] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawIneligibleRewardIxAccounts {
-                    pool_authority: ix.accounts[0].0.into(),
-                    pool: ix.accounts[1].0.into(),
-                    reward_vault: ix.accounts[2].0.into(),
-                    reward_mint: ix.accounts[3].0.into(),
-                    funder_token_account: ix.accounts[4].0.into(),
-                    funder: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    event_authority: ix.accounts[7].0.into(),
-                    program: ix.accounts[8].0.into(),
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    funder_token_account: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: WithdrawIneligibleRewardIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(CpAmmProgramIx::WithdrawIneligibleReward(
                     ix_accounts,
                     de_ix_data,
@@ -663,7 +710,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -677,6 +731,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -1572,6 +1669,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

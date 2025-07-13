@@ -5,7 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use solana_program::{pubkey, pubkey::Pubkey};
+use solana_pubkey::{pubkey, Pubkey};
 
 /// `boop` program ID.
 pub const BOOP_ID: Pubkey = pubkey!("boop8hVGQGqehUK2iVEMEnMrL5RbjywRzHKBmBE7ry4");

@@ -11,25 +11,25 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct GetPoolInfo {
     /// Pool account (PDA)
-    pub pool: solana_program::pubkey::Pubkey,
+    pub pool: solana_pubkey::Pubkey,
     /// LP token mint of the pool
-    pub lp_mint: solana_program::pubkey::Pubkey,
+    pub lp_mint: solana_pubkey::Pubkey,
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub a_vault_lp: solana_program::pubkey::Pubkey,
+    pub a_vault_lp: solana_pubkey::Pubkey,
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub b_vault_lp: solana_program::pubkey::Pubkey,
+    pub b_vault_lp: solana_pubkey::Pubkey,
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
-    pub a_vault: solana_program::pubkey::Pubkey,
+    pub a_vault: solana_pubkey::Pubkey,
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
-    pub b_vault: solana_program::pubkey::Pubkey,
+    pub b_vault: solana_pubkey::Pubkey,
     /// LP token mint of vault a
-    pub a_vault_lp_mint: solana_program::pubkey::Pubkey,
+    pub a_vault_lp_mint: solana_pubkey::Pubkey,
     /// LP token mint of vault b
-    pub b_vault_lp_mint: solana_program::pubkey::Pubkey,
+    pub b_vault_lp_mint: solana_pubkey::Pubkey,
 }
 
 impl GetPoolInfo {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -37,44 +37,44 @@ impl GetPoolInfo {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.pool, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.a_vault_lp,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.b_vault_lp,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.a_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.b_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.a_vault_lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.b_vault_lp_mint,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&GetPoolInfoInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -114,15 +114,15 @@ impl Default for GetPoolInfoInstructionData {
 ///   7. `[]` b_vault_lp_mint
 #[derive(Clone, Debug, Default)]
 pub struct GetPoolInfoBuilder {
-    pool: Option<solana_program::pubkey::Pubkey>,
-    lp_mint: Option<solana_program::pubkey::Pubkey>,
-    a_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    b_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    a_vault: Option<solana_program::pubkey::Pubkey>,
-    b_vault: Option<solana_program::pubkey::Pubkey>,
-    a_vault_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    b_vault_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    pool: Option<solana_pubkey::Pubkey>,
+    lp_mint: Option<solana_pubkey::Pubkey>,
+    a_vault_lp: Option<solana_pubkey::Pubkey>,
+    b_vault_lp: Option<solana_pubkey::Pubkey>,
+    a_vault: Option<solana_pubkey::Pubkey>,
+    b_vault: Option<solana_pubkey::Pubkey>,
+    a_vault_lp_mint: Option<solana_pubkey::Pubkey>,
+    b_vault_lp_mint: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl GetPoolInfoBuilder {
@@ -130,72 +130,63 @@ impl GetPoolInfoBuilder {
 
     /// Pool account (PDA)
     #[inline(always)]
-    pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
 
     /// LP token mint of the pool
     #[inline(always)]
-    pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
 
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
-    pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_vault_lp(&mut self, a_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
 
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
-    pub fn b_vault_lp(&mut self, b_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn b_vault_lp(&mut self, b_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.b_vault_lp = Some(b_vault_lp);
         self
     }
 
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn a_vault(&mut self, a_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_vault(&mut self, a_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault = Some(a_vault);
         self
     }
 
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn b_vault(&mut self, b_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn b_vault(&mut self, b_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.b_vault = Some(b_vault);
         self
     }
 
     /// LP token mint of vault a
     #[inline(always)]
-    pub fn a_vault_lp_mint(
-        &mut self,
-        a_vault_lp_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn a_vault_lp_mint(&mut self, a_vault_lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
     }
 
     /// LP token mint of vault b
     #[inline(always)]
-    pub fn b_vault_lp_mint(
-        &mut self,
-        b_vault_lp_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn b_vault_lp_mint(&mut self, b_vault_lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -204,14 +195,14 @@ impl GetPoolInfoBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = GetPoolInfo {
             pool: self.pool.expect("pool is not set"),
             lp_mint: self.lp_mint.expect("lp_mint is not set"),
@@ -230,48 +221,48 @@ impl GetPoolInfoBuilder {
 /// `get_pool_info` CPI accounts.
 pub struct GetPoolInfoCpiAccounts<'a, 'b> {
     /// Pool account (PDA)
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of the pool
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub b_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
-    pub a_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
-    pub b_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault a
-    pub a_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault b
-    pub b_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `get_pool_info` CPI instruction.
 pub struct GetPoolInfoCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Pool account (PDA)
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of the pool
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub b_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
-    pub a_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
-    pub b_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault a
-    pub a_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault b
-    pub b_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> GetPoolInfoCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: GetPoolInfoCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -288,19 +279,15 @@ impl<'a, 'b> GetPoolInfoCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -308,7 +295,7 @@ impl<'a, 'b> GetPoolInfoCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -318,47 +305,43 @@ impl<'a, 'b> GetPoolInfoCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.a_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.b_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.a_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.b_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.a_vault_lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.b_vault_lp_mint.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -366,7 +349,7 @@ impl<'a, 'b> GetPoolInfoCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&GetPoolInfoInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -386,9 +369,9 @@ impl<'a, 'b> GetPoolInfoCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -411,7 +394,7 @@ pub struct GetPoolInfoCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(GetPoolInfoCpiBuilderInstruction {
             __program: program,
             pool: None,
@@ -429,17 +412,14 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
 
     /// Pool account (PDA)
     #[inline(always)]
-    pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
 
     /// LP token mint of the pool
     #[inline(always)]
-    pub fn lp_mint(
-        &mut self,
-        lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
@@ -448,7 +428,7 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn a_vault_lp(
         &mut self,
-        a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
@@ -458,7 +438,7 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn b_vault_lp(
         &mut self,
-        b_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        b_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.b_vault_lp = Some(b_vault_lp);
         self
@@ -466,20 +446,14 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
 
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn a_vault(
-        &mut self,
-        a_vault: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn a_vault(&mut self, a_vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.a_vault = Some(a_vault);
         self
     }
 
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn b_vault(
-        &mut self,
-        b_vault: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn b_vault(&mut self, b_vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.b_vault = Some(b_vault);
         self
     }
@@ -488,7 +462,7 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn a_vault_lp_mint(
         &mut self,
-        a_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        a_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
@@ -498,7 +472,7 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn b_vault_lp_mint(
         &mut self,
-        b_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        b_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
@@ -508,7 +482,7 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -525,11 +499,7 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -538,14 +508,14 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = GetPoolInfoCpi {
             __program: self.instruction.__program,
 
@@ -580,19 +550,15 @@ impl<'a, 'b> GetPoolInfoCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct GetPoolInfoCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_vault_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_vault_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

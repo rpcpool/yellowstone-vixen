@@ -5,7 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use solana_program::{pubkey, pubkey::Pubkey};
+use solana_pubkey::{pubkey, Pubkey};
 
 /// `raydium_launchpad` program ID.
 pub const RAYDIUM_LAUNCHPAD_ID: Pubkey = pubkey!("LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj");

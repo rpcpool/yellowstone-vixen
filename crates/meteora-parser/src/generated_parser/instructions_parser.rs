@@ -5,9 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+#[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
 use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
@@ -253,6 +255,9 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
+    type Output = LbClmmProgramIx;
+    #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<LbClmmProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "LbClmm::InstructionParser".into() }
@@ -269,7 +274,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -284,1087 +305,958 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<InstructionUpdateOutput<LbClmmProgramIx>> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
         let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [45, 154, 237, 210, 221, 15, 166, 92] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeLbPairIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    token_mint_x: ix.accounts[2].0.into(),
-                    token_mint_y: ix.accounts[3].0.into(),
-                    reserve_x: ix.accounts[4].0.into(),
-                    reserve_y: ix.accounts[5].0.into(),
-                    oracle: ix.accounts[6].0.into(),
-                    preset_parameter: ix.accounts[7].0.into(),
-                    funder: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
-                    rent: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    token_mint_x: next_account(accounts)?,
+                    token_mint_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    preset_parameter: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeLbPairIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: InitializeLbPairIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializeLbPair(ix_accounts, de_ix_data))
             },
             [108, 102, 213, 85, 251, 3, 53, 21] => {
-                check_min_accounts_req(accounts_len, 17)?;
+                let expected_accounts_len = 17;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePermissionLbPairIxAccounts {
-                    base: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    token_mint_x: ix.accounts[3].0.into(),
-                    token_mint_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    oracle: ix.accounts[7].0.into(),
-                    admin: ix.accounts[8].0.into(),
-                    token_badge_x: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    token_badge_y: if ix.accounts[10]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[10].0.into())
-                    },
-                    token_program_x: ix.accounts[11].0.into(),
-                    token_program_y: ix.accounts[12].0.into(),
-                    system_program: ix.accounts[13].0.into(),
-                    rent: ix.accounts[14].0.into(),
-                    event_authority: ix.accounts[15].0.into(),
-                    program: ix.accounts[16].0.into(),
+                    base: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    token_mint_x: next_account(accounts)?,
+                    token_mint_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    token_badge_x: next_program_id_optional_account(accounts)?,
+                    token_badge_y: next_program_id_optional_account(accounts)?,
+                    token_program_x: next_account(accounts)?,
+                    token_program_y: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePermissionLbPairIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializePermissionLbPair(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [46, 39, 41, 135, 111, 183, 200, 64] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeCustomizablePermissionlessLbPairIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    token_mint_x: ix.accounts[2].0.into(),
-                    token_mint_y: ix.accounts[3].0.into(),
-                    reserve_x: ix.accounts[4].0.into(),
-                    reserve_y: ix.accounts[5].0.into(),
-                    oracle: ix.accounts[6].0.into(),
-                    user_token_x: ix.accounts[7].0.into(),
-                    funder: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
-                    user_token_y: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    token_mint_x: next_account(accounts)?,
+                    token_mint_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeCustomizablePermissionlessLbPairIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [47, 157, 226, 180, 12, 240, 33, 71] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeBinArrayBitmapExtensionIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: ix.accounts[1].0.into(),
-                    funder: ix.accounts[2].0.into(),
-                    system_program: ix.accounts[3].0.into(),
-                    rent: ix.accounts[4].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::InitializeBinArrayBitmapExtension(
                     ix_accounts,
                 ))
             },
             [35, 86, 19, 185, 78, 212, 75, 211] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeBinArrayIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array: ix.accounts[1].0.into(),
-                    funder: ix.accounts[2].0.into(),
-                    system_program: ix.accounts[3].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeBinArrayIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializeBinArray(ix_accounts, de_ix_data))
             },
             [181, 157, 89, 67, 143, 182, 52, 72] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidityIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    bin_array_lower: ix.accounts[9].0.into(),
-                    bin_array_upper: ix.accounts[10].0.into(),
-                    sender: ix.accounts[11].0.into(),
-                    token_x_program: ix.accounts[12].0.into(),
-                    token_y_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: AddLiquidityIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: AddLiquidityIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::AddLiquidity(ix_accounts, de_ix_data))
             },
             [28, 140, 238, 99, 231, 162, 21, 149] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidityByWeightIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    bin_array_lower: ix.accounts[9].0.into(),
-                    bin_array_upper: ix.accounts[10].0.into(),
-                    sender: ix.accounts[11].0.into(),
-                    token_x_program: ix.accounts[12].0.into(),
-                    token_y_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: AddLiquidityByWeightIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::AddLiquidityByWeight(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [7, 3, 150, 127, 148, 40, 61, 200] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidityByStrategyIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    bin_array_lower: ix.accounts[9].0.into(),
-                    bin_array_upper: ix.accounts[10].0.into(),
-                    sender: ix.accounts[11].0.into(),
-                    token_x_program: ix.accounts[12].0.into(),
-                    token_y_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: AddLiquidityByStrategyIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::AddLiquidityByStrategy(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [41, 5, 238, 175, 100, 225, 6, 205] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidityByStrategyOneSideIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token: ix.accounts[3].0.into(),
-                    reserve: ix.accounts[4].0.into(),
-                    token_mint: ix.accounts[5].0.into(),
-                    bin_array_lower: ix.accounts[6].0.into(),
-                    bin_array_upper: ix.accounts[7].0.into(),
-                    sender: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    event_authority: ix.accounts[10].0.into(),
-                    program: ix.accounts[11].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: AddLiquidityByStrategyOneSideIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::AddLiquidityByStrategyOneSide(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [94, 155, 103, 151, 70, 95, 220, 165] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidityOneSideIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token: ix.accounts[3].0.into(),
-                    reserve: ix.accounts[4].0.into(),
-                    token_mint: ix.accounts[5].0.into(),
-                    bin_array_lower: ix.accounts[6].0.into(),
-                    bin_array_upper: ix.accounts[7].0.into(),
-                    sender: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    event_authority: ix.accounts[10].0.into(),
-                    program: ix.accounts[11].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: AddLiquidityOneSideIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::AddLiquidityOneSide(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [80, 85, 209, 72, 24, 206, 177, 108] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveLiquidityIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    bin_array_lower: ix.accounts[9].0.into(),
-                    bin_array_upper: ix.accounts[10].0.into(),
-                    sender: ix.accounts[11].0.into(),
-                    token_x_program: ix.accounts[12].0.into(),
-                    token_y_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: RemoveLiquidityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: RemoveLiquidityIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::RemoveLiquidity(ix_accounts, de_ix_data))
             },
             [219, 192, 234, 71, 190, 191, 102, 80] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePositionIxAccounts {
-                    payer: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    lb_pair: ix.accounts[2].0.into(),
-                    owner: ix.accounts[3].0.into(),
-                    system_program: ix.accounts[4].0.into(),
-                    rent: ix.accounts[5].0.into(),
-                    event_authority: ix.accounts[6].0.into(),
-                    program: ix.accounts[7].0.into(),
+                    payer: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePositionIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializePosition(ix_accounts, de_ix_data))
             },
             [46, 82, 125, 146, 85, 141, 228, 153] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePositionPdaIxAccounts {
-                    payer: ix.accounts[0].0.into(),
-                    base: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    lb_pair: ix.accounts[3].0.into(),
-                    owner: ix.accounts[4].0.into(),
-                    system_program: ix.accounts[5].0.into(),
-                    rent: ix.accounts[6].0.into(),
-                    event_authority: ix.accounts[7].0.into(),
-                    program: ix.accounts[8].0.into(),
+                    payer: next_account(accounts)?,
+                    base: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePositionPdaIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializePositionPda(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [251, 189, 190, 244, 117, 254, 35, 148] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePositionByOperatorIxAccounts {
-                    payer: ix.accounts[0].0.into(),
-                    base: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    lb_pair: ix.accounts[3].0.into(),
-                    owner: ix.accounts[4].0.into(),
-                    operator: ix.accounts[5].0.into(),
-                    operator_token_x: ix.accounts[6].0.into(),
-                    owner_token_x: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    event_authority: ix.accounts[9].0.into(),
-                    program: ix.accounts[10].0.into(),
+                    payer: next_account(accounts)?,
+                    base: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    operator_token_x: next_account(accounts)?,
+                    owner_token_x: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePositionByOperatorIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializePositionByOperator(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [202, 184, 103, 143, 180, 191, 116, 217] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdatePositionOperatorIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    owner: ix.accounts[1].0.into(),
-                    event_authority: ix.accounts[2].0.into(),
-                    program: ix.accounts[3].0.into(),
+                    position: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdatePositionOperatorIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::UpdatePositionOperator(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    reserve_x: ix.accounts[2].0.into(),
-                    reserve_y: ix.accounts[3].0.into(),
-                    user_token_in: ix.accounts[4].0.into(),
-                    user_token_out: ix.accounts[5].0.into(),
-                    token_x_mint: ix.accounts[6].0.into(),
-                    token_y_mint: ix.accounts[7].0.into(),
-                    oracle: ix.accounts[8].0.into(),
-                    host_fee_in: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    user: ix.accounts[10].0.into(),
-                    token_x_program: ix.accounts[11].0.into(),
-                    token_y_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    user_token_in: next_account(accounts)?,
+                    user_token_out: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    host_fee_in: next_program_id_optional_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SwapIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::Swap(ix_accounts, de_ix_data))
             },
             [250, 73, 101, 33, 38, 207, 75, 184] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapExactOutIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    reserve_x: ix.accounts[2].0.into(),
-                    reserve_y: ix.accounts[3].0.into(),
-                    user_token_in: ix.accounts[4].0.into(),
-                    user_token_out: ix.accounts[5].0.into(),
-                    token_x_mint: ix.accounts[6].0.into(),
-                    token_y_mint: ix.accounts[7].0.into(),
-                    oracle: ix.accounts[8].0.into(),
-                    host_fee_in: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    user: ix.accounts[10].0.into(),
-                    token_x_program: ix.accounts[11].0.into(),
-                    token_y_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    user_token_in: next_account(accounts)?,
+                    user_token_out: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    host_fee_in: next_program_id_optional_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapExactOutIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SwapExactOutIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::SwapExactOut(ix_accounts, de_ix_data))
             },
             [56, 173, 230, 208, 173, 228, 156, 205] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapWithPriceImpactIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    reserve_x: ix.accounts[2].0.into(),
-                    reserve_y: ix.accounts[3].0.into(),
-                    user_token_in: ix.accounts[4].0.into(),
-                    user_token_out: ix.accounts[5].0.into(),
-                    token_x_mint: ix.accounts[6].0.into(),
-                    token_y_mint: ix.accounts[7].0.into(),
-                    oracle: ix.accounts[8].0.into(),
-                    host_fee_in: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    user: ix.accounts[10].0.into(),
-                    token_x_program: ix.accounts[11].0.into(),
-                    token_y_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    user_token_in: next_account(accounts)?,
+                    user_token_out: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    host_fee_in: next_program_id_optional_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: SwapWithPriceImpactIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::SwapWithPriceImpact(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [158, 201, 158, 189, 33, 93, 162, 103] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawProtocolFeeIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    reserve_x: ix.accounts[1].0.into(),
-                    reserve_y: ix.accounts[2].0.into(),
-                    token_x_mint: ix.accounts[3].0.into(),
-                    token_y_mint: ix.accounts[4].0.into(),
-                    receiver_token_x: ix.accounts[5].0.into(),
-                    receiver_token_y: ix.accounts[6].0.into(),
-                    claim_fee_operator: ix.accounts[7].0.into(),
-                    operator: ix.accounts[8].0.into(),
-                    token_x_program: ix.accounts[9].0.into(),
-                    token_y_program: ix.accounts[10].0.into(),
-                    memo_program: ix.accounts[11].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    receiver_token_x: next_account(accounts)?,
+                    receiver_token_y: next_account(accounts)?,
+                    claim_fee_operator: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
                 };
                 let de_ix_data: WithdrawProtocolFeeIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::WithdrawProtocolFee(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [95, 135, 192, 196, 242, 129, 230, 68] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeRewardIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    reward_vault: ix.accounts[1].0.into(),
-                    reward_mint: ix.accounts[2].0.into(),
-                    token_badge: if ix.accounts[3]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[3].0.into())
-                    },
-                    admin: ix.accounts[4].0.into(),
-                    token_program: ix.accounts[5].0.into(),
-                    system_program: ix.accounts[6].0.into(),
-                    rent: ix.accounts[7].0.into(),
-                    event_authority: ix.accounts[8].0.into(),
-                    program: ix.accounts[9].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    token_badge: next_program_id_optional_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeRewardIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: InitializeRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializeReward(ix_accounts, de_ix_data))
             },
             [188, 50, 249, 165, 93, 151, 38, 63] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = FundRewardIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    reward_vault: ix.accounts[1].0.into(),
-                    reward_mint: ix.accounts[2].0.into(),
-                    funder_token_account: ix.accounts[3].0.into(),
-                    funder: ix.accounts[4].0.into(),
-                    bin_array: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    event_authority: ix.accounts[7].0.into(),
-                    program: ix.accounts[8].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    funder_token_account: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    bin_array: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: FundRewardIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: FundRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::FundReward(ix_accounts, de_ix_data))
             },
             [211, 28, 48, 32, 215, 160, 35, 23] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateRewardFunderIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    event_authority: ix.accounts[2].0.into(),
-                    program: ix.accounts[3].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateRewardFunderIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::UpdateRewardFunder(ix_accounts, de_ix_data))
             },
             [138, 174, 196, 169, 213, 235, 254, 107] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateRewardDurationIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    bin_array: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    bin_array: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateRewardDurationIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::UpdateRewardDuration(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [149, 95, 181, 242, 94, 90, 158, 162] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimRewardIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    bin_array_lower: ix.accounts[2].0.into(),
-                    bin_array_upper: ix.accounts[3].0.into(),
-                    sender: ix.accounts[4].0.into(),
-                    reward_vault: ix.accounts[5].0.into(),
-                    reward_mint: ix.accounts[6].0.into(),
-                    user_token_account: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    event_authority: ix.accounts[9].0.into(),
-                    program: ix.accounts[10].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    user_token_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimRewardIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ClaimRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::ClaimReward(ix_accounts, de_ix_data))
             },
             [169, 32, 79, 137, 136, 232, 70, 137] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimFeeIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    bin_array_lower: ix.accounts[2].0.into(),
-                    bin_array_upper: ix.accounts[3].0.into(),
-                    sender: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    user_token_x: ix.accounts[7].0.into(),
-                    user_token_y: ix.accounts[8].0.into(),
-                    token_x_mint: ix.accounts[9].0.into(),
-                    token_y_mint: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::ClaimFee(ix_accounts))
             },
             [123, 134, 81, 0, 49, 68, 98, 98] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClosePositionIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_lower: ix.accounts[2].0.into(),
-                    bin_array_upper: ix.accounts[3].0.into(),
-                    sender: ix.accounts[4].0.into(),
-                    rent_receiver: ix.accounts[5].0.into(),
-                    event_authority: ix.accounts[6].0.into(),
-                    program: ix.accounts[7].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::ClosePosition(ix_accounts))
             },
             [75, 168, 223, 161, 16, 195, 3, 47] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateBaseFeeParametersIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    event_authority: ix.accounts[2].0.into(),
-                    program: ix.accounts[3].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateBaseFeeParametersIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::UpdateBaseFeeParameters(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [92, 161, 46, 246, 255, 189, 22, 22] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateDynamicFeeParametersIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    event_authority: ix.accounts[2].0.into(),
-                    program: ix.accounts[3].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateDynamicFeeParametersIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::UpdateDynamicFeeParameters(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [190, 61, 125, 87, 103, 79, 158, 173] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = IncreaseOracleLengthIxAccounts {
-                    oracle: ix.accounts[0].0.into(),
-                    funder: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    oracle: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: IncreaseOracleLengthIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::IncreaseOracleLength(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [66, 188, 71, 211, 98, 109, 14, 186] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePresetParameterIxAccounts {
-                    preset_parameter: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
-                    rent: ix.accounts[3].0.into(),
+                    preset_parameter: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePresetParameterIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializePresetParameter(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [4, 148, 145, 100, 134, 26, 181, 61] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClosePresetParameterIxAccounts {
-                    preset_parameter: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    rent_receiver: ix.accounts[2].0.into(),
+                    preset_parameter: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::ClosePresetParameter(ix_accounts))
             },
             [39, 25, 95, 107, 116, 17, 115, 28] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClosePresetParameter2IxAccounts {
-                    preset_parameter: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    rent_receiver: ix.accounts[2].0.into(),
+                    preset_parameter: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::ClosePresetParameter2(ix_accounts))
             },
             [10, 51, 61, 35, 112, 105, 24, 85] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveAllLiquidityIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    bin_array_lower: ix.accounts[9].0.into(),
-                    bin_array_upper: ix.accounts[10].0.into(),
-                    sender: ix.accounts[11].0.into(),
-                    token_x_program: ix.accounts[12].0.into(),
-                    token_y_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::RemoveAllLiquidity(ix_accounts))
             },
             [67, 248, 231, 137, 154, 149, 217, 174] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetPairStatusIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
-                let de_ix_data: SetPairStatusIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SetPairStatusIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::SetPairStatus(ix_accounts, de_ix_data))
             },
             [15, 132, 59, 50, 199, 6, 251, 46] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = MigratePositionIxAccounts {
-                    position_v2: ix.accounts[0].0.into(),
-                    position_v1: ix.accounts[1].0.into(),
-                    lb_pair: ix.accounts[2].0.into(),
-                    bin_array_lower: ix.accounts[3].0.into(),
-                    bin_array_upper: ix.accounts[4].0.into(),
-                    owner: ix.accounts[5].0.into(),
-                    system_program: ix.accounts[6].0.into(),
-                    rent_receiver: ix.accounts[7].0.into(),
-                    event_authority: ix.accounts[8].0.into(),
-                    program: ix.accounts[9].0.into(),
+                    position_v2: next_account(accounts)?,
+                    position_v1: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::MigratePosition(ix_accounts))
             },
             [17, 23, 159, 211, 101, 184, 41, 241] => {
-                check_min_accounts_req(accounts_len, 1)?;
+                let expected_accounts_len = 1;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = MigrateBinArrayIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
+                    lb_pair: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::MigrateBinArray(ix_accounts))
             },
             [154, 230, 250, 13, 236, 209, 75, 223] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateFeesAndRewardsIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_lower: ix.accounts[2].0.into(),
-                    bin_array_upper: ix.accounts[3].0.into(),
-                    owner: ix.accounts[4].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    owner: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::UpdateFeesAndRewards(ix_accounts))
             },
             [148, 206, 42, 195, 247, 49, 103, 8] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawIneligibleRewardIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    reward_vault: ix.accounts[1].0.into(),
-                    reward_mint: ix.accounts[2].0.into(),
-                    funder_token_account: ix.accounts[3].0.into(),
-                    funder: ix.accounts[4].0.into(),
-                    bin_array: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    memo_program: ix.accounts[7].0.into(),
-                    event_authority: ix.accounts[8].0.into(),
-                    program: ix.accounts[9].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    funder_token_account: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    bin_array: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: WithdrawIneligibleRewardIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::WithdrawIneligibleReward(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [91, 249, 15, 165, 26, 129, 254, 125] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetActivationPointIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
                 let de_ix_data: SetActivationPointIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::SetActivationPoint(ix_accounts, de_ix_data))
             },
             [26, 82, 102, 152, 240, 74, 105, 26] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveLiquidityByRangeIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    bin_array_lower: ix.accounts[9].0.into(),
-                    bin_array_upper: ix.accounts[10].0.into(),
-                    sender: ix.accounts[11].0.into(),
-                    token_x_program: ix.accounts[12].0.into(),
-                    token_y_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: RemoveLiquidityByRangeIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::RemoveLiquidityByRange(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [161, 194, 103, 84, 171, 71, 250, 154] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidityOneSidePreciseIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token: ix.accounts[3].0.into(),
-                    reserve: ix.accounts[4].0.into(),
-                    token_mint: ix.accounts[5].0.into(),
-                    bin_array_lower: ix.accounts[6].0.into(),
-                    bin_array_upper: ix.accounts[7].0.into(),
-                    sender: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    event_authority: ix.accounts[10].0.into(),
-                    program: ix.accounts[11].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    bin_array_lower: next_account(accounts)?,
+                    bin_array_upper: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: AddLiquidityOneSidePreciseIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::AddLiquidityOneSidePrecise(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [146, 72, 174, 224, 40, 253, 84, 174] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = GoToABinIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    from_bin_array: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    to_bin_array: if ix.accounts[3]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[3].0.into())
-                    },
-                    event_authority: ix.accounts[4].0.into(),
-                    program: ix.accounts[5].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    from_bin_array: next_program_id_optional_account(accounts)?,
+                    to_bin_array: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: GoToABinIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: GoToABinIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::GoToABin(ix_accounts, de_ix_data))
             },
             [165, 61, 201, 244, 130, 159, 22, 100] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetPreActivationDurationIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    creator: ix.accounts[1].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    creator: next_account(accounts)?,
                 };
                 let de_ix_data: SetPreActivationDurationIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::SetPreActivationDuration(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [57, 139, 47, 123, 216, 80, 223, 10] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetPreActivationSwapAddressIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    creator: ix.accounts[1].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    creator: next_account(accounts)?,
                 };
                 let de_ix_data: SetPreActivationSwapAddressIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::SetPreActivationSwapAddress(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [78, 59, 152, 211, 70, 183, 46, 208] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetPairStatusPermissionlessIxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    creator: ix.accounts[1].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    creator: next_account(accounts)?,
                 };
                 let de_ix_data: SetPairStatusPermissionlessIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::SetPairStatusPermissionless(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [253, 77, 205, 95, 27, 224, 89, 223] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeTokenBadgeIxAccounts {
-                    token_mint: ix.accounts[0].0.into(),
-                    token_badge: ix.accounts[1].0.into(),
-                    admin: ix.accounts[2].0.into(),
-                    system_program: ix.accounts[3].0.into(),
+                    token_mint: next_account(accounts)?,
+                    token_badge: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::InitializeTokenBadge(ix_accounts))
             },
             [51, 19, 150, 252, 105, 157, 48, 91] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateClaimProtocolFeeOperatorIxAccounts {
-                    claim_fee_operator: ix.accounts[0].0.into(),
-                    operator: ix.accounts[1].0.into(),
-                    admin: ix.accounts[2].0.into(),
-                    system_program: ix.accounts[3].0.into(),
+                    claim_fee_operator: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::CreateClaimProtocolFeeOperator(ix_accounts))
             },
             [8, 41, 87, 35, 80, 48, 121, 26] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CloseClaimProtocolFeeOperatorIxAccounts {
-                    claim_fee_operator: ix.accounts[0].0.into(),
-                    rent_receiver: ix.accounts[1].0.into(),
-                    admin: ix.accounts[2].0.into(),
+                    claim_fee_operator: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::CloseClaimProtocolFeeOperator(ix_accounts))
             },
             [184, 7, 240, 171, 103, 47, 183, 121] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePresetParameter2IxAccounts {
-                    preset_parameter: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    preset_parameter: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePresetParameter2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializePresetParameter2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [73, 59, 36, 120, 237, 83, 108, 198] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeLbPair2IxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    token_mint_x: ix.accounts[2].0.into(),
-                    token_mint_y: ix.accounts[3].0.into(),
-                    reserve_x: ix.accounts[4].0.into(),
-                    reserve_y: ix.accounts[5].0.into(),
-                    oracle: ix.accounts[6].0.into(),
-                    preset_parameter: ix.accounts[7].0.into(),
-                    funder: ix.accounts[8].0.into(),
-                    token_badge_x: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    token_badge_y: if ix.accounts[10]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[10].0.into())
-                    },
-                    token_program_x: ix.accounts[11].0.into(),
-                    token_program_y: ix.accounts[12].0.into(),
-                    system_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    token_mint_x: next_account(accounts)?,
+                    token_mint_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    preset_parameter: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    token_badge_x: next_program_id_optional_account(accounts)?,
+                    token_badge_y: next_program_id_optional_account(accounts)?,
+                    token_program_x: next_account(accounts)?,
+                    token_program_y: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeLbPair2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::InitializeLbPair2(ix_accounts, de_ix_data))
             },
             [243, 73, 129, 126, 51, 19, 241, 107] => {
-                check_min_accounts_req(accounts_len, 17)?;
+                let expected_accounts_len = 17;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeCustomizablePermissionlessLbPair2IxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    token_mint_x: ix.accounts[2].0.into(),
-                    token_mint_y: ix.accounts[3].0.into(),
-                    reserve_x: ix.accounts[4].0.into(),
-                    reserve_y: ix.accounts[5].0.into(),
-                    oracle: ix.accounts[6].0.into(),
-                    user_token_x: ix.accounts[7].0.into(),
-                    funder: ix.accounts[8].0.into(),
-                    token_badge_x: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    token_badge_y: if ix.accounts[10]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[10].0.into())
-                    },
-                    token_program_x: ix.accounts[11].0.into(),
-                    token_program_y: ix.accounts[12].0.into(),
-                    system_program: ix.accounts[13].0.into(),
-                    user_token_y: ix.accounts[14].0.into(),
-                    event_authority: ix.accounts[15].0.into(),
-                    program: ix.accounts[16].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    token_mint_x: next_account(accounts)?,
+                    token_mint_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    token_badge_x: next_program_id_optional_account(accounts)?,
+                    token_badge_y: next_program_id_optional_account(accounts)?,
+                    token_program_x: next_account(accounts)?,
+                    token_program_y: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeCustomizablePermissionlessLbPair2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(
                     LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair2(
                         ix_accounts,
@@ -1373,331 +1265,277 @@ impl InstructionParser {
                 )
             },
             [112, 191, 101, 171, 28, 144, 127, 187] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimFee2IxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    sender: ix.accounts[2].0.into(),
-                    reserve_x: ix.accounts[3].0.into(),
-                    reserve_y: ix.accounts[4].0.into(),
-                    user_token_x: ix.accounts[5].0.into(),
-                    user_token_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    token_program_x: ix.accounts[9].0.into(),
-                    token_program_y: ix.accounts[10].0.into(),
-                    memo_program: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    token_program_x: next_account(accounts)?,
+                    token_program_y: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimFee2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ClaimFee2IxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::ClaimFee2(ix_accounts, de_ix_data))
             },
             [190, 3, 127, 119, 178, 87, 157, 183] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimReward2IxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    sender: ix.accounts[2].0.into(),
-                    reward_vault: ix.accounts[3].0.into(),
-                    reward_mint: ix.accounts[4].0.into(),
-                    user_token_account: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    memo_program: ix.accounts[7].0.into(),
-                    event_authority: ix.accounts[8].0.into(),
-                    program: ix.accounts[9].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    user_token_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimReward2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ClaimReward2IxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::ClaimReward2(ix_accounts, de_ix_data))
             },
             [228, 162, 78, 28, 70, 219, 116, 115] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidity2IxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    sender: ix.accounts[9].0.into(),
-                    token_x_program: ix.accounts[10].0.into(),
-                    token_y_program: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: AddLiquidity2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: AddLiquidity2IxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::AddLiquidity2(ix_accounts, de_ix_data))
             },
             [3, 221, 149, 218, 111, 141, 118, 213] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidityByStrategy2IxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    sender: ix.accounts[9].0.into(),
-                    token_x_program: ix.accounts[10].0.into(),
-                    token_y_program: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: AddLiquidityByStrategy2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::AddLiquidityByStrategy2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [33, 51, 163, 201, 117, 98, 125, 231] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddLiquidityOneSidePrecise2IxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token: ix.accounts[3].0.into(),
-                    reserve: ix.accounts[4].0.into(),
-                    token_mint: ix.accounts[5].0.into(),
-                    sender: ix.accounts[6].0.into(),
-                    token_program: ix.accounts[7].0.into(),
-                    event_authority: ix.accounts[8].0.into(),
-                    program: ix.accounts[9].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: AddLiquidityOneSidePrecise2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::AddLiquidityOneSidePrecise2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [230, 215, 82, 127, 241, 101, 227, 146] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveLiquidity2IxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    sender: ix.accounts[9].0.into(),
-                    token_x_program: ix.accounts[10].0.into(),
-                    token_y_program: ix.accounts[11].0.into(),
-                    memo_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: RemoveLiquidity2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: RemoveLiquidity2IxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::RemoveLiquidity2(ix_accounts, de_ix_data))
             },
             [204, 2, 195, 145, 53, 145, 145, 205] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveLiquidityByRange2IxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[2]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[2].0.into())
-                    },
-                    user_token_x: ix.accounts[3].0.into(),
-                    user_token_y: ix.accounts[4].0.into(),
-                    reserve_x: ix.accounts[5].0.into(),
-                    reserve_y: ix.accounts[6].0.into(),
-                    token_x_mint: ix.accounts[7].0.into(),
-                    token_y_mint: ix.accounts[8].0.into(),
-                    sender: ix.accounts[9].0.into(),
-                    token_x_program: ix.accounts[10].0.into(),
-                    token_y_program: ix.accounts[11].0.into(),
-                    memo_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    user_token_x: next_account(accounts)?,
+                    user_token_y: next_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: RemoveLiquidityByRange2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::RemoveLiquidityByRange2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [65, 75, 63, 76, 235, 91, 91, 136] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = Swap2IxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    reserve_x: ix.accounts[2].0.into(),
-                    reserve_y: ix.accounts[3].0.into(),
-                    user_token_in: ix.accounts[4].0.into(),
-                    user_token_out: ix.accounts[5].0.into(),
-                    token_x_mint: ix.accounts[6].0.into(),
-                    token_y_mint: ix.accounts[7].0.into(),
-                    oracle: ix.accounts[8].0.into(),
-                    host_fee_in: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    user: ix.accounts[10].0.into(),
-                    token_x_program: ix.accounts[11].0.into(),
-                    token_y_program: ix.accounts[12].0.into(),
-                    memo_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    user_token_in: next_account(accounts)?,
+                    user_token_out: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    host_fee_in: next_program_id_optional_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: Swap2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: Swap2IxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::Swap2(ix_accounts, de_ix_data))
             },
             [43, 215, 247, 132, 137, 60, 243, 81] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapExactOut2IxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    reserve_x: ix.accounts[2].0.into(),
-                    reserve_y: ix.accounts[3].0.into(),
-                    user_token_in: ix.accounts[4].0.into(),
-                    user_token_out: ix.accounts[5].0.into(),
-                    token_x_mint: ix.accounts[6].0.into(),
-                    token_y_mint: ix.accounts[7].0.into(),
-                    oracle: ix.accounts[8].0.into(),
-                    host_fee_in: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    user: ix.accounts[10].0.into(),
-                    token_x_program: ix.accounts[11].0.into(),
-                    token_y_program: ix.accounts[12].0.into(),
-                    memo_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    user_token_in: next_account(accounts)?,
+                    user_token_out: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    host_fee_in: next_program_id_optional_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapExactOut2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SwapExactOut2IxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::SwapExactOut2(ix_accounts, de_ix_data))
             },
             [74, 98, 192, 214, 177, 51, 75, 51] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapWithPriceImpact2IxAccounts {
-                    lb_pair: ix.accounts[0].0.into(),
-                    bin_array_bitmap_extension: if ix.accounts[1]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[1].0.into())
-                    },
-                    reserve_x: ix.accounts[2].0.into(),
-                    reserve_y: ix.accounts[3].0.into(),
-                    user_token_in: ix.accounts[4].0.into(),
-                    user_token_out: ix.accounts[5].0.into(),
-                    token_x_mint: ix.accounts[6].0.into(),
-                    token_y_mint: ix.accounts[7].0.into(),
-                    oracle: ix.accounts[8].0.into(),
-                    host_fee_in: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    user: ix.accounts[10].0.into(),
-                    token_x_program: ix.accounts[11].0.into(),
-                    token_y_program: ix.accounts[12].0.into(),
-                    memo_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    lb_pair: next_account(accounts)?,
+                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                    reserve_x: next_account(accounts)?,
+                    reserve_y: next_account(accounts)?,
+                    user_token_in: next_account(accounts)?,
+                    user_token_out: next_account(accounts)?,
+                    token_x_mint: next_account(accounts)?,
+                    token_y_mint: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    host_fee_in: next_program_id_optional_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_x_program: next_account(accounts)?,
+                    token_y_program: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: SwapWithPriceImpact2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::SwapWithPriceImpact2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [174, 90, 35, 115, 186, 40, 147, 226] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClosePosition2IxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    sender: ix.accounts[1].0.into(),
-                    rent_receiver: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    position: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::ClosePosition2(ix_accounts))
             },
             [32, 142, 184, 154, 103, 65, 184, 88] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateFeesAndReward2IxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    lb_pair: ix.accounts[1].0.into(),
-                    owner: ix.accounts[2].0.into(),
+                    position: next_account(accounts)?,
+                    lb_pair: next_account(accounts)?,
+                    owner: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateFeesAndReward2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(LbClmmProgramIx::UpdateFeesAndReward2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [59, 124, 212, 118, 91, 152, 110, 157] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClosePositionIfEmptyIxAccounts {
-                    position: ix.accounts[0].0.into(),
-                    sender: ix.accounts[1].0.into(),
-                    rent_receiver: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    position: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(LbClmmProgramIx::ClosePositionIfEmpty(ix_accounts))
             },
@@ -1728,6 +1566,10 @@ impl InstructionParser {
             },
         }
 
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
         ix.map(|ix| InstructionUpdateOutput {
             parsed_ix: ix,
             shared_data,
@@ -1745,6 +1587,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -3345,521 +3230,377 @@ mod proto_parser {
     impl IntoProto<proto_def::ProgramIxs> for LbClmmProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                LbClmmProgramIx::InitializeLbPair(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeLbPair(
-                        proto_def::InitializeLbPairIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::InitializePermissionLbPair(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionLbPair(
-                        proto_def::InitializePermissionLbPairIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessLbPair(
-                            proto_def::InitializeCustomizablePermissionlessLbPairIx {
+                                                            LbClmmProgramIx::InitializeLbPair(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeLbPair(proto_def::InitializeLbPairIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::InitializeBinArrayBitmapExtension(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::InitializeBinArrayBitmapExtension(
-                            proto_def::InitializeBinArrayBitmapExtensionIx {
-                                accounts: Some(acc.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::InitializeBinArray(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeBinArray(
-                        proto_def::InitializeBinArrayIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::AddLiquidity(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidity(
-                        proto_def::AddLiquidityIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::AddLiquidityByWeight(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByWeight(
-                        proto_def::AddLiquidityByWeightIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::AddLiquidityByStrategy(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategy(
-                        proto_def::AddLiquidityByStrategyIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::AddLiquidityByStrategyOneSide(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::AddLiquidityByStrategyOneSide(
-                            proto_def::AddLiquidityByStrategyOneSideIx {
+                                                                                LbClmmProgramIx::InitializePermissionLbPair(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionLbPair(proto_def::InitializePermissionLbPairIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::AddLiquidityOneSide(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSide(
-                        proto_def::AddLiquidityOneSideIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::RemoveLiquidity(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidity(
-                        proto_def::RemoveLiquidityIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::InitializePosition(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePosition(
-                        proto_def::InitializePositionIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::InitializePositionPda(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePositionPda(
-                        proto_def::InitializePositionPdaIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::InitializePositionByOperator(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::InitializePositionByOperator(
-                            proto_def::InitializePositionByOperatorIx {
+                                                                                LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessLbPair(proto_def::InitializeCustomizablePermissionlessLbPairIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::UpdatePositionOperator(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdatePositionOperator(
-                        proto_def::UpdatePositionOperatorIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
-                        accounts: Some(acc.into_proto()),
-                        data: Some(data.into_proto()),
-                    })),
-                },
-                LbClmmProgramIx::SwapExactOut(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut(
-                        proto_def::SwapExactOutIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                                                                                LbClmmProgramIx::InitializeBinArrayBitmapExtension(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeBinArrayBitmapExtension(proto_def::InitializeBinArrayBitmapExtensionIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::SwapWithPriceImpact(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact(
-                        proto_def::SwapWithPriceImpactIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::WithdrawProtocolFee(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawProtocolFee(
-                        proto_def::WithdrawProtocolFeeIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::InitializeReward(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeReward(
-                        proto_def::InitializeRewardIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::FundReward(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::FundReward(
-                        proto_def::FundRewardIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::UpdateRewardFunder(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateRewardFunder(
-                        proto_def::UpdateRewardFunderIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::UpdateRewardDuration(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateRewardDuration(
-                        proto_def::UpdateRewardDurationIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::ClaimReward(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimReward(
-                        proto_def::ClaimRewardIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::ClaimFee(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee(
-                        proto_def::ClaimFeeIx {
-                            accounts: Some(acc.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::ClosePosition(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePosition(
-                        proto_def::ClosePositionIx {
-                            accounts: Some(acc.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::UpdateBaseFeeParameters(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateBaseFeeParameters(
-                        proto_def::UpdateBaseFeeParametersIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::UpdateDynamicFeeParameters(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateDynamicFeeParameters(
-                        proto_def::UpdateDynamicFeeParametersIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::IncreaseOracleLength(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::IncreaseOracleLength(
-                        proto_def::IncreaseOracleLengthIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::InitializePresetParameter(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePresetParameter(
-                        proto_def::InitializePresetParameterIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::ClosePresetParameter(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePresetParameter(
-                        proto_def::ClosePresetParameterIx {
-                            accounts: Some(acc.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::ClosePresetParameter2(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePresetParameter2(
-                        proto_def::ClosePresetParameter2Ix {
-                            accounts: Some(acc.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::RemoveAllLiquidity(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveAllLiquidity(
-                        proto_def::RemoveAllLiquidityIx {
-                            accounts: Some(acc.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::SetPairStatus(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPairStatus(
-                        proto_def::SetPairStatusIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::MigratePosition(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::MigratePosition(
-                        proto_def::MigratePositionIx {
-                            accounts: Some(acc.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::MigrateBinArray(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::MigrateBinArray(
-                        proto_def::MigrateBinArrayIx {
-                            accounts: Some(acc.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::UpdateFeesAndRewards(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateFeesAndRewards(
-                        proto_def::UpdateFeesAndRewardsIx {
-                            accounts: Some(acc.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::WithdrawIneligibleReward(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawIneligibleReward(
-                        proto_def::WithdrawIneligibleRewardIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::SetActivationPoint(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetActivationPoint(
-                        proto_def::SetActivationPointIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::RemoveLiquidityByRange(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidityByRange(
-                        proto_def::RemoveLiquidityByRangeIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::AddLiquidityOneSidePrecise(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSidePrecise(
-                        proto_def::AddLiquidityOneSidePreciseIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::GoToABin(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::GoToABin(
-                        proto_def::GoToABinIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::SetPreActivationDuration(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPreActivationDuration(
-                        proto_def::SetPreActivationDurationIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::SetPreActivationSwapAddress(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::SetPreActivationSwapAddress(
-                            proto_def::SetPreActivationSwapAddressIx {
+                                                                                LbClmmProgramIx::InitializeBinArray(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeBinArray(proto_def::InitializeBinArrayIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::SetPairStatusPermissionless(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::SetPairStatusPermissionless(
-                            proto_def::SetPairStatusPermissionlessIx {
+                            })),
+                        },
+                                                                                LbClmmProgramIx::AddLiquidity(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidity(proto_def::AddLiquidityIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::InitializeTokenBadge(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeTokenBadge(
-                        proto_def::InitializeTokenBadgeIx {
-                            accounts: Some(acc.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::CreateClaimProtocolFeeOperator(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::CreateClaimProtocolFeeOperator(
-                            proto_def::CreateClaimProtocolFeeOperatorIx {
-                                accounts: Some(acc.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::CloseClaimProtocolFeeOperator(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::CloseClaimProtocolFeeOperator(
-                            proto_def::CloseClaimProtocolFeeOperatorIx {
-                                accounts: Some(acc.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::InitializePresetParameter2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePresetParameter2(
-                        proto_def::InitializePresetParameter2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::InitializeLbPair2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeLbPair2(
-                        proto_def::InitializeLbPair2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessLbPair2(
-                            proto_def::InitializeCustomizablePermissionlessLbPair2Ix {
+                                                                                LbClmmProgramIx::AddLiquidityByWeight(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByWeight(proto_def::AddLiquidityByWeightIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::ClaimFee2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee2(
-                        proto_def::ClaimFee2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::ClaimReward2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimReward2(
-                        proto_def::ClaimReward2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::AddLiquidity2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidity2(
-                        proto_def::AddLiquidity2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::AddLiquidityByStrategy2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategy2(
-                        proto_def::AddLiquidityByStrategy2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                LbClmmProgramIx::AddLiquidityOneSidePrecise2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::AddLiquidityOneSidePrecise2(
-                            proto_def::AddLiquidityOneSidePrecise2Ix {
+                                                                                LbClmmProgramIx::AddLiquidityByStrategy(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategy(proto_def::AddLiquidityByStrategyIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
-                            },
-                        ),
-                    ),
-                },
-                LbClmmProgramIx::RemoveLiquidity2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidity2(
-                        proto_def::RemoveLiquidity2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::RemoveLiquidityByRange2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidityByRange2(
-                        proto_def::RemoveLiquidityByRange2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                                                                                LbClmmProgramIx::AddLiquidityByStrategyOneSide(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategyOneSide(proto_def::AddLiquidityByStrategyOneSideIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::Swap2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap2(proto_def::Swap2Ix {
-                        accounts: Some(acc.into_proto()),
-                        data: Some(data.into_proto()),
-                    })),
-                },
-                LbClmmProgramIx::SwapExactOut2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut2(
-                        proto_def::SwapExactOut2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                                                                                LbClmmProgramIx::AddLiquidityOneSide(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSide(proto_def::AddLiquidityOneSideIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::SwapWithPriceImpact2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact2(
-                        proto_def::SwapWithPriceImpact2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                                                                                LbClmmProgramIx::RemoveLiquidity(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidity(proto_def::RemoveLiquidityIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::ClosePosition2(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePosition2(
-                        proto_def::ClosePosition2Ix {
-                            accounts: Some(acc.into_proto()),
+                                                                                LbClmmProgramIx::InitializePosition(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePosition(proto_def::InitializePositionIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::UpdateFeesAndReward2(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateFeesAndReward2(
-                        proto_def::UpdateFeesAndReward2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
+                                                                                LbClmmProgramIx::InitializePositionPda(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePositionPda(proto_def::InitializePositionPdaIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-                LbClmmProgramIx::ClosePositionIfEmpty(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePositionIfEmpty(
-                        proto_def::ClosePositionIfEmptyIx {
-                            accounts: Some(acc.into_proto()),
+                                                                                LbClmmProgramIx::InitializePositionByOperator(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePositionByOperator(proto_def::InitializePositionByOperatorIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
                         },
-                    )),
-                },
-            }
+                                                                                LbClmmProgramIx::UpdatePositionOperator(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdatePositionOperator(proto_def::UpdatePositionOperatorIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::SwapExactOut(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut(proto_def::SwapExactOutIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::SwapWithPriceImpact(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact(proto_def::SwapWithPriceImpactIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::WithdrawProtocolFee(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawProtocolFee(proto_def::WithdrawProtocolFeeIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::InitializeReward(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeReward(proto_def::InitializeRewardIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::FundReward(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::FundReward(proto_def::FundRewardIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::UpdateRewardFunder(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateRewardFunder(proto_def::UpdateRewardFunderIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::UpdateRewardDuration(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateRewardDuration(proto_def::UpdateRewardDurationIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::ClaimReward(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimReward(proto_def::ClaimRewardIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::ClaimFee(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee(proto_def::ClaimFeeIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::ClosePosition(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePosition(proto_def::ClosePositionIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::UpdateBaseFeeParameters(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateBaseFeeParameters(proto_def::UpdateBaseFeeParametersIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::UpdateDynamicFeeParameters(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateDynamicFeeParameters(proto_def::UpdateDynamicFeeParametersIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::IncreaseOracleLength(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::IncreaseOracleLength(proto_def::IncreaseOracleLengthIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::InitializePresetParameter(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePresetParameter(proto_def::InitializePresetParameterIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::ClosePresetParameter(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePresetParameter(proto_def::ClosePresetParameterIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::ClosePresetParameter2(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePresetParameter2(proto_def::ClosePresetParameter2Ix {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::RemoveAllLiquidity(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveAllLiquidity(proto_def::RemoveAllLiquidityIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::SetPairStatus(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPairStatus(proto_def::SetPairStatusIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::MigratePosition(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::MigratePosition(proto_def::MigratePositionIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::MigrateBinArray(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::MigrateBinArray(proto_def::MigrateBinArrayIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::UpdateFeesAndRewards(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateFeesAndRewards(proto_def::UpdateFeesAndRewardsIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::WithdrawIneligibleReward(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawIneligibleReward(proto_def::WithdrawIneligibleRewardIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::SetActivationPoint(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetActivationPoint(proto_def::SetActivationPointIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::RemoveLiquidityByRange(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidityByRange(proto_def::RemoveLiquidityByRangeIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::AddLiquidityOneSidePrecise(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSidePrecise(proto_def::AddLiquidityOneSidePreciseIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::GoToABin(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::GoToABin(proto_def::GoToABinIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::SetPreActivationDuration(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPreActivationDuration(proto_def::SetPreActivationDurationIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::SetPreActivationSwapAddress(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPreActivationSwapAddress(proto_def::SetPreActivationSwapAddressIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::SetPairStatusPermissionless(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPairStatusPermissionless(proto_def::SetPairStatusPermissionlessIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::InitializeTokenBadge(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeTokenBadge(proto_def::InitializeTokenBadgeIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::CreateClaimProtocolFeeOperator(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateClaimProtocolFeeOperator(proto_def::CreateClaimProtocolFeeOperatorIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::CloseClaimProtocolFeeOperator(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::CloseClaimProtocolFeeOperator(proto_def::CloseClaimProtocolFeeOperatorIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::InitializePresetParameter2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePresetParameter2(proto_def::InitializePresetParameter2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::InitializeLbPair2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeLbPair2(proto_def::InitializeLbPair2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessLbPair2(proto_def::InitializeCustomizablePermissionlessLbPair2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::ClaimFee2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee2(proto_def::ClaimFee2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::ClaimReward2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimReward2(proto_def::ClaimReward2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::AddLiquidity2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidity2(proto_def::AddLiquidity2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::AddLiquidityByStrategy2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategy2(proto_def::AddLiquidityByStrategy2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::AddLiquidityOneSidePrecise2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSidePrecise2(proto_def::AddLiquidityOneSidePrecise2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::RemoveLiquidity2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidity2(proto_def::RemoveLiquidity2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::RemoveLiquidityByRange2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidityByRange2(proto_def::RemoveLiquidityByRange2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::Swap2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap2(proto_def::Swap2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::SwapExactOut2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut2(proto_def::SwapExactOut2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::SwapWithPriceImpact2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact2(proto_def::SwapWithPriceImpact2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::ClosePosition2(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePosition2(proto_def::ClosePosition2Ix {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::UpdateFeesAndReward2(acc, data) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateFeesAndReward2(proto_def::UpdateFeesAndReward2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            })),
+                        },
+                                                                                LbClmmProgramIx::ClosePositionIfEmpty(acc) => proto_def::ProgramIxs {
+                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePositionIfEmpty(proto_def::ClosePositionIfEmptyIx {
+                                accounts: Some(acc.into_proto()),
+                            })),
+                        },
+                                                }
         }
     }
 
@@ -3867,6 +3608,10 @@ mod proto_parser {
         type Message = proto_def::ProgramIxs;
 
         fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
             value.parsed_ix.into_proto()
         }
     }

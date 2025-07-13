@@ -13,32 +13,32 @@ use crate::generated::types::StrategyType;
 #[derive(Debug)]
 pub struct InitializeStrategy {
     /// Vault account
-    pub vault: solana_program::pubkey::Pubkey,
+    pub vault: solana_pubkey::Pubkey,
 
-    pub strategy_program: solana_program::pubkey::Pubkey,
+    pub strategy_program: solana_pubkey::Pubkey,
     /// Strategy account
-    pub strategy: solana_program::pubkey::Pubkey,
+    pub strategy: solana_pubkey::Pubkey,
 
-    pub reserve: solana_program::pubkey::Pubkey,
+    pub reserve: solana_pubkey::Pubkey,
     /// Collateral vault account
-    pub collateral_vault: solana_program::pubkey::Pubkey,
+    pub collateral_vault: solana_pubkey::Pubkey,
     /// Collateral mint account
-    pub collateral_mint: solana_program::pubkey::Pubkey,
+    pub collateral_mint: solana_pubkey::Pubkey,
     /// Admin account
-    pub admin: solana_program::pubkey::Pubkey,
+    pub admin: solana_pubkey::Pubkey,
     /// System program account
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
     /// Rent account
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
     /// Token program account
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 }
 
 impl InitializeStrategy {
     pub fn instruction(
         &self,
         args: InitializeStrategyInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -47,43 +47,33 @@ impl InitializeStrategy {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: InitializeStrategyInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.vault, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.vault, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.strategy_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.strategy,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.reserve,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.strategy, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.reserve, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.collateral_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.collateral_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.admin, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.admin, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
@@ -92,7 +82,7 @@ impl InitializeStrategy {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::VAULT_ID,
             accounts,
             data,
@@ -142,20 +132,20 @@ pub struct InitializeStrategyInstructionArgs {
 ///   9. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
 #[derive(Clone, Debug, Default)]
 pub struct InitializeStrategyBuilder {
-    vault: Option<solana_program::pubkey::Pubkey>,
-    strategy_program: Option<solana_program::pubkey::Pubkey>,
-    strategy: Option<solana_program::pubkey::Pubkey>,
-    reserve: Option<solana_program::pubkey::Pubkey>,
-    collateral_vault: Option<solana_program::pubkey::Pubkey>,
-    collateral_mint: Option<solana_program::pubkey::Pubkey>,
-    admin: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
+    vault: Option<solana_pubkey::Pubkey>,
+    strategy_program: Option<solana_pubkey::Pubkey>,
+    strategy: Option<solana_pubkey::Pubkey>,
+    reserve: Option<solana_pubkey::Pubkey>,
+    collateral_vault: Option<solana_pubkey::Pubkey>,
+    collateral_mint: Option<solana_pubkey::Pubkey>,
+    admin: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
     strategy_index: Option<u8>,
     other_bumps: Option<[u8; 10]>,
     strategy_type: Option<StrategyType>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl InitializeStrategyBuilder {
@@ -163,56 +153,47 @@ impl InitializeStrategyBuilder {
 
     /// Vault account
     #[inline(always)]
-    pub fn vault(&mut self, vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vault(&mut self, vault: solana_pubkey::Pubkey) -> &mut Self {
         self.vault = Some(vault);
         self
     }
 
     #[inline(always)]
-    pub fn strategy_program(
-        &mut self,
-        strategy_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn strategy_program(&mut self, strategy_program: solana_pubkey::Pubkey) -> &mut Self {
         self.strategy_program = Some(strategy_program);
         self
     }
 
     /// Strategy account
     #[inline(always)]
-    pub fn strategy(&mut self, strategy: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn strategy(&mut self, strategy: solana_pubkey::Pubkey) -> &mut Self {
         self.strategy = Some(strategy);
         self
     }
 
     #[inline(always)]
-    pub fn reserve(&mut self, reserve: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn reserve(&mut self, reserve: solana_pubkey::Pubkey) -> &mut Self {
         self.reserve = Some(reserve);
         self
     }
 
     /// Collateral vault account
     #[inline(always)]
-    pub fn collateral_vault(
-        &mut self,
-        collateral_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn collateral_vault(&mut self, collateral_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.collateral_vault = Some(collateral_vault);
         self
     }
 
     /// Collateral mint account
     #[inline(always)]
-    pub fn collateral_mint(
-        &mut self,
-        collateral_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn collateral_mint(&mut self, collateral_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.collateral_mint = Some(collateral_mint);
         self
     }
 
     /// Admin account
     #[inline(always)]
-    pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
@@ -220,7 +201,7 @@ impl InitializeStrategyBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program account
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -228,7 +209,7 @@ impl InitializeStrategyBuilder {
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Rent account
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
@@ -236,7 +217,7 @@ impl InitializeStrategyBuilder {
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program account
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -261,10 +242,7 @@ impl InitializeStrategyBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -273,14 +251,14 @@ impl InitializeStrategyBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializeStrategy {
             vault: self.vault.expect("vault is not set"),
             strategy_program: self.strategy_program.expect("strategy_program is not set"),
@@ -291,11 +269,11 @@ impl InitializeStrategyBuilder {
             admin: self.admin.expect("admin is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
         };
@@ -318,58 +296,58 @@ impl InitializeStrategyBuilder {
 /// `initialize_strategy` CPI accounts.
 pub struct InitializeStrategyCpiAccounts<'a, 'b> {
     /// Vault account
-    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub strategy_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub strategy_program: &'b solana_account_info::AccountInfo<'a>,
     /// Strategy account
-    pub strategy: &'b solana_program::account_info::AccountInfo<'a>,
+    pub strategy: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve: &'b solana_account_info::AccountInfo<'a>,
     /// Collateral vault account
-    pub collateral_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub collateral_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Collateral mint account
-    pub collateral_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub collateral_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Admin account
-    pub admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
     /// System program account
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Rent account
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
     /// Token program account
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `initialize_strategy` CPI instruction.
 pub struct InitializeStrategyCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account
-    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub strategy_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub strategy_program: &'b solana_account_info::AccountInfo<'a>,
     /// Strategy account
-    pub strategy: &'b solana_program::account_info::AccountInfo<'a>,
+    pub strategy: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve: &'b solana_account_info::AccountInfo<'a>,
     /// Collateral vault account
-    pub collateral_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub collateral_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Collateral mint account
-    pub collateral_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub collateral_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Admin account
-    pub admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
     /// System program account
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Rent account
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
     /// Token program account
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: InitializeStrategyInstructionArgs,
 }
 
 impl<'a, 'b> InitializeStrategyCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: InitializeStrategyCpiAccounts<'a, 'b>,
         args: InitializeStrategyInstructionArgs,
     ) -> Self {
@@ -390,19 +368,15 @@ impl<'a, 'b> InitializeStrategyCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -410,7 +384,7 @@ impl<'a, 'b> InitializeStrategyCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -420,55 +394,45 @@ impl<'a, 'b> InitializeStrategyCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.vault.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.vault.key, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.strategy_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.strategy.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.reserve.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.collateral_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.collateral_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.admin.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.admin.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -478,7 +442,7 @@ impl<'a, 'b> InitializeStrategyCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::VAULT_ID,
             accounts,
             data,
@@ -500,9 +464,9 @@ impl<'a, 'b> InitializeStrategyCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -527,7 +491,7 @@ pub struct InitializeStrategyCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(InitializeStrategyCpiBuilderInstruction {
             __program: program,
             vault: None,
@@ -550,7 +514,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
 
     /// Vault account
     #[inline(always)]
-    pub fn vault(&mut self, vault: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn vault(&mut self, vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vault = Some(vault);
         self
     }
@@ -558,7 +522,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn strategy_program(
         &mut self,
-        strategy_program: &'b solana_program::account_info::AccountInfo<'a>,
+        strategy_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.strategy_program = Some(strategy_program);
         self
@@ -566,19 +530,13 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
 
     /// Strategy account
     #[inline(always)]
-    pub fn strategy(
-        &mut self,
-        strategy: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn strategy(&mut self, strategy: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.strategy = Some(strategy);
         self
     }
 
     #[inline(always)]
-    pub fn reserve(
-        &mut self,
-        reserve: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn reserve(&mut self, reserve: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.reserve = Some(reserve);
         self
     }
@@ -587,7 +545,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn collateral_vault(
         &mut self,
-        collateral_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        collateral_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.collateral_vault = Some(collateral_vault);
         self
@@ -597,7 +555,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn collateral_mint(
         &mut self,
-        collateral_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        collateral_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.collateral_mint = Some(collateral_mint);
         self
@@ -605,7 +563,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
 
     /// Admin account
     #[inline(always)]
-    pub fn admin(&mut self, admin: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
@@ -614,7 +572,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -622,7 +580,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
 
     /// Rent account
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -631,7 +589,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -659,7 +617,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -676,11 +634,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -689,14 +643,14 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = InitializeStrategyInstructionArgs {
             strategy_index: self
                 .instruction
@@ -762,24 +716,20 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct InitializeStrategyCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    strategy_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    strategy: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    reserve: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collateral_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collateral_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    admin: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    strategy_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    strategy: Option<&'b solana_account_info::AccountInfo<'a>>,
+    reserve: Option<&'b solana_account_info::AccountInfo<'a>>,
+    collateral_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    collateral_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    admin: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     strategy_index: Option<u8>,
     other_bumps: Option<[u8; 10]>,
     strategy_type: Option<StrategyType>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

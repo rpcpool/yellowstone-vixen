@@ -10,33 +10,33 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct Withdraw {
-    pub global: solana_program::pubkey::Pubkey,
+    pub global: solana_pubkey::Pubkey,
 
-    pub last_withdraw: solana_program::pubkey::Pubkey,
+    pub last_withdraw: solana_pubkey::Pubkey,
 
-    pub mint: solana_program::pubkey::Pubkey,
+    pub mint: solana_pubkey::Pubkey,
 
-    pub bonding_curve: solana_program::pubkey::Pubkey,
+    pub bonding_curve: solana_pubkey::Pubkey,
 
-    pub associated_bonding_curve: solana_program::pubkey::Pubkey,
+    pub associated_bonding_curve: solana_pubkey::Pubkey,
 
-    pub associated_user: solana_program::pubkey::Pubkey,
+    pub associated_user: solana_pubkey::Pubkey,
 
-    pub user: solana_program::pubkey::Pubkey,
+    pub user: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl Withdraw {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -44,58 +44,56 @@ impl Withdraw {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.global,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.last_withdraw,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.mint, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.bonding_curve,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.associated_bonding_curve,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.associated_user,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.user, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.user, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&WithdrawInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::PUMP_ID,
             accounts,
             data,
@@ -139,44 +137,44 @@ impl Default for WithdrawInstructionData {
 ///   11. `[optional]` program (default to `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`)
 #[derive(Clone, Debug, Default)]
 pub struct WithdrawBuilder {
-    global: Option<solana_program::pubkey::Pubkey>,
-    last_withdraw: Option<solana_program::pubkey::Pubkey>,
-    mint: Option<solana_program::pubkey::Pubkey>,
-    bonding_curve: Option<solana_program::pubkey::Pubkey>,
-    associated_bonding_curve: Option<solana_program::pubkey::Pubkey>,
-    associated_user: Option<solana_program::pubkey::Pubkey>,
-    user: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    global: Option<solana_pubkey::Pubkey>,
+    last_withdraw: Option<solana_pubkey::Pubkey>,
+    mint: Option<solana_pubkey::Pubkey>,
+    bonding_curve: Option<solana_pubkey::Pubkey>,
+    associated_bonding_curve: Option<solana_pubkey::Pubkey>,
+    associated_user: Option<solana_pubkey::Pubkey>,
+    user: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl WithdrawBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn global(&mut self, global: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn global(&mut self, global: solana_pubkey::Pubkey) -> &mut Self {
         self.global = Some(global);
         self
     }
 
     #[inline(always)]
-    pub fn last_withdraw(&mut self, last_withdraw: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn last_withdraw(&mut self, last_withdraw: solana_pubkey::Pubkey) -> &mut Self {
         self.last_withdraw = Some(last_withdraw);
         self
     }
 
     #[inline(always)]
-    pub fn mint(&mut self, mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn mint(&mut self, mint: solana_pubkey::Pubkey) -> &mut Self {
         self.mint = Some(mint);
         self
     }
 
     #[inline(always)]
-    pub fn bonding_curve(&mut self, bonding_curve: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn bonding_curve(&mut self, bonding_curve: solana_pubkey::Pubkey) -> &mut Self {
         self.bonding_curve = Some(bonding_curve);
         self
     }
@@ -184,71 +182,62 @@ impl WithdrawBuilder {
     #[inline(always)]
     pub fn associated_bonding_curve(
         &mut self,
-        associated_bonding_curve: solana_program::pubkey::Pubkey,
+        associated_bonding_curve: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_bonding_curve = Some(associated_bonding_curve);
         self
     }
 
     #[inline(always)]
-    pub fn associated_user(
-        &mut self,
-        associated_user: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn associated_user(&mut self, associated_user: solana_pubkey::Pubkey) -> &mut Self {
         self.associated_user = Some(associated_user);
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
 
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
 
     /// `[optional account, default to 'Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1']`
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     /// `[optional account, default to '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P']`
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -257,14 +246,14 @@ impl WithdrawBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = Withdraw {
             global: self.global.expect("global is not set"),
             last_withdraw: self.last_withdraw.expect("last_withdraw is not set"),
@@ -277,17 +266,17 @@ impl WithdrawBuilder {
             user: self.user.expect("user is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
-            event_authority: self.event_authority.unwrap_or(solana_program::pubkey!(
+            event_authority: self.event_authority.unwrap_or(solana_pubkey::pubkey!(
                 "Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1"
             )),
-            program: self.program.unwrap_or(solana_program::pubkey!(
+            program: self.program.unwrap_or(solana_pubkey::pubkey!(
                 "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
             )),
         };
@@ -298,64 +287,64 @@ impl WithdrawBuilder {
 
 /// `withdraw` CPI accounts.
 pub struct WithdrawCpiAccounts<'a, 'b> {
-    pub global: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global: &'b solana_account_info::AccountInfo<'a>,
 
-    pub last_withdraw: &'b solana_program::account_info::AccountInfo<'a>,
+    pub last_withdraw: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_bonding_curve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `withdraw` CPI instruction.
 pub struct WithdrawCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub global: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global: &'b solana_account_info::AccountInfo<'a>,
 
-    pub last_withdraw: &'b solana_program::account_info::AccountInfo<'a>,
+    pub last_withdraw: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_bonding_curve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> WithdrawCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: WithdrawCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -376,19 +365,15 @@ impl<'a, 'b> WithdrawCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -396,7 +381,7 @@ impl<'a, 'b> WithdrawCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -406,63 +391,56 @@ impl<'a, 'b> WithdrawCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.global.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.last_withdraw.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.bonding_curve.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.associated_bonding_curve.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.associated_user.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.user.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.user.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -470,7 +448,7 @@ impl<'a, 'b> WithdrawCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&WithdrawInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::PUMP_ID,
             accounts,
             data,
@@ -494,9 +472,9 @@ impl<'a, 'b> WithdrawCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -523,7 +501,7 @@ pub struct WithdrawCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(WithdrawCpiBuilderInstruction {
             __program: program,
             global: None,
@@ -544,10 +522,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn global(
-        &mut self,
-        global: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn global(&mut self, global: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.global = Some(global);
         self
     }
@@ -555,14 +530,14 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn last_withdraw(
         &mut self,
-        last_withdraw: &'b solana_program::account_info::AccountInfo<'a>,
+        last_withdraw: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.last_withdraw = Some(last_withdraw);
         self
     }
 
     #[inline(always)]
-    pub fn mint(&mut self, mint: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn mint(&mut self, mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.mint = Some(mint);
         self
     }
@@ -570,7 +545,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bonding_curve(
         &mut self,
-        bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+        bonding_curve: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.bonding_curve = Some(bonding_curve);
         self
@@ -579,7 +554,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_bonding_curve(
         &mut self,
-        associated_bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_bonding_curve: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_bonding_curve = Some(associated_bonding_curve);
         self
@@ -588,14 +563,14 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_user(
         &mut self,
-        associated_user: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_user: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_user = Some(associated_user);
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
@@ -603,7 +578,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -612,14 +587,14 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
     }
 
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -627,17 +602,14 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -646,7 +618,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -663,11 +635,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -676,14 +644,14 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = WithdrawCpi {
             __program: self.instruction.__program,
 
@@ -741,23 +709,19 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct WithdrawCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    global: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    last_withdraw: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bonding_curve: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_bonding_curve: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_user: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    global: Option<&'b solana_account_info::AccountInfo<'a>>,
+    last_withdraw: Option<&'b solana_account_info::AccountInfo<'a>>,
+    mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bonding_curve: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_bonding_curve: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_user: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

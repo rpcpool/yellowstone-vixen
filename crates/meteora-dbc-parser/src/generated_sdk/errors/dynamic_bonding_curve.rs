@@ -120,12 +120,12 @@ pub enum DynamicBondingCurveError {
     InvalidCreatorTradingFeePercentage = 0x1793,
 }
 
-impl solana_program::program_error::PrintProgramError for DynamicBondingCurveError {
+impl solana_program_error::PrintProgramError for DynamicBondingCurveError {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for DynamicBondingCurveError {
+impl<T> solana_decode_error::DecodeError<T> for DynamicBondingCurveError {
     fn type_of() -> &'static str { "DynamicBondingCurveError" }
 }

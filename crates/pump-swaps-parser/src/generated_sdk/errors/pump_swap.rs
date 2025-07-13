@@ -96,12 +96,12 @@ pub enum PumpSwapError {
     AccountTypeNotSupported = 0x178b,
 }
 
-impl solana_program::program_error::PrintProgramError for PumpSwapError {
+impl solana_program_error::PrintProgramError for PumpSwapError {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for PumpSwapError {
+impl<T> solana_decode_error::DecodeError<T> for PumpSwapError {
     fn type_of() -> &'static str { "PumpSwapError" }
 }

@@ -5,6 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::BorshDeserialize;
+
 use crate::{
     accounts::{AmmConfig, BondingCurve, Config, LockedCpLiquidityState},
     ID,
@@ -26,16 +28,16 @@ impl BoopProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [218, 244, 33, 104, 203, 203, 43, 111] => Ok(BoopProgramState::AmmConfig(
-                AmmConfig::from_bytes(data_bytes)?,
+                AmmConfig::try_from_slice(data_bytes)?,
             )),
             [23, 183, 248, 55, 96, 216, 172, 96] => Ok(BoopProgramState::BondingCurve(
-                BondingCurve::from_bytes(data_bytes)?,
+                BondingCurve::try_from_slice(data_bytes)?,
             )),
-            [155, 12, 170, 224, 30, 250, 204, 130] => {
-                Ok(BoopProgramState::Config(Config::from_bytes(data_bytes)?))
-            },
+            [155, 12, 170, 224, 30, 250, 204, 130] => Ok(BoopProgramState::Config(
+                Config::try_from_slice(data_bytes)?,
+            )),
             [25, 10, 238, 197, 207, 234, 73, 22] => Ok(BoopProgramState::LockedCpLiquidityState(
-                LockedCpLiquidityState::from_bytes(data_bytes)?,
+                LockedCpLiquidityState::try_from_slice(data_bytes)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
@@ -91,8 +93,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        BoopProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = BoopProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = &inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 

@@ -11,16 +11,13 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct EnableVault {
     /// Vault account
-    pub vault: solana_program::pubkey::Pubkey,
+    pub vault: solana_pubkey::Pubkey,
     /// Admin account
-    pub admin: solana_program::pubkey::Pubkey,
+    pub admin: solana_pubkey::Pubkey,
 }
 
 impl EnableVault {
-    pub fn instruction(
-        &self,
-        args: EnableVaultInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self, args: EnableVaultInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -29,13 +26,11 @@ impl EnableVault {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: EnableVaultInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.vault, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.vault, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.admin, true,
         ));
         accounts.extend_from_slice(remaining_accounts);
@@ -43,7 +38,7 @@ impl EnableVault {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::VAULT_ID,
             accounts,
             data,
@@ -83,10 +78,10 @@ pub struct EnableVaultInstructionArgs {
 ///   1. `[signer]` admin
 #[derive(Clone, Debug, Default)]
 pub struct EnableVaultBuilder {
-    vault: Option<solana_program::pubkey::Pubkey>,
-    admin: Option<solana_program::pubkey::Pubkey>,
+    vault: Option<solana_pubkey::Pubkey>,
+    admin: Option<solana_pubkey::Pubkey>,
     enabled: Option<u8>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl EnableVaultBuilder {
@@ -94,14 +89,14 @@ impl EnableVaultBuilder {
 
     /// Vault account
     #[inline(always)]
-    pub fn vault(&mut self, vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vault(&mut self, vault: solana_pubkey::Pubkey) -> &mut Self {
         self.vault = Some(vault);
         self
     }
 
     /// Admin account
     #[inline(always)]
-    pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
@@ -114,10 +109,7 @@ impl EnableVaultBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -126,14 +118,14 @@ impl EnableVaultBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = EnableVault {
             vault: self.vault.expect("vault is not set"),
             admin: self.admin.expect("admin is not set"),
@@ -149,26 +141,26 @@ impl EnableVaultBuilder {
 /// `enable_vault` CPI accounts.
 pub struct EnableVaultCpiAccounts<'a, 'b> {
     /// Vault account
-    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault: &'b solana_account_info::AccountInfo<'a>,
     /// Admin account
-    pub admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `enable_vault` CPI instruction.
 pub struct EnableVaultCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account
-    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault: &'b solana_account_info::AccountInfo<'a>,
     /// Admin account
-    pub admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: EnableVaultInstructionArgs,
 }
 
 impl<'a, 'b> EnableVaultCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: EnableVaultCpiAccounts<'a, 'b>,
         args: EnableVaultInstructionArgs,
     ) -> Self {
@@ -181,19 +173,15 @@ impl<'a, 'b> EnableVaultCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -201,7 +189,7 @@ impl<'a, 'b> EnableVaultCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -211,23 +199,16 @@ impl<'a, 'b> EnableVaultCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.vault.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.vault.key, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.admin.key,
             true,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -237,7 +218,7 @@ impl<'a, 'b> EnableVaultCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::VAULT_ID,
             accounts,
             data,
@@ -251,9 +232,9 @@ impl<'a, 'b> EnableVaultCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -270,7 +251,7 @@ pub struct EnableVaultCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> EnableVaultCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(EnableVaultCpiBuilderInstruction {
             __program: program,
             vault: None,
@@ -283,14 +264,14 @@ impl<'a, 'b> EnableVaultCpiBuilder<'a, 'b> {
 
     /// Vault account
     #[inline(always)]
-    pub fn vault(&mut self, vault: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn vault(&mut self, vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vault = Some(vault);
         self
     }
 
     /// Admin account
     #[inline(always)]
-    pub fn admin(&mut self, admin: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
@@ -305,7 +286,7 @@ impl<'a, 'b> EnableVaultCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -322,11 +303,7 @@ impl<'a, 'b> EnableVaultCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -335,14 +312,14 @@ impl<'a, 'b> EnableVaultCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = EnableVaultInstructionArgs {
             enabled: self
                 .instruction
@@ -367,14 +344,10 @@ impl<'a, 'b> EnableVaultCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct EnableVaultCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    admin: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    admin: Option<&'b solana_account_info::AccountInfo<'a>>,
     enabled: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

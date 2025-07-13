@@ -12,44 +12,44 @@ use crate::generated::types::RemainingAccountsInfo;
 /// Accounts.
 #[derive(Debug)]
 pub struct SwapWithPriceImpact2 {
-    pub lb_pair: solana_program::pubkey::Pubkey,
+    pub lb_pair: solana_pubkey::Pubkey,
 
-    pub bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
+    pub bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
 
-    pub reserve_x: solana_program::pubkey::Pubkey,
+    pub reserve_x: solana_pubkey::Pubkey,
 
-    pub reserve_y: solana_program::pubkey::Pubkey,
+    pub reserve_y: solana_pubkey::Pubkey,
 
-    pub user_token_in: solana_program::pubkey::Pubkey,
+    pub user_token_in: solana_pubkey::Pubkey,
 
-    pub user_token_out: solana_program::pubkey::Pubkey,
+    pub user_token_out: solana_pubkey::Pubkey,
 
-    pub token_x_mint: solana_program::pubkey::Pubkey,
+    pub token_x_mint: solana_pubkey::Pubkey,
 
-    pub token_y_mint: solana_program::pubkey::Pubkey,
+    pub token_y_mint: solana_pubkey::Pubkey,
 
-    pub oracle: solana_program::pubkey::Pubkey,
+    pub oracle: solana_pubkey::Pubkey,
 
-    pub host_fee_in: Option<solana_program::pubkey::Pubkey>,
+    pub host_fee_in: Option<solana_pubkey::Pubkey>,
 
-    pub user: solana_program::pubkey::Pubkey,
+    pub user: solana_pubkey::Pubkey,
 
-    pub token_x_program: solana_program::pubkey::Pubkey,
+    pub token_x_program: solana_pubkey::Pubkey,
 
-    pub token_y_program: solana_program::pubkey::Pubkey,
+    pub token_y_program: solana_pubkey::Pubkey,
 
-    pub memo_program: solana_program::pubkey::Pubkey,
+    pub memo_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl SwapWithPriceImpact2 {
     pub fn instruction(
         &self,
         args: SwapWithPriceImpact2InstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -58,83 +58,68 @@ impl SwapWithPriceImpact2 {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: SwapWithPriceImpact2InstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lb_pair,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.lb_pair, false));
         if let Some(bin_array_bitmap_extension) = self.bin_array_bitmap_extension {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 bin_array_bitmap_extension,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.reserve_x,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.reserve_y,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.reserve_x, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.reserve_y, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.user_token_in,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.user_token_out,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_x_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_y_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.oracle,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.oracle, false));
         if let Some(host_fee_in) = self.host_fee_in {
-            accounts.push(solana_program::instruction::AccountMeta::new(
-                host_fee_in,
-                false,
-            ));
+            accounts.push(solana_instruction::AccountMeta::new(host_fee_in, false));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.user, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_x_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_y_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.memo_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -143,7 +128,7 @@ impl SwapWithPriceImpact2 {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -200,34 +185,34 @@ pub struct SwapWithPriceImpact2InstructionArgs {
 ///   15. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct SwapWithPriceImpact2Builder {
-    lb_pair: Option<solana_program::pubkey::Pubkey>,
-    bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
-    reserve_x: Option<solana_program::pubkey::Pubkey>,
-    reserve_y: Option<solana_program::pubkey::Pubkey>,
-    user_token_in: Option<solana_program::pubkey::Pubkey>,
-    user_token_out: Option<solana_program::pubkey::Pubkey>,
-    token_x_mint: Option<solana_program::pubkey::Pubkey>,
-    token_y_mint: Option<solana_program::pubkey::Pubkey>,
-    oracle: Option<solana_program::pubkey::Pubkey>,
-    host_fee_in: Option<solana_program::pubkey::Pubkey>,
-    user: Option<solana_program::pubkey::Pubkey>,
-    token_x_program: Option<solana_program::pubkey::Pubkey>,
-    token_y_program: Option<solana_program::pubkey::Pubkey>,
-    memo_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    lb_pair: Option<solana_pubkey::Pubkey>,
+    bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
+    reserve_x: Option<solana_pubkey::Pubkey>,
+    reserve_y: Option<solana_pubkey::Pubkey>,
+    user_token_in: Option<solana_pubkey::Pubkey>,
+    user_token_out: Option<solana_pubkey::Pubkey>,
+    token_x_mint: Option<solana_pubkey::Pubkey>,
+    token_y_mint: Option<solana_pubkey::Pubkey>,
+    oracle: Option<solana_pubkey::Pubkey>,
+    host_fee_in: Option<solana_pubkey::Pubkey>,
+    user: Option<solana_pubkey::Pubkey>,
+    token_x_program: Option<solana_pubkey::Pubkey>,
+    token_y_program: Option<solana_pubkey::Pubkey>,
+    memo_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     amount_in: Option<u64>,
     active_id: Option<i32>,
     max_price_impact_bps: Option<u16>,
     remaining_accounts_info: Option<RemainingAccountsInfo>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl SwapWithPriceImpact2Builder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn lb_pair(&mut self, lb_pair: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: solana_pubkey::Pubkey) -> &mut Self {
         self.lb_pair = Some(lb_pair);
         self
     }
@@ -236,105 +221,93 @@ impl SwapWithPriceImpact2Builder {
     #[inline(always)]
     pub fn bin_array_bitmap_extension(
         &mut self,
-        bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
+        bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.bin_array_bitmap_extension = bin_array_bitmap_extension;
         self
     }
 
     #[inline(always)]
-    pub fn reserve_x(&mut self, reserve_x: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn reserve_x(&mut self, reserve_x: solana_pubkey::Pubkey) -> &mut Self {
         self.reserve_x = Some(reserve_x);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_y(&mut self, reserve_y: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn reserve_y(&mut self, reserve_y: solana_pubkey::Pubkey) -> &mut Self {
         self.reserve_y = Some(reserve_y);
         self
     }
 
     #[inline(always)]
-    pub fn user_token_in(&mut self, user_token_in: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user_token_in(&mut self, user_token_in: solana_pubkey::Pubkey) -> &mut Self {
         self.user_token_in = Some(user_token_in);
         self
     }
 
     #[inline(always)]
-    pub fn user_token_out(&mut self, user_token_out: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user_token_out(&mut self, user_token_out: solana_pubkey::Pubkey) -> &mut Self {
         self.user_token_out = Some(user_token_out);
         self
     }
 
     #[inline(always)]
-    pub fn token_x_mint(&mut self, token_x_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_x_mint(&mut self, token_x_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_x_mint = Some(token_x_mint);
         self
     }
 
     #[inline(always)]
-    pub fn token_y_mint(&mut self, token_y_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_y_mint(&mut self, token_y_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_y_mint = Some(token_y_mint);
         self
     }
 
     #[inline(always)]
-    pub fn oracle(&mut self, oracle: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn oracle(&mut self, oracle: solana_pubkey::Pubkey) -> &mut Self {
         self.oracle = Some(oracle);
         self
     }
 
     /// `[optional account]`
     #[inline(always)]
-    pub fn host_fee_in(
-        &mut self,
-        host_fee_in: Option<solana_program::pubkey::Pubkey>,
-    ) -> &mut Self {
+    pub fn host_fee_in(&mut self, host_fee_in: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.host_fee_in = host_fee_in;
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
 
     #[inline(always)]
-    pub fn token_x_program(
-        &mut self,
-        token_x_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_x_program(&mut self, token_x_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_x_program = Some(token_x_program);
         self
     }
 
     #[inline(always)]
-    pub fn token_y_program(
-        &mut self,
-        token_y_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_y_program(&mut self, token_y_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_y_program = Some(token_y_program);
         self
     }
 
     #[inline(always)]
-    pub fn memo_program(&mut self, memo_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn memo_program(&mut self, memo_program: solana_pubkey::Pubkey) -> &mut Self {
         self.memo_program = Some(memo_program);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -369,10 +342,7 @@ impl SwapWithPriceImpact2Builder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -381,14 +351,14 @@ impl SwapWithPriceImpact2Builder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = SwapWithPriceImpact2 {
             lb_pair: self.lb_pair.expect("lb_pair is not set"),
             bin_array_bitmap_extension: self.bin_array_bitmap_extension,
@@ -426,82 +396,82 @@ impl SwapWithPriceImpact2Builder {
 
 /// `swap_with_price_impact2` CPI accounts.
 pub struct SwapWithPriceImpact2CpiAccounts<'a, 'b> {
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub reserve_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_token_in: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token_in: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_token_out: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token_out: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_x_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_x_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_y_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_y_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub oracle: &'b solana_program::account_info::AccountInfo<'a>,
+    pub oracle: &'b solana_account_info::AccountInfo<'a>,
 
-    pub host_fee_in: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub host_fee_in: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_x_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_x_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_y_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_y_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub memo_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub memo_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `swap_with_price_impact2` CPI instruction.
 pub struct SwapWithPriceImpact2Cpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub reserve_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_token_in: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token_in: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_token_out: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token_out: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_x_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_x_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_y_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_y_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub oracle: &'b solana_program::account_info::AccountInfo<'a>,
+    pub oracle: &'b solana_account_info::AccountInfo<'a>,
 
-    pub host_fee_in: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub host_fee_in: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_x_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_x_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_y_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_y_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub memo_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub memo_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: SwapWithPriceImpact2InstructionArgs,
 }
 
 impl<'a, 'b> SwapWithPriceImpact2Cpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: SwapWithPriceImpact2CpiAccounts<'a, 'b>,
         args: SwapWithPriceImpact2InstructionArgs,
     ) -> Self {
@@ -528,19 +498,15 @@ impl<'a, 'b> SwapWithPriceImpact2Cpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -548,7 +514,7 @@ impl<'a, 'b> SwapWithPriceImpact2Cpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -558,93 +524,89 @@ impl<'a, 'b> SwapWithPriceImpact2Cpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lb_pair.key,
             false,
         ));
         if let Some(bin_array_bitmap_extension) = self.bin_array_bitmap_extension {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 *bin_array_bitmap_extension.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.reserve_x.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.reserve_y.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.user_token_in.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.user_token_out.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_x_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_y_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.oracle.key,
             false,
         ));
         if let Some(host_fee_in) = self.host_fee_in {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 *host_fee_in.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.user.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_x_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_y_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.memo_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -654,7 +616,7 @@ impl<'a, 'b> SwapWithPriceImpact2Cpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -686,9 +648,9 @@ impl<'a, 'b> SwapWithPriceImpact2Cpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -719,7 +681,7 @@ pub struct SwapWithPriceImpact2CpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(SwapWithPriceImpact2CpiBuilderInstruction {
             __program: program,
             lb_pair: None,
@@ -748,10 +710,7 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn lb_pair(
-        &mut self,
-        lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lb_pair = Some(lb_pair);
         self
     }
@@ -760,26 +719,20 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bin_array_bitmap_extension(
         &mut self,
-        bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.bin_array_bitmap_extension = bin_array_bitmap_extension;
         self
     }
 
     #[inline(always)]
-    pub fn reserve_x(
-        &mut self,
-        reserve_x: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn reserve_x(&mut self, reserve_x: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.reserve_x = Some(reserve_x);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_y(
-        &mut self,
-        reserve_y: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn reserve_y(&mut self, reserve_y: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.reserve_y = Some(reserve_y);
         self
     }
@@ -787,7 +740,7 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_token_in(
         &mut self,
-        user_token_in: &'b solana_program::account_info::AccountInfo<'a>,
+        user_token_in: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_token_in = Some(user_token_in);
         self
@@ -796,7 +749,7 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_token_out(
         &mut self,
-        user_token_out: &'b solana_program::account_info::AccountInfo<'a>,
+        user_token_out: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_token_out = Some(user_token_out);
         self
@@ -805,7 +758,7 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_x_mint(
         &mut self,
-        token_x_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_x_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_x_mint = Some(token_x_mint);
         self
@@ -814,17 +767,14 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_y_mint(
         &mut self,
-        token_y_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_y_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_y_mint = Some(token_y_mint);
         self
     }
 
     #[inline(always)]
-    pub fn oracle(
-        &mut self,
-        oracle: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn oracle(&mut self, oracle: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.oracle = Some(oracle);
         self
     }
@@ -833,14 +783,14 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn host_fee_in(
         &mut self,
-        host_fee_in: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        host_fee_in: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.host_fee_in = host_fee_in;
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
@@ -848,7 +798,7 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_x_program(
         &mut self,
-        token_x_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_x_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_x_program = Some(token_x_program);
         self
@@ -857,7 +807,7 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_y_program(
         &mut self,
-        token_y_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_y_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_y_program = Some(token_y_program);
         self
@@ -866,7 +816,7 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn memo_program(
         &mut self,
-        memo_program: &'b solana_program::account_info::AccountInfo<'a>,
+        memo_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.memo_program = Some(memo_program);
         self
@@ -875,17 +825,14 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -922,7 +869,7 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -939,11 +886,7 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -952,14 +895,14 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = SwapWithPriceImpact2InstructionArgs {
             amount_in: self
                 .instruction
@@ -1047,31 +990,27 @@ impl<'a, 'b> SwapWithPriceImpact2CpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct SwapWithPriceImpact2CpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    lb_pair: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    reserve_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    reserve_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_token_in: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_token_out: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_x_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_y_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    oracle: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    host_fee_in: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_x_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_y_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    memo_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    lb_pair: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
+    reserve_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    reserve_y: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_token_in: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_token_out: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_x_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_y_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    oracle: Option<&'b solana_account_info::AccountInfo<'a>>,
+    host_fee_in: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_x_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_y_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    memo_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     amount_in: Option<u64>,
     active_id: Option<i32>,
     max_price_impact_bps: Option<u16>,
     remaining_accounts_info: Option<RemainingAccountsInfo>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

@@ -6,27 +6,24 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 /// Accounts.
 #[derive(Debug)]
 pub struct SetParams {
-    pub global: solana_program::pubkey::Pubkey,
+    pub global: solana_pubkey::Pubkey,
 
-    pub user: solana_program::pubkey::Pubkey,
+    pub user: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl SetParams {
-    pub fn instruction(
-        &self,
-        args: SetParamsInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self, args: SetParamsInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -35,25 +32,20 @@ impl SetParams {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: SetParamsInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.global,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.user, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.global, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.user, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -62,7 +54,7 @@ impl SetParams {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::PUMP_ID,
             accounts,
             data,
@@ -110,55 +102,52 @@ pub struct SetParamsInstructionArgs {
 ///   4. `[optional]` program (default to `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`)
 #[derive(Clone, Debug, Default)]
 pub struct SetParamsBuilder {
-    global: Option<solana_program::pubkey::Pubkey>,
-    user: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    global: Option<solana_pubkey::Pubkey>,
+    user: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     fee_recipient: Option<Pubkey>,
     initial_virtual_token_reserves: Option<u64>,
     initial_virtual_sol_reserves: Option<u64>,
     initial_real_token_reserves: Option<u64>,
     token_total_supply: Option<u64>,
     fee_basis_points: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl SetParamsBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn global(&mut self, global: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn global(&mut self, global: solana_pubkey::Pubkey) -> &mut Self {
         self.global = Some(global);
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1']`
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     /// `[optional account, default to '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P']`
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -204,10 +193,7 @@ impl SetParamsBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -216,24 +202,24 @@ impl SetParamsBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = SetParams {
             global: self.global.expect("global is not set"),
             user: self.user.expect("user is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            event_authority: self.event_authority.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            event_authority: self.event_authority.unwrap_or(solana_pubkey::pubkey!(
                 "Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1"
             )),
-            program: self.program.unwrap_or(solana_program::pubkey!(
+            program: self.program.unwrap_or(solana_pubkey::pubkey!(
                 "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
             )),
         };
@@ -270,38 +256,38 @@ impl SetParamsBuilder {
 
 /// `set_params` CPI accounts.
 pub struct SetParamsCpiAccounts<'a, 'b> {
-    pub global: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `set_params` CPI instruction.
 pub struct SetParamsCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub global: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: SetParamsInstructionArgs,
 }
 
 impl<'a, 'b> SetParamsCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: SetParamsCpiAccounts<'a, 'b>,
         args: SetParamsInstructionArgs,
     ) -> Self {
@@ -317,19 +303,15 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -337,7 +319,7 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -347,35 +329,28 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.global.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.user.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.user.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -385,7 +360,7 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::PUMP_ID,
             accounts,
             data,
@@ -402,9 +377,9 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -424,7 +399,7 @@ pub struct SetParamsCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(SetParamsCpiBuilderInstruction {
             __program: program,
             global: None,
@@ -444,16 +419,13 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn global(
-        &mut self,
-        global: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn global(&mut self, global: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.global = Some(global);
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
@@ -461,7 +433,7 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -470,17 +442,14 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -528,7 +497,7 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -545,11 +514,7 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -558,14 +523,14 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = SetParamsInstructionArgs {
             fee_recipient: self
                 .instruction
@@ -627,12 +592,12 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct SetParamsCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    global: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    global: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     fee_recipient: Option<Pubkey>,
     initial_virtual_token_reserves: Option<u64>,
     initial_virtual_sol_reserves: Option<u64>,
@@ -640,9 +605,5 @@ struct SetParamsCpiBuilderInstruction<'a, 'b> {
     token_total_supply: Option<u64>,
     fee_basis_points: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

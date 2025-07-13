@@ -73,21 +73,21 @@ pub mod proto_types_parsers {
         }
     }
 
-    use proto_def::new_curve_type::Variant;
+    use proto_def::new_curve_type;
 
     use crate::types::NewCurveType;
     impl IntoProto<proto_def::NewCurveType> for NewCurveType {
         fn into_proto(self) -> proto_def::NewCurveType {
             let variant = match self {
-                NewCurveType::ConstantProduct => {
-                    Variant::ConstantProduct(proto_def::NewCurveTypeConstantProduct {})
-                },
+                NewCurveType::ConstantProduct => new_curve_type::Variant::ConstantProduct(
+                    proto_def::NewCurveTypeConstantProduct {},
+                ),
                 NewCurveType::Stable {
                     amp,
                     token_multiplier,
                     depeg,
                     last_amp_updated_timestamp,
-                } => Variant::Stable(proto_def::NewCurveTypeStable {
+                } => new_curve_type::Variant::Stable(proto_def::NewCurveTypeStable {
                     amp,
                     token_multiplier: Some(token_multiplier.into_proto()),
                     depeg: Some(depeg.into_proto()),
@@ -96,7 +96,7 @@ pub mod proto_types_parsers {
                 NewCurveType::NewCurve {
                     field_one,
                     field_two,
-                } => Variant::NewCurve(proto_def::NewCurveTypeNewCurve {
+                } => new_curve_type::Variant::NewCurve(proto_def::NewCurveTypeNewCurve {
                     field_one,
                     field_two,
                 }),
@@ -107,21 +107,21 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use proto_def::curve_type::Variant as CurveTypeVariant;
+    use proto_def::curve_type;
 
     use crate::types::CurveType;
     impl IntoProto<proto_def::CurveType> for CurveType {
         fn into_proto(self) -> proto_def::CurveType {
             let variant = match self {
                 CurveType::ConstantProduct => {
-                    CurveTypeVariant::ConstantProduct(proto_def::CurveTypeConstantProduct {})
+                    curve_type::Variant::ConstantProduct(proto_def::CurveTypeConstantProduct {})
                 },
                 CurveType::Stable {
                     amp,
                     token_multiplier,
                     depeg,
                     last_amp_updated_timestamp,
-                } => CurveTypeVariant::Stable(proto_def::CurveTypeStable {
+                } => curve_type::Variant::Stable(proto_def::CurveTypeStable {
                     amp,
                     token_multiplier: Some(token_multiplier.into_proto()),
                     depeg: Some(depeg.into_proto()),

@@ -5,11 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+#[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
 use borsh::BorshDeserialize;
-#[cfg(feature = "prefilters")]
-use yellowstone_vixen_core::custom_prefilters::CustomPrefilters;
+#[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
@@ -36,10 +36,10 @@ use crate::{
     ID,
 };
 
-/// RaydiumAmm Instructions
+/// RaydiumAmmV4 Instructions
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
-pub enum RaydiumAmmProgramIx {
+pub enum RaydiumAmmV4ProgramIx {
     Initialize(InitializeIxAccounts, InitializeIxData),
     Initialize2(Initialize2IxAccounts, Initialize2IxData),
     MonitorStep(MonitorStepIxAccounts, MonitorStepIxData),
@@ -61,11 +61,19 @@ pub enum RaydiumAmmProgramIx {
 #[derive(Debug, Copy, Clone)]
 pub struct InstructionParser;
 
+#[cfg(feature = "prefilters")]
+impl yellowstone_vixen_core::custom_prefilters::CustomPrefilters for InstructionParser {}
+
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-    type Output = InstructionUpdateOutput<RaydiumAmmProgramIx>;
+    #[cfg(not(feature = "shared-data"))]
+    type Output = RaydiumAmmV4ProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<RaydiumAmmV4ProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<str> { "RaydiumAmm::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<str> {
+        "RaydiumAmmV4::InstructionParser".into()
+    }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -102,21 +110,21 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     }
 }
 
-#[cfg(feature = "prefilters")]
-impl CustomPrefilters for InstructionParser {}
-
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        ID.to_bytes().into()
+    }
 }
 
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<InstructionUpdateOutput<RaydiumAmmProgramIx>> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
         let accounts = &mut ix.accounts.iter();
 
+        #[cfg(feature = "shared-data")]
         let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 1] = ix.data[0..1].try_into()?;
@@ -146,7 +154,7 @@ impl InstructionParser {
                     user_wallet: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::Initialize(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::Initialize(ix_accounts, de_ix_data))
             },
             [1] => {
                 let expected_accounts_len = 21;
@@ -175,7 +183,7 @@ impl InstructionParser {
                     user_lp_token_account: next_account(accounts)?,
                 };
                 let de_ix_data: Initialize2IxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::Initialize2(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::Initialize2(ix_accounts, de_ix_data))
             },
             [2] => {
                 let expected_accounts_len = 19;
@@ -202,7 +210,7 @@ impl InstructionParser {
                     serum_asks: next_account(accounts)?,
                 };
                 let de_ix_data: MonitorStepIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::MonitorStep(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::MonitorStep(ix_accounts, de_ix_data))
             },
             [3] => {
                 let expected_accounts_len = 14;
@@ -224,7 +232,7 @@ impl InstructionParser {
                     serum_event_queue: next_account(accounts)?,
                 };
                 let de_ix_data: DepositIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::Deposit(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [4] => {
                 let expected_accounts_len = 22;
@@ -254,7 +262,7 @@ impl InstructionParser {
                     serum_asks: next_account(accounts)?,
                 };
                 let de_ix_data: WithdrawIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::Withdraw(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             [5] => {
                 let expected_accounts_len = 21;
@@ -282,7 +290,7 @@ impl InstructionParser {
                     new_serum_market: next_account(accounts)?,
                     admin: next_account(accounts)?,
                 };
-                Ok(RaydiumAmmProgramIx::MigrateToOpenBook(ix_accounts))
+                Ok(RaydiumAmmV4ProgramIx::MigrateToOpenBook(ix_accounts))
             },
             [6] => {
                 let expected_accounts_len = 16;
@@ -306,7 +314,7 @@ impl InstructionParser {
                     amm_admin_account: next_account(accounts)?,
                 };
                 let de_ix_data: SetParamsIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::SetParams(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::SetParams(ix_accounts, de_ix_data))
             },
             [7] => {
                 let expected_accounts_len = 17;
@@ -330,7 +338,7 @@ impl InstructionParser {
                     serum_pc_vault_account: next_account(accounts)?,
                     serum_vault_signer: next_account(accounts)?,
                 };
-                Ok(RaydiumAmmProgramIx::WithdrawPnl(ix_accounts))
+                Ok(RaydiumAmmV4ProgramIx::WithdrawPnl(ix_accounts))
             },
             [8] => {
                 let expected_accounts_len = 6;
@@ -344,7 +352,7 @@ impl InstructionParser {
                     dest_srm_token: next_account(accounts)?,
                 };
                 let de_ix_data: WithdrawSrmIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::WithdrawSrm(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::WithdrawSrm(ix_accounts, de_ix_data))
             },
             [9] => {
                 let mut expected_accounts_len = 17;
@@ -374,7 +382,7 @@ impl InstructionParser {
                     user_source_owner: next_account(accounts)?,
                 };
                 let de_ix_data: SwapBaseInIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::SwapBaseIn(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::SwapBaseIn(ix_accounts, de_ix_data))
             },
             [10] => {
                 let expected_accounts_len = 14;
@@ -396,7 +404,10 @@ impl InstructionParser {
                     user_wallet: next_account(accounts)?,
                 };
                 let de_ix_data: PreInitializeIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::PreInitialize(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::PreInitialize(
+                    ix_accounts,
+                    de_ix_data,
+                ))
             },
             [11] => {
                 let mut expected_accounts_len = 17;
@@ -426,7 +437,7 @@ impl InstructionParser {
                     user_source_owner: next_account(accounts)?,
                 };
                 let de_ix_data: SwapBaseOutIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::SwapBaseOut(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::SwapBaseOut(ix_accounts, de_ix_data))
             },
             [12] => {
                 let expected_accounts_len = 8;
@@ -442,7 +453,7 @@ impl InstructionParser {
                     serum_event_queue: next_account(accounts)?,
                 };
                 let de_ix_data: SimulateInfoIxData = BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::SimulateInfo(ix_accounts, de_ix_data))
+                Ok(RaydiumAmmV4ProgramIx::SimulateInfo(ix_accounts, de_ix_data))
             },
             [13] => {
                 let expected_accounts_len = 17;
@@ -468,7 +479,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: AdminCancelOrdersIxData =
                     BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::AdminCancelOrders(
+                Ok(RaydiumAmmV4ProgramIx::AdminCancelOrders(
                     ix_accounts,
                     de_ix_data,
                 ))
@@ -483,7 +494,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                     rent: next_account(accounts)?,
                 };
-                Ok(RaydiumAmmProgramIx::CreateConfigAccount(ix_accounts))
+                Ok(RaydiumAmmV4ProgramIx::CreateConfigAccount(ix_accounts))
             },
             [15] => {
                 let expected_accounts_len = 2;
@@ -494,7 +505,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: UpdateConfigAccountIxData =
                     BorshDeserialize::try_from_slice(ix_data)?;
-                Ok(RaydiumAmmProgramIx::UpdateConfigAccount(
+                Ok(RaydiumAmmV4ProgramIx::UpdateConfigAccount(
                     ix_accounts,
                     de_ix_data,
                 ))
@@ -526,6 +537,10 @@ impl InstructionParser {
             },
         }
 
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
         ix.map(|ix| InstructionUpdateOutput {
             parsed_ix: ix,
             shared_data,
@@ -548,7 +563,7 @@ pub fn check_min_accounts_req(
 
 fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
     accounts: &mut T,
-) -> Result<solana_program::pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
     accounts
         .next()
         .ok_or(yellowstone_vixen_core::ParseError::from(
@@ -557,13 +572,14 @@ fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>
         .map(|acc| acc.0.into())
 }
 
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
 /// ### Be careful to use this function when more than one account is optional in the Instruction.
 ///  Only by order there is no way to which ones of the optional accounts are present.
 pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
     accounts: &mut T,
     actual_accounts_len: usize,
     expected_accounts_len: &mut usize,
-) -> Result<Option<solana_program::pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
     if actual_accounts_len == *expected_accounts_len + 1 {
         *expected_accounts_len += 1;
         Ok(Some(next_account(accounts)?))
@@ -572,11 +588,27 @@ pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::
     }
 }
 
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
+    }
+}
+
 // #[cfg(feature = "proto")]
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{InitializeIxAccounts, InstructionParser, RaydiumAmmProgramIx};
+    use super::{InitializeIxAccounts, InstructionParser, RaydiumAmmV4ProgramIx};
     use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::InitializeIxAccounts> for InitializeIxAccounts {
         fn into_proto(self) -> proto_def::InitializeIxAccounts {
@@ -1048,10 +1080,10 @@ mod proto_parser {
         }
     }
 
-    impl IntoProto<proto_def::ProgramIxs> for RaydiumAmmProgramIx {
+    impl IntoProto<proto_def::ProgramIxs> for RaydiumAmmV4ProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                RaydiumAmmProgramIx::Initialize(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::Initialize(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Initialize(
                         proto_def::InitializeIx {
                             accounts: Some(acc.into_proto()),
@@ -1059,7 +1091,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::Initialize2(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::Initialize2(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Initialize2(
                         proto_def::Initialize2Ix {
                             accounts: Some(acc.into_proto()),
@@ -1067,7 +1099,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::MonitorStep(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::MonitorStep(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::MonitorStep(
                         proto_def::MonitorStepIx {
                             accounts: Some(acc.into_proto()),
@@ -1075,7 +1107,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::Deposit(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::Deposit(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Deposit(
                         proto_def::DepositIx {
                             accounts: Some(acc.into_proto()),
@@ -1083,7 +1115,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::Withdraw(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::Withdraw(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Withdraw(
                         proto_def::WithdrawIx {
                             accounts: Some(acc.into_proto()),
@@ -1091,14 +1123,14 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::MigrateToOpenBook(acc) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::MigrateToOpenBook(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::MigrateToOpenBook(
                         proto_def::MigrateToOpenBookIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::SetParams(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::SetParams(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SetParams(
                         proto_def::SetParamsIx {
                             accounts: Some(acc.into_proto()),
@@ -1106,14 +1138,14 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::WithdrawPnl(acc) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::WithdrawPnl(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawPnl(
                         proto_def::WithdrawPnlIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::WithdrawSrm(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::WithdrawSrm(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawSrm(
                         proto_def::WithdrawSrmIx {
                             accounts: Some(acc.into_proto()),
@@ -1121,7 +1153,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::SwapBaseIn(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::SwapBaseIn(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseIn(
                         proto_def::SwapBaseInIx {
                             accounts: Some(acc.into_proto()),
@@ -1129,7 +1161,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::PreInitialize(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::PreInitialize(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::PreInitialize(
                         proto_def::PreInitializeIx {
                             accounts: Some(acc.into_proto()),
@@ -1137,7 +1169,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::SwapBaseOut(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::SwapBaseOut(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseOut(
                         proto_def::SwapBaseOutIx {
                             accounts: Some(acc.into_proto()),
@@ -1145,7 +1177,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::SimulateInfo(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::SimulateInfo(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SimulateInfo(
                         proto_def::SimulateInfoIx {
                             accounts: Some(acc.into_proto()),
@@ -1153,7 +1185,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::AdminCancelOrders(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::AdminCancelOrders(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::AdminCancelOrders(
                         proto_def::AdminCancelOrdersIx {
                             accounts: Some(acc.into_proto()),
@@ -1161,14 +1193,14 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::CreateConfigAccount(acc) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::CreateConfigAccount(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateConfigAccount(
                         proto_def::CreateConfigAccountIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::UpdateConfigAccount(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::UpdateConfigAccount(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateConfigAccount(
                         proto_def::UpdateConfigAccountIx {
                             accounts: Some(acc.into_proto()),
@@ -1184,6 +1216,10 @@ mod proto_parser {
         type Message = proto_def::ProgramIxs;
 
         fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
             value.parsed_ix.into_proto()
         }
     }

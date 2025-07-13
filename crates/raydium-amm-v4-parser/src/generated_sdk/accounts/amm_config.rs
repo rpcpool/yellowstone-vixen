@@ -6,7 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -34,12 +34,10 @@ impl AmmConfig {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for AmmConfig {
+impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for AmmConfig {
     type Error = std::io::Error;
 
-    fn try_from(
-        account_info: &solana_program::account_info::AccountInfo<'a>,
-    ) -> Result<Self, Self::Error> {
+    fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
         let mut data: &[u8] = &(*account_info.data).borrow();
         Self::deserialize(&mut data)
     }
@@ -48,7 +46,7 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for AmmConfig {
 #[cfg(feature = "fetch")]
 pub fn fetch_amm_config(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::DecodedAccount<AmmConfig>, std::io::Error> {
     let accounts = fetch_all_amm_config(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -57,7 +55,7 @@ pub fn fetch_amm_config(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_amm_config(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::DecodedAccount<AmmConfig>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -82,7 +80,7 @@ pub fn fetch_all_amm_config(
 #[cfg(feature = "fetch")]
 pub fn fetch_maybe_amm_config(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::MaybeAccount<AmmConfig>, std::io::Error> {
     let accounts = fetch_all_maybe_amm_config(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -91,7 +89,7 @@ pub fn fetch_maybe_amm_config(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_maybe_amm_config(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::MaybeAccount<AmmConfig>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -127,7 +125,7 @@ impl anchor_lang::AccountSerialize for AmmConfig {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for AmmConfig {
-    fn owner() -> Pubkey { crate::RAYDIUM_AMM_ID }
+    fn owner() -> Pubkey { crate::RAYDIUM_AMM_V4_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

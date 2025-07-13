@@ -10,53 +10,53 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateRaydiumRandomPool {
-    pub cpmm_program: solana_program::pubkey::Pubkey,
+    pub cpmm_program: solana_pubkey::Pubkey,
     /// Which config the pool belongs to.
-    pub amm_config: solana_program::pubkey::Pubkey,
+    pub amm_config: solana_pubkey::Pubkey,
 
-    pub authority: solana_program::pubkey::Pubkey,
+    pub authority: solana_pubkey::Pubkey,
 
-    pub pool_state: solana_program::pubkey::Pubkey,
+    pub pool_state: solana_pubkey::Pubkey,
 
-    pub token0_mint: solana_program::pubkey::Pubkey,
+    pub token0_mint: solana_pubkey::Pubkey,
     /// Token_1 mint, the key must be greater than token_0 mint.
-    pub token1_mint: solana_program::pubkey::Pubkey,
+    pub token1_mint: solana_pubkey::Pubkey,
 
-    pub lp_mint: solana_program::pubkey::Pubkey,
+    pub lp_mint: solana_pubkey::Pubkey,
 
-    pub vault_authority: solana_program::pubkey::Pubkey,
+    pub vault_authority: solana_pubkey::Pubkey,
 
-    pub bonding_curve: solana_program::pubkey::Pubkey,
+    pub bonding_curve: solana_pubkey::Pubkey,
 
-    pub bonding_curve_vault: solana_program::pubkey::Pubkey,
+    pub bonding_curve_vault: solana_pubkey::Pubkey,
 
-    pub bonding_curve_wsol_vault: solana_program::pubkey::Pubkey,
+    pub bonding_curve_wsol_vault: solana_pubkey::Pubkey,
 
-    pub creator_lp_token: solana_program::pubkey::Pubkey,
+    pub creator_lp_token: solana_pubkey::Pubkey,
 
-    pub token0_vault: solana_program::pubkey::Pubkey,
+    pub token0_vault: solana_pubkey::Pubkey,
 
-    pub token1_vault: solana_program::pubkey::Pubkey,
+    pub token1_vault: solana_pubkey::Pubkey,
     /// create pool fee account
-    pub create_pool_fee: solana_program::pubkey::Pubkey,
+    pub create_pool_fee: solana_pubkey::Pubkey,
 
-    pub observation_state: solana_program::pubkey::Pubkey,
+    pub observation_state: solana_pubkey::Pubkey,
 
-    pub operator: solana_program::pubkey::Pubkey,
+    pub operator: solana_pubkey::Pubkey,
 
-    pub config: solana_program::pubkey::Pubkey,
+    pub config: solana_pubkey::Pubkey,
     /// Program to create mint account and mint tokens
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
     /// Program to create an ATA for receiving position NFT
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
     /// To create a new program account
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
     /// Sysvar for program account
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 }
 
 impl CreateRaydiumRandomPool {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -64,100 +64,91 @@ impl CreateRaydiumRandomPool {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(22 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.cpmm_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.amm_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool_state,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.pool_state, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token0_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token1_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lp_mint,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.lp_mint, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.vault_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.bonding_curve,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.bonding_curve_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.bonding_curve_wsol_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.creator_lp_token,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token0_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token1_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.create_pool_fee,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.observation_state,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.operator,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.operator, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&CreateRaydiumRandomPoolInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::BOOP_ID,
             accounts,
             data,
@@ -211,29 +202,29 @@ impl Default for CreateRaydiumRandomPoolInstructionData {
 ///   21. `[optional]` rent (default to `SysvarRent111111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct CreateRaydiumRandomPoolBuilder {
-    cpmm_program: Option<solana_program::pubkey::Pubkey>,
-    amm_config: Option<solana_program::pubkey::Pubkey>,
-    authority: Option<solana_program::pubkey::Pubkey>,
-    pool_state: Option<solana_program::pubkey::Pubkey>,
-    token0_mint: Option<solana_program::pubkey::Pubkey>,
-    token1_mint: Option<solana_program::pubkey::Pubkey>,
-    lp_mint: Option<solana_program::pubkey::Pubkey>,
-    vault_authority: Option<solana_program::pubkey::Pubkey>,
-    bonding_curve: Option<solana_program::pubkey::Pubkey>,
-    bonding_curve_vault: Option<solana_program::pubkey::Pubkey>,
-    bonding_curve_wsol_vault: Option<solana_program::pubkey::Pubkey>,
-    creator_lp_token: Option<solana_program::pubkey::Pubkey>,
-    token0_vault: Option<solana_program::pubkey::Pubkey>,
-    token1_vault: Option<solana_program::pubkey::Pubkey>,
-    create_pool_fee: Option<solana_program::pubkey::Pubkey>,
-    observation_state: Option<solana_program::pubkey::Pubkey>,
-    operator: Option<solana_program::pubkey::Pubkey>,
-    config: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    cpmm_program: Option<solana_pubkey::Pubkey>,
+    amm_config: Option<solana_pubkey::Pubkey>,
+    authority: Option<solana_pubkey::Pubkey>,
+    pool_state: Option<solana_pubkey::Pubkey>,
+    token0_mint: Option<solana_pubkey::Pubkey>,
+    token1_mint: Option<solana_pubkey::Pubkey>,
+    lp_mint: Option<solana_pubkey::Pubkey>,
+    vault_authority: Option<solana_pubkey::Pubkey>,
+    bonding_curve: Option<solana_pubkey::Pubkey>,
+    bonding_curve_vault: Option<solana_pubkey::Pubkey>,
+    bonding_curve_wsol_vault: Option<solana_pubkey::Pubkey>,
+    creator_lp_token: Option<solana_pubkey::Pubkey>,
+    token0_vault: Option<solana_pubkey::Pubkey>,
+    token1_vault: Option<solana_pubkey::Pubkey>,
+    create_pool_fee: Option<solana_pubkey::Pubkey>,
+    observation_state: Option<solana_pubkey::Pubkey>,
+    operator: Option<solana_pubkey::Pubkey>,
+    config: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateRaydiumRandomPoolBuilder {
@@ -241,32 +232,32 @@ impl CreateRaydiumRandomPoolBuilder {
 
     /// `[optional account, default to 'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C']`
     #[inline(always)]
-    pub fn cpmm_program(&mut self, cpmm_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn cpmm_program(&mut self, cpmm_program: solana_pubkey::Pubkey) -> &mut Self {
         self.cpmm_program = Some(cpmm_program);
         self
     }
 
     /// Which config the pool belongs to.
     #[inline(always)]
-    pub fn amm_config(&mut self, amm_config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn amm_config(&mut self, amm_config: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_config = Some(amm_config);
         self
     }
 
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
 
     #[inline(always)]
-    pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
 
     #[inline(always)]
-    pub fn token0_mint(&mut self, token0_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token0_mint(&mut self, token0_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token0_mint = Some(token0_mint);
         self
     }
@@ -274,37 +265,31 @@ impl CreateRaydiumRandomPoolBuilder {
     /// `[optional account, default to 'So11111111111111111111111111111111111111112']`
     /// Token_1 mint, the key must be greater than token_0 mint.
     #[inline(always)]
-    pub fn token1_mint(&mut self, token1_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token1_mint(&mut self, token1_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token1_mint = Some(token1_mint);
         self
     }
 
     #[inline(always)]
-    pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
 
     #[inline(always)]
-    pub fn vault_authority(
-        &mut self,
-        vault_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn vault_authority(&mut self, vault_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.vault_authority = Some(vault_authority);
         self
     }
 
     #[inline(always)]
-    pub fn bonding_curve(&mut self, bonding_curve: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn bonding_curve(&mut self, bonding_curve: solana_pubkey::Pubkey) -> &mut Self {
         self.bonding_curve = Some(bonding_curve);
         self
     }
 
     #[inline(always)]
-    pub fn bonding_curve_vault(
-        &mut self,
-        bonding_curve_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn bonding_curve_vault(&mut self, bonding_curve_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.bonding_curve_vault = Some(bonding_curve_vault);
         self
     }
@@ -312,29 +297,26 @@ impl CreateRaydiumRandomPoolBuilder {
     #[inline(always)]
     pub fn bonding_curve_wsol_vault(
         &mut self,
-        bonding_curve_wsol_vault: solana_program::pubkey::Pubkey,
+        bonding_curve_wsol_vault: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.bonding_curve_wsol_vault = Some(bonding_curve_wsol_vault);
         self
     }
 
     #[inline(always)]
-    pub fn creator_lp_token(
-        &mut self,
-        creator_lp_token: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn creator_lp_token(&mut self, creator_lp_token: solana_pubkey::Pubkey) -> &mut Self {
         self.creator_lp_token = Some(creator_lp_token);
         self
     }
 
     #[inline(always)]
-    pub fn token0_vault(&mut self, token0_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token0_vault(&mut self, token0_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token0_vault = Some(token0_vault);
         self
     }
 
     #[inline(always)]
-    pub fn token1_vault(&mut self, token1_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token1_vault(&mut self, token1_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token1_vault = Some(token1_vault);
         self
     }
@@ -342,31 +324,25 @@ impl CreateRaydiumRandomPoolBuilder {
     /// `[optional account, default to 'DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8']`
     /// create pool fee account
     #[inline(always)]
-    pub fn create_pool_fee(
-        &mut self,
-        create_pool_fee: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn create_pool_fee(&mut self, create_pool_fee: solana_pubkey::Pubkey) -> &mut Self {
         self.create_pool_fee = Some(create_pool_fee);
         self
     }
 
     #[inline(always)]
-    pub fn observation_state(
-        &mut self,
-        observation_state: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn observation_state(&mut self, observation_state: solana_pubkey::Pubkey) -> &mut Self {
         self.observation_state = Some(observation_state);
         self
     }
 
     #[inline(always)]
-    pub fn operator(&mut self, operator: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn operator(&mut self, operator: solana_pubkey::Pubkey) -> &mut Self {
         self.operator = Some(operator);
         self
     }
 
     #[inline(always)]
-    pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
@@ -374,7 +350,7 @@ impl CreateRaydiumRandomPoolBuilder {
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Program to create mint account and mint tokens
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -384,7 +360,7 @@ impl CreateRaydiumRandomPoolBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
@@ -393,7 +369,7 @@ impl CreateRaydiumRandomPoolBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// To create a new program account
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -401,17 +377,14 @@ impl CreateRaydiumRandomPoolBuilder {
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Sysvar for program account
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -420,23 +393,23 @@ impl CreateRaydiumRandomPoolBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateRaydiumRandomPool {
-            cpmm_program: self.cpmm_program.unwrap_or(solana_program::pubkey!(
+            cpmm_program: self.cpmm_program.unwrap_or(solana_pubkey::pubkey!(
                 "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
             )),
             amm_config: self.amm_config.expect("amm_config is not set"),
             authority: self.authority.expect("authority is not set"),
             pool_state: self.pool_state.expect("pool_state is not set"),
             token0_mint: self.token0_mint.expect("token0_mint is not set"),
-            token1_mint: self.token1_mint.unwrap_or(solana_program::pubkey!(
+            token1_mint: self.token1_mint.unwrap_or(solana_pubkey::pubkey!(
                 "So11111111111111111111111111111111111111112"
             )),
             lp_mint: self.lp_mint.expect("lp_mint is not set"),
@@ -451,7 +424,7 @@ impl CreateRaydiumRandomPoolBuilder {
             creator_lp_token: self.creator_lp_token.expect("creator_lp_token is not set"),
             token0_vault: self.token0_vault.expect("token0_vault is not set"),
             token1_vault: self.token1_vault.expect("token1_vault is not set"),
-            create_pool_fee: self.create_pool_fee.unwrap_or(solana_program::pubkey!(
+            create_pool_fee: self.create_pool_fee.unwrap_or(solana_pubkey::pubkey!(
                 "DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8"
             )),
             observation_state: self
@@ -459,16 +432,16 @@ impl CreateRaydiumRandomPoolBuilder {
                 .expect("observation_state is not set"),
             operator: self.operator.expect("operator is not set"),
             config: self.config.expect("config is not set"),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self.associated_token_program.unwrap_or(
-                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
         };
@@ -479,104 +452,104 @@ impl CreateRaydiumRandomPoolBuilder {
 
 /// `create_raydium_random_pool` CPI accounts.
 pub struct CreateRaydiumRandomPoolCpiAccounts<'a, 'b> {
-    pub cpmm_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpmm_program: &'b solana_account_info::AccountInfo<'a>,
     /// Which config the pool belongs to.
-    pub amm_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token0_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token0_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Token_1 mint, the key must be greater than token_0 mint.
-    pub token1_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token1_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vault_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve_wsol_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve_wsol_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub creator_lp_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator_lp_token: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token0_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token0_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token1_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token1_vault: &'b solana_account_info::AccountInfo<'a>,
     /// create pool fee account
-    pub create_pool_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub create_pool_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub observation_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub observation_state: &'b solana_account_info::AccountInfo<'a>,
 
-    pub operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create mint account and mint tokens
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create an ATA for receiving position NFT
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// To create a new program account
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Sysvar for program account
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `create_raydium_random_pool` CPI instruction.
 pub struct CreateRaydiumRandomPoolCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpmm_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpmm_program: &'b solana_account_info::AccountInfo<'a>,
     /// Which config the pool belongs to.
-    pub amm_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token0_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token0_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Token_1 mint, the key must be greater than token_0 mint.
-    pub token1_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token1_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vault_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve_wsol_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve_wsol_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub creator_lp_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator_lp_token: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token0_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token0_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token1_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token1_vault: &'b solana_account_info::AccountInfo<'a>,
     /// create pool fee account
-    pub create_pool_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub create_pool_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub observation_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub observation_state: &'b solana_account_info::AccountInfo<'a>,
 
-    pub operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create mint account and mint tokens
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create an ATA for receiving position NFT
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// To create a new program account
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Sysvar for program account
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> CreateRaydiumRandomPoolCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: CreateRaydiumRandomPoolCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -607,19 +580,15 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -627,7 +596,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -637,103 +606,99 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(22 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.cpmm_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.amm_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_state.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token0_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token1_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.vault_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.bonding_curve.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.bonding_curve_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.bonding_curve_wsol_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.creator_lp_token.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token0_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token1_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.create_pool_fee.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.observation_state.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.operator.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -741,7 +706,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&CreateRaydiumRandomPoolInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::BOOP_ID,
             accounts,
             data,
@@ -775,9 +740,9 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -814,7 +779,7 @@ pub struct CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(CreateRaydiumRandomPoolCpiBuilderInstruction {
             __program: program,
             cpmm_program: None,
@@ -847,7 +812,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpmm_program(
         &mut self,
-        cpmm_program: &'b solana_program::account_info::AccountInfo<'a>,
+        cpmm_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpmm_program = Some(cpmm_program);
         self
@@ -857,17 +822,14 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_config(
         &mut self,
-        amm_config: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_config: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_config = Some(amm_config);
         self
     }
 
     #[inline(always)]
-    pub fn authority(
-        &mut self,
-        authority: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.authority = Some(authority);
         self
     }
@@ -875,7 +837,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_state(
         &mut self,
-        pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_state = Some(pool_state);
         self
@@ -884,7 +846,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token0_mint(
         &mut self,
-        token0_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token0_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token0_mint = Some(token0_mint);
         self
@@ -894,17 +856,14 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token1_mint(
         &mut self,
-        token1_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token1_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token1_mint = Some(token1_mint);
         self
     }
 
     #[inline(always)]
-    pub fn lp_mint(
-        &mut self,
-        lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
@@ -912,7 +871,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn vault_authority(
         &mut self,
-        vault_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        vault_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vault_authority = Some(vault_authority);
         self
@@ -921,7 +880,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bonding_curve(
         &mut self,
-        bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+        bonding_curve: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.bonding_curve = Some(bonding_curve);
         self
@@ -930,7 +889,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bonding_curve_vault(
         &mut self,
-        bonding_curve_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        bonding_curve_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.bonding_curve_vault = Some(bonding_curve_vault);
         self
@@ -939,7 +898,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bonding_curve_wsol_vault(
         &mut self,
-        bonding_curve_wsol_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        bonding_curve_wsol_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.bonding_curve_wsol_vault = Some(bonding_curve_wsol_vault);
         self
@@ -948,7 +907,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn creator_lp_token(
         &mut self,
-        creator_lp_token: &'b solana_program::account_info::AccountInfo<'a>,
+        creator_lp_token: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.creator_lp_token = Some(creator_lp_token);
         self
@@ -957,7 +916,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token0_vault(
         &mut self,
-        token0_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        token0_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token0_vault = Some(token0_vault);
         self
@@ -966,7 +925,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token1_vault(
         &mut self,
-        token1_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        token1_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token1_vault = Some(token1_vault);
         self
@@ -976,7 +935,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn create_pool_fee(
         &mut self,
-        create_pool_fee: &'b solana_program::account_info::AccountInfo<'a>,
+        create_pool_fee: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.create_pool_fee = Some(create_pool_fee);
         self
@@ -985,26 +944,20 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn observation_state(
         &mut self,
-        observation_state: &'b solana_program::account_info::AccountInfo<'a>,
+        observation_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.observation_state = Some(observation_state);
         self
     }
 
     #[inline(always)]
-    pub fn operator(
-        &mut self,
-        operator: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn operator(&mut self, operator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.operator = Some(operator);
         self
     }
 
     #[inline(always)]
-    pub fn config(
-        &mut self,
-        config: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
@@ -1013,7 +966,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -1023,7 +976,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -1033,7 +986,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -1041,7 +994,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
 
     /// Sysvar for program account
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -1050,7 +1003,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -1067,11 +1020,7 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -1080,14 +1029,14 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = CreateRaydiumRandomPoolCpi {
             __program: self.instruction.__program,
 
@@ -1189,33 +1138,29 @@ impl<'a, 'b> CreateRaydiumRandomPoolCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct CreateRaydiumRandomPoolCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    cpmm_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token0_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token1_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vault_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bonding_curve: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bonding_curve_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bonding_curve_wsol_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    creator_lp_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token0_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token1_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    create_pool_fee: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    observation_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    operator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    cpmm_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token0_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token1_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vault_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bonding_curve: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bonding_curve_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bonding_curve_wsol_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    creator_lp_token: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token0_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token1_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    create_pool_fee: Option<&'b solana_account_info::AccountInfo<'a>>,
+    observation_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    operator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

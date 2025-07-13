@@ -5,7 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
 use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     instructions::{
@@ -44,7 +49,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = PumpSwapProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<PumpSwapProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "PumpSwap::InstructionParser".into() }
 
@@ -60,7 +68,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -75,184 +99,197 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<PumpSwapProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [102, 6, 61, 18, 1, 218, 235, 234] => {
-                check_min_accounts_req(accounts_len, 17)?;
+                let expected_accounts_len = 17;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = BuyIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    user: ix.accounts[1].0.into(),
-                    global_config: ix.accounts[2].0.into(),
-                    base_mint: ix.accounts[3].0.into(),
-                    quote_mint: ix.accounts[4].0.into(),
-                    user_base_token_account: ix.accounts[5].0.into(),
-                    user_quote_token_account: ix.accounts[6].0.into(),
-                    pool_base_token_account: ix.accounts[7].0.into(),
-                    pool_quote_token_account: ix.accounts[8].0.into(),
-                    protocol_fee_recipient: ix.accounts[9].0.into(),
-                    protocol_fee_recipient_token_account: ix.accounts[10].0.into(),
-                    base_token_program: ix.accounts[11].0.into(),
-                    quote_token_program: ix.accounts[12].0.into(),
-                    system_program: ix.accounts[13].0.into(),
-                    associated_token_program: ix.accounts[14].0.into(),
-                    event_authority: ix.accounts[15].0.into(),
-                    program: ix.accounts[16].0.into(),
+                    pool: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    base_mint: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    user_base_token_account: next_account(accounts)?,
+                    user_quote_token_account: next_account(accounts)?,
+                    pool_base_token_account: next_account(accounts)?,
+                    pool_quote_token_account: next_account(accounts)?,
+                    protocol_fee_recipient: next_account(accounts)?,
+                    protocol_fee_recipient_token_account: next_account(accounts)?,
+                    base_token_program: next_account(accounts)?,
+                    quote_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: BuyIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(PumpSwapProgramIx::Buy(ix_accounts, de_ix_data))
             },
             [201, 207, 243, 114, 75, 111, 47, 189] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateConfigIxAccounts {
-                    admin: ix.accounts[0].0.into(),
-                    global_config: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    admin: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateConfigIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: CreateConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(PumpSwapProgramIx::CreateConfig(ix_accounts, de_ix_data))
             },
             [233, 146, 209, 142, 207, 104, 64, 188] => {
-                check_min_accounts_req(accounts_len, 18)?;
+                let expected_accounts_len = 18;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreatePoolIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    global_config: ix.accounts[1].0.into(),
-                    creator: ix.accounts[2].0.into(),
-                    base_mint: ix.accounts[3].0.into(),
-                    quote_mint: ix.accounts[4].0.into(),
-                    lp_mint: ix.accounts[5].0.into(),
-                    user_base_token_account: ix.accounts[6].0.into(),
-                    user_quote_token_account: ix.accounts[7].0.into(),
-                    user_pool_token_account: ix.accounts[8].0.into(),
-                    pool_base_token_account: ix.accounts[9].0.into(),
-                    pool_quote_token_account: ix.accounts[10].0.into(),
-                    system_program: ix.accounts[11].0.into(),
-                    token2022_program: ix.accounts[12].0.into(),
-                    base_token_program: ix.accounts[13].0.into(),
-                    quote_token_program: ix.accounts[14].0.into(),
-                    associated_token_program: ix.accounts[15].0.into(),
-                    event_authority: ix.accounts[16].0.into(),
-                    program: ix.accounts[17].0.into(),
+                    pool: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    creator: next_account(accounts)?,
+                    base_mint: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_base_token_account: next_account(accounts)?,
+                    user_quote_token_account: next_account(accounts)?,
+                    user_pool_token_account: next_account(accounts)?,
+                    pool_base_token_account: next_account(accounts)?,
+                    pool_quote_token_account: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                    base_token_program: next_account(accounts)?,
+                    quote_token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: CreatePoolIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: CreatePoolIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(PumpSwapProgramIx::CreatePool(ix_accounts, de_ix_data))
             },
             [242, 35, 198, 137, 82, 225, 242, 182] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DepositIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    global_config: ix.accounts[1].0.into(),
-                    user: ix.accounts[2].0.into(),
-                    base_mint: ix.accounts[3].0.into(),
-                    quote_mint: ix.accounts[4].0.into(),
-                    lp_mint: ix.accounts[5].0.into(),
-                    user_base_token_account: ix.accounts[6].0.into(),
-                    user_quote_token_account: ix.accounts[7].0.into(),
-                    user_pool_token_account: ix.accounts[8].0.into(),
-                    pool_base_token_account: ix.accounts[9].0.into(),
-                    pool_quote_token_account: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    token2022_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    pool: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    base_mint: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_base_token_account: next_account(accounts)?,
+                    user_quote_token_account: next_account(accounts)?,
+                    user_pool_token_account: next_account(accounts)?,
+                    pool_base_token_account: next_account(accounts)?,
+                    pool_quote_token_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: DepositIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: DepositIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(PumpSwapProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [185, 173, 187, 90, 216, 15, 238, 233] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DisableIxAccounts {
-                    admin: ix.accounts[0].0.into(),
-                    global_config: ix.accounts[1].0.into(),
-                    event_authority: ix.accounts[2].0.into(),
-                    program: ix.accounts[3].0.into(),
+                    admin: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: DisableIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: DisableIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(PumpSwapProgramIx::Disable(ix_accounts, de_ix_data))
             },
             [234, 102, 194, 203, 150, 72, 62, 229] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ExtendAccountIxAccounts {
-                    account: ix.accounts[0].0.into(),
-                    user: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    account: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(PumpSwapProgramIx::ExtendAccount(ix_accounts))
             },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
-                check_min_accounts_req(accounts_len, 17)?;
+                let expected_accounts_len = 17;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SellIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    user: ix.accounts[1].0.into(),
-                    global_config: ix.accounts[2].0.into(),
-                    base_mint: ix.accounts[3].0.into(),
-                    quote_mint: ix.accounts[4].0.into(),
-                    user_base_token_account: ix.accounts[5].0.into(),
-                    user_quote_token_account: ix.accounts[6].0.into(),
-                    pool_base_token_account: ix.accounts[7].0.into(),
-                    pool_quote_token_account: ix.accounts[8].0.into(),
-                    protocol_fee_recipient: ix.accounts[9].0.into(),
-                    protocol_fee_recipient_token_account: ix.accounts[10].0.into(),
-                    base_token_program: ix.accounts[11].0.into(),
-                    quote_token_program: ix.accounts[12].0.into(),
-                    system_program: ix.accounts[13].0.into(),
-                    associated_token_program: ix.accounts[14].0.into(),
-                    event_authority: ix.accounts[15].0.into(),
-                    program: ix.accounts[16].0.into(),
+                    pool: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    base_mint: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    user_base_token_account: next_account(accounts)?,
+                    user_quote_token_account: next_account(accounts)?,
+                    pool_base_token_account: next_account(accounts)?,
+                    pool_quote_token_account: next_account(accounts)?,
+                    protocol_fee_recipient: next_account(accounts)?,
+                    protocol_fee_recipient_token_account: next_account(accounts)?,
+                    base_token_program: next_account(accounts)?,
+                    quote_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: SellIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SellIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(PumpSwapProgramIx::Sell(ix_accounts, de_ix_data))
             },
             [161, 176, 40, 213, 60, 184, 179, 228] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateAdminIxAccounts {
-                    admin: ix.accounts[0].0.into(),
-                    global_config: ix.accounts[1].0.into(),
-                    new_admin: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+                    admin: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    new_admin: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(PumpSwapProgramIx::UpdateAdmin(ix_accounts))
             },
             [104, 184, 103, 242, 88, 151, 107, 20] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateFeeConfigIxAccounts {
-                    admin: ix.accounts[0].0.into(),
-                    global_config: ix.accounts[1].0.into(),
-                    event_authority: ix.accounts[2].0.into(),
-                    program: ix.accounts[3].0.into(),
+                    admin: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: UpdateFeeConfigIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: UpdateFeeConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(PumpSwapProgramIx::UpdateFeeConfig(ix_accounts, de_ix_data))
             },
             [183, 18, 70, 156, 148, 109, 161, 34] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    global_config: ix.accounts[1].0.into(),
-                    user: ix.accounts[2].0.into(),
-                    base_mint: ix.accounts[3].0.into(),
-                    quote_mint: ix.accounts[4].0.into(),
-                    lp_mint: ix.accounts[5].0.into(),
-                    user_base_token_account: ix.accounts[6].0.into(),
-                    user_quote_token_account: ix.accounts[7].0.into(),
-                    user_pool_token_account: ix.accounts[8].0.into(),
-                    pool_base_token_account: ix.accounts[9].0.into(),
-                    pool_quote_token_account: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    token2022_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    pool: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    base_mint: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_base_token_account: next_account(accounts)?,
+                    user_quote_token_account: next_account(accounts)?,
+                    user_pool_token_account: next_account(accounts)?,
+                    pool_base_token_account: next_account(accounts)?,
+                    pool_quote_token_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: WithdrawIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(PumpSwapProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
@@ -282,7 +319,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -296,6 +340,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -656,6 +743,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

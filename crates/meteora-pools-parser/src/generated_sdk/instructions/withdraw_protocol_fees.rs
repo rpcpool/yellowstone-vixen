@@ -11,23 +11,23 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct WithdrawProtocolFees {
     /// Pool account (PDA)
-    pub pool: solana_program::pubkey::Pubkey,
+    pub pool: solana_pubkey::Pubkey,
 
-    pub a_vault_lp: solana_program::pubkey::Pubkey,
+    pub a_vault_lp: solana_pubkey::Pubkey,
 
-    pub protocol_token_a_fee: solana_program::pubkey::Pubkey,
+    pub protocol_token_a_fee: solana_pubkey::Pubkey,
 
-    pub protocol_token_b_fee: solana_program::pubkey::Pubkey,
+    pub protocol_token_b_fee: solana_pubkey::Pubkey,
 
-    pub treasury_token_a: solana_program::pubkey::Pubkey,
+    pub treasury_token_a: solana_pubkey::Pubkey,
 
-    pub treasury_token_b: solana_program::pubkey::Pubkey,
+    pub treasury_token_b: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 }
 
 impl WithdrawProtocolFees {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -35,40 +35,40 @@ impl WithdrawProtocolFees {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.pool, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.a_vault_lp,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.protocol_token_a_fee,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.protocol_token_b_fee,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.treasury_token_a,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.treasury_token_b,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&WithdrawProtocolFeesInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -107,14 +107,14 @@ impl Default for WithdrawProtocolFeesInstructionData {
 ///   6. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
 #[derive(Clone, Debug, Default)]
 pub struct WithdrawProtocolFeesBuilder {
-    pool: Option<solana_program::pubkey::Pubkey>,
-    a_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    protocol_token_a_fee: Option<solana_program::pubkey::Pubkey>,
-    protocol_token_b_fee: Option<solana_program::pubkey::Pubkey>,
-    treasury_token_a: Option<solana_program::pubkey::Pubkey>,
-    treasury_token_b: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    pool: Option<solana_pubkey::Pubkey>,
+    a_vault_lp: Option<solana_pubkey::Pubkey>,
+    protocol_token_a_fee: Option<solana_pubkey::Pubkey>,
+    protocol_token_b_fee: Option<solana_pubkey::Pubkey>,
+    treasury_token_a: Option<solana_pubkey::Pubkey>,
+    treasury_token_b: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl WithdrawProtocolFeesBuilder {
@@ -122,13 +122,13 @@ impl WithdrawProtocolFeesBuilder {
 
     /// Pool account (PDA)
     #[inline(always)]
-    pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
 
     #[inline(always)]
-    pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_vault_lp(&mut self, a_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
@@ -136,7 +136,7 @@ impl WithdrawProtocolFeesBuilder {
     #[inline(always)]
     pub fn protocol_token_a_fee(
         &mut self,
-        protocol_token_a_fee: solana_program::pubkey::Pubkey,
+        protocol_token_a_fee: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
@@ -145,43 +145,34 @@ impl WithdrawProtocolFeesBuilder {
     #[inline(always)]
     pub fn protocol_token_b_fee(
         &mut self,
-        protocol_token_b_fee: solana_program::pubkey::Pubkey,
+        protocol_token_b_fee: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
     }
 
     #[inline(always)]
-    pub fn treasury_token_a(
-        &mut self,
-        treasury_token_a: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn treasury_token_a(&mut self, treasury_token_a: solana_pubkey::Pubkey) -> &mut Self {
         self.treasury_token_a = Some(treasury_token_a);
         self
     }
 
     #[inline(always)]
-    pub fn treasury_token_b(
-        &mut self,
-        treasury_token_b: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn treasury_token_b(&mut self, treasury_token_b: solana_pubkey::Pubkey) -> &mut Self {
         self.treasury_token_b = Some(treasury_token_b);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -190,14 +181,14 @@ impl WithdrawProtocolFeesBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = WithdrawProtocolFees {
             pool: self.pool.expect("pool is not set"),
             a_vault_lp: self.a_vault_lp.expect("a_vault_lp is not set"),
@@ -209,7 +200,7 @@ impl WithdrawProtocolFeesBuilder {
                 .expect("protocol_token_b_fee is not set"),
             treasury_token_a: self.treasury_token_a.expect("treasury_token_a is not set"),
             treasury_token_b: self.treasury_token_b.expect("treasury_token_b is not set"),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
         };
@@ -221,44 +212,44 @@ impl WithdrawProtocolFeesBuilder {
 /// `withdraw_protocol_fees` CPI accounts.
 pub struct WithdrawProtocolFeesCpiAccounts<'a, 'b> {
     /// Pool account (PDA)
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_token_a_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_a_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_token_b_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_b_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub treasury_token_a: &'b solana_program::account_info::AccountInfo<'a>,
+    pub treasury_token_a: &'b solana_account_info::AccountInfo<'a>,
 
-    pub treasury_token_b: &'b solana_program::account_info::AccountInfo<'a>,
+    pub treasury_token_b: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `withdraw_protocol_fees` CPI instruction.
 pub struct WithdrawProtocolFeesCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Pool account (PDA)
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_token_a_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_a_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_token_b_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_b_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub treasury_token_a: &'b solana_program::account_info::AccountInfo<'a>,
+    pub treasury_token_a: &'b solana_account_info::AccountInfo<'a>,
 
-    pub treasury_token_b: &'b solana_program::account_info::AccountInfo<'a>,
+    pub treasury_token_b: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> WithdrawProtocolFeesCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: WithdrawProtocolFeesCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -274,19 +265,15 @@ impl<'a, 'b> WithdrawProtocolFeesCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -294,7 +281,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -304,43 +291,39 @@ impl<'a, 'b> WithdrawProtocolFeesCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.a_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.protocol_token_a_fee.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.protocol_token_b_fee.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.treasury_token_a.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.treasury_token_b.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -348,7 +331,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&WithdrawProtocolFeesInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -367,9 +350,9 @@ impl<'a, 'b> WithdrawProtocolFeesCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -391,7 +374,7 @@ pub struct WithdrawProtocolFeesCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(WithdrawProtocolFeesCpiBuilderInstruction {
             __program: program,
             pool: None,
@@ -408,7 +391,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
 
     /// Pool account (PDA)
     #[inline(always)]
-    pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
@@ -416,7 +399,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn a_vault_lp(
         &mut self,
-        a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
@@ -425,7 +408,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn protocol_token_a_fee(
         &mut self,
-        protocol_token_a_fee: &'b solana_program::account_info::AccountInfo<'a>,
+        protocol_token_a_fee: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
@@ -434,7 +417,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn protocol_token_b_fee(
         &mut self,
-        protocol_token_b_fee: &'b solana_program::account_info::AccountInfo<'a>,
+        protocol_token_b_fee: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
@@ -443,7 +426,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn treasury_token_a(
         &mut self,
-        treasury_token_a: &'b solana_program::account_info::AccountInfo<'a>,
+        treasury_token_a: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.treasury_token_a = Some(treasury_token_a);
         self
@@ -452,7 +435,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn treasury_token_b(
         &mut self,
-        treasury_token_b: &'b solana_program::account_info::AccountInfo<'a>,
+        treasury_token_b: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.treasury_token_b = Some(treasury_token_b);
         self
@@ -461,7 +444,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -471,7 +454,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -488,11 +471,7 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -501,14 +480,14 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = WithdrawProtocolFeesCpi {
             __program: self.instruction.__program,
 
@@ -550,18 +529,14 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct WithdrawProtocolFeesCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    protocol_token_a_fee: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    protocol_token_b_fee: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    treasury_token_a: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    treasury_token_b: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    protocol_token_a_fee: Option<&'b solana_account_info::AccountInfo<'a>>,
+    protocol_token_b_fee: Option<&'b solana_account_info::AccountInfo<'a>>,
+    treasury_token_a: Option<&'b solana_account_info::AccountInfo<'a>>,
+    treasury_token_b: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

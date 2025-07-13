@@ -6,39 +6,39 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 /// Accounts.
 #[derive(Debug)]
 pub struct InitializePositionByOperator {
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
 
-    pub base: solana_program::pubkey::Pubkey,
+    pub base: solana_pubkey::Pubkey,
 
-    pub position: solana_program::pubkey::Pubkey,
+    pub position: solana_pubkey::Pubkey,
 
-    pub lb_pair: solana_program::pubkey::Pubkey,
+    pub lb_pair: solana_pubkey::Pubkey,
 
-    pub owner: solana_program::pubkey::Pubkey,
+    pub owner: solana_pubkey::Pubkey,
     /// operator
-    pub operator: solana_program::pubkey::Pubkey,
+    pub operator: solana_pubkey::Pubkey,
 
-    pub operator_token_x: solana_program::pubkey::Pubkey,
+    pub operator_token_x: solana_pubkey::Pubkey,
 
-    pub owner_token_x: solana_program::pubkey::Pubkey,
+    pub owner_token_x: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl InitializePositionByOperator {
     pub fn instruction(
         &self,
         args: InitializePositionByOperatorInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -47,47 +47,42 @@ impl InitializePositionByOperator {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: InitializePositionByOperatorInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.base, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.position,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.position, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.lb_pair,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.owner, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.operator,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.operator_token_x,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.owner_token_x,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -96,7 +91,7 @@ impl InitializePositionByOperator {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -148,97 +143,91 @@ pub struct InitializePositionByOperatorInstructionArgs {
 ///   10. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct InitializePositionByOperatorBuilder {
-    payer: Option<solana_program::pubkey::Pubkey>,
-    base: Option<solana_program::pubkey::Pubkey>,
-    position: Option<solana_program::pubkey::Pubkey>,
-    lb_pair: Option<solana_program::pubkey::Pubkey>,
-    owner: Option<solana_program::pubkey::Pubkey>,
-    operator: Option<solana_program::pubkey::Pubkey>,
-    operator_token_x: Option<solana_program::pubkey::Pubkey>,
-    owner_token_x: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    base: Option<solana_pubkey::Pubkey>,
+    position: Option<solana_pubkey::Pubkey>,
+    lb_pair: Option<solana_pubkey::Pubkey>,
+    owner: Option<solana_pubkey::Pubkey>,
+    operator: Option<solana_pubkey::Pubkey>,
+    operator_token_x: Option<solana_pubkey::Pubkey>,
+    owner_token_x: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     lower_bin_id: Option<i32>,
     width: Option<i32>,
     fee_owner: Option<Pubkey>,
     lock_release_point: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl InitializePositionByOperatorBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
 
     #[inline(always)]
-    pub fn base(&mut self, base: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn base(&mut self, base: solana_pubkey::Pubkey) -> &mut Self {
         self.base = Some(base);
         self
     }
 
     #[inline(always)]
-    pub fn position(&mut self, position: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
         self.position = Some(position);
         self
     }
 
     #[inline(always)]
-    pub fn lb_pair(&mut self, lb_pair: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: solana_pubkey::Pubkey) -> &mut Self {
         self.lb_pair = Some(lb_pair);
         self
     }
 
     #[inline(always)]
-    pub fn owner(&mut self, owner: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
 
     /// operator
     #[inline(always)]
-    pub fn operator(&mut self, operator: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn operator(&mut self, operator: solana_pubkey::Pubkey) -> &mut Self {
         self.operator = Some(operator);
         self
     }
 
     #[inline(always)]
-    pub fn operator_token_x(
-        &mut self,
-        operator_token_x: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn operator_token_x(&mut self, operator_token_x: solana_pubkey::Pubkey) -> &mut Self {
         self.operator_token_x = Some(operator_token_x);
         self
     }
 
     #[inline(always)]
-    pub fn owner_token_x(&mut self, owner_token_x: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn owner_token_x(&mut self, owner_token_x: solana_pubkey::Pubkey) -> &mut Self {
         self.owner_token_x = Some(owner_token_x);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -269,10 +258,7 @@ impl InitializePositionByOperatorBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -281,14 +267,14 @@ impl InitializePositionByOperatorBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializePositionByOperator {
             payer: self.payer.expect("payer is not set"),
             base: self.base.expect("base is not set"),
@@ -300,7 +286,7 @@ impl InitializePositionByOperatorBuilder {
             owner_token_x: self.owner_token_x.expect("owner_token_x is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
@@ -320,62 +306,62 @@ impl InitializePositionByOperatorBuilder {
 
 /// `initialize_position_by_operator` CPI accounts.
 pub struct InitializePositionByOperatorCpiAccounts<'a, 'b> {
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub base: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner: &'b solana_account_info::AccountInfo<'a>,
     /// operator
-    pub operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub operator_token_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator_token_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub owner_token_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner_token_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `initialize_position_by_operator` CPI instruction.
 pub struct InitializePositionByOperatorCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub base: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner: &'b solana_account_info::AccountInfo<'a>,
     /// operator
-    pub operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub operator_token_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator_token_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub owner_token_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner_token_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: InitializePositionByOperatorInstructionArgs,
 }
 
 impl<'a, 'b> InitializePositionByOperatorCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: InitializePositionByOperatorCpiAccounts<'a, 'b>,
         args: InitializePositionByOperatorInstructionArgs,
     ) -> Self {
@@ -397,19 +383,15 @@ impl<'a, 'b> InitializePositionByOperatorCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -417,7 +399,7 @@ impl<'a, 'b> InitializePositionByOperatorCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -427,59 +409,52 @@ impl<'a, 'b> InitializePositionByOperatorCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.base.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.position.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.lb_pair.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.owner.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.operator.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.operator_token_x.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.owner_token_x.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -489,7 +464,7 @@ impl<'a, 'b> InitializePositionByOperatorCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -512,9 +487,9 @@ impl<'a, 'b> InitializePositionByOperatorCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -540,7 +515,7 @@ pub struct InitializePositionByOperatorCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(InitializePositionByOperatorCpiBuilderInstruction {
             __program: program,
             payer: None,
@@ -564,47 +539,38 @@ impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
 
     #[inline(always)]
-    pub fn base(&mut self, base: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn base(&mut self, base: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base = Some(base);
         self
     }
 
     #[inline(always)]
-    pub fn position(
-        &mut self,
-        position: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn position(&mut self, position: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.position = Some(position);
         self
     }
 
     #[inline(always)]
-    pub fn lb_pair(
-        &mut self,
-        lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lb_pair = Some(lb_pair);
         self
     }
 
     #[inline(always)]
-    pub fn owner(&mut self, owner: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
 
     /// operator
     #[inline(always)]
-    pub fn operator(
-        &mut self,
-        operator: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn operator(&mut self, operator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.operator = Some(operator);
         self
     }
@@ -612,7 +578,7 @@ impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn operator_token_x(
         &mut self,
-        operator_token_x: &'b solana_program::account_info::AccountInfo<'a>,
+        operator_token_x: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.operator_token_x = Some(operator_token_x);
         self
@@ -621,7 +587,7 @@ impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn owner_token_x(
         &mut self,
-        owner_token_x: &'b solana_program::account_info::AccountInfo<'a>,
+        owner_token_x: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.owner_token_x = Some(owner_token_x);
         self
@@ -630,7 +596,7 @@ impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -639,17 +605,14 @@ impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -682,7 +645,7 @@ impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -699,11 +662,7 @@ impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -712,14 +671,14 @@ impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = InitializePositionByOperatorInstructionArgs {
             lower_bin_id: self
                 .instruction
@@ -785,26 +744,22 @@ impl<'a, 'b> InitializePositionByOperatorCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct InitializePositionByOperatorCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    position: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lb_pair: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    operator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    operator_token_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    owner_token_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base: Option<&'b solana_account_info::AccountInfo<'a>>,
+    position: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lb_pair: Option<&'b solana_account_info::AccountInfo<'a>>,
+    owner: Option<&'b solana_account_info::AccountInfo<'a>>,
+    operator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    operator_token_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    owner_token_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     lower_bin_id: Option<i32>,
     width: Option<i32>,
     fee_owner: Option<Pubkey>,
     lock_release_point: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

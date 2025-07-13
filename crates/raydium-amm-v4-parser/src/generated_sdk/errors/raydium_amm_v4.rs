@@ -9,7 +9,7 @@ use num_derive::FromPrimitive;
 use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
-pub enum RaydiumAmmError {
+pub enum RaydiumAmmV4Error {
     /// 0 - AlreadyInUse
     #[error("AlreadyInUse")]
     AlreadyInUse = 0x0,
@@ -183,12 +183,12 @@ pub enum RaydiumAmmError {
     UnknownAmmError = 0x38,
 }
 
-impl solana_program::program_error::PrintProgramError for RaydiumAmmError {
+impl solana_program_error::PrintProgramError for RaydiumAmmV4Error {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for RaydiumAmmError {
-    fn type_of() -> &'static str { "RaydiumAmmError" }
+impl<T> solana_decode_error::DecodeError<T> for RaydiumAmmV4Error {
+    fn type_of() -> &'static str { "RaydiumAmmV4Error" }
 }

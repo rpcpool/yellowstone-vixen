@@ -1,18 +1,11 @@
-//! ## This crate contains the generated parser for the Raydium AMM v4 program.
-//!
-//! feature flags:
-//! - `prefilters`: This feature is used to enable the custom prefilters for the parser.
-//! - `tracing`: This feature is used to enable the tracing for the parser for debugging and performance monitoring.
-//!   (Note: while this feature enables tracing it does not assumes how tracing subscribers and )
-
 mod generated_parser;
 mod generated_sdk;
 pub use generated::*;
 pub use generated_parser::*;
 use generated_sdk as generated;
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
-pub const ID: Pubkey = RAYDIUM_AMM_ID;
+pub const ID: Pubkey = RAYDIUM_AMM_V4_ID;
 
 // #[cfg(feature = "proto")]
 pub mod proto_def {

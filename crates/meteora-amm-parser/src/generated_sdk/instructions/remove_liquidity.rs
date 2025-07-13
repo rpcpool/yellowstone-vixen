@@ -12,42 +12,42 @@ use crate::generated::types::RemoveLiquidityParameters;
 /// Accounts.
 #[derive(Debug)]
 pub struct RemoveLiquidity {
-    pub pool_authority: solana_program::pubkey::Pubkey,
+    pub pool_authority: solana_pubkey::Pubkey,
 
-    pub pool: solana_program::pubkey::Pubkey,
+    pub pool: solana_pubkey::Pubkey,
 
-    pub position: solana_program::pubkey::Pubkey,
+    pub position: solana_pubkey::Pubkey,
     /// The user token a account
-    pub token_a_account: solana_program::pubkey::Pubkey,
+    pub token_a_account: solana_pubkey::Pubkey,
     /// The user token b account
-    pub token_b_account: solana_program::pubkey::Pubkey,
+    pub token_b_account: solana_pubkey::Pubkey,
     /// The vault token account for input token
-    pub token_a_vault: solana_program::pubkey::Pubkey,
+    pub token_a_vault: solana_pubkey::Pubkey,
     /// The vault token account for output token
-    pub token_b_vault: solana_program::pubkey::Pubkey,
+    pub token_b_vault: solana_pubkey::Pubkey,
     /// The mint of token a
-    pub token_a_mint: solana_program::pubkey::Pubkey,
+    pub token_a_mint: solana_pubkey::Pubkey,
     /// The mint of token b
-    pub token_b_mint: solana_program::pubkey::Pubkey,
+    pub token_b_mint: solana_pubkey::Pubkey,
     /// The token account for nft
-    pub position_nft_account: solana_program::pubkey::Pubkey,
+    pub position_nft_account: solana_pubkey::Pubkey,
     /// owner of position
-    pub owner: solana_program::pubkey::Pubkey,
+    pub owner: solana_pubkey::Pubkey,
     /// Token a program
-    pub token_a_program: solana_program::pubkey::Pubkey,
+    pub token_a_program: solana_pubkey::Pubkey,
     /// Token b program
-    pub token_b_program: solana_program::pubkey::Pubkey,
+    pub token_b_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl RemoveLiquidity {
     pub fn instruction(
         &self,
         args: RemoveLiquidityInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -56,64 +56,59 @@ impl RemoveLiquidity {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: RemoveLiquidityInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(15 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.pool_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.position,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.pool, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.position, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_a_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_b_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_a_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_b_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_a_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_b_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.position_nft_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.owner, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_a_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_b_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -122,7 +117,7 @@ impl RemoveLiquidity {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
             accounts,
             data,
@@ -175,90 +170,84 @@ pub struct RemoveLiquidityInstructionArgs {
 ///   14. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct RemoveLiquidityBuilder {
-    pool_authority: Option<solana_program::pubkey::Pubkey>,
-    pool: Option<solana_program::pubkey::Pubkey>,
-    position: Option<solana_program::pubkey::Pubkey>,
-    token_a_account: Option<solana_program::pubkey::Pubkey>,
-    token_b_account: Option<solana_program::pubkey::Pubkey>,
-    token_a_vault: Option<solana_program::pubkey::Pubkey>,
-    token_b_vault: Option<solana_program::pubkey::Pubkey>,
-    token_a_mint: Option<solana_program::pubkey::Pubkey>,
-    token_b_mint: Option<solana_program::pubkey::Pubkey>,
-    position_nft_account: Option<solana_program::pubkey::Pubkey>,
-    owner: Option<solana_program::pubkey::Pubkey>,
-    token_a_program: Option<solana_program::pubkey::Pubkey>,
-    token_b_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    pool_authority: Option<solana_pubkey::Pubkey>,
+    pool: Option<solana_pubkey::Pubkey>,
+    position: Option<solana_pubkey::Pubkey>,
+    token_a_account: Option<solana_pubkey::Pubkey>,
+    token_b_account: Option<solana_pubkey::Pubkey>,
+    token_a_vault: Option<solana_pubkey::Pubkey>,
+    token_b_vault: Option<solana_pubkey::Pubkey>,
+    token_a_mint: Option<solana_pubkey::Pubkey>,
+    token_b_mint: Option<solana_pubkey::Pubkey>,
+    position_nft_account: Option<solana_pubkey::Pubkey>,
+    owner: Option<solana_pubkey::Pubkey>,
+    token_a_program: Option<solana_pubkey::Pubkey>,
+    token_b_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     params: Option<RemoveLiquidityParameters>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl RemoveLiquidityBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn pool_authority(&mut self, pool_authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
 
     #[inline(always)]
-    pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
 
     #[inline(always)]
-    pub fn position(&mut self, position: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
         self.position = Some(position);
         self
     }
 
     /// The user token a account
     #[inline(always)]
-    pub fn token_a_account(
-        &mut self,
-        token_a_account: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_a_account(&mut self, token_a_account: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_account = Some(token_a_account);
         self
     }
 
     /// The user token b account
     #[inline(always)]
-    pub fn token_b_account(
-        &mut self,
-        token_b_account: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_b_account(&mut self, token_b_account: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_account = Some(token_b_account);
         self
     }
 
     /// The vault token account for input token
     #[inline(always)]
-    pub fn token_a_vault(&mut self, token_a_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_a_vault(&mut self, token_a_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_vault = Some(token_a_vault);
         self
     }
 
     /// The vault token account for output token
     #[inline(always)]
-    pub fn token_b_vault(&mut self, token_b_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_b_vault(&mut self, token_b_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_vault = Some(token_b_vault);
         self
     }
 
     /// The mint of token a
     #[inline(always)]
-    pub fn token_a_mint(&mut self, token_a_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_a_mint(&mut self, token_a_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_mint = Some(token_a_mint);
         self
     }
 
     /// The mint of token b
     #[inline(always)]
-    pub fn token_b_mint(&mut self, token_b_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_b_mint(&mut self, token_b_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_mint = Some(token_b_mint);
         self
     }
@@ -267,7 +256,7 @@ impl RemoveLiquidityBuilder {
     #[inline(always)]
     pub fn position_nft_account(
         &mut self,
-        position_nft_account: solana_program::pubkey::Pubkey,
+        position_nft_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.position_nft_account = Some(position_nft_account);
         self
@@ -275,42 +264,33 @@ impl RemoveLiquidityBuilder {
 
     /// owner of position
     #[inline(always)]
-    pub fn owner(&mut self, owner: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
 
     /// Token a program
     #[inline(always)]
-    pub fn token_a_program(
-        &mut self,
-        token_a_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_a_program(&mut self, token_a_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_program = Some(token_a_program);
         self
     }
 
     /// Token b program
     #[inline(always)]
-    pub fn token_b_program(
-        &mut self,
-        token_b_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_b_program(&mut self, token_b_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_program = Some(token_b_program);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -323,10 +303,7 @@ impl RemoveLiquidityBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -335,14 +312,14 @@ impl RemoveLiquidityBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = RemoveLiquidity {
             pool_authority: self.pool_authority.expect("pool_authority is not set"),
             pool: self.pool.expect("pool is not set"),
@@ -372,78 +349,78 @@ impl RemoveLiquidityBuilder {
 
 /// `remove_liquidity` CPI accounts.
 pub struct RemoveLiquidityCpiAccounts<'a, 'b> {
-    pub pool_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position: &'b solana_account_info::AccountInfo<'a>,
     /// The user token a account
-    pub token_a_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_account: &'b solana_account_info::AccountInfo<'a>,
     /// The user token b account
-    pub token_b_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_account: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for input token
-    pub token_a_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for output token
-    pub token_b_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of token a
-    pub token_a_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of token b
-    pub token_b_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The token account for nft
-    pub position_nft_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position_nft_account: &'b solana_account_info::AccountInfo<'a>,
     /// owner of position
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner: &'b solana_account_info::AccountInfo<'a>,
     /// Token a program
-    pub token_a_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token b program
-    pub token_b_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `remove_liquidity` CPI instruction.
 pub struct RemoveLiquidityCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position: &'b solana_account_info::AccountInfo<'a>,
     /// The user token a account
-    pub token_a_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_account: &'b solana_account_info::AccountInfo<'a>,
     /// The user token b account
-    pub token_b_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_account: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for input token
-    pub token_a_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for output token
-    pub token_b_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of token a
-    pub token_a_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of token b
-    pub token_b_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The token account for nft
-    pub position_nft_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position_nft_account: &'b solana_account_info::AccountInfo<'a>,
     /// owner of position
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner: &'b solana_account_info::AccountInfo<'a>,
     /// Token a program
-    pub token_a_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token b program
-    pub token_b_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: RemoveLiquidityInstructionArgs,
 }
 
 impl<'a, 'b> RemoveLiquidityCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: RemoveLiquidityCpiAccounts<'a, 'b>,
         args: RemoveLiquidityInstructionArgs,
     ) -> Self {
@@ -469,19 +446,15 @@ impl<'a, 'b> RemoveLiquidityCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -489,7 +462,7 @@ impl<'a, 'b> RemoveLiquidityCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -499,75 +472,68 @@ impl<'a, 'b> RemoveLiquidityCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(15 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.pool.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.pool.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.position.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_a_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_b_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_a_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_b_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_a_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_b_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.position_nft_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.owner.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_a_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_b_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -577,7 +543,7 @@ impl<'a, 'b> RemoveLiquidityCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
             accounts,
             data,
@@ -604,9 +570,9 @@ impl<'a, 'b> RemoveLiquidityCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -636,7 +602,7 @@ pub struct RemoveLiquidityCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(RemoveLiquidityCpiBuilderInstruction {
             __program: program,
             pool_authority: None,
@@ -663,23 +629,20 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
-        pool_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
 
     #[inline(always)]
-    pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
 
     #[inline(always)]
-    pub fn position(
-        &mut self,
-        position: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn position(&mut self, position: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.position = Some(position);
         self
     }
@@ -688,7 +651,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_a_account(
         &mut self,
-        token_a_account: &'b solana_program::account_info::AccountInfo<'a>,
+        token_a_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_a_account = Some(token_a_account);
         self
@@ -698,7 +661,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_b_account(
         &mut self,
-        token_b_account: &'b solana_program::account_info::AccountInfo<'a>,
+        token_b_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_b_account = Some(token_b_account);
         self
@@ -708,7 +671,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_a_vault(
         &mut self,
-        token_a_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        token_a_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_a_vault = Some(token_a_vault);
         self
@@ -718,7 +681,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_b_vault(
         &mut self,
-        token_b_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        token_b_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_b_vault = Some(token_b_vault);
         self
@@ -728,7 +691,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_a_mint(
         &mut self,
-        token_a_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_a_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_a_mint = Some(token_a_mint);
         self
@@ -738,7 +701,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_b_mint(
         &mut self,
-        token_b_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_b_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_b_mint = Some(token_b_mint);
         self
@@ -748,7 +711,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn position_nft_account(
         &mut self,
-        position_nft_account: &'b solana_program::account_info::AccountInfo<'a>,
+        position_nft_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.position_nft_account = Some(position_nft_account);
         self
@@ -756,7 +719,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
 
     /// owner of position
     #[inline(always)]
-    pub fn owner(&mut self, owner: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
@@ -765,7 +728,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_a_program(
         &mut self,
-        token_a_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_a_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_a_program = Some(token_a_program);
         self
@@ -775,7 +738,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_b_program(
         &mut self,
-        token_b_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_b_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_b_program = Some(token_b_program);
         self
@@ -784,17 +747,14 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -809,7 +769,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -826,11 +786,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -839,14 +795,14 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = RemoveLiquidityInstructionArgs {
             params: self.instruction.params.clone().expect("params is not set"),
         };
@@ -926,27 +882,23 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct RemoveLiquidityCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    pool_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    position: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_a_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_b_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_a_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_b_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_a_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_b_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    position_nft_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_a_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_b_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    pool_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    position: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_a_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_b_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_a_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_b_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_a_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_b_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    position_nft_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    owner: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_a_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_b_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     params: Option<RemoveLiquidityParameters>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

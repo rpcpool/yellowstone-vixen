@@ -9,27 +9,31 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use proto_def::update_global_config_value::Variant;
+    use proto_def::update_global_config_value;
 
     use crate::{proto_def, types::UpdateGlobalConfigValue};
     impl IntoProto<proto_def::UpdateGlobalConfigValue> for UpdateGlobalConfigValue {
         fn into_proto(self) -> proto_def::UpdateGlobalConfigValue {
             let variant = match self {
                 UpdateGlobalConfigValue::Bool(field_0) => {
-                    Variant::Bool(proto_def::UpdateGlobalConfigValueBool { field_0 })
+                    update_global_config_value::Variant::Bool(
+                        proto_def::UpdateGlobalConfigValueBool { field_0 },
+                    )
                 },
-                UpdateGlobalConfigValue::U16(field_0) => {
-                    Variant::U16(proto_def::UpdateGlobalConfigValueU16 {
+                UpdateGlobalConfigValue::U16(field_0) => update_global_config_value::Variant::U16(
+                    proto_def::UpdateGlobalConfigValueU16 {
                         field_0: field_0.into(),
-                    })
-                },
-                UpdateGlobalConfigValue::U64(field_0) => {
-                    Variant::U64(proto_def::UpdateGlobalConfigValueU64 { field_0 })
-                },
+                    },
+                ),
+                UpdateGlobalConfigValue::U64(field_0) => update_global_config_value::Variant::U64(
+                    proto_def::UpdateGlobalConfigValueU64 { field_0 },
+                ),
                 UpdateGlobalConfigValue::Pubkey(field_0) => {
-                    Variant::Pubkey(proto_def::UpdateGlobalConfigValuePubkey {
-                        field_0: field_0.to_string(),
-                    })
+                    update_global_config_value::Variant::Pubkey(
+                        proto_def::UpdateGlobalConfigValuePubkey {
+                            field_0: field_0.to_string(),
+                        },
+                    )
                 },
             };
 

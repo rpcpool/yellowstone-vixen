@@ -11,23 +11,23 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct CreateMintMetadata {
     /// Pool account
-    pub pool: solana_program::pubkey::Pubkey,
+    pub pool: solana_pubkey::Pubkey,
     /// LP mint account of the pool
-    pub lp_mint: solana_program::pubkey::Pubkey,
+    pub lp_mint: solana_pubkey::Pubkey,
     /// Vault A LP account of the pool
-    pub a_vault_lp: solana_program::pubkey::Pubkey,
+    pub a_vault_lp: solana_pubkey::Pubkey,
 
-    pub mint_metadata: solana_program::pubkey::Pubkey,
+    pub mint_metadata: solana_pubkey::Pubkey,
 
-    pub metadata_program: solana_program::pubkey::Pubkey,
+    pub metadata_program: solana_pubkey::Pubkey,
     /// System program.
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
     /// Payer
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
 }
 
 impl CreateMintMetadata {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -35,39 +35,37 @@ impl CreateMintMetadata {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.pool, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.a_vault_lp,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.mint_metadata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.metadata_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&CreateMintMetadataInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -106,14 +104,14 @@ impl Default for CreateMintMetadataInstructionData {
 ///   6. `[writable, signer]` payer
 #[derive(Clone, Debug, Default)]
 pub struct CreateMintMetadataBuilder {
-    pool: Option<solana_program::pubkey::Pubkey>,
-    lp_mint: Option<solana_program::pubkey::Pubkey>,
-    a_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    mint_metadata: Option<solana_program::pubkey::Pubkey>,
-    metadata_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    payer: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    pool: Option<solana_pubkey::Pubkey>,
+    lp_mint: Option<solana_pubkey::Pubkey>,
+    a_vault_lp: Option<solana_pubkey::Pubkey>,
+    mint_metadata: Option<solana_pubkey::Pubkey>,
+    metadata_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateMintMetadataBuilder {
@@ -121,36 +119,33 @@ impl CreateMintMetadataBuilder {
 
     /// Pool account
     #[inline(always)]
-    pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
 
     /// LP mint account of the pool
     #[inline(always)]
-    pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
 
     /// Vault A LP account of the pool
     #[inline(always)]
-    pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_vault_lp(&mut self, a_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
 
     #[inline(always)]
-    pub fn mint_metadata(&mut self, mint_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn mint_metadata(&mut self, mint_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.mint_metadata = Some(mint_metadata);
         self
     }
 
     #[inline(always)]
-    pub fn metadata_program(
-        &mut self,
-        metadata_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn metadata_program(&mut self, metadata_program: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata_program = Some(metadata_program);
         self
     }
@@ -158,24 +153,21 @@ impl CreateMintMetadataBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// Payer
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -184,14 +176,14 @@ impl CreateMintMetadataBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateMintMetadata {
             pool: self.pool.expect("pool is not set"),
             lp_mint: self.lp_mint.expect("lp_mint is not set"),
@@ -200,7 +192,7 @@ impl CreateMintMetadataBuilder {
             metadata_program: self.metadata_program.expect("metadata_program is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
             payer: self.payer.expect("payer is not set"),
         };
 
@@ -211,44 +203,44 @@ impl CreateMintMetadataBuilder {
 /// `create_mint_metadata` CPI accounts.
 pub struct CreateMintMetadataCpiAccounts<'a, 'b> {
     /// Pool account
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
     /// LP mint account of the pool
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Vault A LP account of the pool
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
     /// System program.
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Payer
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `create_mint_metadata` CPI instruction.
 pub struct CreateMintMetadataCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Pool account
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
     /// LP mint account of the pool
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Vault A LP account of the pool
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
     /// System program.
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Payer
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> CreateMintMetadataCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: CreateMintMetadataCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -264,19 +256,15 @@ impl<'a, 'b> CreateMintMetadataCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -284,7 +272,7 @@ impl<'a, 'b> CreateMintMetadataCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -294,43 +282,36 @@ impl<'a, 'b> CreateMintMetadataCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.a_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.mint_metadata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.metadata_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -338,7 +319,7 @@ impl<'a, 'b> CreateMintMetadataCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&CreateMintMetadataInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -357,9 +338,9 @@ impl<'a, 'b> CreateMintMetadataCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -381,7 +362,7 @@ pub struct CreateMintMetadataCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(CreateMintMetadataCpiBuilderInstruction {
             __program: program,
             pool: None,
@@ -398,17 +379,14 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
 
     /// Pool account
     #[inline(always)]
-    pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
 
     /// LP mint account of the pool
     #[inline(always)]
-    pub fn lp_mint(
-        &mut self,
-        lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
@@ -417,7 +395,7 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn a_vault_lp(
         &mut self,
-        a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
@@ -426,7 +404,7 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn mint_metadata(
         &mut self,
-        mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+        mint_metadata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mint_metadata = Some(mint_metadata);
         self
@@ -435,7 +413,7 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
-        metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+        metadata_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.metadata_program = Some(metadata_program);
         self
@@ -445,7 +423,7 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -453,7 +431,7 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
 
     /// Payer
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
@@ -462,7 +440,7 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -479,11 +457,7 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -492,14 +466,14 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = CreateMintMetadataCpi {
             __program: self.instruction.__program,
 
@@ -535,18 +509,14 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct CreateMintMetadataCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    mint_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    metadata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    mint_metadata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    metadata_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

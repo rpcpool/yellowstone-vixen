@@ -5,7 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
 use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     instructions::{
@@ -56,7 +61,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = VaultProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<VaultProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "Vault::InstructionParser".into() }
 
@@ -72,7 +80,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -87,214 +111,229 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<VaultProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [175, 175, 109, 31, 13, 152, 155, 237] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    payer: ix.accounts[1].0.into(),
-                    token_vault: ix.accounts[2].0.into(),
-                    token_mint: ix.accounts[3].0.into(),
-                    lp_mint: ix.accounts[4].0.into(),
-                    rent: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
+                    vault: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(VaultProgramIx::Initialize(ix_accounts))
             },
             [145, 82, 241, 156, 26, 154, 233, 211] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = EnableVaultIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
+                    vault: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
-                let de_ix_data: EnableVaultIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: EnableVaultIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VaultProgramIx::EnableVault(ix_accounts, de_ix_data))
             },
             [238, 153, 101, 169, 243, 131, 36, 1] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetOperatorIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    operator: ix.accounts[1].0.into(),
-                    admin: ix.accounts[2].0.into(),
+                    vault: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
                 Ok(VaultProgramIx::SetOperator(ix_accounts))
             },
             [208, 119, 144, 145, 178, 57, 105, 252] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeStrategyIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    strategy_program: ix.accounts[1].0.into(),
-                    strategy: ix.accounts[2].0.into(),
-                    reserve: ix.accounts[3].0.into(),
-                    collateral_vault: ix.accounts[4].0.into(),
-                    collateral_mint: ix.accounts[5].0.into(),
-                    admin: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    rent: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
+                    vault: next_account(accounts)?,
+                    strategy_program: next_account(accounts)?,
+                    strategy: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    collateral_vault: next_account(accounts)?,
+                    collateral_mint: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeStrategyIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VaultProgramIx::InitializeStrategy(ix_accounts, de_ix_data))
             },
             [185, 238, 33, 91, 134, 210, 97, 26] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveStrategyIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    strategy: ix.accounts[1].0.into(),
-                    strategy_program: ix.accounts[2].0.into(),
-                    collateral_vault: ix.accounts[3].0.into(),
-                    reserve: ix.accounts[4].0.into(),
-                    token_vault: ix.accounts[5].0.into(),
-                    fee_vault: ix.accounts[6].0.into(),
-                    lp_mint: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    admin: ix.accounts[9].0.into(),
+                    vault: next_account(accounts)?,
+                    strategy: next_account(accounts)?,
+                    strategy_program: next_account(accounts)?,
+                    collateral_vault: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    fee_vault: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
                 Ok(VaultProgramIx::RemoveStrategy(ix_accounts))
             },
             [138, 104, 208, 148, 126, 35, 195, 14] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveStrategy2IxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    strategy: ix.accounts[1].0.into(),
-                    strategy_program: ix.accounts[2].0.into(),
-                    collateral_vault: ix.accounts[3].0.into(),
-                    reserve: ix.accounts[4].0.into(),
-                    token_vault: ix.accounts[5].0.into(),
-                    token_admin_advance_payment: ix.accounts[6].0.into(),
-                    token_vault_advance_payment: ix.accounts[7].0.into(),
-                    fee_vault: ix.accounts[8].0.into(),
-                    lp_mint: ix.accounts[9].0.into(),
-                    token_program: ix.accounts[10].0.into(),
-                    admin: ix.accounts[11].0.into(),
+                    vault: next_account(accounts)?,
+                    strategy: next_account(accounts)?,
+                    strategy_program: next_account(accounts)?,
+                    collateral_vault: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    token_admin_advance_payment: next_account(accounts)?,
+                    token_vault_advance_payment: next_account(accounts)?,
+                    fee_vault: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
-                let de_ix_data: RemoveStrategy2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: RemoveStrategy2IxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VaultProgramIx::RemoveStrategy2(ix_accounts, de_ix_data))
             },
             [246, 149, 21, 82, 160, 74, 254, 240] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CollectDustIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    token_vault: ix.accounts[1].0.into(),
-                    token_admin: ix.accounts[2].0.into(),
-                    admin: ix.accounts[3].0.into(),
-                    token_program: ix.accounts[4].0.into(),
+                    vault: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    token_admin: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 Ok(VaultProgramIx::CollectDust(ix_accounts))
             },
             [64, 123, 127, 227, 192, 234, 198, 20] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddStrategyIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    strategy: ix.accounts[1].0.into(),
-                    admin: ix.accounts[2].0.into(),
+                    vault: next_account(accounts)?,
+                    strategy: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
                 Ok(VaultProgramIx::AddStrategy(ix_accounts))
             },
             [246, 82, 57, 226, 131, 222, 253, 249] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DepositStrategyIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    strategy: ix.accounts[1].0.into(),
-                    token_vault: ix.accounts[2].0.into(),
-                    fee_vault: ix.accounts[3].0.into(),
-                    lp_mint: ix.accounts[4].0.into(),
-                    strategy_program: ix.accounts[5].0.into(),
-                    collateral_vault: ix.accounts[6].0.into(),
-                    reserve: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    operator: ix.accounts[9].0.into(),
+                    vault: next_account(accounts)?,
+                    strategy: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    fee_vault: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    strategy_program: next_account(accounts)?,
+                    collateral_vault: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    operator: next_account(accounts)?,
                 };
-                let de_ix_data: DepositStrategyIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: DepositStrategyIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VaultProgramIx::DepositStrategy(ix_accounts, de_ix_data))
             },
             [31, 45, 162, 5, 193, 217, 134, 188] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawStrategyIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    strategy: ix.accounts[1].0.into(),
-                    token_vault: ix.accounts[2].0.into(),
-                    fee_vault: ix.accounts[3].0.into(),
-                    lp_mint: ix.accounts[4].0.into(),
-                    strategy_program: ix.accounts[5].0.into(),
-                    collateral_vault: ix.accounts[6].0.into(),
-                    reserve: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    operator: ix.accounts[9].0.into(),
+                    vault: next_account(accounts)?,
+                    strategy: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    fee_vault: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    strategy_program: next_account(accounts)?,
+                    collateral_vault: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    operator: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawStrategyIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: WithdrawStrategyIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VaultProgramIx::WithdrawStrategy(ix_accounts, de_ix_data))
             },
             [80, 6, 111, 73, 174, 211, 66, 132] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = Withdraw2IxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    token_vault: ix.accounts[1].0.into(),
-                    lp_mint: ix.accounts[2].0.into(),
-                    user_token: ix.accounts[3].0.into(),
-                    user_lp: ix.accounts[4].0.into(),
-                    user: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
+                    vault: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_token: next_account(accounts)?,
+                    user_lp: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
-                let de_ix_data: Withdraw2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: Withdraw2IxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VaultProgramIx::Withdraw2(ix_accounts, de_ix_data))
             },
             [242, 35, 198, 137, 82, 225, 242, 182] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DepositIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    token_vault: ix.accounts[1].0.into(),
-                    lp_mint: ix.accounts[2].0.into(),
-                    user_token: ix.accounts[3].0.into(),
-                    user_lp: ix.accounts[4].0.into(),
-                    user: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
+                    vault: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_token: next_account(accounts)?,
+                    user_lp: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
-                let de_ix_data: DepositIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: DepositIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VaultProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [183, 18, 70, 156, 148, 109, 161, 34] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    token_vault: ix.accounts[1].0.into(),
-                    lp_mint: ix.accounts[2].0.into(),
-                    user_token: ix.accounts[3].0.into(),
-                    user_lp: ix.accounts[4].0.into(),
-                    user: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
+                    vault: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_token: next_account(accounts)?,
+                    user_lp: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: WithdrawIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VaultProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             [201, 141, 146, 46, 173, 116, 198, 22] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawDirectlyFromStrategyIxAccounts {
-                    vault: ix.accounts[0].0.into(),
-                    strategy: ix.accounts[1].0.into(),
-                    reserve: ix.accounts[2].0.into(),
-                    strategy_program: ix.accounts[3].0.into(),
-                    collateral_vault: ix.accounts[4].0.into(),
-                    token_vault: ix.accounts[5].0.into(),
-                    lp_mint: ix.accounts[6].0.into(),
-                    fee_vault: ix.accounts[7].0.into(),
-                    user_token: ix.accounts[8].0.into(),
-                    user_lp: ix.accounts[9].0.into(),
-                    user: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
+                    vault: next_account(accounts)?,
+                    strategy: next_account(accounts)?,
+                    reserve: next_account(accounts)?,
+                    strategy_program: next_account(accounts)?,
+                    collateral_vault: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    fee_vault: next_account(accounts)?,
+                    user_token: next_account(accounts)?,
+                    user_lp: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 let de_ix_data: WithdrawDirectlyFromStrategyIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VaultProgramIx::WithdrawDirectlyFromStrategy(
                     ix_accounts,
                     de_ix_data,
@@ -327,7 +366,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -341,6 +387,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -755,6 +844,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

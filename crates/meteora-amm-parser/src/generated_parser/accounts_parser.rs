@@ -5,6 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::BorshDeserialize;
+
 use crate::{
     accounts::{ClaimFeeOperator, Config, Pool, Position, TokenBadge, Vesting},
     ID,
@@ -28,23 +30,23 @@ impl CpAmmProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [166, 48, 134, 86, 34, 200, 188, 150] => Ok(CpAmmProgramState::ClaimFeeOperator(
-                ClaimFeeOperator::from_bytes(data_bytes)?,
+                ClaimFeeOperator::try_from_slice(data_bytes)?,
             )),
-            [155, 12, 170, 224, 30, 250, 204, 130] => {
-                Ok(CpAmmProgramState::Config(Config::from_bytes(data_bytes)?))
-            },
+            [155, 12, 170, 224, 30, 250, 204, 130] => Ok(CpAmmProgramState::Config(
+                Config::try_from_slice(data_bytes)?,
+            )),
             [241, 154, 109, 4, 17, 177, 109, 188] => {
-                Ok(CpAmmProgramState::Pool(Pool::from_bytes(data_bytes)?))
+                Ok(CpAmmProgramState::Pool(Pool::try_from_slice(data_bytes)?))
             },
             [170, 188, 143, 228, 122, 64, 247, 208] => Ok(CpAmmProgramState::Position(
-                Position::from_bytes(data_bytes)?,
+                Position::try_from_slice(data_bytes)?,
             )),
             [116, 219, 204, 229, 249, 116, 255, 150] => Ok(CpAmmProgramState::TokenBadge(
-                TokenBadge::from_bytes(data_bytes)?,
+                TokenBadge::try_from_slice(data_bytes)?,
             )),
-            [100, 149, 66, 138, 95, 200, 128, 241] => {
-                Ok(CpAmmProgramState::Vesting(Vesting::from_bytes(data_bytes)?))
-            },
+            [100, 149, 66, 138, 95, 200, 128, 241] => Ok(CpAmmProgramState::Vesting(
+                Vesting::try_from_slice(data_bytes)?,
+            )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
@@ -99,8 +101,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        CpAmmProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = CpAmmProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = &inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 

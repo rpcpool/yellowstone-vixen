@@ -5,7 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
 use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     instructions::{
@@ -35,7 +40,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = TokenLaunchpadProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<TokenLaunchpadProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "TokenLaunchpad::InstructionParser".into() }
 
@@ -51,7 +59,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -66,101 +90,111 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<TokenLaunchpadProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [3, 44, 164, 184, 123, 13, 245, 179] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = TokenMintIxAccounts {
-                    sender: ix.accounts[0].0.into(),
-                    backend_authority: ix.accounts[1].0.into(),
-                    curve_account: ix.accounts[2].0.into(),
-                    mint: ix.accounts[3].0.into(),
-                    mint_metadata: ix.accounts[4].0.into(),
-                    curve_token_account: ix.accounts[5].0.into(),
-                    config_account: ix.accounts[6].0.into(),
-                    token_program: ix.accounts[7].0.into(),
-                    associated_token_program: ix.accounts[8].0.into(),
-                    mpl_token_metadata: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
+                    sender: next_account(accounts)?,
+                    backend_authority: next_account(accounts)?,
+                    curve_account: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    mint_metadata: next_account(accounts)?,
+                    curve_token_account: next_account(accounts)?,
+                    config_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    mpl_token_metadata: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: TokenMintIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: TokenMintIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(TokenLaunchpadProgramIx::TokenMint(ix_accounts, de_ix_data))
             },
             [102, 6, 61, 18, 1, 218, 235, 234] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = BuyIxAccounts {
-                    sender: ix.accounts[0].0.into(),
-                    sender_token_account: ix.accounts[1].0.into(),
-                    curve_account: ix.accounts[2].0.into(),
-                    curve_token_account: ix.accounts[3].0.into(),
-                    dex_fee: ix.accounts[4].0.into(),
-                    helio_fee: ix.accounts[5].0.into(),
-                    mint: ix.accounts[6].0.into(),
-                    config_account: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
+                    sender: next_account(accounts)?,
+                    sender_token_account: next_account(accounts)?,
+                    curve_account: next_account(accounts)?,
+                    curve_token_account: next_account(accounts)?,
+                    dex_fee: next_account(accounts)?,
+                    helio_fee: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    config_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: BuyIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(TokenLaunchpadProgramIx::Buy(ix_accounts, de_ix_data))
             },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SellIxAccounts {
-                    sender: ix.accounts[0].0.into(),
-                    sender_token_account: ix.accounts[1].0.into(),
-                    curve_account: ix.accounts[2].0.into(),
-                    curve_token_account: ix.accounts[3].0.into(),
-                    dex_fee: ix.accounts[4].0.into(),
-                    helio_fee: ix.accounts[5].0.into(),
-                    mint: ix.accounts[6].0.into(),
-                    config_account: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
+                    sender: next_account(accounts)?,
+                    sender_token_account: next_account(accounts)?,
+                    curve_account: next_account(accounts)?,
+                    curve_token_account: next_account(accounts)?,
+                    dex_fee: next_account(accounts)?,
+                    helio_fee: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    config_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: SellIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SellIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(TokenLaunchpadProgramIx::Sell(ix_accounts, de_ix_data))
             },
             [42, 229, 10, 231, 189, 62, 193, 174] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = MigrateFundsIxAccounts {
-                    backend_authority: ix.accounts[0].0.into(),
-                    migration_authority: ix.accounts[1].0.into(),
-                    curve_account: ix.accounts[2].0.into(),
-                    curve_token_account: ix.accounts[3].0.into(),
-                    migration_authority_token_account: ix.accounts[4].0.into(),
-                    mint: ix.accounts[5].0.into(),
-                    dex_fee_account: ix.accounts[6].0.into(),
-                    helio_fee_account: ix.accounts[7].0.into(),
-                    config_account: ix.accounts[8].0.into(),
-                    system_program: ix.accounts[9].0.into(),
-                    token_program: ix.accounts[10].0.into(),
-                    associated_token_program: ix.accounts[11].0.into(),
+                    backend_authority: next_account(accounts)?,
+                    migration_authority: next_account(accounts)?,
+                    curve_account: next_account(accounts)?,
+                    curve_token_account: next_account(accounts)?,
+                    migration_authority_token_account: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    dex_fee_account: next_account(accounts)?,
+                    helio_fee_account: next_account(accounts)?,
+                    config_account: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
                 Ok(TokenLaunchpadProgramIx::MigrateFunds(ix_accounts))
             },
             [13, 236, 164, 173, 106, 253, 164, 185] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ConfigInitIxAccounts {
-                    config_authority: ix.accounts[0].0.into(),
-                    config_account: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    config_authority: next_account(accounts)?,
+                    config_account: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: ConfigInitIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ConfigInitIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(TokenLaunchpadProgramIx::ConfigInit(ix_accounts, de_ix_data))
             },
             [80, 37, 109, 136, 82, 135, 89, 241] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ConfigUpdateIxAccounts {
-                    config_authority: ix.accounts[0].0.into(),
-                    config_account: ix.accounts[1].0.into(),
+                    config_authority: next_account(accounts)?,
+                    config_account: next_account(accounts)?,
                 };
-                let de_ix_data: ConfigUpdateIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ConfigUpdateIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(TokenLaunchpadProgramIx::ConfigUpdate(
                     ix_accounts,
                     de_ix_data,
@@ -193,7 +227,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -207,6 +248,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -410,6 +494,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

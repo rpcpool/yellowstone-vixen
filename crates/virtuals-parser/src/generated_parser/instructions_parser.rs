@@ -5,7 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
 use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     instructions::{
@@ -37,7 +42,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = VirtualsProgramProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<VirtualsProgramProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "VirtualsProgram::InstructionParser".into() }
 
@@ -53,7 +61,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -68,213 +92,225 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<VirtualsProgramProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [102, 6, 61, 18, 1, 218, 235, 234] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = BuyIxAccounts {
-                    user: ix.accounts[0].0.into(),
-                    vpool: ix.accounts[1].0.into(),
-                    token_mint: ix.accounts[2].0.into(),
-                    user_virtuals_ata: ix.accounts[3].0.into(),
-                    user_token_ata: ix.accounts[4].0.into(),
-                    vpool_token_ata: ix.accounts[5].0.into(),
-                    platform_prototype: ix.accounts[6].0.into(),
-                    platform_prototype_virtuals_ata: ix.accounts[7].0.into(),
-                    vpool_virtuals_ata: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
+                    user: next_account(accounts)?,
+                    vpool: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    user_virtuals_ata: next_account(accounts)?,
+                    user_token_ata: next_account(accounts)?,
+                    vpool_token_ata: next_account(accounts)?,
+                    platform_prototype: next_account(accounts)?,
+                    platform_prototype_virtuals_ata: next_account(accounts)?,
+                    vpool_virtuals_ata: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: BuyIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VirtualsProgramProgramIx::Buy(ix_accounts, de_ix_data))
             },
             [82, 251, 233, 156, 12, 52, 184, 202] => {
-                check_min_accounts_req(accounts_len, 28)?;
+                let expected_accounts_len = 28;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimFeesIxAccounts {
-                    payer: ix.accounts[0].0.into(),
-                    vpool: ix.accounts[1].0.into(),
-                    virtuals_mint: ix.accounts[2].0.into(),
-                    token_mint: ix.accounts[3].0.into(),
-                    vpool_virtuals_ata: ix.accounts[4].0.into(),
-                    vpool_token_ata: ix.accounts[5].0.into(),
-                    platform: ix.accounts[6].0.into(),
-                    platform_virtuals_ata: ix.accounts[7].0.into(),
-                    platform_token_ata: ix.accounts[8].0.into(),
-                    creator_virtuals_ata: ix.accounts[9].0.into(),
-                    creator_token_ata: ix.accounts[10].0.into(),
-                    pool: ix.accounts[11].0.into(),
-                    lp_mint: ix.accounts[12].0.into(),
-                    lock_escrow: ix.accounts[13].0.into(),
-                    escrow_vault: ix.accounts[14].0.into(),
-                    token_program: ix.accounts[15].0.into(),
-                    virtuals_vault: ix.accounts[16].0.into(),
-                    token_vault: ix.accounts[17].0.into(),
-                    virtuals_token_vault: ix.accounts[18].0.into(),
-                    token_token_vault: ix.accounts[19].0.into(),
-                    virtuals_vault_lp_mint: ix.accounts[20].0.into(),
-                    token_vault_lp_mint: ix.accounts[21].0.into(),
-                    virtuals_vault_lp: ix.accounts[22].0.into(),
-                    token_vault_lp: ix.accounts[23].0.into(),
-                    vault_program: ix.accounts[24].0.into(),
-                    associated_token_program: ix.accounts[25].0.into(),
-                    system_program: ix.accounts[26].0.into(),
-                    dynamic_amm_program: ix.accounts[27].0.into(),
+                    payer: next_account(accounts)?,
+                    vpool: next_account(accounts)?,
+                    virtuals_mint: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    vpool_virtuals_ata: next_account(accounts)?,
+                    vpool_token_ata: next_account(accounts)?,
+                    platform: next_account(accounts)?,
+                    platform_virtuals_ata: next_account(accounts)?,
+                    platform_token_ata: next_account(accounts)?,
+                    creator_virtuals_ata: next_account(accounts)?,
+                    creator_token_ata: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    lock_escrow: next_account(accounts)?,
+                    escrow_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    virtuals_vault: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    virtuals_token_vault: next_account(accounts)?,
+                    token_token_vault: next_account(accounts)?,
+                    virtuals_vault_lp_mint: next_account(accounts)?,
+                    token_vault_lp_mint: next_account(accounts)?,
+                    virtuals_vault_lp: next_account(accounts)?,
+                    token_vault_lp: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    dynamic_amm_program: next_account(accounts)?,
                 };
                 Ok(VirtualsProgramProgramIx::ClaimFees(ix_accounts))
             },
             [246, 254, 33, 37, 225, 176, 41, 232] => {
-                check_min_accounts_req(accounts_len, 36)?;
+                let expected_accounts_len = 36;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateMeteoraPoolIxAccounts {
-                    vpool: ix.accounts[0].0.into(),
-                    meteora_deployer: ix.accounts[1].0.into(),
-                    meteora_deployer_virtuals_ata: ix.accounts[2].0.into(),
-                    meteora_deployer_token_ata: ix.accounts[3].0.into(),
-                    vpool_virtuals_ata: ix.accounts[4].0.into(),
-                    vpool_token_ata: ix.accounts[5].0.into(),
-                    lock_escrow: ix.accounts[6].0.into(),
-                    escrow_vault: ix.accounts[7].0.into(),
-                    pool: ix.accounts[8].0.into(),
-                    config: ix.accounts[9].0.into(),
-                    lp_mint: ix.accounts[10].0.into(),
-                    virtuals_mint: ix.accounts[11].0.into(),
-                    token_mint: ix.accounts[12].0.into(),
-                    virtuals_vault: ix.accounts[13].0.into(),
-                    token_vault: ix.accounts[14].0.into(),
-                    virtuals_token_vault: ix.accounts[15].0.into(),
-                    token_token_vault: ix.accounts[16].0.into(),
-                    virtuals_vault_lp_mint: ix.accounts[17].0.into(),
-                    token_vault_lp_mint: ix.accounts[18].0.into(),
-                    virtuals_vault_lp: ix.accounts[19].0.into(),
-                    token_vault_lp: ix.accounts[20].0.into(),
-                    pool_virtuals_ata: ix.accounts[21].0.into(),
-                    pool_token_ata: ix.accounts[22].0.into(),
-                    meteora_deployer_pool_lp: ix.accounts[23].0.into(),
-                    protocol_virtuals_fee: ix.accounts[24].0.into(),
-                    protocol_token_fee: ix.accounts[25].0.into(),
-                    payer: ix.accounts[26].0.into(),
-                    token_metadata: ix.accounts[27].0.into(),
-                    rent: ix.accounts[28].0.into(),
-                    mint_metadata: ix.accounts[29].0.into(),
-                    metadata_program: ix.accounts[30].0.into(),
-                    vault_program: ix.accounts[31].0.into(),
-                    token_program: ix.accounts[32].0.into(),
-                    associated_token_program: ix.accounts[33].0.into(),
-                    system_program: ix.accounts[34].0.into(),
-                    dynamic_amm_program: ix.accounts[35].0.into(),
+                    vpool: next_account(accounts)?,
+                    meteora_deployer: next_account(accounts)?,
+                    meteora_deployer_virtuals_ata: next_account(accounts)?,
+                    meteora_deployer_token_ata: next_account(accounts)?,
+                    vpool_virtuals_ata: next_account(accounts)?,
+                    vpool_token_ata: next_account(accounts)?,
+                    lock_escrow: next_account(accounts)?,
+                    escrow_vault: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    virtuals_mint: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    virtuals_vault: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    virtuals_token_vault: next_account(accounts)?,
+                    token_token_vault: next_account(accounts)?,
+                    virtuals_vault_lp_mint: next_account(accounts)?,
+                    token_vault_lp_mint: next_account(accounts)?,
+                    virtuals_vault_lp: next_account(accounts)?,
+                    token_vault_lp: next_account(accounts)?,
+                    pool_virtuals_ata: next_account(accounts)?,
+                    pool_token_ata: next_account(accounts)?,
+                    meteora_deployer_pool_lp: next_account(accounts)?,
+                    protocol_virtuals_fee: next_account(accounts)?,
+                    protocol_token_fee: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    token_metadata: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    mint_metadata: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    dynamic_amm_program: next_account(accounts)?,
                 };
                 Ok(VirtualsProgramProgramIx::CreateMeteoraPool(ix_accounts))
             },
             [175, 175, 109, 31, 13, 152, 155, 237] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeIxAccounts {
-                    payer: ix.accounts[0].0.into(),
-                    virtuals_mint: ix.accounts[1].0.into(),
-                    token_mint: ix.accounts[2].0.into(),
-                    vpool_virtuals_ata: ix.accounts[3].0.into(),
-                    vpool_token_ata: ix.accounts[4].0.into(),
-                    vpool: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    associated_token_program: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
+                    payer: next_account(accounts)?,
+                    virtuals_mint: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    vpool_virtuals_ata: next_account(accounts)?,
+                    vpool_token_ata: next_account(accounts)?,
+                    vpool: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(VirtualsProgramProgramIx::Initialize(ix_accounts))
             },
             [53, 12, 118, 158, 253, 239, 185, 214] => {
-                check_min_accounts_req(accounts_len, 36)?;
+                let expected_accounts_len = 36;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeMeteoraAccountsIxAccounts {
-                    vpool: ix.accounts[0].0.into(),
-                    meteora_deployer: ix.accounts[1].0.into(),
-                    meteora_deployer_virtuals_ata: ix.accounts[2].0.into(),
-                    meteora_deployer_token_ata: ix.accounts[3].0.into(),
-                    vpool_virtuals_ata: ix.accounts[4].0.into(),
-                    vpool_token_ata: ix.accounts[5].0.into(),
-                    lock_escrow: ix.accounts[6].0.into(),
-                    escrow_vault: ix.accounts[7].0.into(),
-                    pool: ix.accounts[8].0.into(),
-                    config: ix.accounts[9].0.into(),
-                    lp_mint: ix.accounts[10].0.into(),
-                    virtuals_mint: ix.accounts[11].0.into(),
-                    token_mint: ix.accounts[12].0.into(),
-                    virtuals_vault: ix.accounts[13].0.into(),
-                    token_vault: ix.accounts[14].0.into(),
-                    virtuals_token_vault: ix.accounts[15].0.into(),
-                    token_token_vault: ix.accounts[16].0.into(),
-                    virtuals_vault_lp_mint: ix.accounts[17].0.into(),
-                    token_vault_lp_mint: ix.accounts[18].0.into(),
-                    virtuals_vault_lp: ix.accounts[19].0.into(),
-                    token_vault_lp: ix.accounts[20].0.into(),
-                    pool_virtuals_ata: ix.accounts[21].0.into(),
-                    pool_token_ata: ix.accounts[22].0.into(),
-                    meteora_deployer_pool_lp: ix.accounts[23].0.into(),
-                    protocol_virtuals_fee: ix.accounts[24].0.into(),
-                    protocol_token_fee: ix.accounts[25].0.into(),
-                    payer: ix.accounts[26].0.into(),
-                    token_metadata: ix.accounts[27].0.into(),
-                    rent: ix.accounts[28].0.into(),
-                    mint_metadata: ix.accounts[29].0.into(),
-                    metadata_program: ix.accounts[30].0.into(),
-                    vault_program: ix.accounts[31].0.into(),
-                    token_program: ix.accounts[32].0.into(),
-                    associated_token_program: ix.accounts[33].0.into(),
-                    system_program: ix.accounts[34].0.into(),
-                    dynamic_amm_program: ix.accounts[35].0.into(),
+                    vpool: next_account(accounts)?,
+                    meteora_deployer: next_account(accounts)?,
+                    meteora_deployer_virtuals_ata: next_account(accounts)?,
+                    meteora_deployer_token_ata: next_account(accounts)?,
+                    vpool_virtuals_ata: next_account(accounts)?,
+                    vpool_token_ata: next_account(accounts)?,
+                    lock_escrow: next_account(accounts)?,
+                    escrow_vault: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    virtuals_mint: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    virtuals_vault: next_account(accounts)?,
+                    token_vault: next_account(accounts)?,
+                    virtuals_token_vault: next_account(accounts)?,
+                    token_token_vault: next_account(accounts)?,
+                    virtuals_vault_lp_mint: next_account(accounts)?,
+                    token_vault_lp_mint: next_account(accounts)?,
+                    virtuals_vault_lp: next_account(accounts)?,
+                    token_vault_lp: next_account(accounts)?,
+                    pool_virtuals_ata: next_account(accounts)?,
+                    pool_token_ata: next_account(accounts)?,
+                    meteora_deployer_pool_lp: next_account(accounts)?,
+                    protocol_virtuals_fee: next_account(accounts)?,
+                    protocol_token_fee: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    token_metadata: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    mint_metadata: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    dynamic_amm_program: next_account(accounts)?,
                 };
                 Ok(VirtualsProgramProgramIx::InitializeMeteoraAccounts(
                     ix_accounts,
                 ))
             },
             [153, 241, 93, 225, 22, 69, 74, 61] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = LaunchIxAccounts {
-                    creator: ix.accounts[0].0.into(),
-                    creator_virtuals_ata: ix.accounts[1].0.into(),
-                    token_mint: ix.accounts[2].0.into(),
-                    platform_prototype: ix.accounts[3].0.into(),
-                    platform_prototype_virtuals_ata: ix.accounts[4].0.into(),
-                    vpool: ix.accounts[5].0.into(),
-                    token_metadata: ix.accounts[6].0.into(),
-                    metadata_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
-                    rent: ix.accounts[11].0.into(),
+                    creator: next_account(accounts)?,
+                    creator_virtuals_ata: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    platform_prototype: next_account(accounts)?,
+                    platform_prototype_virtuals_ata: next_account(accounts)?,
+                    vpool: next_account(accounts)?,
+                    token_metadata: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
-                let de_ix_data: LaunchIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: LaunchIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VirtualsProgramProgramIx::Launch(ix_accounts, de_ix_data))
             },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SellIxAccounts {
-                    user: ix.accounts[0].0.into(),
-                    vpool: ix.accounts[1].0.into(),
-                    token_mint: ix.accounts[2].0.into(),
-                    user_virtuals_ata: ix.accounts[3].0.into(),
-                    user_token_ata: ix.accounts[4].0.into(),
-                    vpool_token_ata: ix.accounts[5].0.into(),
-                    platform_prototype: ix.accounts[6].0.into(),
-                    platform_prototype_virtuals_ata: ix.accounts[7].0.into(),
-                    vpool_virtuals_ata: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
+                    user: next_account(accounts)?,
+                    vpool: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    user_virtuals_ata: next_account(accounts)?,
+                    user_token_ata: next_account(accounts)?,
+                    vpool_token_ata: next_account(accounts)?,
+                    platform_prototype: next_account(accounts)?,
+                    platform_prototype_virtuals_ata: next_account(accounts)?,
+                    vpool_virtuals_ata: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
-                let de_ix_data: SellIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SellIxData = BorshDeserialize::try_from_slice(ix_data)?;
                 Ok(VirtualsProgramProgramIx::Sell(ix_accounts, de_ix_data))
             },
             [113, 225, 166, 185, 94, 231, 96, 28] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdatePoolCreatorIxAccounts {
-                    creator: ix.accounts[0].0.into(),
-                    new_creator: ix.accounts[1].0.into(),
-                    virtuals_mint: ix.accounts[2].0.into(),
-                    token_mint: ix.accounts[3].0.into(),
-                    new_creator_virtuals_ata: ix.accounts[4].0.into(),
-                    new_creator_token_ata: ix.accounts[5].0.into(),
-                    vpool: ix.accounts[6].0.into(),
-                    token_program: ix.accounts[7].0.into(),
-                    associated_token_program: ix.accounts[8].0.into(),
-                    system_program: ix.accounts[9].0.into(),
+                    creator: next_account(accounts)?,
+                    new_creator: next_account(accounts)?,
+                    virtuals_mint: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    new_creator_virtuals_ata: next_account(accounts)?,
+                    new_creator_token_ata: next_account(accounts)?,
+                    vpool: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(VirtualsProgramProgramIx::UpdatePoolCreator(ix_accounts))
             },
@@ -305,7 +341,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -319,6 +362,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -630,6 +716,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

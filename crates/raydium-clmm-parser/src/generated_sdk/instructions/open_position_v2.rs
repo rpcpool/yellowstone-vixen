@@ -10,56 +10,56 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct OpenPositionV2 {
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
 
-    pub position_nft_owner: solana_program::pubkey::Pubkey,
+    pub position_nft_owner: solana_pubkey::Pubkey,
 
-    pub position_nft_mint: solana_program::pubkey::Pubkey,
+    pub position_nft_mint: solana_pubkey::Pubkey,
 
-    pub position_nft_account: solana_program::pubkey::Pubkey,
+    pub position_nft_account: solana_pubkey::Pubkey,
 
-    pub metadata_account: solana_program::pubkey::Pubkey,
+    pub metadata_account: solana_pubkey::Pubkey,
 
-    pub pool_state: solana_program::pubkey::Pubkey,
+    pub pool_state: solana_pubkey::Pubkey,
 
-    pub protocol_position: solana_program::pubkey::Pubkey,
+    pub protocol_position: solana_pubkey::Pubkey,
 
-    pub tick_array_lower: solana_program::pubkey::Pubkey,
+    pub tick_array_lower: solana_pubkey::Pubkey,
 
-    pub tick_array_upper: solana_program::pubkey::Pubkey,
+    pub tick_array_upper: solana_pubkey::Pubkey,
 
-    pub personal_position: solana_program::pubkey::Pubkey,
+    pub personal_position: solana_pubkey::Pubkey,
 
-    pub token_account0: solana_program::pubkey::Pubkey,
+    pub token_account0: solana_pubkey::Pubkey,
 
-    pub token_account1: solana_program::pubkey::Pubkey,
+    pub token_account1: solana_pubkey::Pubkey,
 
-    pub token_vault0: solana_program::pubkey::Pubkey,
+    pub token_vault0: solana_pubkey::Pubkey,
 
-    pub token_vault1: solana_program::pubkey::Pubkey,
+    pub token_vault1: solana_pubkey::Pubkey,
 
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 
-    pub metadata_program: solana_program::pubkey::Pubkey,
+    pub metadata_program: solana_pubkey::Pubkey,
 
-    pub token_program2022: solana_program::pubkey::Pubkey,
+    pub token_program2022: solana_pubkey::Pubkey,
 
-    pub vault0_mint: solana_program::pubkey::Pubkey,
+    pub vault0_mint: solana_pubkey::Pubkey,
 
-    pub vault1_mint: solana_program::pubkey::Pubkey,
+    pub vault1_mint: solana_pubkey::Pubkey,
 }
 
 impl OpenPositionV2 {
     pub fn instruction(
         &self,
         args: OpenPositionV2InstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -68,92 +68,87 @@ impl OpenPositionV2 {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: OpenPositionV2InstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(22 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.position_nft_owner,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.position_nft_mint,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.position_nft_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.metadata_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool_state,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.pool_state, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.protocol_position,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.tick_array_lower,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.tick_array_upper,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.personal_position,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_account0,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_account1,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_vault0,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_vault1,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.metadata_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program2022,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.vault0_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.vault1_mint,
             false,
         ));
@@ -162,7 +157,7 @@ impl OpenPositionV2 {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::AMM_V3_ID,
             accounts,
             data,
@@ -230,28 +225,28 @@ pub struct OpenPositionV2InstructionArgs {
 ///   21. `[]` vault1_mint
 #[derive(Clone, Debug, Default)]
 pub struct OpenPositionV2Builder {
-    payer: Option<solana_program::pubkey::Pubkey>,
-    position_nft_owner: Option<solana_program::pubkey::Pubkey>,
-    position_nft_mint: Option<solana_program::pubkey::Pubkey>,
-    position_nft_account: Option<solana_program::pubkey::Pubkey>,
-    metadata_account: Option<solana_program::pubkey::Pubkey>,
-    pool_state: Option<solana_program::pubkey::Pubkey>,
-    protocol_position: Option<solana_program::pubkey::Pubkey>,
-    tick_array_lower: Option<solana_program::pubkey::Pubkey>,
-    tick_array_upper: Option<solana_program::pubkey::Pubkey>,
-    personal_position: Option<solana_program::pubkey::Pubkey>,
-    token_account0: Option<solana_program::pubkey::Pubkey>,
-    token_account1: Option<solana_program::pubkey::Pubkey>,
-    token_vault0: Option<solana_program::pubkey::Pubkey>,
-    token_vault1: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    metadata_program: Option<solana_program::pubkey::Pubkey>,
-    token_program2022: Option<solana_program::pubkey::Pubkey>,
-    vault0_mint: Option<solana_program::pubkey::Pubkey>,
-    vault1_mint: Option<solana_program::pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    position_nft_owner: Option<solana_pubkey::Pubkey>,
+    position_nft_mint: Option<solana_pubkey::Pubkey>,
+    position_nft_account: Option<solana_pubkey::Pubkey>,
+    metadata_account: Option<solana_pubkey::Pubkey>,
+    pool_state: Option<solana_pubkey::Pubkey>,
+    protocol_position: Option<solana_pubkey::Pubkey>,
+    tick_array_lower: Option<solana_pubkey::Pubkey>,
+    tick_array_upper: Option<solana_pubkey::Pubkey>,
+    personal_position: Option<solana_pubkey::Pubkey>,
+    token_account0: Option<solana_pubkey::Pubkey>,
+    token_account1: Option<solana_pubkey::Pubkey>,
+    token_vault0: Option<solana_pubkey::Pubkey>,
+    token_vault1: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    metadata_program: Option<solana_pubkey::Pubkey>,
+    token_program2022: Option<solana_pubkey::Pubkey>,
+    vault0_mint: Option<solana_pubkey::Pubkey>,
+    vault1_mint: Option<solana_pubkey::Pubkey>,
     tick_lower_index: Option<i32>,
     tick_upper_index: Option<i32>,
     tick_array_lower_start_index: Option<i32>,
@@ -261,32 +256,26 @@ pub struct OpenPositionV2Builder {
     amount1_max: Option<u64>,
     with_metadata: Option<bool>,
     base_flag: Option<bool>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl OpenPositionV2Builder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
 
     #[inline(always)]
-    pub fn position_nft_owner(
-        &mut self,
-        position_nft_owner: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn position_nft_owner(&mut self, position_nft_owner: solana_pubkey::Pubkey) -> &mut Self {
         self.position_nft_owner = Some(position_nft_owner);
         self
     }
 
     #[inline(always)]
-    pub fn position_nft_mint(
-        &mut self,
-        position_nft_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn position_nft_mint(&mut self, position_nft_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.position_nft_mint = Some(position_nft_mint);
         self
     }
@@ -294,104 +283,89 @@ impl OpenPositionV2Builder {
     #[inline(always)]
     pub fn position_nft_account(
         &mut self,
-        position_nft_account: solana_program::pubkey::Pubkey,
+        position_nft_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.position_nft_account = Some(position_nft_account);
         self
     }
 
     #[inline(always)]
-    pub fn metadata_account(
-        &mut self,
-        metadata_account: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn metadata_account(&mut self, metadata_account: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata_account = Some(metadata_account);
         self
     }
 
     #[inline(always)]
-    pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
 
     #[inline(always)]
-    pub fn protocol_position(
-        &mut self,
-        protocol_position: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn protocol_position(&mut self, protocol_position: solana_pubkey::Pubkey) -> &mut Self {
         self.protocol_position = Some(protocol_position);
         self
     }
 
     #[inline(always)]
-    pub fn tick_array_lower(
-        &mut self,
-        tick_array_lower: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn tick_array_lower(&mut self, tick_array_lower: solana_pubkey::Pubkey) -> &mut Self {
         self.tick_array_lower = Some(tick_array_lower);
         self
     }
 
     #[inline(always)]
-    pub fn tick_array_upper(
-        &mut self,
-        tick_array_upper: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn tick_array_upper(&mut self, tick_array_upper: solana_pubkey::Pubkey) -> &mut Self {
         self.tick_array_upper = Some(tick_array_upper);
         self
     }
 
     #[inline(always)]
-    pub fn personal_position(
-        &mut self,
-        personal_position: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn personal_position(&mut self, personal_position: solana_pubkey::Pubkey) -> &mut Self {
         self.personal_position = Some(personal_position);
         self
     }
 
     #[inline(always)]
-    pub fn token_account0(&mut self, token_account0: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_account0(&mut self, token_account0: solana_pubkey::Pubkey) -> &mut Self {
         self.token_account0 = Some(token_account0);
         self
     }
 
     #[inline(always)]
-    pub fn token_account1(&mut self, token_account1: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_account1(&mut self, token_account1: solana_pubkey::Pubkey) -> &mut Self {
         self.token_account1 = Some(token_account1);
         self
     }
 
     #[inline(always)]
-    pub fn token_vault0(&mut self, token_vault0: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_vault0(&mut self, token_vault0: solana_pubkey::Pubkey) -> &mut Self {
         self.token_vault0 = Some(token_vault0);
         self
     }
 
     #[inline(always)]
-    pub fn token_vault1(&mut self, token_vault1: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_vault1(&mut self, token_vault1: solana_pubkey::Pubkey) -> &mut Self {
         self.token_vault1 = Some(token_vault1);
         self
     }
 
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -399,38 +373,32 @@ impl OpenPositionV2Builder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
     }
 
     #[inline(always)]
-    pub fn metadata_program(
-        &mut self,
-        metadata_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn metadata_program(&mut self, metadata_program: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata_program = Some(metadata_program);
         self
     }
 
     #[inline(always)]
-    pub fn token_program2022(
-        &mut self,
-        token_program2022: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_program2022(&mut self, token_program2022: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program2022 = Some(token_program2022);
         self
     }
 
     #[inline(always)]
-    pub fn vault0_mint(&mut self, vault0_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vault0_mint(&mut self, vault0_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.vault0_mint = Some(vault0_mint);
         self
     }
 
     #[inline(always)]
-    pub fn vault1_mint(&mut self, vault1_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vault1_mint(&mut self, vault1_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.vault1_mint = Some(vault1_mint);
         self
     }
@@ -492,10 +460,7 @@ impl OpenPositionV2Builder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -504,14 +469,14 @@ impl OpenPositionV2Builder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = OpenPositionV2 {
             payer: self.payer.expect("payer is not set"),
             position_nft_owner: self
@@ -537,13 +502,13 @@ impl OpenPositionV2Builder {
             token_account1: self.token_account1.expect("token_account1 is not set"),
             token_vault0: self.token_vault0.expect("token_vault0 is not set"),
             token_vault1: self.token_vault1.expect("token_vault1 is not set"),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self
@@ -589,106 +554,106 @@ impl OpenPositionV2Builder {
 
 /// `open_position_v2` CPI accounts.
 pub struct OpenPositionV2CpiAccounts<'a, 'b> {
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position_nft_owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position_nft_owner: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position_nft_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position_nft_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position_nft_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position_nft_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_position: &'b solana_account_info::AccountInfo<'a>,
 
-    pub tick_array_lower: &'b solana_program::account_info::AccountInfo<'a>,
+    pub tick_array_lower: &'b solana_account_info::AccountInfo<'a>,
 
-    pub tick_array_upper: &'b solana_program::account_info::AccountInfo<'a>,
+    pub tick_array_upper: &'b solana_account_info::AccountInfo<'a>,
 
-    pub personal_position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub personal_position: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_account0: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_account0: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_account1: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_account1: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault0: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault0: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault1: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault1: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program2022: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vault0_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault0_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vault1_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault1_mint: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `open_position_v2` CPI instruction.
 pub struct OpenPositionV2Cpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position_nft_owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position_nft_owner: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position_nft_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position_nft_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position_nft_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position_nft_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_position: &'b solana_account_info::AccountInfo<'a>,
 
-    pub tick_array_lower: &'b solana_program::account_info::AccountInfo<'a>,
+    pub tick_array_lower: &'b solana_account_info::AccountInfo<'a>,
 
-    pub tick_array_upper: &'b solana_program::account_info::AccountInfo<'a>,
+    pub tick_array_upper: &'b solana_account_info::AccountInfo<'a>,
 
-    pub personal_position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub personal_position: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_account0: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_account0: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_account1: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_account1: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault0: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault0: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault1: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault1: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program2022: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vault0_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault0_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vault1_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault1_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: OpenPositionV2InstructionArgs,
 }
 
 impl<'a, 'b> OpenPositionV2Cpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: OpenPositionV2CpiAccounts<'a, 'b>,
         args: OpenPositionV2InstructionArgs,
     ) -> Self {
@@ -721,19 +686,15 @@ impl<'a, 'b> OpenPositionV2Cpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -741,7 +702,7 @@ impl<'a, 'b> OpenPositionV2Cpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -751,103 +712,96 @@ impl<'a, 'b> OpenPositionV2Cpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(22 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.position_nft_owner.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.position_nft_mint.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.position_nft_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.metadata_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_state.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.protocol_position.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.tick_array_lower.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.tick_array_upper.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.personal_position.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_account0.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_account1.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_vault0.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_vault1.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.metadata_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program2022.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.vault0_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.vault1_mint.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -857,7 +811,7 @@ impl<'a, 'b> OpenPositionV2Cpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::AMM_V3_ID,
             accounts,
             data,
@@ -891,9 +845,9 @@ impl<'a, 'b> OpenPositionV2Cpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -930,7 +884,7 @@ pub struct OpenPositionV2CpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(OpenPositionV2CpiBuilderInstruction {
             __program: program,
             payer: None,
@@ -970,7 +924,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
@@ -978,7 +932,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn position_nft_owner(
         &mut self,
-        position_nft_owner: &'b solana_program::account_info::AccountInfo<'a>,
+        position_nft_owner: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.position_nft_owner = Some(position_nft_owner);
         self
@@ -987,7 +941,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn position_nft_mint(
         &mut self,
-        position_nft_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        position_nft_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.position_nft_mint = Some(position_nft_mint);
         self
@@ -996,7 +950,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn position_nft_account(
         &mut self,
-        position_nft_account: &'b solana_program::account_info::AccountInfo<'a>,
+        position_nft_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.position_nft_account = Some(position_nft_account);
         self
@@ -1005,7 +959,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn metadata_account(
         &mut self,
-        metadata_account: &'b solana_program::account_info::AccountInfo<'a>,
+        metadata_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.metadata_account = Some(metadata_account);
         self
@@ -1014,7 +968,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_state(
         &mut self,
-        pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_state = Some(pool_state);
         self
@@ -1023,7 +977,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn protocol_position(
         &mut self,
-        protocol_position: &'b solana_program::account_info::AccountInfo<'a>,
+        protocol_position: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.protocol_position = Some(protocol_position);
         self
@@ -1032,7 +986,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn tick_array_lower(
         &mut self,
-        tick_array_lower: &'b solana_program::account_info::AccountInfo<'a>,
+        tick_array_lower: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tick_array_lower = Some(tick_array_lower);
         self
@@ -1041,7 +995,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn tick_array_upper(
         &mut self,
-        tick_array_upper: &'b solana_program::account_info::AccountInfo<'a>,
+        tick_array_upper: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.tick_array_upper = Some(tick_array_upper);
         self
@@ -1050,7 +1004,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn personal_position(
         &mut self,
-        personal_position: &'b solana_program::account_info::AccountInfo<'a>,
+        personal_position: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.personal_position = Some(personal_position);
         self
@@ -1059,7 +1013,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_account0(
         &mut self,
-        token_account0: &'b solana_program::account_info::AccountInfo<'a>,
+        token_account0: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_account0 = Some(token_account0);
         self
@@ -1068,7 +1022,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_account1(
         &mut self,
-        token_account1: &'b solana_program::account_info::AccountInfo<'a>,
+        token_account1: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_account1 = Some(token_account1);
         self
@@ -1077,7 +1031,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_vault0(
         &mut self,
-        token_vault0: &'b solana_program::account_info::AccountInfo<'a>,
+        token_vault0: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_vault0 = Some(token_vault0);
         self
@@ -1086,14 +1040,14 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_vault1(
         &mut self,
-        token_vault1: &'b solana_program::account_info::AccountInfo<'a>,
+        token_vault1: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_vault1 = Some(token_vault1);
         self
     }
 
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -1101,7 +1055,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -1110,7 +1064,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -1119,7 +1073,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -1128,7 +1082,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
-        metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+        metadata_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.metadata_program = Some(metadata_program);
         self
@@ -1137,7 +1091,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program2022(
         &mut self,
-        token_program2022: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program2022: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program2022 = Some(token_program2022);
         self
@@ -1146,7 +1100,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn vault0_mint(
         &mut self,
-        vault0_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        vault0_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vault0_mint = Some(vault0_mint);
         self
@@ -1155,7 +1109,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn vault1_mint(
         &mut self,
-        vault1_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        vault1_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vault1_mint = Some(vault1_mint);
         self
@@ -1220,7 +1174,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -1237,11 +1191,7 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -1250,14 +1200,14 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = OpenPositionV2InstructionArgs {
             tick_lower_index: self
                 .instruction
@@ -1415,29 +1365,29 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct OpenPositionV2CpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    position_nft_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    position_nft_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    position_nft_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    metadata_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    protocol_position: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    tick_array_lower: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    tick_array_upper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    personal_position: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_account0: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_account1: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_vault0: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_vault1: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    metadata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program2022: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vault0_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vault1_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    position_nft_owner: Option<&'b solana_account_info::AccountInfo<'a>>,
+    position_nft_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    position_nft_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    metadata_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    protocol_position: Option<&'b solana_account_info::AccountInfo<'a>>,
+    tick_array_lower: Option<&'b solana_account_info::AccountInfo<'a>>,
+    tick_array_upper: Option<&'b solana_account_info::AccountInfo<'a>>,
+    personal_position: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_account0: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_account1: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_vault0: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_vault1: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    metadata_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program2022: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vault0_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vault1_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     tick_lower_index: Option<i32>,
     tick_upper_index: Option<i32>,
     tick_array_lower_start_index: Option<i32>,
@@ -1448,9 +1398,5 @@ struct OpenPositionV2CpiBuilderInstruction<'a, 'b> {
     with_metadata: Option<bool>,
     base_flag: Option<bool>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

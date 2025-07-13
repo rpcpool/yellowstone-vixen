@@ -12,22 +12,22 @@ use borsh::{BorshDeserialize, BorshSerialize};
 pub struct CreateVestingAccount {
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
-    pub creator: solana_program::pubkey::Pubkey,
+    pub creator: solana_pubkey::Pubkey,
 
-    pub beneficiary: solana_program::pubkey::Pubkey,
+    pub beneficiary: solana_pubkey::Pubkey,
     /// The pool state account
-    pub pool_state: solana_program::pubkey::Pubkey,
+    pub pool_state: solana_pubkey::Pubkey,
     /// The vesting record account
-    pub vesting_record: solana_program::pubkey::Pubkey,
+    pub vesting_record: solana_pubkey::Pubkey,
     /// Required for account creation
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 }
 
 impl CreateVestingAccount {
     pub fn instruction(
         &self,
         args: CreateVestingAccountInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -36,26 +36,20 @@ impl CreateVestingAccount {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: CreateVestingAccountInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.creator,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.creator, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.beneficiary,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool_state,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.pool_state, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.vesting_record,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
@@ -64,7 +58,7 @@ impl CreateVestingAccount {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
@@ -107,13 +101,13 @@ pub struct CreateVestingAccountInstructionArgs {
 ///   4. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct CreateVestingAccountBuilder {
-    creator: Option<solana_program::pubkey::Pubkey>,
-    beneficiary: Option<solana_program::pubkey::Pubkey>,
-    pool_state: Option<solana_program::pubkey::Pubkey>,
-    vesting_record: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
+    creator: Option<solana_pubkey::Pubkey>,
+    beneficiary: Option<solana_pubkey::Pubkey>,
+    pool_state: Option<solana_pubkey::Pubkey>,
+    vesting_record: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
     share_amount: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateVestingAccountBuilder {
@@ -122,27 +116,27 @@ impl CreateVestingAccountBuilder {
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     #[inline(always)]
-    pub fn creator(&mut self, creator: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
 
     #[inline(always)]
-    pub fn beneficiary(&mut self, beneficiary: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn beneficiary(&mut self, beneficiary: solana_pubkey::Pubkey) -> &mut Self {
         self.beneficiary = Some(beneficiary);
         self
     }
 
     /// The pool state account
     #[inline(always)]
-    pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
 
     /// The vesting record account
     #[inline(always)]
-    pub fn vesting_record(&mut self, vesting_record: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vesting_record(&mut self, vesting_record: solana_pubkey::Pubkey) -> &mut Self {
         self.vesting_record = Some(vesting_record);
         self
     }
@@ -150,7 +144,7 @@ impl CreateVestingAccountBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -163,10 +157,7 @@ impl CreateVestingAccountBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -175,14 +166,14 @@ impl CreateVestingAccountBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateVestingAccount {
             creator: self.creator.expect("creator is not set"),
             beneficiary: self.beneficiary.expect("beneficiary is not set"),
@@ -190,7 +181,7 @@ impl CreateVestingAccountBuilder {
             vesting_record: self.vesting_record.expect("vesting_record is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
         };
         let args = CreateVestingAccountInstructionArgs {
             share_amount: self.share_amount.clone().expect("share_amount is not set"),
@@ -204,39 +195,39 @@ impl CreateVestingAccountBuilder {
 pub struct CreateVestingAccountCpiAccounts<'a, 'b> {
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
-    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub beneficiary: &'b solana_program::account_info::AccountInfo<'a>,
+    pub beneficiary: &'b solana_account_info::AccountInfo<'a>,
     /// The pool state account
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// The vesting record account
-    pub vesting_record: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vesting_record: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `create_vesting_account` CPI instruction.
 pub struct CreateVestingAccountCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
-    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub beneficiary: &'b solana_program::account_info::AccountInfo<'a>,
+    pub beneficiary: &'b solana_account_info::AccountInfo<'a>,
     /// The pool state account
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// The vesting record account
-    pub vesting_record: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vesting_record: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: CreateVestingAccountInstructionArgs,
 }
 
 impl<'a, 'b> CreateVestingAccountCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: CreateVestingAccountCpiAccounts<'a, 'b>,
         args: CreateVestingAccountInstructionArgs,
     ) -> Self {
@@ -252,19 +243,15 @@ impl<'a, 'b> CreateVestingAccountCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -272,7 +259,7 @@ impl<'a, 'b> CreateVestingAccountCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -282,35 +269,31 @@ impl<'a, 'b> CreateVestingAccountCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.creator.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.beneficiary.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_state.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.vesting_record.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -320,7 +303,7 @@ impl<'a, 'b> CreateVestingAccountCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
@@ -337,9 +320,9 @@ impl<'a, 'b> CreateVestingAccountCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -359,7 +342,7 @@ pub struct CreateVestingAccountCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(CreateVestingAccountCpiBuilderInstruction {
             __program: program,
             creator: None,
@@ -376,10 +359,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     #[inline(always)]
-    pub fn creator(
-        &mut self,
-        creator: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn creator(&mut self, creator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.creator = Some(creator);
         self
     }
@@ -387,7 +367,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn beneficiary(
         &mut self,
-        beneficiary: &'b solana_program::account_info::AccountInfo<'a>,
+        beneficiary: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.beneficiary = Some(beneficiary);
         self
@@ -397,7 +377,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_state(
         &mut self,
-        pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_state = Some(pool_state);
         self
@@ -407,7 +387,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn vesting_record(
         &mut self,
-        vesting_record: &'b solana_program::account_info::AccountInfo<'a>,
+        vesting_record: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vesting_record = Some(vesting_record);
         self
@@ -417,7 +397,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -433,7 +413,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -450,11 +430,7 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -463,14 +439,14 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = CreateVestingAccountInstructionArgs {
             share_amount: self
                 .instruction
@@ -510,17 +486,13 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct CreateVestingAccountCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    beneficiary: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vesting_record: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    creator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    beneficiary: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vesting_record: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     share_amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

@@ -14,6 +14,6 @@ fn main() {
     prost_build::Config::new()
         .enable_type_names()
         .file_descriptor_set_path(out_dir.join("descriptor.bin"))
-        .compile_protos(&["proto/vixen_meteora_vault_parser.proto"], &["proto"])
+        .compile_protos(&["proto/meteora_vault.proto"], &["proto"])
         .unwrap();
 }

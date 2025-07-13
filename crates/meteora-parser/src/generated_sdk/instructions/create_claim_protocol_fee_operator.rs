@@ -10,17 +10,17 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateClaimProtocolFeeOperator {
-    pub claim_fee_operator: solana_program::pubkey::Pubkey,
+    pub claim_fee_operator: solana_pubkey::Pubkey,
 
-    pub operator: solana_program::pubkey::Pubkey,
+    pub operator: solana_pubkey::Pubkey,
 
-    pub admin: solana_program::pubkey::Pubkey,
+    pub admin: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 }
 
 impl CreateClaimProtocolFeeOperator {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -28,28 +28,26 @@ impl CreateClaimProtocolFeeOperator {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.claim_fee_operator,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.operator,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.admin, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.admin, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&CreateClaimProtocolFeeOperatorInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -85,50 +83,44 @@ impl Default for CreateClaimProtocolFeeOperatorInstructionData {
 ///   3. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct CreateClaimProtocolFeeOperatorBuilder {
-    claim_fee_operator: Option<solana_program::pubkey::Pubkey>,
-    operator: Option<solana_program::pubkey::Pubkey>,
-    admin: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    claim_fee_operator: Option<solana_pubkey::Pubkey>,
+    operator: Option<solana_pubkey::Pubkey>,
+    admin: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateClaimProtocolFeeOperatorBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn claim_fee_operator(
-        &mut self,
-        claim_fee_operator: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn claim_fee_operator(&mut self, claim_fee_operator: solana_pubkey::Pubkey) -> &mut Self {
         self.claim_fee_operator = Some(claim_fee_operator);
         self
     }
 
     #[inline(always)]
-    pub fn operator(&mut self, operator: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn operator(&mut self, operator: solana_pubkey::Pubkey) -> &mut Self {
         self.operator = Some(operator);
         self
     }
 
     #[inline(always)]
-    pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -137,14 +129,14 @@ impl CreateClaimProtocolFeeOperatorBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateClaimProtocolFeeOperator {
             claim_fee_operator: self
                 .claim_fee_operator
@@ -153,7 +145,7 @@ impl CreateClaimProtocolFeeOperatorBuilder {
             admin: self.admin.expect("admin is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
         };
 
         accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
@@ -162,32 +154,32 @@ impl CreateClaimProtocolFeeOperatorBuilder {
 
 /// `create_claim_protocol_fee_operator` CPI accounts.
 pub struct CreateClaimProtocolFeeOperatorCpiAccounts<'a, 'b> {
-    pub claim_fee_operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub claim_fee_operator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `create_claim_protocol_fee_operator` CPI instruction.
 pub struct CreateClaimProtocolFeeOperatorCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub claim_fee_operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub claim_fee_operator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> CreateClaimProtocolFeeOperatorCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: CreateClaimProtocolFeeOperatorCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -200,19 +192,15 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -220,7 +208,7 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -230,31 +218,24 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.claim_fee_operator.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.operator.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.admin.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.admin.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -262,7 +243,7 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&CreateClaimProtocolFeeOperatorInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -278,9 +259,9 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -299,7 +280,7 @@ pub struct CreateClaimProtocolFeeOperatorCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> CreateClaimProtocolFeeOperatorCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(CreateClaimProtocolFeeOperatorCpiBuilderInstruction {
             __program: program,
             claim_fee_operator: None,
@@ -314,23 +295,20 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn claim_fee_operator(
         &mut self,
-        claim_fee_operator: &'b solana_program::account_info::AccountInfo<'a>,
+        claim_fee_operator: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.claim_fee_operator = Some(claim_fee_operator);
         self
     }
 
     #[inline(always)]
-    pub fn operator(
-        &mut self,
-        operator: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn operator(&mut self, operator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.operator = Some(operator);
         self
     }
 
     #[inline(always)]
-    pub fn admin(&mut self, admin: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
@@ -338,7 +316,7 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -348,7 +326,7 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -365,11 +343,7 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -378,14 +352,14 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = CreateClaimProtocolFeeOperatorCpi {
             __program: self.instruction.__program,
 
@@ -412,15 +386,11 @@ impl<'a, 'b> CreateClaimProtocolFeeOperatorCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct CreateClaimProtocolFeeOperatorCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    claim_fee_operator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    operator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    admin: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    claim_fee_operator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    operator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    admin: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

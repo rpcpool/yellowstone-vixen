@@ -5,6 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::BorshDeserialize;
+
 use crate::{
     accounts::{BondingCurve, Global},
     ID,
@@ -24,11 +26,11 @@ impl PumpProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [23, 183, 248, 55, 96, 216, 172, 96] => Ok(PumpProgramState::BondingCurve(
-                BondingCurve::from_bytes(data_bytes)?,
+                BondingCurve::try_from_slice(data_bytes)?,
             )),
-            [167, 232, 232, 177, 200, 108, 114, 127] => {
-                Ok(PumpProgramState::Global(Global::from_bytes(data_bytes)?))
-            },
+            [167, 232, 232, 177, 200, 108, 114, 127] => Ok(PumpProgramState::Global(
+                Global::try_from_slice(data_bytes)?,
+            )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
@@ -83,8 +85,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        PumpProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = PumpProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = &inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 

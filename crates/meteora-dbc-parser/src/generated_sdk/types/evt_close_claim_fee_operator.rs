@@ -6,7 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 /// Close claim fee operator
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

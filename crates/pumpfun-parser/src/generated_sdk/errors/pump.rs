@@ -39,12 +39,12 @@ pub enum PumpError {
     WithdrawTooFrequent = 0x1778,
 }
 
-impl solana_program::program_error::PrintProgramError for PumpError {
+impl solana_program_error::PrintProgramError for PumpError {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for PumpError {
+impl<T> solana_decode_error::DecodeError<T> for PumpError {
     fn type_of() -> &'static str { "PumpError" }
 }

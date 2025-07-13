@@ -5,6 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::BorshDeserialize;
+
 use crate::{
     accounts::{
         FeeTier, LockConfig, Position, PositionBundle, TickArray, TokenBadge, Whirlpool,
@@ -34,33 +36,33 @@ impl WhirlpoolProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [157, 20, 49, 224, 217, 87, 193, 254] => Ok(WhirlpoolProgramState::WhirlpoolsConfig(
-                WhirlpoolsConfig::from_bytes(data_bytes)?,
+                WhirlpoolsConfig::try_from_slice(data_bytes)?,
             )),
             [2, 99, 215, 163, 240, 26, 153, 58] => {
                 Ok(WhirlpoolProgramState::WhirlpoolsConfigExtension(
-                    WhirlpoolsConfigExtension::from_bytes(data_bytes)?,
+                    WhirlpoolsConfigExtension::try_from_slice(data_bytes)?,
                 ))
             },
             [56, 75, 159, 76, 142, 68, 190, 105] => Ok(WhirlpoolProgramState::FeeTier(
-                FeeTier::from_bytes(data_bytes)?,
+                FeeTier::try_from_slice(data_bytes)?,
             )),
             [106, 47, 238, 159, 124, 12, 160, 192] => Ok(WhirlpoolProgramState::LockConfig(
-                LockConfig::from_bytes(data_bytes)?,
+                LockConfig::try_from_slice(data_bytes)?,
             )),
             [170, 188, 143, 228, 122, 64, 247, 208] => Ok(WhirlpoolProgramState::Position(
-                Position::from_bytes(data_bytes)?,
+                Position::try_from_slice(data_bytes)?,
             )),
             [129, 169, 175, 65, 185, 95, 32, 100] => Ok(WhirlpoolProgramState::PositionBundle(
-                PositionBundle::from_bytes(data_bytes)?,
+                PositionBundle::try_from_slice(data_bytes)?,
             )),
             [69, 97, 189, 190, 110, 7, 66, 187] => Ok(WhirlpoolProgramState::TickArray(
-                TickArray::from_bytes(data_bytes)?,
+                TickArray::try_from_slice(data_bytes)?,
             )),
             [116, 219, 204, 229, 249, 116, 255, 150] => Ok(WhirlpoolProgramState::TokenBadge(
-                TokenBadge::from_bytes(data_bytes)?,
+                TokenBadge::try_from_slice(data_bytes)?,
             )),
             [63, 149, 209, 12, 225, 128, 99, 9] => Ok(WhirlpoolProgramState::Whirlpool(
-                Whirlpool::from_bytes(data_bytes)?,
+                Whirlpool::try_from_slice(data_bytes)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
@@ -116,8 +118,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        WhirlpoolProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = WhirlpoolProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = &inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 
