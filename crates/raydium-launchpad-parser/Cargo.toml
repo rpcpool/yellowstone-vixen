@@ -4,7 +4,7 @@
 name = "yellowstone-vixen-raydium-launchpad-parser"
 version = "0.3.0"
 edition = "2021"
-description = "Vixen program parser for Raydium AMM v4"
+description = "Vixen program parser for Raydium Launchpad"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 

@@ -4,7 +4,7 @@
 name = "yellowstone-vixen-meteora-vault-parser"
 version = "0.3.0"
 edition = "2021"
-description = "Vixen program parser for Raydium AMM v4"
+description = "Vixen program parser for Meteora vault"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 

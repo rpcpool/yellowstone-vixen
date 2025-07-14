@@ -4,7 +4,7 @@
 name = "yellowstone-vixen-pumpfun-parser"
 version = "0.3.0"
 edition = "2021"
-description = "Vixen program parser for Raydium AMM v4"
+description = "Vixen program parser for Pumpfun"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
