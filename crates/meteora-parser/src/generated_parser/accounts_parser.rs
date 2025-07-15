@@ -244,6 +244,11 @@ mod proto_parser {
                 idx: self.idx,
                 active_size: self.active_size,
                 length: self.length,
+                observations: self
+                    .observations
+                    .into_iter()
+                    .map(IntoProto::into_proto)
+                    .collect(),
             }
         }
     }

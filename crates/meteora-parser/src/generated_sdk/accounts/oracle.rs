@@ -7,7 +7,7 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(BorshSerialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Oracle {
     pub discriminator: [u8; 8],
@@ -17,6 +17,8 @@ pub struct Oracle {
     pub active_size: u64,
     /// Number of observations
     pub length: u64,
+    /// Observations
+    pub observations: Vec<[u8; 32]>,
 }
 
 impl Oracle {
