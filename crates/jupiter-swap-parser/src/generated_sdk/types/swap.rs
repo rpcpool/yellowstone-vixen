@@ -147,4 +147,36 @@ pub enum Swap {
     PumpdotfunAmmBuy,
     PumpdotfunAmmSell,
     Gamma,
+    MeteoraDlmmSwapV2 {
+        remaining_accounts_info: RemainingAccountsInfo,
+    },
+    Woofi,
+    MeteoraDammV2,
+    MeteoraDynamicBondingCurveSwap,
+    StabbleStableSwapV2,
+    StabbleWeightedSwapV2,
+    RaydiumLaunchlabBuy {
+        share_fee_rate: u64,
+    },
+    RaydiumLaunchlabSell {
+        share_fee_rate: u64,
+    },
+    BoopdotfunWrappedBuy,
+    BoopdotfunWrappedSell,
+    Plasma {
+        side: Side,
+    },
+    GoonFi {
+        is_bid: bool,
+        blacklist_bump: u8,
+    },
+    HumidiFi {
+        swap_id: u64,
+        is_base_to_quote: bool,
+    },
+    MeteoraDynamicBondingCurveSwapWithRemainingAccounts,
+    TesseraV {
+        side: Side,
+    },
+    RaydiumStable,
 }

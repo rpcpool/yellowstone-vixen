@@ -277,6 +277,70 @@ pub mod proto_types_parsers {
                     swap::Variant::PumpdotfunAmmSell(proto_def::SwapPumpdotfunAmmSell {})
                 },
                 Swap::Gamma => swap::Variant::Gamma(proto_def::SwapGamma {}),
+                Swap::MeteoraDlmmSwapV2 {
+                    remaining_accounts_info,
+                } => swap::Variant::MeteoraDlmmSwapV2(proto_def::SwapMeteoraDlmmSwapV2 {
+                    remaining_accounts_info: Some(remaining_accounts_info.into_proto()),
+                }),
+                Swap::Woofi => swap::Variant::Woofi(proto_def::SwapWoofi {}),
+                Swap::MeteoraDammV2 => {
+                    swap::Variant::MeteoraDammV2(proto_def::SwapMeteoraDammV2 {})
+                },
+                Swap::MeteoraDynamicBondingCurveSwap => {
+                    swap::Variant::MeteoraDynamicBondingCurveSwap(
+                        proto_def::SwapMeteoraDynamicBondingCurveSwap {},
+                    )
+                },
+                Swap::StabbleStableSwapV2 => {
+                    swap::Variant::StabbleStableSwapV2(proto_def::SwapStabbleStableSwapV2 {})
+                },
+                Swap::StabbleWeightedSwapV2 => {
+                    swap::Variant::StabbleWeightedSwapV2(proto_def::SwapStabbleWeightedSwapV2 {})
+                },
+                Swap::RaydiumLaunchlabBuy { share_fee_rate } => {
+                    swap::Variant::RaydiumLaunchlabBuy(proto_def::SwapRaydiumLaunchlabBuy {
+                        share_fee_rate,
+                    })
+                },
+                Swap::RaydiumLaunchlabSell { share_fee_rate } => {
+                    swap::Variant::RaydiumLaunchlabSell(proto_def::SwapRaydiumLaunchlabSell {
+                        share_fee_rate,
+                    })
+                },
+                Swap::BoopdotfunWrappedBuy => {
+                    swap::Variant::BoopdotfunWrappedBuy(proto_def::SwapBoopdotfunWrappedBuy {})
+                },
+                Swap::BoopdotfunWrappedSell => {
+                    swap::Variant::BoopdotfunWrappedSell(proto_def::SwapBoopdotfunWrappedSell {})
+                },
+                Swap::Plasma { side } => {
+                    swap::Variant::Plasma(proto_def::SwapPlasma { side: side as i32 })
+                },
+                Swap::GoonFi {
+                    is_bid,
+                    blacklist_bump,
+                } => swap::Variant::GoonFi(proto_def::SwapGoonFi {
+                    is_bid,
+                    blacklist_bump: blacklist_bump.into(),
+                }),
+                Swap::HumidiFi {
+                    swap_id,
+                    is_base_to_quote,
+                } => swap::Variant::HumidiFi(proto_def::SwapHumidiFi {
+                    swap_id,
+                    is_base_to_quote,
+                }),
+                Swap::MeteoraDynamicBondingCurveSwapWithRemainingAccounts => {
+                    swap::Variant::MeteoraDynamicBondingCurveSwapWithRemainingAccounts(
+                        proto_def::SwapMeteoraDynamicBondingCurveSwapWithRemainingAccounts {},
+                    )
+                },
+                Swap::TesseraV { side } => {
+                    swap::Variant::TesseraV(proto_def::SwapTesseraV { side: side as i32 })
+                },
+                Swap::RaydiumStable => {
+                    swap::Variant::RaydiumStable(proto_def::SwapRaydiumStable {})
+                },
             };
 
             proto_def::Swap {
