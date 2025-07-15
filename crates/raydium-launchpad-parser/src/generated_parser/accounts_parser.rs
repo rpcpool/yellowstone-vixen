@@ -104,7 +104,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
 
         #[cfg(feature = "tracing")]
         if let Err(e) = &res {
-            let acc_discriminator: [u8; 8] = &inner.data[0..8].try_into()?;
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
             tracing::info!(
                 name: "incorrectly_parsed_account",
                 name = "account_update",
