@@ -1612,158 +1612,204 @@ mod proto_parser {
     impl IntoProto<proto_def::ProgramIxs> for AmmProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                                                            AmmProgramIx::InitializePermissionedPool(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionedPool(proto_def::InitializePermissionedPoolIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                AmmProgramIx::InitializePermissionedPool(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionedPool(
+                        proto_def::InitializePermissionedPoolIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::InitializePermissionlessPool(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionlessPool(proto_def::InitializePermissionlessPoolIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::InitializePermissionlessPool(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionlessPool(
+                        proto_def::InitializePermissionlessPoolIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::InitializePermissionlessPoolWithFeeTier(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionlessPoolWithFeeTier(proto_def::InitializePermissionlessPoolWithFeeTierIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::InitializePermissionlessPoolWithFeeTier(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionlessPoolWithFeeTier(
+                        proto_def::InitializePermissionlessPoolWithFeeTierIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::EnableOrDisablePool(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::EnableOrDisablePool(proto_def::EnableOrDisablePoolIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::EnableOrDisablePool(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::EnableOrDisablePool(
+                        proto_def::EnableOrDisablePoolIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                AmmProgramIx::RemoveLiquiditySingleSide(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquiditySingleSide(
+                        proto_def::RemoveLiquiditySingleSideIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::RemoveLiquiditySingleSide(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquiditySingleSide(proto_def::RemoveLiquiditySingleSideIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::AddImbalanceLiquidity(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddImbalanceLiquidity(
+                        proto_def::AddImbalanceLiquidityIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::AddImbalanceLiquidity(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddImbalanceLiquidity(proto_def::AddImbalanceLiquidityIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::RemoveBalanceLiquidity(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveBalanceLiquidity(
+                        proto_def::RemoveBalanceLiquidityIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::RemoveBalanceLiquidity(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveBalanceLiquidity(proto_def::RemoveBalanceLiquidityIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::AddBalanceLiquidity(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddBalanceLiquidity(
+                        proto_def::AddBalanceLiquidityIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::AddBalanceLiquidity(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddBalanceLiquidity(proto_def::AddBalanceLiquidityIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::SetPoolFees(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPoolFees(proto_def::SetPoolFeesIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                AmmProgramIx::OverrideCurveParam(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::OverrideCurveParam(
+                        proto_def::OverrideCurveParamIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::SetPoolFees(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPoolFees(proto_def::SetPoolFeesIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::GetPoolInfo(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::GetPoolInfo(proto_def::GetPoolInfoIx {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+                AmmProgramIx::BootstrapLiquidity(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::BootstrapLiquidity(
+                        proto_def::BootstrapLiquidityIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::OverrideCurveParam(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::OverrideCurveParam(proto_def::OverrideCurveParamIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::CreateMintMetadata(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateMintMetadata(
+                        proto_def::CreateMintMetadataIx {
+                            accounts: Some(acc.into_proto()),
                         },
-                                                                                AmmProgramIx::GetPoolInfo(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::GetPoolInfo(proto_def::GetPoolInfoIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::CreateLockEscrow(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateLockEscrow(proto_def::CreateLockEscrowIx {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+                AmmProgramIx::Lock(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Lock(proto_def::LockIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                AmmProgramIx::ClaimFee(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee(proto_def::ClaimFeeIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                AmmProgramIx::CreateConfig(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateConfig(proto_def::CreateConfigIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                AmmProgramIx::CloseConfig(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CloseConfig(proto_def::CloseConfigIx {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+                AmmProgramIx::InitializePermissionlessConstantProductPoolWithConfig(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::InitializePermissionlessConstantProductPoolWithConfig(
+                                proto_def::InitializePermissionlessConstantProductPoolWithConfigIx {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
+                        ),
+                    }
+                },
+                AmmProgramIx::InitializePermissionlessConstantProductPoolWithConfig2(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::InitializePermissionlessConstantProductPoolWithConfig2(
+                                proto_def::InitializePermissionlessConstantProductPoolWithConfig2Ix {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
+                        ),
+                    }
+                },
+                AmmProgramIx::InitializeCustomizablePermissionlessConstantProductPool(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessConstantProductPool(
+                                proto_def::InitializeCustomizablePermissionlessConstantProductPoolIx {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
+                        ),
+                    }
+                },
+                AmmProgramIx::UpdateActivationPoint(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateActivationPoint(
+                        proto_def::UpdateActivationPointIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::BootstrapLiquidity(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::BootstrapLiquidity(proto_def::BootstrapLiquidityIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::WithdrawProtocolFees(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawProtocolFees(
+                        proto_def::WithdrawProtocolFeesIx {
+                            accounts: Some(acc.into_proto()),
                         },
-                                                                                AmmProgramIx::CreateMintMetadata(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateMintMetadata(proto_def::CreateMintMetadataIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
+                    )),
+                },
+                AmmProgramIx::SetWhitelistedVault(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetWhitelistedVault(
+                        proto_def::SetWhitelistedVaultIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
-                                                                                AmmProgramIx::CreateLockEscrow(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateLockEscrow(proto_def::CreateLockEscrowIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::Lock(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::Lock(proto_def::LockIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::ClaimFee(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee(proto_def::ClaimFeeIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::CreateConfig(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateConfig(proto_def::CreateConfigIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::CloseConfig(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::CloseConfig(proto_def::CloseConfigIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::InitializePermissionlessConstantProductPoolWithConfig(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionlessConstantProductPoolWithConfig(proto_def::InitializePermissionlessConstantProductPoolWithConfigIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::InitializePermissionlessConstantProductPoolWithConfig2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionlessConstantProductPoolWithConfig2(proto_def::InitializePermissionlessConstantProductPoolWithConfig2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::InitializeCustomizablePermissionlessConstantProductPool(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessConstantProductPool(proto_def::InitializeCustomizablePermissionlessConstantProductPoolIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::UpdateActivationPoint(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateActivationPoint(proto_def::UpdateActivationPointIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::WithdrawProtocolFees(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawProtocolFees(proto_def::WithdrawProtocolFeesIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::SetWhitelistedVault(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetWhitelistedVault(proto_def::SetWhitelistedVaultIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                AmmProgramIx::PartnerClaimFee(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::PartnerClaimFee(proto_def::PartnerClaimFeeIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                }
+                    )),
+                },
+                AmmProgramIx::PartnerClaimFee(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::PartnerClaimFee(proto_def::PartnerClaimFeeIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+            }
         }
     }
 

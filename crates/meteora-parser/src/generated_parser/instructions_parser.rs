@@ -3230,377 +3230,463 @@ mod proto_parser {
     impl IntoProto<proto_def::ProgramIxs> for LbClmmProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                                                            LbClmmProgramIx::InitializeLbPair(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeLbPair(proto_def::InitializeLbPairIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializePermissionLbPair(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionLbPair(proto_def::InitializePermissionLbPairIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessLbPair(proto_def::InitializeCustomizablePermissionlessLbPairIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializeBinArrayBitmapExtension(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeBinArrayBitmapExtension(proto_def::InitializeBinArrayBitmapExtensionIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializeBinArray(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeBinArray(proto_def::InitializeBinArrayIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::AddLiquidity(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidity(proto_def::AddLiquidityIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::AddLiquidityByWeight(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByWeight(proto_def::AddLiquidityByWeightIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::AddLiquidityByStrategy(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategy(proto_def::AddLiquidityByStrategyIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::AddLiquidityByStrategyOneSide(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategyOneSide(proto_def::AddLiquidityByStrategyOneSideIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::AddLiquidityOneSide(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSide(proto_def::AddLiquidityOneSideIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::RemoveLiquidity(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidity(proto_def::RemoveLiquidityIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializePosition(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePosition(proto_def::InitializePositionIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializePositionPda(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePositionPda(proto_def::InitializePositionPdaIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializePositionByOperator(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePositionByOperator(proto_def::InitializePositionByOperatorIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::UpdatePositionOperator(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdatePositionOperator(proto_def::UpdatePositionOperatorIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::SwapExactOut(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut(proto_def::SwapExactOutIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::SwapWithPriceImpact(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact(proto_def::SwapWithPriceImpactIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::WithdrawProtocolFee(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawProtocolFee(proto_def::WithdrawProtocolFeeIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializeReward(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeReward(proto_def::InitializeRewardIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::FundReward(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::FundReward(proto_def::FundRewardIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::UpdateRewardFunder(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateRewardFunder(proto_def::UpdateRewardFunderIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::UpdateRewardDuration(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateRewardDuration(proto_def::UpdateRewardDurationIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::ClaimReward(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimReward(proto_def::ClaimRewardIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::ClaimFee(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee(proto_def::ClaimFeeIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::ClosePosition(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePosition(proto_def::ClosePositionIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::UpdateBaseFeeParameters(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateBaseFeeParameters(proto_def::UpdateBaseFeeParametersIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::UpdateDynamicFeeParameters(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateDynamicFeeParameters(proto_def::UpdateDynamicFeeParametersIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::IncreaseOracleLength(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::IncreaseOracleLength(proto_def::IncreaseOracleLengthIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializePresetParameter(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePresetParameter(proto_def::InitializePresetParameterIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::ClosePresetParameter(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePresetParameter(proto_def::ClosePresetParameterIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::ClosePresetParameter2(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePresetParameter2(proto_def::ClosePresetParameter2Ix {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::RemoveAllLiquidity(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveAllLiquidity(proto_def::RemoveAllLiquidityIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::SetPairStatus(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPairStatus(proto_def::SetPairStatusIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::MigratePosition(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::MigratePosition(proto_def::MigratePositionIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::MigrateBinArray(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::MigrateBinArray(proto_def::MigrateBinArrayIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::UpdateFeesAndRewards(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateFeesAndRewards(proto_def::UpdateFeesAndRewardsIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::WithdrawIneligibleReward(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawIneligibleReward(proto_def::WithdrawIneligibleRewardIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::SetActivationPoint(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetActivationPoint(proto_def::SetActivationPointIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::RemoveLiquidityByRange(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidityByRange(proto_def::RemoveLiquidityByRangeIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::AddLiquidityOneSidePrecise(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSidePrecise(proto_def::AddLiquidityOneSidePreciseIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::GoToABin(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::GoToABin(proto_def::GoToABinIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::SetPreActivationDuration(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPreActivationDuration(proto_def::SetPreActivationDurationIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::SetPreActivationSwapAddress(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPreActivationSwapAddress(proto_def::SetPreActivationSwapAddressIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::SetPairStatusPermissionless(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPairStatusPermissionless(proto_def::SetPairStatusPermissionlessIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializeTokenBadge(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeTokenBadge(proto_def::InitializeTokenBadgeIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::CreateClaimProtocolFeeOperator(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateClaimProtocolFeeOperator(proto_def::CreateClaimProtocolFeeOperatorIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::CloseClaimProtocolFeeOperator(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::CloseClaimProtocolFeeOperator(proto_def::CloseClaimProtocolFeeOperatorIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializePresetParameter2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePresetParameter2(proto_def::InitializePresetParameter2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializeLbPair2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeLbPair2(proto_def::InitializeLbPair2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessLbPair2(proto_def::InitializeCustomizablePermissionlessLbPair2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::ClaimFee2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee2(proto_def::ClaimFee2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::ClaimReward2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimReward2(proto_def::ClaimReward2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::AddLiquidity2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidity2(proto_def::AddLiquidity2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::AddLiquidityByStrategy2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategy2(proto_def::AddLiquidityByStrategy2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::AddLiquidityOneSidePrecise2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSidePrecise2(proto_def::AddLiquidityOneSidePrecise2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::RemoveLiquidity2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidity2(proto_def::RemoveLiquidity2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::RemoveLiquidityByRange2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidityByRange2(proto_def::RemoveLiquidityByRange2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::Swap2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap2(proto_def::Swap2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::SwapExactOut2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut2(proto_def::SwapExactOut2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::SwapWithPriceImpact2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact2(proto_def::SwapWithPriceImpact2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::ClosePosition2(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePosition2(proto_def::ClosePosition2Ix {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::UpdateFeesAndReward2(acc, data) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateFeesAndReward2(proto_def::UpdateFeesAndReward2Ix {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            })),
-                        },
-                                                                                LbClmmProgramIx::ClosePositionIfEmpty(acc) => proto_def::ProgramIxs {
-                            ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePositionIfEmpty(proto_def::ClosePositionIfEmptyIx {
-                                accounts: Some(acc.into_proto()),
-                            })),
-                        },
-                                                }
+                LbClmmProgramIx::InitializeLbPair(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeLbPair(proto_def::InitializeLbPairIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::InitializePermissionLbPair(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePermissionLbPair(
+                        proto_def::InitializePermissionLbPairIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessLbPair(
+                        proto_def::InitializeCustomizablePermissionlessLbPairIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializeBinArrayBitmapExtension(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeBinArrayBitmapExtension(
+                        proto_def::InitializeBinArrayBitmapExtensionIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializeBinArray(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeBinArray(
+                        proto_def::InitializeBinArrayIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::AddLiquidity(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidity(proto_def::AddLiquidityIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::AddLiquidityByWeight(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByWeight(
+                        proto_def::AddLiquidityByWeightIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::AddLiquidityByStrategy(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategy(
+                        proto_def::AddLiquidityByStrategyIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::AddLiquidityByStrategyOneSide(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategyOneSide(
+                        proto_def::AddLiquidityByStrategyOneSideIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::AddLiquidityOneSide(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSide(
+                        proto_def::AddLiquidityOneSideIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::RemoveLiquidity(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidity(proto_def::RemoveLiquidityIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::InitializePosition(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePosition(
+                        proto_def::InitializePositionIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializePositionPda(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePositionPda(
+                        proto_def::InitializePositionPdaIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializePositionByOperator(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePositionByOperator(
+                        proto_def::InitializePositionByOperatorIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::UpdatePositionOperator(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdatePositionOperator(
+                        proto_def::UpdatePositionOperatorIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::SwapExactOut(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut(proto_def::SwapExactOutIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::SwapWithPriceImpact(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact(
+                        proto_def::SwapWithPriceImpactIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::WithdrawProtocolFee(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawProtocolFee(
+                        proto_def::WithdrawProtocolFeeIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializeReward(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeReward(proto_def::InitializeRewardIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::FundReward(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::FundReward(proto_def::FundRewardIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::UpdateRewardFunder(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateRewardFunder(
+                        proto_def::UpdateRewardFunderIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::UpdateRewardDuration(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateRewardDuration(
+                        proto_def::UpdateRewardDurationIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::ClaimReward(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimReward(proto_def::ClaimRewardIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::ClaimFee(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee(proto_def::ClaimFeeIx {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::ClosePosition(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePosition(proto_def::ClosePositionIx {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::UpdateBaseFeeParameters(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateBaseFeeParameters(
+                        proto_def::UpdateBaseFeeParametersIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::UpdateDynamicFeeParameters(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateDynamicFeeParameters(
+                        proto_def::UpdateDynamicFeeParametersIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::IncreaseOracleLength(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::IncreaseOracleLength(
+                        proto_def::IncreaseOracleLengthIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializePresetParameter(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePresetParameter(
+                        proto_def::InitializePresetParameterIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::ClosePresetParameter(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePresetParameter(
+                        proto_def::ClosePresetParameterIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::ClosePresetParameter2(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePresetParameter2(
+                        proto_def::ClosePresetParameter2Ix {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::RemoveAllLiquidity(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveAllLiquidity(
+                        proto_def::RemoveAllLiquidityIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::SetPairStatus(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPairStatus(proto_def::SetPairStatusIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::MigratePosition(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::MigratePosition(proto_def::MigratePositionIx {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::MigrateBinArray(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::MigrateBinArray(proto_def::MigrateBinArrayIx {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::UpdateFeesAndRewards(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateFeesAndRewards(
+                        proto_def::UpdateFeesAndRewardsIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::WithdrawIneligibleReward(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawIneligibleReward(
+                        proto_def::WithdrawIneligibleRewardIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::SetActivationPoint(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetActivationPoint(
+                        proto_def::SetActivationPointIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::RemoveLiquidityByRange(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidityByRange(
+                        proto_def::RemoveLiquidityByRangeIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::AddLiquidityOneSidePrecise(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSidePrecise(
+                        proto_def::AddLiquidityOneSidePreciseIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::GoToABin(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::GoToABin(proto_def::GoToABinIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::SetPreActivationDuration(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPreActivationDuration(
+                        proto_def::SetPreActivationDurationIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::SetPreActivationSwapAddress(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPreActivationSwapAddress(
+                        proto_def::SetPreActivationSwapAddressIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::SetPairStatusPermissionless(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetPairStatusPermissionless(
+                        proto_def::SetPairStatusPermissionlessIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializeTokenBadge(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeTokenBadge(
+                        proto_def::InitializeTokenBadgeIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::CreateClaimProtocolFeeOperator(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateClaimProtocolFeeOperator(
+                        proto_def::CreateClaimProtocolFeeOperatorIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::CloseClaimProtocolFeeOperator(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CloseClaimProtocolFeeOperator(
+                        proto_def::CloseClaimProtocolFeeOperatorIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializePresetParameter2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializePresetParameter2(
+                        proto_def::InitializePresetParameter2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializeLbPair2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeLbPair2(
+                        proto_def::InitializeLbPair2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeCustomizablePermissionlessLbPair2(
+                        proto_def::InitializeCustomizablePermissionlessLbPair2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::ClaimFee2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimFee2(proto_def::ClaimFee2Ix {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::ClaimReward2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimReward2(proto_def::ClaimReward2Ix {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::AddLiquidity2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidity2(proto_def::AddLiquidity2Ix {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::AddLiquidityByStrategy2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityByStrategy2(
+                        proto_def::AddLiquidityByStrategy2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::AddLiquidityOneSidePrecise2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AddLiquidityOneSidePrecise2(
+                        proto_def::AddLiquidityOneSidePrecise2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::RemoveLiquidity2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidity2(proto_def::RemoveLiquidity2Ix {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::RemoveLiquidityByRange2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RemoveLiquidityByRange2(
+                        proto_def::RemoveLiquidityByRange2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::Swap2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap2(proto_def::Swap2Ix {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::SwapExactOut2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut2(proto_def::SwapExactOut2Ix {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::SwapWithPriceImpact2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact2(
+                        proto_def::SwapWithPriceImpact2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::ClosePosition2(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePosition2(proto_def::ClosePosition2Ix {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+                LbClmmProgramIx::UpdateFeesAndReward2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateFeesAndReward2(
+                        proto_def::UpdateFeesAndReward2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                LbClmmProgramIx::ClosePositionIfEmpty(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePositionIfEmpty(
+                        proto_def::ClosePositionIfEmptyIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+            }
         }
     }
 
