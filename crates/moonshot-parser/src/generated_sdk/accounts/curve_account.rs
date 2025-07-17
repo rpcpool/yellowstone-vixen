@@ -30,6 +30,7 @@ pub struct CurveAccount {
     pub coef_b: u32,
     pub bump: u8,
     pub migration_target: MigrationTarget,
+    pub price_increase: u16,
 }
 
 impl CurveAccount {

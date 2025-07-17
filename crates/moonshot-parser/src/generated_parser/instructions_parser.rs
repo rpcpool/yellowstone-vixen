@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         Buy as BuyIxAccounts, BuyInstructionArgs as BuyIxData, ConfigInit as ConfigInitIxAccounts,
         ConfigInitInstructionArgs as ConfigInitIxData, ConfigUpdate as ConfigUpdateIxAccounts,
@@ -116,7 +116,7 @@ impl InstructionParser {
                     mpl_token_metadata: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: TokenMintIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: TokenMintIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(TokenLaunchpadProgramIx::TokenMint(ix_accounts, de_ix_data))
             },
             [102, 6, 61, 18, 1, 218, 235, 234] => {
@@ -135,7 +135,7 @@ impl InstructionParser {
                     associated_token_program: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: BuyIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(TokenLaunchpadProgramIx::Buy(ix_accounts, de_ix_data))
             },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
@@ -154,7 +154,7 @@ impl InstructionParser {
                     associated_token_program: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: SellIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SellIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(TokenLaunchpadProgramIx::Sell(ix_accounts, de_ix_data))
             },
             [42, 229, 10, 231, 189, 62, 193, 174] => {
@@ -184,7 +184,7 @@ impl InstructionParser {
                     config_account: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: ConfigInitIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: ConfigInitIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(TokenLaunchpadProgramIx::ConfigInit(ix_accounts, de_ix_data))
             },
             [80, 37, 109, 136, 82, 135, 89, 241] => {
@@ -194,7 +194,8 @@ impl InstructionParser {
                     config_authority: next_account(accounts)?,
                     config_account: next_account(accounts)?,
                 };
-                let de_ix_data: ConfigUpdateIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: ConfigUpdateIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(TokenLaunchpadProgramIx::ConfigUpdate(
                     ix_accounts,
                     de_ix_data,
