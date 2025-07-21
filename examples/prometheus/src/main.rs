@@ -13,7 +13,7 @@ use clap::Parser;
 use solana_accounts_rpc_source::SolanaAccountsRpcSource;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_grpc_source::YellowstoneGrpcSource;
-use yellowstone_vixen::{self as vixen, vixen_core::custom_prefilters::CustomPrefilters, Pipeline};
+use yellowstone_vixen::{self as vixen, Pipeline};
 use yellowstone_vixen_parser::block_meta::BlockMetaParser;
 use yellowstone_vixen_raydium_amm_v4_parser::{
     accounts_parser::AccountParser as RaydiumAmmV4AccParser,
@@ -51,12 +51,7 @@ fn main() {
         .source(YellowstoneGrpcSource::new())
         .source(SolanaAccountsRpcSource::new())
         .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
-        .instruction(Pipeline::new(
-            RaydiumAmmV4IxParser.filter()
-                .include_accounts(["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"])
-                .required_accounts([RaydiumAmmV4AccParser]),
-            [Logger],
-        ))
+        .instruction(Pipeline::new(RaydiumAmmV4IxParser, [Logger]))
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
         .metrics(vixen::metrics::Prometheus)
         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)

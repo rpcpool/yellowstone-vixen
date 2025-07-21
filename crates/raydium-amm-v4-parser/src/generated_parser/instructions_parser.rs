@@ -61,9 +61,6 @@ pub enum RaydiumAmmV4ProgramIx {
 #[derive(Debug, Copy, Clone)]
 pub struct InstructionParser;
 
-#[cfg(feature = "prefilters")]
-impl yellowstone_vixen_core::custom_prefilters::CustomPrefilters for InstructionParser {}
-
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     #[cfg(not(feature = "shared-data"))]
