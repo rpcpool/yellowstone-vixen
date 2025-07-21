@@ -53,7 +53,7 @@ impl Disable {
         data.append(&mut args);
 
         solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         }
@@ -314,7 +314,7 @@ impl<'a, 'b> DisableCpi<'a, 'b> {
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         };

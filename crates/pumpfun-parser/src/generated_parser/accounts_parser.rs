@@ -5,11 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{BondingCurve, Global},
-    ID,
+    deserialize_checked, ID,
 };
 
 /// Pump Program State
@@ -26,10 +24,10 @@ impl PumpProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [23, 183, 248, 55, 96, 216, 172, 96] => Ok(PumpProgramState::BondingCurve(
-                BondingCurve::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [167, 232, 232, 177, 200, 108, 114, 127] => Ok(PumpProgramState::Global(
-                Global::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
@@ -125,6 +123,7 @@ mod proto_parser {
                 real_sol_reserves: self.real_sol_reserves,
                 token_total_supply: self.token_total_supply,
                 complete: self.complete,
+                creator: self.creator.to_string(),
             }
         }
     }
@@ -140,6 +139,16 @@ mod proto_parser {
                 initial_real_token_reserves: self.initial_real_token_reserves,
                 token_total_supply: self.token_total_supply,
                 fee_basis_points: self.fee_basis_points,
+                withdraw_authority: self.withdraw_authority.to_string(),
+                enable_migrate: self.enable_migrate,
+                pool_migration_fee: self.pool_migration_fee,
+                creator_fee_basis_points: self.creator_fee_basis_points,
+                fee_recipients: self
+                    .fee_recipients
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+                set_creator_authority: self.set_creator_authority.to_string(),
             }
         }
     }

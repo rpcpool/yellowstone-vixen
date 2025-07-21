@@ -5,11 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{AmmConfig, AmmInfo, TargetOrders},
-    ID,
+    deserialize_checked, ID,
 };
 
 /// RaydiumAmmV4 Program State
@@ -30,15 +28,18 @@ impl RaydiumAmmV4ProgramState {
         const AMMCONFIG_LEN: usize = std::mem::size_of::<AmmConfig>();
 
         let acc = match data_len {
-            TARGETORDERS_LEN => Ok(RaydiumAmmV4ProgramState::TargetOrders(
-                TargetOrders::try_from_slice(data_bytes)?,
-            )),
-            AMMINFO_LEN => Ok(RaydiumAmmV4ProgramState::AmmInfo(AmmInfo::try_from_slice(
+            TARGETORDERS_LEN => Ok(RaydiumAmmV4ProgramState::TargetOrders(deserialize_checked(
                 data_bytes,
+                &data_len.to_le_bytes(),
             )?)),
-            AMMCONFIG_LEN => Ok(RaydiumAmmV4ProgramState::AmmConfig(
-                AmmConfig::try_from_slice(data_bytes)?,
-            )),
+            AMMINFO_LEN => Ok(RaydiumAmmV4ProgramState::AmmInfo(deserialize_checked(
+                data_bytes,
+                &data_len.to_le_bytes(),
+            )?)),
+            AMMCONFIG_LEN => Ok(RaydiumAmmV4ProgramState::AmmConfig(deserialize_checked(
+                data_bytes,
+                &data_len.to_le_bytes(),
+            )?)),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account data length".to_owned(),
             )),

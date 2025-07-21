@@ -5,9 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
-use crate::{accounts::TokenLedger, ID};
+use crate::{accounts::TokenLedger, deserialize_checked, ID};
 
 /// Jupiter Program State
 #[allow(clippy::large_enum_variant)]
@@ -22,7 +20,7 @@ impl JupiterProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [156, 247, 9, 188, 54, 108, 85, 77] => Ok(JupiterProgramState::TokenLedger(
-                TokenLedger::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),

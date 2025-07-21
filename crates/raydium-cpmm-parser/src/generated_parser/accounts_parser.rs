@@ -5,11 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{AmmConfig, ObservationState, PoolState},
-    ID,
+    deserialize_checked, ID,
 };
 
 /// RaydiumCpSwap Program State
@@ -27,15 +25,15 @@ impl RaydiumCpSwapProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [218, 244, 33, 104, 203, 203, 43, 111] => Ok(RaydiumCpSwapProgramState::AmmConfig(
-                AmmConfig::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [122, 174, 197, 53, 129, 9, 165, 132] => {
                 Ok(RaydiumCpSwapProgramState::ObservationState(
-                    ObservationState::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [247, 237, 227, 245, 215, 195, 222, 70] => Ok(RaydiumCpSwapProgramState::PoolState(
-                PoolState::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),

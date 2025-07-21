@@ -13,9 +13,7 @@ use solana_pubkey::Pubkey;
 pub struct SetParams {
     pub global: solana_pubkey::Pubkey,
 
-    pub user: solana_pubkey::Pubkey,
-
-    pub system_program: solana_pubkey::Pubkey,
+    pub authority: solana_pubkey::Pubkey,
 
     pub event_authority: solana_pubkey::Pubkey,
 
@@ -34,13 +32,9 @@ impl SetParams {
         args: SetParamsInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(self.global, false));
-        accounts.push(solana_instruction::AccountMeta::new(self.user, true));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.system_program,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.authority, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
@@ -71,7 +65,7 @@ pub struct SetParamsInstructionData {
 impl SetParamsInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [165, 31, 134, 53, 189, 180, 130, 255],
+            discriminator: [27, 234, 178, 52, 147, 2, 187, 141],
         }
     }
 }
@@ -83,12 +77,16 @@ impl Default for SetParamsInstructionData {
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SetParamsInstructionArgs {
-    pub fee_recipient: Pubkey,
     pub initial_virtual_token_reserves: u64,
     pub initial_virtual_sol_reserves: u64,
     pub initial_real_token_reserves: u64,
     pub token_total_supply: u64,
     pub fee_basis_points: u64,
+    pub withdraw_authority: Pubkey,
+    pub enable_migrate: bool,
+    pub pool_migration_fee: u64,
+    pub creator_fee_basis_points: u64,
+    pub set_creator_authority: Pubkey,
 }
 
 /// Instruction builder for `SetParams`.
@@ -96,23 +94,25 @@ pub struct SetParamsInstructionArgs {
 /// ### Accounts:
 ///
 ///   0. `[writable]` global
-///   1. `[writable, signer]` user
-///   2. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   3. `[optional]` event_authority (default to `Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1`)
-///   4. `[optional]` program (default to `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`)
+///   1. `[writable, signer]` authority
+///   2. `[]` event_authority
+///   3. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct SetParamsBuilder {
     global: Option<solana_pubkey::Pubkey>,
-    user: Option<solana_pubkey::Pubkey>,
-    system_program: Option<solana_pubkey::Pubkey>,
+    authority: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
-    fee_recipient: Option<Pubkey>,
     initial_virtual_token_reserves: Option<u64>,
     initial_virtual_sol_reserves: Option<u64>,
     initial_real_token_reserves: Option<u64>,
     token_total_supply: Option<u64>,
     fee_basis_points: Option<u64>,
+    withdraw_authority: Option<Pubkey>,
+    enable_migrate: Option<bool>,
+    pool_migration_fee: Option<u64>,
+    creator_fee_basis_points: Option<u64>,
+    set_creator_authority: Option<Pubkey>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -126,35 +126,20 @@ impl SetParamsBuilder {
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
-        self.user = Some(user);
+    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
+        self.authority = Some(authority);
         self
     }
 
-    /// `[optional account, default to '11111111111111111111111111111111']`
-    #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
-        self.system_program = Some(system_program);
-        self
-    }
-
-    /// `[optional account, default to 'Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1']`
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
-    /// `[optional account, default to '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P']`
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
-        self
-    }
-
-    #[inline(always)]
-    pub fn fee_recipient(&mut self, fee_recipient: Pubkey) -> &mut Self {
-        self.fee_recipient = Some(fee_recipient);
         self
     }
 
@@ -191,6 +176,36 @@ impl SetParamsBuilder {
         self
     }
 
+    #[inline(always)]
+    pub fn withdraw_authority(&mut self, withdraw_authority: Pubkey) -> &mut Self {
+        self.withdraw_authority = Some(withdraw_authority);
+        self
+    }
+
+    #[inline(always)]
+    pub fn enable_migrate(&mut self, enable_migrate: bool) -> &mut Self {
+        self.enable_migrate = Some(enable_migrate);
+        self
+    }
+
+    #[inline(always)]
+    pub fn pool_migration_fee(&mut self, pool_migration_fee: u64) -> &mut Self {
+        self.pool_migration_fee = Some(pool_migration_fee);
+        self
+    }
+
+    #[inline(always)]
+    pub fn creator_fee_basis_points(&mut self, creator_fee_basis_points: u64) -> &mut Self {
+        self.creator_fee_basis_points = Some(creator_fee_basis_points);
+        self
+    }
+
+    #[inline(always)]
+    pub fn set_creator_authority(&mut self, set_creator_authority: Pubkey) -> &mut Self {
+        self.set_creator_authority = Some(set_creator_authority);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
@@ -212,22 +227,11 @@ impl SetParamsBuilder {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = SetParams {
             global: self.global.expect("global is not set"),
-            user: self.user.expect("user is not set"),
-            system_program: self
-                .system_program
-                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
-            event_authority: self.event_authority.unwrap_or(solana_pubkey::pubkey!(
-                "Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1"
-            )),
-            program: self.program.unwrap_or(solana_pubkey::pubkey!(
-                "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
-            )),
+            authority: self.authority.expect("authority is not set"),
+            event_authority: self.event_authority.expect("event_authority is not set"),
+            program: self.program.expect("program is not set"),
         };
         let args = SetParamsInstructionArgs {
-            fee_recipient: self
-                .fee_recipient
-                .clone()
-                .expect("fee_recipient is not set"),
             initial_virtual_token_reserves: self
                 .initial_virtual_token_reserves
                 .clone()
@@ -248,6 +252,26 @@ impl SetParamsBuilder {
                 .fee_basis_points
                 .clone()
                 .expect("fee_basis_points is not set"),
+            withdraw_authority: self
+                .withdraw_authority
+                .clone()
+                .expect("withdraw_authority is not set"),
+            enable_migrate: self
+                .enable_migrate
+                .clone()
+                .expect("enable_migrate is not set"),
+            pool_migration_fee: self
+                .pool_migration_fee
+                .clone()
+                .expect("pool_migration_fee is not set"),
+            creator_fee_basis_points: self
+                .creator_fee_basis_points
+                .clone()
+                .expect("creator_fee_basis_points is not set"),
+            set_creator_authority: self
+                .set_creator_authority
+                .clone()
+                .expect("set_creator_authority is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -258,9 +282,7 @@ impl SetParamsBuilder {
 pub struct SetParamsCpiAccounts<'a, 'b> {
     pub global: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_account_info::AccountInfo<'a>,
-
-    pub system_program: &'b solana_account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
@@ -274,9 +296,7 @@ pub struct SetParamsCpi<'a, 'b> {
 
     pub global: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_account_info::AccountInfo<'a>,
-
-    pub system_program: &'b solana_account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
@@ -294,8 +314,7 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
         Self {
             __program: program,
             global: accounts.global,
-            user: accounts.user,
-            system_program: accounts.system_program,
+            authority: accounts.authority,
             event_authority: accounts.event_authority,
             program: accounts.program,
             __args: args,
@@ -331,15 +350,14 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
             *self.global.key,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new(*self.user.key, true));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.system_program.key,
-            false,
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.authority.key,
+            true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
@@ -365,11 +383,10 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(6 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(5 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.global.clone());
-        account_infos.push(self.user.clone());
-        account_infos.push(self.system_program.clone());
+        account_infos.push(self.authority.clone());
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
         remaining_accounts
@@ -389,10 +406,9 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
 /// ### Accounts:
 ///
 ///   0. `[writable]` global
-///   1. `[writable, signer]` user
-///   2. `[]` system_program
-///   3. `[]` event_authority
-///   4. `[]` program
+///   1. `[writable, signer]` authority
+///   2. `[]` event_authority
+///   3. `[]` program
 #[derive(Clone, Debug)]
 pub struct SetParamsCpiBuilder<'a, 'b> {
     instruction: Box<SetParamsCpiBuilderInstruction<'a, 'b>>,
@@ -403,16 +419,19 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
         let instruction = Box::new(SetParamsCpiBuilderInstruction {
             __program: program,
             global: None,
-            user: None,
-            system_program: None,
+            authority: None,
             event_authority: None,
             program: None,
-            fee_recipient: None,
             initial_virtual_token_reserves: None,
             initial_virtual_sol_reserves: None,
             initial_real_token_reserves: None,
             token_total_supply: None,
             fee_basis_points: None,
+            withdraw_authority: None,
+            enable_migrate: None,
+            pool_migration_fee: None,
+            creator_fee_basis_points: None,
+            set_creator_authority: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -425,17 +444,8 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.user = Some(user);
-        self
-    }
-
-    #[inline(always)]
-    pub fn system_program(
-        &mut self,
-        system_program: &'b solana_account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.system_program = Some(system_program);
+    pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.authority = Some(authority);
         self
     }
 
@@ -451,12 +461,6 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
-        self
-    }
-
-    #[inline(always)]
-    pub fn fee_recipient(&mut self, fee_recipient: Pubkey) -> &mut Self {
-        self.instruction.fee_recipient = Some(fee_recipient);
         self
     }
 
@@ -490,6 +494,36 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn fee_basis_points(&mut self, fee_basis_points: u64) -> &mut Self {
         self.instruction.fee_basis_points = Some(fee_basis_points);
+        self
+    }
+
+    #[inline(always)]
+    pub fn withdraw_authority(&mut self, withdraw_authority: Pubkey) -> &mut Self {
+        self.instruction.withdraw_authority = Some(withdraw_authority);
+        self
+    }
+
+    #[inline(always)]
+    pub fn enable_migrate(&mut self, enable_migrate: bool) -> &mut Self {
+        self.instruction.enable_migrate = Some(enable_migrate);
+        self
+    }
+
+    #[inline(always)]
+    pub fn pool_migration_fee(&mut self, pool_migration_fee: u64) -> &mut Self {
+        self.instruction.pool_migration_fee = Some(pool_migration_fee);
+        self
+    }
+
+    #[inline(always)]
+    pub fn creator_fee_basis_points(&mut self, creator_fee_basis_points: u64) -> &mut Self {
+        self.instruction.creator_fee_basis_points = Some(creator_fee_basis_points);
+        self
+    }
+
+    #[inline(always)]
+    pub fn set_creator_authority(&mut self, set_creator_authority: Pubkey) -> &mut Self {
+        self.instruction.set_creator_authority = Some(set_creator_authority);
         self
     }
 
@@ -532,11 +566,6 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program_entrypoint::ProgramResult {
         let args = SetParamsInstructionArgs {
-            fee_recipient: self
-                .instruction
-                .fee_recipient
-                .clone()
-                .expect("fee_recipient is not set"),
             initial_virtual_token_reserves: self
                 .instruction
                 .initial_virtual_token_reserves
@@ -562,18 +591,38 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
                 .fee_basis_points
                 .clone()
                 .expect("fee_basis_points is not set"),
+            withdraw_authority: self
+                .instruction
+                .withdraw_authority
+                .clone()
+                .expect("withdraw_authority is not set"),
+            enable_migrate: self
+                .instruction
+                .enable_migrate
+                .clone()
+                .expect("enable_migrate is not set"),
+            pool_migration_fee: self
+                .instruction
+                .pool_migration_fee
+                .clone()
+                .expect("pool_migration_fee is not set"),
+            creator_fee_basis_points: self
+                .instruction
+                .creator_fee_basis_points
+                .clone()
+                .expect("creator_fee_basis_points is not set"),
+            set_creator_authority: self
+                .instruction
+                .set_creator_authority
+                .clone()
+                .expect("set_creator_authority is not set"),
         };
         let instruction = SetParamsCpi {
             __program: self.instruction.__program,
 
             global: self.instruction.global.expect("global is not set"),
 
-            user: self.instruction.user.expect("user is not set"),
-
-            system_program: self
-                .instruction
-                .system_program
-                .expect("system_program is not set"),
+            authority: self.instruction.authority.expect("authority is not set"),
 
             event_authority: self
                 .instruction
@@ -594,16 +643,19 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
 struct SetParamsCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     global: Option<&'b solana_account_info::AccountInfo<'a>>,
-    user: Option<&'b solana_account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    fee_recipient: Option<Pubkey>,
     initial_virtual_token_reserves: Option<u64>,
     initial_virtual_sol_reserves: Option<u64>,
     initial_real_token_reserves: Option<u64>,
     token_total_supply: Option<u64>,
     fee_basis_points: Option<u64>,
+    withdraw_authority: Option<Pubkey>,
+    enable_migrate: Option<bool>,
+    pool_migration_fee: Option<u64>,
+    creator_fee_basis_points: Option<u64>,
+    set_creator_authority: Option<Pubkey>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

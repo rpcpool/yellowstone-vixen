@@ -5,11 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{Config, LockEscrow, Pool},
-    ID,
+    deserialize_checked, ID,
 };
 
 /// Amm Program State
@@ -26,15 +24,15 @@ impl AmmProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
-            [155, 12, 170, 224, 30, 250, 204, 130] => {
-                Ok(AmmProgramState::Config(Config::try_from_slice(data_bytes)?))
-            },
-            [190, 106, 121, 6, 200, 182, 21, 75] => Ok(AmmProgramState::LockEscrow(
-                LockEscrow::try_from_slice(data_bytes)?,
+            [155, 12, 170, 224, 30, 250, 204, 130] => Ok(AmmProgramState::Config(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
-            [241, 154, 109, 4, 17, 177, 109, 188] => {
-                Ok(AmmProgramState::Pool(Pool::try_from_slice(data_bytes)?))
-            },
+            [190, 106, 121, 6, 200, 182, 21, 75] => Ok(AmmProgramState::LockEscrow(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
+            [241, 154, 109, 4, 17, 177, 109, 188] => Ok(AmmProgramState::Pool(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),

@@ -5,14 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{
         AmmConfig, ObservationState, OperationState, PersonalPositionState, PoolState,
         ProtocolPositionState, TickArrayBitmapExtension, TickArrayState,
     },
-    ID,
+    deserialize_checked, ID,
 };
 
 /// AmmV3 Program State
@@ -35,31 +33,31 @@ impl AmmV3ProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [218, 244, 33, 104, 203, 203, 43, 111] => Ok(AmmV3ProgramState::AmmConfig(
-                AmmConfig::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [19, 236, 58, 237, 81, 222, 183, 252] => Ok(AmmV3ProgramState::OperationState(
-                OperationState::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [122, 174, 197, 53, 129, 9, 165, 132] => Ok(AmmV3ProgramState::ObservationState(
-                ObservationState::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [70, 111, 150, 126, 230, 15, 25, 117] => Ok(AmmV3ProgramState::PersonalPositionState(
-                PersonalPositionState::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [247, 237, 227, 245, 215, 195, 222, 70] => Ok(AmmV3ProgramState::PoolState(
-                PoolState::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [100, 226, 145, 99, 146, 218, 160, 106] => {
                 Ok(AmmV3ProgramState::ProtocolPositionState(
-                    ProtocolPositionState::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [192, 155, 85, 205, 49, 249, 129, 42] => Ok(AmmV3ProgramState::TickArrayState(
-                TickArrayState::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [60, 150, 36, 219, 97, 128, 139, 153] => {
                 Ok(AmmV3ProgramState::TickArrayBitmapExtension(
-                    TickArrayBitmapExtension::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(

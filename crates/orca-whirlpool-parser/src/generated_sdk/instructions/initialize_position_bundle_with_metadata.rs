@@ -13,7 +13,7 @@ pub struct InitializePositionBundleWithMetadata {
     pub position_bundle: solana_pubkey::Pubkey,
 
     pub position_bundle_mint: solana_pubkey::Pubkey,
-
+    /// https://github.com/metaplex-foundation/metaplex-program-library/blob/773a574c4b34e5b9f248a81306ec24db064e255f/token-metadata/program/src/utils/metadata.rs#L100
     pub position_bundle_metadata: solana_pubkey::Pubkey,
 
     pub position_bundle_token_account: solana_pubkey::Pubkey,
@@ -172,6 +172,7 @@ impl InitializePositionBundleWithMetadataBuilder {
         self
     }
 
+    /// https://github.com/metaplex-foundation/metaplex-program-library/blob/773a574c4b34e5b9f248a81306ec24db064e255f/token-metadata/program/src/utils/metadata.rs#L100
     #[inline(always)]
     pub fn position_bundle_metadata(
         &mut self,
@@ -311,7 +312,7 @@ pub struct InitializePositionBundleWithMetadataCpiAccounts<'a, 'b> {
     pub position_bundle: &'b solana_account_info::AccountInfo<'a>,
 
     pub position_bundle_mint: &'b solana_account_info::AccountInfo<'a>,
-
+    /// https://github.com/metaplex-foundation/metaplex-program-library/blob/773a574c4b34e5b9f248a81306ec24db064e255f/token-metadata/program/src/utils/metadata.rs#L100
     pub position_bundle_metadata: &'b solana_account_info::AccountInfo<'a>,
 
     pub position_bundle_token_account: &'b solana_account_info::AccountInfo<'a>,
@@ -341,7 +342,7 @@ pub struct InitializePositionBundleWithMetadataCpi<'a, 'b> {
     pub position_bundle: &'b solana_account_info::AccountInfo<'a>,
 
     pub position_bundle_mint: &'b solana_account_info::AccountInfo<'a>,
-
+    /// https://github.com/metaplex-foundation/metaplex-program-library/blob/773a574c4b34e5b9f248a81306ec24db064e255f/token-metadata/program/src/utils/metadata.rs#L100
     pub position_bundle_metadata: &'b solana_account_info::AccountInfo<'a>,
 
     pub position_bundle_token_account: &'b solana_account_info::AccountInfo<'a>,
@@ -561,6 +562,7 @@ impl<'a, 'b> InitializePositionBundleWithMetadataCpiBuilder<'a, 'b> {
         self
     }
 
+    /// https://github.com/metaplex-foundation/metaplex-program-library/blob/773a574c4b34e5b9f248a81306ec24db064e255f/token-metadata/program/src/utils/metadata.rs#L100
     #[inline(always)]
     pub fn position_bundle_metadata(
         &mut self,

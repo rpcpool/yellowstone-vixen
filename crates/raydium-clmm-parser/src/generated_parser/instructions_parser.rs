@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         ClosePosition as ClosePositionIxAccounts, CollectFundFee as CollectFundFeeIxAccounts,
         CollectFundFeeInstructionArgs as CollectFundFeeIxData,
@@ -169,7 +169,8 @@ impl InstructionParser {
                     amm_config: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateAmmConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CreateAmmConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::CreateAmmConfig(ix_accounts, de_ix_data))
             },
             [49, 60, 174, 136, 154, 28, 116, 200] => {
@@ -179,7 +180,8 @@ impl InstructionParser {
                     owner: next_account(accounts)?,
                     amm_config: next_account(accounts)?,
                 };
-                let de_ix_data: UpdateAmmConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: UpdateAmmConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::UpdateAmmConfig(ix_accounts, de_ix_data))
             },
             [233, 146, 209, 142, 207, 104, 64, 188] => {
@@ -200,7 +202,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                     rent: next_account(accounts)?,
                 };
-                let de_ix_data: CreatePoolIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CreatePoolIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::CreatePool(ix_accounts, de_ix_data))
             },
             [130, 87, 108, 6, 46, 224, 117, 123] => {
@@ -210,7 +212,8 @@ impl InstructionParser {
                     authority: next_account(accounts)?,
                     pool_state: next_account(accounts)?,
                 };
-                let de_ix_data: UpdatePoolStatusIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: UpdatePoolStatusIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::UpdatePoolStatus(ix_accounts, de_ix_data))
             },
             [63, 87, 148, 33, 109, 35, 8, 104] => {
@@ -232,7 +235,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateOperationAccountIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::UpdateOperationAccount(
                     ix_accounts,
                     de_ix_data,
@@ -246,7 +249,7 @@ impl InstructionParser {
                     pool_state: next_account(accounts)?,
                 };
                 let de_ix_data: TransferRewardOwnerIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::TransferRewardOwner(ix_accounts, de_ix_data))
             },
             [95, 135, 192, 196, 242, 129, 230, 68] => {
@@ -264,7 +267,8 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                     rent: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: InitializeRewardIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::InitializeReward(ix_accounts, de_ix_data))
             },
             [18, 237, 166, 197, 34, 16, 213, 144] => {
@@ -281,7 +285,7 @@ impl InstructionParser {
                     memo_program: next_account(accounts)?,
                 };
                 let de_ix_data: CollectRemainingRewardsIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::CollectRemainingRewards(
                     ix_accounts,
                     de_ix_data,
@@ -306,7 +310,8 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     token_program2022: next_account(accounts)?,
                 };
-                let de_ix_data: SetRewardParamsIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SetRewardParamsIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::SetRewardParams(ix_accounts, de_ix_data))
             },
             [136, 136, 252, 221, 194, 66, 126, 89] => {
@@ -326,7 +331,7 @@ impl InstructionParser {
                     token_program2022: next_account(accounts)?,
                 };
                 let de_ix_data: CollectProtocolFeeIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::CollectProtocolFee(ix_accounts, de_ix_data))
             },
             [167, 138, 78, 149, 223, 194, 6, 126] => {
@@ -345,7 +350,8 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     token_program2022: next_account(accounts)?,
                 };
-                let de_ix_data: CollectFundFeeIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CollectFundFeeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::CollectFundFee(ix_accounts, de_ix_data))
             },
             [135, 128, 47, 77, 15, 152, 240, 49] => {
@@ -372,7 +378,8 @@ impl InstructionParser {
                     associated_token_program: next_account(accounts)?,
                     metadata_program: next_account(accounts)?,
                 };
-                let de_ix_data: OpenPositionIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: OpenPositionIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::OpenPosition(ix_accounts, de_ix_data))
             },
             [77, 184, 74, 214, 112, 86, 241, 199] => {
@@ -402,7 +409,8 @@ impl InstructionParser {
                     vault0_mint: next_account(accounts)?,
                     vault1_mint: next_account(accounts)?,
                 };
-                let de_ix_data: OpenPositionV2IxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: OpenPositionV2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::OpenPositionV2(ix_accounts, de_ix_data))
             },
             [77, 255, 174, 82, 125, 29, 201, 46] => {
@@ -431,7 +439,7 @@ impl InstructionParser {
                     vault1_mint: next_account(accounts)?,
                 };
                 let de_ix_data: OpenPositionWithToken22NftIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::OpenPositionWithToken22Nft(
                     ix_accounts,
                     de_ix_data,
@@ -468,7 +476,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                 };
                 let de_ix_data: IncreaseLiquidityIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::IncreaseLiquidity(ix_accounts, de_ix_data))
             },
             [133, 29, 89, 223, 69, 238, 176, 10] => {
@@ -492,7 +500,7 @@ impl InstructionParser {
                     vault1_mint: next_account(accounts)?,
                 };
                 let de_ix_data: IncreaseLiquidityV2IxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::IncreaseLiquidityV2(ix_accounts, de_ix_data))
             },
             [160, 38, 208, 111, 104, 91, 44, 1] => {
@@ -513,7 +521,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                 };
                 let de_ix_data: DecreaseLiquidityIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::DecreaseLiquidity(ix_accounts, de_ix_data))
             },
             [58, 127, 188, 62, 79, 82, 196, 96] => {
@@ -538,7 +546,7 @@ impl InstructionParser {
                     vault1_mint: next_account(accounts)?,
                 };
                 let de_ix_data: DecreaseLiquidityV2IxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::DecreaseLiquidityV2(ix_accounts, de_ix_data))
             },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
@@ -556,7 +564,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     tick_array: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::Swap(ix_accounts, de_ix_data))
             },
             [43, 4, 237, 11, 26, 201, 30, 98] => {
@@ -577,7 +585,7 @@ impl InstructionParser {
                     input_vault_mint: next_account(accounts)?,
                     output_vault_mint: next_account(accounts)?,
                 };
-                let de_ix_data: SwapV2IxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SwapV2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::SwapV2(ix_accounts, de_ix_data))
             },
             [69, 125, 115, 218, 245, 186, 242, 196] => {
@@ -591,7 +599,8 @@ impl InstructionParser {
                     token_program2022: next_account(accounts)?,
                     memo_program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapRouterBaseInIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SwapRouterBaseInIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmV3ProgramIx::SwapRouterBaseIn(ix_accounts, de_ix_data))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(

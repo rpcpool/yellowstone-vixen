@@ -6,6 +6,10 @@
 //!
 
 pub(crate) mod r#accounts_type;
+pub(crate) mod r#adaptive_fee_constants;
+pub(crate) mod r#adaptive_fee_variables;
+pub(crate) mod r#dynamic_tick;
+pub(crate) mod r#dynamic_tick_data;
 pub(crate) mod r#lock_type;
 pub(crate) mod r#lock_type_label;
 pub(crate) mod r#position_reward_info;
@@ -15,7 +19,8 @@ pub(crate) mod r#tick;
 pub(crate) mod r#whirlpool_reward_info;
 
 pub use self::{
-    r#accounts_type::*, r#lock_type::*, r#lock_type_label::*, r#position_reward_info::*,
-    r#remaining_accounts_info::*, r#remaining_accounts_slice::*, r#tick::*,
-    r#whirlpool_reward_info::*,
+    r#accounts_type::*, r#adaptive_fee_constants::*, r#adaptive_fee_variables::*,
+    r#dynamic_tick::*, r#dynamic_tick_data::*, r#lock_type::*, r#lock_type_label::*,
+    r#position_reward_info::*, r#remaining_accounts_info::*, r#remaining_accounts_slice::*,
+    r#tick::*, r#whirlpool_reward_info::*,
 };

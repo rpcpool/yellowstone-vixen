@@ -6,6 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_pubkey::Pubkey;
 
 /// Accounts.
 #[derive(Debug)]
@@ -129,7 +130,7 @@ impl CreatePool {
         data.append(&mut args);
 
         solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         }
@@ -160,6 +161,7 @@ pub struct CreatePoolInstructionArgs {
     pub index: u16,
     pub base_amount_in: u64,
     pub quote_amount_in: u64,
+    pub coin_creator: Pubkey,
 }
 
 /// Instruction builder for `CreatePool`.
@@ -207,6 +209,7 @@ pub struct CreatePoolBuilder {
     index: Option<u16>,
     base_amount_in: Option<u64>,
     quote_amount_in: Option<u64>,
+    coin_creator: Option<Pubkey>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -360,6 +363,12 @@ impl CreatePoolBuilder {
         self
     }
 
+    #[inline(always)]
+    pub fn coin_creator(&mut self, coin_creator: Pubkey) -> &mut Self {
+        self.coin_creator = Some(coin_creator);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
@@ -429,6 +438,7 @@ impl CreatePoolBuilder {
                 .quote_amount_in
                 .clone()
                 .expect("quote_amount_in is not set"),
+            coin_creator: self.coin_creator.clone().expect("coin_creator is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -659,7 +669,7 @@ impl<'a, 'b> CreatePoolCpi<'a, 'b> {
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         };
@@ -747,6 +757,7 @@ impl<'a, 'b> CreatePoolCpiBuilder<'a, 'b> {
             index: None,
             base_amount_in: None,
             quote_amount_in: None,
+            coin_creator: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -917,6 +928,12 @@ impl<'a, 'b> CreatePoolCpiBuilder<'a, 'b> {
         self
     }
 
+    #[inline(always)]
+    pub fn coin_creator(&mut self, coin_creator: Pubkey) -> &mut Self {
+        self.instruction.coin_creator = Some(coin_creator);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -967,6 +984,11 @@ impl<'a, 'b> CreatePoolCpiBuilder<'a, 'b> {
                 .quote_amount_in
                 .clone()
                 .expect("quote_amount_in is not set"),
+            coin_creator: self
+                .instruction
+                .coin_creator
+                .clone()
+                .expect("coin_creator is not set"),
         };
         let instruction = CreatePoolCpi {
             __program: self.instruction.__program,
@@ -1075,6 +1097,7 @@ struct CreatePoolCpiBuilderInstruction<'a, 'b> {
     index: Option<u16>,
     base_amount_in: Option<u64>,
     quote_amount_in: Option<u64>,
+    coin_creator: Option<Pubkey>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

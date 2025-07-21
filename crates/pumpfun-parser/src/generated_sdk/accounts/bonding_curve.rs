@@ -6,6 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -17,10 +18,15 @@ pub struct BondingCurve {
     pub real_sol_reserves: u64,
     pub token_total_supply: u64,
     pub complete: bool,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub creator: Pubkey,
 }
 
 impl BondingCurve {
-    pub const LEN: usize = 49;
+    pub const LEN: usize = 81;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {

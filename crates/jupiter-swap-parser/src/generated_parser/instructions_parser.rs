@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         Claim as ClaimIxAccounts, ClaimInstructionArgs as ClaimIxData,
         ClaimToken as ClaimTokenIxAccounts, ClaimTokenInstructionArgs as ClaimTokenIxData,
@@ -140,7 +140,7 @@ impl InstructionParser {
                     program_authority: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: ClaimIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::Claim(ix_accounts, de_ix_data))
             },
             [116, 206, 27, 191, 166, 19, 0, 73] => {
@@ -157,7 +157,7 @@ impl InstructionParser {
                     associated_token_program: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimTokenIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: ClaimTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::ClaimToken(ix_accounts, de_ix_data))
             },
             [26, 74, 236, 151, 104, 64, 183, 249] => {
@@ -171,7 +171,7 @@ impl InstructionParser {
                     mint: next_account(accounts)?,
                     token_program: next_account(accounts)?,
                 };
-                let de_ix_data: CloseTokenIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CloseTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::CloseToken(ix_accounts, de_ix_data))
             },
             [229, 194, 212, 172, 8, 10, 134, 147] => {
@@ -200,7 +200,7 @@ impl InstructionParser {
                     market: next_account(accounts)?,
                 };
                 let de_ix_data: CreateProgramOpenOrdersIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::CreateProgramOpenOrders(
                     ix_accounts,
                     de_ix_data,
@@ -227,7 +227,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                 };
                 let de_ix_data: CreateTokenAccountIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::CreateTokenAccount(
                     ix_accounts,
                     de_ix_data,
@@ -249,7 +249,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: ExactOutRouteIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: ExactOutRouteIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::ExactOutRoute(ix_accounts, de_ix_data))
             },
             [229, 23, 203, 151, 122, 227, 173, 42] => {
@@ -266,7 +267,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: RouteIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: RouteIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::Route(ix_accounts, de_ix_data))
             },
             [150, 86, 71, 116, 167, 93, 14, 104] => {
@@ -285,7 +286,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: RouteWithTokenLedgerIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::RouteWithTokenLedger(
                     ix_accounts,
                     de_ix_data,
@@ -319,7 +320,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsExactOutRouteIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::SharedAccountsExactOutRoute(
                     ix_accounts,
                     de_ix_data,
@@ -344,7 +345,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsRouteIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::SharedAccountsRoute(
                     ix_accounts,
                     de_ix_data,
@@ -370,7 +371,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsRouteWithTokenLedgerIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::SharedAccountsRouteWithTokenLedger(
                     ix_accounts,
                     de_ix_data,

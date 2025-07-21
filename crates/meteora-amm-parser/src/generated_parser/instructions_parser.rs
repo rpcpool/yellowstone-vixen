@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         AddLiquidity as AddLiquidityIxAccounts, AddLiquidityInstructionArgs as AddLiquidityIxData,
         ClaimPartnerFee as ClaimPartnerFeeIxAccounts,
@@ -183,7 +183,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: AddLiquidityIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: AddLiquidityIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::AddLiquidity(ix_accounts, de_ix_data))
             },
             [97, 206, 39, 105, 94, 94, 126, 148] => {
@@ -204,7 +205,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimPartnerFeeIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: ClaimPartnerFeeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::ClaimPartnerFee(ix_accounts, de_ix_data))
             },
             [180, 38, 154, 17, 133, 33, 162, 211] => {
@@ -266,7 +268,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: ClaimRewardIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::ClaimReward(ix_accounts, de_ix_data))
             },
             [38, 134, 82, 216, 95, 124, 17, 99] => {
@@ -333,7 +336,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CreateConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::CreateConfig(ix_accounts, de_ix_data))
             },
             [81, 251, 122, 78, 66, 57, 208, 82] => {
@@ -347,7 +351,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: CreateDynamicConfigIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::CreateDynamicConfig(ix_accounts, de_ix_data))
             },
             [48, 215, 197, 153, 96, 203, 180, 133] => {
@@ -394,7 +398,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: FundRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: FundRewardIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::FundReward(ix_accounts, de_ix_data))
             },
             [20, 161, 241, 24, 189, 221, 180, 2] => {
@@ -422,7 +426,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeCustomizablePoolIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::InitializeCustomizablePool(
                     ix_accounts,
                     de_ix_data,
@@ -453,7 +457,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: InitializePoolIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: InitializePoolIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::InitializePool(ix_accounts, de_ix_data))
             },
             [149, 82, 72, 197, 253, 252, 68, 15] => {
@@ -483,7 +488,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePoolWithDynamicConfigIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::InitializePoolWithDynamicConfig(
                     ix_accounts,
                     de_ix_data,
@@ -503,7 +508,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeRewardIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: InitializeRewardIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::InitializeReward(ix_accounts, de_ix_data))
             },
             [227, 62, 2, 252, 247, 10, 171, 185] => {
@@ -520,7 +526,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: LockPositionIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: LockPositionIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::LockPosition(ix_accounts, de_ix_data))
             },
             [165, 176, 125, 6, 231, 171, 186, 213] => {
@@ -535,7 +542,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: PermanentLockPositionIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::PermanentLockPosition(
                     ix_accounts,
                     de_ix_data,
@@ -573,7 +580,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: RemoveAllLiquidityIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::RemoveAllLiquidity(ix_accounts, de_ix_data))
             },
             [80, 85, 209, 72, 24, 206, 177, 108] => {
@@ -596,7 +603,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: RemoveLiquidityIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: RemoveLiquidityIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::RemoveLiquidity(ix_accounts, de_ix_data))
             },
             [112, 87, 135, 223, 83, 204, 132, 53] => {
@@ -608,7 +616,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SetPoolStatusIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SetPoolStatusIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::SetPoolStatus(ix_accounts, de_ix_data))
             },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
@@ -630,7 +639,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::Swap(ix_accounts, de_ix_data))
             },
             [138, 174, 196, 169, 213, 235, 254, 107] => {
@@ -643,7 +652,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateRewardDurationIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::UpdateRewardDuration(
                     ix_accounts,
                     de_ix_data,
@@ -659,7 +668,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateRewardFunderIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::UpdateRewardFunder(ix_accounts, de_ix_data))
             },
             [148, 206, 42, 195, 247, 49, 103, 8] => {
@@ -677,7 +686,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: WithdrawIneligibleRewardIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::WithdrawIneligibleReward(
                     ix_accounts,
                     de_ix_data,

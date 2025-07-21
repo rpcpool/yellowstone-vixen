@@ -5,9 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
-use crate::{accounts::VirtualsPool, ID};
+use crate::{accounts::VirtualsPool, deserialize_checked, ID};
 
 /// VirtualsProgram Program State
 #[allow(clippy::large_enum_variant)]
@@ -22,7 +20,7 @@ impl VirtualsProgramProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [71, 118, 5, 203, 5, 98, 135, 116] => Ok(VirtualsProgramProgramState::VirtualsPool(
-                VirtualsPool::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),

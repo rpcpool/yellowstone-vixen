@@ -12,7 +12,7 @@ use crate::generated::types::{Bootstrapping, CurveType, Padding, PartnerInfo, Po
 
 /// State of pool account
 
-#[derive(BorshSerialize, Clone, Debug, Eq, PartialEq)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Pool {
     pub discriminator: [u8; 8],

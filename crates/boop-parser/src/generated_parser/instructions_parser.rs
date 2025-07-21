@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         AddOperators as AddOperatorsIxAccounts, AddOperatorsInstructionArgs as AddOperatorsIxData,
         BuyToken as BuyTokenIxAccounts, BuyTokenInstructionArgs as BuyTokenIxData,
@@ -165,7 +165,8 @@ impl InstructionParser {
                     authority: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: AddOperatorsIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: AddOperatorsIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::AddOperators(ix_accounts, de_ix_data))
             },
             [138, 127, 14, 91, 38, 87, 115, 105] => {
@@ -186,7 +187,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     associated_token_program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyTokenIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: BuyTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::BuyToken(ix_accounts, de_ix_data))
             },
             [94, 131, 125, 184, 183, 24, 125, 229] => {
@@ -330,7 +331,8 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     token_metadata_program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateTokenIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CreateTokenIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::CreateToken(ix_accounts, de_ix_data))
             },
             [253, 184, 126, 199, 235, 232, 172, 162] => {
@@ -347,7 +349,7 @@ impl InstructionParser {
                     token_metadata_program: next_account(accounts)?,
                 };
                 let de_ix_data: CreateTokenFallbackIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::CreateTokenFallback(ix_accounts, de_ix_data))
             },
             [180, 89, 199, 76, 168, 236, 217, 138] => {
@@ -366,7 +368,7 @@ impl InstructionParser {
                     associated_token_program: next_account(accounts)?,
                 };
                 let de_ix_data: DeployBondingCurveIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::DeployBondingCurve(ix_accounts, de_ix_data))
             },
             [53, 230, 172, 84, 77, 174, 22, 61] => {
@@ -385,7 +387,7 @@ impl InstructionParser {
                     associated_token_program: next_account(accounts)?,
                 };
                 let de_ix_data: DeployBondingCurveFallbackIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::DeployBondingCurveFallback(
                     ix_accounts,
                     de_ix_data,
@@ -418,7 +420,7 @@ impl InstructionParser {
                     token1_mint: next_account(accounts)?,
                 };
                 let de_ix_data: DepositIntoRaydiumIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::DepositIntoRaydium(ix_accounts, de_ix_data))
             },
             [45, 235, 225, 181, 17, 218, 64, 130] => {
@@ -451,7 +453,7 @@ impl InstructionParser {
                     authority: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: InitializeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::Initialize(ix_accounts, de_ix_data))
             },
             [210, 43, 101, 215, 119, 140, 106, 218] => {
@@ -463,7 +465,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitiateAuthorityTransferIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::InitiateAuthorityTransfer(
                     ix_accounts,
                     de_ix_data,
@@ -506,7 +508,8 @@ impl InstructionParser {
                     authority: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: RemoveOperatorsIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: RemoveOperatorsIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::RemoveOperators(ix_accounts, de_ix_data))
             },
             [109, 61, 40, 187, 230, 176, 135, 174] => {
@@ -526,7 +529,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     associated_token_program: next_account(accounts)?,
                 };
-                let de_ix_data: SellTokenIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SellTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::SellToken(ix_accounts, de_ix_data))
             },
             [96, 126, 225, 47, 185, 213, 50, 58] => {
@@ -582,7 +585,7 @@ impl InstructionParser {
                     observation_state: next_account(accounts)?,
                 };
                 let de_ix_data: SwapSolForTokensOnRaydiumIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::SwapSolForTokensOnRaydium(
                     ix_accounts,
                     de_ix_data,
@@ -610,7 +613,7 @@ impl InstructionParser {
                     observation_state: next_account(accounts)?,
                 };
                 let de_ix_data: SwapTokensForSolOnRaydiumIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::SwapTokensForSolOnRaydium(
                     ix_accounts,
                     de_ix_data,
@@ -633,7 +636,8 @@ impl InstructionParser {
                     authority: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: UpdateConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: UpdateConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::UpdateConfig(ix_accounts, de_ix_data))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(

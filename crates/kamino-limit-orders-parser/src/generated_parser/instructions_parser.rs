@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         CloseOrderAndClaimTip as CloseOrderAndClaimTipIxAccounts,
         CreateOrder as CreateOrderIxAccounts, CreateOrderInstructionArgs as CreateOrderIxData,
@@ -162,7 +162,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateOrderIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CreateOrderIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimoProgramIx::CreateOrder(ix_accounts, de_ix_data))
             },
             [244, 27, 12, 226, 45, 247, 230, 43] => {
@@ -212,7 +213,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: TakeOrderIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: TakeOrderIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimoProgramIx::TakeOrder(ix_accounts, de_ix_data))
             },
             [126, 53, 176, 15, 39, 103, 97, 243] => {
@@ -244,7 +245,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: FlashTakeOrderStartIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimoProgramIx::FlashTakeOrderStart(ix_accounts, de_ix_data))
             },
             [206, 242, 215, 187, 134, 33, 224, 148] => {
@@ -276,7 +277,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: FlashTakeOrderEndIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimoProgramIx::FlashTakeOrderEnd(ix_accounts, de_ix_data))
             },
             [164, 84, 130, 189, 111, 58, 250, 200] => {
@@ -287,7 +288,7 @@ impl InstructionParser {
                     global_config: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateGlobalConfigIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimoProgramIx::UpdateGlobalConfig(ix_accounts, de_ix_data))
             },
             [184, 87, 23, 193, 156, 238, 175, 119] => {
@@ -349,7 +350,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: LogUserSwapBalancesEndIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimoProgramIx::LogUserSwapBalancesEnd(
                     ix_accounts,
                     de_ix_data,

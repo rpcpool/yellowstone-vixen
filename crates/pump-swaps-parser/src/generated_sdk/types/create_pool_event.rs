@@ -58,4 +58,9 @@ pub struct CreatePoolEvent {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub user_quote_token_account: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub coin_creator: Pubkey,
 }

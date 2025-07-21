@@ -53,7 +53,7 @@ impl ExtendAccount {
         let data = borsh::to_vec(&ExtendAccountInstructionData::new()).unwrap();
 
         solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         }
@@ -268,7 +268,7 @@ impl<'a, 'b> ExtendAccountCpi<'a, 'b> {
         let data = borsh::to_vec(&ExtendAccountInstructionData::new()).unwrap();
 
         let instruction = solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         };

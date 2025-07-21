@@ -5,14 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{
         BinArray, BinArrayBitmapExtension, ClaimFeeOperator, LbPair, Oracle, Position, PositionV2,
         PresetParameter, PresetParameter2, TokenBadge,
     },
-    ID,
+    deserialize_checked, ID,
 };
 
 /// LbClmm Program State
@@ -37,34 +35,34 @@ impl LbClmmProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [80, 111, 124, 113, 55, 237, 18, 5] => Ok(LbClmmProgramState::BinArrayBitmapExtension(
-                BinArrayBitmapExtension::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [92, 142, 92, 220, 5, 148, 70, 181] => Ok(LbClmmProgramState::BinArray(
-                BinArray::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [166, 48, 134, 86, 34, 200, 188, 150] => Ok(LbClmmProgramState::ClaimFeeOperator(
-                ClaimFeeOperator::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [33, 11, 49, 98, 181, 101, 177, 13] => Ok(LbClmmProgramState::LbPair(
-                LbPair::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [139, 194, 131, 179, 140, 179, 229, 244] => Ok(LbClmmProgramState::Oracle(
-                Oracle::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [170, 188, 143, 228, 122, 64, 247, 208] => Ok(LbClmmProgramState::Position(
-                Position::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [117, 176, 212, 199, 245, 180, 133, 182] => Ok(LbClmmProgramState::PositionV2(
-                PositionV2::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [171, 236, 148, 115, 162, 113, 222, 174] => Ok(LbClmmProgramState::PresetParameter2(
-                PresetParameter2::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [242, 62, 244, 34, 181, 112, 58, 170] => Ok(LbClmmProgramState::PresetParameter(
-                PresetParameter::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [116, 219, 204, 229, 249, 116, 255, 150] => Ok(LbClmmProgramState::TokenBadge(
-                TokenBadge::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
@@ -246,8 +244,10 @@ mod proto_parser {
                 length: self.length,
                 observations: self
                     .observations
-                    .into_iter()
-                    .map(IntoProto::into_proto)
+                    .iter()
+                    .map(|x| proto_def::RepeatedUint32Row {
+                        rows: x.iter().map(|x| *x as u32).collect(),
+                    })
                     .collect(),
             }
         }

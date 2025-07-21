@@ -29,4 +29,14 @@ pub struct CreateEvent {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub user: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub creator: Pubkey,
+    pub timestamp: i64,
+    pub virtual_token_reserves: u64,
+    pub virtual_sol_reserves: u64,
+    pub real_token_reserves: u64,
+    pub token_total_supply: u64,
 }

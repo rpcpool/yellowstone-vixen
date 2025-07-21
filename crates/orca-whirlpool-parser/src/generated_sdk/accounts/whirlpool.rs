@@ -21,7 +21,7 @@ pub struct Whirlpool {
     pub whirlpools_config: Pubkey,
     pub whirlpool_bump: [u8; 1],
     pub tick_spacing: u16,
-    pub tick_spacing_seed: [u8; 2],
+    pub fee_tier_index_seed: [u8; 2],
     pub fee_rate: u16,
     pub protocol_fee_rate: u16,
     pub liquidity: u128,

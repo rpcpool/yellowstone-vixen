@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         BuyExactIn as BuyExactInIxAccounts, BuyExactInInstructionArgs as BuyExactInIxData,
         BuyExactOut as BuyExactOutIxAccounts, BuyExactOutInstructionArgs as BuyExactOutIxData,
@@ -143,7 +143,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyExactInIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: BuyExactInIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::BuyExactIn(
                     ix_accounts,
                     de_ix_data,
@@ -169,7 +169,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyExactOutIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: BuyExactOutIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::BuyExactOut(
                     ix_accounts,
                     de_ix_data,
@@ -252,7 +253,8 @@ impl InstructionParser {
                     migrate_to_cpswap_wallet: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CreateConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::CreateConfig(
                     ix_accounts,
                     de_ix_data,
@@ -269,7 +271,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                 };
                 let de_ix_data: CreatePlatformConfigIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::CreatePlatformConfig(
                     ix_accounts,
                     de_ix_data,
@@ -286,7 +288,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                 };
                 let de_ix_data: CreateVestingAccountIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::CreateVestingAccount(
                     ix_accounts,
                     de_ix_data,
@@ -315,7 +317,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: InitializeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::Initialize(
                     ix_accounts,
                     de_ix_data,
@@ -358,7 +360,8 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                     rent_program: next_account(accounts)?,
                 };
-                let de_ix_data: MigrateToAmmIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: MigrateToAmmIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::MigrateToAmm(
                     ix_accounts,
                     de_ix_data,
@@ -419,7 +422,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SellExactInIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SellExactInIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::SellExactIn(
                     ix_accounts,
                     de_ix_data,
@@ -445,7 +449,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SellExactOutIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SellExactOutIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::SellExactOut(
                     ix_accounts,
                     de_ix_data,
@@ -458,7 +463,8 @@ impl InstructionParser {
                     owner: next_account(accounts)?,
                     global_config: next_account(accounts)?,
                 };
-                let de_ix_data: UpdateConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: UpdateConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::UpdateConfig(
                     ix_accounts,
                     de_ix_data,
@@ -472,7 +478,7 @@ impl InstructionParser {
                     platform_config: next_account(accounts)?,
                 };
                 let de_ix_data: UpdatePlatformConfigIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::UpdatePlatformConfig(
                     ix_accounts,
                     de_ix_data,

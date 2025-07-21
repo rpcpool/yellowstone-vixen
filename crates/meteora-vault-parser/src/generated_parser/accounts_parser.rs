@@ -5,11 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{Strategy, Vault},
-    ID,
+    deserialize_checked, ID,
 };
 
 /// Vault Program State
@@ -25,11 +23,11 @@ impl VaultProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
-            [211, 8, 232, 43, 2, 152, 117, 119] => {
-                Ok(VaultProgramState::Vault(Vault::try_from_slice(data_bytes)?))
-            },
+            [211, 8, 232, 43, 2, 152, 117, 119] => Ok(VaultProgramState::Vault(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             [174, 110, 39, 119, 82, 106, 169, 102] => Ok(VaultProgramState::Strategy(
-                Strategy::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),

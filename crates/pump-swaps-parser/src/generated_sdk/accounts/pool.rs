@@ -44,12 +44,17 @@ pub struct Pool {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub pool_quote_token_account: Pubkey,
-    /// True circulating supply without burns andlock-ups
+    /// True circulating supply without burns and lock-ups
     pub lp_supply: u64,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub coin_creator: Pubkey,
 }
 
 impl Pool {
-    pub const LEN: usize = 211;
+    pub const LEN: usize = 243;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -149,7 +154,7 @@ impl anchor_lang::AccountSerialize for Pool {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Pool {
-    fn owner() -> Pubkey { crate::PUMP_SWAP_ID }
+    fn owner() -> Pubkey { crate::PUMP_AMM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

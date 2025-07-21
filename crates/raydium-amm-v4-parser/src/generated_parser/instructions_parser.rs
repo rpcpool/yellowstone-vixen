@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         AdminCancelOrders as AdminCancelOrdersIxAccounts,
         AdminCancelOrdersInstructionArgs as AdminCancelOrdersIxData,
@@ -149,7 +149,7 @@ impl InstructionParser {
                     serum_market: next_account(accounts)?,
                     user_wallet: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: InitializeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::Initialize(ix_accounts, de_ix_data))
             },
             [1] => {
@@ -178,7 +178,8 @@ impl InstructionParser {
                     user_token_pc: next_account(accounts)?,
                     user_lp_token_account: next_account(accounts)?,
                 };
-                let de_ix_data: Initialize2IxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: Initialize2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::Initialize2(ix_accounts, de_ix_data))
             },
             [2] => {
@@ -205,7 +206,8 @@ impl InstructionParser {
                     serum_bids: next_account(accounts)?,
                     serum_asks: next_account(accounts)?,
                 };
-                let de_ix_data: MonitorStepIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: MonitorStepIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::MonitorStep(ix_accounts, de_ix_data))
             },
             [3] => {
@@ -227,7 +229,7 @@ impl InstructionParser {
                     user_owner: next_account(accounts)?,
                     serum_event_queue: next_account(accounts)?,
                 };
-                let de_ix_data: DepositIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: DepositIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [4] => {
@@ -257,7 +259,7 @@ impl InstructionParser {
                     serum_bids: next_account(accounts)?,
                     serum_asks: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: WithdrawIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             [5] => {
@@ -309,7 +311,7 @@ impl InstructionParser {
                     serum_asks: next_account(accounts)?,
                     amm_admin_account: next_account(accounts)?,
                 };
-                let de_ix_data: SetParamsIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SetParamsIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::SetParams(ix_accounts, de_ix_data))
             },
             [7] => {
@@ -347,7 +349,8 @@ impl InstructionParser {
                     srm_token: next_account(accounts)?,
                     dest_srm_token: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawSrmIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: WithdrawSrmIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::WithdrawSrm(ix_accounts, de_ix_data))
             },
             [9] => {
@@ -377,7 +380,7 @@ impl InstructionParser {
                     uer_destination_token_account: next_account(accounts)?,
                     user_source_owner: next_account(accounts)?,
                 };
-                let de_ix_data: SwapBaseInIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SwapBaseInIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::SwapBaseIn(ix_accounts, de_ix_data))
             },
             [10] => {
@@ -399,7 +402,8 @@ impl InstructionParser {
                     serum_market: next_account(accounts)?,
                     user_wallet: next_account(accounts)?,
                 };
-                let de_ix_data: PreInitializeIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: PreInitializeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::PreInitialize(
                     ix_accounts,
                     de_ix_data,
@@ -432,7 +436,8 @@ impl InstructionParser {
                     uer_destination_token_account: next_account(accounts)?,
                     user_source_owner: next_account(accounts)?,
                 };
-                let de_ix_data: SwapBaseOutIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SwapBaseOutIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::SwapBaseOut(ix_accounts, de_ix_data))
             },
             [12] => {
@@ -448,7 +453,8 @@ impl InstructionParser {
                     serum_market: next_account(accounts)?,
                     serum_event_queue: next_account(accounts)?,
                 };
-                let de_ix_data: SimulateInfoIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SimulateInfoIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::SimulateInfo(ix_accounts, de_ix_data))
             },
             [13] => {
@@ -474,7 +480,7 @@ impl InstructionParser {
                     serum_asks: next_account(accounts)?,
                 };
                 let de_ix_data: AdminCancelOrdersIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::AdminCancelOrders(
                     ix_accounts,
                     de_ix_data,
@@ -500,7 +506,7 @@ impl InstructionParser {
                     amm_config: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateConfigAccountIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumAmmV4ProgramIx::UpdateConfigAccount(
                     ix_accounts,
                     de_ix_data,

@@ -28,7 +28,7 @@ pub struct Buy {
 
     pub token_program: solana_pubkey::Pubkey,
 
-    pub rent: solana_pubkey::Pubkey,
+    pub creator_vault: solana_pubkey::Pubkey,
 
     pub event_authority: solana_pubkey::Pubkey,
 
@@ -80,8 +80,9 @@ impl Buy {
             self.token_program,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.rent, false,
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.creator_vault,
+            false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
@@ -142,9 +143,9 @@ pub struct BuyInstructionArgs {
 ///   6. `[writable, signer]` user
 ///   7. `[optional]` system_program (default to `11111111111111111111111111111111`)
 ///   8. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   9. `[optional]` rent (default to `SysvarRent111111111111111111111111111111111`)
-///   10. `[optional]` event_authority (default to `Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1`)
-///   11. `[optional]` program (default to `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`)
+///   9. `[writable]` creator_vault
+///   10. `[]` event_authority
+///   11. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct BuyBuilder {
     global: Option<solana_pubkey::Pubkey>,
@@ -156,7 +157,7 @@ pub struct BuyBuilder {
     user: Option<solana_pubkey::Pubkey>,
     system_program: Option<solana_pubkey::Pubkey>,
     token_program: Option<solana_pubkey::Pubkey>,
-    rent: Option<solana_pubkey::Pubkey>,
+    creator_vault: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
     amount: Option<u64>,
@@ -226,21 +227,18 @@ impl BuyBuilder {
         self
     }
 
-    /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
-        self.rent = Some(rent);
+    pub fn creator_vault(&mut self, creator_vault: solana_pubkey::Pubkey) -> &mut Self {
+        self.creator_vault = Some(creator_vault);
         self
     }
 
-    /// `[optional account, default to 'Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1']`
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
-    /// `[optional account, default to '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P']`
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
@@ -294,15 +292,9 @@ impl BuyBuilder {
             token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
-            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
-                "SysvarRent111111111111111111111111111111111"
-            )),
-            event_authority: self.event_authority.unwrap_or(solana_pubkey::pubkey!(
-                "Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1"
-            )),
-            program: self.program.unwrap_or(solana_pubkey::pubkey!(
-                "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
-            )),
+            creator_vault: self.creator_vault.expect("creator_vault is not set"),
+            event_authority: self.event_authority.expect("event_authority is not set"),
+            program: self.program.expect("program is not set"),
         };
         let args = BuyInstructionArgs {
             amount: self.amount.clone().expect("amount is not set"),
@@ -333,7 +325,7 @@ pub struct BuyCpiAccounts<'a, 'b> {
 
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_account_info::AccountInfo<'a>,
+    pub creator_vault: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
@@ -363,7 +355,7 @@ pub struct BuyCpi<'a, 'b> {
 
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_account_info::AccountInfo<'a>,
+    pub creator_vault: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
@@ -389,7 +381,7 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
             user: accounts.user,
             system_program: accounts.system_program,
             token_program: accounts.token_program,
-            rent: accounts.rent,
+            creator_vault: accounts.creator_vault,
             event_authority: accounts.event_authority,
             program: accounts.program,
             __args: args,
@@ -459,8 +451,8 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.rent.key,
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.creator_vault.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -498,7 +490,7 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
         account_infos.push(self.user.clone());
         account_infos.push(self.system_program.clone());
         account_infos.push(self.token_program.clone());
-        account_infos.push(self.rent.clone());
+        account_infos.push(self.creator_vault.clone());
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
         remaining_accounts
@@ -526,7 +518,7 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
 ///   6. `[writable, signer]` user
 ///   7. `[]` system_program
 ///   8. `[]` token_program
-///   9. `[]` rent
+///   9. `[writable]` creator_vault
 ///   10. `[]` event_authority
 ///   11. `[]` program
 #[derive(Clone, Debug)]
@@ -547,7 +539,7 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
             user: None,
             system_program: None,
             token_program: None,
-            rent: None,
+            creator_vault: None,
             event_authority: None,
             program: None,
             amount: None,
@@ -630,8 +622,11 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.rent = Some(rent);
+    pub fn creator_vault(
+        &mut self,
+        creator_vault: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.creator_vault = Some(creator_vault);
         self
     }
 
@@ -747,7 +742,10 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
                 .token_program
                 .expect("token_program is not set"),
 
-            rent: self.instruction.rent.expect("rent is not set"),
+            creator_vault: self
+                .instruction
+                .creator_vault
+                .expect("creator_vault is not set"),
 
             event_authority: self
                 .instruction
@@ -776,7 +774,7 @@ struct BuyCpiBuilderInstruction<'a, 'b> {
     user: Option<&'b solana_account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    creator_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
     amount: Option<u64>,

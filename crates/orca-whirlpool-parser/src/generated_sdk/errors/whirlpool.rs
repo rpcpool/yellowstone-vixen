@@ -190,6 +190,24 @@ pub enum WhirlpoolError {
     /// 6059 - Operation not allowed on locked position
     #[error("Operation not allowed on locked position")]
     OperationNotAllowedOnLockedPosition = 0x17ab,
+    /// 6060 - Cannot reset position range with same tick range
+    #[error("Cannot reset position range with same tick range")]
+    SameTickRangeNotAllowed = 0x17ac,
+    /// 6061 - Invalid adaptive fee constants
+    #[error("Invalid adaptive fee constants")]
+    InvalidAdaptiveFeeConstants = 0x17ad,
+    /// 6062 - Invalid fee tier index
+    #[error("Invalid fee tier index")]
+    InvalidFeeTierIndex = 0x17ae,
+    /// 6063 - Invalid trade enable timestamp
+    #[error("Invalid trade enable timestamp")]
+    InvalidTradeEnableTimestamp = 0x17af,
+    /// 6064 - Trade is not enabled yet
+    #[error("Trade is not enabled yet")]
+    TradeIsNotEnabled = 0x17b0,
+    /// 6065 - Rent calculation error
+    #[error("Rent calculation error")]
+    RentCalculationError = 0x17b1,
 }
 
 impl solana_program_error::PrintProgramError for WhirlpoolError {

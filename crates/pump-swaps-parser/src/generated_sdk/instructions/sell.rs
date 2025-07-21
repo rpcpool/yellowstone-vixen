@@ -43,6 +43,10 @@ pub struct Sell {
     pub event_authority: solana_pubkey::Pubkey,
 
     pub program: solana_pubkey::Pubkey,
+
+    pub coin_creator_vault_ata: solana_pubkey::Pubkey,
+
+    pub coin_creator_vault_authority: solana_pubkey::Pubkey,
 }
 
 impl Sell {
@@ -57,7 +61,7 @@ impl Sell {
         args: SellInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(17 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(19 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.pool, false,
         ));
@@ -122,13 +126,21 @@ impl Sell {
             self.program,
             false,
         ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.coin_creator_vault_ata,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.coin_creator_vault_authority,
+            false,
+        ));
         accounts.extend_from_slice(remaining_accounts);
         let mut data = borsh::to_vec(&SellInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         }
@@ -181,6 +193,8 @@ pub struct SellInstructionArgs {
 ///   14. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   15. `[]` event_authority
 ///   16. `[]` program
+///   17. `[writable]` coin_creator_vault_ata
+///   18. `[]` coin_creator_vault_authority
 #[derive(Clone, Debug, Default)]
 pub struct SellBuilder {
     pool: Option<solana_pubkey::Pubkey>,
@@ -200,6 +214,8 @@ pub struct SellBuilder {
     associated_token_program: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
+    coin_creator_vault_ata: Option<solana_pubkey::Pubkey>,
+    coin_creator_vault_authority: Option<solana_pubkey::Pubkey>,
     base_amount_in: Option<u64>,
     min_quote_amount_out: Option<u64>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
@@ -334,6 +350,24 @@ impl SellBuilder {
     }
 
     #[inline(always)]
+    pub fn coin_creator_vault_ata(
+        &mut self,
+        coin_creator_vault_ata: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.coin_creator_vault_ata = Some(coin_creator_vault_ata);
+        self
+    }
+
+    #[inline(always)]
+    pub fn coin_creator_vault_authority(
+        &mut self,
+        coin_creator_vault_authority: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.coin_creator_vault_authority = Some(coin_creator_vault_authority);
+        self
+    }
+
+    #[inline(always)]
     pub fn base_amount_in(&mut self, base_amount_in: u64) -> &mut Self {
         self.base_amount_in = Some(base_amount_in);
         self
@@ -402,6 +436,12 @@ impl SellBuilder {
             ),
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
+            coin_creator_vault_ata: self
+                .coin_creator_vault_ata
+                .expect("coin_creator_vault_ata is not set"),
+            coin_creator_vault_authority: self
+                .coin_creator_vault_authority
+                .expect("coin_creator_vault_authority is not set"),
         };
         let args = SellInstructionArgs {
             base_amount_in: self
@@ -453,6 +493,10 @@ pub struct SellCpiAccounts<'a, 'b> {
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
+
+    pub coin_creator_vault_ata: &'b solana_account_info::AccountInfo<'a>,
+
+    pub coin_creator_vault_authority: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `sell` CPI instruction.
@@ -493,6 +537,10 @@ pub struct SellCpi<'a, 'b> {
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
+
+    pub coin_creator_vault_ata: &'b solana_account_info::AccountInfo<'a>,
+
+    pub coin_creator_vault_authority: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: SellInstructionArgs,
 }
@@ -522,6 +570,8 @@ impl<'a, 'b> SellCpi<'a, 'b> {
             associated_token_program: accounts.associated_token_program,
             event_authority: accounts.event_authority,
             program: accounts.program,
+            coin_creator_vault_ata: accounts.coin_creator_vault_ata,
+            coin_creator_vault_authority: accounts.coin_creator_vault_authority,
             __args: args,
         }
     }
@@ -555,7 +605,7 @@ impl<'a, 'b> SellCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(17 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(19 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool.key,
             false,
@@ -621,6 +671,14 @@ impl<'a, 'b> SellCpi<'a, 'b> {
             *self.program.key,
             false,
         ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.coin_creator_vault_ata.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.coin_creator_vault_authority.key,
+            false,
+        ));
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
@@ -633,11 +691,11 @@ impl<'a, 'b> SellCpi<'a, 'b> {
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(18 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(20 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.pool.clone());
         account_infos.push(self.user.clone());
@@ -656,6 +714,8 @@ impl<'a, 'b> SellCpi<'a, 'b> {
         account_infos.push(self.associated_token_program.clone());
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
+        account_infos.push(self.coin_creator_vault_ata.clone());
+        account_infos.push(self.coin_creator_vault_authority.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -689,6 +749,8 @@ impl<'a, 'b> SellCpi<'a, 'b> {
 ///   14. `[]` associated_token_program
 ///   15. `[]` event_authority
 ///   16. `[]` program
+///   17. `[writable]` coin_creator_vault_ata
+///   18. `[]` coin_creator_vault_authority
 #[derive(Clone, Debug)]
 pub struct SellCpiBuilder<'a, 'b> {
     instruction: Box<SellCpiBuilderInstruction<'a, 'b>>,
@@ -715,6 +777,8 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
             associated_token_program: None,
             event_authority: None,
             program: None,
+            coin_creator_vault_ata: None,
+            coin_creator_vault_authority: None,
             base_amount_in: None,
             min_quote_amount_out: None,
             __remaining_accounts: Vec::new(),
@@ -865,6 +929,24 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
+    pub fn coin_creator_vault_ata(
+        &mut self,
+        coin_creator_vault_ata: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.coin_creator_vault_ata = Some(coin_creator_vault_ata);
+        self
+    }
+
+    #[inline(always)]
+    pub fn coin_creator_vault_authority(
+        &mut self,
+        coin_creator_vault_authority: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.coin_creator_vault_authority = Some(coin_creator_vault_authority);
+        self
+    }
+
+    #[inline(always)]
     pub fn base_amount_in(&mut self, base_amount_in: u64) -> &mut Self {
         self.instruction.base_amount_in = Some(base_amount_in);
         self
@@ -998,6 +1080,16 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
                 .expect("event_authority is not set"),
 
             program: self.instruction.program.expect("program is not set"),
+
+            coin_creator_vault_ata: self
+                .instruction
+                .coin_creator_vault_ata
+                .expect("coin_creator_vault_ata is not set"),
+
+            coin_creator_vault_authority: self
+                .instruction
+                .coin_creator_vault_authority
+                .expect("coin_creator_vault_authority is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -1027,6 +1119,8 @@ struct SellCpiBuilderInstruction<'a, 'b> {
     associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    coin_creator_vault_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    coin_creator_vault_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     base_amount_in: Option<u64>,
     min_quote_amount_out: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.

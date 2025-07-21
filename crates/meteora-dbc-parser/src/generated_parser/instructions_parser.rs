@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         ClaimCreatorTradingFee as ClaimCreatorTradingFeeIxAccounts,
         ClaimCreatorTradingFeeInstructionArgs as ClaimCreatorTradingFeeIxData,
@@ -169,7 +169,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: ClaimCreatorTradingFeeIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DynamicBondingCurveProgramIx::ClaimCreatorTradingFee(
                     ix_accounts,
                     de_ix_data,
@@ -216,7 +216,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimTradingFeeIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: ClaimTradingFeeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DynamicBondingCurveProgramIx::ClaimTradingFee(
                     ix_accounts,
                     de_ix_data,
@@ -264,7 +265,8 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CreateConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DynamicBondingCurveProgramIx::CreateConfig(
                     ix_accounts,
                     de_ix_data,
@@ -303,7 +305,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: CreatePartnerMetadataIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DynamicBondingCurveProgramIx::CreatePartnerMetadata(
                     ix_accounts,
                     de_ix_data,
@@ -322,7 +324,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: CreateVirtualPoolMetadataIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DynamicBondingCurveProgramIx::CreateVirtualPoolMetadata(
                     ix_accounts,
                     de_ix_data,
@@ -369,7 +371,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeVirtualPoolWithSplTokenIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(
                     DynamicBondingCurveProgramIx::InitializeVirtualPoolWithSplToken(
                         ix_accounts,
@@ -397,7 +399,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeVirtualPoolWithToken2022IxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(
                     DynamicBondingCurveProgramIx::InitializeVirtualPoolWithToken2022(
                         ix_accounts,
@@ -606,7 +608,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DynamicBondingCurveProgramIx::Swap(ix_accounts, de_ix_data))
             },
             [20, 198, 202, 237, 235, 243, 183, 66] => {

@@ -17,7 +17,7 @@ pub struct OpenPositionWithMetadata {
     pub position: solana_pubkey::Pubkey,
 
     pub position_mint: solana_pubkey::Pubkey,
-
+    /// https://github.com/metaplex-foundation/mpl-token-metadata/blob/master/programs/token-metadata/program/src/utils/metadata.rs#L78
     pub position_metadata_account: solana_pubkey::Pubkey,
 
     pub position_token_account: solana_pubkey::Pubkey,
@@ -203,6 +203,7 @@ impl OpenPositionWithMetadataBuilder {
         self
     }
 
+    /// https://github.com/metaplex-foundation/mpl-token-metadata/blob/master/programs/token-metadata/program/src/utils/metadata.rs#L78
     #[inline(always)]
     pub fn position_metadata_account(
         &mut self,
@@ -376,7 +377,7 @@ pub struct OpenPositionWithMetadataCpiAccounts<'a, 'b> {
     pub position: &'b solana_account_info::AccountInfo<'a>,
 
     pub position_mint: &'b solana_account_info::AccountInfo<'a>,
-
+    /// https://github.com/metaplex-foundation/mpl-token-metadata/blob/master/programs/token-metadata/program/src/utils/metadata.rs#L78
     pub position_metadata_account: &'b solana_account_info::AccountInfo<'a>,
 
     pub position_token_account: &'b solana_account_info::AccountInfo<'a>,
@@ -408,7 +409,7 @@ pub struct OpenPositionWithMetadataCpi<'a, 'b> {
     pub position: &'b solana_account_info::AccountInfo<'a>,
 
     pub position_mint: &'b solana_account_info::AccountInfo<'a>,
-
+    /// https://github.com/metaplex-foundation/mpl-token-metadata/blob/master/programs/token-metadata/program/src/utils/metadata.rs#L78
     pub position_metadata_account: &'b solana_account_info::AccountInfo<'a>,
 
     pub position_token_account: &'b solana_account_info::AccountInfo<'a>,
@@ -652,6 +653,7 @@ impl<'a, 'b> OpenPositionWithMetadataCpiBuilder<'a, 'b> {
         self
     }
 
+    /// https://github.com/metaplex-foundation/mpl-token-metadata/blob/master/programs/token-metadata/program/src/utils/metadata.rs#L78
     #[inline(always)]
     pub fn position_metadata_account(
         &mut self,

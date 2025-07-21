@@ -75,9 +75,7 @@ impl Create {
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(self.metadata, false));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.user, false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.user, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
@@ -152,13 +150,13 @@ pub struct CreateInstructionArgs {
 ///   4. `[]` global
 ///   5. `[optional]` mpl_token_metadata (default to `metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s`)
 ///   6. `[writable]` metadata
-///   7. `[]` user
+///   7. `[writable, signer]` user
 ///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
 ///   9. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
 ///   10. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   11. `[optional]` rent (default to `SysvarRent111111111111111111111111111111111`)
-///   12. `[optional]` event_authority (default to `Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1`)
-///   13. `[optional]` program (default to `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`)
+///   12. `[]` event_authority
+///   13. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct CreateBuilder {
     mint: Option<solana_pubkey::Pubkey>,
@@ -268,14 +266,12 @@ impl CreateBuilder {
         self
     }
 
-    /// `[optional account, default to 'Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1']`
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
-    /// `[optional account, default to '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P']`
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
@@ -350,12 +346,8 @@ impl CreateBuilder {
             rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
-            event_authority: self.event_authority.unwrap_or(solana_pubkey::pubkey!(
-                "Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1"
-            )),
-            program: self.program.unwrap_or(solana_pubkey::pubkey!(
-                "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
-            )),
+            event_authority: self.event_authority.expect("event_authority is not set"),
+            program: self.program.expect("program is not set"),
         };
         let args = CreateInstructionArgs {
             name: self.name.clone().expect("name is not set"),
@@ -516,10 +508,7 @@ impl<'a, 'b> CreateCpi<'a, 'b> {
             *self.metadata.key,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.user.key,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(*self.user.key, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
@@ -599,7 +588,7 @@ impl<'a, 'b> CreateCpi<'a, 'b> {
 ///   4. `[]` global
 ///   5. `[]` mpl_token_metadata
 ///   6. `[writable]` metadata
-///   7. `[]` user
+///   7. `[writable, signer]` user
 ///   8. `[]` system_program
 ///   9. `[]` token_program
 ///   10. `[]` associated_token_program

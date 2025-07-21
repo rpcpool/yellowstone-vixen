@@ -7,5 +7,5 @@
 
 use solana_pubkey::{pubkey, Pubkey};
 
-/// `pump_swap` program ID.
-pub const PUMP_SWAP_ID: Pubkey = pubkey!("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA");
+/// `pump_amm` program ID.
+pub const PUMP_AMM_ID: Pubkey = pubkey!("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA");

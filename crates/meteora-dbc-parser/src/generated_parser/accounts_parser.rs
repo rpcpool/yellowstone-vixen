@@ -5,14 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{
         ClaimFeeOperator, Config, LockEscrow, MeteoraDammMigrationMetadata, MeteoraDammV2Metadata,
         PartnerMetadata, PoolConfig, VirtualPool, VirtualPoolMetadata,
     },
-    ID,
+    deserialize_checked, ID,
 };
 
 /// DynamicBondingCurve Program State
@@ -37,45 +35,46 @@ impl DynamicBondingCurveProgramState {
         let acc = match acc_discriminator {
             [166, 48, 134, 86, 34, 200, 188, 150] => {
                 Ok(DynamicBondingCurveProgramState::ClaimFeeOperator(
-                    ClaimFeeOperator::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [155, 12, 170, 224, 30, 250, 204, 130] => Ok(DynamicBondingCurveProgramState::Config(
-                Config::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [190, 106, 121, 6, 200, 182, 21, 75] => {
                 Ok(DynamicBondingCurveProgramState::LockEscrow(
-                    LockEscrow::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [17, 155, 141, 215, 207, 4, 133, 156] => Ok(
-                DynamicBondingCurveProgramState::MeteoraDammMigrationMetadata(
-                    MeteoraDammMigrationMetadata::try_from_slice(data_bytes)?,
-                ),
+                DynamicBondingCurveProgramState::MeteoraDammMigrationMetadata(deserialize_checked(
+                    data_bytes,
+                    &acc_discriminator,
+                )?),
             ),
             [104, 221, 219, 203, 10, 142, 250, 163] => {
                 Ok(DynamicBondingCurveProgramState::MeteoraDammV2Metadata(
-                    MeteoraDammV2Metadata::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [68, 68, 130, 19, 16, 209, 98, 156] => {
                 Ok(DynamicBondingCurveProgramState::PartnerMetadata(
-                    PartnerMetadata::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [26, 108, 14, 123, 116, 230, 129, 43] => {
                 Ok(DynamicBondingCurveProgramState::PoolConfig(
-                    PoolConfig::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [213, 224, 5, 209, 98, 69, 119, 92] => {
                 Ok(DynamicBondingCurveProgramState::VirtualPool(
-                    VirtualPool::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [217, 37, 82, 250, 43, 47, 228, 254] => {
                 Ok(DynamicBondingCurveProgramState::VirtualPoolMetadata(
-                    VirtualPoolMetadata::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(

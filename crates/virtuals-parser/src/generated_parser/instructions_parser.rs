@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         Buy as BuyIxAccounts, BuyInstructionArgs as BuyIxData, ClaimFees as ClaimFeesIxAccounts,
         CreateMeteoraPool as CreateMeteoraPoolIxAccounts, Initialize as InitializeIxAccounts,
@@ -117,7 +117,7 @@ impl InstructionParser {
                     vpool_virtuals_ata: next_account(accounts)?,
                     token_program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: BuyIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VirtualsProgramProgramIx::Buy(ix_accounts, de_ix_data))
             },
             [82, 251, 233, 156, 12, 52, 184, 202] => {
@@ -276,7 +276,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                     rent: next_account(accounts)?,
                 };
-                let de_ix_data: LaunchIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: LaunchIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VirtualsProgramProgramIx::Launch(ix_accounts, de_ix_data))
             },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
@@ -294,7 +294,7 @@ impl InstructionParser {
                     vpool_virtuals_ata: next_account(accounts)?,
                     token_program: next_account(accounts)?,
                 };
-                let de_ix_data: SellIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SellIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VirtualsProgramProgramIx::Sell(ix_accounts, de_ix_data))
             },
             [113, 225, 166, 185, 94, 231, 96, 28] => {

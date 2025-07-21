@@ -5,11 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{GlobalConfig, PlatformConfig, PoolState, VestingRecord},
-    ID,
+    deserialize_checked, ID,
 };
 
 /// RaydiumLaunchpad Program State
@@ -29,20 +27,20 @@ impl RaydiumLaunchpadProgramState {
         let acc = match acc_discriminator {
             [149, 8, 156, 202, 160, 252, 176, 217] => {
                 Ok(RaydiumLaunchpadProgramState::GlobalConfig(
-                    GlobalConfig::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [160, 78, 128, 0, 248, 83, 230, 160] => {
                 Ok(RaydiumLaunchpadProgramState::PlatformConfig(
-                    PlatformConfig::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [247, 237, 227, 245, 215, 195, 222, 70] => Ok(RaydiumLaunchpadProgramState::PoolState(
-                PoolState::try_from_slice(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [106, 243, 221, 205, 230, 126, 85, 83] => {
                 Ok(RaydiumLaunchpadProgramState::VestingRecord(
-                    VestingRecord::try_from_slice(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(

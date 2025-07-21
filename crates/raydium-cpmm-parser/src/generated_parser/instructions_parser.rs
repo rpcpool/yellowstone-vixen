@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         CollectFundFee as CollectFundFeeIxAccounts,
         CollectFundFeeInstructionArgs as CollectFundFeeIxData,
@@ -123,7 +123,8 @@ impl InstructionParser {
                     amm_config: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateAmmConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CreateAmmConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::CreateAmmConfig(
                     ix_accounts,
                     de_ix_data,
@@ -136,7 +137,8 @@ impl InstructionParser {
                     owner: next_account(accounts)?,
                     amm_config: next_account(accounts)?,
                 };
-                let de_ix_data: UpdateAmmConfigIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: UpdateAmmConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::UpdateAmmConfig(
                     ix_accounts,
                     de_ix_data,
@@ -149,7 +151,8 @@ impl InstructionParser {
                     authority: next_account(accounts)?,
                     pool_state: next_account(accounts)?,
                 };
-                let de_ix_data: UpdatePoolStatusIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: UpdatePoolStatusIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::UpdatePoolStatus(
                     ix_accounts,
                     de_ix_data,
@@ -173,7 +176,7 @@ impl InstructionParser {
                     token_program2022: next_account(accounts)?,
                 };
                 let de_ix_data: CollectProtocolFeeIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::CollectProtocolFee(
                     ix_accounts,
                     de_ix_data,
@@ -196,7 +199,8 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     token_program2022: next_account(accounts)?,
                 };
-                let de_ix_data: CollectFundFeeIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: CollectFundFeeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::CollectFundFee(
                     ix_accounts,
                     de_ix_data,
@@ -227,7 +231,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                     rent: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: InitializeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::Initialize(ix_accounts, de_ix_data))
             },
             [242, 35, 198, 137, 82, 225, 242, 182] => {
@@ -248,7 +252,7 @@ impl InstructionParser {
                     vault1_mint: next_account(accounts)?,
                     lp_mint: next_account(accounts)?,
                 };
-                let de_ix_data: DepositIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: DepositIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [183, 18, 70, 156, 148, 109, 161, 34] => {
@@ -270,7 +274,7 @@ impl InstructionParser {
                     lp_mint: next_account(accounts)?,
                     memo_program: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: WithdrawIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             [143, 190, 90, 218, 196, 30, 51, 222] => {
@@ -291,7 +295,8 @@ impl InstructionParser {
                     output_token_mint: next_account(accounts)?,
                     observation_state: next_account(accounts)?,
                 };
-                let de_ix_data: SwapBaseInputIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SwapBaseInputIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::SwapBaseInput(
                     ix_accounts,
                     de_ix_data,
@@ -315,7 +320,8 @@ impl InstructionParser {
                     output_token_mint: next_account(accounts)?,
                     observation_state: next_account(accounts)?,
                 };
-                let de_ix_data: SwapBaseOutputIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: SwapBaseOutputIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::SwapBaseOutput(
                     ix_accounts,
                     de_ix_data,

@@ -31,10 +31,12 @@ pub struct GlobalConfig {
     pub disable_flags: u8,
     /// Addresses of the protocol fee recipients
     pub protocol_fee_recipients: [Pubkey; 8],
+    /// The coin creator fee in basis points (0.01%)
+    pub coin_creator_fee_basis_points: u64,
 }
 
 impl GlobalConfig {
-    pub const LEN: usize = 313;
+    pub const LEN: usize = 321;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -134,7 +136,7 @@ impl anchor_lang::AccountSerialize for GlobalConfig {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for GlobalConfig {
-    fn owner() -> Pubkey { crate::PUMP_SWAP_ID }
+    fn owner() -> Pubkey { crate::PUMP_AMM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

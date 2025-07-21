@@ -8,11 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         AddStrategy as AddStrategyIxAccounts, CollectDust as CollectDustIxAccounts,
         Deposit as DepositIxAccounts, DepositInstructionArgs as DepositIxData,
@@ -143,7 +143,8 @@ impl InstructionParser {
                     vault: next_account(accounts)?,
                     admin: next_account(accounts)?,
                 };
-                let de_ix_data: EnableVaultIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: EnableVaultIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VaultProgramIx::EnableVault(ix_accounts, de_ix_data))
             },
             [238, 153, 101, 169, 243, 131, 36, 1] => {
@@ -172,7 +173,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeStrategyIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VaultProgramIx::InitializeStrategy(ix_accounts, de_ix_data))
             },
             [185, 238, 33, 91, 134, 210, 97, 26] => {
@@ -209,7 +210,8 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     admin: next_account(accounts)?,
                 };
-                let de_ix_data: RemoveStrategy2IxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: RemoveStrategy2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VaultProgramIx::RemoveStrategy2(ix_accounts, de_ix_data))
             },
             [246, 149, 21, 82, 160, 74, 254, 240] => {
@@ -249,7 +251,8 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     operator: next_account(accounts)?,
                 };
-                let de_ix_data: DepositStrategyIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: DepositStrategyIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VaultProgramIx::DepositStrategy(ix_accounts, de_ix_data))
             },
             [31, 45, 162, 5, 193, 217, 134, 188] => {
@@ -267,7 +270,8 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     operator: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawStrategyIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: WithdrawStrategyIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VaultProgramIx::WithdrawStrategy(ix_accounts, de_ix_data))
             },
             [80, 6, 111, 73, 174, 211, 66, 132] => {
@@ -282,7 +286,7 @@ impl InstructionParser {
                     user: next_account(accounts)?,
                     token_program: next_account(accounts)?,
                 };
-                let de_ix_data: Withdraw2IxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: Withdraw2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VaultProgramIx::Withdraw2(ix_accounts, de_ix_data))
             },
             [242, 35, 198, 137, 82, 225, 242, 182] => {
@@ -297,7 +301,7 @@ impl InstructionParser {
                     user: next_account(accounts)?,
                     token_program: next_account(accounts)?,
                 };
-                let de_ix_data: DepositIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: DepositIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VaultProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [183, 18, 70, 156, 148, 109, 161, 34] => {
@@ -312,7 +316,7 @@ impl InstructionParser {
                     user: next_account(accounts)?,
                     token_program: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawIxData = BorshDeserialize::try_from_slice(ix_data)?;
+                let de_ix_data: WithdrawIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VaultProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             [201, 141, 146, 46, 173, 116, 198, 22] => {
@@ -333,7 +337,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                 };
                 let de_ix_data: WithdrawDirectlyFromStrategyIxData =
-                    BorshDeserialize::try_from_slice(ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(VaultProgramIx::WithdrawDirectlyFromStrategy(
                     ix_accounts,
                     de_ix_data,

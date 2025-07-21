@@ -12,6 +12,7 @@ use solana_pubkey::Pubkey;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Global {
     pub discriminator: [u8; 8],
+    /// Unused
     pub initialized: bool,
     #[cfg_attr(
         feature = "serde",
@@ -28,10 +29,25 @@ pub struct Global {
     pub initial_real_token_reserves: u64,
     pub token_total_supply: u64,
     pub fee_basis_points: u64,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub withdraw_authority: Pubkey,
+    /// Unused
+    pub enable_migrate: bool,
+    pub pool_migration_fee: u64,
+    pub creator_fee_basis_points: u64,
+    pub fee_recipients: [Pubkey; 7],
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub set_creator_authority: Pubkey,
 }
 
 impl Global {
-    pub const LEN: usize = 113;
+    pub const LEN: usize = 418;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {

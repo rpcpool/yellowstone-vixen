@@ -10,7 +10,7 @@ use solana_pubkey::Pubkey;
 
 /// State of lock escrow account
 
-#[derive(BorshSerialize, Clone, Debug, Eq, PartialEq)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LockEscrow {
     pub discriminator: [u8; 8],

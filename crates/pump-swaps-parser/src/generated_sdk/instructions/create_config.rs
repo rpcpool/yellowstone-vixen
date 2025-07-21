@@ -61,7 +61,7 @@ impl CreateConfig {
         data.append(&mut args);
 
         solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         }
@@ -92,6 +92,7 @@ pub struct CreateConfigInstructionArgs {
     pub lp_fee_basis_points: u64,
     pub protocol_fee_basis_points: u64,
     pub protocol_fee_recipients: [Pubkey; 8],
+    pub coin_creator_fee_basis_points: u64,
 }
 
 /// Instruction builder for `CreateConfig`.
@@ -113,6 +114,7 @@ pub struct CreateConfigBuilder {
     lp_fee_basis_points: Option<u64>,
     protocol_fee_basis_points: Option<u64>,
     protocol_fee_recipients: Option<[Pubkey; 8]>,
+    coin_creator_fee_basis_points: Option<u64>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -169,6 +171,15 @@ impl CreateConfigBuilder {
         self
     }
 
+    #[inline(always)]
+    pub fn coin_creator_fee_basis_points(
+        &mut self,
+        coin_creator_fee_basis_points: u64,
+    ) -> &mut Self {
+        self.coin_creator_fee_basis_points = Some(coin_creator_fee_basis_points);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
@@ -212,6 +223,10 @@ impl CreateConfigBuilder {
                 .protocol_fee_recipients
                 .clone()
                 .expect("protocol_fee_recipients is not set"),
+            coin_creator_fee_basis_points: self
+                .coin_creator_fee_basis_points
+                .clone()
+                .expect("coin_creator_fee_basis_points is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -325,7 +340,7 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         };
@@ -374,6 +389,7 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             lp_fee_basis_points: None,
             protocol_fee_basis_points: None,
             protocol_fee_recipients: None,
+            coin_creator_fee_basis_points: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -436,6 +452,15 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self
     }
 
+    #[inline(always)]
+    pub fn coin_creator_fee_basis_points(
+        &mut self,
+        coin_creator_fee_basis_points: u64,
+    ) -> &mut Self {
+        self.instruction.coin_creator_fee_basis_points = Some(coin_creator_fee_basis_points);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -490,6 +515,11 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
                 .protocol_fee_recipients
                 .clone()
                 .expect("protocol_fee_recipients is not set"),
+            coin_creator_fee_basis_points: self
+                .instruction
+                .coin_creator_fee_basis_points
+                .clone()
+                .expect("coin_creator_fee_basis_points is not set"),
         };
         let instruction = CreateConfigCpi {
             __program: self.instruction.__program,
@@ -532,6 +562,7 @@ struct CreateConfigCpiBuilderInstruction<'a, 'b> {
     lp_fee_basis_points: Option<u64>,
     protocol_fee_basis_points: Option<u64>,
     protocol_fee_recipients: Option<[Pubkey; 8]>,
+    coin_creator_fee_basis_points: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

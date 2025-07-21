@@ -56,7 +56,7 @@ impl UpdateAdmin {
         let data = borsh::to_vec(&UpdateAdminInstructionData::new()).unwrap();
 
         solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         }
@@ -268,7 +268,7 @@ impl<'a, 'b> UpdateAdminCpi<'a, 'b> {
         let data = borsh::to_vec(&UpdateAdminInstructionData::new()).unwrap();
 
         let instruction = solana_instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         };
