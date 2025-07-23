@@ -12,16 +12,16 @@ use crate::generated::types::ConfigParams;
 /// Accounts.
 #[derive(Debug)]
 pub struct ConfigUpdate {
-    pub config_authority: solana_program::pubkey::Pubkey,
+    pub config_authority: solana_pubkey::Pubkey,
 
-    pub config_account: solana_program::pubkey::Pubkey,
+    pub config_account: solana_pubkey::Pubkey,
 }
 
 impl ConfigUpdate {
     pub fn instruction(
         &self,
         args: ConfigUpdateInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -30,14 +30,14 @@ impl ConfigUpdate {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: ConfigUpdateInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.config_authority,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.config_account,
             false,
         ));
@@ -46,7 +46,7 @@ impl ConfigUpdate {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::TOKEN_LAUNCHPAD_ID,
             accounts,
             data,
@@ -86,26 +86,23 @@ pub struct ConfigUpdateInstructionArgs {
 ///   1. `[writable]` config_account
 #[derive(Clone, Debug, Default)]
 pub struct ConfigUpdateBuilder {
-    config_authority: Option<solana_program::pubkey::Pubkey>,
-    config_account: Option<solana_program::pubkey::Pubkey>,
+    config_authority: Option<solana_pubkey::Pubkey>,
+    config_account: Option<solana_pubkey::Pubkey>,
     data: Option<ConfigParams>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl ConfigUpdateBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn config_authority(
-        &mut self,
-        config_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn config_authority(&mut self, config_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.config_authority = Some(config_authority);
         self
     }
 
     #[inline(always)]
-    pub fn config_account(&mut self, config_account: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn config_account(&mut self, config_account: solana_pubkey::Pubkey) -> &mut Self {
         self.config_account = Some(config_account);
         self
     }
@@ -118,10 +115,7 @@ impl ConfigUpdateBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -130,14 +124,14 @@ impl ConfigUpdateBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = ConfigUpdate {
             config_authority: self.config_authority.expect("config_authority is not set"),
             config_account: self.config_account.expect("config_account is not set"),
@@ -152,26 +146,26 @@ impl ConfigUpdateBuilder {
 
 /// `config_update` CPI accounts.
 pub struct ConfigUpdateCpiAccounts<'a, 'b> {
-    pub config_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config_account: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `config_update` CPI instruction.
 pub struct ConfigUpdateCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config_account: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: ConfigUpdateInstructionArgs,
 }
 
 impl<'a, 'b> ConfigUpdateCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: ConfigUpdateCpiAccounts<'a, 'b>,
         args: ConfigUpdateInstructionArgs,
     ) -> Self {
@@ -184,19 +178,15 @@ impl<'a, 'b> ConfigUpdateCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -204,7 +194,7 @@ impl<'a, 'b> ConfigUpdateCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -214,23 +204,19 @@ impl<'a, 'b> ConfigUpdateCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.config_authority.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.config_account.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -240,7 +226,7 @@ impl<'a, 'b> ConfigUpdateCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::TOKEN_LAUNCHPAD_ID,
             accounts,
             data,
@@ -254,9 +240,9 @@ impl<'a, 'b> ConfigUpdateCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -273,7 +259,7 @@ pub struct ConfigUpdateCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> ConfigUpdateCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(ConfigUpdateCpiBuilderInstruction {
             __program: program,
             config_authority: None,
@@ -287,7 +273,7 @@ impl<'a, 'b> ConfigUpdateCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn config_authority(
         &mut self,
-        config_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        config_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.config_authority = Some(config_authority);
         self
@@ -296,7 +282,7 @@ impl<'a, 'b> ConfigUpdateCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn config_account(
         &mut self,
-        config_account: &'b solana_program::account_info::AccountInfo<'a>,
+        config_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.config_account = Some(config_account);
         self
@@ -312,7 +298,7 @@ impl<'a, 'b> ConfigUpdateCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -329,11 +315,7 @@ impl<'a, 'b> ConfigUpdateCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -342,14 +324,14 @@ impl<'a, 'b> ConfigUpdateCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = ConfigUpdateInstructionArgs {
             data: self.instruction.data.clone().expect("data is not set"),
         };
@@ -376,14 +358,10 @@ impl<'a, 'b> ConfigUpdateCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct ConfigUpdateCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    config_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    config_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    config_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    config_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     data: Option<ConfigParams>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

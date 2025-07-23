@@ -10,29 +10,29 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct UpdatePoolCreator {
-    pub creator: solana_program::pubkey::Pubkey,
+    pub creator: solana_pubkey::Pubkey,
 
-    pub new_creator: solana_program::pubkey::Pubkey,
+    pub new_creator: solana_pubkey::Pubkey,
 
-    pub virtuals_mint: solana_program::pubkey::Pubkey,
+    pub virtuals_mint: solana_pubkey::Pubkey,
 
-    pub token_mint: solana_program::pubkey::Pubkey,
+    pub token_mint: solana_pubkey::Pubkey,
 
-    pub new_creator_virtuals_ata: solana_program::pubkey::Pubkey,
+    pub new_creator_virtuals_ata: solana_pubkey::Pubkey,
 
-    pub new_creator_token_ata: solana_program::pubkey::Pubkey,
+    pub new_creator_token_ata: solana_pubkey::Pubkey,
 
-    pub vpool: solana_program::pubkey::Pubkey,
+    pub vpool: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 }
 
 impl UpdatePoolCreator {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -40,52 +40,49 @@ impl UpdatePoolCreator {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.creator,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.creator, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.new_creator,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.virtuals_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.new_creator_virtuals_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.new_creator_token_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.vpool, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&UpdatePoolCreatorInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::VIRTUALS_PROGRAM_ID,
             accounts,
             data,
@@ -127,43 +124,43 @@ impl Default for UpdatePoolCreatorInstructionData {
 ///   9. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct UpdatePoolCreatorBuilder {
-    creator: Option<solana_program::pubkey::Pubkey>,
-    new_creator: Option<solana_program::pubkey::Pubkey>,
-    virtuals_mint: Option<solana_program::pubkey::Pubkey>,
-    token_mint: Option<solana_program::pubkey::Pubkey>,
-    new_creator_virtuals_ata: Option<solana_program::pubkey::Pubkey>,
-    new_creator_token_ata: Option<solana_program::pubkey::Pubkey>,
-    vpool: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    creator: Option<solana_pubkey::Pubkey>,
+    new_creator: Option<solana_pubkey::Pubkey>,
+    virtuals_mint: Option<solana_pubkey::Pubkey>,
+    token_mint: Option<solana_pubkey::Pubkey>,
+    new_creator_virtuals_ata: Option<solana_pubkey::Pubkey>,
+    new_creator_token_ata: Option<solana_pubkey::Pubkey>,
+    vpool: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl UpdatePoolCreatorBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn creator(&mut self, creator: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
 
     #[inline(always)]
-    pub fn new_creator(&mut self, new_creator: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn new_creator(&mut self, new_creator: solana_pubkey::Pubkey) -> &mut Self {
         self.new_creator = Some(new_creator);
         self
     }
 
     /// `[optional account, default to '3iQL8BFS2vE7mww4ehAqQHAsbmRNCrPxizWAT2Zfyr9y']`
     #[inline(always)]
-    pub fn virtuals_mint(&mut self, virtuals_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn virtuals_mint(&mut self, virtuals_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.virtuals_mint = Some(virtuals_mint);
         self
     }
 
     #[inline(always)]
-    pub fn token_mint(&mut self, token_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_mint(&mut self, token_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_mint = Some(token_mint);
         self
     }
@@ -171,7 +168,7 @@ impl UpdatePoolCreatorBuilder {
     #[inline(always)]
     pub fn new_creator_virtuals_ata(
         &mut self,
-        new_creator_virtuals_ata: solana_program::pubkey::Pubkey,
+        new_creator_virtuals_ata: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.new_creator_virtuals_ata = Some(new_creator_virtuals_ata);
         self
@@ -180,21 +177,21 @@ impl UpdatePoolCreatorBuilder {
     #[inline(always)]
     pub fn new_creator_token_ata(
         &mut self,
-        new_creator_token_ata: solana_program::pubkey::Pubkey,
+        new_creator_token_ata: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.new_creator_token_ata = Some(new_creator_token_ata);
         self
     }
 
     #[inline(always)]
-    pub fn vpool(&mut self, vpool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vpool(&mut self, vpool: solana_pubkey::Pubkey) -> &mut Self {
         self.vpool = Some(vpool);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -203,7 +200,7 @@ impl UpdatePoolCreatorBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
@@ -211,17 +208,14 @@ impl UpdatePoolCreatorBuilder {
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -230,18 +224,18 @@ impl UpdatePoolCreatorBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = UpdatePoolCreator {
             creator: self.creator.expect("creator is not set"),
             new_creator: self.new_creator.expect("new_creator is not set"),
-            virtuals_mint: self.virtuals_mint.unwrap_or(solana_program::pubkey!(
+            virtuals_mint: self.virtuals_mint.unwrap_or(solana_pubkey::pubkey!(
                 "3iQL8BFS2vE7mww4ehAqQHAsbmRNCrPxizWAT2Zfyr9y"
             )),
             token_mint: self.token_mint.expect("token_mint is not set"),
@@ -252,15 +246,15 @@ impl UpdatePoolCreatorBuilder {
                 .new_creator_token_ata
                 .expect("new_creator_token_ata is not set"),
             vpool: self.vpool.expect("vpool is not set"),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self.associated_token_program.unwrap_or(
-                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
         };
 
         accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
@@ -269,56 +263,56 @@ impl UpdatePoolCreatorBuilder {
 
 /// `update_pool_creator` CPI accounts.
 pub struct UpdatePoolCreatorCpiAccounts<'a, 'b> {
-    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub new_creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub new_creator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub new_creator_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub new_creator_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub new_creator_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub new_creator_token_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vpool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `update_pool_creator` CPI instruction.
 pub struct UpdatePoolCreatorCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub new_creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub new_creator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub new_creator_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub new_creator_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub new_creator_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub new_creator_token_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vpool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> UpdatePoolCreatorCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: UpdatePoolCreatorCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -337,19 +331,15 @@ impl<'a, 'b> UpdatePoolCreatorCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -357,7 +347,7 @@ impl<'a, 'b> UpdatePoolCreatorCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -367,55 +357,51 @@ impl<'a, 'b> UpdatePoolCreatorCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.creator.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.new_creator.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.virtuals_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.new_creator_virtuals_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.new_creator_token_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.vpool.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -423,7 +409,7 @@ impl<'a, 'b> UpdatePoolCreatorCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&UpdatePoolCreatorInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::VIRTUALS_PROGRAM_ID,
             accounts,
             data,
@@ -445,9 +431,9 @@ impl<'a, 'b> UpdatePoolCreatorCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -472,7 +458,7 @@ pub struct UpdatePoolCreatorCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(UpdatePoolCreatorCpiBuilderInstruction {
             __program: program,
             creator: None,
@@ -491,10 +477,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn creator(
-        &mut self,
-        creator: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn creator(&mut self, creator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.creator = Some(creator);
         self
     }
@@ -502,7 +485,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn new_creator(
         &mut self,
-        new_creator: &'b solana_program::account_info::AccountInfo<'a>,
+        new_creator: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.new_creator = Some(new_creator);
         self
@@ -511,7 +494,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn virtuals_mint(
         &mut self,
-        virtuals_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        virtuals_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.virtuals_mint = Some(virtuals_mint);
         self
@@ -520,7 +503,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_mint(
         &mut self,
-        token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_mint = Some(token_mint);
         self
@@ -529,7 +512,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn new_creator_virtuals_ata(
         &mut self,
-        new_creator_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        new_creator_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.new_creator_virtuals_ata = Some(new_creator_virtuals_ata);
         self
@@ -538,14 +521,14 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn new_creator_token_ata(
         &mut self,
-        new_creator_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        new_creator_token_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.new_creator_token_ata = Some(new_creator_token_ata);
         self
     }
 
     #[inline(always)]
-    pub fn vpool(&mut self, vpool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn vpool(&mut self, vpool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vpool = Some(vpool);
         self
     }
@@ -553,7 +536,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -562,7 +545,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -571,7 +554,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -581,7 +564,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -598,11 +581,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -611,14 +590,14 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = UpdatePoolCreatorCpi {
             __program: self.instruction.__program,
 
@@ -672,21 +651,17 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct UpdatePoolCreatorCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    new_creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    virtuals_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    new_creator_virtuals_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    new_creator_token_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vpool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    creator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    new_creator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    virtuals_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    new_creator_virtuals_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    new_creator_token_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vpool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

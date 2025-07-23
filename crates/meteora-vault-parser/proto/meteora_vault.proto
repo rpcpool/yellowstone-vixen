@@ -6,7 +6,7 @@
 //!
 syntax = "proto3";
 
-package vixen.parser.vixen_meteora_vault_parser;
+package vixen.parser.meteora_vault;
 
 message InitializeIx {
 	InitializeIxAccounts accounts = 1;

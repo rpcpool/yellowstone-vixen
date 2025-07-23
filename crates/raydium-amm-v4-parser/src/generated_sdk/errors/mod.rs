@@ -5,6 +5,6 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-pub(crate) mod raydium_amm;
+pub(crate) mod raydium_amm_v4;
 
-pub use self::raydium_amm::RaydiumAmmError;
+pub use self::raydium_amm_v4::RaydiumAmmV4Error;

@@ -5,15 +5,24 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
-        Buy as BuyIxAccounts, BuyInstructionArgs as BuyIxData, Create as CreateIxAccounts,
-        CreateInstructionArgs as CreateIxData, Initialize as InitializeIxAccounts,
-        Sell as SellIxAccounts, SellInstructionArgs as SellIxData,
-        SetParams as SetParamsIxAccounts, SetParamsInstructionArgs as SetParamsIxData,
-        Withdraw as WithdrawIxAccounts,
+        Buy as BuyIxAccounts, BuyInstructionArgs as BuyIxData,
+        CollectCreatorFee as CollectCreatorFeeIxAccounts, Create as CreateIxAccounts,
+        CreateInstructionArgs as CreateIxData, ExtendAccount as ExtendAccountIxAccounts,
+        Initialize as InitializeIxAccounts, Migrate as MigrateIxAccounts, Sell as SellIxAccounts,
+        SellInstructionArgs as SellIxData, SetCreator as SetCreatorIxAccounts,
+        SetCreatorInstructionArgs as SetCreatorIxData,
+        SetMetaplexCreator as SetMetaplexCreatorIxAccounts, SetParams as SetParamsIxAccounts,
+        SetParamsInstructionArgs as SetParamsIxData,
+        UpdateGlobalAuthority as UpdateGlobalAuthorityIxAccounts,
     },
     ID,
 };
@@ -21,13 +30,19 @@ use crate::{
 /// Pump Instructions
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
+#[allow(clippy::large_enum_variant)]
 pub enum PumpProgramIx {
-    Initialize(InitializeIxAccounts),
-    SetParams(SetParamsIxAccounts, SetParamsIxData),
-    Create(CreateIxAccounts, CreateIxData),
     Buy(BuyIxAccounts, BuyIxData),
+    CollectCreatorFee(CollectCreatorFeeIxAccounts),
+    Create(CreateIxAccounts, CreateIxData),
+    ExtendAccount(ExtendAccountIxAccounts),
+    Initialize(InitializeIxAccounts),
+    Migrate(MigrateIxAccounts),
     Sell(SellIxAccounts, SellIxData),
-    Withdraw(WithdrawIxAccounts),
+    SetCreator(SetCreatorIxAccounts, SetCreatorIxData),
+    SetMetaplexCreator(SetMetaplexCreatorIxAccounts),
+    SetParams(SetParamsIxAccounts, SetParamsIxData),
+    UpdateGlobalAuthority(UpdateGlobalAuthorityIxAccounts),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -35,7 +50,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = PumpProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<PumpProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "Pump::InstructionParser".into() }
 
@@ -51,7 +69,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -66,109 +100,193 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<PumpProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
+            [102, 6, 61, 18, 1, 218, 235, 234] => {
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = BuyIxAccounts {
+                    global: next_account(accounts)?,
+                    fee_recipient: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    associated_bonding_curve: next_account(accounts)?,
+                    associated_user: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    creator_vault: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: BuyIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(PumpProgramIx::Buy(ix_accounts, de_ix_data))
+            },
+            [20, 22, 86, 123, 198, 28, 219, 132] => {
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = CollectCreatorFeeIxAccounts {
+                    creator: next_account(accounts)?,
+                    creator_vault: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                Ok(PumpProgramIx::CollectCreatorFee(ix_accounts))
+            },
+            [24, 30, 200, 40, 5, 28, 7, 119] => {
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = CreateIxAccounts {
+                    mint: next_account(accounts)?,
+                    mint_authority: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    associated_bonding_curve: next_account(accounts)?,
+                    global: next_account(accounts)?,
+                    mpl_token_metadata: next_account(accounts)?,
+                    metadata: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: CreateIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(PumpProgramIx::Create(ix_accounts, de_ix_data))
+            },
+            [234, 102, 194, 203, 150, 72, 62, 229] => {
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = ExtendAccountIxAccounts {
+                    account: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                Ok(PumpProgramIx::ExtendAccount(ix_accounts))
+            },
             [175, 175, 109, 31, 13, 152, 155, 237] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeIxAccounts {
-                    global: ix.accounts[0].0.into(),
-                    user: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    global: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(PumpProgramIx::Initialize(ix_accounts))
             },
-            [165, 31, 134, 53, 189, 180, 130, 255] => {
-                check_min_accounts_req(accounts_len, 5)?;
-                let ix_accounts = SetParamsIxAccounts {
-                    global: ix.accounts[0].0.into(),
-                    user: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
-                    event_authority: ix.accounts[3].0.into(),
-                    program: ix.accounts[4].0.into(),
+            [155, 234, 231, 146, 236, 158, 162, 30] => {
+                let expected_accounts_len = 24;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = MigrateIxAccounts {
+                    global: next_account(accounts)?,
+                    withdraw_authority: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    associated_bonding_curve: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    pump_amm: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    pool_authority: next_account(accounts)?,
+                    pool_authority_mint_account: next_account(accounts)?,
+                    pool_authority_wsol_account: next_account(accounts)?,
+                    amm_global_config: next_account(accounts)?,
+                    wsol_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_pool_token_account: next_account(accounts)?,
+                    pool_base_token_account: next_account(accounts)?,
+                    pool_quote_token_account: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    pump_amm_event_authority: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: SetParamsIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpProgramIx::SetParams(ix_accounts, de_ix_data))
-            },
-            [24, 30, 200, 40, 5, 28, 7, 119] => {
-                check_min_accounts_req(accounts_len, 14)?;
-                let ix_accounts = CreateIxAccounts {
-                    mint: ix.accounts[0].0.into(),
-                    mint_authority: ix.accounts[1].0.into(),
-                    bonding_curve: ix.accounts[2].0.into(),
-                    associated_bonding_curve: ix.accounts[3].0.into(),
-                    global: ix.accounts[4].0.into(),
-                    mpl_token_metadata: ix.accounts[5].0.into(),
-                    metadata: ix.accounts[6].0.into(),
-                    user: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    associated_token_program: ix.accounts[10].0.into(),
-                    rent: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
-                };
-                let de_ix_data: CreateIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpProgramIx::Create(ix_accounts, de_ix_data))
-            },
-            [102, 6, 61, 18, 1, 218, 235, 234] => {
-                check_min_accounts_req(accounts_len, 12)?;
-                let ix_accounts = BuyIxAccounts {
-                    global: ix.accounts[0].0.into(),
-                    fee_recipient: ix.accounts[1].0.into(),
-                    mint: ix.accounts[2].0.into(),
-                    bonding_curve: ix.accounts[3].0.into(),
-                    associated_bonding_curve: ix.accounts[4].0.into(),
-                    associated_user: ix.accounts[5].0.into(),
-                    user: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    rent: ix.accounts[9].0.into(),
-                    event_authority: ix.accounts[10].0.into(),
-                    program: ix.accounts[11].0.into(),
-                };
-                let de_ix_data: BuyIxData = BorshDeserialize::deserialize(&mut ix_data)?;
-                Ok(PumpProgramIx::Buy(ix_accounts, de_ix_data))
+                Ok(PumpProgramIx::Migrate(ix_accounts))
             },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SellIxAccounts {
-                    global: ix.accounts[0].0.into(),
-                    fee_recipient: ix.accounts[1].0.into(),
-                    mint: ix.accounts[2].0.into(),
-                    bonding_curve: ix.accounts[3].0.into(),
-                    associated_bonding_curve: ix.accounts[4].0.into(),
-                    associated_user: ix.accounts[5].0.into(),
-                    user: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    associated_token_program: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    event_authority: ix.accounts[10].0.into(),
-                    program: ix.accounts[11].0.into(),
+                    global: next_account(accounts)?,
+                    fee_recipient: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    associated_bonding_curve: next_account(accounts)?,
+                    associated_user: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    creator_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: SellIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SellIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(PumpProgramIx::Sell(ix_accounts, de_ix_data))
             },
-            [183, 18, 70, 156, 148, 109, 161, 34] => {
-                check_min_accounts_req(accounts_len, 12)?;
-                let ix_accounts = WithdrawIxAccounts {
-                    global: ix.accounts[0].0.into(),
-                    last_withdraw: ix.accounts[1].0.into(),
-                    mint: ix.accounts[2].0.into(),
-                    bonding_curve: ix.accounts[3].0.into(),
-                    associated_bonding_curve: ix.accounts[4].0.into(),
-                    associated_user: ix.accounts[5].0.into(),
-                    user: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    rent: ix.accounts[9].0.into(),
-                    event_authority: ix.accounts[10].0.into(),
-                    program: ix.accounts[11].0.into(),
+            [254, 148, 255, 112, 207, 142, 170, 165] => {
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SetCreatorIxAccounts {
+                    set_creator_authority: next_account(accounts)?,
+                    global: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    metadata: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                Ok(PumpProgramIx::Withdraw(ix_accounts))
+                let de_ix_data: SetCreatorIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(PumpProgramIx::SetCreator(ix_accounts, de_ix_data))
+            },
+            [138, 96, 174, 217, 48, 85, 197, 246] => {
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SetMetaplexCreatorIxAccounts {
+                    mint: next_account(accounts)?,
+                    metadata: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                Ok(PumpProgramIx::SetMetaplexCreator(ix_accounts))
+            },
+            [27, 234, 178, 52, 147, 2, 187, 141] => {
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SetParamsIxAccounts {
+                    global: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: SetParamsIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(PumpProgramIx::SetParams(ix_accounts, de_ix_data))
+            },
+            [227, 181, 74, 196, 208, 21, 97, 213] => {
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = UpdateGlobalAuthorityIxAccounts {
+                    global: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    new_authority: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                Ok(PumpProgramIx::UpdateGlobalAuthority(ix_accounts))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
@@ -197,7 +315,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -214,43 +339,91 @@ pub fn check_min_accounts_req(
     }
 }
 
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
+    }
+}
+
 // #[cfg(feature = "proto")]
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{InitializeIxAccounts, InstructionParser, PumpProgramIx};
+    use super::{BuyIxAccounts, InstructionParser, PumpProgramIx};
     use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
-    impl IntoProto<proto_def::InitializeIxAccounts> for InitializeIxAccounts {
-        fn into_proto(self) -> proto_def::InitializeIxAccounts {
-            proto_def::InitializeIxAccounts {
+    impl IntoProto<proto_def::BuyIxAccounts> for BuyIxAccounts {
+        fn into_proto(self) -> proto_def::BuyIxAccounts {
+            proto_def::BuyIxAccounts {
                 global: self.global.to_string(),
+                fee_recipient: self.fee_recipient.to_string(),
+                mint: self.mint.to_string(),
+                bonding_curve: self.bonding_curve.to_string(),
+                associated_bonding_curve: self.associated_bonding_curve.to_string(),
+                associated_user: self.associated_user.to_string(),
                 user: self.user.to_string(),
                 system_program: self.system_program.to_string(),
-            }
-        }
-    }
-    use super::SetParamsIxAccounts;
-    impl IntoProto<proto_def::SetParamsIxAccounts> for SetParamsIxAccounts {
-        fn into_proto(self) -> proto_def::SetParamsIxAccounts {
-            proto_def::SetParamsIxAccounts {
-                global: self.global.to_string(),
-                user: self.user.to_string(),
-                system_program: self.system_program.to_string(),
+                token_program: self.token_program.to_string(),
+                creator_vault: self.creator_vault.to_string(),
                 event_authority: self.event_authority.to_string(),
                 program: self.program.to_string(),
             }
         }
     }
-    use super::SetParamsIxData;
-    impl IntoProto<proto_def::SetParamsIxData> for SetParamsIxData {
-        fn into_proto(self) -> proto_def::SetParamsIxData {
-            proto_def::SetParamsIxData {
-                fee_recipient: self.fee_recipient.to_string(),
-                initial_virtual_token_reserves: self.initial_virtual_token_reserves,
-                initial_virtual_sol_reserves: self.initial_virtual_sol_reserves,
-                initial_real_token_reserves: self.initial_real_token_reserves,
-                token_total_supply: self.token_total_supply,
-                fee_basis_points: self.fee_basis_points,
+    use super::BuyIxData;
+    impl IntoProto<proto_def::BuyIxData> for BuyIxData {
+        fn into_proto(self) -> proto_def::BuyIxData {
+            proto_def::BuyIxData {
+                amount: self.amount,
+                max_sol_cost: self.max_sol_cost,
+            }
+        }
+    }
+    use super::CollectCreatorFeeIxAccounts;
+    impl IntoProto<proto_def::CollectCreatorFeeIxAccounts> for CollectCreatorFeeIxAccounts {
+        fn into_proto(self) -> proto_def::CollectCreatorFeeIxAccounts {
+            proto_def::CollectCreatorFeeIxAccounts {
+                creator: self.creator.to_string(),
+                creator_vault: self.creator_vault.to_string(),
+                system_program: self.system_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
             }
         }
     }
@@ -286,31 +459,56 @@ mod proto_parser {
             }
         }
     }
-    use super::BuyIxAccounts;
-    impl IntoProto<proto_def::BuyIxAccounts> for BuyIxAccounts {
-        fn into_proto(self) -> proto_def::BuyIxAccounts {
-            proto_def::BuyIxAccounts {
-                global: self.global.to_string(),
-                fee_recipient: self.fee_recipient.to_string(),
-                mint: self.mint.to_string(),
-                bonding_curve: self.bonding_curve.to_string(),
-                associated_bonding_curve: self.associated_bonding_curve.to_string(),
-                associated_user: self.associated_user.to_string(),
+    use super::ExtendAccountIxAccounts;
+    impl IntoProto<proto_def::ExtendAccountIxAccounts> for ExtendAccountIxAccounts {
+        fn into_proto(self) -> proto_def::ExtendAccountIxAccounts {
+            proto_def::ExtendAccountIxAccounts {
+                account: self.account.to_string(),
                 user: self.user.to_string(),
                 system_program: self.system_program.to_string(),
-                token_program: self.token_program.to_string(),
-                rent: self.rent.to_string(),
                 event_authority: self.event_authority.to_string(),
                 program: self.program.to_string(),
             }
         }
     }
-    use super::BuyIxData;
-    impl IntoProto<proto_def::BuyIxData> for BuyIxData {
-        fn into_proto(self) -> proto_def::BuyIxData {
-            proto_def::BuyIxData {
-                amount: self.amount,
-                max_sol_cost: self.max_sol_cost,
+    use super::InitializeIxAccounts;
+    impl IntoProto<proto_def::InitializeIxAccounts> for InitializeIxAccounts {
+        fn into_proto(self) -> proto_def::InitializeIxAccounts {
+            proto_def::InitializeIxAccounts {
+                global: self.global.to_string(),
+                user: self.user.to_string(),
+                system_program: self.system_program.to_string(),
+            }
+        }
+    }
+    use super::MigrateIxAccounts;
+    impl IntoProto<proto_def::MigrateIxAccounts> for MigrateIxAccounts {
+        fn into_proto(self) -> proto_def::MigrateIxAccounts {
+            proto_def::MigrateIxAccounts {
+                global: self.global.to_string(),
+                withdraw_authority: self.withdraw_authority.to_string(),
+                mint: self.mint.to_string(),
+                bonding_curve: self.bonding_curve.to_string(),
+                associated_bonding_curve: self.associated_bonding_curve.to_string(),
+                user: self.user.to_string(),
+                system_program: self.system_program.to_string(),
+                token_program: self.token_program.to_string(),
+                pump_amm: self.pump_amm.to_string(),
+                pool: self.pool.to_string(),
+                pool_authority: self.pool_authority.to_string(),
+                pool_authority_mint_account: self.pool_authority_mint_account.to_string(),
+                pool_authority_wsol_account: self.pool_authority_wsol_account.to_string(),
+                amm_global_config: self.amm_global_config.to_string(),
+                wsol_mint: self.wsol_mint.to_string(),
+                lp_mint: self.lp_mint.to_string(),
+                user_pool_token_account: self.user_pool_token_account.to_string(),
+                pool_base_token_account: self.pool_base_token_account.to_string(),
+                pool_quote_token_account: self.pool_quote_token_account.to_string(),
+                token2022_program: self.token2022_program.to_string(),
+                associated_token_program: self.associated_token_program.to_string(),
+                pump_amm_event_authority: self.pump_amm_event_authority.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
             }
         }
     }
@@ -326,7 +524,7 @@ mod proto_parser {
                 associated_user: self.associated_user.to_string(),
                 user: self.user.to_string(),
                 system_program: self.system_program.to_string(),
-                associated_token_program: self.associated_token_program.to_string(),
+                creator_vault: self.creator_vault.to_string(),
                 token_program: self.token_program.to_string(),
                 event_authority: self.event_authority.to_string(),
                 program: self.program.to_string(),
@@ -342,20 +540,75 @@ mod proto_parser {
             }
         }
     }
-    use super::WithdrawIxAccounts;
-    impl IntoProto<proto_def::WithdrawIxAccounts> for WithdrawIxAccounts {
-        fn into_proto(self) -> proto_def::WithdrawIxAccounts {
-            proto_def::WithdrawIxAccounts {
+    use super::SetCreatorIxAccounts;
+    impl IntoProto<proto_def::SetCreatorIxAccounts> for SetCreatorIxAccounts {
+        fn into_proto(self) -> proto_def::SetCreatorIxAccounts {
+            proto_def::SetCreatorIxAccounts {
+                set_creator_authority: self.set_creator_authority.to_string(),
                 global: self.global.to_string(),
-                last_withdraw: self.last_withdraw.to_string(),
                 mint: self.mint.to_string(),
+                metadata: self.metadata.to_string(),
                 bonding_curve: self.bonding_curve.to_string(),
-                associated_bonding_curve: self.associated_bonding_curve.to_string(),
-                associated_user: self.associated_user.to_string(),
-                user: self.user.to_string(),
-                system_program: self.system_program.to_string(),
-                token_program: self.token_program.to_string(),
-                rent: self.rent.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SetCreatorIxData;
+    impl IntoProto<proto_def::SetCreatorIxData> for SetCreatorIxData {
+        fn into_proto(self) -> proto_def::SetCreatorIxData {
+            proto_def::SetCreatorIxData {
+                creator: self.creator.to_string(),
+            }
+        }
+    }
+    use super::SetMetaplexCreatorIxAccounts;
+    impl IntoProto<proto_def::SetMetaplexCreatorIxAccounts> for SetMetaplexCreatorIxAccounts {
+        fn into_proto(self) -> proto_def::SetMetaplexCreatorIxAccounts {
+            proto_def::SetMetaplexCreatorIxAccounts {
+                mint: self.mint.to_string(),
+                metadata: self.metadata.to_string(),
+                bonding_curve: self.bonding_curve.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SetParamsIxAccounts;
+    impl IntoProto<proto_def::SetParamsIxAccounts> for SetParamsIxAccounts {
+        fn into_proto(self) -> proto_def::SetParamsIxAccounts {
+            proto_def::SetParamsIxAccounts {
+                global: self.global.to_string(),
+                authority: self.authority.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SetParamsIxData;
+    impl IntoProto<proto_def::SetParamsIxData> for SetParamsIxData {
+        fn into_proto(self) -> proto_def::SetParamsIxData {
+            proto_def::SetParamsIxData {
+                initial_virtual_token_reserves: self.initial_virtual_token_reserves,
+                initial_virtual_sol_reserves: self.initial_virtual_sol_reserves,
+                initial_real_token_reserves: self.initial_real_token_reserves,
+                token_total_supply: self.token_total_supply,
+                fee_basis_points: self.fee_basis_points,
+                withdraw_authority: self.withdraw_authority.to_string(),
+                enable_migrate: self.enable_migrate,
+                pool_migration_fee: self.pool_migration_fee,
+                creator_fee_basis_points: self.creator_fee_basis_points,
+                set_creator_authority: self.set_creator_authority.to_string(),
+            }
+        }
+    }
+    use super::UpdateGlobalAuthorityIxAccounts;
+    impl IntoProto<proto_def::UpdateGlobalAuthorityIxAccounts> for UpdateGlobalAuthorityIxAccounts {
+        fn into_proto(self) -> proto_def::UpdateGlobalAuthorityIxAccounts {
+            proto_def::UpdateGlobalAuthorityIxAccounts {
+                global: self.global.to_string(),
+                authority: self.authority.to_string(),
+                new_authority: self.new_authority.to_string(),
                 event_authority: self.event_authority.to_string(),
                 program: self.program.to_string(),
             }
@@ -365,9 +618,65 @@ mod proto_parser {
     impl IntoProto<proto_def::ProgramIxs> for PumpProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
+                PumpProgramIx::Buy(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Buy(proto_def::BuyIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                PumpProgramIx::CollectCreatorFee(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CollectCreatorFee(
+                        proto_def::CollectCreatorFeeIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                PumpProgramIx::Create(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Create(
+                        proto_def::CreateIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                PumpProgramIx::ExtendAccount(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ExtendAccount(
+                        proto_def::ExtendAccountIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
                 PumpProgramIx::Initialize(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Initialize(
                         proto_def::InitializeIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                PumpProgramIx::Migrate(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Migrate(
+                        proto_def::MigrateIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                PumpProgramIx::Sell(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Sell(proto_def::SellIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                PumpProgramIx::SetCreator(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetCreator(
+                        proto_def::SetCreatorIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                PumpProgramIx::SetMetaplexCreator(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetMetaplexCreator(
+                        proto_def::SetMetaplexCreatorIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
@@ -380,29 +689,9 @@ mod proto_parser {
                         },
                     )),
                 },
-                PumpProgramIx::Create(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Create(
-                        proto_def::CreateIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                PumpProgramIx::Buy(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Buy(proto_def::BuyIx {
-                        accounts: Some(acc.into_proto()),
-                        data: Some(data.into_proto()),
-                    })),
-                },
-                PumpProgramIx::Sell(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Sell(proto_def::SellIx {
-                        accounts: Some(acc.into_proto()),
-                        data: Some(data.into_proto()),
-                    })),
-                },
-                PumpProgramIx::Withdraw(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Withdraw(
-                        proto_def::WithdrawIx {
+                PumpProgramIx::UpdateGlobalAuthority(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdateGlobalAuthority(
+                        proto_def::UpdateGlobalAuthorityIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
@@ -414,6 +703,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

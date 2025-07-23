@@ -8,6 +8,12 @@ syntax = "proto3";
 
 package vixen.parser.orca_whirlpool;
 
+message DynamicTickUninitialized { }
+
+message DynamicTickInitialized {
+  DynamicTickData field_0 = 1;
+}
+
 message InitializeConfigIx {
 	InitializeConfigIxAccounts accounts = 1;
 	InitializeConfigIxData data = 2;
@@ -21,6 +27,11 @@ message InitializePoolIx {
 message InitializeTickArrayIx {
 	InitializeTickArrayIxAccounts accounts = 1;
 	InitializeTickArrayIxData data = 2;
+}
+
+message InitializeDynamicTickArrayIx {
+	InitializeDynamicTickArrayIxAccounts accounts = 1;
+	InitializeDynamicTickArrayIxData data = 2;
 }
 
 message InitializeFeeTierIx {
@@ -167,6 +178,48 @@ message LockPositionIx {
 	LockPositionIxData data = 2;
 }
 
+message ResetPositionRangeIx {
+	ResetPositionRangeIxAccounts accounts = 1;
+	ResetPositionRangeIxData data = 2;
+}
+
+message TransferLockedPositionIx {
+	TransferLockedPositionIxAccounts accounts = 1;
+}
+
+message InitializeAdaptiveFeeTierIx {
+	InitializeAdaptiveFeeTierIxAccounts accounts = 1;
+	InitializeAdaptiveFeeTierIxData data = 2;
+}
+
+message SetDefaultBaseFeeRateIx {
+	SetDefaultBaseFeeRateIxAccounts accounts = 1;
+	SetDefaultBaseFeeRateIxData data = 2;
+}
+
+message SetDelegatedFeeAuthorityIx {
+	SetDelegatedFeeAuthorityIxAccounts accounts = 1;
+}
+
+message SetInitializePoolAuthorityIx {
+	SetInitializePoolAuthorityIxAccounts accounts = 1;
+}
+
+message SetPresetAdaptiveFeeConstantsIx {
+	SetPresetAdaptiveFeeConstantsIxAccounts accounts = 1;
+	SetPresetAdaptiveFeeConstantsIxData data = 2;
+}
+
+message InitializePoolWithAdaptiveFeeIx {
+	InitializePoolWithAdaptiveFeeIxAccounts accounts = 1;
+	InitializePoolWithAdaptiveFeeIxData data = 2;
+}
+
+message SetFeeRateByDelegatedFeeAuthorityIx {
+	SetFeeRateByDelegatedFeeAuthorityIxAccounts accounts = 1;
+	SetFeeRateByDelegatedFeeAuthorityIxData data = 2;
+}
+
 message CollectFeesV2Ix {
 	CollectFeesV2IxAccounts accounts = 1;
 	CollectFeesV2IxData data = 2;
@@ -237,6 +290,25 @@ message DeleteTokenBadgeIx {
 	DeleteTokenBadgeIxAccounts accounts = 1;
 }
 
+message IdlIncludeIx {
+	IdlIncludeIxAccounts accounts = 1;
+}
+
+
+message DynamicTick {
+	oneof variant{
+		DynamicTickUninitialized uninitialized = 1;
+		DynamicTickInitialized initialized = 2;
+	}
+}
+
+message DynamicTickData {
+	string liquidity_net = 1;
+	string liquidity_gross = 2;
+	string fee_growth_outside_a = 3;
+	string fee_growth_outside_b = 4;
+	repeated string reward_growths_outside = 5;
+}
 
 enum LockType {
 	LockTypePermanent = 0;
@@ -244,6 +316,26 @@ enum LockType {
 
 enum LockTypeLabel {
 	LockTypeLabelPermanent = 0;
+}
+
+message AdaptiveFeeConstants {
+	uint32 filter_period = 1;
+	uint32 decay_period = 2;
+	uint32 reduction_factor = 3;
+	uint32 adaptive_fee_control_factor = 4;
+	uint32 max_volatility_accumulator = 5;
+	uint32 tick_group_size = 6;
+	uint32 major_swap_threshold_ticks = 7;
+	repeated uint32 reserved = 8;
+}
+
+message AdaptiveFeeVariables {
+	uint64 last_reference_update_timestamp = 1;
+	uint64 last_major_swap_timestamp = 2;
+	uint32 volatility_reference = 3;
+	int32 tick_group_index_reference = 4;
+	uint32 volatility_accumulator = 5;
+	repeated uint32 reserved = 6;
 }
 
 message PositionRewardInfo {
@@ -290,6 +382,22 @@ message RemainingAccountsSlice {
 }
 
 
+message AdaptiveFeeTier {
+	string whirlpools_config = 1;
+	uint32 fee_tier_index = 2;
+	uint32 tick_spacing = 3;
+	string initialize_pool_authority = 4;
+	string delegated_fee_authority = 5;
+	uint32 default_base_fee_rate = 6;
+	uint32 filter_period = 7;
+	uint32 decay_period = 8;
+	uint32 reduction_factor = 9;
+	uint32 adaptive_fee_control_factor = 10;
+	uint32 max_volatility_accumulator = 11;
+	uint32 tick_group_size = 12;
+	uint32 major_swap_threshold_ticks = 13;
+}
+
 message WhirlpoolsConfig {
 	string fee_authority = 1;
 	string collect_protocol_fees_authority = 2;
@@ -303,10 +411,23 @@ message WhirlpoolsConfigExtension {
 	string token_badge_authority = 3;
 }
 
+message DynamicTickArray {
+	int32 start_tick_index = 1;
+	string whirlpool = 2;
+	string tick_bitmap = 3;
+	repeated DynamicTick ticks = 4;
+}
+
 message FeeTier {
 	string whirlpools_config = 1;
 	uint32 tick_spacing = 2;
 	uint32 default_fee_rate = 3;
+}
+
+message TickArray {
+	int32 start_tick_index = 1;
+	repeated Tick ticks = 2;
+	string whirlpool = 3;
 }
 
 message LockConfig {
@@ -315,6 +436,14 @@ message LockConfig {
 	string whirlpool = 3;
 	uint64 locked_timestamp = 4;
 	LockTypeLabel lock_type = 5;
+}
+
+message Oracle {
+	string whirlpool = 1;
+	uint64 trade_enable_timestamp = 2;
+	AdaptiveFeeConstants adaptive_fee_constants = 3;
+	AdaptiveFeeVariables adaptive_fee_variables = 4;
+	repeated uint32 reserved = 5;
 }
 
 message Position {
@@ -335,12 +464,6 @@ message PositionBundle {
 	repeated uint32 position_bitmap = 2;
 }
 
-message TickArray {
-	int32 start_tick_index = 1;
-	repeated Tick ticks = 2;
-	string whirlpool = 3;
-}
-
 message TokenBadge {
 	string whirlpools_config = 1;
 	string token_mint = 2;
@@ -350,7 +473,7 @@ message Whirlpool {
 	string whirlpools_config = 1;
 	repeated uint32 whirlpool_bump = 2;
 	uint32 tick_spacing = 3;
-	repeated uint32 tick_spacing_seed = 4;
+	repeated uint32 fee_tier_index_seed = 4;
 	uint32 fee_rate = 5;
 	uint32 protocol_fee_rate = 6;
 	string liquidity = 7;
@@ -411,6 +534,18 @@ message InitializeTickArrayIxAccounts {
 
 message InitializeTickArrayIxData {
 	int32 start_tick_index = 1;
+}
+
+message InitializeDynamicTickArrayIxAccounts {
+	string whirlpool = 1;
+	string funder = 2;
+	string tick_array = 3;
+	string system_program = 4;
+}
+
+message InitializeDynamicTickArrayIxData {
+	int32 start_tick_index = 1;
+	bool idempotent = 2;
 }
 
 message InitializeFeeTierIxAccounts {
@@ -840,6 +975,131 @@ message LockPositionIxData {
 	LockType lock_type = 1;
 }
 
+message ResetPositionRangeIxAccounts {
+	string funder = 1;
+	string position_authority = 2;
+	string whirlpool = 3;
+	string position = 4;
+	string position_token_account = 5;
+	string system_program = 6;
+}
+
+message ResetPositionRangeIxData {
+	int32 new_tick_lower_index = 1;
+	int32 new_tick_upper_index = 2;
+}
+
+message TransferLockedPositionIxAccounts {
+	string position_authority = 1;
+	string receiver = 2;
+	string position = 3;
+	string position_mint = 4;
+	string position_token_account = 5;
+	string destination_token_account = 6;
+	string lock_config = 7;
+	string token2022_program = 8;
+}
+
+
+message InitializeAdaptiveFeeTierIxAccounts {
+	string whirlpools_config = 1;
+	string adaptive_fee_tier = 2;
+	string funder = 3;
+	string fee_authority = 4;
+	string system_program = 5;
+}
+
+message InitializeAdaptiveFeeTierIxData {
+	uint32 fee_tier_index = 1;
+	uint32 tick_spacing = 2;
+	string initialize_pool_authority = 3;
+	string delegated_fee_authority = 4;
+	uint32 default_base_fee_rate = 5;
+	uint32 filter_period = 6;
+	uint32 decay_period = 7;
+	uint32 reduction_factor = 8;
+	uint32 adaptive_fee_control_factor = 9;
+	uint32 max_volatility_accumulator = 10;
+	uint32 tick_group_size = 11;
+	uint32 major_swap_threshold_ticks = 12;
+}
+
+message SetDefaultBaseFeeRateIxAccounts {
+	string whirlpools_config = 1;
+	string adaptive_fee_tier = 2;
+	string fee_authority = 3;
+}
+
+message SetDefaultBaseFeeRateIxData {
+	uint32 default_base_fee_rate = 1;
+}
+
+message SetDelegatedFeeAuthorityIxAccounts {
+	string whirlpools_config = 1;
+	string adaptive_fee_tier = 2;
+	string fee_authority = 3;
+	string new_delegated_fee_authority = 4;
+}
+
+
+message SetInitializePoolAuthorityIxAccounts {
+	string whirlpools_config = 1;
+	string adaptive_fee_tier = 2;
+	string fee_authority = 3;
+	string new_initialize_pool_authority = 4;
+}
+
+
+message SetPresetAdaptiveFeeConstantsIxAccounts {
+	string whirlpools_config = 1;
+	string adaptive_fee_tier = 2;
+	string fee_authority = 3;
+}
+
+message SetPresetAdaptiveFeeConstantsIxData {
+	uint32 filter_period = 1;
+	uint32 decay_period = 2;
+	uint32 reduction_factor = 3;
+	uint32 adaptive_fee_control_factor = 4;
+	uint32 max_volatility_accumulator = 5;
+	uint32 tick_group_size = 6;
+	uint32 major_swap_threshold_ticks = 7;
+}
+
+message InitializePoolWithAdaptiveFeeIxAccounts {
+	string whirlpools_config = 1;
+	string token_mint_a = 2;
+	string token_mint_b = 3;
+	string token_badge_a = 4;
+	string token_badge_b = 5;
+	string funder = 6;
+	string initialize_pool_authority = 7;
+	string whirlpool = 8;
+	string oracle = 9;
+	string token_vault_a = 10;
+	string token_vault_b = 11;
+	string adaptive_fee_tier = 12;
+	string token_program_a = 13;
+	string token_program_b = 14;
+	string system_program = 15;
+	string rent = 16;
+}
+
+message InitializePoolWithAdaptiveFeeIxData {
+	string initial_sqrt_price = 1;
+	optional uint64 trade_enable_timestamp = 2;
+}
+
+message SetFeeRateByDelegatedFeeAuthorityIxAccounts {
+	string whirlpool = 1;
+	string adaptive_fee_tier = 2;
+	string delegated_fee_authority = 3;
+}
+
+message SetFeeRateByDelegatedFeeAuthorityIxData {
+	uint32 fee_rate = 1;
+}
+
 message CollectFeesV2IxAccounts {
 	string whirlpool = 1;
 	string position_authority = 2;
@@ -1106,18 +1366,27 @@ message DeleteTokenBadgeIxAccounts {
 }
 
 
+message IdlIncludeIxAccounts {
+	string tick_array = 1;
+	string system_program = 2;
+}
+
+
 
 message ProgramState {
     oneof state_oneof {
-        	WhirlpoolsConfig whirlpools_config = 1;
-        	WhirlpoolsConfigExtension whirlpools_config_extension = 2;
-        	FeeTier fee_tier = 3;
-        	LockConfig lock_config = 4;
-        	Position position = 5;
-        	PositionBundle position_bundle = 6;
-        	TickArray tick_array = 7;
-        	TokenBadge token_badge = 8;
-        	Whirlpool whirlpool = 9;
+        	AdaptiveFeeTier adaptive_fee_tier = 1;
+        	WhirlpoolsConfig whirlpools_config = 2;
+        	WhirlpoolsConfigExtension whirlpools_config_extension = 3;
+        	DynamicTickArray dynamic_tick_array = 4;
+        	FeeTier fee_tier = 5;
+        	TickArray tick_array = 6;
+        	LockConfig lock_config = 7;
+        	Oracle oracle = 8;
+        	Position position = 9;
+        	PositionBundle position_bundle = 10;
+        	TokenBadge token_badge = 11;
+        	Whirlpool whirlpool = 12;
         }
 }
 
@@ -1126,52 +1395,63 @@ message ProgramIxs {
         	InitializeConfigIx initialize_config = 1;
         	InitializePoolIx initialize_pool = 2;
         	InitializeTickArrayIx initialize_tick_array = 3;
-        	InitializeFeeTierIx initialize_fee_tier = 4;
-        	InitializeRewardIx initialize_reward = 5;
-        	SetRewardEmissionsIx set_reward_emissions = 6;
-        	OpenPositionIx open_position = 7;
-        	OpenPositionWithMetadataIx open_position_with_metadata = 8;
-        	IncreaseLiquidityIx increase_liquidity = 9;
-        	DecreaseLiquidityIx decrease_liquidity = 10;
-        	UpdateFeesAndRewardsIx update_fees_and_rewards = 11;
-        	CollectFeesIx collect_fees = 12;
-        	CollectRewardIx collect_reward = 13;
-        	CollectProtocolFeesIx collect_protocol_fees = 14;
-        	SwapIx swap = 15;
-        	ClosePositionIx close_position = 16;
-        	SetDefaultFeeRateIx set_default_fee_rate = 17;
-        	SetDefaultProtocolFeeRateIx set_default_protocol_fee_rate = 18;
-        	SetFeeRateIx set_fee_rate = 19;
-        	SetProtocolFeeRateIx set_protocol_fee_rate = 20;
-        	SetFeeAuthorityIx set_fee_authority = 21;
-        	SetCollectProtocolFeesAuthorityIx set_collect_protocol_fees_authority = 22;
-        	SetRewardAuthorityIx set_reward_authority = 23;
-        	SetRewardAuthorityBySuperAuthorityIx set_reward_authority_by_super_authority = 24;
-        	SetRewardEmissionsSuperAuthorityIx set_reward_emissions_super_authority = 25;
-        	TwoHopSwapIx two_hop_swap = 26;
-        	InitializePositionBundleIx initialize_position_bundle = 27;
-        	InitializePositionBundleWithMetadataIx initialize_position_bundle_with_metadata = 28;
-        	DeletePositionBundleIx delete_position_bundle = 29;
-        	OpenBundledPositionIx open_bundled_position = 30;
-        	CloseBundledPositionIx close_bundled_position = 31;
-        	OpenPositionWithTokenExtensionsIx open_position_with_token_extensions = 32;
-        	ClosePositionWithTokenExtensionsIx close_position_with_token_extensions = 33;
-        	LockPositionIx lock_position = 34;
-        	CollectFeesV2Ix collect_fees_v2 = 35;
-        	CollectProtocolFeesV2Ix collect_protocol_fees_v2 = 36;
-        	CollectRewardV2Ix collect_reward_v2 = 37;
-        	DecreaseLiquidityV2Ix decrease_liquidity_v2 = 38;
-        	IncreaseLiquidityV2Ix increase_liquidity_v2 = 39;
-        	InitializePoolV2Ix initialize_pool_v2 = 40;
-        	InitializeRewardV2Ix initialize_reward_v2 = 41;
-        	SetRewardEmissionsV2Ix set_reward_emissions_v2 = 42;
-        	SwapV2Ix swap_v2 = 43;
-        	TwoHopSwapV2Ix two_hop_swap_v2 = 44;
-        	InitializeConfigExtensionIx initialize_config_extension = 45;
-        	SetConfigExtensionAuthorityIx set_config_extension_authority = 46;
-        	SetTokenBadgeAuthorityIx set_token_badge_authority = 47;
-        	InitializeTokenBadgeIx initialize_token_badge = 48;
-        	DeleteTokenBadgeIx delete_token_badge = 49;
+        	InitializeDynamicTickArrayIx initialize_dynamic_tick_array = 4;
+        	InitializeFeeTierIx initialize_fee_tier = 5;
+        	InitializeRewardIx initialize_reward = 6;
+        	SetRewardEmissionsIx set_reward_emissions = 7;
+        	OpenPositionIx open_position = 8;
+        	OpenPositionWithMetadataIx open_position_with_metadata = 9;
+        	IncreaseLiquidityIx increase_liquidity = 10;
+        	DecreaseLiquidityIx decrease_liquidity = 11;
+        	UpdateFeesAndRewardsIx update_fees_and_rewards = 12;
+        	CollectFeesIx collect_fees = 13;
+        	CollectRewardIx collect_reward = 14;
+        	CollectProtocolFeesIx collect_protocol_fees = 15;
+        	SwapIx swap = 16;
+        	ClosePositionIx close_position = 17;
+        	SetDefaultFeeRateIx set_default_fee_rate = 18;
+        	SetDefaultProtocolFeeRateIx set_default_protocol_fee_rate = 19;
+        	SetFeeRateIx set_fee_rate = 20;
+        	SetProtocolFeeRateIx set_protocol_fee_rate = 21;
+        	SetFeeAuthorityIx set_fee_authority = 22;
+        	SetCollectProtocolFeesAuthorityIx set_collect_protocol_fees_authority = 23;
+        	SetRewardAuthorityIx set_reward_authority = 24;
+        	SetRewardAuthorityBySuperAuthorityIx set_reward_authority_by_super_authority = 25;
+        	SetRewardEmissionsSuperAuthorityIx set_reward_emissions_super_authority = 26;
+        	TwoHopSwapIx two_hop_swap = 27;
+        	InitializePositionBundleIx initialize_position_bundle = 28;
+        	InitializePositionBundleWithMetadataIx initialize_position_bundle_with_metadata = 29;
+        	DeletePositionBundleIx delete_position_bundle = 30;
+        	OpenBundledPositionIx open_bundled_position = 31;
+        	CloseBundledPositionIx close_bundled_position = 32;
+        	OpenPositionWithTokenExtensionsIx open_position_with_token_extensions = 33;
+        	ClosePositionWithTokenExtensionsIx close_position_with_token_extensions = 34;
+        	LockPositionIx lock_position = 35;
+        	ResetPositionRangeIx reset_position_range = 36;
+        	TransferLockedPositionIx transfer_locked_position = 37;
+        	InitializeAdaptiveFeeTierIx initialize_adaptive_fee_tier = 38;
+        	SetDefaultBaseFeeRateIx set_default_base_fee_rate = 39;
+        	SetDelegatedFeeAuthorityIx set_delegated_fee_authority = 40;
+        	SetInitializePoolAuthorityIx set_initialize_pool_authority = 41;
+        	SetPresetAdaptiveFeeConstantsIx set_preset_adaptive_fee_constants = 42;
+        	InitializePoolWithAdaptiveFeeIx initialize_pool_with_adaptive_fee = 43;
+        	SetFeeRateByDelegatedFeeAuthorityIx set_fee_rate_by_delegated_fee_authority = 44;
+        	CollectFeesV2Ix collect_fees_v2 = 45;
+        	CollectProtocolFeesV2Ix collect_protocol_fees_v2 = 46;
+        	CollectRewardV2Ix collect_reward_v2 = 47;
+        	DecreaseLiquidityV2Ix decrease_liquidity_v2 = 48;
+        	IncreaseLiquidityV2Ix increase_liquidity_v2 = 49;
+        	InitializePoolV2Ix initialize_pool_v2 = 50;
+        	InitializeRewardV2Ix initialize_reward_v2 = 51;
+        	SetRewardEmissionsV2Ix set_reward_emissions_v2 = 52;
+        	SwapV2Ix swap_v2 = 53;
+        	TwoHopSwapV2Ix two_hop_swap_v2 = 54;
+        	InitializeConfigExtensionIx initialize_config_extension = 55;
+        	SetConfigExtensionAuthorityIx set_config_extension_authority = 56;
+        	SetTokenBadgeAuthorityIx set_token_badge_authority = 57;
+        	InitializeTokenBadgeIx initialize_token_badge = 58;
+        	DeleteTokenBadgeIx delete_token_badge = 59;
+        	IdlIncludeIx idl_include = 60;
         }
 }
 

@@ -614,7 +614,6 @@ impl From<Filters> for SubscribeRequest {
                         // TODO: make this configurable
                         failed: Some(false),
                         signature: None,
-                        // TODO: figure these out
                         account_include: v.accounts.iter().map(ToString::to_string).collect(),
                         account_exclude: [].into_iter().collect(),
                         account_required: [].into_iter().collect(),

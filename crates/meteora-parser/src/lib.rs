@@ -3,7 +3,9 @@ mod generated_sdk;
 pub use generated::*;
 pub use generated_parser::*;
 use generated_sdk as generated;
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
+
+mod custom_impl;
 
 pub const ID: Pubkey = LB_CLMM_ID;
 

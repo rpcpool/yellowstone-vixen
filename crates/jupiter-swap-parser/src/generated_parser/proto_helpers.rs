@@ -60,101 +60,107 @@ pub mod proto_types_parsers {
         }
     }
 
-    use proto_def::swap::Variant;
+    use proto_def::swap;
 
     use crate::types::Swap;
     impl IntoProto<proto_def::Swap> for Swap {
         fn into_proto(self) -> proto_def::Swap {
             let variant = match self {
-                Swap::Saber => Variant::Saber(proto_def::SwapSaber {}),
-                Swap::SaberAddDecimalsDeposit => {
-                    Variant::SaberAddDecimalsDeposit(proto_def::SwapSaberAddDecimalsDeposit {})
+                Swap::Saber => swap::Variant::Saber(proto_def::SwapSaber {}),
+                Swap::SaberAddDecimalsDeposit => swap::Variant::SaberAddDecimalsDeposit(
+                    proto_def::SwapSaberAddDecimalsDeposit {},
+                ),
+                Swap::SaberAddDecimalsWithdraw => swap::Variant::SaberAddDecimalsWithdraw(
+                    proto_def::SwapSaberAddDecimalsWithdraw {},
+                ),
+                Swap::TokenSwap => swap::Variant::TokenSwap(proto_def::SwapTokenSwap {}),
+                Swap::Sencha => swap::Variant::Sencha(proto_def::SwapSencha {}),
+                Swap::Step => swap::Variant::Step(proto_def::SwapStep {}),
+                Swap::Cropper => swap::Variant::Cropper(proto_def::SwapCropper {}),
+                Swap::Raydium => swap::Variant::Raydium(proto_def::SwapRaydium {}),
+                Swap::Crema { a_to_b } => swap::Variant::Crema(proto_def::SwapCrema { a_to_b }),
+                Swap::Lifinity => swap::Variant::Lifinity(proto_def::SwapLifinity {}),
+                Swap::Mercurial => swap::Variant::Mercurial(proto_def::SwapMercurial {}),
+                Swap::Cykura => swap::Variant::Cykura(proto_def::SwapCykura {}),
+                Swap::Serum { side } => {
+                    swap::Variant::Serum(proto_def::SwapSerum { side: side as i32 })
                 },
-                Swap::SaberAddDecimalsWithdraw => {
-                    Variant::SaberAddDecimalsWithdraw(proto_def::SwapSaberAddDecimalsWithdraw {})
-                },
-                Swap::TokenSwap => Variant::TokenSwap(proto_def::SwapTokenSwap {}),
-                Swap::Sencha => Variant::Sencha(proto_def::SwapSencha {}),
-                Swap::Step => Variant::Step(proto_def::SwapStep {}),
-                Swap::Cropper => Variant::Cropper(proto_def::SwapCropper {}),
-                Swap::Raydium => Variant::Raydium(proto_def::SwapRaydium {}),
-                Swap::Crema { a_to_b } => Variant::Crema(proto_def::SwapCrema { a_to_b }),
-                Swap::Lifinity => Variant::Lifinity(proto_def::SwapLifinity {}),
-                Swap::Mercurial => Variant::Mercurial(proto_def::SwapMercurial {}),
-                Swap::Cykura => Variant::Cykura(proto_def::SwapCykura {}),
-                Swap::Serum { side } => Variant::Serum(proto_def::SwapSerum { side: side as i32 }),
                 Swap::MarinadeDeposit => {
-                    Variant::MarinadeDeposit(proto_def::SwapMarinadeDeposit {})
+                    swap::Variant::MarinadeDeposit(proto_def::SwapMarinadeDeposit {})
                 },
                 Swap::MarinadeUnstake => {
-                    Variant::MarinadeUnstake(proto_def::SwapMarinadeUnstake {})
+                    swap::Variant::MarinadeUnstake(proto_def::SwapMarinadeUnstake {})
                 },
                 Swap::Aldrin { side } => {
-                    Variant::Aldrin(proto_def::SwapAldrin { side: side as i32 })
+                    swap::Variant::Aldrin(proto_def::SwapAldrin { side: side as i32 })
                 },
                 Swap::AldrinV2 { side } => {
-                    Variant::AldrinV2(proto_def::SwapAldrinV2 { side: side as i32 })
+                    swap::Variant::AldrinV2(proto_def::SwapAldrinV2 { side: side as i32 })
                 },
                 Swap::Whirlpool { a_to_b } => {
-                    Variant::Whirlpool(proto_def::SwapWhirlpool { a_to_b })
+                    swap::Variant::Whirlpool(proto_def::SwapWhirlpool { a_to_b })
                 },
                 Swap::Invariant { x_to_y } => {
-                    Variant::Invariant(proto_def::SwapInvariant { x_to_y })
+                    swap::Variant::Invariant(proto_def::SwapInvariant { x_to_y })
                 },
-                Swap::Meteora => Variant::Meteora(proto_def::SwapMeteora {}),
-                Swap::GooseFX => Variant::GooseFX(proto_def::SwapGooseFx {}),
-                Swap::DeltaFi { stable } => Variant::DeltaFi(proto_def::SwapDeltaFi { stable }),
-                Swap::Balansol => Variant::Balansol(proto_def::SwapBalansol {}),
+                Swap::Meteora => swap::Variant::Meteora(proto_def::SwapMeteora {}),
+                Swap::GooseFX => swap::Variant::GooseFX(proto_def::SwapGooseFx {}),
+                Swap::DeltaFi { stable } => {
+                    swap::Variant::DeltaFi(proto_def::SwapDeltaFi { stable })
+                },
+                Swap::Balansol => swap::Variant::Balansol(proto_def::SwapBalansol {}),
                 Swap::MarcoPolo { x_to_y } => {
-                    Variant::MarcoPolo(proto_def::SwapMarcoPolo { x_to_y })
+                    swap::Variant::MarcoPolo(proto_def::SwapMarcoPolo { x_to_y })
                 },
                 Swap::Dradex { side } => {
-                    Variant::Dradex(proto_def::SwapDradex { side: side as i32 })
+                    swap::Variant::Dradex(proto_def::SwapDradex { side: side as i32 })
                 },
-                Swap::LifinityV2 => Variant::LifinityV2(proto_def::SwapLifinityV2 {}),
-                Swap::RaydiumClmm => Variant::RaydiumClmm(proto_def::SwapRaydiumClmm {}),
+                Swap::LifinityV2 => swap::Variant::LifinityV2(proto_def::SwapLifinityV2 {}),
+                Swap::RaydiumClmm => swap::Variant::RaydiumClmm(proto_def::SwapRaydiumClmm {}),
                 Swap::Openbook { side } => {
-                    Variant::Openbook(proto_def::SwapOpenbook { side: side as i32 })
+                    swap::Variant::Openbook(proto_def::SwapOpenbook { side: side as i32 })
                 },
                 Swap::Phoenix { side } => {
-                    Variant::Phoenix(proto_def::SwapPhoenix { side: side as i32 })
+                    swap::Variant::Phoenix(proto_def::SwapPhoenix { side: side as i32 })
                 },
                 Swap::Symmetry {
                     from_token_id,
                     to_token_id,
-                } => Variant::Symmetry(proto_def::SwapSymmetry {
+                } => swap::Variant::Symmetry(proto_def::SwapSymmetry {
                     from_token_id,
                     to_token_id,
                 }),
-                Swap::TokenSwapV2 => Variant::TokenSwapV2(proto_def::SwapTokenSwapV2 {}),
+                Swap::TokenSwapV2 => swap::Variant::TokenSwapV2(proto_def::SwapTokenSwapV2 {}),
                 Swap::HeliumTreasuryManagementRedeemV0 => {
-                    Variant::HeliumTreasuryManagementRedeemV0(
+                    swap::Variant::HeliumTreasuryManagementRedeemV0(
                         proto_def::SwapHeliumTreasuryManagementRedeemV0 {},
                     )
                 },
-                Swap::StakeDexStakeWrappedSol => {
-                    Variant::StakeDexStakeWrappedSol(proto_def::SwapStakeDexStakeWrappedSol {})
-                },
+                Swap::StakeDexStakeWrappedSol => swap::Variant::StakeDexStakeWrappedSol(
+                    proto_def::SwapStakeDexStakeWrappedSol {},
+                ),
                 Swap::StakeDexSwapViaStake { bridge_stake_seed } => {
-                    Variant::StakeDexSwapViaStake(proto_def::SwapStakeDexSwapViaStake {
+                    swap::Variant::StakeDexSwapViaStake(proto_def::SwapStakeDexSwapViaStake {
                         bridge_stake_seed,
                     })
                 },
-                Swap::GooseFXV2 => Variant::GooseFXV2(proto_def::SwapGooseFxv2 {}),
-                Swap::Perps => Variant::Perps(proto_def::SwapPerps {}),
+                Swap::GooseFXV2 => swap::Variant::GooseFXV2(proto_def::SwapGooseFxv2 {}),
+                Swap::Perps => swap::Variant::Perps(proto_def::SwapPerps {}),
                 Swap::PerpsAddLiquidity => {
-                    Variant::PerpsAddLiquidity(proto_def::SwapPerpsAddLiquidity {})
+                    swap::Variant::PerpsAddLiquidity(proto_def::SwapPerpsAddLiquidity {})
                 },
                 Swap::PerpsRemoveLiquidity => {
-                    Variant::PerpsRemoveLiquidity(proto_def::SwapPerpsRemoveLiquidity {})
+                    swap::Variant::PerpsRemoveLiquidity(proto_def::SwapPerpsRemoveLiquidity {})
                 },
-                Swap::MeteoraDlmm => Variant::MeteoraDlmm(proto_def::SwapMeteoraDlmm {}),
+                Swap::MeteoraDlmm => swap::Variant::MeteoraDlmm(proto_def::SwapMeteoraDlmm {}),
                 Swap::OpenBookV2 { side } => {
-                    Variant::OpenBookV2(proto_def::SwapOpenBookV2 { side: side as i32 })
+                    swap::Variant::OpenBookV2(proto_def::SwapOpenBookV2 { side: side as i32 })
                 },
-                Swap::RaydiumClmmV2 => Variant::RaydiumClmmV2(proto_def::SwapRaydiumClmmV2 {}),
+                Swap::RaydiumClmmV2 => {
+                    swap::Variant::RaydiumClmmV2(proto_def::SwapRaydiumClmmV2 {})
+                },
                 Swap::StakeDexPrefundWithdrawStakeAndDepositStake { bridge_stake_seed } => {
-                    Variant::StakeDexPrefundWithdrawStakeAndDepositStake(
+                    swap::Variant::StakeDexPrefundWithdrawStakeAndDepositStake(
                         proto_def::SwapStakeDexPrefundWithdrawStakeAndDepositStake {
                             bridge_stake_seed,
                         },
@@ -164,7 +170,7 @@ pub mod proto_types_parsers {
                     pool_index,
                     quantity_is_input,
                     quantity_is_collateral,
-                } => Variant::Clone(proto_def::SwapClone {
+                } => swap::Variant::Clone(proto_def::SwapClone {
                     pool_index: pool_index.into(),
                     quantity_is_input,
                     quantity_is_collateral,
@@ -174,7 +180,7 @@ pub mod proto_types_parsers {
                     dst_lst_value_calc_accs,
                     src_lst_index,
                     dst_lst_index,
-                } => Variant::SanctumS(proto_def::SwapSanctumS {
+                } => swap::Variant::SanctumS(proto_def::SwapSanctumS {
                     src_lst_value_calc_accs: src_lst_value_calc_accs.into(),
                     dst_lst_value_calc_accs: dst_lst_value_calc_accs.into(),
                     src_lst_index,
@@ -183,92 +189,158 @@ pub mod proto_types_parsers {
                 Swap::SanctumSAddLiquidity {
                     lst_value_calc_accs,
                     lst_index,
-                } => Variant::SanctumSAddLiquidity(proto_def::SwapSanctumSAddLiquidity {
+                } => swap::Variant::SanctumSAddLiquidity(proto_def::SwapSanctumSAddLiquidity {
                     lst_value_calc_accs: lst_value_calc_accs.into(),
                     lst_index,
                 }),
                 Swap::SanctumSRemoveLiquidity {
                     lst_value_calc_accs,
                     lst_index,
-                } => Variant::SanctumSRemoveLiquidity(proto_def::SwapSanctumSRemoveLiquidity {
-                    lst_value_calc_accs: lst_value_calc_accs.into(),
-                    lst_index,
-                }),
-                Swap::RaydiumCP => Variant::RaydiumCP(proto_def::SwapRaydiumCp {}),
+                } => {
+                    swap::Variant::SanctumSRemoveLiquidity(proto_def::SwapSanctumSRemoveLiquidity {
+                        lst_value_calc_accs: lst_value_calc_accs.into(),
+                        lst_index,
+                    })
+                },
+                Swap::RaydiumCP => swap::Variant::RaydiumCP(proto_def::SwapRaydiumCp {}),
                 Swap::WhirlpoolSwapV2 {
                     a_to_b,
                     remaining_accounts_info,
-                } => Variant::WhirlpoolSwapV2(proto_def::SwapWhirlpoolSwapV2 {
+                } => swap::Variant::WhirlpoolSwapV2(proto_def::SwapWhirlpoolSwapV2 {
                     a_to_b,
                     remaining_accounts_info: remaining_accounts_info.map(|x| x.into_proto()),
                 }),
-                Swap::OneIntro => Variant::OneIntro(proto_def::SwapOneIntro {}),
+                Swap::OneIntro => swap::Variant::OneIntro(proto_def::SwapOneIntro {}),
                 Swap::PumpdotfunWrappedBuy => {
-                    Variant::PumpdotfunWrappedBuy(proto_def::SwapPumpdotfunWrappedBuy {})
+                    swap::Variant::PumpdotfunWrappedBuy(proto_def::SwapPumpdotfunWrappedBuy {})
                 },
                 Swap::PumpdotfunWrappedSell => {
-                    Variant::PumpdotfunWrappedSell(proto_def::SwapPumpdotfunWrappedSell {})
+                    swap::Variant::PumpdotfunWrappedSell(proto_def::SwapPumpdotfunWrappedSell {})
                 },
-                Swap::PerpsV2 => Variant::PerpsV2(proto_def::SwapPerpsV2 {}),
+                Swap::PerpsV2 => swap::Variant::PerpsV2(proto_def::SwapPerpsV2 {}),
                 Swap::PerpsV2AddLiquidity => {
-                    Variant::PerpsV2AddLiquidity(proto_def::SwapPerpsV2AddLiquidity {})
+                    swap::Variant::PerpsV2AddLiquidity(proto_def::SwapPerpsV2AddLiquidity {})
                 },
                 Swap::PerpsV2RemoveLiquidity => {
-                    Variant::PerpsV2RemoveLiquidity(proto_def::SwapPerpsV2RemoveLiquidity {})
+                    swap::Variant::PerpsV2RemoveLiquidity(proto_def::SwapPerpsV2RemoveLiquidity {})
                 },
                 Swap::MoonshotWrappedBuy => {
-                    Variant::MoonshotWrappedBuy(proto_def::SwapMoonshotWrappedBuy {})
+                    swap::Variant::MoonshotWrappedBuy(proto_def::SwapMoonshotWrappedBuy {})
                 },
                 Swap::MoonshotWrappedSell => {
-                    Variant::MoonshotWrappedSell(proto_def::SwapMoonshotWrappedSell {})
+                    swap::Variant::MoonshotWrappedSell(proto_def::SwapMoonshotWrappedSell {})
                 },
                 Swap::StabbleStableSwap => {
-                    Variant::StabbleStableSwap(proto_def::SwapStabbleStableSwap {})
+                    swap::Variant::StabbleStableSwap(proto_def::SwapStabbleStableSwap {})
                 },
                 Swap::StabbleWeightedSwap => {
-                    Variant::StabbleWeightedSwap(proto_def::SwapStabbleWeightedSwap {})
+                    swap::Variant::StabbleWeightedSwap(proto_def::SwapStabbleWeightedSwap {})
                 },
-                Swap::Obric { x_to_y } => Variant::Obric(proto_def::SwapObric { x_to_y }),
-                Swap::FoxBuyFromEstimatedCost => {
-                    Variant::FoxBuyFromEstimatedCost(proto_def::SwapFoxBuyFromEstimatedCost {})
-                },
+                Swap::Obric { x_to_y } => swap::Variant::Obric(proto_def::SwapObric { x_to_y }),
+                Swap::FoxBuyFromEstimatedCost => swap::Variant::FoxBuyFromEstimatedCost(
+                    proto_def::SwapFoxBuyFromEstimatedCost {},
+                ),
                 Swap::FoxClaimPartial { is_y } => {
-                    Variant::FoxClaimPartial(proto_def::SwapFoxClaimPartial { is_y })
+                    swap::Variant::FoxClaimPartial(proto_def::SwapFoxClaimPartial { is_y })
                 },
                 Swap::SolFi { is_quote_to_base } => {
-                    Variant::SolFi(proto_def::SwapSolFi { is_quote_to_base })
+                    swap::Variant::SolFi(proto_def::SwapSolFi { is_quote_to_base })
                 },
                 Swap::SolayerDelegateNoInit => {
-                    Variant::SolayerDelegateNoInit(proto_def::SwapSolayerDelegateNoInit {})
+                    swap::Variant::SolayerDelegateNoInit(proto_def::SwapSolayerDelegateNoInit {})
                 },
-                Swap::SolayerUndelegateNoInit => {
-                    Variant::SolayerUndelegateNoInit(proto_def::SwapSolayerUndelegateNoInit {})
-                },
+                Swap::SolayerUndelegateNoInit => swap::Variant::SolayerUndelegateNoInit(
+                    proto_def::SwapSolayerUndelegateNoInit {},
+                ),
                 Swap::TokenMill { side } => {
-                    Variant::TokenMill(proto_def::SwapTokenMill { side: side as i32 })
+                    swap::Variant::TokenMill(proto_def::SwapTokenMill { side: side as i32 })
                 },
-                Swap::DaosFunBuy => Variant::DaosFunBuy(proto_def::SwapDaosFunBuy {}),
-                Swap::DaosFunSell => Variant::DaosFunSell(proto_def::SwapDaosFunSell {}),
-                Swap::ZeroFi => Variant::ZeroFi(proto_def::SwapZeroFi {}),
-                Swap::StakeDexWithdrawWrappedSol => Variant::StakeDexWithdrawWrappedSol(
+                Swap::DaosFunBuy => swap::Variant::DaosFunBuy(proto_def::SwapDaosFunBuy {}),
+                Swap::DaosFunSell => swap::Variant::DaosFunSell(proto_def::SwapDaosFunSell {}),
+                Swap::ZeroFi => swap::Variant::ZeroFi(proto_def::SwapZeroFi {}),
+                Swap::StakeDexWithdrawWrappedSol => swap::Variant::StakeDexWithdrawWrappedSol(
                     proto_def::SwapStakeDexWithdrawWrappedSol {},
                 ),
-                Swap::VirtualsBuy => Variant::VirtualsBuy(proto_def::SwapVirtualsBuy {}),
-                Swap::VirtualsSell => Variant::VirtualsSell(proto_def::SwapVirtualsSell {}),
+                Swap::VirtualsBuy => swap::Variant::VirtualsBuy(proto_def::SwapVirtualsBuy {}),
+                Swap::VirtualsSell => swap::Variant::VirtualsSell(proto_def::SwapVirtualsSell {}),
                 Swap::Perena {
                     in_index,
                     out_index,
-                } => Variant::Perena(proto_def::SwapPerena {
+                } => swap::Variant::Perena(proto_def::SwapPerena {
                     in_index: in_index.into(),
                     out_index: out_index.into(),
                 }),
                 Swap::PumpdotfunAmmBuy => {
-                    Variant::PumpdotfunAmmBuy(proto_def::SwapPumpdotfunAmmBuy {})
+                    swap::Variant::PumpdotfunAmmBuy(proto_def::SwapPumpdotfunAmmBuy {})
                 },
                 Swap::PumpdotfunAmmSell => {
-                    Variant::PumpdotfunAmmSell(proto_def::SwapPumpdotfunAmmSell {})
+                    swap::Variant::PumpdotfunAmmSell(proto_def::SwapPumpdotfunAmmSell {})
                 },
-                Swap::Gamma => Variant::Gamma(proto_def::SwapGamma {}),
+                Swap::Gamma => swap::Variant::Gamma(proto_def::SwapGamma {}),
+                Swap::MeteoraDlmmSwapV2 {
+                    remaining_accounts_info,
+                } => swap::Variant::MeteoraDlmmSwapV2(proto_def::SwapMeteoraDlmmSwapV2 {
+                    remaining_accounts_info: Some(remaining_accounts_info.into_proto()),
+                }),
+                Swap::Woofi => swap::Variant::Woofi(proto_def::SwapWoofi {}),
+                Swap::MeteoraDammV2 => {
+                    swap::Variant::MeteoraDammV2(proto_def::SwapMeteoraDammV2 {})
+                },
+                Swap::MeteoraDynamicBondingCurveSwap => {
+                    swap::Variant::MeteoraDynamicBondingCurveSwap(
+                        proto_def::SwapMeteoraDynamicBondingCurveSwap {},
+                    )
+                },
+                Swap::StabbleStableSwapV2 => {
+                    swap::Variant::StabbleStableSwapV2(proto_def::SwapStabbleStableSwapV2 {})
+                },
+                Swap::StabbleWeightedSwapV2 => {
+                    swap::Variant::StabbleWeightedSwapV2(proto_def::SwapStabbleWeightedSwapV2 {})
+                },
+                Swap::RaydiumLaunchlabBuy { share_fee_rate } => {
+                    swap::Variant::RaydiumLaunchlabBuy(proto_def::SwapRaydiumLaunchlabBuy {
+                        share_fee_rate,
+                    })
+                },
+                Swap::RaydiumLaunchlabSell { share_fee_rate } => {
+                    swap::Variant::RaydiumLaunchlabSell(proto_def::SwapRaydiumLaunchlabSell {
+                        share_fee_rate,
+                    })
+                },
+                Swap::BoopdotfunWrappedBuy => {
+                    swap::Variant::BoopdotfunWrappedBuy(proto_def::SwapBoopdotfunWrappedBuy {})
+                },
+                Swap::BoopdotfunWrappedSell => {
+                    swap::Variant::BoopdotfunWrappedSell(proto_def::SwapBoopdotfunWrappedSell {})
+                },
+                Swap::Plasma { side } => {
+                    swap::Variant::Plasma(proto_def::SwapPlasma { side: side as i32 })
+                },
+                Swap::GoonFi {
+                    is_bid,
+                    blacklist_bump,
+                } => swap::Variant::GoonFi(proto_def::SwapGoonFi {
+                    is_bid,
+                    blacklist_bump: blacklist_bump.into(),
+                }),
+                Swap::HumidiFi {
+                    swap_id,
+                    is_base_to_quote,
+                } => swap::Variant::HumidiFi(proto_def::SwapHumidiFi {
+                    swap_id,
+                    is_base_to_quote,
+                }),
+                Swap::MeteoraDynamicBondingCurveSwapWithRemainingAccounts => {
+                    swap::Variant::MeteoraDynamicBondingCurveSwapWithRemainingAccounts(
+                        proto_def::SwapMeteoraDynamicBondingCurveSwapWithRemainingAccounts {},
+                    )
+                },
+                Swap::TesseraV { side } => {
+                    swap::Variant::TesseraV(proto_def::SwapTesseraV { side: side as i32 })
+                },
+                Swap::RaydiumStable => {
+                    swap::Variant::RaydiumStable(proto_def::SwapRaydiumStable {})
+                },
             };
 
             proto_def::Swap {

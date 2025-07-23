@@ -64,7 +64,6 @@ use yellowstone_vixen_pumpfun_parser::{
 };
 use yellowstone_vixen_raydium_amm_v4_parser::{
     accounts_parser::AccountParser as RaydiumAmmV4AccParser,
-    instructions_parser::InstructionParser as RaydiumAmmV4IxParser,
     proto_def::DESCRIPTOR_SET as RAYDIUM_AMM_V4_DESCRIPTOR_SET,
 };
 use yellowstone_vixen_raydium_clmm_parser::{
@@ -133,7 +132,6 @@ fn main() {
         .instruction(Proto::new(OrcaWhirlpoolIxParser))
         .instruction(Proto::new(MoonshotIxParser))
         .instruction(Proto::new(MeteoraAmmIxParser))
-        .instruction(Proto::new(RaydiumAmmV4IxParser))
         .instruction(Proto::new(RaydiumClmmIxParser))
         .instruction(Proto::new(KaminoLimitOrdersIxParser))
         .build(config)

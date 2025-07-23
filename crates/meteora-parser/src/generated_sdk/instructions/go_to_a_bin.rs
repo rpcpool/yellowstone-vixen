@@ -10,24 +10,21 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct GoToABin {
-    pub lb_pair: solana_program::pubkey::Pubkey,
+    pub lb_pair: solana_pubkey::Pubkey,
 
-    pub bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
+    pub bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
 
-    pub from_bin_array: Option<solana_program::pubkey::Pubkey>,
+    pub from_bin_array: Option<solana_pubkey::Pubkey>,
 
-    pub to_bin_array: Option<solana_program::pubkey::Pubkey>,
+    pub to_bin_array: Option<solana_pubkey::Pubkey>,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl GoToABin {
-    pub fn instruction(
-        &self,
-        args: GoToABinInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self, args: GoToABinInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -36,51 +33,48 @@ impl GoToABin {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: GoToABinInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(6 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lb_pair,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.lb_pair, false));
         if let Some(bin_array_bitmap_extension) = self.bin_array_bitmap_extension {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 bin_array_bitmap_extension,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
         if let Some(from_bin_array) = self.from_bin_array {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 from_bin_array,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
         if let Some(to_bin_array) = self.to_bin_array {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 to_bin_array,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -89,7 +83,7 @@ impl GoToABin {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -133,21 +127,21 @@ pub struct GoToABinInstructionArgs {
 ///   5. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct GoToABinBuilder {
-    lb_pair: Option<solana_program::pubkey::Pubkey>,
-    bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
-    from_bin_array: Option<solana_program::pubkey::Pubkey>,
-    to_bin_array: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    lb_pair: Option<solana_pubkey::Pubkey>,
+    bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
+    from_bin_array: Option<solana_pubkey::Pubkey>,
+    to_bin_array: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     bin_id: Option<i32>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl GoToABinBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn lb_pair(&mut self, lb_pair: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: solana_pubkey::Pubkey) -> &mut Self {
         self.lb_pair = Some(lb_pair);
         self
     }
@@ -156,7 +150,7 @@ impl GoToABinBuilder {
     #[inline(always)]
     pub fn bin_array_bitmap_extension(
         &mut self,
-        bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
+        bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.bin_array_bitmap_extension = bin_array_bitmap_extension;
         self
@@ -164,35 +158,26 @@ impl GoToABinBuilder {
 
     /// `[optional account]`
     #[inline(always)]
-    pub fn from_bin_array(
-        &mut self,
-        from_bin_array: Option<solana_program::pubkey::Pubkey>,
-    ) -> &mut Self {
+    pub fn from_bin_array(&mut self, from_bin_array: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.from_bin_array = from_bin_array;
         self
     }
 
     /// `[optional account]`
     #[inline(always)]
-    pub fn to_bin_array(
-        &mut self,
-        to_bin_array: Option<solana_program::pubkey::Pubkey>,
-    ) -> &mut Self {
+    pub fn to_bin_array(&mut self, to_bin_array: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.to_bin_array = to_bin_array;
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -205,10 +190,7 @@ impl GoToABinBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -217,14 +199,14 @@ impl GoToABinBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = GoToABin {
             lb_pair: self.lb_pair.expect("lb_pair is not set"),
             bin_array_bitmap_extension: self.bin_array_bitmap_extension,
@@ -243,42 +225,42 @@ impl GoToABinBuilder {
 
 /// `go_to_a_bin` CPI accounts.
 pub struct GoToABinCpiAccounts<'a, 'b> {
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub from_bin_array: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub from_bin_array: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub to_bin_array: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub to_bin_array: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `go_to_a_bin` CPI instruction.
 pub struct GoToABinCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub from_bin_array: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub from_bin_array: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub to_bin_array: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub to_bin_array: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: GoToABinInstructionArgs,
 }
 
 impl<'a, 'b> GoToABinCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: GoToABinCpiAccounts<'a, 'b>,
         args: GoToABinInstructionArgs,
     ) -> Self {
@@ -295,19 +277,15 @@ impl<'a, 'b> GoToABinCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -315,7 +293,7 @@ impl<'a, 'b> GoToABinCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -325,60 +303,56 @@ impl<'a, 'b> GoToABinCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(6 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lb_pair.key,
             false,
         ));
         if let Some(bin_array_bitmap_extension) = self.bin_array_bitmap_extension {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 *bin_array_bitmap_extension.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
         if let Some(from_bin_array) = self.from_bin_array {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 *from_bin_array.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
         if let Some(to_bin_array) = self.to_bin_array {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 *to_bin_array.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -388,7 +362,7 @@ impl<'a, 'b> GoToABinCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -412,9 +386,9 @@ impl<'a, 'b> GoToABinCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -435,7 +409,7 @@ pub struct GoToABinCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(GoToABinCpiBuilderInstruction {
             __program: program,
             lb_pair: None,
@@ -451,10 +425,7 @@ impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn lb_pair(
-        &mut self,
-        lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lb_pair = Some(lb_pair);
         self
     }
@@ -463,7 +434,7 @@ impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bin_array_bitmap_extension(
         &mut self,
-        bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.bin_array_bitmap_extension = bin_array_bitmap_extension;
         self
@@ -473,7 +444,7 @@ impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn from_bin_array(
         &mut self,
-        from_bin_array: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        from_bin_array: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.from_bin_array = from_bin_array;
         self
@@ -483,7 +454,7 @@ impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn to_bin_array(
         &mut self,
-        to_bin_array: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        to_bin_array: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.to_bin_array = to_bin_array;
         self
@@ -492,17 +463,14 @@ impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -517,7 +485,7 @@ impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -534,11 +502,7 @@ impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -547,14 +511,14 @@ impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = GoToABinInstructionArgs {
             bin_id: self.instruction.bin_id.clone().expect("bin_id is not set"),
         };
@@ -586,18 +550,14 @@ impl<'a, 'b> GoToABinCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct GoToABinCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    lb_pair: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    from_bin_array: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    to_bin_array: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    lb_pair: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
+    from_bin_array: Option<&'b solana_account_info::AccountInfo<'a>>,
+    to_bin_array: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     bin_id: Option<i32>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

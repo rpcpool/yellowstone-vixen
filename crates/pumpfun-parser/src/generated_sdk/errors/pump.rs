@@ -37,14 +37,80 @@ pub enum PumpError {
     /// 6008 - Withdraw too frequent
     #[error("Withdraw too frequent")]
     WithdrawTooFrequent = 0x1778,
+    /// 6009 - new_size should be > current_size
+    #[error("new_size should be > current_size")]
+    NewSizeShouldBeGreaterThanCurrentSize = 0x1779,
+    /// 6010 - Account type not supported
+    #[error("Account type not supported")]
+    AccountTypeNotSupported = 0x177a,
+    /// 6011 - initial_real_token_reserves should be less than token_total_supply
+    #[error("initial_real_token_reserves should be less than token_total_supply")]
+    InitialRealTokenReservesShouldBeLessThanTokenTotalSupply = 0x177b,
+    /// 6012 - initial_virtual_token_reserves should be greater than initial_real_token_reserves
+    #[error("initial_virtual_token_reserves should be greater than initial_real_token_reserves")]
+    InitialVirtualTokenReservesShouldBeGreaterThanInitialRealTokenReserves = 0x177c,
+    /// 6013 - fee_basis_points greater than maximum
+    #[error("fee_basis_points greater than maximum")]
+    FeeBasisPointsGreaterThanMaximum = 0x177d,
+    /// 6014 - Withdraw authority cannot be set to System Program ID
+    #[error("Withdraw authority cannot be set to System Program ID")]
+    AllZerosWithdrawAuthority = 0x177e,
+    /// 6015 - pool_migration_fee should be less than final_real_sol_reserves
+    #[error("pool_migration_fee should be less than final_real_sol_reserves")]
+    PoolMigrationFeeShouldBeLessThanFinalRealSolReserves = 0x177f,
+    /// 6016 - pool_migration_fee should be greater than creator_fee + MAX_MIGRATE_FEES
+    #[error("pool_migration_fee should be greater than creator_fee + MAX_MIGRATE_FEES")]
+    PoolMigrationFeeShouldBeGreaterThanCreatorFeePlusMaxMigrateFees = 0x1780,
+    /// 6017 - Migrate instruction is disabled
+    #[error("Migrate instruction is disabled")]
+    DisabledWithdraw = 0x1781,
+    /// 6018 - Migrate instruction is disabled
+    #[error("Migrate instruction is disabled")]
+    DisabledMigrate = 0x1782,
+    /// 6019 - Invalid creator pubkey
+    #[error("Invalid creator pubkey")]
+    InvalidCreator = 0x1783,
+    /// 6020 - Buy zero amount
+    #[error("Buy zero amount")]
+    BuyZeroAmount = 0x1784,
+    /// 6021 - Not enough tokens to buy
+    #[error("Not enough tokens to buy")]
+    NotEnoughTokensToBuy = 0x1785,
+    /// 6022 - Sell zero amount
+    #[error("Sell zero amount")]
+    SellZeroAmount = 0x1786,
+    /// 6023 - Not enough tokens to sell
+    #[error("Not enough tokens to sell")]
+    NotEnoughTokensToSell = 0x1787,
+    /// 6024 - Overflow
+    #[error("Overflow")]
+    Overflow = 0x1788,
+    /// 6025 - Truncation
+    #[error("Truncation")]
+    Truncation = 0x1789,
+    /// 6026 - Division by zero
+    #[error("Division by zero")]
+    DivisionByZero = 0x178a,
+    /// 6027 - Not enough remaining accounts
+    #[error("Not enough remaining accounts")]
+    NotEnoughRemainingAccounts = 0x178b,
+    /// 6028 - All fee recipients should be non-zero
+    #[error("All fee recipients should be non-zero")]
+    AllFeeRecipientsShouldBeNonZero = 0x178c,
+    /// 6029 - Unsorted or not unique fee recipients
+    #[error("Unsorted or not unique fee recipients")]
+    UnsortedNotUniqueFeeRecipients = 0x178d,
+    /// 6030 - Creator should not be zero
+    #[error("Creator should not be zero")]
+    CreatorShouldNotBeZero = 0x178e,
 }
 
-impl solana_program::program_error::PrintProgramError for PumpError {
+impl solana_program_error::PrintProgramError for PumpError {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for PumpError {
+impl<T> solana_decode_error::DecodeError<T> for PumpError {
     fn type_of() -> &'static str { "PumpError" }
 }

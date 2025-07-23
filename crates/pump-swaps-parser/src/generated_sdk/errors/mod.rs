@@ -5,6 +5,6 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-pub(crate) mod pump_swap;
+pub(crate) mod pump_amm;
 
-pub use self::pump_swap::PumpSwapError;
+pub use self::pump_amm::PumpAmmError;

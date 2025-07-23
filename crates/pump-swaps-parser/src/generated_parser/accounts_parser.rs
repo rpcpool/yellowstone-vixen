@@ -6,29 +6,33 @@
 //!
 
 use crate::{
-    accounts::{GlobalConfig, Pool},
-    ID,
+    accounts::{BondingCurve, GlobalConfig, Pool},
+    deserialize_checked, ID,
 };
 
-/// PumpSwap Program State
+/// PumpAmm Program State
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
-pub enum PumpSwapProgramState {
+pub enum PumpAmmProgramState {
+    BondingCurve(BondingCurve),
     GlobalConfig(GlobalConfig),
     Pool(Pool),
 }
 
-impl PumpSwapProgramState {
+impl PumpAmmProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
-            [149, 8, 156, 202, 160, 252, 176, 217] => Ok(PumpSwapProgramState::GlobalConfig(
-                GlobalConfig::from_bytes(data_bytes)?,
+            [23, 183, 248, 55, 96, 216, 172, 96] => Ok(PumpAmmProgramState::BondingCurve(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
-            [241, 154, 109, 4, 17, 177, 109, 188] => {
-                Ok(PumpSwapProgramState::Pool(Pool::from_bytes(data_bytes)?))
-            },
+            [149, 8, 156, 202, 160, 252, 176, 217] => Ok(PumpAmmProgramState::GlobalConfig(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
+            [241, 154, 109, 4, 17, 177, 109, 188] => Ok(PumpAmmProgramState::Pool(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
@@ -65,9 +69,9 @@ pub struct AccountParser;
 
 impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
-    type Output = PumpSwapProgramState;
+    type Output = PumpAmmProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> { "pump_swap::AccountParser".into() }
+    fn id(&self) -> std::borrow::Cow<str> { "pump_amm::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -83,8 +87,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        PumpSwapProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = PumpAmmProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 
@@ -97,8 +116,22 @@ impl yellowstone_vixen_core::ProgramParser for AccountParser {
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{AccountParser, GlobalConfig, PumpSwapProgramState};
+    use super::{AccountParser, BondingCurve, PumpAmmProgramState};
     use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
+    impl IntoProto<proto_def::BondingCurve> for BondingCurve {
+        fn into_proto(self) -> proto_def::BondingCurve {
+            proto_def::BondingCurve {
+                virtual_token_reserves: self.virtual_token_reserves,
+                virtual_sol_reserves: self.virtual_sol_reserves,
+                real_token_reserves: self.real_token_reserves,
+                real_sol_reserves: self.real_sol_reserves,
+                token_total_supply: self.token_total_supply,
+                complete: self.complete,
+                creator: self.creator.to_string(),
+            }
+        }
+    }
+    use super::GlobalConfig;
     impl IntoProto<proto_def::GlobalConfig> for GlobalConfig {
         fn into_proto(self) -> proto_def::GlobalConfig {
             proto_def::GlobalConfig {
@@ -111,6 +144,7 @@ mod proto_parser {
                     .into_iter()
                     .map(|x| x.to_string())
                     .collect(),
+                coin_creator_fee_basis_points: self.coin_creator_fee_basis_points,
             }
         }
     }
@@ -127,17 +161,21 @@ mod proto_parser {
                 pool_base_token_account: self.pool_base_token_account.to_string(),
                 pool_quote_token_account: self.pool_quote_token_account.to_string(),
                 lp_supply: self.lp_supply,
+                coin_creator: self.coin_creator.to_string(),
             }
         }
     }
 
-    impl IntoProto<proto_def::ProgramState> for PumpSwapProgramState {
+    impl IntoProto<proto_def::ProgramState> for PumpAmmProgramState {
         fn into_proto(self) -> proto_def::ProgramState {
             let state_oneof = match self {
-                PumpSwapProgramState::GlobalConfig(data) => {
+                PumpAmmProgramState::BondingCurve(data) => {
+                    proto_def::program_state::StateOneof::BondingCurve(data.into_proto())
+                },
+                PumpAmmProgramState::GlobalConfig(data) => {
                     proto_def::program_state::StateOneof::GlobalConfig(data.into_proto())
                 },
-                PumpSwapProgramState::Pool(data) => {
+                PumpAmmProgramState::Pool(data) => {
                     proto_def::program_state::StateOneof::Pool(data.into_proto())
                 },
             };

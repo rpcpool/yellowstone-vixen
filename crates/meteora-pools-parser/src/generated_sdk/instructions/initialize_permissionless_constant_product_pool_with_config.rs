@@ -11,64 +11,64 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct InitializePermissionlessConstantProductPoolWithConfig {
     /// Pool account (PDA address)
-    pub pool: solana_program::pubkey::Pubkey,
+    pub pool: solana_pubkey::Pubkey,
 
-    pub config: solana_program::pubkey::Pubkey,
+    pub config: solana_pubkey::Pubkey,
     /// LP token mint of the pool
-    pub lp_mint: solana_program::pubkey::Pubkey,
+    pub lp_mint: solana_pubkey::Pubkey,
     /// Token A mint of the pool. Eg: USDT
-    pub token_a_mint: solana_program::pubkey::Pubkey,
+    pub token_a_mint: solana_pubkey::Pubkey,
     /// Token B mint of the pool. Eg: USDC
-    pub token_b_mint: solana_program::pubkey::Pubkey,
+    pub token_b_mint: solana_pubkey::Pubkey,
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
-    pub a_vault: solana_program::pubkey::Pubkey,
+    pub a_vault: solana_pubkey::Pubkey,
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
-    pub b_vault: solana_program::pubkey::Pubkey,
+    pub b_vault: solana_pubkey::Pubkey,
     /// Token vault account of vault A
-    pub a_token_vault: solana_program::pubkey::Pubkey,
+    pub a_token_vault: solana_pubkey::Pubkey,
     /// Token vault account of vault B
-    pub b_token_vault: solana_program::pubkey::Pubkey,
+    pub b_token_vault: solana_pubkey::Pubkey,
     /// LP token mint of vault A
-    pub a_vault_lp_mint: solana_program::pubkey::Pubkey,
+    pub a_vault_lp_mint: solana_pubkey::Pubkey,
     /// LP token mint of vault B
-    pub b_vault_lp_mint: solana_program::pubkey::Pubkey,
+    pub b_vault_lp_mint: solana_pubkey::Pubkey,
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub a_vault_lp: solana_program::pubkey::Pubkey,
+    pub a_vault_lp: solana_pubkey::Pubkey,
     /// LP token account of vault B. Used to receive/burn vault LP upon deposit/withdraw from the vault.
-    pub b_vault_lp: solana_program::pubkey::Pubkey,
+    pub b_vault_lp: solana_pubkey::Pubkey,
     /// Payer token account for pool token A mint. Used to bootstrap the pool with initial liquidity.
-    pub payer_token_a: solana_program::pubkey::Pubkey,
+    pub payer_token_a: solana_pubkey::Pubkey,
     /// Admin token account for pool token B mint. Used to bootstrap the pool with initial liquidity.
-    pub payer_token_b: solana_program::pubkey::Pubkey,
+    pub payer_token_b: solana_pubkey::Pubkey,
 
-    pub payer_pool_lp: solana_program::pubkey::Pubkey,
+    pub payer_pool_lp: solana_pubkey::Pubkey,
     /// Protocol fee token account for token A. Used to receive trading fee.
-    pub protocol_token_a_fee: solana_program::pubkey::Pubkey,
+    pub protocol_token_a_fee: solana_pubkey::Pubkey,
     /// Protocol fee token account for token B. Used to receive trading fee.
-    pub protocol_token_b_fee: solana_program::pubkey::Pubkey,
+    pub protocol_token_b_fee: solana_pubkey::Pubkey,
     /// Admin account. This account will be the admin of the pool, and the payer for PDA during initialize pool.
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
     /// Rent account.
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 
-    pub mint_metadata: solana_program::pubkey::Pubkey,
+    pub mint_metadata: solana_pubkey::Pubkey,
 
-    pub metadata_program: solana_program::pubkey::Pubkey,
+    pub metadata_program: solana_pubkey::Pubkey,
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
-    pub vault_program: solana_program::pubkey::Pubkey,
+    pub vault_program: solana_pubkey::Pubkey,
     /// Token program.
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
     /// Associated token program.
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
     /// System program.
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 }
 
 impl InitializePermissionlessConstantProductPoolWithConfig {
     pub fn instruction(
         &self,
         args: InitializePermissionlessConstantProductPoolWithConfigInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -77,107 +77,88 @@ impl InitializePermissionlessConstantProductPoolWithConfig {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: InitializePermissionlessConstantProductPoolWithConfigInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(26 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.pool, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lp_mint,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.lp_mint, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_a_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_b_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.a_vault,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.b_vault,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.a_vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.b_vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.a_token_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.b_token_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.a_vault_lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.b_vault_lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.a_vault_lp,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.b_vault_lp,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.a_vault_lp, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.b_vault_lp, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.payer_token_a,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.payer_token_b,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.payer_pool_lp,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.protocol_token_a_fee,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.protocol_token_b_fee,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.mint_metadata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.metadata_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.vault_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
@@ -189,7 +170,7 @@ impl InitializePermissionlessConstantProductPoolWithConfig {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -254,35 +235,35 @@ pub struct InitializePermissionlessConstantProductPoolWithConfigInstructionArgs 
 ///   25. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct InitializePermissionlessConstantProductPoolWithConfigBuilder {
-    pool: Option<solana_program::pubkey::Pubkey>,
-    config: Option<solana_program::pubkey::Pubkey>,
-    lp_mint: Option<solana_program::pubkey::Pubkey>,
-    token_a_mint: Option<solana_program::pubkey::Pubkey>,
-    token_b_mint: Option<solana_program::pubkey::Pubkey>,
-    a_vault: Option<solana_program::pubkey::Pubkey>,
-    b_vault: Option<solana_program::pubkey::Pubkey>,
-    a_token_vault: Option<solana_program::pubkey::Pubkey>,
-    b_token_vault: Option<solana_program::pubkey::Pubkey>,
-    a_vault_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    b_vault_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    a_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    b_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    payer_token_a: Option<solana_program::pubkey::Pubkey>,
-    payer_token_b: Option<solana_program::pubkey::Pubkey>,
-    payer_pool_lp: Option<solana_program::pubkey::Pubkey>,
-    protocol_token_a_fee: Option<solana_program::pubkey::Pubkey>,
-    protocol_token_b_fee: Option<solana_program::pubkey::Pubkey>,
-    payer: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    mint_metadata: Option<solana_program::pubkey::Pubkey>,
-    metadata_program: Option<solana_program::pubkey::Pubkey>,
-    vault_program: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
+    pool: Option<solana_pubkey::Pubkey>,
+    config: Option<solana_pubkey::Pubkey>,
+    lp_mint: Option<solana_pubkey::Pubkey>,
+    token_a_mint: Option<solana_pubkey::Pubkey>,
+    token_b_mint: Option<solana_pubkey::Pubkey>,
+    a_vault: Option<solana_pubkey::Pubkey>,
+    b_vault: Option<solana_pubkey::Pubkey>,
+    a_token_vault: Option<solana_pubkey::Pubkey>,
+    b_token_vault: Option<solana_pubkey::Pubkey>,
+    a_vault_lp_mint: Option<solana_pubkey::Pubkey>,
+    b_vault_lp_mint: Option<solana_pubkey::Pubkey>,
+    a_vault_lp: Option<solana_pubkey::Pubkey>,
+    b_vault_lp: Option<solana_pubkey::Pubkey>,
+    payer_token_a: Option<solana_pubkey::Pubkey>,
+    payer_token_b: Option<solana_pubkey::Pubkey>,
+    payer_pool_lp: Option<solana_pubkey::Pubkey>,
+    protocol_token_a_fee: Option<solana_pubkey::Pubkey>,
+    protocol_token_b_fee: Option<solana_pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    mint_metadata: Option<solana_pubkey::Pubkey>,
+    metadata_program: Option<solana_pubkey::Pubkey>,
+    vault_program: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
     token_a_amount: Option<u64>,
     token_b_amount: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
@@ -290,116 +271,110 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
 
     /// Pool account (PDA address)
     #[inline(always)]
-    pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
 
     #[inline(always)]
-    pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
 
     /// LP token mint of the pool
     #[inline(always)]
-    pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
 
     /// Token A mint of the pool. Eg: USDT
     #[inline(always)]
-    pub fn token_a_mint(&mut self, token_a_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_a_mint(&mut self, token_a_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_mint = Some(token_a_mint);
         self
     }
 
     /// Token B mint of the pool. Eg: USDC
     #[inline(always)]
-    pub fn token_b_mint(&mut self, token_b_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_b_mint(&mut self, token_b_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_mint = Some(token_b_mint);
         self
     }
 
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn a_vault(&mut self, a_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_vault(&mut self, a_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault = Some(a_vault);
         self
     }
 
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn b_vault(&mut self, b_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn b_vault(&mut self, b_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.b_vault = Some(b_vault);
         self
     }
 
     /// Token vault account of vault A
     #[inline(always)]
-    pub fn a_token_vault(&mut self, a_token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_token_vault(&mut self, a_token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.a_token_vault = Some(a_token_vault);
         self
     }
 
     /// Token vault account of vault B
     #[inline(always)]
-    pub fn b_token_vault(&mut self, b_token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn b_token_vault(&mut self, b_token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.b_token_vault = Some(b_token_vault);
         self
     }
 
     /// LP token mint of vault A
     #[inline(always)]
-    pub fn a_vault_lp_mint(
-        &mut self,
-        a_vault_lp_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn a_vault_lp_mint(&mut self, a_vault_lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
     }
 
     /// LP token mint of vault B
     #[inline(always)]
-    pub fn b_vault_lp_mint(
-        &mut self,
-        b_vault_lp_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn b_vault_lp_mint(&mut self, b_vault_lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
     }
 
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
-    pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_vault_lp(&mut self, a_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
 
     /// LP token account of vault B. Used to receive/burn vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
-    pub fn b_vault_lp(&mut self, b_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn b_vault_lp(&mut self, b_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.b_vault_lp = Some(b_vault_lp);
         self
     }
 
     /// Payer token account for pool token A mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
-    pub fn payer_token_a(&mut self, payer_token_a: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer_token_a(&mut self, payer_token_a: solana_pubkey::Pubkey) -> &mut Self {
         self.payer_token_a = Some(payer_token_a);
         self
     }
 
     /// Admin token account for pool token B mint. Used to bootstrap the pool with initial liquidity.
     #[inline(always)]
-    pub fn payer_token_b(&mut self, payer_token_b: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer_token_b(&mut self, payer_token_b: solana_pubkey::Pubkey) -> &mut Self {
         self.payer_token_b = Some(payer_token_b);
         self
     }
 
     #[inline(always)]
-    pub fn payer_pool_lp(&mut self, payer_pool_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer_pool_lp(&mut self, payer_pool_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.payer_pool_lp = Some(payer_pool_lp);
         self
     }
@@ -408,7 +383,7 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
     #[inline(always)]
     pub fn protocol_token_a_fee(
         &mut self,
-        protocol_token_a_fee: solana_program::pubkey::Pubkey,
+        protocol_token_a_fee: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
@@ -418,7 +393,7 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
     #[inline(always)]
     pub fn protocol_token_b_fee(
         &mut self,
-        protocol_token_b_fee: solana_program::pubkey::Pubkey,
+        protocol_token_b_fee: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
@@ -426,7 +401,7 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
 
     /// Admin account. This account will be the admin of the pool, and the payer for PDA during initialize pool.
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
@@ -434,29 +409,26 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Rent account.
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
 
     #[inline(always)]
-    pub fn mint_metadata(&mut self, mint_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn mint_metadata(&mut self, mint_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.mint_metadata = Some(mint_metadata);
         self
     }
 
     #[inline(always)]
-    pub fn metadata_program(
-        &mut self,
-        metadata_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn metadata_program(&mut self, metadata_program: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata_program = Some(metadata_program);
         self
     }
 
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
     #[inline(always)]
-    pub fn vault_program(&mut self, vault_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vault_program(&mut self, vault_program: solana_pubkey::Pubkey) -> &mut Self {
         self.vault_program = Some(vault_program);
         self
     }
@@ -464,7 +436,7 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program.
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -473,7 +445,7 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
@@ -482,7 +454,7 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -501,10 +473,7 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -513,14 +482,14 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializePermissionlessConstantProductPoolWithConfig {
             pool: self.pool.expect("pool is not set"),
             config: self.config.expect("config is not set"),
@@ -545,13 +514,13 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
                 .protocol_token_b_fee
                 .expect("protocol_token_b_fee is not set"),
             payer: self.payer.expect("payer is not set"),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
             mint_metadata: self.mint_metadata.expect("mint_metadata is not set"),
             metadata_program: self.metadata_program.expect("metadata_program is not set"),
             vault_program: self.vault_program.expect("vault_program is not set"),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self
@@ -559,7 +528,7 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
                 .expect("associated_token_program is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
         };
         let args = InitializePermissionlessConstantProductPoolWithConfigInstructionArgs {
             token_a_amount: self
@@ -579,122 +548,122 @@ impl InitializePermissionlessConstantProductPoolWithConfigBuilder {
 /// `initialize_permissionless_constant_product_pool_with_config` CPI accounts.
 pub struct InitializePermissionlessConstantProductPoolWithConfigCpiAccounts<'a, 'b> {
     /// Pool account (PDA address)
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of the pool
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Token A mint of the pool. Eg: USDT
-    pub token_a_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Token B mint of the pool. Eg: USDC
-    pub token_b_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
-    pub a_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
-    pub b_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token vault account of vault A
-    pub a_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token vault account of vault B
-    pub b_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault A
-    pub a_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault B
-    pub b_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault B. Used to receive/burn vault LP upon deposit/withdraw from the vault.
-    pub b_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// Payer token account for pool token A mint. Used to bootstrap the pool with initial liquidity.
-    pub payer_token_a: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer_token_a: &'b solana_account_info::AccountInfo<'a>,
     /// Admin token account for pool token B mint. Used to bootstrap the pool with initial liquidity.
-    pub payer_token_b: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer_token_b: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer_pool_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer_pool_lp: &'b solana_account_info::AccountInfo<'a>,
     /// Protocol fee token account for token A. Used to receive trading fee.
-    pub protocol_token_a_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_a_fee: &'b solana_account_info::AccountInfo<'a>,
     /// Protocol fee token account for token B. Used to receive trading fee.
-    pub protocol_token_b_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_b_fee: &'b solana_account_info::AccountInfo<'a>,
     /// Admin account. This account will be the admin of the pool, and the payer for PDA during initialize pool.
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// Rent account.
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
-    pub vault_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token program.
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Associated token program.
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// System program.
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `initialize_permissionless_constant_product_pool_with_config` CPI instruction.
 pub struct InitializePermissionlessConstantProductPoolWithConfigCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Pool account (PDA address)
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of the pool
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Token A mint of the pool. Eg: USDT
-    pub token_a_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_a_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Token B mint of the pool. Eg: USDC
-    pub token_b_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_b_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
-    pub a_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
-    pub b_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token vault account of vault A
-    pub a_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token vault account of vault B
-    pub b_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault A
-    pub a_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault B
-    pub b_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault B. Used to receive/burn vault LP upon deposit/withdraw from the vault.
-    pub b_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// Payer token account for pool token A mint. Used to bootstrap the pool with initial liquidity.
-    pub payer_token_a: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer_token_a: &'b solana_account_info::AccountInfo<'a>,
     /// Admin token account for pool token B mint. Used to bootstrap the pool with initial liquidity.
-    pub payer_token_b: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer_token_b: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer_pool_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer_pool_lp: &'b solana_account_info::AccountInfo<'a>,
     /// Protocol fee token account for token A. Used to receive trading fee.
-    pub protocol_token_a_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_a_fee: &'b solana_account_info::AccountInfo<'a>,
     /// Protocol fee token account for token B. Used to receive trading fee.
-    pub protocol_token_b_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_b_fee: &'b solana_account_info::AccountInfo<'a>,
     /// Admin account. This account will be the admin of the pool, and the payer for PDA during initialize pool.
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// Rent account.
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
     /// Vault program. The pool will deposit/withdraw liquidity from the vault.
-    pub vault_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token program.
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Associated token program.
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// System program.
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: InitializePermissionlessConstantProductPoolWithConfigInstructionArgs,
 }
 
 impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: InitializePermissionlessConstantProductPoolWithConfigCpiAccounts<'a, 'b>,
         args: InitializePermissionlessConstantProductPoolWithConfigInstructionArgs,
     ) -> Self {
@@ -731,19 +700,15 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -751,7 +716,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -761,119 +726,109 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(26 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.pool.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.pool.key, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_a_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_b_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.a_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.b_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.a_token_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.b_token_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.a_vault_lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.b_vault_lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.a_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.b_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.payer_token_a.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.payer_token_b.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.payer_pool_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.protocol_token_a_fee.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.protocol_token_b_fee.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.mint_metadata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.metadata_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.vault_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -886,7 +841,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -924,9 +879,9 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -968,7 +923,7 @@ pub struct InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a, '
 }
 
 impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(
             InitializePermissionlessConstantProductPoolWithConfigCpiBuilderInstruction {
                 __program: program,
@@ -1008,26 +963,20 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
 
     /// Pool account (PDA address)
     #[inline(always)]
-    pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
 
     #[inline(always)]
-    pub fn config(
-        &mut self,
-        config: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
 
     /// LP token mint of the pool
     #[inline(always)]
-    pub fn lp_mint(
-        &mut self,
-        lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
@@ -1036,7 +985,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn token_a_mint(
         &mut self,
-        token_a_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_a_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_a_mint = Some(token_a_mint);
         self
@@ -1046,7 +995,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn token_b_mint(
         &mut self,
-        token_b_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_b_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_b_mint = Some(token_b_mint);
         self
@@ -1054,20 +1003,14 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
 
     /// Vault account for token A. Token A of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn a_vault(
-        &mut self,
-        a_vault: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn a_vault(&mut self, a_vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.a_vault = Some(a_vault);
         self
     }
 
     /// Vault account for token B. Token B of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn b_vault(
-        &mut self,
-        b_vault: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn b_vault(&mut self, b_vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.b_vault = Some(b_vault);
         self
     }
@@ -1076,7 +1019,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn a_token_vault(
         &mut self,
-        a_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        a_token_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_token_vault = Some(a_token_vault);
         self
@@ -1086,7 +1029,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn b_token_vault(
         &mut self,
-        b_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        b_token_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.b_token_vault = Some(b_token_vault);
         self
@@ -1096,7 +1039,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn a_vault_lp_mint(
         &mut self,
-        a_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        a_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
@@ -1106,7 +1049,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn b_vault_lp_mint(
         &mut self,
-        b_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        b_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
@@ -1116,7 +1059,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn a_vault_lp(
         &mut self,
-        a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
@@ -1126,7 +1069,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn b_vault_lp(
         &mut self,
-        b_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        b_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.b_vault_lp = Some(b_vault_lp);
         self
@@ -1136,7 +1079,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn payer_token_a(
         &mut self,
-        payer_token_a: &'b solana_program::account_info::AccountInfo<'a>,
+        payer_token_a: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.payer_token_a = Some(payer_token_a);
         self
@@ -1146,7 +1089,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn payer_token_b(
         &mut self,
-        payer_token_b: &'b solana_program::account_info::AccountInfo<'a>,
+        payer_token_b: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.payer_token_b = Some(payer_token_b);
         self
@@ -1155,7 +1098,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn payer_pool_lp(
         &mut self,
-        payer_pool_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        payer_pool_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.payer_pool_lp = Some(payer_pool_lp);
         self
@@ -1165,7 +1108,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn protocol_token_a_fee(
         &mut self,
-        protocol_token_a_fee: &'b solana_program::account_info::AccountInfo<'a>,
+        protocol_token_a_fee: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.protocol_token_a_fee = Some(protocol_token_a_fee);
         self
@@ -1175,7 +1118,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn protocol_token_b_fee(
         &mut self,
-        protocol_token_b_fee: &'b solana_program::account_info::AccountInfo<'a>,
+        protocol_token_b_fee: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.protocol_token_b_fee = Some(protocol_token_b_fee);
         self
@@ -1183,14 +1126,14 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
 
     /// Admin account. This account will be the admin of the pool, and the payer for PDA during initialize pool.
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
 
     /// Rent account.
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -1198,7 +1141,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn mint_metadata(
         &mut self,
-        mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+        mint_metadata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mint_metadata = Some(mint_metadata);
         self
@@ -1207,7 +1150,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
-        metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+        metadata_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.metadata_program = Some(metadata_program);
         self
@@ -1217,7 +1160,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn vault_program(
         &mut self,
-        vault_program: &'b solana_program::account_info::AccountInfo<'a>,
+        vault_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vault_program = Some(vault_program);
         self
@@ -1227,7 +1170,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -1237,7 +1180,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -1247,7 +1190,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -1269,7 +1212,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -1286,11 +1229,7 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -1299,14 +1238,14 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = InitializePermissionlessConstantProductPoolWithConfigInstructionArgs {
             token_a_amount: self
                 .instruction
@@ -1435,39 +1374,35 @@ impl<'a, 'b> InitializePermissionlessConstantProductPoolWithConfigCpiBuilder<'a,
 
 #[derive(Clone, Debug)]
 struct InitializePermissionlessConstantProductPoolWithConfigCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_a_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_b_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_token_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_token_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_vault_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer_token_a: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer_token_b: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer_pool_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    protocol_token_a_fee: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    protocol_token_b_fee: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    mint_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    metadata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vault_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_a_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_b_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_vault_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer_token_a: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer_token_b: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer_pool_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    protocol_token_a_fee: Option<&'b solana_account_info::AccountInfo<'a>>,
+    protocol_token_b_fee: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    mint_metadata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    metadata_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vault_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_a_amount: Option<u64>,
     token_b_amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

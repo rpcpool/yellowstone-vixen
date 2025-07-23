@@ -5,9 +5,14 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         CollectFundFee as CollectFundFeeIxAccounts,
         CollectFundFeeInstructionArgs as CollectFundFeeIxData,
@@ -50,7 +55,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = RaydiumCpSwapProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<RaydiumCpSwapProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "RaydiumCpSwap::InstructionParser".into() }
 
@@ -66,7 +74,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -81,206 +105,223 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<RaydiumCpSwapProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [137, 52, 237, 212, 215, 117, 108, 104] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateAmmConfigIxAccounts {
-                    owner: ix.accounts[0].0.into(),
-                    amm_config: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    owner: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: CreateAmmConfigIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::CreateAmmConfig(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [49, 60, 174, 136, 154, 28, 116, 200] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateAmmConfigIxAccounts {
-                    owner: ix.accounts[0].0.into(),
-                    amm_config: ix.accounts[1].0.into(),
+                    owner: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateAmmConfigIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::UpdateAmmConfig(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [130, 87, 108, 6, 46, 224, 117, 123] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdatePoolStatusIxAccounts {
-                    authority: ix.accounts[0].0.into(),
-                    pool_state: ix.accounts[1].0.into(),
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
                 };
                 let de_ix_data: UpdatePoolStatusIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::UpdatePoolStatus(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [136, 136, 252, 221, 194, 66, 126, 89] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CollectProtocolFeeIxAccounts {
-                    owner: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    pool_state: ix.accounts[2].0.into(),
-                    amm_config: ix.accounts[3].0.into(),
-                    token0_vault: ix.accounts[4].0.into(),
-                    token1_vault: ix.accounts[5].0.into(),
-                    vault0_mint: ix.accounts[6].0.into(),
-                    vault1_mint: ix.accounts[7].0.into(),
-                    recipient_token0_account: ix.accounts[8].0.into(),
-                    recipient_token1_account: ix.accounts[9].0.into(),
-                    token_program: ix.accounts[10].0.into(),
-                    token_program2022: ix.accounts[11].0.into(),
+                    owner: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    vault0_mint: next_account(accounts)?,
+                    vault1_mint: next_account(accounts)?,
+                    recipient_token0_account: next_account(accounts)?,
+                    recipient_token1_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_program2022: next_account(accounts)?,
                 };
                 let de_ix_data: CollectProtocolFeeIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::CollectProtocolFee(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [167, 138, 78, 149, 223, 194, 6, 126] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CollectFundFeeIxAccounts {
-                    owner: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    pool_state: ix.accounts[2].0.into(),
-                    amm_config: ix.accounts[3].0.into(),
-                    token0_vault: ix.accounts[4].0.into(),
-                    token1_vault: ix.accounts[5].0.into(),
-                    vault0_mint: ix.accounts[6].0.into(),
-                    vault1_mint: ix.accounts[7].0.into(),
-                    recipient_token0_account: ix.accounts[8].0.into(),
-                    recipient_token1_account: ix.accounts[9].0.into(),
-                    token_program: ix.accounts[10].0.into(),
-                    token_program2022: ix.accounts[11].0.into(),
+                    owner: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    vault0_mint: next_account(accounts)?,
+                    vault1_mint: next_account(accounts)?,
+                    recipient_token0_account: next_account(accounts)?,
+                    recipient_token1_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_program2022: next_account(accounts)?,
                 };
-                let de_ix_data: CollectFundFeeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: CollectFundFeeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::CollectFundFee(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [175, 175, 109, 31, 13, 152, 155, 237] => {
-                check_min_accounts_req(accounts_len, 20)?;
+                let expected_accounts_len = 20;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeIxAccounts {
-                    creator: ix.accounts[0].0.into(),
-                    amm_config: ix.accounts[1].0.into(),
-                    authority: ix.accounts[2].0.into(),
-                    pool_state: ix.accounts[3].0.into(),
-                    token0_mint: ix.accounts[4].0.into(),
-                    token1_mint: ix.accounts[5].0.into(),
-                    lp_mint: ix.accounts[6].0.into(),
-                    creator_token0: ix.accounts[7].0.into(),
-                    creator_token1: ix.accounts[8].0.into(),
-                    creator_lp_token: ix.accounts[9].0.into(),
-                    token0_vault: ix.accounts[10].0.into(),
-                    token1_vault: ix.accounts[11].0.into(),
-                    create_pool_fee: ix.accounts[12].0.into(),
-                    observation_state: ix.accounts[13].0.into(),
-                    token_program: ix.accounts[14].0.into(),
-                    token0_program: ix.accounts[15].0.into(),
-                    token1_program: ix.accounts[16].0.into(),
-                    associated_token_program: ix.accounts[17].0.into(),
-                    system_program: ix.accounts[18].0.into(),
-                    rent: ix.accounts[19].0.into(),
+                    creator: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    token0_mint: next_account(accounts)?,
+                    token1_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    creator_token0: next_account(accounts)?,
+                    creator_token1: next_account(accounts)?,
+                    creator_lp_token: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    create_pool_fee: next_account(accounts)?,
+                    observation_state: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token0_program: next_account(accounts)?,
+                    token1_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: InitializeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::Initialize(ix_accounts, de_ix_data))
             },
             [242, 35, 198, 137, 82, 225, 242, 182] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DepositIxAccounts {
-                    owner: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    pool_state: ix.accounts[2].0.into(),
-                    owner_lp_token: ix.accounts[3].0.into(),
-                    token0_account: ix.accounts[4].0.into(),
-                    token1_account: ix.accounts[5].0.into(),
-                    token0_vault: ix.accounts[6].0.into(),
-                    token1_vault: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    token_program2022: ix.accounts[9].0.into(),
-                    vault0_mint: ix.accounts[10].0.into(),
-                    vault1_mint: ix.accounts[11].0.into(),
-                    lp_mint: ix.accounts[12].0.into(),
+                    owner: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    owner_lp_token: next_account(accounts)?,
+                    token0_account: next_account(accounts)?,
+                    token1_account: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_program2022: next_account(accounts)?,
+                    vault0_mint: next_account(accounts)?,
+                    vault1_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
                 };
-                let de_ix_data: DepositIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: DepositIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [183, 18, 70, 156, 148, 109, 161, 34] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawIxAccounts {
-                    owner: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    pool_state: ix.accounts[2].0.into(),
-                    owner_lp_token: ix.accounts[3].0.into(),
-                    token0_account: ix.accounts[4].0.into(),
-                    token1_account: ix.accounts[5].0.into(),
-                    token0_vault: ix.accounts[6].0.into(),
-                    token1_vault: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    token_program2022: ix.accounts[9].0.into(),
-                    vault0_mint: ix.accounts[10].0.into(),
-                    vault1_mint: ix.accounts[11].0.into(),
-                    lp_mint: ix.accounts[12].0.into(),
-                    memo_program: ix.accounts[13].0.into(),
+                    owner: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    owner_lp_token: next_account(accounts)?,
+                    token0_account: next_account(accounts)?,
+                    token1_account: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_program2022: next_account(accounts)?,
+                    vault0_mint: next_account(accounts)?,
+                    vault1_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: WithdrawIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             [143, 190, 90, 218, 196, 30, 51, 222] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapBaseInputIxAccounts {
-                    payer: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    amm_config: ix.accounts[2].0.into(),
-                    pool_state: ix.accounts[3].0.into(),
-                    input_token_account: ix.accounts[4].0.into(),
-                    output_token_account: ix.accounts[5].0.into(),
-                    input_vault: ix.accounts[6].0.into(),
-                    output_vault: ix.accounts[7].0.into(),
-                    input_token_program: ix.accounts[8].0.into(),
-                    output_token_program: ix.accounts[9].0.into(),
-                    input_token_mint: ix.accounts[10].0.into(),
-                    output_token_mint: ix.accounts[11].0.into(),
-                    observation_state: ix.accounts[12].0.into(),
+                    payer: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    input_token_account: next_account(accounts)?,
+                    output_token_account: next_account(accounts)?,
+                    input_vault: next_account(accounts)?,
+                    output_vault: next_account(accounts)?,
+                    input_token_program: next_account(accounts)?,
+                    output_token_program: next_account(accounts)?,
+                    input_token_mint: next_account(accounts)?,
+                    output_token_mint: next_account(accounts)?,
+                    observation_state: next_account(accounts)?,
                 };
-                let de_ix_data: SwapBaseInputIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SwapBaseInputIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::SwapBaseInput(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [55, 217, 98, 86, 163, 74, 180, 173] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapBaseOutputIxAccounts {
-                    payer: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    amm_config: ix.accounts[2].0.into(),
-                    pool_state: ix.accounts[3].0.into(),
-                    input_token_account: ix.accounts[4].0.into(),
-                    output_token_account: ix.accounts[5].0.into(),
-                    input_vault: ix.accounts[6].0.into(),
-                    output_vault: ix.accounts[7].0.into(),
-                    input_token_program: ix.accounts[8].0.into(),
-                    output_token_program: ix.accounts[9].0.into(),
-                    input_token_mint: ix.accounts[10].0.into(),
-                    output_token_mint: ix.accounts[11].0.into(),
-                    observation_state: ix.accounts[12].0.into(),
+                    payer: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    input_token_account: next_account(accounts)?,
+                    output_token_account: next_account(accounts)?,
+                    input_vault: next_account(accounts)?,
+                    output_vault: next_account(accounts)?,
+                    input_token_program: next_account(accounts)?,
+                    output_token_program: next_account(accounts)?,
+                    input_token_mint: next_account(accounts)?,
+                    output_token_mint: next_account(accounts)?,
+                    observation_state: next_account(accounts)?,
                 };
-                let de_ix_data: SwapBaseOutputIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SwapBaseOutputIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::SwapBaseOutput(
                     ix_accounts,
                     de_ix_data,
@@ -313,7 +354,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -327,6 +375,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -695,6 +786,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

@@ -5,8 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+pub(crate) mod r#adaptive_fee_tier;
+pub(crate) mod r#dynamic_tick_array;
 pub(crate) mod r#fee_tier;
 pub(crate) mod r#lock_config;
+pub(crate) mod r#oracle;
 pub(crate) mod r#position;
 pub(crate) mod r#position_bundle;
 pub(crate) mod r#tick_array;
@@ -16,6 +19,7 @@ pub(crate) mod r#whirlpools_config;
 pub(crate) mod r#whirlpools_config_extension;
 
 pub use self::{
-    r#fee_tier::*, r#lock_config::*, r#position::*, r#position_bundle::*, r#tick_array::*,
-    r#token_badge::*, r#whirlpool::*, r#whirlpools_config::*, r#whirlpools_config_extension::*,
+    r#adaptive_fee_tier::*, r#dynamic_tick_array::*, r#fee_tier::*, r#lock_config::*, r#oracle::*,
+    r#position::*, r#position_bundle::*, r#tick_array::*, r#token_badge::*, r#whirlpool::*,
+    r#whirlpools_config::*, r#whirlpools_config_extension::*,
 };

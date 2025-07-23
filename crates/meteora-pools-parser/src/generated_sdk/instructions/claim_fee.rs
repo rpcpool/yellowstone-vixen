@@ -11,48 +11,45 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct ClaimFee {
     /// Pool account
-    pub pool: solana_program::pubkey::Pubkey,
+    pub pool: solana_pubkey::Pubkey,
     /// LP token mint of the pool
-    pub lp_mint: solana_program::pubkey::Pubkey,
+    pub lp_mint: solana_pubkey::Pubkey,
     /// Lock account
-    pub lock_escrow: solana_program::pubkey::Pubkey,
+    pub lock_escrow: solana_pubkey::Pubkey,
     /// Owner of lock account
-    pub owner: solana_program::pubkey::Pubkey,
+    pub owner: solana_pubkey::Pubkey,
     /// owner lp token account
-    pub source_tokens: solana_program::pubkey::Pubkey,
+    pub source_tokens: solana_pubkey::Pubkey,
     /// Escrow vault
-    pub escrow_vault: solana_program::pubkey::Pubkey,
+    pub escrow_vault: solana_pubkey::Pubkey,
     /// Token program.
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
     /// Token vault account of vault A
-    pub a_token_vault: solana_program::pubkey::Pubkey,
+    pub a_token_vault: solana_pubkey::Pubkey,
     /// Token vault account of vault B
-    pub b_token_vault: solana_program::pubkey::Pubkey,
+    pub b_token_vault: solana_pubkey::Pubkey,
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
-    pub a_vault: solana_program::pubkey::Pubkey,
+    pub a_vault: solana_pubkey::Pubkey,
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
-    pub b_vault: solana_program::pubkey::Pubkey,
+    pub b_vault: solana_pubkey::Pubkey,
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub a_vault_lp: solana_program::pubkey::Pubkey,
+    pub a_vault_lp: solana_pubkey::Pubkey,
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub b_vault_lp: solana_program::pubkey::Pubkey,
+    pub b_vault_lp: solana_pubkey::Pubkey,
     /// LP token mint of vault a
-    pub a_vault_lp_mint: solana_program::pubkey::Pubkey,
+    pub a_vault_lp_mint: solana_pubkey::Pubkey,
     /// LP token mint of vault b
-    pub b_vault_lp_mint: solana_program::pubkey::Pubkey,
+    pub b_vault_lp_mint: solana_pubkey::Pubkey,
     /// User token A account. Token will be transfer from this account if it is add liquidity operation. Else, token will be transfer into this account.
-    pub user_a_token: solana_program::pubkey::Pubkey,
+    pub user_a_token: solana_pubkey::Pubkey,
     /// User token B account. Token will be transfer from this account if it is add liquidity operation. Else, token will be transfer into this account.
-    pub user_b_token: solana_program::pubkey::Pubkey,
+    pub user_b_token: solana_pubkey::Pubkey,
     /// Vault program. the pool will deposit/withdraw liquidity from the vault.
-    pub vault_program: solana_program::pubkey::Pubkey,
+    pub vault_program: solana_pubkey::Pubkey,
 }
 
 impl ClaimFee {
-    pub fn instruction(
-        &self,
-        args: ClaimFeeInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self, args: ClaimFeeInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -61,76 +58,57 @@ impl ClaimFee {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: ClaimFeeInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(18 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lp_mint,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.pool, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.lp_mint, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.lock_escrow,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.owner, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.owner, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.source_tokens,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.escrow_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.a_token_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.b_token_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.a_vault,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.b_vault,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.a_vault_lp,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.b_vault_lp,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.a_vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.b_vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.a_vault_lp, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.b_vault_lp, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.a_vault_lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.b_vault_lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.user_a_token,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.user_b_token,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.vault_program,
             false,
         ));
@@ -139,7 +117,7 @@ impl ClaimFee {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -195,26 +173,26 @@ pub struct ClaimFeeInstructionArgs {
 ///   17. `[]` vault_program
 #[derive(Clone, Debug, Default)]
 pub struct ClaimFeeBuilder {
-    pool: Option<solana_program::pubkey::Pubkey>,
-    lp_mint: Option<solana_program::pubkey::Pubkey>,
-    lock_escrow: Option<solana_program::pubkey::Pubkey>,
-    owner: Option<solana_program::pubkey::Pubkey>,
-    source_tokens: Option<solana_program::pubkey::Pubkey>,
-    escrow_vault: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    a_token_vault: Option<solana_program::pubkey::Pubkey>,
-    b_token_vault: Option<solana_program::pubkey::Pubkey>,
-    a_vault: Option<solana_program::pubkey::Pubkey>,
-    b_vault: Option<solana_program::pubkey::Pubkey>,
-    a_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    b_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    a_vault_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    b_vault_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    user_a_token: Option<solana_program::pubkey::Pubkey>,
-    user_b_token: Option<solana_program::pubkey::Pubkey>,
-    vault_program: Option<solana_program::pubkey::Pubkey>,
+    pool: Option<solana_pubkey::Pubkey>,
+    lp_mint: Option<solana_pubkey::Pubkey>,
+    lock_escrow: Option<solana_pubkey::Pubkey>,
+    owner: Option<solana_pubkey::Pubkey>,
+    source_tokens: Option<solana_pubkey::Pubkey>,
+    escrow_vault: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    a_token_vault: Option<solana_pubkey::Pubkey>,
+    b_token_vault: Option<solana_pubkey::Pubkey>,
+    a_vault: Option<solana_pubkey::Pubkey>,
+    b_vault: Option<solana_pubkey::Pubkey>,
+    a_vault_lp: Option<solana_pubkey::Pubkey>,
+    b_vault_lp: Option<solana_pubkey::Pubkey>,
+    a_vault_lp_mint: Option<solana_pubkey::Pubkey>,
+    b_vault_lp_mint: Option<solana_pubkey::Pubkey>,
+    user_a_token: Option<solana_pubkey::Pubkey>,
+    user_b_token: Option<solana_pubkey::Pubkey>,
+    vault_program: Option<solana_pubkey::Pubkey>,
     max_amount: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl ClaimFeeBuilder {
@@ -222,42 +200,42 @@ impl ClaimFeeBuilder {
 
     /// Pool account
     #[inline(always)]
-    pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
 
     /// LP token mint of the pool
     #[inline(always)]
-    pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
 
     /// Lock account
     #[inline(always)]
-    pub fn lock_escrow(&mut self, lock_escrow: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lock_escrow(&mut self, lock_escrow: solana_pubkey::Pubkey) -> &mut Self {
         self.lock_escrow = Some(lock_escrow);
         self
     }
 
     /// Owner of lock account
     #[inline(always)]
-    pub fn owner(&mut self, owner: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
 
     /// owner lp token account
     #[inline(always)]
-    pub fn source_tokens(&mut self, source_tokens: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn source_tokens(&mut self, source_tokens: solana_pubkey::Pubkey) -> &mut Self {
         self.source_tokens = Some(source_tokens);
         self
     }
 
     /// Escrow vault
     #[inline(always)]
-    pub fn escrow_vault(&mut self, escrow_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn escrow_vault(&mut self, escrow_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.escrow_vault = Some(escrow_vault);
         self
     }
@@ -265,90 +243,84 @@ impl ClaimFeeBuilder {
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program.
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
 
     /// Token vault account of vault A
     #[inline(always)]
-    pub fn a_token_vault(&mut self, a_token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_token_vault(&mut self, a_token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.a_token_vault = Some(a_token_vault);
         self
     }
 
     /// Token vault account of vault B
     #[inline(always)]
-    pub fn b_token_vault(&mut self, b_token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn b_token_vault(&mut self, b_token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.b_token_vault = Some(b_token_vault);
         self
     }
 
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn a_vault(&mut self, a_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_vault(&mut self, a_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault = Some(a_vault);
         self
     }
 
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn b_vault(&mut self, b_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn b_vault(&mut self, b_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.b_vault = Some(b_vault);
         self
     }
 
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
-    pub fn a_vault_lp(&mut self, a_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn a_vault_lp(&mut self, a_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp = Some(a_vault_lp);
         self
     }
 
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
     #[inline(always)]
-    pub fn b_vault_lp(&mut self, b_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn b_vault_lp(&mut self, b_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.b_vault_lp = Some(b_vault_lp);
         self
     }
 
     /// LP token mint of vault a
     #[inline(always)]
-    pub fn a_vault_lp_mint(
-        &mut self,
-        a_vault_lp_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn a_vault_lp_mint(&mut self, a_vault_lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
     }
 
     /// LP token mint of vault b
     #[inline(always)]
-    pub fn b_vault_lp_mint(
-        &mut self,
-        b_vault_lp_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn b_vault_lp_mint(&mut self, b_vault_lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
     }
 
     /// User token A account. Token will be transfer from this account if it is add liquidity operation. Else, token will be transfer into this account.
     #[inline(always)]
-    pub fn user_a_token(&mut self, user_a_token: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user_a_token(&mut self, user_a_token: solana_pubkey::Pubkey) -> &mut Self {
         self.user_a_token = Some(user_a_token);
         self
     }
 
     /// User token B account. Token will be transfer from this account if it is add liquidity operation. Else, token will be transfer into this account.
     #[inline(always)]
-    pub fn user_b_token(&mut self, user_b_token: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user_b_token(&mut self, user_b_token: solana_pubkey::Pubkey) -> &mut Self {
         self.user_b_token = Some(user_b_token);
         self
     }
 
     /// Vault program. the pool will deposit/withdraw liquidity from the vault.
     #[inline(always)]
-    pub fn vault_program(&mut self, vault_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vault_program(&mut self, vault_program: solana_pubkey::Pubkey) -> &mut Self {
         self.vault_program = Some(vault_program);
         self
     }
@@ -361,10 +333,7 @@ impl ClaimFeeBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -373,14 +342,14 @@ impl ClaimFeeBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = ClaimFee {
             pool: self.pool.expect("pool is not set"),
             lp_mint: self.lp_mint.expect("lp_mint is not set"),
@@ -388,7 +357,7 @@ impl ClaimFeeBuilder {
             owner: self.owner.expect("owner is not set"),
             source_tokens: self.source_tokens.expect("source_tokens is not set"),
             escrow_vault: self.escrow_vault.expect("escrow_vault is not set"),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             a_token_vault: self.a_token_vault.expect("a_token_vault is not set"),
@@ -414,90 +383,90 @@ impl ClaimFeeBuilder {
 /// `claim_fee` CPI accounts.
 pub struct ClaimFeeCpiAccounts<'a, 'b> {
     /// Pool account
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of the pool
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Lock account
-    pub lock_escrow: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_escrow: &'b solana_account_info::AccountInfo<'a>,
     /// Owner of lock account
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner: &'b solana_account_info::AccountInfo<'a>,
     /// owner lp token account
-    pub source_tokens: &'b solana_program::account_info::AccountInfo<'a>,
+    pub source_tokens: &'b solana_account_info::AccountInfo<'a>,
     /// Escrow vault
-    pub escrow_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub escrow_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token program.
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token vault account of vault A
-    pub a_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token vault account of vault B
-    pub b_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
-    pub a_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
-    pub b_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub b_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault a
-    pub a_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault b
-    pub b_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// User token A account. Token will be transfer from this account if it is add liquidity operation. Else, token will be transfer into this account.
-    pub user_a_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_a_token: &'b solana_account_info::AccountInfo<'a>,
     /// User token B account. Token will be transfer from this account if it is add liquidity operation. Else, token will be transfer into this account.
-    pub user_b_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_b_token: &'b solana_account_info::AccountInfo<'a>,
     /// Vault program. the pool will deposit/withdraw liquidity from the vault.
-    pub vault_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `claim_fee` CPI instruction.
 pub struct ClaimFeeCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Pool account
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of the pool
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Lock account
-    pub lock_escrow: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_escrow: &'b solana_account_info::AccountInfo<'a>,
     /// Owner of lock account
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner: &'b solana_account_info::AccountInfo<'a>,
     /// owner lp token account
-    pub source_tokens: &'b solana_program::account_info::AccountInfo<'a>,
+    pub source_tokens: &'b solana_account_info::AccountInfo<'a>,
     /// Escrow vault
-    pub escrow_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub escrow_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token program.
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token vault account of vault A
-    pub a_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token vault account of vault B
-    pub b_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
-    pub a_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
-    pub b_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault A. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// LP token account of vault B. Used to receive/burn the vault LP upon deposit/withdraw from the vault.
-    pub b_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault a
-    pub a_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub a_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// LP token mint of vault b
-    pub b_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub b_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// User token A account. Token will be transfer from this account if it is add liquidity operation. Else, token will be transfer into this account.
-    pub user_a_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_a_token: &'b solana_account_info::AccountInfo<'a>,
     /// User token B account. Token will be transfer from this account if it is add liquidity operation. Else, token will be transfer into this account.
-    pub user_b_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_b_token: &'b solana_account_info::AccountInfo<'a>,
     /// Vault program. the pool will deposit/withdraw liquidity from the vault.
-    pub vault_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: ClaimFeeInstructionArgs,
 }
 
 impl<'a, 'b> ClaimFeeCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: ClaimFeeCpiAccounts<'a, 'b>,
         args: ClaimFeeInstructionArgs,
     ) -> Self {
@@ -526,19 +495,15 @@ impl<'a, 'b> ClaimFeeCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -546,7 +511,7 @@ impl<'a, 'b> ClaimFeeCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -556,87 +521,77 @@ impl<'a, 'b> ClaimFeeCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(18 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.pool.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.pool.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lock_escrow.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.owner.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.owner.key, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.source_tokens.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.escrow_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.a_token_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.b_token_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.a_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.b_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.a_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.b_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.a_vault_lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.b_vault_lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.user_a_token.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.user_b_token.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.vault_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -646,7 +601,7 @@ impl<'a, 'b> ClaimFeeCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::AMM_ID,
             accounts,
             data,
@@ -676,9 +631,9 @@ impl<'a, 'b> ClaimFeeCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -711,7 +666,7 @@ pub struct ClaimFeeCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(ClaimFeeCpiBuilderInstruction {
             __program: program,
             pool: None,
@@ -740,17 +695,14 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
 
     /// Pool account
     #[inline(always)]
-    pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
 
     /// LP token mint of the pool
     #[inline(always)]
-    pub fn lp_mint(
-        &mut self,
-        lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
@@ -759,7 +711,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn lock_escrow(
         &mut self,
-        lock_escrow: &'b solana_program::account_info::AccountInfo<'a>,
+        lock_escrow: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.lock_escrow = Some(lock_escrow);
         self
@@ -767,7 +719,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
 
     /// Owner of lock account
     #[inline(always)]
-    pub fn owner(&mut self, owner: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
@@ -776,7 +728,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn source_tokens(
         &mut self,
-        source_tokens: &'b solana_program::account_info::AccountInfo<'a>,
+        source_tokens: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.source_tokens = Some(source_tokens);
         self
@@ -786,7 +738,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn escrow_vault(
         &mut self,
-        escrow_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        escrow_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.escrow_vault = Some(escrow_vault);
         self
@@ -796,7 +748,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -806,7 +758,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn a_token_vault(
         &mut self,
-        a_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        a_token_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_token_vault = Some(a_token_vault);
         self
@@ -816,7 +768,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn b_token_vault(
         &mut self,
-        b_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        b_token_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.b_token_vault = Some(b_token_vault);
         self
@@ -824,20 +776,14 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
 
     /// Vault account for token a. token a of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn a_vault(
-        &mut self,
-        a_vault: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn a_vault(&mut self, a_vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.a_vault = Some(a_vault);
         self
     }
 
     /// Vault account for token b. token b of the pool will be deposit / withdraw from this vault account.
     #[inline(always)]
-    pub fn b_vault(
-        &mut self,
-        b_vault: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn b_vault(&mut self, b_vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.b_vault = Some(b_vault);
         self
     }
@@ -846,7 +792,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn a_vault_lp(
         &mut self,
-        a_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        a_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_vault_lp = Some(a_vault_lp);
         self
@@ -856,7 +802,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn b_vault_lp(
         &mut self,
-        b_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        b_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.b_vault_lp = Some(b_vault_lp);
         self
@@ -866,7 +812,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn a_vault_lp_mint(
         &mut self,
-        a_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        a_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.a_vault_lp_mint = Some(a_vault_lp_mint);
         self
@@ -876,7 +822,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn b_vault_lp_mint(
         &mut self,
-        b_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        b_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.b_vault_lp_mint = Some(b_vault_lp_mint);
         self
@@ -886,7 +832,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_a_token(
         &mut self,
-        user_a_token: &'b solana_program::account_info::AccountInfo<'a>,
+        user_a_token: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_a_token = Some(user_a_token);
         self
@@ -896,7 +842,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_b_token(
         &mut self,
-        user_b_token: &'b solana_program::account_info::AccountInfo<'a>,
+        user_b_token: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_b_token = Some(user_b_token);
         self
@@ -906,7 +852,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn vault_program(
         &mut self,
-        vault_program: &'b solana_program::account_info::AccountInfo<'a>,
+        vault_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vault_program = Some(vault_program);
         self
@@ -922,7 +868,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -939,11 +885,7 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -952,14 +894,14 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = ClaimFeeInstructionArgs {
             max_amount: self
                 .instruction
@@ -1049,30 +991,26 @@ impl<'a, 'b> ClaimFeeCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct ClaimFeeCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lock_escrow: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    source_tokens: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    escrow_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_token_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_token_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    a_vault_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    b_vault_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_a_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_b_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vault_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lock_escrow: Option<&'b solana_account_info::AccountInfo<'a>>,
+    owner: Option<&'b solana_account_info::AccountInfo<'a>>,
+    source_tokens: Option<&'b solana_account_info::AccountInfo<'a>>,
+    escrow_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    a_vault_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    b_vault_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_a_token: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_b_token: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vault_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     max_amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

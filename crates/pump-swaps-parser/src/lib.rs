@@ -3,9 +3,11 @@ mod generated_sdk;
 pub use generated::*;
 pub use generated_parser::*;
 use generated_sdk as generated;
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
-pub const ID: Pubkey = PUMP_SWAP_ID;
+mod custom_impl;
+
+pub const ID: Pubkey = PUMP_AMM_ID;
 
 // #[cfg(feature = "proto")]
 pub mod proto_def {

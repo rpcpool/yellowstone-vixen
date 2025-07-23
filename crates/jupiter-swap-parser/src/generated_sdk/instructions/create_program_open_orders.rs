@@ -10,26 +10,26 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateProgramOpenOrders {
-    pub open_orders: solana_program::pubkey::Pubkey,
+    pub open_orders: solana_pubkey::Pubkey,
 
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
 
-    pub program_authority: solana_program::pubkey::Pubkey,
+    pub program_authority: solana_pubkey::Pubkey,
 
-    pub dex_program: solana_program::pubkey::Pubkey,
+    pub dex_program: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 
-    pub market: solana_program::pubkey::Pubkey,
+    pub market: solana_pubkey::Pubkey,
 }
 
 impl CreateProgramOpenOrders {
     pub fn instruction(
         &self,
         args: CreateProgramOpenOrdersInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -38,32 +38,30 @@ impl CreateProgramOpenOrders {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: CreateProgramOpenOrdersInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.open_orders,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.dex_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.market,
             false,
         ));
@@ -72,7 +70,7 @@ impl CreateProgramOpenOrders {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::JUPITER_ID,
             accounts,
             data,
@@ -117,63 +115,60 @@ pub struct CreateProgramOpenOrdersInstructionArgs {
 ///   6. `[]` market
 #[derive(Clone, Debug, Default)]
 pub struct CreateProgramOpenOrdersBuilder {
-    open_orders: Option<solana_program::pubkey::Pubkey>,
-    payer: Option<solana_program::pubkey::Pubkey>,
-    program_authority: Option<solana_program::pubkey::Pubkey>,
-    dex_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    market: Option<solana_program::pubkey::Pubkey>,
+    open_orders: Option<solana_pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    program_authority: Option<solana_pubkey::Pubkey>,
+    dex_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    market: Option<solana_pubkey::Pubkey>,
     id: Option<u8>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateProgramOpenOrdersBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn open_orders(&mut self, open_orders: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn open_orders(&mut self, open_orders: solana_pubkey::Pubkey) -> &mut Self {
         self.open_orders = Some(open_orders);
         self
     }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
 
     #[inline(always)]
-    pub fn program_authority(
-        &mut self,
-        program_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn program_authority(&mut self, program_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.program_authority = Some(program_authority);
         self
     }
 
     #[inline(always)]
-    pub fn dex_program(&mut self, dex_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn dex_program(&mut self, dex_program: solana_pubkey::Pubkey) -> &mut Self {
         self.dex_program = Some(dex_program);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
 
     #[inline(always)]
-    pub fn market(&mut self, market: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn market(&mut self, market: solana_pubkey::Pubkey) -> &mut Self {
         self.market = Some(market);
         self
     }
@@ -186,10 +181,7 @@ impl CreateProgramOpenOrdersBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -198,14 +190,14 @@ impl CreateProgramOpenOrdersBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateProgramOpenOrders {
             open_orders: self.open_orders.expect("open_orders is not set"),
             payer: self.payer.expect("payer is not set"),
@@ -215,8 +207,8 @@ impl CreateProgramOpenOrdersBuilder {
             dex_program: self.dex_program.expect("dex_program is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
             market: self.market.expect("market is not set"),
@@ -231,46 +223,46 @@ impl CreateProgramOpenOrdersBuilder {
 
 /// `create_program_open_orders` CPI accounts.
 pub struct CreateProgramOpenOrdersCpiAccounts<'a, 'b> {
-    pub open_orders: &'b solana_program::account_info::AccountInfo<'a>,
+    pub open_orders: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub dex_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dex_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub market: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `create_program_open_orders` CPI instruction.
 pub struct CreateProgramOpenOrdersCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub open_orders: &'b solana_program::account_info::AccountInfo<'a>,
+    pub open_orders: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub dex_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dex_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub market: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: CreateProgramOpenOrdersInstructionArgs,
 }
 
 impl<'a, 'b> CreateProgramOpenOrdersCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: CreateProgramOpenOrdersCpiAccounts<'a, 'b>,
         args: CreateProgramOpenOrdersInstructionArgs,
     ) -> Self {
@@ -288,19 +280,15 @@ impl<'a, 'b> CreateProgramOpenOrdersCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -308,7 +296,7 @@ impl<'a, 'b> CreateProgramOpenOrdersCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -318,43 +306,36 @@ impl<'a, 'b> CreateProgramOpenOrdersCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.open_orders.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.dex_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.market.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -364,7 +345,7 @@ impl<'a, 'b> CreateProgramOpenOrdersCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::JUPITER_ID,
             accounts,
             data,
@@ -383,9 +364,9 @@ impl<'a, 'b> CreateProgramOpenOrdersCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -407,7 +388,7 @@ pub struct CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(CreateProgramOpenOrdersCpiBuilderInstruction {
             __program: program,
             open_orders: None,
@@ -426,14 +407,14 @@ impl<'a, 'b> CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn open_orders(
         &mut self,
-        open_orders: &'b solana_program::account_info::AccountInfo<'a>,
+        open_orders: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.open_orders = Some(open_orders);
         self
     }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
@@ -441,7 +422,7 @@ impl<'a, 'b> CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn program_authority(
         &mut self,
-        program_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        program_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.program_authority = Some(program_authority);
         self
@@ -450,7 +431,7 @@ impl<'a, 'b> CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn dex_program(
         &mut self,
-        dex_program: &'b solana_program::account_info::AccountInfo<'a>,
+        dex_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.dex_program = Some(dex_program);
         self
@@ -459,23 +440,20 @@ impl<'a, 'b> CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
     }
 
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
 
     #[inline(always)]
-    pub fn market(
-        &mut self,
-        market: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn market(&mut self, market: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.market = Some(market);
         self
     }
@@ -490,7 +468,7 @@ impl<'a, 'b> CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -507,11 +485,7 @@ impl<'a, 'b> CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -520,14 +494,14 @@ impl<'a, 'b> CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = CreateProgramOpenOrdersInstructionArgs {
             id: self.instruction.id.clone().expect("id is not set"),
         };
@@ -570,19 +544,15 @@ impl<'a, 'b> CreateProgramOpenOrdersCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct CreateProgramOpenOrdersCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    open_orders: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    dex_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    market: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    open_orders: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    dex_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    market: Option<&'b solana_account_info::AccountInfo<'a>>,
     id: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

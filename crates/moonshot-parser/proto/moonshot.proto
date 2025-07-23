@@ -120,6 +120,7 @@ message CurveAccount {
 	uint32 coef_b = 10;
 	uint32 bump = 11;
 	MigrationTarget migration_target = 12;
+	uint32 price_increase = 13;
 }
 
 

@@ -6,25 +6,25 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 /// Accounts.
 #[derive(Debug)]
 pub struct UpdateFeeConfig {
-    pub admin: solana_program::pubkey::Pubkey,
+    pub admin: solana_pubkey::Pubkey,
 
-    pub global_config: solana_program::pubkey::Pubkey,
+    pub global_config: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl UpdateFeeConfig {
     pub fn instruction(
         &self,
         args: UpdateFeeConfigInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -33,21 +33,21 @@ impl UpdateFeeConfig {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: UpdateFeeConfigInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.admin, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.global_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -56,8 +56,8 @@ impl UpdateFeeConfig {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+        solana_instruction::Instruction {
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         }
@@ -88,6 +88,7 @@ pub struct UpdateFeeConfigInstructionArgs {
     pub lp_fee_basis_points: u64,
     pub protocol_fee_basis_points: u64,
     pub protocol_fee_recipients: [Pubkey; 8],
+    pub coin_creator_fee_basis_points: u64,
 }
 
 /// Instruction builder for `UpdateFeeConfig`.
@@ -100,42 +101,40 @@ pub struct UpdateFeeConfigInstructionArgs {
 ///   3. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct UpdateFeeConfigBuilder {
-    admin: Option<solana_program::pubkey::Pubkey>,
-    global_config: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    admin: Option<solana_pubkey::Pubkey>,
+    global_config: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     lp_fee_basis_points: Option<u64>,
     protocol_fee_basis_points: Option<u64>,
     protocol_fee_recipients: Option<[Pubkey; 8]>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    coin_creator_fee_basis_points: Option<u64>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl UpdateFeeConfigBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
 
     #[inline(always)]
-    pub fn global_config(&mut self, global_config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn global_config(&mut self, global_config: solana_pubkey::Pubkey) -> &mut Self {
         self.global_config = Some(global_config);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -158,12 +157,18 @@ impl UpdateFeeConfigBuilder {
         self
     }
 
+    #[inline(always)]
+    pub fn coin_creator_fee_basis_points(
+        &mut self,
+        coin_creator_fee_basis_points: u64,
+    ) -> &mut Self {
+        self.coin_creator_fee_basis_points = Some(coin_creator_fee_basis_points);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -172,14 +177,14 @@ impl UpdateFeeConfigBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = UpdateFeeConfig {
             admin: self.admin.expect("admin is not set"),
             global_config: self.global_config.expect("global_config is not set"),
@@ -199,6 +204,10 @@ impl UpdateFeeConfigBuilder {
                 .protocol_fee_recipients
                 .clone()
                 .expect("protocol_fee_recipients is not set"),
+            coin_creator_fee_basis_points: self
+                .coin_creator_fee_basis_points
+                .clone()
+                .expect("coin_creator_fee_basis_points is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -207,34 +216,34 @@ impl UpdateFeeConfigBuilder {
 
 /// `update_fee_config` CPI accounts.
 pub struct UpdateFeeConfigCpiAccounts<'a, 'b> {
-    pub admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
 
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `update_fee_config` CPI instruction.
 pub struct UpdateFeeConfigCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub admin: &'b solana_program::account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
 
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: UpdateFeeConfigInstructionArgs,
 }
 
 impl<'a, 'b> UpdateFeeConfigCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: UpdateFeeConfigCpiAccounts<'a, 'b>,
         args: UpdateFeeConfigInstructionArgs,
     ) -> Self {
@@ -249,19 +258,15 @@ impl<'a, 'b> UpdateFeeConfigCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -269,7 +274,7 @@ impl<'a, 'b> UpdateFeeConfigCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -279,31 +284,27 @@ impl<'a, 'b> UpdateFeeConfigCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.admin.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.global_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -313,8 +314,8 @@ impl<'a, 'b> UpdateFeeConfigCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
-            program_id: crate::PUMP_SWAP_ID,
+        let instruction = solana_instruction::Instruction {
+            program_id: crate::PUMP_AMM_ID,
             accounts,
             data,
         };
@@ -329,9 +330,9 @@ impl<'a, 'b> UpdateFeeConfigCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -350,7 +351,7 @@ pub struct UpdateFeeConfigCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> UpdateFeeConfigCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(UpdateFeeConfigCpiBuilderInstruction {
             __program: program,
             admin: None,
@@ -360,13 +361,14 @@ impl<'a, 'b> UpdateFeeConfigCpiBuilder<'a, 'b> {
             lp_fee_basis_points: None,
             protocol_fee_basis_points: None,
             protocol_fee_recipients: None,
+            coin_creator_fee_basis_points: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
 
     #[inline(always)]
-    pub fn admin(&mut self, admin: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
@@ -374,7 +376,7 @@ impl<'a, 'b> UpdateFeeConfigCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn global_config(
         &mut self,
-        global_config: &'b solana_program::account_info::AccountInfo<'a>,
+        global_config: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.global_config = Some(global_config);
         self
@@ -383,17 +385,14 @@ impl<'a, 'b> UpdateFeeConfigCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -416,11 +415,20 @@ impl<'a, 'b> UpdateFeeConfigCpiBuilder<'a, 'b> {
         self
     }
 
+    #[inline(always)]
+    pub fn coin_creator_fee_basis_points(
+        &mut self,
+        coin_creator_fee_basis_points: u64,
+    ) -> &mut Self {
+        self.instruction.coin_creator_fee_basis_points = Some(coin_creator_fee_basis_points);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -437,11 +445,7 @@ impl<'a, 'b> UpdateFeeConfigCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -450,14 +454,14 @@ impl<'a, 'b> UpdateFeeConfigCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = UpdateFeeConfigInstructionArgs {
             lp_fee_basis_points: self
                 .instruction
@@ -474,6 +478,11 @@ impl<'a, 'b> UpdateFeeConfigCpiBuilder<'a, 'b> {
                 .protocol_fee_recipients
                 .clone()
                 .expect("protocol_fee_recipients is not set"),
+            coin_creator_fee_basis_points: self
+                .instruction
+                .coin_creator_fee_basis_points
+                .clone()
+                .expect("coin_creator_fee_basis_points is not set"),
         };
         let instruction = UpdateFeeConfigCpi {
             __program: self.instruction.__program,
@@ -502,18 +511,15 @@ impl<'a, 'b> UpdateFeeConfigCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct UpdateFeeConfigCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    admin: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    global_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    admin: Option<&'b solana_account_info::AccountInfo<'a>>,
+    global_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     lp_fee_basis_points: Option<u64>,
     protocol_fee_basis_points: Option<u64>,
     protocol_fee_recipients: Option<[Pubkey; 8]>,
+    coin_creator_fee_basis_points: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

@@ -1415,12 +1415,12 @@ name = "example-vixen-opentelemetry"
 version = "0.0.0"
 dependencies = [
  "clap",
- "opentelemetry-stdout",
- "opentelemetry_sdk",
+ "opentelemetry-stdout 0.5.0",
+ "opentelemetry_sdk 0.24.1",
  "tokio",
  "toml 0.8.20",
  "tracing",
- "tracing-opentelemetry",
+ "tracing-opentelemetry 0.25.0",
  "tracing-subscriber",
  "yellowstone-grpc-source",
  "yellowstone-vixen",
@@ -1479,6 +1479,44 @@ dependencies = [
  "yellowstone-vixen-raydium-amm-v4-parser",
  "yellowstone-vixen-raydium-clmm-parser",
  "yellowstone-vixen-raydium-cpmm-parser",
+]
+
+[[package]]
+name = "example-vixen-streams-tracing"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "opentelemetry 0.29.1",
+ "opentelemetry-appender-tracing",
+ "opentelemetry-otlp",
+ "opentelemetry-stdout 0.29.0",
+ "opentelemetry_sdk 0.29.0",
+ "prost-build",
+ "tokio",
+ "toml 0.8.20",
+ "tracing",
+ "tracing-opentelemetry 0.30.0",
+ "tracing-subscriber",
+ "yellowstone-grpc-source",
+ "yellowstone-vixen",
+ "yellowstone-vixen-boop-parser",
+ "yellowstone-vixen-jupiter-swap-parser",
+ "yellowstone-vixen-kamino-limit-orders-parser",
+ "yellowstone-vixen-meteora-amm-parser",
+ "yellowstone-vixen-meteora-dbc-parser",
+ "yellowstone-vixen-meteora-parser",
+ "yellowstone-vixen-meteora-pools-parser",
+ "yellowstone-vixen-meteora-vault-parser",
+ "yellowstone-vixen-moonshot-parser",
+ "yellowstone-vixen-orca-whirlpool-parser",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-pump-swaps-parser",
+ "yellowstone-vixen-pumpfun-parser",
+ "yellowstone-vixen-raydium-amm-v4-parser",
+ "yellowstone-vixen-raydium-clmm-parser",
+ "yellowstone-vixen-raydium-cpmm-parser",
+ "yellowstone-vixen-raydium-launchpad-parser",
+ "yellowstone-vixen-virtuals-parser",
 ]
 
 [[package]]
@@ -2885,6 +2923,78 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry"
+version = "0.29.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e87237e2775f74896f9ad219d26a2081751187eb7c9f5c58dde20a23b95d16c"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "js-sys",
+ "pin-project-lite",
+ "thiserror 2.0.11",
+ "tracing",
+]
+
+[[package]]
+name = "opentelemetry-appender-tracing"
+version = "0.29.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e716f864eb23007bdd9dc4aec381e188a1cee28eecf22066772b5fd822b9727d"
+dependencies = [
+ "opentelemetry 0.29.1",
+ "tracing",
+ "tracing-core",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "opentelemetry-http"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46d7ab32b827b5b495bd90fa95a6cb65ccc293555dcc3199ae2937d2d237c8ed"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "http 1.2.0",
+ "opentelemetry 0.29.1",
+ "reqwest 0.12.12",
+ "tracing",
+]
+
+[[package]]
+name = "opentelemetry-otlp"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d899720fe06916ccba71c01d04ecd77312734e2de3467fd30d9d580c8ce85656"
+dependencies = [
+ "futures-core",
+ "http 1.2.0",
+ "opentelemetry 0.29.1",
+ "opentelemetry-http",
+ "opentelemetry-proto",
+ "opentelemetry_sdk 0.29.0",
+ "prost",
+ "reqwest 0.12.12",
+ "thiserror 2.0.11",
+ "tokio",
+ "tonic",
+ "tracing",
+]
+
+[[package]]
+name = "opentelemetry-proto"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c40da242381435e18570d5b9d50aca2a4f4f4d8e146231adb4e7768023309b3"
+dependencies = [
+ "opentelemetry 0.29.1",
+ "opentelemetry_sdk 0.29.0",
+ "prost",
+ "tonic",
+]
+
+[[package]]
 name = "opentelemetry-stdout"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2893,12 +3003,24 @@ dependencies = [
  "async-trait",
  "chrono",
  "futures-util",
- "opentelemetry",
- "opentelemetry_sdk",
+ "opentelemetry 0.24.0",
+ "opentelemetry_sdk 0.24.1",
  "ordered-float",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "opentelemetry-stdout"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7e27d446dabd68610ef0b77d07b102ecde827a4596ea9c01a4d3811e945b286"
+dependencies = [
+ "chrono",
+ "futures-util",
+ "opentelemetry 0.29.1",
+ "opentelemetry_sdk 0.29.0",
 ]
 
 [[package]]
@@ -2913,13 +3035,33 @@ dependencies = [
  "futures-util",
  "glob",
  "once_cell",
- "opentelemetry",
+ "opentelemetry 0.24.0",
  "percent-encoding",
  "rand 0.8.5",
  "serde_json",
  "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
+]
+
+[[package]]
+name = "opentelemetry_sdk"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afdefb21d1d47394abc1ba6c57363ab141be19e27cc70d0e422b7f303e4d290b"
+dependencies = [
+ "futures-channel",
+ "futures-executor",
+ "futures-util",
+ "glob",
+ "opentelemetry 0.29.1",
+ "percent-encoding",
+ "rand 0.9.1",
+ "serde_json",
+ "thiserror 2.0.11",
+ "tokio",
+ "tokio-stream",
+ "tracing",
 ]
 
 [[package]]
@@ -3357,6 +3499,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rand"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fbfd9d094a40bf3ae768db9361049ace4c0e04a4fd6b359518bd7b73a73dd97"
+dependencies = [
+ "rand_chacha 0.9.0",
+ "rand_core 0.9.3",
+]
+
+[[package]]
 name = "rand_chacha"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3377,6 +3529,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rand_chacha"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb"
+dependencies = [
+ "ppv-lite86",
+ "rand_core 0.9.3",
+]
+
+[[package]]
 name = "rand_core"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3392,6 +3554,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom 0.2.15",
+]
+
+[[package]]
+name = "rand_core"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99d9a13982dcf210057a8a78572b2217b667c3beacbf3a0d8b454f6f82837d38"
+dependencies = [
+ "getrandom 0.3.1",
 ]
 
 [[package]]
@@ -7459,8 +7630,26 @@ checksum = "a9784ed4da7d921bc8df6963f8c80a0e4ce34ba6ba76668acadd3edbd985ff3b"
 dependencies = [
  "js-sys",
  "once_cell",
- "opentelemetry",
- "opentelemetry_sdk",
+ "opentelemetry 0.24.0",
+ "opentelemetry_sdk 0.24.1",
+ "smallvec",
+ "tracing",
+ "tracing-core",
+ "tracing-log",
+ "tracing-subscriber",
+ "web-time",
+]
+
+[[package]]
+name = "tracing-opentelemetry"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd8e764bd6f5813fd8bebc3117875190c5b0415be8f7f8059bffb6ecd979c444"
+dependencies = [
+ "js-sys",
+ "once_cell",
+ "opentelemetry 0.29.1",
+ "opentelemetry_sdk 0.29.0",
  "smallvec",
  "tracing",
  "tracing-core",
@@ -8119,7 +8308,7 @@ dependencies = [
  "clap",
  "futures-channel",
  "futures-util",
- "opentelemetry",
+ "opentelemetry 0.24.0",
  "pin-project-lite",
  "prometheus",
  "serde",
@@ -8143,7 +8332,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8171,7 +8367,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8189,7 +8392,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8207,7 +8417,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8225,7 +8442,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8243,7 +8467,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8261,7 +8492,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8279,7 +8517,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8313,7 +8558,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8331,7 +8583,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8384,7 +8643,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8402,7 +8668,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8420,7 +8693,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8438,7 +8718,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8456,7 +8743,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8474,7 +8768,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -8492,7 +8793,14 @@ dependencies = [
  "num-traits",
  "prost",
  "prost-build",
- "solana-program",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",

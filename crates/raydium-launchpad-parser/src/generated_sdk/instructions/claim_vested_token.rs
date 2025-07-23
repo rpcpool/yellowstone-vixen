@@ -11,34 +11,34 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct ClaimVestedToken {
     /// The beneficiary of the vesting account
-    pub beneficiary: solana_program::pubkey::Pubkey,
+    pub beneficiary: solana_pubkey::Pubkey,
     /// PDA that acts as the authority for pool vault and mint operations
     /// Generated using AUTH_SEED
-    pub authority: solana_program::pubkey::Pubkey,
+    pub authority: solana_pubkey::Pubkey,
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
-    pub pool_state: solana_program::pubkey::Pubkey,
+    pub pool_state: solana_pubkey::Pubkey,
     /// The vesting record account
-    pub vesting_record: solana_program::pubkey::Pubkey,
+    pub vesting_record: solana_pubkey::Pubkey,
     /// The pool's vault for base tokens
     /// Will be debited to send tokens to the user
-    pub base_vault: solana_program::pubkey::Pubkey,
+    pub base_vault: solana_pubkey::Pubkey,
 
-    pub user_base_token: solana_program::pubkey::Pubkey,
+    pub user_base_token: solana_pubkey::Pubkey,
     /// The mint for the base token (token being sold)
     /// Created in this instruction with specified decimals
-    pub base_token_mint: solana_program::pubkey::Pubkey,
+    pub base_token_mint: solana_pubkey::Pubkey,
     /// SPL Token program for the base token
     /// Must be the standard Token program
-    pub base_token_program: solana_program::pubkey::Pubkey,
+    pub base_token_program: solana_pubkey::Pubkey,
     /// Required for account creation
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
     /// Required for associated token program
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 }
 
 impl ClaimVestedToken {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -46,53 +46,44 @@ impl ClaimVestedToken {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.beneficiary,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.beneficiary, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool_state,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.pool_state, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.vesting_record,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.base_vault,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.base_vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.user_base_token,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.base_token_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.base_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&ClaimVestedTokenInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
@@ -134,17 +125,17 @@ impl Default for ClaimVestedTokenInstructionData {
 ///   9. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 #[derive(Clone, Debug, Default)]
 pub struct ClaimVestedTokenBuilder {
-    beneficiary: Option<solana_program::pubkey::Pubkey>,
-    authority: Option<solana_program::pubkey::Pubkey>,
-    pool_state: Option<solana_program::pubkey::Pubkey>,
-    vesting_record: Option<solana_program::pubkey::Pubkey>,
-    base_vault: Option<solana_program::pubkey::Pubkey>,
-    user_base_token: Option<solana_program::pubkey::Pubkey>,
-    base_token_mint: Option<solana_program::pubkey::Pubkey>,
-    base_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    beneficiary: Option<solana_pubkey::Pubkey>,
+    authority: Option<solana_pubkey::Pubkey>,
+    pool_state: Option<solana_pubkey::Pubkey>,
+    vesting_record: Option<solana_pubkey::Pubkey>,
+    base_vault: Option<solana_pubkey::Pubkey>,
+    user_base_token: Option<solana_pubkey::Pubkey>,
+    base_token_mint: Option<solana_pubkey::Pubkey>,
+    base_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl ClaimVestedTokenBuilder {
@@ -152,7 +143,7 @@ impl ClaimVestedTokenBuilder {
 
     /// The beneficiary of the vesting account
     #[inline(always)]
-    pub fn beneficiary(&mut self, beneficiary: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn beneficiary(&mut self, beneficiary: solana_pubkey::Pubkey) -> &mut Self {
         self.beneficiary = Some(beneficiary);
         self
     }
@@ -160,7 +151,7 @@ impl ClaimVestedTokenBuilder {
     /// PDA that acts as the authority for pool vault and mint operations
     /// Generated using AUTH_SEED
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
@@ -168,14 +159,14 @@ impl ClaimVestedTokenBuilder {
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
-    pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
 
     /// The vesting record account
     #[inline(always)]
-    pub fn vesting_record(&mut self, vesting_record: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vesting_record(&mut self, vesting_record: solana_pubkey::Pubkey) -> &mut Self {
         self.vesting_record = Some(vesting_record);
         self
     }
@@ -183,16 +174,13 @@ impl ClaimVestedTokenBuilder {
     /// The pool's vault for base tokens
     /// Will be debited to send tokens to the user
     #[inline(always)]
-    pub fn base_vault(&mut self, base_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn base_vault(&mut self, base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.base_vault = Some(base_vault);
         self
     }
 
     #[inline(always)]
-    pub fn user_base_token(
-        &mut self,
-        user_base_token: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn user_base_token(&mut self, user_base_token: solana_pubkey::Pubkey) -> &mut Self {
         self.user_base_token = Some(user_base_token);
         self
     }
@@ -200,10 +188,7 @@ impl ClaimVestedTokenBuilder {
     /// The mint for the base token (token being sold)
     /// Created in this instruction with specified decimals
     #[inline(always)]
-    pub fn base_token_mint(
-        &mut self,
-        base_token_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn base_token_mint(&mut self, base_token_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.base_token_mint = Some(base_token_mint);
         self
     }
@@ -212,10 +197,7 @@ impl ClaimVestedTokenBuilder {
     /// SPL Token program for the base token
     /// Must be the standard Token program
     #[inline(always)]
-    pub fn base_token_program(
-        &mut self,
-        base_token_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn base_token_program(&mut self, base_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.base_token_program = Some(base_token_program);
         self
     }
@@ -223,7 +205,7 @@ impl ClaimVestedTokenBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -233,7 +215,7 @@ impl ClaimVestedTokenBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
@@ -241,10 +223,7 @@ impl ClaimVestedTokenBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -253,14 +232,14 @@ impl ClaimVestedTokenBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = ClaimVestedToken {
             beneficiary: self.beneficiary.expect("beneficiary is not set"),
             authority: self.authority.expect("authority is not set"),
@@ -269,14 +248,14 @@ impl ClaimVestedTokenBuilder {
             base_vault: self.base_vault.expect("base_vault is not set"),
             user_base_token: self.user_base_token.expect("user_base_token is not set"),
             base_token_mint: self.base_token_mint.expect("base_token_mint is not set"),
-            base_token_program: self.base_token_program.unwrap_or(solana_program::pubkey!(
+            base_token_program: self.base_token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
             associated_token_program: self.associated_token_program.unwrap_or(
-                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
         };
 
@@ -287,66 +266,66 @@ impl ClaimVestedTokenBuilder {
 /// `claim_vested_token` CPI accounts.
 pub struct ClaimVestedTokenCpiAccounts<'a, 'b> {
     /// The beneficiary of the vesting account
-    pub beneficiary: &'b solana_program::account_info::AccountInfo<'a>,
+    pub beneficiary: &'b solana_account_info::AccountInfo<'a>,
     /// PDA that acts as the authority for pool vault and mint operations
     /// Generated using AUTH_SEED
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// The vesting record account
-    pub vesting_record: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vesting_record: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for base tokens
     /// Will be debited to send tokens to the user
-    pub base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_base_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_base_token: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the base token (token being sold)
     /// Created in this instruction with specified decimals
-    pub base_token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_token_mint: &'b solana_account_info::AccountInfo<'a>,
     /// SPL Token program for the base token
     /// Must be the standard Token program
-    pub base_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for associated token program
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `claim_vested_token` CPI instruction.
 pub struct ClaimVestedTokenCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// The beneficiary of the vesting account
-    pub beneficiary: &'b solana_program::account_info::AccountInfo<'a>,
+    pub beneficiary: &'b solana_account_info::AccountInfo<'a>,
     /// PDA that acts as the authority for pool vault and mint operations
     /// Generated using AUTH_SEED
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// The vesting record account
-    pub vesting_record: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vesting_record: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for base tokens
     /// Will be debited to send tokens to the user
-    pub base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_base_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_base_token: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the base token (token being sold)
     /// Created in this instruction with specified decimals
-    pub base_token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_token_mint: &'b solana_account_info::AccountInfo<'a>,
     /// SPL Token program for the base token
     /// Must be the standard Token program
-    pub base_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for associated token program
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: ClaimVestedTokenCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -365,19 +344,15 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -385,7 +360,7 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -395,55 +370,51 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.beneficiary.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_state.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.vesting_record.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.base_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.user_base_token.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.base_token_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.base_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -451,7 +422,7 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&ClaimVestedTokenInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
@@ -473,9 +444,9 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -500,7 +471,7 @@ pub struct ClaimVestedTokenCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(ClaimVestedTokenCpiBuilderInstruction {
             __program: program,
             beneficiary: None,
@@ -522,7 +493,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn beneficiary(
         &mut self,
-        beneficiary: &'b solana_program::account_info::AccountInfo<'a>,
+        beneficiary: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.beneficiary = Some(beneficiary);
         self
@@ -531,10 +502,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     /// PDA that acts as the authority for pool vault and mint operations
     /// Generated using AUTH_SEED
     #[inline(always)]
-    pub fn authority(
-        &mut self,
-        authority: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.authority = Some(authority);
         self
     }
@@ -544,7 +512,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_state(
         &mut self,
-        pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_state = Some(pool_state);
         self
@@ -554,7 +522,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn vesting_record(
         &mut self,
-        vesting_record: &'b solana_program::account_info::AccountInfo<'a>,
+        vesting_record: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vesting_record = Some(vesting_record);
         self
@@ -565,7 +533,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn base_vault(
         &mut self,
-        base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        base_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.base_vault = Some(base_vault);
         self
@@ -574,7 +542,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_base_token(
         &mut self,
-        user_base_token: &'b solana_program::account_info::AccountInfo<'a>,
+        user_base_token: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_base_token = Some(user_base_token);
         self
@@ -585,7 +553,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn base_token_mint(
         &mut self,
-        base_token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        base_token_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.base_token_mint = Some(base_token_mint);
         self
@@ -596,7 +564,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn base_token_program(
         &mut self,
-        base_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        base_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.base_token_program = Some(base_token_program);
         self
@@ -606,7 +574,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -616,7 +584,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -626,7 +594,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -643,11 +611,7 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -656,14 +620,14 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = ClaimVestedTokenCpi {
             __program: self.instruction.__program,
 
@@ -717,21 +681,17 @@ impl<'a, 'b> ClaimVestedTokenCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct ClaimVestedTokenCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    beneficiary: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vesting_record: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_base_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_token_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    beneficiary: Option<&'b solana_account_info::AccountInfo<'a>>,
+    authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vesting_record: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_base_token: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_token_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

@@ -6,7 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 /// Stores the state relevant for tracking liquidity mining rewards
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

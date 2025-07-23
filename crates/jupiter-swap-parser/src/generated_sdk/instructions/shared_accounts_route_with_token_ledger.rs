@@ -12,40 +12,40 @@ use crate::generated::types::RoutePlanStep;
 /// Accounts.
 #[derive(Debug)]
 pub struct SharedAccountsRouteWithTokenLedger {
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub program_authority: solana_program::pubkey::Pubkey,
+    pub program_authority: solana_pubkey::Pubkey,
 
-    pub user_transfer_authority: solana_program::pubkey::Pubkey,
+    pub user_transfer_authority: solana_pubkey::Pubkey,
 
-    pub source_token_account: solana_program::pubkey::Pubkey,
+    pub source_token_account: solana_pubkey::Pubkey,
 
-    pub program_source_token_account: solana_program::pubkey::Pubkey,
+    pub program_source_token_account: solana_pubkey::Pubkey,
 
-    pub program_destination_token_account: solana_program::pubkey::Pubkey,
+    pub program_destination_token_account: solana_pubkey::Pubkey,
 
-    pub destination_token_account: solana_program::pubkey::Pubkey,
+    pub destination_token_account: solana_pubkey::Pubkey,
 
-    pub source_mint: solana_program::pubkey::Pubkey,
+    pub source_mint: solana_pubkey::Pubkey,
 
-    pub destination_mint: solana_program::pubkey::Pubkey,
+    pub destination_mint: solana_pubkey::Pubkey,
 
-    pub platform_fee_account: Option<solana_program::pubkey::Pubkey>,
+    pub platform_fee_account: Option<solana_pubkey::Pubkey>,
 
-    pub token2022_program: Option<solana_program::pubkey::Pubkey>,
+    pub token2022_program: Option<solana_pubkey::Pubkey>,
 
-    pub token_ledger: solana_program::pubkey::Pubkey,
+    pub token_ledger: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl SharedAccountsRouteWithTokenLedger {
     pub fn instruction(
         &self,
         args: SharedAccountsRouteWithTokenLedgerInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -54,76 +54,76 @@ impl SharedAccountsRouteWithTokenLedger {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: SharedAccountsRouteWithTokenLedgerInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.user_transfer_authority,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.source_token_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.program_source_token_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.program_destination_token_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.destination_token_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.source_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.destination_mint,
             false,
         ));
         if let Some(platform_fee_account) = self.platform_fee_account {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 platform_fee_account,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::JUPITER_ID,
                 false,
             ));
         }
         if let Some(token2022_program) = self.token2022_program {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 token2022_program,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::JUPITER_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_ledger,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -133,7 +133,7 @@ impl SharedAccountsRouteWithTokenLedger {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::JUPITER_ID,
             accounts,
             data,
@@ -189,26 +189,26 @@ pub struct SharedAccountsRouteWithTokenLedgerInstructionArgs {
 ///   13. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct SharedAccountsRouteWithTokenLedgerBuilder {
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    program_authority: Option<solana_program::pubkey::Pubkey>,
-    user_transfer_authority: Option<solana_program::pubkey::Pubkey>,
-    source_token_account: Option<solana_program::pubkey::Pubkey>,
-    program_source_token_account: Option<solana_program::pubkey::Pubkey>,
-    program_destination_token_account: Option<solana_program::pubkey::Pubkey>,
-    destination_token_account: Option<solana_program::pubkey::Pubkey>,
-    source_mint: Option<solana_program::pubkey::Pubkey>,
-    destination_mint: Option<solana_program::pubkey::Pubkey>,
-    platform_fee_account: Option<solana_program::pubkey::Pubkey>,
-    token2022_program: Option<solana_program::pubkey::Pubkey>,
-    token_ledger: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    program_authority: Option<solana_pubkey::Pubkey>,
+    user_transfer_authority: Option<solana_pubkey::Pubkey>,
+    source_token_account: Option<solana_pubkey::Pubkey>,
+    program_source_token_account: Option<solana_pubkey::Pubkey>,
+    program_destination_token_account: Option<solana_pubkey::Pubkey>,
+    destination_token_account: Option<solana_pubkey::Pubkey>,
+    source_mint: Option<solana_pubkey::Pubkey>,
+    destination_mint: Option<solana_pubkey::Pubkey>,
+    platform_fee_account: Option<solana_pubkey::Pubkey>,
+    token2022_program: Option<solana_pubkey::Pubkey>,
+    token_ledger: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     id: Option<u8>,
     route_plan: Option<Vec<RoutePlanStep>>,
     quoted_out_amount: Option<u64>,
     slippage_bps: Option<u16>,
     platform_fee_bps: Option<u8>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl SharedAccountsRouteWithTokenLedgerBuilder {
@@ -216,16 +216,13 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
 
     #[inline(always)]
-    pub fn program_authority(
-        &mut self,
-        program_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn program_authority(&mut self, program_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.program_authority = Some(program_authority);
         self
     }
@@ -233,7 +230,7 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
     #[inline(always)]
     pub fn user_transfer_authority(
         &mut self,
-        user_transfer_authority: solana_program::pubkey::Pubkey,
+        user_transfer_authority: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.user_transfer_authority = Some(user_transfer_authority);
         self
@@ -242,7 +239,7 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
     #[inline(always)]
     pub fn source_token_account(
         &mut self,
-        source_token_account: solana_program::pubkey::Pubkey,
+        source_token_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.source_token_account = Some(source_token_account);
         self
@@ -251,7 +248,7 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
     #[inline(always)]
     pub fn program_source_token_account(
         &mut self,
-        program_source_token_account: solana_program::pubkey::Pubkey,
+        program_source_token_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.program_source_token_account = Some(program_source_token_account);
         self
@@ -260,7 +257,7 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
     #[inline(always)]
     pub fn program_destination_token_account(
         &mut self,
-        program_destination_token_account: solana_program::pubkey::Pubkey,
+        program_destination_token_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.program_destination_token_account = Some(program_destination_token_account);
         self
@@ -269,23 +266,20 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
     #[inline(always)]
     pub fn destination_token_account(
         &mut self,
-        destination_token_account: solana_program::pubkey::Pubkey,
+        destination_token_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.destination_token_account = Some(destination_token_account);
         self
     }
 
     #[inline(always)]
-    pub fn source_mint(&mut self, source_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn source_mint(&mut self, source_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.source_mint = Some(source_mint);
         self
     }
 
     #[inline(always)]
-    pub fn destination_mint(
-        &mut self,
-        destination_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn destination_mint(&mut self, destination_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.destination_mint = Some(destination_mint);
         self
     }
@@ -294,7 +288,7 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
     #[inline(always)]
     pub fn platform_fee_account(
         &mut self,
-        platform_fee_account: Option<solana_program::pubkey::Pubkey>,
+        platform_fee_account: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.platform_fee_account = platform_fee_account;
         self
@@ -304,30 +298,27 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
     #[inline(always)]
     pub fn token2022_program(
         &mut self,
-        token2022_program: Option<solana_program::pubkey::Pubkey>,
+        token2022_program: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.token2022_program = token2022_program;
         self
     }
 
     #[inline(always)]
-    pub fn token_ledger(&mut self, token_ledger: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_ledger(&mut self, token_ledger: solana_pubkey::Pubkey) -> &mut Self {
         self.token_ledger = Some(token_ledger);
         self
     }
 
     /// `[optional account, default to 'D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf']`
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -364,10 +355,7 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -376,16 +364,16 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = SharedAccountsRouteWithTokenLedger {
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             program_authority: self
@@ -411,7 +399,7 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
             platform_fee_account: self.platform_fee_account,
             token2022_program: self.token2022_program,
             token_ledger: self.token_ledger.expect("token_ledger is not set"),
-            event_authority: self.event_authority.unwrap_or(solana_program::pubkey!(
+            event_authority: self.event_authority.unwrap_or(solana_pubkey::pubkey!(
                 "D8cy77BBepLMngZx6ZukaTff5hCt1HrWyKk3Hnd9oitf"
             )),
             program: self.program.expect("program is not set"),
@@ -436,74 +424,74 @@ impl SharedAccountsRouteWithTokenLedgerBuilder {
 
 /// `shared_accounts_route_with_token_ledger` CPI accounts.
 pub struct SharedAccountsRouteWithTokenLedgerCpiAccounts<'a, 'b> {
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_transfer_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_transfer_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub source_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub source_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program_source_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program_source_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program_destination_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program_destination_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub destination_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub destination_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub source_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub source_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub destination_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub destination_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub platform_fee_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub platform_fee_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token2022_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub token2022_program: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_ledger: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_ledger: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `shared_accounts_route_with_token_ledger` CPI instruction.
 pub struct SharedAccountsRouteWithTokenLedgerCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_transfer_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_transfer_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub source_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub source_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program_source_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program_source_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program_destination_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program_destination_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub destination_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub destination_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub source_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub source_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub destination_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub destination_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub platform_fee_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub platform_fee_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token2022_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub token2022_program: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_ledger: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_ledger: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: SharedAccountsRouteWithTokenLedgerInstructionArgs,
 }
 
 impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: SharedAccountsRouteWithTokenLedgerCpiAccounts<'a, 'b>,
         args: SharedAccountsRouteWithTokenLedgerInstructionArgs,
     ) -> Self {
@@ -528,19 +516,15 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -548,7 +532,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -558,85 +542,81 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.user_transfer_authority.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.source_token_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.program_source_token_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.program_destination_token_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.destination_token_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.source_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.destination_mint.key,
             false,
         ));
         if let Some(platform_fee_account) = self.platform_fee_account {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 *platform_fee_account.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::JUPITER_ID,
                 false,
             ));
         }
         if let Some(token2022_program) = self.token2022_program {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 *token2022_program.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::JUPITER_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_ledger.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -647,7 +627,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::JUPITER_ID,
             accounts,
             data,
@@ -677,9 +657,9 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -708,7 +688,7 @@ pub struct SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(SharedAccountsRouteWithTokenLedgerCpiBuilderInstruction {
             __program: program,
             token_program: None,
@@ -738,7 +718,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -747,7 +727,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn program_authority(
         &mut self,
-        program_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        program_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.program_authority = Some(program_authority);
         self
@@ -756,7 +736,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_transfer_authority(
         &mut self,
-        user_transfer_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        user_transfer_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_transfer_authority = Some(user_transfer_authority);
         self
@@ -765,7 +745,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn source_token_account(
         &mut self,
-        source_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+        source_token_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.source_token_account = Some(source_token_account);
         self
@@ -774,7 +754,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn program_source_token_account(
         &mut self,
-        program_source_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+        program_source_token_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.program_source_token_account = Some(program_source_token_account);
         self
@@ -783,7 +763,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn program_destination_token_account(
         &mut self,
-        program_destination_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+        program_destination_token_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.program_destination_token_account =
             Some(program_destination_token_account);
@@ -793,7 +773,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn destination_token_account(
         &mut self,
-        destination_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+        destination_token_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.destination_token_account = Some(destination_token_account);
         self
@@ -802,7 +782,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn source_mint(
         &mut self,
-        source_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        source_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.source_mint = Some(source_mint);
         self
@@ -811,7 +791,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn destination_mint(
         &mut self,
-        destination_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        destination_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.destination_mint = Some(destination_mint);
         self
@@ -821,7 +801,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn platform_fee_account(
         &mut self,
-        platform_fee_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        platform_fee_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.platform_fee_account = platform_fee_account;
         self
@@ -831,7 +811,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token2022_program(
         &mut self,
-        token2022_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        token2022_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.token2022_program = token2022_program;
         self
@@ -840,7 +820,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_ledger(
         &mut self,
-        token_ledger: &'b solana_program::account_info::AccountInfo<'a>,
+        token_ledger: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_ledger = Some(token_ledger);
         self
@@ -849,17 +829,14 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -898,7 +875,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -915,11 +892,7 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -928,14 +901,14 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = SharedAccountsRouteWithTokenLedgerInstructionArgs {
             id: self.instruction.id.clone().expect("id is not set"),
             route_plan: self
@@ -1033,30 +1006,26 @@ impl<'a, 'b> SharedAccountsRouteWithTokenLedgerCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct SharedAccountsRouteWithTokenLedgerCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_transfer_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    source_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program_source_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program_destination_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    destination_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    source_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    destination_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    platform_fee_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token2022_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_ledger: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_transfer_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    source_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program_source_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program_destination_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    destination_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    source_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    destination_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    platform_fee_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token2022_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_ledger: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     id: Option<u8>,
     route_plan: Option<Vec<RoutePlanStep>>,
     quoted_out_amount: Option<u64>,
     slippage_bps: Option<u16>,
     platform_fee_bps: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

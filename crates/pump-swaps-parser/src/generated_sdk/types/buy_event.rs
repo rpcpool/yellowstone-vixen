@@ -6,7 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -55,4 +55,11 @@ pub struct BuyEvent {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub protocol_fee_recipient_token_account: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub coin_creator: Pubkey,
+    pub coin_creator_fee_basis_points: u64,
+    pub coin_creator_fee: u64,
 }

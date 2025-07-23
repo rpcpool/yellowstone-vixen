@@ -5,9 +5,14 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         Claim as ClaimIxAccounts, ClaimInstructionArgs as ClaimIxData,
         ClaimToken as ClaimTokenIxAccounts, ClaimTokenInstructionArgs as ClaimTokenIxData,
@@ -67,7 +72,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = JupiterProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<JupiterProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "Jupiter::InstructionParser".into() }
 
@@ -83,7 +91,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -98,315 +122,256 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<JupiterProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [62, 198, 214, 193, 213, 159, 108, 210] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimIxAccounts {
-                    wallet: ix.accounts[0].0.into(),
-                    program_authority: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    wallet: next_account(accounts)?,
+                    program_authority: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ClaimIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::Claim(ix_accounts, de_ix_data))
             },
             [116, 206, 27, 191, 166, 19, 0, 73] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimTokenIxAccounts {
-                    payer: ix.accounts[0].0.into(),
-                    wallet: ix.accounts[1].0.into(),
-                    program_authority: ix.accounts[2].0.into(),
-                    program_token_account: ix.accounts[3].0.into(),
-                    destination_token_account: ix.accounts[4].0.into(),
-                    mint: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    associated_token_program: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
+                    payer: next_account(accounts)?,
+                    wallet: next_account(accounts)?,
+                    program_authority: next_account(accounts)?,
+                    program_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimTokenIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ClaimTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::ClaimToken(ix_accounts, de_ix_data))
             },
             [26, 74, 236, 151, 104, 64, 183, 249] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CloseTokenIxAccounts {
-                    operator: ix.accounts[0].0.into(),
-                    wallet: ix.accounts[1].0.into(),
-                    program_authority: ix.accounts[2].0.into(),
-                    program_token_account: ix.accounts[3].0.into(),
-                    mint: ix.accounts[4].0.into(),
-                    token_program: ix.accounts[5].0.into(),
+                    operator: next_account(accounts)?,
+                    wallet: next_account(accounts)?,
+                    program_authority: next_account(accounts)?,
+                    program_token_account: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
-                let de_ix_data: CloseTokenIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: CloseTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::CloseToken(ix_accounts, de_ix_data))
             },
             [229, 194, 212, 172, 8, 10, 134, 147] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateOpenOrdersIxAccounts {
-                    open_orders: ix.accounts[0].0.into(),
-                    payer: ix.accounts[1].0.into(),
-                    dex_program: ix.accounts[2].0.into(),
-                    system_program: ix.accounts[3].0.into(),
-                    rent: ix.accounts[4].0.into(),
-                    market: ix.accounts[5].0.into(),
+                    open_orders: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    dex_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    market: next_account(accounts)?,
                 };
                 Ok(JupiterProgramIx::CreateOpenOrders(ix_accounts))
             },
             [28, 226, 32, 148, 188, 136, 113, 171] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateProgramOpenOrdersIxAccounts {
-                    open_orders: ix.accounts[0].0.into(),
-                    payer: ix.accounts[1].0.into(),
-                    program_authority: ix.accounts[2].0.into(),
-                    dex_program: ix.accounts[3].0.into(),
-                    system_program: ix.accounts[4].0.into(),
-                    rent: ix.accounts[5].0.into(),
-                    market: ix.accounts[6].0.into(),
+                    open_orders: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    program_authority: next_account(accounts)?,
+                    dex_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    market: next_account(accounts)?,
                 };
                 let de_ix_data: CreateProgramOpenOrdersIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::CreateProgramOpenOrders(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [232, 242, 197, 253, 240, 143, 129, 52] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateTokenLedgerIxAccounts {
-                    token_ledger: ix.accounts[0].0.into(),
-                    payer: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    token_ledger: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(JupiterProgramIx::CreateTokenLedger(ix_accounts))
             },
             [147, 241, 123, 100, 244, 132, 174, 118] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateTokenAccountIxAccounts {
-                    token_account: ix.accounts[0].0.into(),
-                    user: ix.accounts[1].0.into(),
-                    mint: ix.accounts[2].0.into(),
-                    token_program: ix.accounts[3].0.into(),
-                    system_program: ix.accounts[4].0.into(),
+                    token_account: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: CreateTokenAccountIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::CreateTokenAccount(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [208, 51, 239, 151, 123, 43, 237, 92] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ExactOutRouteIxAccounts {
-                    token_program: ix.accounts[0].0.into(),
-                    user_transfer_authority: ix.accounts[1].0.into(),
-                    user_source_token_account: ix.accounts[2].0.into(),
-                    user_destination_token_account: ix.accounts[3].0.into(),
-                    destination_token_account: if ix.accounts[4]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[4].0.into())
-                    },
-                    source_mint: ix.accounts[5].0.into(),
-                    destination_mint: ix.accounts[6].0.into(),
-                    platform_fee_account: if ix.accounts[7]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[7].0.into())
-                    },
-                    token2022_program: if ix.accounts[8]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[8].0.into())
-                    },
-                    event_authority: ix.accounts[9].0.into(),
-                    program: ix.accounts[10].0.into(),
+                    token_program: next_account(accounts)?,
+                    user_transfer_authority: next_account(accounts)?,
+                    user_source_token_account: next_account(accounts)?,
+                    user_destination_token_account: next_account(accounts)?,
+                    destination_token_account: next_program_id_optional_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    token2022_program: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: ExactOutRouteIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ExactOutRouteIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::ExactOutRoute(ix_accounts, de_ix_data))
             },
             [229, 23, 203, 151, 122, 227, 173, 42] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RouteIxAccounts {
-                    token_program: ix.accounts[0].0.into(),
-                    user_transfer_authority: ix.accounts[1].0.into(),
-                    user_source_token_account: ix.accounts[2].0.into(),
-                    user_destination_token_account: ix.accounts[3].0.into(),
-                    destination_token_account: if ix.accounts[4]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[4].0.into())
-                    },
-                    destination_mint: ix.accounts[5].0.into(),
-                    platform_fee_account: if ix.accounts[6]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[6].0.into())
-                    },
-                    event_authority: ix.accounts[7].0.into(),
-                    program: ix.accounts[8].0.into(),
+                    token_program: next_account(accounts)?,
+                    user_transfer_authority: next_account(accounts)?,
+                    user_source_token_account: next_account(accounts)?,
+                    user_destination_token_account: next_account(accounts)?,
+                    destination_token_account: next_program_id_optional_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: RouteIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: RouteIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::Route(ix_accounts, de_ix_data))
             },
             [150, 86, 71, 116, 167, 93, 14, 104] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RouteWithTokenLedgerIxAccounts {
-                    token_program: ix.accounts[0].0.into(),
-                    user_transfer_authority: ix.accounts[1].0.into(),
-                    user_source_token_account: ix.accounts[2].0.into(),
-                    user_destination_token_account: ix.accounts[3].0.into(),
-                    destination_token_account: if ix.accounts[4]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[4].0.into())
-                    },
-                    destination_mint: ix.accounts[5].0.into(),
-                    platform_fee_account: if ix.accounts[6]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[6].0.into())
-                    },
-                    token_ledger: ix.accounts[7].0.into(),
-                    event_authority: ix.accounts[8].0.into(),
-                    program: ix.accounts[9].0.into(),
+                    token_program: next_account(accounts)?,
+                    user_transfer_authority: next_account(accounts)?,
+                    user_source_token_account: next_account(accounts)?,
+                    user_destination_token_account: next_account(accounts)?,
+                    destination_token_account: next_program_id_optional_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    token_ledger: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: RouteWithTokenLedgerIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::RouteWithTokenLedger(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [228, 85, 185, 112, 78, 79, 77, 2] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetTokenLedgerIxAccounts {
-                    token_ledger: ix.accounts[0].0.into(),
-                    token_account: ix.accounts[1].0.into(),
+                    token_ledger: next_account(accounts)?,
+                    token_account: next_account(accounts)?,
                 };
                 Ok(JupiterProgramIx::SetTokenLedger(ix_accounts))
             },
             [176, 209, 105, 168, 154, 125, 69, 62] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SharedAccountsExactOutRouteIxAccounts {
-                    token_program: ix.accounts[0].0.into(),
-                    program_authority: ix.accounts[1].0.into(),
-                    user_transfer_authority: ix.accounts[2].0.into(),
-                    source_token_account: ix.accounts[3].0.into(),
-                    program_source_token_account: ix.accounts[4].0.into(),
-                    program_destination_token_account: ix.accounts[5].0.into(),
-                    destination_token_account: ix.accounts[6].0.into(),
-                    source_mint: ix.accounts[7].0.into(),
-                    destination_mint: ix.accounts[8].0.into(),
-                    platform_fee_account: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    token2022_program: if ix.accounts[10]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[10].0.into())
-                    },
-                    event_authority: ix.accounts[11].0.into(),
-                    program: ix.accounts[12].0.into(),
+                    token_program: next_account(accounts)?,
+                    program_authority: next_account(accounts)?,
+                    user_transfer_authority: next_account(accounts)?,
+                    source_token_account: next_account(accounts)?,
+                    program_source_token_account: next_account(accounts)?,
+                    program_destination_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    token2022_program: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsExactOutRouteIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::SharedAccountsExactOutRoute(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [193, 32, 155, 51, 65, 214, 156, 129] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SharedAccountsRouteIxAccounts {
-                    token_program: ix.accounts[0].0.into(),
-                    program_authority: ix.accounts[1].0.into(),
-                    user_transfer_authority: ix.accounts[2].0.into(),
-                    source_token_account: ix.accounts[3].0.into(),
-                    program_source_token_account: ix.accounts[4].0.into(),
-                    program_destination_token_account: ix.accounts[5].0.into(),
-                    destination_token_account: ix.accounts[6].0.into(),
-                    source_mint: ix.accounts[7].0.into(),
-                    destination_mint: ix.accounts[8].0.into(),
-                    platform_fee_account: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    token2022_program: if ix.accounts[10]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[10].0.into())
-                    },
-                    event_authority: ix.accounts[11].0.into(),
-                    program: ix.accounts[12].0.into(),
+                    token_program: next_account(accounts)?,
+                    program_authority: next_account(accounts)?,
+                    user_transfer_authority: next_account(accounts)?,
+                    source_token_account: next_account(accounts)?,
+                    program_source_token_account: next_account(accounts)?,
+                    program_destination_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    token2022_program: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsRouteIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::SharedAccountsRoute(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [230, 121, 143, 80, 119, 159, 106, 170] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SharedAccountsRouteWithTokenLedgerIxAccounts {
-                    token_program: ix.accounts[0].0.into(),
-                    program_authority: ix.accounts[1].0.into(),
-                    user_transfer_authority: ix.accounts[2].0.into(),
-                    source_token_account: ix.accounts[3].0.into(),
-                    program_source_token_account: ix.accounts[4].0.into(),
-                    program_destination_token_account: ix.accounts[5].0.into(),
-                    destination_token_account: ix.accounts[6].0.into(),
-                    source_mint: ix.accounts[7].0.into(),
-                    destination_mint: ix.accounts[8].0.into(),
-                    platform_fee_account: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    token2022_program: if ix.accounts[10]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[10].0.into())
-                    },
-                    token_ledger: ix.accounts[11].0.into(),
-                    event_authority: ix.accounts[12].0.into(),
-                    program: ix.accounts[13].0.into(),
+                    token_program: next_account(accounts)?,
+                    program_authority: next_account(accounts)?,
+                    user_transfer_authority: next_account(accounts)?,
+                    source_token_account: next_account(accounts)?,
+                    program_source_token_account: next_account(accounts)?,
+                    program_destination_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    token2022_program: next_program_id_optional_account(accounts)?,
+                    token_ledger: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsRouteWithTokenLedgerIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::SharedAccountsRouteWithTokenLedger(
                     ix_accounts,
                     de_ix_data,
@@ -439,7 +404,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -453,6 +425,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -936,6 +951,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

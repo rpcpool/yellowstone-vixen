@@ -11,32 +11,32 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct WithdrawStrategy {
     /// vault
-    pub vault: solana_program::pubkey::Pubkey,
+    pub vault: solana_pubkey::Pubkey,
     /// strategy
-    pub strategy: solana_program::pubkey::Pubkey,
+    pub strategy: solana_pubkey::Pubkey,
     /// token_vault
-    pub token_vault: solana_program::pubkey::Pubkey,
+    pub token_vault: solana_pubkey::Pubkey,
     /// fee_vault
-    pub fee_vault: solana_program::pubkey::Pubkey,
+    pub fee_vault: solana_pubkey::Pubkey,
     /// lp_mint
-    pub lp_mint: solana_program::pubkey::Pubkey,
+    pub lp_mint: solana_pubkey::Pubkey,
 
-    pub strategy_program: solana_program::pubkey::Pubkey,
+    pub strategy_program: solana_pubkey::Pubkey,
     /// collateral_vault
-    pub collateral_vault: solana_program::pubkey::Pubkey,
+    pub collateral_vault: solana_pubkey::Pubkey,
 
-    pub reserve: solana_program::pubkey::Pubkey,
+    pub reserve: solana_pubkey::Pubkey,
     /// token_program
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
     /// operator
-    pub operator: solana_program::pubkey::Pubkey,
+    pub operator: solana_pubkey::Pubkey,
 }
 
 impl WithdrawStrategy {
     pub fn instruction(
         &self,
         args: WithdrawStrategyInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -45,45 +45,31 @@ impl WithdrawStrategy {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: WithdrawStrategyInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.vault, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.strategy,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.strategy, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.fee_vault,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lp_mint,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.fee_vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.lp_mint, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.strategy_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.collateral_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.reserve,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.reserve, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.operator,
             true,
         ));
@@ -92,7 +78,7 @@ impl WithdrawStrategy {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::VAULT_ID,
             accounts,
             data,
@@ -140,18 +126,18 @@ pub struct WithdrawStrategyInstructionArgs {
 ///   9. `[signer]` operator
 #[derive(Clone, Debug, Default)]
 pub struct WithdrawStrategyBuilder {
-    vault: Option<solana_program::pubkey::Pubkey>,
-    strategy: Option<solana_program::pubkey::Pubkey>,
-    token_vault: Option<solana_program::pubkey::Pubkey>,
-    fee_vault: Option<solana_program::pubkey::Pubkey>,
-    lp_mint: Option<solana_program::pubkey::Pubkey>,
-    strategy_program: Option<solana_program::pubkey::Pubkey>,
-    collateral_vault: Option<solana_program::pubkey::Pubkey>,
-    reserve: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    operator: Option<solana_program::pubkey::Pubkey>,
+    vault: Option<solana_pubkey::Pubkey>,
+    strategy: Option<solana_pubkey::Pubkey>,
+    token_vault: Option<solana_pubkey::Pubkey>,
+    fee_vault: Option<solana_pubkey::Pubkey>,
+    lp_mint: Option<solana_pubkey::Pubkey>,
+    strategy_program: Option<solana_pubkey::Pubkey>,
+    collateral_vault: Option<solana_pubkey::Pubkey>,
+    reserve: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    operator: Option<solana_pubkey::Pubkey>,
     amount: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl WithdrawStrategyBuilder {
@@ -159,60 +145,54 @@ impl WithdrawStrategyBuilder {
 
     /// vault
     #[inline(always)]
-    pub fn vault(&mut self, vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vault(&mut self, vault: solana_pubkey::Pubkey) -> &mut Self {
         self.vault = Some(vault);
         self
     }
 
     /// strategy
     #[inline(always)]
-    pub fn strategy(&mut self, strategy: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn strategy(&mut self, strategy: solana_pubkey::Pubkey) -> &mut Self {
         self.strategy = Some(strategy);
         self
     }
 
     /// token_vault
     #[inline(always)]
-    pub fn token_vault(&mut self, token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_vault(&mut self, token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_vault = Some(token_vault);
         self
     }
 
     /// fee_vault
     #[inline(always)]
-    pub fn fee_vault(&mut self, fee_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn fee_vault(&mut self, fee_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.fee_vault = Some(fee_vault);
         self
     }
 
     /// lp_mint
     #[inline(always)]
-    pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
 
     #[inline(always)]
-    pub fn strategy_program(
-        &mut self,
-        strategy_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn strategy_program(&mut self, strategy_program: solana_pubkey::Pubkey) -> &mut Self {
         self.strategy_program = Some(strategy_program);
         self
     }
 
     /// collateral_vault
     #[inline(always)]
-    pub fn collateral_vault(
-        &mut self,
-        collateral_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn collateral_vault(&mut self, collateral_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.collateral_vault = Some(collateral_vault);
         self
     }
 
     #[inline(always)]
-    pub fn reserve(&mut self, reserve: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn reserve(&mut self, reserve: solana_pubkey::Pubkey) -> &mut Self {
         self.reserve = Some(reserve);
         self
     }
@@ -220,14 +200,14 @@ impl WithdrawStrategyBuilder {
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// token_program
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
 
     /// operator
     #[inline(always)]
-    pub fn operator(&mut self, operator: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn operator(&mut self, operator: solana_pubkey::Pubkey) -> &mut Self {
         self.operator = Some(operator);
         self
     }
@@ -240,10 +220,7 @@ impl WithdrawStrategyBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -252,14 +229,14 @@ impl WithdrawStrategyBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = WithdrawStrategy {
             vault: self.vault.expect("vault is not set"),
             strategy: self.strategy.expect("strategy is not set"),
@@ -269,7 +246,7 @@ impl WithdrawStrategyBuilder {
             strategy_program: self.strategy_program.expect("strategy_program is not set"),
             collateral_vault: self.collateral_vault.expect("collateral_vault is not set"),
             reserve: self.reserve.expect("reserve is not set"),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             operator: self.operator.expect("operator is not set"),
@@ -285,58 +262,58 @@ impl WithdrawStrategyBuilder {
 /// `withdraw_strategy` CPI accounts.
 pub struct WithdrawStrategyCpiAccounts<'a, 'b> {
     /// vault
-    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault: &'b solana_account_info::AccountInfo<'a>,
     /// strategy
-    pub strategy: &'b solana_program::account_info::AccountInfo<'a>,
+    pub strategy: &'b solana_account_info::AccountInfo<'a>,
     /// token_vault
-    pub token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// fee_vault
-    pub fee_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub fee_vault: &'b solana_account_info::AccountInfo<'a>,
     /// lp_mint
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub strategy_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub strategy_program: &'b solana_account_info::AccountInfo<'a>,
     /// collateral_vault
-    pub collateral_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub collateral_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve: &'b solana_account_info::AccountInfo<'a>,
     /// token_program
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// operator
-    pub operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `withdraw_strategy` CPI instruction.
 pub struct WithdrawStrategyCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// vault
-    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault: &'b solana_account_info::AccountInfo<'a>,
     /// strategy
-    pub strategy: &'b solana_program::account_info::AccountInfo<'a>,
+    pub strategy: &'b solana_account_info::AccountInfo<'a>,
     /// token_vault
-    pub token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// fee_vault
-    pub fee_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub fee_vault: &'b solana_account_info::AccountInfo<'a>,
     /// lp_mint
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub strategy_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub strategy_program: &'b solana_account_info::AccountInfo<'a>,
     /// collateral_vault
-    pub collateral_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub collateral_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve: &'b solana_account_info::AccountInfo<'a>,
     /// token_program
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// operator
-    pub operator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: WithdrawStrategyInstructionArgs,
 }
 
 impl<'a, 'b> WithdrawStrategyCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: WithdrawStrategyCpiAccounts<'a, 'b>,
         args: WithdrawStrategyInstructionArgs,
     ) -> Self {
@@ -357,19 +334,15 @@ impl<'a, 'b> WithdrawStrategyCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -377,7 +350,7 @@ impl<'a, 'b> WithdrawStrategyCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -387,55 +360,48 @@ impl<'a, 'b> WithdrawStrategyCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.vault.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.vault.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.strategy.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.fee_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.strategy_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.collateral_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.reserve.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.operator.key,
             true,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -445,7 +411,7 @@ impl<'a, 'b> WithdrawStrategyCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::VAULT_ID,
             accounts,
             data,
@@ -467,9 +433,9 @@ impl<'a, 'b> WithdrawStrategyCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -494,7 +460,7 @@ pub struct WithdrawStrategyCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(WithdrawStrategyCpiBuilderInstruction {
             __program: program,
             vault: None,
@@ -515,17 +481,14 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
 
     /// vault
     #[inline(always)]
-    pub fn vault(&mut self, vault: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn vault(&mut self, vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vault = Some(vault);
         self
     }
 
     /// strategy
     #[inline(always)]
-    pub fn strategy(
-        &mut self,
-        strategy: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn strategy(&mut self, strategy: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.strategy = Some(strategy);
         self
     }
@@ -534,7 +497,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_vault(
         &mut self,
-        token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        token_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_vault = Some(token_vault);
         self
@@ -542,20 +505,14 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
 
     /// fee_vault
     #[inline(always)]
-    pub fn fee_vault(
-        &mut self,
-        fee_vault: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn fee_vault(&mut self, fee_vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.fee_vault = Some(fee_vault);
         self
     }
 
     /// lp_mint
     #[inline(always)]
-    pub fn lp_mint(
-        &mut self,
-        lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
@@ -563,7 +520,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn strategy_program(
         &mut self,
-        strategy_program: &'b solana_program::account_info::AccountInfo<'a>,
+        strategy_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.strategy_program = Some(strategy_program);
         self
@@ -573,17 +530,14 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn collateral_vault(
         &mut self,
-        collateral_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        collateral_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.collateral_vault = Some(collateral_vault);
         self
     }
 
     #[inline(always)]
-    pub fn reserve(
-        &mut self,
-        reserve: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn reserve(&mut self, reserve: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.reserve = Some(reserve);
         self
     }
@@ -592,7 +546,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -600,10 +554,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
 
     /// operator
     #[inline(always)]
-    pub fn operator(
-        &mut self,
-        operator: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn operator(&mut self, operator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.operator = Some(operator);
         self
     }
@@ -618,7 +569,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -635,11 +586,7 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -648,14 +595,14 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = WithdrawStrategyInstructionArgs {
             amount: self.instruction.amount.clone().expect("amount is not set"),
         };
@@ -704,22 +651,18 @@ impl<'a, 'b> WithdrawStrategyCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct WithdrawStrategyCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    strategy: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    fee_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    strategy_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collateral_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    reserve: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    operator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    strategy: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    fee_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    strategy_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    collateral_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    reserve: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    operator: Option<&'b solana_account_info::AccountInfo<'a>>,
     amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

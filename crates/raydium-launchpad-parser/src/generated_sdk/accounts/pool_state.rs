@@ -6,7 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 use crate::generated::types::VestingSchedule;
 
@@ -117,12 +117,10 @@ impl PoolState {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for PoolState {
+impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for PoolState {
     type Error = std::io::Error;
 
-    fn try_from(
-        account_info: &solana_program::account_info::AccountInfo<'a>,
-    ) -> Result<Self, Self::Error> {
+    fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
         let mut data: &[u8] = &(*account_info.data).borrow();
         Self::deserialize(&mut data)
     }
@@ -131,7 +129,7 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for PoolState {
 #[cfg(feature = "fetch")]
 pub fn fetch_pool_state(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::DecodedAccount<PoolState>, std::io::Error> {
     let accounts = fetch_all_pool_state(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -140,7 +138,7 @@ pub fn fetch_pool_state(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_pool_state(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::DecodedAccount<PoolState>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -165,7 +163,7 @@ pub fn fetch_all_pool_state(
 #[cfg(feature = "fetch")]
 pub fn fetch_maybe_pool_state(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::MaybeAccount<PoolState>, std::io::Error> {
     let accounts = fetch_all_maybe_pool_state(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -174,7 +172,7 @@ pub fn fetch_maybe_pool_state(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_maybe_pool_state(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::MaybeAccount<PoolState>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)

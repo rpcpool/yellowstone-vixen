@@ -5,24 +5,22 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-
 use crate::{
     accounts::{AmmConfig, AmmInfo, TargetOrders},
-    ID,
+    deserialize_checked, ID,
 };
 
-/// RaydiumAmm Program State
+/// RaydiumAmmV4 Program State
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
-pub enum RaydiumAmmProgramState {
+pub enum RaydiumAmmV4ProgramState {
     TargetOrders(TargetOrders),
     AmmInfo(AmmInfo),
     AmmConfig(AmmConfig),
 }
 
-impl RaydiumAmmProgramState {
+impl RaydiumAmmV4ProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let data_len = data_bytes.len();
         const TARGETORDERS_LEN: usize = std::mem::size_of::<TargetOrders>();
@@ -30,15 +28,18 @@ impl RaydiumAmmProgramState {
         const AMMCONFIG_LEN: usize = std::mem::size_of::<AmmConfig>();
 
         let acc = match data_len {
-            TARGETORDERS_LEN => Ok(RaydiumAmmProgramState::TargetOrders(
-                TargetOrders::try_from_slice(data_bytes)?,
-            )),
-            AMMINFO_LEN => Ok(RaydiumAmmProgramState::AmmInfo(AmmInfo::try_from_slice(
+            TARGETORDERS_LEN => Ok(RaydiumAmmV4ProgramState::TargetOrders(deserialize_checked(
                 data_bytes,
+                &data_len.to_le_bytes(),
             )?)),
-            AMMCONFIG_LEN => Ok(RaydiumAmmProgramState::AmmConfig(
-                AmmConfig::try_from_slice(data_bytes)?,
-            )),
+            AMMINFO_LEN => Ok(RaydiumAmmV4ProgramState::AmmInfo(deserialize_checked(
+                data_bytes,
+                &data_len.to_le_bytes(),
+            )?)),
+            AMMCONFIG_LEN => Ok(RaydiumAmmV4ProgramState::AmmConfig(deserialize_checked(
+                data_bytes,
+                &data_len.to_le_bytes(),
+            )?)),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account data length".to_owned(),
             )),
@@ -75,9 +76,9 @@ pub struct AccountParser;
 
 impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
-    type Output = RaydiumAmmProgramState;
+    type Output = RaydiumAmmV4ProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> { "raydium_amm::AccountParser".into() }
+    fn id(&self) -> std::borrow::Cow<str> { "raydium_amm_v4::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -93,8 +94,8 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        let res = RaydiumAmmProgramState::try_unpack(&inner.data);
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = RaydiumAmmV4ProgramState::try_unpack(&inner.data);
 
         #[cfg(feature = "tracing")]
         if let Err(e) = &res {
@@ -122,7 +123,7 @@ impl yellowstone_vixen_core::ProgramParser for AccountParser {
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{AccountParser, RaydiumAmmProgramState, TargetOrders};
+    use super::{AccountParser, RaydiumAmmV4ProgramState, TargetOrders};
     use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::TargetOrders> for TargetOrders {
         fn into_proto(self) -> proto_def::TargetOrders {
@@ -216,16 +217,16 @@ mod proto_parser {
         }
     }
 
-    impl IntoProto<proto_def::ProgramState> for RaydiumAmmProgramState {
+    impl IntoProto<proto_def::ProgramState> for RaydiumAmmV4ProgramState {
         fn into_proto(self) -> proto_def::ProgramState {
             let state_oneof = match self {
-                RaydiumAmmProgramState::TargetOrders(data) => {
+                RaydiumAmmV4ProgramState::TargetOrders(data) => {
                     proto_def::program_state::StateOneof::TargetOrders(data.into_proto())
                 },
-                RaydiumAmmProgramState::AmmInfo(data) => {
+                RaydiumAmmV4ProgramState::AmmInfo(data) => {
                     proto_def::program_state::StateOneof::AmmInfo(data.into_proto())
                 },
-                RaydiumAmmProgramState::AmmConfig(data) => {
+                RaydiumAmmV4ProgramState::AmmConfig(data) => {
                     proto_def::program_state::StateOneof::AmmConfig(data.into_proto())
                 },
             };

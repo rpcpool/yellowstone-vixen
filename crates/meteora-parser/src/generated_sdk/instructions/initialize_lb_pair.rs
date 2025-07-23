@@ -10,40 +10,40 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct InitializeLbPair {
-    pub lb_pair: solana_program::pubkey::Pubkey,
+    pub lb_pair: solana_pubkey::Pubkey,
 
-    pub bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
+    pub bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
 
-    pub token_mint_x: solana_program::pubkey::Pubkey,
+    pub token_mint_x: solana_pubkey::Pubkey,
 
-    pub token_mint_y: solana_program::pubkey::Pubkey,
+    pub token_mint_y: solana_pubkey::Pubkey,
 
-    pub reserve_x: solana_program::pubkey::Pubkey,
+    pub reserve_x: solana_pubkey::Pubkey,
 
-    pub reserve_y: solana_program::pubkey::Pubkey,
+    pub reserve_y: solana_pubkey::Pubkey,
 
-    pub oracle: solana_program::pubkey::Pubkey,
+    pub oracle: solana_pubkey::Pubkey,
 
-    pub preset_parameter: solana_program::pubkey::Pubkey,
+    pub preset_parameter: solana_pubkey::Pubkey,
 
-    pub funder: solana_program::pubkey::Pubkey,
+    pub funder: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl InitializeLbPair {
     pub fn instruction(
         &self,
         args: InitializeLbPairInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -52,68 +52,53 @@ impl InitializeLbPair {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: InitializeLbPairInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lb_pair,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.lb_pair, false));
         if let Some(bin_array_bitmap_extension) = self.bin_array_bitmap_extension {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 bin_array_bitmap_extension,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_mint_x,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_mint_y,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.reserve_x,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.reserve_y,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.oracle,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.reserve_x, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.reserve_y, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.oracle, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.preset_parameter,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.funder,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.funder, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -122,7 +107,7 @@ impl InitializeLbPair {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -175,30 +160,30 @@ pub struct InitializeLbPairInstructionArgs {
 ///   13. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct InitializeLbPairBuilder {
-    lb_pair: Option<solana_program::pubkey::Pubkey>,
-    bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
-    token_mint_x: Option<solana_program::pubkey::Pubkey>,
-    token_mint_y: Option<solana_program::pubkey::Pubkey>,
-    reserve_x: Option<solana_program::pubkey::Pubkey>,
-    reserve_y: Option<solana_program::pubkey::Pubkey>,
-    oracle: Option<solana_program::pubkey::Pubkey>,
-    preset_parameter: Option<solana_program::pubkey::Pubkey>,
-    funder: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    lb_pair: Option<solana_pubkey::Pubkey>,
+    bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
+    token_mint_x: Option<solana_pubkey::Pubkey>,
+    token_mint_y: Option<solana_pubkey::Pubkey>,
+    reserve_x: Option<solana_pubkey::Pubkey>,
+    reserve_y: Option<solana_pubkey::Pubkey>,
+    oracle: Option<solana_pubkey::Pubkey>,
+    preset_parameter: Option<solana_pubkey::Pubkey>,
+    funder: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     active_id: Option<i32>,
     bin_step: Option<u16>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl InitializeLbPairBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn lb_pair(&mut self, lb_pair: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: solana_pubkey::Pubkey) -> &mut Self {
         self.lb_pair = Some(lb_pair);
         self
     }
@@ -207,89 +192,83 @@ impl InitializeLbPairBuilder {
     #[inline(always)]
     pub fn bin_array_bitmap_extension(
         &mut self,
-        bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
+        bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.bin_array_bitmap_extension = bin_array_bitmap_extension;
         self
     }
 
     #[inline(always)]
-    pub fn token_mint_x(&mut self, token_mint_x: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_mint_x(&mut self, token_mint_x: solana_pubkey::Pubkey) -> &mut Self {
         self.token_mint_x = Some(token_mint_x);
         self
     }
 
     #[inline(always)]
-    pub fn token_mint_y(&mut self, token_mint_y: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_mint_y(&mut self, token_mint_y: solana_pubkey::Pubkey) -> &mut Self {
         self.token_mint_y = Some(token_mint_y);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_x(&mut self, reserve_x: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn reserve_x(&mut self, reserve_x: solana_pubkey::Pubkey) -> &mut Self {
         self.reserve_x = Some(reserve_x);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_y(&mut self, reserve_y: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn reserve_y(&mut self, reserve_y: solana_pubkey::Pubkey) -> &mut Self {
         self.reserve_y = Some(reserve_y);
         self
     }
 
     #[inline(always)]
-    pub fn oracle(&mut self, oracle: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn oracle(&mut self, oracle: solana_pubkey::Pubkey) -> &mut Self {
         self.oracle = Some(oracle);
         self
     }
 
     #[inline(always)]
-    pub fn preset_parameter(
-        &mut self,
-        preset_parameter: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn preset_parameter(&mut self, preset_parameter: solana_pubkey::Pubkey) -> &mut Self {
         self.preset_parameter = Some(preset_parameter);
         self
     }
 
     #[inline(always)]
-    pub fn funder(&mut self, funder: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn funder(&mut self, funder: solana_pubkey::Pubkey) -> &mut Self {
         self.funder = Some(funder);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -308,10 +287,7 @@ impl InitializeLbPairBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -320,14 +296,14 @@ impl InitializeLbPairBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializeLbPair {
             lb_pair: self.lb_pair.expect("lb_pair is not set"),
             bin_array_bitmap_extension: self.bin_array_bitmap_extension,
@@ -338,13 +314,13 @@ impl InitializeLbPairBuilder {
             oracle: self.oracle.expect("oracle is not set"),
             preset_parameter: self.preset_parameter.expect("preset_parameter is not set"),
             funder: self.funder.expect("funder is not set"),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
             event_authority: self.event_authority.expect("event_authority is not set"),
@@ -361,74 +337,74 @@ impl InitializeLbPairBuilder {
 
 /// `initialize_lb_pair` CPI accounts.
 pub struct InitializeLbPairCpiAccounts<'a, 'b> {
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_mint_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub oracle: &'b solana_program::account_info::AccountInfo<'a>,
+    pub oracle: &'b solana_account_info::AccountInfo<'a>,
 
-    pub preset_parameter: &'b solana_program::account_info::AccountInfo<'a>,
+    pub preset_parameter: &'b solana_account_info::AccountInfo<'a>,
 
-    pub funder: &'b solana_program::account_info::AccountInfo<'a>,
+    pub funder: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `initialize_lb_pair` CPI instruction.
 pub struct InitializeLbPairCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_mint_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub oracle: &'b solana_program::account_info::AccountInfo<'a>,
+    pub oracle: &'b solana_account_info::AccountInfo<'a>,
 
-    pub preset_parameter: &'b solana_program::account_info::AccountInfo<'a>,
+    pub preset_parameter: &'b solana_account_info::AccountInfo<'a>,
 
-    pub funder: &'b solana_program::account_info::AccountInfo<'a>,
+    pub funder: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: InitializeLbPairInstructionArgs,
 }
 
 impl<'a, 'b> InitializeLbPairCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: InitializeLbPairCpiAccounts<'a, 'b>,
         args: InitializeLbPairInstructionArgs,
     ) -> Self {
@@ -453,19 +429,15 @@ impl<'a, 'b> InitializeLbPairCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -473,7 +445,7 @@ impl<'a, 'b> InitializeLbPairCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -483,78 +455,71 @@ impl<'a, 'b> InitializeLbPairCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lb_pair.key,
             false,
         ));
         if let Some(bin_array_bitmap_extension) = self.bin_array_bitmap_extension {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 *bin_array_bitmap_extension.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_mint_x.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_mint_y.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.reserve_x.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.reserve_y.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.oracle.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.preset_parameter.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.funder.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.funder.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -564,7 +529,7 @@ impl<'a, 'b> InitializeLbPairCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -592,9 +557,9 @@ impl<'a, 'b> InitializeLbPairCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -623,7 +588,7 @@ pub struct InitializeLbPairCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(InitializeLbPairCpiBuilderInstruction {
             __program: program,
             lb_pair: None,
@@ -648,10 +613,7 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn lb_pair(
-        &mut self,
-        lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lb_pair = Some(lb_pair);
         self
     }
@@ -660,7 +622,7 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bin_array_bitmap_extension(
         &mut self,
-        bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.bin_array_bitmap_extension = bin_array_bitmap_extension;
         self
@@ -669,7 +631,7 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_mint_x(
         &mut self,
-        token_mint_x: &'b solana_program::account_info::AccountInfo<'a>,
+        token_mint_x: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_mint_x = Some(token_mint_x);
         self
@@ -678,35 +640,26 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_mint_y(
         &mut self,
-        token_mint_y: &'b solana_program::account_info::AccountInfo<'a>,
+        token_mint_y: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_mint_y = Some(token_mint_y);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_x(
-        &mut self,
-        reserve_x: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn reserve_x(&mut self, reserve_x: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.reserve_x = Some(reserve_x);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_y(
-        &mut self,
-        reserve_y: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn reserve_y(&mut self, reserve_y: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.reserve_y = Some(reserve_y);
         self
     }
 
     #[inline(always)]
-    pub fn oracle(
-        &mut self,
-        oracle: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn oracle(&mut self, oracle: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.oracle = Some(oracle);
         self
     }
@@ -714,17 +667,14 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn preset_parameter(
         &mut self,
-        preset_parameter: &'b solana_program::account_info::AccountInfo<'a>,
+        preset_parameter: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.preset_parameter = Some(preset_parameter);
         self
     }
 
     #[inline(always)]
-    pub fn funder(
-        &mut self,
-        funder: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn funder(&mut self, funder: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.funder = Some(funder);
         self
     }
@@ -732,7 +682,7 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -741,14 +691,14 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
     }
 
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -756,17 +706,14 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -787,7 +734,7 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -804,11 +751,7 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -817,14 +760,14 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = InitializeLbPairInstructionArgs {
             active_id: self
                 .instruction
@@ -896,27 +839,23 @@ impl<'a, 'b> InitializeLbPairCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct InitializeLbPairCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    lb_pair: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_mint_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_mint_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    reserve_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    reserve_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    oracle: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    preset_parameter: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    funder: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    lb_pair: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_mint_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_mint_y: Option<&'b solana_account_info::AccountInfo<'a>>,
+    reserve_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    reserve_y: Option<&'b solana_account_info::AccountInfo<'a>>,
+    oracle: Option<&'b solana_account_info::AccountInfo<'a>>,
+    preset_parameter: Option<&'b solana_account_info::AccountInfo<'a>>,
+    funder: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     active_id: Option<i32>,
     bin_step: Option<u16>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

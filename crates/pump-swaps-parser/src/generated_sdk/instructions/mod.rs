@@ -6,17 +6,20 @@
 //!
 
 pub(crate) mod r#buy;
+pub(crate) mod r#collect_coin_creator_fee;
 pub(crate) mod r#create_config;
 pub(crate) mod r#create_pool;
 pub(crate) mod r#deposit;
 pub(crate) mod r#disable;
 pub(crate) mod r#extend_account;
 pub(crate) mod r#sell;
+pub(crate) mod r#set_coin_creator;
 pub(crate) mod r#update_admin;
 pub(crate) mod r#update_fee_config;
 pub(crate) mod r#withdraw;
 
 pub use self::{
-    r#buy::*, r#create_config::*, r#create_pool::*, r#deposit::*, r#disable::*,
-    r#extend_account::*, r#sell::*, r#update_admin::*, r#update_fee_config::*, r#withdraw::*,
+    r#buy::*, r#collect_coin_creator_fee::*, r#create_config::*, r#create_pool::*, r#deposit::*,
+    r#disable::*, r#extend_account::*, r#sell::*, r#set_coin_creator::*, r#update_admin::*,
+    r#update_fee_config::*, r#withdraw::*,
 };

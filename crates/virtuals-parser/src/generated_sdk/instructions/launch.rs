@@ -10,36 +10,33 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct Launch {
-    pub creator: solana_program::pubkey::Pubkey,
+    pub creator: solana_pubkey::Pubkey,
 
-    pub creator_virtuals_ata: solana_program::pubkey::Pubkey,
+    pub creator_virtuals_ata: solana_pubkey::Pubkey,
 
-    pub token_mint: solana_program::pubkey::Pubkey,
+    pub token_mint: solana_pubkey::Pubkey,
 
-    pub platform_prototype: solana_program::pubkey::Pubkey,
+    pub platform_prototype: solana_pubkey::Pubkey,
 
-    pub platform_prototype_virtuals_ata: solana_program::pubkey::Pubkey,
+    pub platform_prototype_virtuals_ata: solana_pubkey::Pubkey,
 
-    pub vpool: solana_program::pubkey::Pubkey,
+    pub vpool: solana_pubkey::Pubkey,
 
-    pub token_metadata: solana_program::pubkey::Pubkey,
+    pub token_metadata: solana_pubkey::Pubkey,
 
-    pub metadata_program: solana_program::pubkey::Pubkey,
+    pub metadata_program: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 }
 
 impl Launch {
-    pub fn instruction(
-        &self,
-        args: LaunchInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self, args: LaunchInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -48,53 +45,45 @@ impl Launch {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: LaunchInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.creator,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.creator, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.creator_virtuals_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.token_mint,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.token_mint, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.platform_prototype,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.platform_prototype_virtuals_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.vpool, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.vpool, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_metadata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.metadata_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
         accounts.extend_from_slice(remaining_accounts);
@@ -102,7 +91,7 @@ impl Launch {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::VIRTUALS_PROGRAM_ID,
             accounts,
             data,
@@ -154,29 +143,29 @@ pub struct LaunchInstructionArgs {
 ///   11. `[optional]` rent (default to `SysvarRent111111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct LaunchBuilder {
-    creator: Option<solana_program::pubkey::Pubkey>,
-    creator_virtuals_ata: Option<solana_program::pubkey::Pubkey>,
-    token_mint: Option<solana_program::pubkey::Pubkey>,
-    platform_prototype: Option<solana_program::pubkey::Pubkey>,
-    platform_prototype_virtuals_ata: Option<solana_program::pubkey::Pubkey>,
-    vpool: Option<solana_program::pubkey::Pubkey>,
-    token_metadata: Option<solana_program::pubkey::Pubkey>,
-    metadata_program: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
+    creator: Option<solana_pubkey::Pubkey>,
+    creator_virtuals_ata: Option<solana_pubkey::Pubkey>,
+    token_mint: Option<solana_pubkey::Pubkey>,
+    platform_prototype: Option<solana_pubkey::Pubkey>,
+    platform_prototype_virtuals_ata: Option<solana_pubkey::Pubkey>,
+    vpool: Option<solana_pubkey::Pubkey>,
+    token_metadata: Option<solana_pubkey::Pubkey>,
+    metadata_program: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
     symbol: Option<String>,
     name: Option<String>,
     uri: Option<String>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl LaunchBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn creator(&mut self, creator: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
@@ -184,24 +173,21 @@ impl LaunchBuilder {
     #[inline(always)]
     pub fn creator_virtuals_ata(
         &mut self,
-        creator_virtuals_ata: solana_program::pubkey::Pubkey,
+        creator_virtuals_ata: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.creator_virtuals_ata = Some(creator_virtuals_ata);
         self
     }
 
     #[inline(always)]
-    pub fn token_mint(&mut self, token_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_mint(&mut self, token_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_mint = Some(token_mint);
         self
     }
 
     /// `[optional account, default to '933jV351WDG23QTcHPqLFJxyYRrEPWRTR3qoPWi3jwEL']`
     #[inline(always)]
-    pub fn platform_prototype(
-        &mut self,
-        platform_prototype: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn platform_prototype(&mut self, platform_prototype: solana_pubkey::Pubkey) -> &mut Self {
         self.platform_prototype = Some(platform_prototype);
         self
     }
@@ -209,37 +195,34 @@ impl LaunchBuilder {
     #[inline(always)]
     pub fn platform_prototype_virtuals_ata(
         &mut self,
-        platform_prototype_virtuals_ata: solana_program::pubkey::Pubkey,
+        platform_prototype_virtuals_ata: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.platform_prototype_virtuals_ata = Some(platform_prototype_virtuals_ata);
         self
     }
 
     #[inline(always)]
-    pub fn vpool(&mut self, vpool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vpool(&mut self, vpool: solana_pubkey::Pubkey) -> &mut Self {
         self.vpool = Some(vpool);
         self
     }
 
     #[inline(always)]
-    pub fn token_metadata(&mut self, token_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_metadata(&mut self, token_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.token_metadata = Some(token_metadata);
         self
     }
 
     /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
     #[inline(always)]
-    pub fn metadata_program(
-        &mut self,
-        metadata_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn metadata_program(&mut self, metadata_program: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata_program = Some(metadata_program);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -248,7 +231,7 @@ impl LaunchBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
@@ -256,14 +239,14 @@ impl LaunchBuilder {
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
@@ -288,10 +271,7 @@ impl LaunchBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -300,21 +280,21 @@ impl LaunchBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = Launch {
             creator: self.creator.expect("creator is not set"),
             creator_virtuals_ata: self
                 .creator_virtuals_ata
                 .expect("creator_virtuals_ata is not set"),
             token_mint: self.token_mint.expect("token_mint is not set"),
-            platform_prototype: self.platform_prototype.unwrap_or(solana_program::pubkey!(
+            platform_prototype: self.platform_prototype.unwrap_or(solana_pubkey::pubkey!(
                 "933jV351WDG23QTcHPqLFJxyYRrEPWRTR3qoPWi3jwEL"
             )),
             platform_prototype_virtuals_ata: self
@@ -322,19 +302,19 @@ impl LaunchBuilder {
                 .expect("platform_prototype_virtuals_ata is not set"),
             vpool: self.vpool.expect("vpool is not set"),
             token_metadata: self.token_metadata.expect("token_metadata is not set"),
-            metadata_program: self.metadata_program.unwrap_or(solana_program::pubkey!(
+            metadata_program: self.metadata_program.unwrap_or(solana_pubkey::pubkey!(
                 "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
             )),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self.associated_token_program.unwrap_or(
-                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
         };
@@ -350,66 +330,66 @@ impl LaunchBuilder {
 
 /// `launch` CPI accounts.
 pub struct LaunchCpiAccounts<'a, 'b> {
-    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub creator_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub platform_prototype: &'b solana_program::account_info::AccountInfo<'a>,
+    pub platform_prototype: &'b solana_account_info::AccountInfo<'a>,
 
-    pub platform_prototype_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub platform_prototype_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vpool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `launch` CPI instruction.
 pub struct LaunchCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
 
-    pub creator_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub platform_prototype: &'b solana_program::account_info::AccountInfo<'a>,
+    pub platform_prototype: &'b solana_account_info::AccountInfo<'a>,
 
-    pub platform_prototype_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub platform_prototype_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vpool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: LaunchInstructionArgs,
 }
 
 impl<'a, 'b> LaunchCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: LaunchCpiAccounts<'a, 'b>,
         args: LaunchInstructionArgs,
     ) -> Self {
@@ -432,19 +412,15 @@ impl<'a, 'b> LaunchCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -452,7 +428,7 @@ impl<'a, 'b> LaunchCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -462,63 +438,56 @@ impl<'a, 'b> LaunchCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.creator.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.creator_virtuals_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.platform_prototype.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.platform_prototype_virtuals_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.vpool.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.vpool.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_metadata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.metadata_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -528,7 +497,7 @@ impl<'a, 'b> LaunchCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::VIRTUALS_PROGRAM_ID,
             accounts,
             data,
@@ -552,9 +521,9 @@ impl<'a, 'b> LaunchCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -581,7 +550,7 @@ pub struct LaunchCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(LaunchCpiBuilderInstruction {
             __program: program,
             creator: None,
@@ -605,10 +574,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn creator(
-        &mut self,
-        creator: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn creator(&mut self, creator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.creator = Some(creator);
         self
     }
@@ -616,7 +582,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn creator_virtuals_ata(
         &mut self,
-        creator_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        creator_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.creator_virtuals_ata = Some(creator_virtuals_ata);
         self
@@ -625,7 +591,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_mint(
         &mut self,
-        token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_mint = Some(token_mint);
         self
@@ -634,7 +600,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn platform_prototype(
         &mut self,
-        platform_prototype: &'b solana_program::account_info::AccountInfo<'a>,
+        platform_prototype: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.platform_prototype = Some(platform_prototype);
         self
@@ -643,14 +609,14 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn platform_prototype_virtuals_ata(
         &mut self,
-        platform_prototype_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        platform_prototype_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.platform_prototype_virtuals_ata = Some(platform_prototype_virtuals_ata);
         self
     }
 
     #[inline(always)]
-    pub fn vpool(&mut self, vpool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn vpool(&mut self, vpool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vpool = Some(vpool);
         self
     }
@@ -658,7 +624,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_metadata(
         &mut self,
-        token_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+        token_metadata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_metadata = Some(token_metadata);
         self
@@ -667,7 +633,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
-        metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+        metadata_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.metadata_program = Some(metadata_program);
         self
@@ -676,7 +642,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -685,7 +651,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -694,14 +660,14 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
     }
 
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -728,7 +694,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -745,11 +711,7 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -758,14 +720,14 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = LaunchInstructionArgs {
             symbol: self.instruction.symbol.clone().expect("symbol is not set"),
             name: self.instruction.name.clone().expect("name is not set"),
@@ -832,26 +794,22 @@ impl<'a, 'b> LaunchCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct LaunchCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    creator_virtuals_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    platform_prototype: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    platform_prototype_virtuals_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vpool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    metadata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    creator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    creator_virtuals_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    platform_prototype: Option<&'b solana_account_info::AccountInfo<'a>>,
+    platform_prototype_virtuals_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vpool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_metadata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    metadata_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
     symbol: Option<String>,
     name: Option<String>,
     uri: Option<String>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

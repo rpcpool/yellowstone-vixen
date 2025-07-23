@@ -11,26 +11,23 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct Deposit {
     /// vault
-    pub vault: solana_program::pubkey::Pubkey,
+    pub vault: solana_pubkey::Pubkey,
     /// token_vault
-    pub token_vault: solana_program::pubkey::Pubkey,
+    pub token_vault: solana_pubkey::Pubkey,
     /// lp_mint
-    pub lp_mint: solana_program::pubkey::Pubkey,
+    pub lp_mint: solana_pubkey::Pubkey,
     /// user_token
-    pub user_token: solana_program::pubkey::Pubkey,
+    pub user_token: solana_pubkey::Pubkey,
     /// user_lp
-    pub user_lp: solana_program::pubkey::Pubkey,
+    pub user_lp: solana_pubkey::Pubkey,
     /// user
-    pub user: solana_program::pubkey::Pubkey,
+    pub user: solana_pubkey::Pubkey,
     /// token_program
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 }
 
 impl Deposit {
-    pub fn instruction(
-        &self,
-        args: DepositInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self, args: DepositInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -39,32 +36,21 @@ impl Deposit {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: DepositInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.vault, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lp_mint,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.user_token,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.user_lp,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.lp_mint, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.user_token, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.user_lp, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.user, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
@@ -73,7 +59,7 @@ impl Deposit {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::VAULT_ID,
             accounts,
             data,
@@ -119,16 +105,16 @@ pub struct DepositInstructionArgs {
 ///   6. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
 #[derive(Clone, Debug, Default)]
 pub struct DepositBuilder {
-    vault: Option<solana_program::pubkey::Pubkey>,
-    token_vault: Option<solana_program::pubkey::Pubkey>,
-    lp_mint: Option<solana_program::pubkey::Pubkey>,
-    user_token: Option<solana_program::pubkey::Pubkey>,
-    user_lp: Option<solana_program::pubkey::Pubkey>,
-    user: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
+    vault: Option<solana_pubkey::Pubkey>,
+    token_vault: Option<solana_pubkey::Pubkey>,
+    lp_mint: Option<solana_pubkey::Pubkey>,
+    user_token: Option<solana_pubkey::Pubkey>,
+    user_lp: Option<solana_pubkey::Pubkey>,
+    user: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
     token_amount: Option<u64>,
     minimum_lp_token_amount: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl DepositBuilder {
@@ -136,42 +122,42 @@ impl DepositBuilder {
 
     /// vault
     #[inline(always)]
-    pub fn vault(&mut self, vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vault(&mut self, vault: solana_pubkey::Pubkey) -> &mut Self {
         self.vault = Some(vault);
         self
     }
 
     /// token_vault
     #[inline(always)]
-    pub fn token_vault(&mut self, token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_vault(&mut self, token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_vault = Some(token_vault);
         self
     }
 
     /// lp_mint
     #[inline(always)]
-    pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
 
     /// user_token
     #[inline(always)]
-    pub fn user_token(&mut self, user_token: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user_token(&mut self, user_token: solana_pubkey::Pubkey) -> &mut Self {
         self.user_token = Some(user_token);
         self
     }
 
     /// user_lp
     #[inline(always)]
-    pub fn user_lp(&mut self, user_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user_lp(&mut self, user_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.user_lp = Some(user_lp);
         self
     }
 
     /// user
     #[inline(always)]
-    pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
@@ -179,7 +165,7 @@ impl DepositBuilder {
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// token_program
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -198,10 +184,7 @@ impl DepositBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -210,14 +193,14 @@ impl DepositBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = Deposit {
             vault: self.vault.expect("vault is not set"),
             token_vault: self.token_vault.expect("token_vault is not set"),
@@ -225,7 +208,7 @@ impl DepositBuilder {
             user_token: self.user_token.expect("user_token is not set"),
             user_lp: self.user_lp.expect("user_lp is not set"),
             user: self.user.expect("user is not set"),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
         };
@@ -244,46 +227,46 @@ impl DepositBuilder {
 /// `deposit` CPI accounts.
 pub struct DepositCpiAccounts<'a, 'b> {
     /// vault
-    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault: &'b solana_account_info::AccountInfo<'a>,
     /// token_vault
-    pub token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// lp_mint
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// user_token
-    pub user_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token: &'b solana_account_info::AccountInfo<'a>,
     /// user_lp
-    pub user_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_lp: &'b solana_account_info::AccountInfo<'a>,
     /// user
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
     /// token_program
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `deposit` CPI instruction.
 pub struct DepositCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// vault
-    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault: &'b solana_account_info::AccountInfo<'a>,
     /// token_vault
-    pub token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault: &'b solana_account_info::AccountInfo<'a>,
     /// lp_mint
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// user_token
-    pub user_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token: &'b solana_account_info::AccountInfo<'a>,
     /// user_lp
-    pub user_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_lp: &'b solana_account_info::AccountInfo<'a>,
     /// user
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
     /// token_program
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: DepositInstructionArgs,
 }
 
 impl<'a, 'b> DepositCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: DepositCpiAccounts<'a, 'b>,
         args: DepositInstructionArgs,
     ) -> Self {
@@ -301,19 +284,15 @@ impl<'a, 'b> DepositCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -321,7 +300,7 @@ impl<'a, 'b> DepositCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -331,43 +310,36 @@ impl<'a, 'b> DepositCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.vault.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.vault.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.user_token.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.user_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.user.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -377,7 +349,7 @@ impl<'a, 'b> DepositCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::VAULT_ID,
             accounts,
             data,
@@ -396,9 +368,9 @@ impl<'a, 'b> DepositCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -420,7 +392,7 @@ pub struct DepositCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(DepositCpiBuilderInstruction {
             __program: program,
             vault: None,
@@ -439,7 +411,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
 
     /// vault
     #[inline(always)]
-    pub fn vault(&mut self, vault: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn vault(&mut self, vault: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vault = Some(vault);
         self
     }
@@ -448,7 +420,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_vault(
         &mut self,
-        token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        token_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_vault = Some(token_vault);
         self
@@ -456,10 +428,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
 
     /// lp_mint
     #[inline(always)]
-    pub fn lp_mint(
-        &mut self,
-        lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
@@ -468,7 +437,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_token(
         &mut self,
-        user_token: &'b solana_program::account_info::AccountInfo<'a>,
+        user_token: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_token = Some(user_token);
         self
@@ -476,17 +445,14 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
 
     /// user_lp
     #[inline(always)]
-    pub fn user_lp(
-        &mut self,
-        user_lp: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn user_lp(&mut self, user_lp: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user_lp = Some(user_lp);
         self
     }
 
     /// user
     #[inline(always)]
-    pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
@@ -495,7 +461,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -517,7 +483,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -534,11 +500,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -547,14 +509,14 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = DepositInstructionArgs {
             token_amount: self
                 .instruction
@@ -600,20 +562,16 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct DepositCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_token: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_amount: Option<u64>,
     minimum_lp_token_amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

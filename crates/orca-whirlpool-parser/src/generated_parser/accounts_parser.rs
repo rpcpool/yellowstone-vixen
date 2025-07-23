@@ -7,10 +7,10 @@
 
 use crate::{
     accounts::{
-        FeeTier, LockConfig, Position, PositionBundle, TickArray, TokenBadge, Whirlpool,
-        WhirlpoolsConfig, WhirlpoolsConfigExtension,
+        AdaptiveFeeTier, DynamicTickArray, FeeTier, LockConfig, Oracle, Position, PositionBundle,
+        TickArray, TokenBadge, Whirlpool, WhirlpoolsConfig, WhirlpoolsConfigExtension,
     },
-    ID,
+    deserialize_checked, ID,
 };
 
 /// Whirlpool Program State
@@ -18,13 +18,16 @@ use crate::{
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum WhirlpoolProgramState {
+    AdaptiveFeeTier(AdaptiveFeeTier),
     WhirlpoolsConfig(WhirlpoolsConfig),
     WhirlpoolsConfigExtension(WhirlpoolsConfigExtension),
+    DynamicTickArray(DynamicTickArray),
     FeeTier(FeeTier),
+    TickArray(TickArray),
     LockConfig(LockConfig),
+    Oracle(Oracle),
     Position(Position),
     PositionBundle(PositionBundle),
-    TickArray(TickArray),
     TokenBadge(TokenBadge),
     Whirlpool(Whirlpool),
 }
@@ -33,34 +36,43 @@ impl WhirlpoolProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
+            [147, 16, 144, 116, 47, 146, 149, 46] => Ok(WhirlpoolProgramState::AdaptiveFeeTier(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             [157, 20, 49, 224, 217, 87, 193, 254] => Ok(WhirlpoolProgramState::WhirlpoolsConfig(
-                WhirlpoolsConfig::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [2, 99, 215, 163, 240, 26, 153, 58] => {
                 Ok(WhirlpoolProgramState::WhirlpoolsConfigExtension(
-                    WhirlpoolsConfigExtension::from_bytes(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
+            [17, 216, 246, 142, 225, 199, 218, 56] => Ok(WhirlpoolProgramState::DynamicTickArray(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             [56, 75, 159, 76, 142, 68, 190, 105] => Ok(WhirlpoolProgramState::FeeTier(
-                FeeTier::from_bytes(data_bytes)?,
-            )),
-            [106, 47, 238, 159, 124, 12, 160, 192] => Ok(WhirlpoolProgramState::LockConfig(
-                LockConfig::from_bytes(data_bytes)?,
-            )),
-            [170, 188, 143, 228, 122, 64, 247, 208] => Ok(WhirlpoolProgramState::Position(
-                Position::from_bytes(data_bytes)?,
-            )),
-            [129, 169, 175, 65, 185, 95, 32, 100] => Ok(WhirlpoolProgramState::PositionBundle(
-                PositionBundle::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [69, 97, 189, 190, 110, 7, 66, 187] => Ok(WhirlpoolProgramState::TickArray(
-                TickArray::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
+            [106, 47, 238, 159, 124, 12, 160, 192] => Ok(WhirlpoolProgramState::LockConfig(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
+            [139, 194, 131, 179, 140, 179, 229, 244] => Ok(WhirlpoolProgramState::Oracle(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
+            [170, 188, 143, 228, 122, 64, 247, 208] => Ok(WhirlpoolProgramState::Position(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
+            [129, 169, 175, 65, 185, 95, 32, 100] => Ok(WhirlpoolProgramState::PositionBundle(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [116, 219, 204, 229, 249, 116, 255, 150] => Ok(WhirlpoolProgramState::TokenBadge(
-                TokenBadge::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [63, 149, 209, 12, 225, 128, 99, 9] => Ok(WhirlpoolProgramState::Whirlpool(
-                Whirlpool::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
@@ -116,8 +128,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        WhirlpoolProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = WhirlpoolProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 
@@ -130,8 +157,28 @@ impl yellowstone_vixen_core::ProgramParser for AccountParser {
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{AccountParser, WhirlpoolProgramState, WhirlpoolsConfig};
+    use super::{AccountParser, AdaptiveFeeTier, WhirlpoolProgramState};
     use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
+    impl IntoProto<proto_def::AdaptiveFeeTier> for AdaptiveFeeTier {
+        fn into_proto(self) -> proto_def::AdaptiveFeeTier {
+            proto_def::AdaptiveFeeTier {
+                whirlpools_config: self.whirlpools_config.to_string(),
+                fee_tier_index: self.fee_tier_index.into(),
+                tick_spacing: self.tick_spacing.into(),
+                initialize_pool_authority: self.initialize_pool_authority.to_string(),
+                delegated_fee_authority: self.delegated_fee_authority.to_string(),
+                default_base_fee_rate: self.default_base_fee_rate.into(),
+                filter_period: self.filter_period.into(),
+                decay_period: self.decay_period.into(),
+                reduction_factor: self.reduction_factor.into(),
+                adaptive_fee_control_factor: self.adaptive_fee_control_factor,
+                max_volatility_accumulator: self.max_volatility_accumulator,
+                tick_group_size: self.tick_group_size.into(),
+                major_swap_threshold_ticks: self.major_swap_threshold_ticks.into(),
+            }
+        }
+    }
+    use super::WhirlpoolsConfig;
     impl IntoProto<proto_def::WhirlpoolsConfig> for WhirlpoolsConfig {
         fn into_proto(self) -> proto_def::WhirlpoolsConfig {
             proto_def::WhirlpoolsConfig {
@@ -152,6 +199,17 @@ mod proto_parser {
             }
         }
     }
+    use super::DynamicTickArray;
+    impl IntoProto<proto_def::DynamicTickArray> for DynamicTickArray {
+        fn into_proto(self) -> proto_def::DynamicTickArray {
+            proto_def::DynamicTickArray {
+                start_tick_index: self.start_tick_index,
+                whirlpool: self.whirlpool.to_string(),
+                tick_bitmap: self.tick_bitmap.to_string(),
+                ticks: self.ticks.into_iter().map(|x| x.into_proto()).collect(),
+            }
+        }
+    }
     use super::FeeTier;
     impl IntoProto<proto_def::FeeTier> for FeeTier {
         fn into_proto(self) -> proto_def::FeeTier {
@@ -159,6 +217,16 @@ mod proto_parser {
                 whirlpools_config: self.whirlpools_config.to_string(),
                 tick_spacing: self.tick_spacing.into(),
                 default_fee_rate: self.default_fee_rate.into(),
+            }
+        }
+    }
+    use super::TickArray;
+    impl IntoProto<proto_def::TickArray> for TickArray {
+        fn into_proto(self) -> proto_def::TickArray {
+            proto_def::TickArray {
+                start_tick_index: self.start_tick_index,
+                ticks: self.ticks.into_iter().map(|x| x.into_proto()).collect(),
+                whirlpool: self.whirlpool.to_string(),
             }
         }
     }
@@ -171,6 +239,18 @@ mod proto_parser {
                 whirlpool: self.whirlpool.to_string(),
                 locked_timestamp: self.locked_timestamp,
                 lock_type: self.lock_type as i32,
+            }
+        }
+    }
+    use super::Oracle;
+    impl IntoProto<proto_def::Oracle> for Oracle {
+        fn into_proto(self) -> proto_def::Oracle {
+            proto_def::Oracle {
+                whirlpool: self.whirlpool.to_string(),
+                trade_enable_timestamp: self.trade_enable_timestamp,
+                adaptive_fee_constants: Some(self.adaptive_fee_constants.into_proto()),
+                adaptive_fee_variables: Some(self.adaptive_fee_variables.into_proto()),
+                reserved: self.reserved.into_iter().map(|x| x.into()).collect(),
             }
         }
     }
@@ -204,16 +284,6 @@ mod proto_parser {
             }
         }
     }
-    use super::TickArray;
-    impl IntoProto<proto_def::TickArray> for TickArray {
-        fn into_proto(self) -> proto_def::TickArray {
-            proto_def::TickArray {
-                start_tick_index: self.start_tick_index,
-                ticks: self.ticks.into_iter().map(|x| x.into_proto()).collect(),
-                whirlpool: self.whirlpool.to_string(),
-            }
-        }
-    }
     use super::TokenBadge;
     impl IntoProto<proto_def::TokenBadge> for TokenBadge {
         fn into_proto(self) -> proto_def::TokenBadge {
@@ -230,8 +300,8 @@ mod proto_parser {
                 whirlpools_config: self.whirlpools_config.to_string(),
                 whirlpool_bump: self.whirlpool_bump.into_iter().map(|x| x.into()).collect(),
                 tick_spacing: self.tick_spacing.into(),
-                tick_spacing_seed: self
-                    .tick_spacing_seed
+                fee_tier_index_seed: self
+                    .fee_tier_index_seed
                     .into_iter()
                     .map(|x| x.into())
                     .collect(),
@@ -261,6 +331,9 @@ mod proto_parser {
     impl IntoProto<proto_def::ProgramState> for WhirlpoolProgramState {
         fn into_proto(self) -> proto_def::ProgramState {
             let state_oneof = match self {
+                WhirlpoolProgramState::AdaptiveFeeTier(data) => {
+                    proto_def::program_state::StateOneof::AdaptiveFeeTier(data.into_proto())
+                },
                 WhirlpoolProgramState::WhirlpoolsConfig(data) => {
                     proto_def::program_state::StateOneof::WhirlpoolsConfig(data.into_proto())
                 },
@@ -269,20 +342,26 @@ mod proto_parser {
                         data.into_proto(),
                     )
                 },
+                WhirlpoolProgramState::DynamicTickArray(data) => {
+                    proto_def::program_state::StateOneof::DynamicTickArray(data.into_proto())
+                },
                 WhirlpoolProgramState::FeeTier(data) => {
                     proto_def::program_state::StateOneof::FeeTier(data.into_proto())
                 },
+                WhirlpoolProgramState::TickArray(data) => {
+                    proto_def::program_state::StateOneof::TickArray(data.into_proto())
+                },
                 WhirlpoolProgramState::LockConfig(data) => {
                     proto_def::program_state::StateOneof::LockConfig(data.into_proto())
+                },
+                WhirlpoolProgramState::Oracle(data) => {
+                    proto_def::program_state::StateOneof::Oracle(data.into_proto())
                 },
                 WhirlpoolProgramState::Position(data) => {
                     proto_def::program_state::StateOneof::Position(data.into_proto())
                 },
                 WhirlpoolProgramState::PositionBundle(data) => {
                     proto_def::program_state::StateOneof::PositionBundle(data.into_proto())
-                },
-                WhirlpoolProgramState::TickArray(data) => {
-                    proto_def::program_state::StateOneof::TickArray(data.into_proto())
                 },
                 WhirlpoolProgramState::TokenBadge(data) => {
                     proto_def::program_state::StateOneof::TokenBadge(data.into_proto())

@@ -6,6 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -17,10 +18,15 @@ pub struct BondingCurve {
     pub real_sol_reserves: u64,
     pub token_total_supply: u64,
     pub complete: bool,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub creator: Pubkey,
 }
 
 impl BondingCurve {
-    pub const LEN: usize = 49;
+    pub const LEN: usize = 81;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -29,12 +35,10 @@ impl BondingCurve {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for BondingCurve {
+impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for BondingCurve {
     type Error = std::io::Error;
 
-    fn try_from(
-        account_info: &solana_program::account_info::AccountInfo<'a>,
-    ) -> Result<Self, Self::Error> {
+    fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
         let mut data: &[u8] = &(*account_info.data).borrow();
         Self::deserialize(&mut data)
     }
@@ -43,7 +47,7 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for BondingCurv
 #[cfg(feature = "fetch")]
 pub fn fetch_bonding_curve(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::DecodedAccount<BondingCurve>, std::io::Error> {
     let accounts = fetch_all_bonding_curve(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -52,7 +56,7 @@ pub fn fetch_bonding_curve(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_bonding_curve(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::DecodedAccount<BondingCurve>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -77,7 +81,7 @@ pub fn fetch_all_bonding_curve(
 #[cfg(feature = "fetch")]
 pub fn fetch_maybe_bonding_curve(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::MaybeAccount<BondingCurve>, std::io::Error> {
     let accounts = fetch_all_maybe_bonding_curve(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -86,7 +90,7 @@ pub fn fetch_maybe_bonding_curve(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_maybe_bonding_curve(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::MaybeAccount<BondingCurve>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)

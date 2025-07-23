@@ -185,6 +185,7 @@ enum RewardState {
 	RewardStateEnded = 3;
 }
 
+
 message AmmConfig {
 	uint32 bump = 1;
 	uint32 index = 2;

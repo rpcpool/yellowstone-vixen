@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+pub(crate) mod r#bonding_curve;
 pub(crate) mod r#global_config;
 pub(crate) mod r#pool;
 
-pub use self::{r#global_config::*, r#pool::*};
+pub use self::{r#bonding_curve::*, r#global_config::*, r#pool::*};

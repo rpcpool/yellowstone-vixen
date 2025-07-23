@@ -11,38 +11,38 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(Debug)]
 pub struct SwapBaseInput {
     /// The user performing the swap
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
 
-    pub authority: solana_program::pubkey::Pubkey,
+    pub authority: solana_pubkey::Pubkey,
     /// The factory state to read protocol fees
-    pub amm_config: solana_program::pubkey::Pubkey,
+    pub amm_config: solana_pubkey::Pubkey,
     /// The program account of the pool in which the swap will be performed
-    pub pool_state: solana_program::pubkey::Pubkey,
+    pub pool_state: solana_pubkey::Pubkey,
     /// The user token account for input token
-    pub input_token_account: solana_program::pubkey::Pubkey,
+    pub input_token_account: solana_pubkey::Pubkey,
     /// The user token account for output token
-    pub output_token_account: solana_program::pubkey::Pubkey,
+    pub output_token_account: solana_pubkey::Pubkey,
     /// The vault token account for input token
-    pub input_vault: solana_program::pubkey::Pubkey,
+    pub input_vault: solana_pubkey::Pubkey,
     /// The vault token account for output token
-    pub output_vault: solana_program::pubkey::Pubkey,
+    pub output_vault: solana_pubkey::Pubkey,
     /// SPL program for input token transfers
-    pub input_token_program: solana_program::pubkey::Pubkey,
+    pub input_token_program: solana_pubkey::Pubkey,
     /// SPL program for output token transfers
-    pub output_token_program: solana_program::pubkey::Pubkey,
+    pub output_token_program: solana_pubkey::Pubkey,
     /// The mint of input token
-    pub input_token_mint: solana_program::pubkey::Pubkey,
+    pub input_token_mint: solana_pubkey::Pubkey,
     /// The mint of output token
-    pub output_token_mint: solana_program::pubkey::Pubkey,
+    pub output_token_mint: solana_pubkey::Pubkey,
     /// The program account for the most recent oracle observation
-    pub observation_state: solana_program::pubkey::Pubkey,
+    pub observation_state: solana_pubkey::Pubkey,
 }
 
 impl SwapBaseInput {
     pub fn instruction(
         &self,
         args: SwapBaseInputInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -51,57 +51,54 @@ impl SwapBaseInput {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: SwapBaseInputInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.payer, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.amm_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool_state,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.pool_state, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.input_token_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.output_token_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.input_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.output_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.output_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_token_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.output_token_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.observation_state,
             false,
         ));
@@ -110,7 +107,7 @@ impl SwapBaseInput {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::RAYDIUM_CP_SWAP_ID,
             accounts,
             data,
@@ -162,22 +159,22 @@ pub struct SwapBaseInputInstructionArgs {
 ///   12. `[writable]` observation_state
 #[derive(Clone, Debug, Default)]
 pub struct SwapBaseInputBuilder {
-    payer: Option<solana_program::pubkey::Pubkey>,
-    authority: Option<solana_program::pubkey::Pubkey>,
-    amm_config: Option<solana_program::pubkey::Pubkey>,
-    pool_state: Option<solana_program::pubkey::Pubkey>,
-    input_token_account: Option<solana_program::pubkey::Pubkey>,
-    output_token_account: Option<solana_program::pubkey::Pubkey>,
-    input_vault: Option<solana_program::pubkey::Pubkey>,
-    output_vault: Option<solana_program::pubkey::Pubkey>,
-    input_token_program: Option<solana_program::pubkey::Pubkey>,
-    output_token_program: Option<solana_program::pubkey::Pubkey>,
-    input_token_mint: Option<solana_program::pubkey::Pubkey>,
-    output_token_mint: Option<solana_program::pubkey::Pubkey>,
-    observation_state: Option<solana_program::pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    authority: Option<solana_pubkey::Pubkey>,
+    amm_config: Option<solana_pubkey::Pubkey>,
+    pool_state: Option<solana_pubkey::Pubkey>,
+    input_token_account: Option<solana_pubkey::Pubkey>,
+    output_token_account: Option<solana_pubkey::Pubkey>,
+    input_vault: Option<solana_pubkey::Pubkey>,
+    output_vault: Option<solana_pubkey::Pubkey>,
+    input_token_program: Option<solana_pubkey::Pubkey>,
+    output_token_program: Option<solana_pubkey::Pubkey>,
+    input_token_mint: Option<solana_pubkey::Pubkey>,
+    output_token_mint: Option<solana_pubkey::Pubkey>,
+    observation_state: Option<solana_pubkey::Pubkey>,
     amount_in: Option<u64>,
     minimum_amount_out: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl SwapBaseInputBuilder {
@@ -185,37 +182,34 @@ impl SwapBaseInputBuilder {
 
     /// The user performing the swap
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
 
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
 
     /// The factory state to read protocol fees
     #[inline(always)]
-    pub fn amm_config(&mut self, amm_config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn amm_config(&mut self, amm_config: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_config = Some(amm_config);
         self
     }
 
     /// The program account of the pool in which the swap will be performed
     #[inline(always)]
-    pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
 
     /// The user token account for input token
     #[inline(always)]
-    pub fn input_token_account(
-        &mut self,
-        input_token_account: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn input_token_account(&mut self, input_token_account: solana_pubkey::Pubkey) -> &mut Self {
         self.input_token_account = Some(input_token_account);
         self
     }
@@ -224,7 +218,7 @@ impl SwapBaseInputBuilder {
     #[inline(always)]
     pub fn output_token_account(
         &mut self,
-        output_token_account: solana_program::pubkey::Pubkey,
+        output_token_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.output_token_account = Some(output_token_account);
         self
@@ -232,24 +226,21 @@ impl SwapBaseInputBuilder {
 
     /// The vault token account for input token
     #[inline(always)]
-    pub fn input_vault(&mut self, input_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_vault(&mut self, input_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.input_vault = Some(input_vault);
         self
     }
 
     /// The vault token account for output token
     #[inline(always)]
-    pub fn output_vault(&mut self, output_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn output_vault(&mut self, output_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.output_vault = Some(output_vault);
         self
     }
 
     /// SPL program for input token transfers
     #[inline(always)]
-    pub fn input_token_program(
-        &mut self,
-        input_token_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn input_token_program(&mut self, input_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.input_token_program = Some(input_token_program);
         self
     }
@@ -258,7 +249,7 @@ impl SwapBaseInputBuilder {
     #[inline(always)]
     pub fn output_token_program(
         &mut self,
-        output_token_program: solana_program::pubkey::Pubkey,
+        output_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.output_token_program = Some(output_token_program);
         self
@@ -266,30 +257,21 @@ impl SwapBaseInputBuilder {
 
     /// The mint of input token
     #[inline(always)]
-    pub fn input_token_mint(
-        &mut self,
-        input_token_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn input_token_mint(&mut self, input_token_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.input_token_mint = Some(input_token_mint);
         self
     }
 
     /// The mint of output token
     #[inline(always)]
-    pub fn output_token_mint(
-        &mut self,
-        output_token_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn output_token_mint(&mut self, output_token_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.output_token_mint = Some(output_token_mint);
         self
     }
 
     /// The program account for the most recent oracle observation
     #[inline(always)]
-    pub fn observation_state(
-        &mut self,
-        observation_state: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn observation_state(&mut self, observation_state: solana_pubkey::Pubkey) -> &mut Self {
         self.observation_state = Some(observation_state);
         self
     }
@@ -308,10 +290,7 @@ impl SwapBaseInputBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -320,14 +299,14 @@ impl SwapBaseInputBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = SwapBaseInput {
             payer: self.payer.expect("payer is not set"),
             authority: self.authority.expect("authority is not set"),
@@ -370,70 +349,70 @@ impl SwapBaseInputBuilder {
 /// `swap_base_input` CPI accounts.
 pub struct SwapBaseInputCpiAccounts<'a, 'b> {
     /// The user performing the swap
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// The factory state to read protocol fees
-    pub amm_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_config: &'b solana_account_info::AccountInfo<'a>,
     /// The program account of the pool in which the swap will be performed
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// The user token account for input token
-    pub input_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_account: &'b solana_account_info::AccountInfo<'a>,
     /// The user token account for output token
-    pub output_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_token_account: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for input token
-    pub input_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for output token
-    pub output_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_vault: &'b solana_account_info::AccountInfo<'a>,
     /// SPL program for input token transfers
-    pub input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// SPL program for output token transfers
-    pub output_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of input token
-    pub input_token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of output token
-    pub output_token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_token_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The program account for the most recent oracle observation
-    pub observation_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub observation_state: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `swap_base_input` CPI instruction.
 pub struct SwapBaseInputCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// The user performing the swap
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// The factory state to read protocol fees
-    pub amm_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_config: &'b solana_account_info::AccountInfo<'a>,
     /// The program account of the pool in which the swap will be performed
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// The user token account for input token
-    pub input_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_account: &'b solana_account_info::AccountInfo<'a>,
     /// The user token account for output token
-    pub output_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_token_account: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for input token
-    pub input_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for output token
-    pub output_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_vault: &'b solana_account_info::AccountInfo<'a>,
     /// SPL program for input token transfers
-    pub input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// SPL program for output token transfers
-    pub output_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of input token
-    pub input_token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of output token
-    pub output_token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_token_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The program account for the most recent oracle observation
-    pub observation_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub observation_state: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: SwapBaseInputInstructionArgs,
 }
 
 impl<'a, 'b> SwapBaseInputCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: SwapBaseInputCpiAccounts<'a, 'b>,
         args: SwapBaseInputInstructionArgs,
     ) -> Self {
@@ -457,19 +436,15 @@ impl<'a, 'b> SwapBaseInputCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -477,7 +452,7 @@ impl<'a, 'b> SwapBaseInputCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -487,67 +462,63 @@ impl<'a, 'b> SwapBaseInputCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.payer.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.amm_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_state.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.input_token_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.output_token_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.input_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.output_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.output_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_token_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.output_token_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.observation_state.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -557,7 +528,7 @@ impl<'a, 'b> SwapBaseInputCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::RAYDIUM_CP_SWAP_ID,
             accounts,
             data,
@@ -582,9 +553,9 @@ impl<'a, 'b> SwapBaseInputCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -612,7 +583,7 @@ pub struct SwapBaseInputCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(SwapBaseInputCpiBuilderInstruction {
             __program: program,
             payer: None,
@@ -637,16 +608,13 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
 
     /// The user performing the swap
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
 
     #[inline(always)]
-    pub fn authority(
-        &mut self,
-        authority: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.authority = Some(authority);
         self
     }
@@ -655,7 +623,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_config(
         &mut self,
-        amm_config: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_config: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_config = Some(amm_config);
         self
@@ -665,7 +633,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_state(
         &mut self,
-        pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_state = Some(pool_state);
         self
@@ -675,7 +643,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_token_account(
         &mut self,
-        input_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+        input_token_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_token_account = Some(input_token_account);
         self
@@ -685,7 +653,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_token_account(
         &mut self,
-        output_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+        output_token_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_token_account = Some(output_token_account);
         self
@@ -695,7 +663,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_vault(
         &mut self,
-        input_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        input_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_vault = Some(input_vault);
         self
@@ -705,7 +673,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_vault(
         &mut self,
-        output_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        output_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_vault = Some(output_vault);
         self
@@ -715,7 +683,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_token_program(
         &mut self,
-        input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        input_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_token_program = Some(input_token_program);
         self
@@ -725,7 +693,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_token_program(
         &mut self,
-        output_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        output_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_token_program = Some(output_token_program);
         self
@@ -735,7 +703,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_token_mint(
         &mut self,
-        input_token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        input_token_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_token_mint = Some(input_token_mint);
         self
@@ -745,7 +713,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_token_mint(
         &mut self,
-        output_token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        output_token_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_token_mint = Some(output_token_mint);
         self
@@ -755,7 +723,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn observation_state(
         &mut self,
-        observation_state: &'b solana_program::account_info::AccountInfo<'a>,
+        observation_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.observation_state = Some(observation_state);
         self
@@ -777,7 +745,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -794,11 +762,7 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -807,14 +771,14 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = SwapBaseInputInstructionArgs {
             amount_in: self
                 .instruction
@@ -893,26 +857,22 @@ impl<'a, 'b> SwapBaseInputCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct SwapBaseInputCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_token_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_token_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    observation_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_token_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_token_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    observation_state: Option<&'b solana_account_info::AccountInfo<'a>>,
     amount_in: Option<u64>,
     minimum_amount_out: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

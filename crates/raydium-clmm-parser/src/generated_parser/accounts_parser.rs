@@ -10,7 +10,7 @@ use crate::{
         AmmConfig, ObservationState, OperationState, PersonalPositionState, PoolState,
         ProtocolPositionState, TickArrayBitmapExtension, TickArrayState,
     },
-    ID,
+    deserialize_checked, ID,
 };
 
 /// AmmV3 Program State
@@ -33,31 +33,31 @@ impl AmmV3ProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [218, 244, 33, 104, 203, 203, 43, 111] => Ok(AmmV3ProgramState::AmmConfig(
-                AmmConfig::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [19, 236, 58, 237, 81, 222, 183, 252] => Ok(AmmV3ProgramState::OperationState(
-                OperationState::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [122, 174, 197, 53, 129, 9, 165, 132] => Ok(AmmV3ProgramState::ObservationState(
-                ObservationState::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [70, 111, 150, 126, 230, 15, 25, 117] => Ok(AmmV3ProgramState::PersonalPositionState(
-                PersonalPositionState::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [247, 237, 227, 245, 215, 195, 222, 70] => Ok(AmmV3ProgramState::PoolState(
-                PoolState::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [100, 226, 145, 99, 146, 218, 160, 106] => {
                 Ok(AmmV3ProgramState::ProtocolPositionState(
-                    ProtocolPositionState::from_bytes(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [192, 155, 85, 205, 49, 249, 129, 42] => Ok(AmmV3ProgramState::TickArrayState(
-                TickArrayState::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [60, 150, 36, 219, 97, 128, 139, 153] => {
                 Ok(AmmV3ProgramState::TickArrayBitmapExtension(
-                    TickArrayBitmapExtension::from_bytes(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
@@ -114,8 +114,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        AmmV3ProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = AmmV3ProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 

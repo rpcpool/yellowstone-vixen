@@ -35,6 +35,21 @@ pub mod proto_types_parsers {
                 protocol_fee_recipient_token_account: self
                     .protocol_fee_recipient_token_account
                     .to_string(),
+                coin_creator: self.coin_creator.to_string(),
+                coin_creator_fee_basis_points: self.coin_creator_fee_basis_points,
+                coin_creator_fee: self.coin_creator_fee,
+            }
+        }
+    }
+    use crate::types::CollectCoinCreatorFeeEvent;
+    impl IntoProto<proto_def::CollectCoinCreatorFeeEvent> for CollectCoinCreatorFeeEvent {
+        fn into_proto(self) -> proto_def::CollectCoinCreatorFeeEvent {
+            proto_def::CollectCoinCreatorFeeEvent {
+                timestamp: self.timestamp,
+                coin_creator: self.coin_creator.to_string(),
+                coin_creator_fee: self.coin_creator_fee,
+                coin_creator_vault_ata: self.coin_creator_vault_ata.to_string(),
+                coin_creator_token_account: self.coin_creator_token_account.to_string(),
             }
         }
     }
@@ -51,6 +66,7 @@ pub mod proto_types_parsers {
                     .into_iter()
                     .map(|x| x.to_string())
                     .collect(),
+                coin_creator_fee_basis_points: self.coin_creator_fee_basis_points,
             }
         }
     }
@@ -77,6 +93,7 @@ pub mod proto_types_parsers {
                 lp_mint: self.lp_mint.to_string(),
                 user_base_token_account: self.user_base_token_account.to_string(),
                 user_quote_token_account: self.user_quote_token_account.to_string(),
+                coin_creator: self.coin_creator.to_string(),
             }
         }
     }
@@ -155,6 +172,33 @@ pub mod proto_types_parsers {
                 protocol_fee_recipient_token_account: self
                     .protocol_fee_recipient_token_account
                     .to_string(),
+                coin_creator: self.coin_creator.to_string(),
+                coin_creator_fee_basis_points: self.coin_creator_fee_basis_points,
+                coin_creator_fee: self.coin_creator_fee,
+            }
+        }
+    }
+    use crate::types::SetBondingCurveCoinCreatorEvent;
+    impl IntoProto<proto_def::SetBondingCurveCoinCreatorEvent> for SetBondingCurveCoinCreatorEvent {
+        fn into_proto(self) -> proto_def::SetBondingCurveCoinCreatorEvent {
+            proto_def::SetBondingCurveCoinCreatorEvent {
+                timestamp: self.timestamp,
+                base_mint: self.base_mint.to_string(),
+                pool: self.pool.to_string(),
+                bonding_curve: self.bonding_curve.to_string(),
+                coin_creator: self.coin_creator.to_string(),
+            }
+        }
+    }
+    use crate::types::SetMetaplexCoinCreatorEvent;
+    impl IntoProto<proto_def::SetMetaplexCoinCreatorEvent> for SetMetaplexCoinCreatorEvent {
+        fn into_proto(self) -> proto_def::SetMetaplexCoinCreatorEvent {
+            proto_def::SetMetaplexCoinCreatorEvent {
+                timestamp: self.timestamp,
+                base_mint: self.base_mint.to_string(),
+                pool: self.pool.to_string(),
+                metadata: self.metadata.to_string(),
+                coin_creator: self.coin_creator.to_string(),
             }
         }
     }
@@ -181,6 +225,7 @@ pub mod proto_types_parsers {
                     .into_iter()
                     .map(|x| x.to_string())
                     .collect(),
+                coin_creator_fee_basis_points: self.coin_creator_fee_basis_points,
             }
         }
     }

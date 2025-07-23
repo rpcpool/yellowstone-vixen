@@ -10,35 +10,32 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct TokenMint {
-    pub sender: solana_program::pubkey::Pubkey,
+    pub sender: solana_pubkey::Pubkey,
 
-    pub backend_authority: solana_program::pubkey::Pubkey,
+    pub backend_authority: solana_pubkey::Pubkey,
 
-    pub curve_account: solana_program::pubkey::Pubkey,
+    pub curve_account: solana_pubkey::Pubkey,
 
-    pub mint: solana_program::pubkey::Pubkey,
+    pub mint: solana_pubkey::Pubkey,
     /// Type validating that the account is owned by the System Program = uninitialized
     /// seeds should ensure that the address is correct
-    pub mint_metadata: solana_program::pubkey::Pubkey,
+    pub mint_metadata: solana_pubkey::Pubkey,
 
-    pub curve_token_account: solana_program::pubkey::Pubkey,
+    pub curve_token_account: solana_pubkey::Pubkey,
 
-    pub config_account: solana_program::pubkey::Pubkey,
+    pub config_account: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 
-    pub mpl_token_metadata: solana_program::pubkey::Pubkey,
+    pub mpl_token_metadata: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 }
 
 impl TokenMint {
-    pub fn instruction(
-        &self,
-        args: TokenMintInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self, args: TokenMintInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -47,49 +44,44 @@ impl TokenMint {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: TokenMintInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.sender,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.sender, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.backend_authority,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.curve_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.mint, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.mint, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.mint_metadata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.curve_token_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.config_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.mpl_token_metadata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
@@ -98,7 +90,7 @@ impl TokenMint {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::TOKEN_LAUNCHPAD_ID,
             accounts,
             data,
@@ -154,17 +146,17 @@ pub struct TokenMintInstructionArgs {
 ///   10. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct TokenMintBuilder {
-    sender: Option<solana_program::pubkey::Pubkey>,
-    backend_authority: Option<solana_program::pubkey::Pubkey>,
-    curve_account: Option<solana_program::pubkey::Pubkey>,
-    mint: Option<solana_program::pubkey::Pubkey>,
-    mint_metadata: Option<solana_program::pubkey::Pubkey>,
-    curve_token_account: Option<solana_program::pubkey::Pubkey>,
-    config_account: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    mpl_token_metadata: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
+    sender: Option<solana_pubkey::Pubkey>,
+    backend_authority: Option<solana_pubkey::Pubkey>,
+    curve_account: Option<solana_pubkey::Pubkey>,
+    mint: Option<solana_pubkey::Pubkey>,
+    mint_metadata: Option<solana_pubkey::Pubkey>,
+    curve_token_account: Option<solana_pubkey::Pubkey>,
+    config_account: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    mpl_token_metadata: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
     name: Option<String>,
     symbol: Option<String>,
     uri: Option<String>,
@@ -173,35 +165,32 @@ pub struct TokenMintBuilder {
     amount: Option<u64>,
     curve_type: Option<u8>,
     migration_target: Option<u8>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl TokenMintBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn sender(&mut self, sender: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn sender(&mut self, sender: solana_pubkey::Pubkey) -> &mut Self {
         self.sender = Some(sender);
         self
     }
 
     #[inline(always)]
-    pub fn backend_authority(
-        &mut self,
-        backend_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn backend_authority(&mut self, backend_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.backend_authority = Some(backend_authority);
         self
     }
 
     #[inline(always)]
-    pub fn curve_account(&mut self, curve_account: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn curve_account(&mut self, curve_account: solana_pubkey::Pubkey) -> &mut Self {
         self.curve_account = Some(curve_account);
         self
     }
 
     #[inline(always)]
-    pub fn mint(&mut self, mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn mint(&mut self, mint: solana_pubkey::Pubkey) -> &mut Self {
         self.mint = Some(mint);
         self
     }
@@ -209,29 +198,26 @@ impl TokenMintBuilder {
     /// Type validating that the account is owned by the System Program = uninitialized
     /// seeds should ensure that the address is correct
     #[inline(always)]
-    pub fn mint_metadata(&mut self, mint_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn mint_metadata(&mut self, mint_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.mint_metadata = Some(mint_metadata);
         self
     }
 
     #[inline(always)]
-    pub fn curve_token_account(
-        &mut self,
-        curve_token_account: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn curve_token_account(&mut self, curve_token_account: solana_pubkey::Pubkey) -> &mut Self {
         self.curve_token_account = Some(curve_token_account);
         self
     }
 
     #[inline(always)]
-    pub fn config_account(&mut self, config_account: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn config_account(&mut self, config_account: solana_pubkey::Pubkey) -> &mut Self {
         self.config_account = Some(config_account);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -239,24 +225,21 @@ impl TokenMintBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
     }
 
     #[inline(always)]
-    pub fn mpl_token_metadata(
-        &mut self,
-        mpl_token_metadata: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn mpl_token_metadata(&mut self, mpl_token_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.mpl_token_metadata = Some(mpl_token_metadata);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -311,10 +294,7 @@ impl TokenMintBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -323,14 +303,14 @@ impl TokenMintBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = TokenMint {
             sender: self.sender.expect("sender is not set"),
             backend_authority: self
@@ -343,7 +323,7 @@ impl TokenMintBuilder {
                 .curve_token_account
                 .expect("curve_token_account is not set"),
             config_account: self.config_account.expect("config_account is not set"),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self
@@ -354,7 +334,7 @@ impl TokenMintBuilder {
                 .expect("mpl_token_metadata is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
         };
         let args = TokenMintInstructionArgs {
             name: self.name.clone().expect("name is not set"),
@@ -379,64 +359,64 @@ impl TokenMintBuilder {
 
 /// `token_mint` CPI accounts.
 pub struct TokenMintCpiAccounts<'a, 'b> {
-    pub sender: &'b solana_program::account_info::AccountInfo<'a>,
+    pub sender: &'b solana_account_info::AccountInfo<'a>,
 
-    pub backend_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub backend_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub curve_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub curve_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint: &'b solana_account_info::AccountInfo<'a>,
     /// Type validating that the account is owned by the System Program = uninitialized
     /// seeds should ensure that the address is correct
-    pub mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub curve_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub curve_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mpl_token_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mpl_token_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `token_mint` CPI instruction.
 pub struct TokenMintCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub sender: &'b solana_program::account_info::AccountInfo<'a>,
+    pub sender: &'b solana_account_info::AccountInfo<'a>,
 
-    pub backend_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub backend_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub curve_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub curve_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint: &'b solana_account_info::AccountInfo<'a>,
     /// Type validating that the account is owned by the System Program = uninitialized
     /// seeds should ensure that the address is correct
-    pub mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub curve_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub curve_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mpl_token_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mpl_token_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: TokenMintInstructionArgs,
 }
 
 impl<'a, 'b> TokenMintCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: TokenMintCpiAccounts<'a, 'b>,
         args: TokenMintInstructionArgs,
     ) -> Self {
@@ -458,19 +438,15 @@ impl<'a, 'b> TokenMintCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -478,7 +454,7 @@ impl<'a, 'b> TokenMintCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -488,59 +464,49 @@ impl<'a, 'b> TokenMintCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.sender.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.sender.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.backend_authority.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.curve_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.mint.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.mint.key, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.mint_metadata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.curve_token_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.config_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.mpl_token_metadata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -550,7 +516,7 @@ impl<'a, 'b> TokenMintCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::TOKEN_LAUNCHPAD_ID,
             accounts,
             data,
@@ -573,9 +539,9 @@ impl<'a, 'b> TokenMintCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -601,7 +567,7 @@ pub struct TokenMintCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(TokenMintCpiBuilderInstruction {
             __program: program,
             sender: None,
@@ -629,10 +595,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn sender(
-        &mut self,
-        sender: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn sender(&mut self, sender: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.sender = Some(sender);
         self
     }
@@ -640,7 +603,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn backend_authority(
         &mut self,
-        backend_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        backend_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.backend_authority = Some(backend_authority);
         self
@@ -649,14 +612,14 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn curve_account(
         &mut self,
-        curve_account: &'b solana_program::account_info::AccountInfo<'a>,
+        curve_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.curve_account = Some(curve_account);
         self
     }
 
     #[inline(always)]
-    pub fn mint(&mut self, mint: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn mint(&mut self, mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.mint = Some(mint);
         self
     }
@@ -666,7 +629,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn mint_metadata(
         &mut self,
-        mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+        mint_metadata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mint_metadata = Some(mint_metadata);
         self
@@ -675,7 +638,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn curve_token_account(
         &mut self,
-        curve_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+        curve_token_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.curve_token_account = Some(curve_token_account);
         self
@@ -684,7 +647,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn config_account(
         &mut self,
-        config_account: &'b solana_program::account_info::AccountInfo<'a>,
+        config_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.config_account = Some(config_account);
         self
@@ -693,7 +656,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -702,7 +665,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -711,7 +674,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn mpl_token_metadata(
         &mut self,
-        mpl_token_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+        mpl_token_metadata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mpl_token_metadata = Some(mpl_token_metadata);
         self
@@ -720,7 +683,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -778,7 +741,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -795,11 +758,7 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -808,14 +767,14 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = TokenMintInstructionArgs {
             name: self.instruction.name.clone().expect("name is not set"),
             symbol: self.instruction.symbol.clone().expect("symbol is not set"),
@@ -904,18 +863,18 @@ impl<'a, 'b> TokenMintCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct TokenMintCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    sender: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    backend_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    curve_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    mint_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    curve_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    config_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    mpl_token_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    sender: Option<&'b solana_account_info::AccountInfo<'a>>,
+    backend_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    curve_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    mint_metadata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    curve_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    config_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    mpl_token_metadata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     name: Option<String>,
     symbol: Option<String>,
     uri: Option<String>,
@@ -925,9 +884,5 @@ struct TokenMintCpiBuilderInstruction<'a, 'b> {
     curve_type: Option<u8>,
     migration_target: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }
