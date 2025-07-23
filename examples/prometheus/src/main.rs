@@ -10,15 +10,15 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use solana_accounts_rpc_source::SolanaAccountsRpcSource;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_grpc_source::YellowstoneGrpcSource;
 use yellowstone_vixen::{self as vixen, Pipeline};
 use yellowstone_vixen_parser::block_meta::BlockMetaParser;
 use yellowstone_vixen_raydium_amm_v4_parser::{
     accounts_parser::AccountParser as RaydiumAmmV4AccParser,
     instructions_parser::InstructionParser as RaydiumAmmV4IxParser,
 };
+use yellowstone_vixen_solana_rpc_source::SolanaAccountsRpcSource;
+use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]

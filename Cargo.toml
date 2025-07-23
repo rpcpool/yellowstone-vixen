@@ -31,8 +31,8 @@ yellowstone-vixen-raydium-launchpad-parser = { path = "crates/raydium-launchpad-
 yellowstone-vixen-virtuals-parser = { path = "crates/virtuals-parser", version = "0.3.0" }
 
 # Sources
-solana-accounts-rpc-source = { path = "crates/solana-accounts-rpc-source", version = "0.1.0" }
-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.1.0" }
+yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.1.0" }
+yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.1.0" }
 
 
 # helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 

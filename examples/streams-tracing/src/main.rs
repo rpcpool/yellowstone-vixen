@@ -12,7 +12,6 @@ use std::path::PathBuf;
 use clap::Parser as _;
 use opentelemetry::trace::TracerProvider;
 use tracing_subscriber::layer::SubscriberExt;
-use yellowstone_grpc_source::YellowstoneGrpcSource;
 use yellowstone_vixen::{self as vixen, vixen_core::proto::Proto};
 use yellowstone_vixen_parser::{
     token_extension_program::{
@@ -23,6 +22,7 @@ use yellowstone_vixen_parser::{
         AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
     },
 };
+use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]

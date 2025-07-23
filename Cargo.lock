@@ -1422,9 +1422,9 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry 0.25.0",
  "tracing-subscriber",
- "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
 [[package]]
@@ -1432,14 +1432,14 @@ name = "example-vixen-prometheus"
 version = "0.0.0"
 dependencies = [
  "clap",
- "solana-accounts-rpc-source",
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
- "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
  "yellowstone-vixen-raydium-amm-v4-parser",
+ "yellowstone-vixen-solana-rpc-source",
+ "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
 [[package]]
@@ -1452,8 +1452,8 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
- "yellowstone-grpc-source",
  "yellowstone-vixen",
+ "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
 [[package]]
@@ -1465,7 +1465,6 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
- "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-jupiter-swap-parser",
  "yellowstone-vixen-kamino-limit-orders-parser",
@@ -1479,6 +1478,7 @@ dependencies = [
  "yellowstone-vixen-raydium-amm-v4-parser",
  "yellowstone-vixen-raydium-clmm-parser",
  "yellowstone-vixen-raydium-cpmm-parser",
+ "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
 [[package]]
@@ -1497,7 +1497,6 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry 0.30.0",
  "tracing-subscriber",
- "yellowstone-grpc-source",
  "yellowstone-vixen",
  "yellowstone-vixen-boop-parser",
  "yellowstone-vixen-jupiter-swap-parser",
@@ -1517,6 +1516,7 @@ dependencies = [
  "yellowstone-vixen-raydium-cpmm-parser",
  "yellowstone-vixen-raydium-launchpad-parser",
  "yellowstone-vixen-virtuals-parser",
+ "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
 [[package]]
@@ -4326,22 +4326,6 @@ dependencies = [
  "solana-program-error",
  "solana-program-memory",
  "solana-pubkey",
-]
-
-[[package]]
-name = "solana-accounts-rpc-source"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "solana-account-decoder-client-types",
- "solana-client",
- "solana-commitment-config",
- "solana-pubkey",
- "tokio",
- "tracing",
- "yellowstone-grpc-proto",
- "yellowstone-vixen",
- "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -8287,20 +8271,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "yellowstone-grpc-source"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures-util",
- "tokio",
- "tracing",
- "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
- "yellowstone-vixen",
- "yellowstone-vixen-core",
-]
-
-[[package]]
 name = "yellowstone-vixen"
 version = "0.3.0"
 dependencies = [
@@ -8785,6 +8755,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-solana-rpc-source"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "solana-account-decoder-client-types",
+ "solana-client",
+ "solana-commitment-config",
+ "solana-pubkey",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen-virtuals-parser"
 version = "0.3.0"
 dependencies = [
@@ -8806,6 +8792,20 @@ dependencies = [
  "thiserror 1.0.69",
  "tonic",
  "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
+name = "yellowstone-vixen-yellowstone-grpc-source"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures-util",
+ "tokio",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen",
  "yellowstone-vixen-core",
 ]
 
