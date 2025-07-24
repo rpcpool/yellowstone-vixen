@@ -38,9 +38,6 @@ pub mod instruction;
 #[cfg(feature = "proto")]
 pub mod proto;
 
-/// A module for custom prefilters.
-pub mod custom_prefilters;
-
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 /// An error returned by a Vixen parser

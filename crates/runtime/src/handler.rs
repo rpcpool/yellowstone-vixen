@@ -142,7 +142,11 @@ where
     P: Parser,
     for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output>,
 {
-    async fn handle(&self, value: &P::Input) -> Result<(), PipelineErrors> {
+    /// Handle fn for `Pipeline`
+    ///
+    /// # Errors
+    /// If any of the related handlers executions errors, returns those errors
+    pub async fn handle(&self, value: &P::Input) -> Result<(), PipelineErrors> {
         let parsed = match self.0.parse(value).await {
             Ok(p) => p,
             Err(ParseError::Filtered) => return Ok(()),

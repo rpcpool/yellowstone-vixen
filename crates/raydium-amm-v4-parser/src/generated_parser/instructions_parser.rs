@@ -8,8 +8,6 @@
 use std::sync::Arc;
 
 use borsh::BorshDeserialize;
-#[cfg(feature = "prefilters")]
-use yellowstone_vixen_core::custom_prefilters::CustomPrefilters;
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
@@ -101,9 +99,6 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         }
     }
 }
-
-#[cfg(feature = "prefilters")]
-impl CustomPrefilters for InstructionParser {}
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]

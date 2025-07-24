@@ -30,8 +30,6 @@ serde = []
 test-sbf = []
 fetch = []
 tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]
-# This feature is used to enable the custom prefilters for the parser.
-prefilters = []
 
 [build-dependencies]
 prost-build = "0.13.1"
