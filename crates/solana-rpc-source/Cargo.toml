@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-solana-rpc-source"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "Solana RPC source for the Yellowstone Vixen"
 repository = "https://github.com/rpcpool/yellowstone-vixen"

@@ -2,7 +2,7 @@
 
 [package]
 name = "yellowstone-vixen-raydium-launchpad-parser"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 description = "Vixen program parser for Raydium Launchpad program"
 license = "MIT"
