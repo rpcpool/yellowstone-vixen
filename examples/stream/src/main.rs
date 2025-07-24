@@ -11,8 +11,8 @@ use std::path::PathBuf;
 
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 use yellowstone_vixen::{self as vixen, vixen_core};
+use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 mod account {
     use yellowstone_vixen::proto::tonic;
