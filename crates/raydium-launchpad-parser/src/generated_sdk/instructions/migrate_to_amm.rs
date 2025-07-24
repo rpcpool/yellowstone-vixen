@@ -12,81 +12,81 @@ use borsh::{BorshDeserialize, BorshSerialize};
 pub struct MigrateToAmm {
     /// Only migrate_to_amm_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_amm_wallet saved in global_config
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
     /// The mint for the base token (token being sold)
-    pub base_mint: solana_program::pubkey::Pubkey,
+    pub base_mint: solana_pubkey::Pubkey,
     /// The mint for the quote token (token used to buy)
-    pub quote_mint: solana_program::pubkey::Pubkey,
+    pub quote_mint: solana_pubkey::Pubkey,
 
-    pub openbook_program: solana_program::pubkey::Pubkey,
+    pub openbook_program: solana_pubkey::Pubkey,
     /// Account created and asigned to openbook_program but not been initialized
-    pub market: solana_program::pubkey::Pubkey,
+    pub market: solana_pubkey::Pubkey,
     /// Account created and asigned to openbook_program but not been initialized
-    pub request_queue: solana_program::pubkey::Pubkey,
+    pub request_queue: solana_pubkey::Pubkey,
     /// Account created and asigned to openbook_program but not been initialized
-    pub event_queue: solana_program::pubkey::Pubkey,
+    pub event_queue: solana_pubkey::Pubkey,
     /// Account created and asigned to openbook_program but not been initialized
-    pub bids: solana_program::pubkey::Pubkey,
+    pub bids: solana_pubkey::Pubkey,
     /// Account created and asigned to openbook_program but not been initialized
-    pub asks: solana_program::pubkey::Pubkey,
+    pub asks: solana_pubkey::Pubkey,
 
-    pub market_vault_signer: solana_program::pubkey::Pubkey,
+    pub market_vault_signer: solana_pubkey::Pubkey,
     /// Token account that holds the market's base tokens
-    pub market_base_vault: solana_program::pubkey::Pubkey,
+    pub market_base_vault: solana_pubkey::Pubkey,
     /// Token account that holds the market's quote tokens
-    pub market_quote_vault: solana_program::pubkey::Pubkey,
+    pub market_quote_vault: solana_pubkey::Pubkey,
 
-    pub amm_program: solana_program::pubkey::Pubkey,
+    pub amm_program: solana_pubkey::Pubkey,
 
-    pub amm_pool: solana_program::pubkey::Pubkey,
+    pub amm_pool: solana_pubkey::Pubkey,
 
-    pub amm_authority: solana_program::pubkey::Pubkey,
+    pub amm_authority: solana_pubkey::Pubkey,
 
-    pub amm_open_orders: solana_program::pubkey::Pubkey,
+    pub amm_open_orders: solana_pubkey::Pubkey,
 
-    pub amm_lp_mint: solana_program::pubkey::Pubkey,
+    pub amm_lp_mint: solana_pubkey::Pubkey,
 
-    pub amm_base_vault: solana_program::pubkey::Pubkey,
+    pub amm_base_vault: solana_pubkey::Pubkey,
 
-    pub amm_quote_vault: solana_program::pubkey::Pubkey,
+    pub amm_quote_vault: solana_pubkey::Pubkey,
 
-    pub amm_target_orders: solana_program::pubkey::Pubkey,
+    pub amm_target_orders: solana_pubkey::Pubkey,
 
-    pub amm_config: solana_program::pubkey::Pubkey,
+    pub amm_config: solana_pubkey::Pubkey,
 
-    pub amm_create_fee_destination: solana_program::pubkey::Pubkey,
+    pub amm_create_fee_destination: solana_pubkey::Pubkey,
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
-    pub authority: solana_program::pubkey::Pubkey,
+    pub authority: solana_pubkey::Pubkey,
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
-    pub pool_state: solana_program::pubkey::Pubkey,
+    pub pool_state: solana_pubkey::Pubkey,
     /// Global config account stores owner
-    pub global_config: solana_program::pubkey::Pubkey,
+    pub global_config: solana_pubkey::Pubkey,
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
-    pub base_vault: solana_program::pubkey::Pubkey,
+    pub base_vault: solana_pubkey::Pubkey,
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
-    pub quote_vault: solana_program::pubkey::Pubkey,
+    pub quote_vault: solana_pubkey::Pubkey,
 
-    pub pool_lp_token: solana_program::pubkey::Pubkey,
+    pub pool_lp_token: solana_pubkey::Pubkey,
     /// SPL Token program for the base token
     /// Must be the standard Token program
-    pub spl_token_program: solana_program::pubkey::Pubkey,
+    pub spl_token_program: solana_pubkey::Pubkey,
     /// Program to create an ATA for receiving fee NFT
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
     /// Required for account creation
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
     /// Required for rent exempt calculations
-    pub rent_program: solana_program::pubkey::Pubkey,
+    pub rent_program: solana_pubkey::Pubkey,
 }
 
 impl MigrateToAmm {
     pub fn instruction(
         &self,
         args: MigrateToAmmInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -95,131 +95,110 @@ impl MigrateToAmm {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: MigrateToAmmInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(32 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.base_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.quote_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.openbook_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.market,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.market, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.request_queue,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.event_queue,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.bids, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.asks, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.bids, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.asks, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.market_vault_signer,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.market_base_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.market_quote_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.amm_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.amm_pool,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.amm_pool, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.amm_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.amm_open_orders,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.amm_lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.amm_base_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.amm_quote_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.amm_target_orders,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.amm_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.amm_create_fee_destination,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.authority,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool_state,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.authority, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.pool_state, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.global_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.base_vault,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.base_vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.quote_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.pool_lp_token,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.spl_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent_program,
             false,
         ));
@@ -228,7 +207,7 @@ impl MigrateToAmm {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
@@ -300,42 +279,42 @@ pub struct MigrateToAmmInstructionArgs {
 ///   31. `[optional]` rent_program (default to `SysvarRent111111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct MigrateToAmmBuilder {
-    payer: Option<solana_program::pubkey::Pubkey>,
-    base_mint: Option<solana_program::pubkey::Pubkey>,
-    quote_mint: Option<solana_program::pubkey::Pubkey>,
-    openbook_program: Option<solana_program::pubkey::Pubkey>,
-    market: Option<solana_program::pubkey::Pubkey>,
-    request_queue: Option<solana_program::pubkey::Pubkey>,
-    event_queue: Option<solana_program::pubkey::Pubkey>,
-    bids: Option<solana_program::pubkey::Pubkey>,
-    asks: Option<solana_program::pubkey::Pubkey>,
-    market_vault_signer: Option<solana_program::pubkey::Pubkey>,
-    market_base_vault: Option<solana_program::pubkey::Pubkey>,
-    market_quote_vault: Option<solana_program::pubkey::Pubkey>,
-    amm_program: Option<solana_program::pubkey::Pubkey>,
-    amm_pool: Option<solana_program::pubkey::Pubkey>,
-    amm_authority: Option<solana_program::pubkey::Pubkey>,
-    amm_open_orders: Option<solana_program::pubkey::Pubkey>,
-    amm_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    amm_base_vault: Option<solana_program::pubkey::Pubkey>,
-    amm_quote_vault: Option<solana_program::pubkey::Pubkey>,
-    amm_target_orders: Option<solana_program::pubkey::Pubkey>,
-    amm_config: Option<solana_program::pubkey::Pubkey>,
-    amm_create_fee_destination: Option<solana_program::pubkey::Pubkey>,
-    authority: Option<solana_program::pubkey::Pubkey>,
-    pool_state: Option<solana_program::pubkey::Pubkey>,
-    global_config: Option<solana_program::pubkey::Pubkey>,
-    base_vault: Option<solana_program::pubkey::Pubkey>,
-    quote_vault: Option<solana_program::pubkey::Pubkey>,
-    pool_lp_token: Option<solana_program::pubkey::Pubkey>,
-    spl_token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    rent_program: Option<solana_program::pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    base_mint: Option<solana_pubkey::Pubkey>,
+    quote_mint: Option<solana_pubkey::Pubkey>,
+    openbook_program: Option<solana_pubkey::Pubkey>,
+    market: Option<solana_pubkey::Pubkey>,
+    request_queue: Option<solana_pubkey::Pubkey>,
+    event_queue: Option<solana_pubkey::Pubkey>,
+    bids: Option<solana_pubkey::Pubkey>,
+    asks: Option<solana_pubkey::Pubkey>,
+    market_vault_signer: Option<solana_pubkey::Pubkey>,
+    market_base_vault: Option<solana_pubkey::Pubkey>,
+    market_quote_vault: Option<solana_pubkey::Pubkey>,
+    amm_program: Option<solana_pubkey::Pubkey>,
+    amm_pool: Option<solana_pubkey::Pubkey>,
+    amm_authority: Option<solana_pubkey::Pubkey>,
+    amm_open_orders: Option<solana_pubkey::Pubkey>,
+    amm_lp_mint: Option<solana_pubkey::Pubkey>,
+    amm_base_vault: Option<solana_pubkey::Pubkey>,
+    amm_quote_vault: Option<solana_pubkey::Pubkey>,
+    amm_target_orders: Option<solana_pubkey::Pubkey>,
+    amm_config: Option<solana_pubkey::Pubkey>,
+    amm_create_fee_destination: Option<solana_pubkey::Pubkey>,
+    authority: Option<solana_pubkey::Pubkey>,
+    pool_state: Option<solana_pubkey::Pubkey>,
+    global_config: Option<solana_pubkey::Pubkey>,
+    base_vault: Option<solana_pubkey::Pubkey>,
+    quote_vault: Option<solana_pubkey::Pubkey>,
+    pool_lp_token: Option<solana_pubkey::Pubkey>,
+    spl_token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    rent_program: Option<solana_pubkey::Pubkey>,
     base_lot_size: Option<u64>,
     quote_lot_size: Option<u64>,
     market_vault_signer_nonce: Option<u8>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl MigrateToAmmBuilder {
@@ -344,159 +323,138 @@ impl MigrateToAmmBuilder {
     /// Only migrate_to_amm_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_amm_wallet saved in global_config
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
 
     /// The mint for the base token (token being sold)
     #[inline(always)]
-    pub fn base_mint(&mut self, base_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn base_mint(&mut self, base_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
 
     /// The mint for the quote token (token used to buy)
     #[inline(always)]
-    pub fn quote_mint(&mut self, quote_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn quote_mint(&mut self, quote_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
 
     /// `[optional account, default to 'srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX']`
     #[inline(always)]
-    pub fn openbook_program(
-        &mut self,
-        openbook_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn openbook_program(&mut self, openbook_program: solana_pubkey::Pubkey) -> &mut Self {
         self.openbook_program = Some(openbook_program);
         self
     }
 
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
-    pub fn market(&mut self, market: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn market(&mut self, market: solana_pubkey::Pubkey) -> &mut Self {
         self.market = Some(market);
         self
     }
 
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
-    pub fn request_queue(&mut self, request_queue: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn request_queue(&mut self, request_queue: solana_pubkey::Pubkey) -> &mut Self {
         self.request_queue = Some(request_queue);
         self
     }
 
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
-    pub fn event_queue(&mut self, event_queue: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn event_queue(&mut self, event_queue: solana_pubkey::Pubkey) -> &mut Self {
         self.event_queue = Some(event_queue);
         self
     }
 
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
-    pub fn bids(&mut self, bids: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn bids(&mut self, bids: solana_pubkey::Pubkey) -> &mut Self {
         self.bids = Some(bids);
         self
     }
 
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
-    pub fn asks(&mut self, asks: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn asks(&mut self, asks: solana_pubkey::Pubkey) -> &mut Self {
         self.asks = Some(asks);
         self
     }
 
     #[inline(always)]
-    pub fn market_vault_signer(
-        &mut self,
-        market_vault_signer: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn market_vault_signer(&mut self, market_vault_signer: solana_pubkey::Pubkey) -> &mut Self {
         self.market_vault_signer = Some(market_vault_signer);
         self
     }
 
     /// Token account that holds the market's base tokens
     #[inline(always)]
-    pub fn market_base_vault(
-        &mut self,
-        market_base_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn market_base_vault(&mut self, market_base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.market_base_vault = Some(market_base_vault);
         self
     }
 
     /// Token account that holds the market's quote tokens
     #[inline(always)]
-    pub fn market_quote_vault(
-        &mut self,
-        market_quote_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn market_quote_vault(&mut self, market_quote_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.market_quote_vault = Some(market_quote_vault);
         self
     }
 
     /// `[optional account, default to '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8']`
     #[inline(always)]
-    pub fn amm_program(&mut self, amm_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn amm_program(&mut self, amm_program: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_program = Some(amm_program);
         self
     }
 
     #[inline(always)]
-    pub fn amm_pool(&mut self, amm_pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn amm_pool(&mut self, amm_pool: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_pool = Some(amm_pool);
         self
     }
 
     #[inline(always)]
-    pub fn amm_authority(&mut self, amm_authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn amm_authority(&mut self, amm_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_authority = Some(amm_authority);
         self
     }
 
     #[inline(always)]
-    pub fn amm_open_orders(
-        &mut self,
-        amm_open_orders: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn amm_open_orders(&mut self, amm_open_orders: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_open_orders = Some(amm_open_orders);
         self
     }
 
     #[inline(always)]
-    pub fn amm_lp_mint(&mut self, amm_lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn amm_lp_mint(&mut self, amm_lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_lp_mint = Some(amm_lp_mint);
         self
     }
 
     #[inline(always)]
-    pub fn amm_base_vault(&mut self, amm_base_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn amm_base_vault(&mut self, amm_base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_base_vault = Some(amm_base_vault);
         self
     }
 
     #[inline(always)]
-    pub fn amm_quote_vault(
-        &mut self,
-        amm_quote_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn amm_quote_vault(&mut self, amm_quote_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_quote_vault = Some(amm_quote_vault);
         self
     }
 
     #[inline(always)]
-    pub fn amm_target_orders(
-        &mut self,
-        amm_target_orders: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn amm_target_orders(&mut self, amm_target_orders: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_target_orders = Some(amm_target_orders);
         self
     }
 
     #[inline(always)]
-    pub fn amm_config(&mut self, amm_config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn amm_config(&mut self, amm_config: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_config = Some(amm_config);
         self
     }
@@ -504,7 +462,7 @@ impl MigrateToAmmBuilder {
     #[inline(always)]
     pub fn amm_create_fee_destination(
         &mut self,
-        amm_create_fee_destination: solana_program::pubkey::Pubkey,
+        amm_create_fee_destination: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.amm_create_fee_destination = Some(amm_create_fee_destination);
         self
@@ -513,7 +471,7 @@ impl MigrateToAmmBuilder {
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
@@ -521,14 +479,14 @@ impl MigrateToAmmBuilder {
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
-    pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
 
     /// Global config account stores owner
     #[inline(always)]
-    pub fn global_config(&mut self, global_config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn global_config(&mut self, global_config: solana_pubkey::Pubkey) -> &mut Self {
         self.global_config = Some(global_config);
         self
     }
@@ -536,7 +494,7 @@ impl MigrateToAmmBuilder {
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
     #[inline(always)]
-    pub fn base_vault(&mut self, base_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn base_vault(&mut self, base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.base_vault = Some(base_vault);
         self
     }
@@ -544,13 +502,13 @@ impl MigrateToAmmBuilder {
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
     #[inline(always)]
-    pub fn quote_vault(&mut self, quote_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn quote_vault(&mut self, quote_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_vault = Some(quote_vault);
         self
     }
 
     #[inline(always)]
-    pub fn pool_lp_token(&mut self, pool_lp_token: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_lp_token(&mut self, pool_lp_token: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_lp_token = Some(pool_lp_token);
         self
     }
@@ -559,10 +517,7 @@ impl MigrateToAmmBuilder {
     /// SPL Token program for the base token
     /// Must be the standard Token program
     #[inline(always)]
-    pub fn spl_token_program(
-        &mut self,
-        spl_token_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn spl_token_program(&mut self, spl_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.spl_token_program = Some(spl_token_program);
         self
     }
@@ -572,7 +527,7 @@ impl MigrateToAmmBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
@@ -581,7 +536,7 @@ impl MigrateToAmmBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -589,7 +544,7 @@ impl MigrateToAmmBuilder {
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Required for rent exempt calculations
     #[inline(always)]
-    pub fn rent_program(&mut self, rent_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent_program(&mut self, rent_program: solana_pubkey::Pubkey) -> &mut Self {
         self.rent_program = Some(rent_program);
         self
     }
@@ -614,10 +569,7 @@ impl MigrateToAmmBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -626,19 +578,19 @@ impl MigrateToAmmBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = MigrateToAmm {
             payer: self.payer.expect("payer is not set"),
             base_mint: self.base_mint.expect("base_mint is not set"),
             quote_mint: self.quote_mint.expect("quote_mint is not set"),
-            openbook_program: self.openbook_program.unwrap_or(solana_program::pubkey!(
+            openbook_program: self.openbook_program.unwrap_or(solana_pubkey::pubkey!(
                 "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
             )),
             market: self.market.expect("market is not set"),
@@ -655,7 +607,7 @@ impl MigrateToAmmBuilder {
             market_quote_vault: self
                 .market_quote_vault
                 .expect("market_quote_vault is not set"),
-            amm_program: self.amm_program.unwrap_or(solana_program::pubkey!(
+            amm_program: self.amm_program.unwrap_or(solana_pubkey::pubkey!(
                 "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
             )),
             amm_pool: self.amm_pool.expect("amm_pool is not set"),
@@ -677,16 +629,16 @@ impl MigrateToAmmBuilder {
             base_vault: self.base_vault.expect("base_vault is not set"),
             quote_vault: self.quote_vault.expect("quote_vault is not set"),
             pool_lp_token: self.pool_lp_token.expect("pool_lp_token is not set"),
-            spl_token_program: self.spl_token_program.unwrap_or(solana_program::pubkey!(
+            spl_token_program: self.spl_token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self.associated_token_program.unwrap_or(
-                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            rent_program: self.rent_program.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            rent_program: self.rent_program.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
         };
@@ -713,157 +665,157 @@ impl MigrateToAmmBuilder {
 pub struct MigrateToAmmCpiAccounts<'a, 'b> {
     /// Only migrate_to_amm_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_amm_wallet saved in global_config
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the base token (token being sold)
-    pub base_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the quote token (token used to buy)
-    pub quote_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub openbook_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub openbook_program: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub market: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub request_queue: &'b solana_program::account_info::AccountInfo<'a>,
+    pub request_queue: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub event_queue: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_queue: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub bids: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bids: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub asks: &'b solana_program::account_info::AccountInfo<'a>,
+    pub asks: &'b solana_account_info::AccountInfo<'a>,
 
-    pub market_vault_signer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market_vault_signer: &'b solana_account_info::AccountInfo<'a>,
     /// Token account that holds the market's base tokens
-    pub market_base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market_base_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token account that holds the market's quote tokens
-    pub market_quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market_quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_open_orders: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_open_orders: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_base_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_target_orders: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_target_orders: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_create_fee_destination: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_create_fee_destination: &'b solana_account_info::AccountInfo<'a>,
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// Global config account stores owner
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
-    pub base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
-    pub quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_lp_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_lp_token: &'b solana_account_info::AccountInfo<'a>,
     /// SPL Token program for the base token
     /// Must be the standard Token program
-    pub spl_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub spl_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create an ATA for receiving fee NFT
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for rent exempt calculations
-    pub rent_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `migrate_to_amm` CPI instruction.
 pub struct MigrateToAmmCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Only migrate_to_amm_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_amm_wallet saved in global_config
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the base token (token being sold)
-    pub base_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the quote token (token used to buy)
-    pub quote_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub openbook_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub openbook_program: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub market: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub request_queue: &'b solana_program::account_info::AccountInfo<'a>,
+    pub request_queue: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub event_queue: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_queue: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub bids: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bids: &'b solana_account_info::AccountInfo<'a>,
     /// Account created and asigned to openbook_program but not been initialized
-    pub asks: &'b solana_program::account_info::AccountInfo<'a>,
+    pub asks: &'b solana_account_info::AccountInfo<'a>,
 
-    pub market_vault_signer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market_vault_signer: &'b solana_account_info::AccountInfo<'a>,
     /// Token account that holds the market's base tokens
-    pub market_base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market_base_vault: &'b solana_account_info::AccountInfo<'a>,
     /// Token account that holds the market's quote tokens
-    pub market_quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub market_quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_open_orders: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_open_orders: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_base_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_target_orders: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_target_orders: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub amm_create_fee_destination: &'b solana_program::account_info::AccountInfo<'a>,
+    pub amm_create_fee_destination: &'b solana_account_info::AccountInfo<'a>,
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// Global config account stores owner
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
-    pub base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
-    pub quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_lp_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_lp_token: &'b solana_account_info::AccountInfo<'a>,
     /// SPL Token program for the base token
     /// Must be the standard Token program
-    pub spl_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub spl_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create an ATA for receiving fee NFT
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for rent exempt calculations
-    pub rent_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: MigrateToAmmInstructionArgs,
 }
 
 impl<'a, 'b> MigrateToAmmCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: MigrateToAmmCpiAccounts<'a, 'b>,
         args: MigrateToAmmInstructionArgs,
     ) -> Self {
@@ -906,19 +858,15 @@ impl<'a, 'b> MigrateToAmmCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -926,7 +874,7 @@ impl<'a, 'b> MigrateToAmmCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -936,143 +884,130 @@ impl<'a, 'b> MigrateToAmmCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(32 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.base_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.quote_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.openbook_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.market.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.request_queue.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.event_queue.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.bids.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.asks.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.bids.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(*self.asks.key, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.market_vault_signer.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.market_base_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.market_quote_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.amm_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.amm_pool.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.amm_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.amm_open_orders.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.amm_lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.amm_base_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.amm_quote_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.amm_target_orders.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.amm_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.amm_create_fee_destination.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_state.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.global_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.base_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.quote_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_lp_token.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.spl_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -1082,7 +1017,7 @@ impl<'a, 'b> MigrateToAmmCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
@@ -1126,9 +1061,9 @@ impl<'a, 'b> MigrateToAmmCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -1175,7 +1110,7 @@ pub struct MigrateToAmmCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(MigrateToAmmCpiBuilderInstruction {
             __program: program,
             payer: None,
@@ -1221,17 +1156,14 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     /// Only migrate_to_amm_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_amm_wallet saved in global_config
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
 
     /// The mint for the base token (token being sold)
     #[inline(always)]
-    pub fn base_mint(
-        &mut self,
-        base_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn base_mint(&mut self, base_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base_mint = Some(base_mint);
         self
     }
@@ -1240,7 +1172,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn quote_mint(
         &mut self,
-        quote_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        quote_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.quote_mint = Some(quote_mint);
         self
@@ -1249,7 +1181,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn openbook_program(
         &mut self,
-        openbook_program: &'b solana_program::account_info::AccountInfo<'a>,
+        openbook_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.openbook_program = Some(openbook_program);
         self
@@ -1257,10 +1189,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
 
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
-    pub fn market(
-        &mut self,
-        market: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn market(&mut self, market: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.market = Some(market);
         self
     }
@@ -1269,7 +1198,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn request_queue(
         &mut self,
-        request_queue: &'b solana_program::account_info::AccountInfo<'a>,
+        request_queue: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.request_queue = Some(request_queue);
         self
@@ -1279,7 +1208,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_queue(
         &mut self,
-        event_queue: &'b solana_program::account_info::AccountInfo<'a>,
+        event_queue: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_queue = Some(event_queue);
         self
@@ -1287,14 +1216,14 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
 
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
-    pub fn bids(&mut self, bids: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn bids(&mut self, bids: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.bids = Some(bids);
         self
     }
 
     /// Account created and asigned to openbook_program but not been initialized
     #[inline(always)]
-    pub fn asks(&mut self, asks: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn asks(&mut self, asks: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.asks = Some(asks);
         self
     }
@@ -1302,7 +1231,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn market_vault_signer(
         &mut self,
-        market_vault_signer: &'b solana_program::account_info::AccountInfo<'a>,
+        market_vault_signer: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.market_vault_signer = Some(market_vault_signer);
         self
@@ -1312,7 +1241,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn market_base_vault(
         &mut self,
-        market_base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        market_base_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.market_base_vault = Some(market_base_vault);
         self
@@ -1322,7 +1251,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn market_quote_vault(
         &mut self,
-        market_quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        market_quote_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.market_quote_vault = Some(market_quote_vault);
         self
@@ -1331,17 +1260,14 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_program(
         &mut self,
-        amm_program: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_program = Some(amm_program);
         self
     }
 
     #[inline(always)]
-    pub fn amm_pool(
-        &mut self,
-        amm_pool: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn amm_pool(&mut self, amm_pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.amm_pool = Some(amm_pool);
         self
     }
@@ -1349,7 +1275,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_authority(
         &mut self,
-        amm_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_authority = Some(amm_authority);
         self
@@ -1358,7 +1284,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_open_orders(
         &mut self,
-        amm_open_orders: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_open_orders: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_open_orders = Some(amm_open_orders);
         self
@@ -1367,7 +1293,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_lp_mint(
         &mut self,
-        amm_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_lp_mint = Some(amm_lp_mint);
         self
@@ -1376,7 +1302,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_base_vault(
         &mut self,
-        amm_base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_base_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_base_vault = Some(amm_base_vault);
         self
@@ -1385,7 +1311,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_quote_vault(
         &mut self,
-        amm_quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_quote_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_quote_vault = Some(amm_quote_vault);
         self
@@ -1394,7 +1320,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_target_orders(
         &mut self,
-        amm_target_orders: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_target_orders: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_target_orders = Some(amm_target_orders);
         self
@@ -1403,7 +1329,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_config(
         &mut self,
-        amm_config: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_config: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_config = Some(amm_config);
         self
@@ -1412,7 +1338,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn amm_create_fee_destination(
         &mut self,
-        amm_create_fee_destination: &'b solana_program::account_info::AccountInfo<'a>,
+        amm_create_fee_destination: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.amm_create_fee_destination = Some(amm_create_fee_destination);
         self
@@ -1421,10 +1347,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
-    pub fn authority(
-        &mut self,
-        authority: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.authority = Some(authority);
         self
     }
@@ -1434,7 +1357,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_state(
         &mut self,
-        pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_state = Some(pool_state);
         self
@@ -1444,7 +1367,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn global_config(
         &mut self,
-        global_config: &'b solana_program::account_info::AccountInfo<'a>,
+        global_config: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.global_config = Some(global_config);
         self
@@ -1455,7 +1378,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn base_vault(
         &mut self,
-        base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        base_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.base_vault = Some(base_vault);
         self
@@ -1466,7 +1389,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn quote_vault(
         &mut self,
-        quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        quote_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.quote_vault = Some(quote_vault);
         self
@@ -1475,7 +1398,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_lp_token(
         &mut self,
-        pool_lp_token: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_lp_token: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_lp_token = Some(pool_lp_token);
         self
@@ -1486,7 +1409,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn spl_token_program(
         &mut self,
-        spl_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        spl_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.spl_token_program = Some(spl_token_program);
         self
@@ -1496,7 +1419,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -1506,7 +1429,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -1516,7 +1439,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn rent_program(
         &mut self,
-        rent_program: &'b solana_program::account_info::AccountInfo<'a>,
+        rent_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.rent_program = Some(rent_program);
         self
@@ -1544,7 +1467,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -1561,11 +1484,7 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -1574,14 +1493,14 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = MigrateToAmmInstructionArgs {
             base_lot_size: self
                 .instruction
@@ -1739,46 +1658,42 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct MigrateToAmmCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    quote_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    openbook_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    market: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    request_queue: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_queue: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bids: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    asks: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    market_vault_signer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    market_base_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    market_quote_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_open_orders: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_base_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_quote_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_target_orders: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    amm_create_fee_destination: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    global_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    quote_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_lp_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    spl_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    quote_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    openbook_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    market: Option<&'b solana_account_info::AccountInfo<'a>>,
+    request_queue: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_queue: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bids: Option<&'b solana_account_info::AccountInfo<'a>>,
+    asks: Option<&'b solana_account_info::AccountInfo<'a>>,
+    market_vault_signer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    market_base_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    market_quote_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_open_orders: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_base_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_quote_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_target_orders: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    amm_create_fee_destination: Option<&'b solana_account_info::AccountInfo<'a>>,
+    authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    global_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    quote_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_lp_token: Option<&'b solana_account_info::AccountInfo<'a>>,
+    spl_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     base_lot_size: Option<u64>,
     quote_lot_size: Option<u64>,
     market_vault_signer_nonce: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

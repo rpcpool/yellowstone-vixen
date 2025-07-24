@@ -1,7 +1,11 @@
 [package]
-name = "yellowstone-grpc-source"
-version = "0.1.0"
+name = "yellowstone-vixen-yellowstone-grpc-source"
+version = "0.2.0"
 edition = "2024"
+description = "Yellowstone gRPC source for the Yellowstone Vixen"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+readme = "./README.md"
 
 [dependencies]
 async-trait = "0.1.88"

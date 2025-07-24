@@ -12,46 +12,46 @@ use crate::generated::types::CustomizableParams;
 /// Accounts.
 #[derive(Debug)]
 pub struct InitializeCustomizablePermissionlessLbPair2 {
-    pub lb_pair: solana_program::pubkey::Pubkey,
+    pub lb_pair: solana_pubkey::Pubkey,
 
-    pub bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
+    pub bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
 
-    pub token_mint_x: solana_program::pubkey::Pubkey,
+    pub token_mint_x: solana_pubkey::Pubkey,
 
-    pub token_mint_y: solana_program::pubkey::Pubkey,
+    pub token_mint_y: solana_pubkey::Pubkey,
 
-    pub reserve_x: solana_program::pubkey::Pubkey,
+    pub reserve_x: solana_pubkey::Pubkey,
 
-    pub reserve_y: solana_program::pubkey::Pubkey,
+    pub reserve_y: solana_pubkey::Pubkey,
 
-    pub oracle: solana_program::pubkey::Pubkey,
+    pub oracle: solana_pubkey::Pubkey,
 
-    pub user_token_x: solana_program::pubkey::Pubkey,
+    pub user_token_x: solana_pubkey::Pubkey,
 
-    pub funder: solana_program::pubkey::Pubkey,
+    pub funder: solana_pubkey::Pubkey,
 
-    pub token_badge_x: Option<solana_program::pubkey::Pubkey>,
+    pub token_badge_x: Option<solana_pubkey::Pubkey>,
 
-    pub token_badge_y: Option<solana_program::pubkey::Pubkey>,
+    pub token_badge_y: Option<solana_pubkey::Pubkey>,
 
-    pub token_program_x: solana_program::pubkey::Pubkey,
+    pub token_program_x: solana_pubkey::Pubkey,
 
-    pub token_program_y: solana_program::pubkey::Pubkey,
+    pub token_program_y: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub user_token_y: solana_program::pubkey::Pubkey,
+    pub user_token_y: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl InitializeCustomizablePermissionlessLbPair2 {
     pub fn instruction(
         &self,
         args: InitializeCustomizablePermissionlessLbPair2InstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -60,95 +60,80 @@ impl InitializeCustomizablePermissionlessLbPair2 {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: InitializeCustomizablePermissionlessLbPair2InstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(17 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lb_pair,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.lb_pair, false));
         if let Some(bin_array_bitmap_extension) = self.bin_array_bitmap_extension {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 bin_array_bitmap_extension,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_mint_x,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_mint_y,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.reserve_x,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.reserve_y,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.oracle,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.reserve_x, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.reserve_y, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.oracle, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.user_token_x,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.funder,
-            true,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.funder, true));
         if let Some(token_badge_x) = self.token_badge_x {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 token_badge_x,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
         if let Some(token_badge_y) = self.token_badge_y {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 token_badge_y,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program_x,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program_y,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.user_token_y,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -159,7 +144,7 @@ impl InitializeCustomizablePermissionlessLbPair2 {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -214,32 +199,32 @@ pub struct InitializeCustomizablePermissionlessLbPair2InstructionArgs {
 ///   16. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct InitializeCustomizablePermissionlessLbPair2Builder {
-    lb_pair: Option<solana_program::pubkey::Pubkey>,
-    bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
-    token_mint_x: Option<solana_program::pubkey::Pubkey>,
-    token_mint_y: Option<solana_program::pubkey::Pubkey>,
-    reserve_x: Option<solana_program::pubkey::Pubkey>,
-    reserve_y: Option<solana_program::pubkey::Pubkey>,
-    oracle: Option<solana_program::pubkey::Pubkey>,
-    user_token_x: Option<solana_program::pubkey::Pubkey>,
-    funder: Option<solana_program::pubkey::Pubkey>,
-    token_badge_x: Option<solana_program::pubkey::Pubkey>,
-    token_badge_y: Option<solana_program::pubkey::Pubkey>,
-    token_program_x: Option<solana_program::pubkey::Pubkey>,
-    token_program_y: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    user_token_y: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    lb_pair: Option<solana_pubkey::Pubkey>,
+    bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
+    token_mint_x: Option<solana_pubkey::Pubkey>,
+    token_mint_y: Option<solana_pubkey::Pubkey>,
+    reserve_x: Option<solana_pubkey::Pubkey>,
+    reserve_y: Option<solana_pubkey::Pubkey>,
+    oracle: Option<solana_pubkey::Pubkey>,
+    user_token_x: Option<solana_pubkey::Pubkey>,
+    funder: Option<solana_pubkey::Pubkey>,
+    token_badge_x: Option<solana_pubkey::Pubkey>,
+    token_badge_y: Option<solana_pubkey::Pubkey>,
+    token_program_x: Option<solana_pubkey::Pubkey>,
+    token_program_y: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    user_token_y: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     params: Option<CustomizableParams>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl InitializeCustomizablePermissionlessLbPair2Builder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn lb_pair(&mut self, lb_pair: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: solana_pubkey::Pubkey) -> &mut Self {
         self.lb_pair = Some(lb_pair);
         self
     }
@@ -248,116 +233,101 @@ impl InitializeCustomizablePermissionlessLbPair2Builder {
     #[inline(always)]
     pub fn bin_array_bitmap_extension(
         &mut self,
-        bin_array_bitmap_extension: Option<solana_program::pubkey::Pubkey>,
+        bin_array_bitmap_extension: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.bin_array_bitmap_extension = bin_array_bitmap_extension;
         self
     }
 
     #[inline(always)]
-    pub fn token_mint_x(&mut self, token_mint_x: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_mint_x(&mut self, token_mint_x: solana_pubkey::Pubkey) -> &mut Self {
         self.token_mint_x = Some(token_mint_x);
         self
     }
 
     #[inline(always)]
-    pub fn token_mint_y(&mut self, token_mint_y: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_mint_y(&mut self, token_mint_y: solana_pubkey::Pubkey) -> &mut Self {
         self.token_mint_y = Some(token_mint_y);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_x(&mut self, reserve_x: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn reserve_x(&mut self, reserve_x: solana_pubkey::Pubkey) -> &mut Self {
         self.reserve_x = Some(reserve_x);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_y(&mut self, reserve_y: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn reserve_y(&mut self, reserve_y: solana_pubkey::Pubkey) -> &mut Self {
         self.reserve_y = Some(reserve_y);
         self
     }
 
     #[inline(always)]
-    pub fn oracle(&mut self, oracle: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn oracle(&mut self, oracle: solana_pubkey::Pubkey) -> &mut Self {
         self.oracle = Some(oracle);
         self
     }
 
     #[inline(always)]
-    pub fn user_token_x(&mut self, user_token_x: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user_token_x(&mut self, user_token_x: solana_pubkey::Pubkey) -> &mut Self {
         self.user_token_x = Some(user_token_x);
         self
     }
 
     #[inline(always)]
-    pub fn funder(&mut self, funder: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn funder(&mut self, funder: solana_pubkey::Pubkey) -> &mut Self {
         self.funder = Some(funder);
         self
     }
 
     /// `[optional account]`
     #[inline(always)]
-    pub fn token_badge_x(
-        &mut self,
-        token_badge_x: Option<solana_program::pubkey::Pubkey>,
-    ) -> &mut Self {
+    pub fn token_badge_x(&mut self, token_badge_x: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.token_badge_x = token_badge_x;
         self
     }
 
     /// `[optional account]`
     #[inline(always)]
-    pub fn token_badge_y(
-        &mut self,
-        token_badge_y: Option<solana_program::pubkey::Pubkey>,
-    ) -> &mut Self {
+    pub fn token_badge_y(&mut self, token_badge_y: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.token_badge_y = token_badge_y;
         self
     }
 
     #[inline(always)]
-    pub fn token_program_x(
-        &mut self,
-        token_program_x: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_program_x(&mut self, token_program_x: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program_x = Some(token_program_x);
         self
     }
 
     #[inline(always)]
-    pub fn token_program_y(
-        &mut self,
-        token_program_y: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_program_y(&mut self, token_program_y: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program_y = Some(token_program_y);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     #[inline(always)]
-    pub fn user_token_y(&mut self, user_token_y: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user_token_y(&mut self, user_token_y: solana_pubkey::Pubkey) -> &mut Self {
         self.user_token_y = Some(user_token_y);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -370,10 +340,7 @@ impl InitializeCustomizablePermissionlessLbPair2Builder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -382,14 +349,14 @@ impl InitializeCustomizablePermissionlessLbPair2Builder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializeCustomizablePermissionlessLbPair2 {
             lb_pair: self.lb_pair.expect("lb_pair is not set"),
             bin_array_bitmap_extension: self.bin_array_bitmap_extension,
@@ -406,7 +373,7 @@ impl InitializeCustomizablePermissionlessLbPair2Builder {
             token_program_y: self.token_program_y.expect("token_program_y is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
             user_token_y: self.user_token_y.expect("user_token_y is not set"),
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
@@ -421,86 +388,86 @@ impl InitializeCustomizablePermissionlessLbPair2Builder {
 
 /// `initialize_customizable_permissionless_lb_pair2` CPI accounts.
 pub struct InitializeCustomizablePermissionlessLbPair2CpiAccounts<'a, 'b> {
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_mint_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub oracle: &'b solana_program::account_info::AccountInfo<'a>,
+    pub oracle: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_token_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub funder: &'b solana_program::account_info::AccountInfo<'a>,
+    pub funder: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_badge_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub token_badge_x: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_badge_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub token_badge_y: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_program_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_token_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `initialize_customizable_permissionless_lb_pair2` CPI instruction.
 pub struct InitializeCustomizablePermissionlessLbPair2Cpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_mint_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub reserve_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub reserve_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub oracle: &'b solana_program::account_info::AccountInfo<'a>,
+    pub oracle: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_token_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub funder: &'b solana_program::account_info::AccountInfo<'a>,
+    pub funder: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_badge_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub token_badge_x: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_badge_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub token_badge_y: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub token_program_x: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program_x: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_token_y: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_token_y: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: InitializeCustomizablePermissionlessLbPair2InstructionArgs,
 }
 
 impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2Cpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: InitializeCustomizablePermissionlessLbPair2CpiAccounts<'a, 'b>,
         args: InitializeCustomizablePermissionlessLbPair2InstructionArgs,
     ) -> Self {
@@ -528,19 +495,15 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2Cpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -548,7 +511,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2Cpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -558,104 +521,97 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2Cpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(17 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lb_pair.key,
             false,
         ));
         if let Some(bin_array_bitmap_extension) = self.bin_array_bitmap_extension {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 *bin_array_bitmap_extension.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_mint_x.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_mint_y.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.reserve_x.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.reserve_y.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.oracle.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.user_token_x.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.funder.key,
-            true,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(*self.funder.key, true));
         if let Some(token_badge_x) = self.token_badge_x {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 *token_badge_x.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
         if let Some(token_badge_y) = self.token_badge_y {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 *token_badge_y.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LB_CLMM_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program_x.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program_y.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.user_token_y.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -667,7 +623,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2Cpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -702,9 +658,9 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2Cpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -736,7 +692,7 @@ pub struct InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(
             InitializeCustomizablePermissionlessLbPair2CpiBuilderInstruction {
                 __program: program,
@@ -765,10 +721,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn lb_pair(
-        &mut self,
-        lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lb_pair = Some(lb_pair);
         self
     }
@@ -777,7 +730,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bin_array_bitmap_extension(
         &mut self,
-        bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.bin_array_bitmap_extension = bin_array_bitmap_extension;
         self
@@ -786,7 +739,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_mint_x(
         &mut self,
-        token_mint_x: &'b solana_program::account_info::AccountInfo<'a>,
+        token_mint_x: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_mint_x = Some(token_mint_x);
         self
@@ -795,35 +748,26 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_mint_y(
         &mut self,
-        token_mint_y: &'b solana_program::account_info::AccountInfo<'a>,
+        token_mint_y: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_mint_y = Some(token_mint_y);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_x(
-        &mut self,
-        reserve_x: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn reserve_x(&mut self, reserve_x: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.reserve_x = Some(reserve_x);
         self
     }
 
     #[inline(always)]
-    pub fn reserve_y(
-        &mut self,
-        reserve_y: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn reserve_y(&mut self, reserve_y: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.reserve_y = Some(reserve_y);
         self
     }
 
     #[inline(always)]
-    pub fn oracle(
-        &mut self,
-        oracle: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn oracle(&mut self, oracle: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.oracle = Some(oracle);
         self
     }
@@ -831,17 +775,14 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_token_x(
         &mut self,
-        user_token_x: &'b solana_program::account_info::AccountInfo<'a>,
+        user_token_x: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_token_x = Some(user_token_x);
         self
     }
 
     #[inline(always)]
-    pub fn funder(
-        &mut self,
-        funder: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn funder(&mut self, funder: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.funder = Some(funder);
         self
     }
@@ -850,7 +791,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_badge_x(
         &mut self,
-        token_badge_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        token_badge_x: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.token_badge_x = token_badge_x;
         self
@@ -860,7 +801,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_badge_y(
         &mut self,
-        token_badge_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        token_badge_y: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.token_badge_y = token_badge_y;
         self
@@ -869,7 +810,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program_x(
         &mut self,
-        token_program_x: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program_x: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program_x = Some(token_program_x);
         self
@@ -878,7 +819,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program_y(
         &mut self,
-        token_program_y: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program_y: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program_y = Some(token_program_y);
         self
@@ -887,7 +828,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -896,7 +837,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_token_y(
         &mut self,
-        user_token_y: &'b solana_program::account_info::AccountInfo<'a>,
+        user_token_y: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_token_y = Some(user_token_y);
         self
@@ -905,17 +846,14 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -930,7 +868,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -947,11 +885,7 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -960,14 +894,14 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = InitializeCustomizablePermissionlessLbPair2InstructionArgs {
             params: self.instruction.params.clone().expect("params is not set"),
         };
@@ -1042,29 +976,25 @@ impl<'a, 'b> InitializeCustomizablePermissionlessLbPair2CpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct InitializeCustomizablePermissionlessLbPair2CpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    lb_pair: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bin_array_bitmap_extension: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_mint_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_mint_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    reserve_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    reserve_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    oracle: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_token_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    funder: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_badge_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_badge_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program_x: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_token_y: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    lb_pair: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bin_array_bitmap_extension: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_mint_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_mint_y: Option<&'b solana_account_info::AccountInfo<'a>>,
+    reserve_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    reserve_y: Option<&'b solana_account_info::AccountInfo<'a>>,
+    oracle: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_token_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    funder: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_badge_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_badge_y: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program_x: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program_y: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_token_y: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     params: Option<CustomizableParams>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

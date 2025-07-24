@@ -10,18 +10,18 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct UpdateFeesAndReward2 {
-    pub position: solana_program::pubkey::Pubkey,
+    pub position: solana_pubkey::Pubkey,
 
-    pub lb_pair: solana_program::pubkey::Pubkey,
+    pub lb_pair: solana_pubkey::Pubkey,
 
-    pub owner: solana_program::pubkey::Pubkey,
+    pub owner: solana_pubkey::Pubkey,
 }
 
 impl UpdateFeesAndReward2 {
     pub fn instruction(
         &self,
         args: UpdateFeesAndReward2InstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -30,18 +30,12 @@ impl UpdateFeesAndReward2 {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: UpdateFeesAndReward2InstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.position,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lb_pair,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.position, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.lb_pair, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.owner, true,
         ));
         accounts.extend_from_slice(remaining_accounts);
@@ -49,7 +43,7 @@ impl UpdateFeesAndReward2 {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -91,31 +85,31 @@ pub struct UpdateFeesAndReward2InstructionArgs {
 ///   2. `[signer]` owner
 #[derive(Clone, Debug, Default)]
 pub struct UpdateFeesAndReward2Builder {
-    position: Option<solana_program::pubkey::Pubkey>,
-    lb_pair: Option<solana_program::pubkey::Pubkey>,
-    owner: Option<solana_program::pubkey::Pubkey>,
+    position: Option<solana_pubkey::Pubkey>,
+    lb_pair: Option<solana_pubkey::Pubkey>,
+    owner: Option<solana_pubkey::Pubkey>,
     min_bin_id: Option<i32>,
     max_bin_id: Option<i32>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl UpdateFeesAndReward2Builder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn position(&mut self, position: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
         self.position = Some(position);
         self
     }
 
     #[inline(always)]
-    pub fn lb_pair(&mut self, lb_pair: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: solana_pubkey::Pubkey) -> &mut Self {
         self.lb_pair = Some(lb_pair);
         self
     }
 
     #[inline(always)]
-    pub fn owner(&mut self, owner: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
@@ -134,10 +128,7 @@ impl UpdateFeesAndReward2Builder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -146,14 +137,14 @@ impl UpdateFeesAndReward2Builder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = UpdateFeesAndReward2 {
             position: self.position.expect("position is not set"),
             lb_pair: self.lb_pair.expect("lb_pair is not set"),
@@ -170,30 +161,30 @@ impl UpdateFeesAndReward2Builder {
 
 /// `update_fees_and_reward2` CPI accounts.
 pub struct UpdateFeesAndReward2CpiAccounts<'a, 'b> {
-    pub position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `update_fees_and_reward2` CPI instruction.
 pub struct UpdateFeesAndReward2Cpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position: &'b solana_program::account_info::AccountInfo<'a>,
+    pub position: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lb_pair: &'b solana_account_info::AccountInfo<'a>,
 
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
+    pub owner: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: UpdateFeesAndReward2InstructionArgs,
 }
 
 impl<'a, 'b> UpdateFeesAndReward2Cpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: UpdateFeesAndReward2CpiAccounts<'a, 'b>,
         args: UpdateFeesAndReward2InstructionArgs,
     ) -> Self {
@@ -207,19 +198,15 @@ impl<'a, 'b> UpdateFeesAndReward2Cpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -227,7 +214,7 @@ impl<'a, 'b> UpdateFeesAndReward2Cpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -237,27 +224,23 @@ impl<'a, 'b> UpdateFeesAndReward2Cpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.position.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lb_pair.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.owner.key,
             true,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -267,7 +250,7 @@ impl<'a, 'b> UpdateFeesAndReward2Cpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LB_CLMM_ID,
             accounts,
             data,
@@ -282,9 +265,9 @@ impl<'a, 'b> UpdateFeesAndReward2Cpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -302,7 +285,7 @@ pub struct UpdateFeesAndReward2CpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> UpdateFeesAndReward2CpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(UpdateFeesAndReward2CpiBuilderInstruction {
             __program: program,
             position: None,
@@ -316,25 +299,19 @@ impl<'a, 'b> UpdateFeesAndReward2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn position(
-        &mut self,
-        position: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn position(&mut self, position: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.position = Some(position);
         self
     }
 
     #[inline(always)]
-    pub fn lb_pair(
-        &mut self,
-        lb_pair: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lb_pair(&mut self, lb_pair: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lb_pair = Some(lb_pair);
         self
     }
 
     #[inline(always)]
-    pub fn owner(&mut self, owner: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
@@ -355,7 +332,7 @@ impl<'a, 'b> UpdateFeesAndReward2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -372,11 +349,7 @@ impl<'a, 'b> UpdateFeesAndReward2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -385,14 +358,14 @@ impl<'a, 'b> UpdateFeesAndReward2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = UpdateFeesAndReward2InstructionArgs {
             min_bin_id: self
                 .instruction
@@ -424,16 +397,12 @@ impl<'a, 'b> UpdateFeesAndReward2CpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct UpdateFeesAndReward2CpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    position: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lb_pair: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    position: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lb_pair: Option<&'b solana_account_info::AccountInfo<'a>>,
+    owner: Option<&'b solana_account_info::AccountInfo<'a>>,
     min_bin_id: Option<i32>,
     max_bin_id: Option<i32>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

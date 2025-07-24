@@ -10,29 +10,29 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct WithdrawLeftover {
-    pub pool_authority: solana_program::pubkey::Pubkey,
+    pub pool_authority: solana_pubkey::Pubkey,
 
-    pub config: solana_program::pubkey::Pubkey,
+    pub config: solana_pubkey::Pubkey,
 
-    pub virtual_pool: solana_program::pubkey::Pubkey,
+    pub virtual_pool: solana_pubkey::Pubkey,
     /// The receiver token account, withdraw to ATA
-    pub token_base_account: solana_program::pubkey::Pubkey,
+    pub token_base_account: solana_pubkey::Pubkey,
     /// The vault token account for output token
-    pub base_vault: solana_program::pubkey::Pubkey,
+    pub base_vault: solana_pubkey::Pubkey,
     /// The mint of quote token
-    pub base_mint: solana_program::pubkey::Pubkey,
+    pub base_mint: solana_pubkey::Pubkey,
 
-    pub leftover_receiver: solana_program::pubkey::Pubkey,
+    pub leftover_receiver: solana_pubkey::Pubkey,
     /// Token base program
-    pub token_base_program: solana_program::pubkey::Pubkey,
+    pub token_base_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl WithdrawLeftover {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -40,53 +40,50 @@ impl WithdrawLeftover {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.pool_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.virtual_pool,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_base_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.base_vault,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.base_vault, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.base_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.leftover_receiver,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_base_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&WithdrawLeftoverInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::DYNAMIC_BONDING_CURVE_ID,
             accounts,
             data,
@@ -128,17 +125,17 @@ impl Default for WithdrawLeftoverInstructionData {
 ///   9. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct WithdrawLeftoverBuilder {
-    pool_authority: Option<solana_program::pubkey::Pubkey>,
-    config: Option<solana_program::pubkey::Pubkey>,
-    virtual_pool: Option<solana_program::pubkey::Pubkey>,
-    token_base_account: Option<solana_program::pubkey::Pubkey>,
-    base_vault: Option<solana_program::pubkey::Pubkey>,
-    base_mint: Option<solana_program::pubkey::Pubkey>,
-    leftover_receiver: Option<solana_program::pubkey::Pubkey>,
-    token_base_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    pool_authority: Option<solana_pubkey::Pubkey>,
+    config: Option<solana_pubkey::Pubkey>,
+    virtual_pool: Option<solana_pubkey::Pubkey>,
+    token_base_account: Option<solana_pubkey::Pubkey>,
+    base_vault: Option<solana_pubkey::Pubkey>,
+    base_mint: Option<solana_pubkey::Pubkey>,
+    leftover_receiver: Option<solana_pubkey::Pubkey>,
+    token_base_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl WithdrawLeftoverBuilder {
@@ -146,87 +143,72 @@ impl WithdrawLeftoverBuilder {
 
     /// `[optional account, default to 'FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM']`
     #[inline(always)]
-    pub fn pool_authority(&mut self, pool_authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
 
     #[inline(always)]
-    pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
 
     #[inline(always)]
-    pub fn virtual_pool(&mut self, virtual_pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn virtual_pool(&mut self, virtual_pool: solana_pubkey::Pubkey) -> &mut Self {
         self.virtual_pool = Some(virtual_pool);
         self
     }
 
     /// The receiver token account, withdraw to ATA
     #[inline(always)]
-    pub fn token_base_account(
-        &mut self,
-        token_base_account: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_base_account(&mut self, token_base_account: solana_pubkey::Pubkey) -> &mut Self {
         self.token_base_account = Some(token_base_account);
         self
     }
 
     /// The vault token account for output token
     #[inline(always)]
-    pub fn base_vault(&mut self, base_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn base_vault(&mut self, base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.base_vault = Some(base_vault);
         self
     }
 
     /// The mint of quote token
     #[inline(always)]
-    pub fn base_mint(&mut self, base_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn base_mint(&mut self, base_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
 
     #[inline(always)]
-    pub fn leftover_receiver(
-        &mut self,
-        leftover_receiver: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn leftover_receiver(&mut self, leftover_receiver: solana_pubkey::Pubkey) -> &mut Self {
         self.leftover_receiver = Some(leftover_receiver);
         self
     }
 
     /// Token base program
     #[inline(always)]
-    pub fn token_base_program(
-        &mut self,
-        token_base_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_base_program(&mut self, token_base_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_base_program = Some(token_base_program);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -235,16 +217,16 @@ impl WithdrawLeftoverBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = WithdrawLeftover {
-            pool_authority: self.pool_authority.unwrap_or(solana_program::pubkey!(
+            pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
                 "FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM"
             )),
             config: self.config.expect("config is not set"),
@@ -270,56 +252,56 @@ impl WithdrawLeftoverBuilder {
 
 /// `withdraw_leftover` CPI accounts.
 pub struct WithdrawLeftoverCpiAccounts<'a, 'b> {
-    pub pool_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtual_pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtual_pool: &'b solana_account_info::AccountInfo<'a>,
     /// The receiver token account, withdraw to ATA
-    pub token_base_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_base_account: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for output token
-    pub base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of quote token
-    pub base_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub leftover_receiver: &'b solana_program::account_info::AccountInfo<'a>,
+    pub leftover_receiver: &'b solana_account_info::AccountInfo<'a>,
     /// Token base program
-    pub token_base_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_base_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `withdraw_leftover` CPI instruction.
 pub struct WithdrawLeftoverCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtual_pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtual_pool: &'b solana_account_info::AccountInfo<'a>,
     /// The receiver token account, withdraw to ATA
-    pub token_base_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_base_account: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for output token
-    pub base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of quote token
-    pub base_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub leftover_receiver: &'b solana_program::account_info::AccountInfo<'a>,
+    pub leftover_receiver: &'b solana_account_info::AccountInfo<'a>,
     /// Token base program
-    pub token_base_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_base_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> WithdrawLeftoverCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: WithdrawLeftoverCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -338,19 +320,15 @@ impl<'a, 'b> WithdrawLeftoverCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -358,7 +336,7 @@ impl<'a, 'b> WithdrawLeftoverCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -368,55 +346,51 @@ impl<'a, 'b> WithdrawLeftoverCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.virtual_pool.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_base_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.base_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.base_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.leftover_receiver.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_base_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -424,7 +398,7 @@ impl<'a, 'b> WithdrawLeftoverCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&WithdrawLeftoverInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::DYNAMIC_BONDING_CURVE_ID,
             accounts,
             data,
@@ -446,9 +420,9 @@ impl<'a, 'b> WithdrawLeftoverCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -473,7 +447,7 @@ pub struct WithdrawLeftoverCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(WithdrawLeftoverCpiBuilderInstruction {
             __program: program,
             pool_authority: None,
@@ -494,17 +468,14 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
-        pool_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
 
     #[inline(always)]
-    pub fn config(
-        &mut self,
-        config: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
@@ -512,7 +483,7 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn virtual_pool(
         &mut self,
-        virtual_pool: &'b solana_program::account_info::AccountInfo<'a>,
+        virtual_pool: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.virtual_pool = Some(virtual_pool);
         self
@@ -522,7 +493,7 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_base_account(
         &mut self,
-        token_base_account: &'b solana_program::account_info::AccountInfo<'a>,
+        token_base_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_base_account = Some(token_base_account);
         self
@@ -532,7 +503,7 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn base_vault(
         &mut self,
-        base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        base_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.base_vault = Some(base_vault);
         self
@@ -540,10 +511,7 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
 
     /// The mint of quote token
     #[inline(always)]
-    pub fn base_mint(
-        &mut self,
-        base_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn base_mint(&mut self, base_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base_mint = Some(base_mint);
         self
     }
@@ -551,7 +519,7 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn leftover_receiver(
         &mut self,
-        leftover_receiver: &'b solana_program::account_info::AccountInfo<'a>,
+        leftover_receiver: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.leftover_receiver = Some(leftover_receiver);
         self
@@ -561,7 +529,7 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_base_program(
         &mut self,
-        token_base_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_base_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_base_program = Some(token_base_program);
         self
@@ -570,17 +538,14 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -589,7 +554,7 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -606,11 +571,7 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -619,14 +580,14 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = WithdrawLeftoverCpi {
             __program: self.instruction.__program,
 
@@ -677,21 +638,17 @@ impl<'a, 'b> WithdrawLeftoverCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct WithdrawLeftoverCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    pool_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    virtual_pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_base_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    leftover_receiver: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_base_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    pool_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    virtual_pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_base_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    leftover_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_base_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

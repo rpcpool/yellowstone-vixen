@@ -7,7 +7,7 @@
 
 use crate::{
     accounts::{Strategy, Vault},
-    ID,
+    deserialize_checked, ID,
 };
 
 /// Vault Program State
@@ -23,11 +23,11 @@ impl VaultProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
-            [211, 8, 232, 43, 2, 152, 117, 119] => {
-                Ok(VaultProgramState::Vault(Vault::from_bytes(data_bytes)?))
-            },
+            [211, 8, 232, 43, 2, 152, 117, 119] => Ok(VaultProgramState::Vault(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             [174, 110, 39, 119, 82, 106, 169, 102] => Ok(VaultProgramState::Strategy(
-                Strategy::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
@@ -83,8 +83,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        VaultProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = VaultProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 

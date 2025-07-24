@@ -10,7 +10,7 @@ use crate::{
         BinArray, BinArrayBitmapExtension, ClaimFeeOperator, LbPair, Oracle, Position, PositionV2,
         PresetParameter, PresetParameter2, TokenBadge,
     },
-    ID,
+    deserialize_checked, ID,
 };
 
 /// LbClmm Program State
@@ -35,34 +35,34 @@ impl LbClmmProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [80, 111, 124, 113, 55, 237, 18, 5] => Ok(LbClmmProgramState::BinArrayBitmapExtension(
-                BinArrayBitmapExtension::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [92, 142, 92, 220, 5, 148, 70, 181] => Ok(LbClmmProgramState::BinArray(
-                BinArray::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [166, 48, 134, 86, 34, 200, 188, 150] => Ok(LbClmmProgramState::ClaimFeeOperator(
-                ClaimFeeOperator::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
-            [33, 11, 49, 98, 181, 101, 177, 13] => {
-                Ok(LbClmmProgramState::LbPair(LbPair::from_bytes(data_bytes)?))
-            },
-            [139, 194, 131, 179, 140, 179, 229, 244] => {
-                Ok(LbClmmProgramState::Oracle(Oracle::from_bytes(data_bytes)?))
-            },
+            [33, 11, 49, 98, 181, 101, 177, 13] => Ok(LbClmmProgramState::LbPair(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
+            [139, 194, 131, 179, 140, 179, 229, 244] => Ok(LbClmmProgramState::Oracle(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             [170, 188, 143, 228, 122, 64, 247, 208] => Ok(LbClmmProgramState::Position(
-                Position::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [117, 176, 212, 199, 245, 180, 133, 182] => Ok(LbClmmProgramState::PositionV2(
-                PositionV2::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [171, 236, 148, 115, 162, 113, 222, 174] => Ok(LbClmmProgramState::PresetParameter2(
-                PresetParameter2::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [242, 62, 244, 34, 181, 112, 58, 170] => Ok(LbClmmProgramState::PresetParameter(
-                PresetParameter::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [116, 219, 204, 229, 249, 116, 255, 150] => Ok(LbClmmProgramState::TokenBadge(
-                TokenBadge::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
@@ -118,8 +118,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        LbClmmProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = LbClmmProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 
@@ -227,6 +242,13 @@ mod proto_parser {
                 idx: self.idx,
                 active_size: self.active_size,
                 length: self.length,
+                observations: self
+                    .observations
+                    .iter()
+                    .map(|x| proto_def::RepeatedUint32Row {
+                        rows: x.iter().map(|x| *x as u32).collect(),
+                    })
+                    .collect(),
             }
         }
     }

@@ -138,12 +138,12 @@ pub enum CpAmmError {
     InvalidConfigType = 0x1799,
 }
 
-impl solana_program::program_error::PrintProgramError for CpAmmError {
+impl solana_program_error::PrintProgramError for CpAmmError {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for CpAmmError {
+impl<T> solana_decode_error::DecodeError<T> for CpAmmError {
     fn type_of() -> &'static str { "CpAmmError" }
 }

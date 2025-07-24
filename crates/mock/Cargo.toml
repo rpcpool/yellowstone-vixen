@@ -1,9 +1,11 @@
 [package]
 name = "yellowstone-vixen-mock"
 description = "Mock implementation of the Vixen Parsers for testing."
-version = "0.3.0"
+version = "0.4.0"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
 edition = "2021"
 license = "MIT"
+readme = "./README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

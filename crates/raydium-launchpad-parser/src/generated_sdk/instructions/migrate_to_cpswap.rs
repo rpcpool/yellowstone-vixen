@@ -12,16 +12,16 @@ use borsh::{BorshDeserialize, BorshSerialize};
 pub struct MigrateToCpswap {
     /// Only migrate_to_cpswap_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_cpswap_wallet saved in global_config
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
     /// The mint for the base token (token being sold)
-    pub base_mint: solana_program::pubkey::Pubkey,
+    pub base_mint: solana_pubkey::Pubkey,
     /// The mint for the quote token (token used to buy)
-    pub quote_mint: solana_program::pubkey::Pubkey,
+    pub quote_mint: solana_pubkey::Pubkey,
     /// Platform configuration account containing platform-wide settings
     /// Used to read platform fee rate
-    pub platform_config: solana_program::pubkey::Pubkey,
+    pub platform_config: solana_pubkey::Pubkey,
 
-    pub cpswap_program: solana_program::pubkey::Pubkey,
+    pub cpswap_program: solana_pubkey::Pubkey,
     /// PDA account:
     /// seeds = [
     /// b"pool",
@@ -32,60 +32,60 @@ pub struct MigrateToCpswap {
     /// seeds::program = cpswap_program,
     ///
     /// Or random account: must be signed by cli
-    pub cpswap_pool: solana_program::pubkey::Pubkey,
+    pub cpswap_pool: solana_pubkey::Pubkey,
 
-    pub cpswap_authority: solana_program::pubkey::Pubkey,
+    pub cpswap_authority: solana_pubkey::Pubkey,
 
-    pub cpswap_lp_mint: solana_program::pubkey::Pubkey,
+    pub cpswap_lp_mint: solana_pubkey::Pubkey,
 
-    pub cpswap_base_vault: solana_program::pubkey::Pubkey,
+    pub cpswap_base_vault: solana_pubkey::Pubkey,
 
-    pub cpswap_quote_vault: solana_program::pubkey::Pubkey,
+    pub cpswap_quote_vault: solana_pubkey::Pubkey,
 
-    pub cpswap_config: solana_program::pubkey::Pubkey,
+    pub cpswap_config: solana_pubkey::Pubkey,
 
-    pub cpswap_create_pool_fee: solana_program::pubkey::Pubkey,
+    pub cpswap_create_pool_fee: solana_pubkey::Pubkey,
 
-    pub cpswap_observation: solana_program::pubkey::Pubkey,
+    pub cpswap_observation: solana_pubkey::Pubkey,
 
-    pub lock_program: solana_program::pubkey::Pubkey,
+    pub lock_program: solana_pubkey::Pubkey,
 
-    pub lock_authority: solana_program::pubkey::Pubkey,
+    pub lock_authority: solana_pubkey::Pubkey,
 
-    pub lock_lp_vault: solana_program::pubkey::Pubkey,
+    pub lock_lp_vault: solana_pubkey::Pubkey,
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
-    pub authority: solana_program::pubkey::Pubkey,
+    pub authority: solana_pubkey::Pubkey,
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
-    pub pool_state: solana_program::pubkey::Pubkey,
+    pub pool_state: solana_pubkey::Pubkey,
     /// Global config account stores owner
-    pub global_config: solana_program::pubkey::Pubkey,
+    pub global_config: solana_pubkey::Pubkey,
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
-    pub base_vault: solana_program::pubkey::Pubkey,
+    pub base_vault: solana_pubkey::Pubkey,
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
-    pub quote_vault: solana_program::pubkey::Pubkey,
+    pub quote_vault: solana_pubkey::Pubkey,
 
-    pub pool_lp_token: solana_program::pubkey::Pubkey,
+    pub pool_lp_token: solana_pubkey::Pubkey,
     /// SPL Token program for the base token
     /// Must be the standard Token program
-    pub base_token_program: solana_program::pubkey::Pubkey,
+    pub base_token_program: solana_pubkey::Pubkey,
     /// SPL Token program for the quote token
-    pub quote_token_program: solana_program::pubkey::Pubkey,
+    pub quote_token_program: solana_pubkey::Pubkey,
     /// Program to create an ATA for receiving fee NFT
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
     /// Required for account creation
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
     /// Required for rent exempt calculations
-    pub rent_program: solana_program::pubkey::Pubkey,
+    pub rent_program: solana_pubkey::Pubkey,
     /// Program to create NFT metadata accunt
-    pub metadata_program: solana_program::pubkey::Pubkey,
+    pub metadata_program: solana_pubkey::Pubkey,
 }
 
 impl MigrateToCpswap {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -93,124 +93,113 @@ impl MigrateToCpswap {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(28 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.base_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.quote_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.platform_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.cpswap_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.cpswap_pool,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.cpswap_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.cpswap_lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.cpswap_base_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.cpswap_quote_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.cpswap_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.cpswap_create_pool_fee,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.cpswap_observation,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.lock_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.lock_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.lock_lp_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.authority,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool_state,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.authority, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.pool_state, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.global_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.base_vault,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.base_vault, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.quote_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.pool_lp_token,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.base_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.quote_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.metadata_program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&MigrateToCpswapInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
@@ -270,35 +259,35 @@ impl Default for MigrateToCpswapInstructionData {
 ///   27. `[optional]` metadata_program (default to `metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s`)
 #[derive(Clone, Debug, Default)]
 pub struct MigrateToCpswapBuilder {
-    payer: Option<solana_program::pubkey::Pubkey>,
-    base_mint: Option<solana_program::pubkey::Pubkey>,
-    quote_mint: Option<solana_program::pubkey::Pubkey>,
-    platform_config: Option<solana_program::pubkey::Pubkey>,
-    cpswap_program: Option<solana_program::pubkey::Pubkey>,
-    cpswap_pool: Option<solana_program::pubkey::Pubkey>,
-    cpswap_authority: Option<solana_program::pubkey::Pubkey>,
-    cpswap_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    cpswap_base_vault: Option<solana_program::pubkey::Pubkey>,
-    cpswap_quote_vault: Option<solana_program::pubkey::Pubkey>,
-    cpswap_config: Option<solana_program::pubkey::Pubkey>,
-    cpswap_create_pool_fee: Option<solana_program::pubkey::Pubkey>,
-    cpswap_observation: Option<solana_program::pubkey::Pubkey>,
-    lock_program: Option<solana_program::pubkey::Pubkey>,
-    lock_authority: Option<solana_program::pubkey::Pubkey>,
-    lock_lp_vault: Option<solana_program::pubkey::Pubkey>,
-    authority: Option<solana_program::pubkey::Pubkey>,
-    pool_state: Option<solana_program::pubkey::Pubkey>,
-    global_config: Option<solana_program::pubkey::Pubkey>,
-    base_vault: Option<solana_program::pubkey::Pubkey>,
-    quote_vault: Option<solana_program::pubkey::Pubkey>,
-    pool_lp_token: Option<solana_program::pubkey::Pubkey>,
-    base_token_program: Option<solana_program::pubkey::Pubkey>,
-    quote_token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    rent_program: Option<solana_program::pubkey::Pubkey>,
-    metadata_program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    payer: Option<solana_pubkey::Pubkey>,
+    base_mint: Option<solana_pubkey::Pubkey>,
+    quote_mint: Option<solana_pubkey::Pubkey>,
+    platform_config: Option<solana_pubkey::Pubkey>,
+    cpswap_program: Option<solana_pubkey::Pubkey>,
+    cpswap_pool: Option<solana_pubkey::Pubkey>,
+    cpswap_authority: Option<solana_pubkey::Pubkey>,
+    cpswap_lp_mint: Option<solana_pubkey::Pubkey>,
+    cpswap_base_vault: Option<solana_pubkey::Pubkey>,
+    cpswap_quote_vault: Option<solana_pubkey::Pubkey>,
+    cpswap_config: Option<solana_pubkey::Pubkey>,
+    cpswap_create_pool_fee: Option<solana_pubkey::Pubkey>,
+    cpswap_observation: Option<solana_pubkey::Pubkey>,
+    lock_program: Option<solana_pubkey::Pubkey>,
+    lock_authority: Option<solana_pubkey::Pubkey>,
+    lock_lp_vault: Option<solana_pubkey::Pubkey>,
+    authority: Option<solana_pubkey::Pubkey>,
+    pool_state: Option<solana_pubkey::Pubkey>,
+    global_config: Option<solana_pubkey::Pubkey>,
+    base_vault: Option<solana_pubkey::Pubkey>,
+    quote_vault: Option<solana_pubkey::Pubkey>,
+    pool_lp_token: Option<solana_pubkey::Pubkey>,
+    base_token_program: Option<solana_pubkey::Pubkey>,
+    quote_token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    rent_program: Option<solana_pubkey::Pubkey>,
+    metadata_program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl MigrateToCpswapBuilder {
@@ -307,21 +296,21 @@ impl MigrateToCpswapBuilder {
     /// Only migrate_to_cpswap_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_cpswap_wallet saved in global_config
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
 
     /// The mint for the base token (token being sold)
     #[inline(always)]
-    pub fn base_mint(&mut self, base_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn base_mint(&mut self, base_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
 
     /// The mint for the quote token (token used to buy)
     #[inline(always)]
-    pub fn quote_mint(&mut self, quote_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn quote_mint(&mut self, quote_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
@@ -329,17 +318,14 @@ impl MigrateToCpswapBuilder {
     /// Platform configuration account containing platform-wide settings
     /// Used to read platform fee rate
     #[inline(always)]
-    pub fn platform_config(
-        &mut self,
-        platform_config: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn platform_config(&mut self, platform_config: solana_pubkey::Pubkey) -> &mut Self {
         self.platform_config = Some(platform_config);
         self
     }
 
     /// `[optional account, default to 'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C']`
     #[inline(always)]
-    pub fn cpswap_program(&mut self, cpswap_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn cpswap_program(&mut self, cpswap_program: solana_pubkey::Pubkey) -> &mut Self {
         self.cpswap_program = Some(cpswap_program);
         self
     }
@@ -355,46 +341,37 @@ impl MigrateToCpswapBuilder {
     ///
     /// Or random account: must be signed by cli
     #[inline(always)]
-    pub fn cpswap_pool(&mut self, cpswap_pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn cpswap_pool(&mut self, cpswap_pool: solana_pubkey::Pubkey) -> &mut Self {
         self.cpswap_pool = Some(cpswap_pool);
         self
     }
 
     #[inline(always)]
-    pub fn cpswap_authority(
-        &mut self,
-        cpswap_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn cpswap_authority(&mut self, cpswap_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.cpswap_authority = Some(cpswap_authority);
         self
     }
 
     #[inline(always)]
-    pub fn cpswap_lp_mint(&mut self, cpswap_lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn cpswap_lp_mint(&mut self, cpswap_lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.cpswap_lp_mint = Some(cpswap_lp_mint);
         self
     }
 
     #[inline(always)]
-    pub fn cpswap_base_vault(
-        &mut self,
-        cpswap_base_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn cpswap_base_vault(&mut self, cpswap_base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.cpswap_base_vault = Some(cpswap_base_vault);
         self
     }
 
     #[inline(always)]
-    pub fn cpswap_quote_vault(
-        &mut self,
-        cpswap_quote_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn cpswap_quote_vault(&mut self, cpswap_quote_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.cpswap_quote_vault = Some(cpswap_quote_vault);
         self
     }
 
     #[inline(always)]
-    pub fn cpswap_config(&mut self, cpswap_config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn cpswap_config(&mut self, cpswap_config: solana_pubkey::Pubkey) -> &mut Self {
         self.cpswap_config = Some(cpswap_config);
         self
     }
@@ -402,36 +379,33 @@ impl MigrateToCpswapBuilder {
     #[inline(always)]
     pub fn cpswap_create_pool_fee(
         &mut self,
-        cpswap_create_pool_fee: solana_program::pubkey::Pubkey,
+        cpswap_create_pool_fee: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.cpswap_create_pool_fee = Some(cpswap_create_pool_fee);
         self
     }
 
     #[inline(always)]
-    pub fn cpswap_observation(
-        &mut self,
-        cpswap_observation: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn cpswap_observation(&mut self, cpswap_observation: solana_pubkey::Pubkey) -> &mut Self {
         self.cpswap_observation = Some(cpswap_observation);
         self
     }
 
     /// `[optional account, default to 'LockrWmn6K5twhz3y9w1dQERbmgSaRkfnTeTKbpofwE']`
     #[inline(always)]
-    pub fn lock_program(&mut self, lock_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lock_program(&mut self, lock_program: solana_pubkey::Pubkey) -> &mut Self {
         self.lock_program = Some(lock_program);
         self
     }
 
     #[inline(always)]
-    pub fn lock_authority(&mut self, lock_authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lock_authority(&mut self, lock_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.lock_authority = Some(lock_authority);
         self
     }
 
     #[inline(always)]
-    pub fn lock_lp_vault(&mut self, lock_lp_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lock_lp_vault(&mut self, lock_lp_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.lock_lp_vault = Some(lock_lp_vault);
         self
     }
@@ -439,7 +413,7 @@ impl MigrateToCpswapBuilder {
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
@@ -447,14 +421,14 @@ impl MigrateToCpswapBuilder {
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
     #[inline(always)]
-    pub fn pool_state(&mut self, pool_state: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
 
     /// Global config account stores owner
     #[inline(always)]
-    pub fn global_config(&mut self, global_config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn global_config(&mut self, global_config: solana_pubkey::Pubkey) -> &mut Self {
         self.global_config = Some(global_config);
         self
     }
@@ -462,7 +436,7 @@ impl MigrateToCpswapBuilder {
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
     #[inline(always)]
-    pub fn base_vault(&mut self, base_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn base_vault(&mut self, base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.base_vault = Some(base_vault);
         self
     }
@@ -470,13 +444,13 @@ impl MigrateToCpswapBuilder {
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
     #[inline(always)]
-    pub fn quote_vault(&mut self, quote_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn quote_vault(&mut self, quote_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_vault = Some(quote_vault);
         self
     }
 
     #[inline(always)]
-    pub fn pool_lp_token(&mut self, pool_lp_token: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_lp_token(&mut self, pool_lp_token: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_lp_token = Some(pool_lp_token);
         self
     }
@@ -485,10 +459,7 @@ impl MigrateToCpswapBuilder {
     /// SPL Token program for the base token
     /// Must be the standard Token program
     #[inline(always)]
-    pub fn base_token_program(
-        &mut self,
-        base_token_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn base_token_program(&mut self, base_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.base_token_program = Some(base_token_program);
         self
     }
@@ -496,10 +467,7 @@ impl MigrateToCpswapBuilder {
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// SPL Token program for the quote token
     #[inline(always)]
-    pub fn quote_token_program(
-        &mut self,
-        quote_token_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn quote_token_program(&mut self, quote_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_token_program = Some(quote_token_program);
         self
     }
@@ -509,7 +477,7 @@ impl MigrateToCpswapBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
@@ -518,7 +486,7 @@ impl MigrateToCpswapBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -526,7 +494,7 @@ impl MigrateToCpswapBuilder {
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Required for rent exempt calculations
     #[inline(always)]
-    pub fn rent_program(&mut self, rent_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent_program(&mut self, rent_program: solana_pubkey::Pubkey) -> &mut Self {
         self.rent_program = Some(rent_program);
         self
     }
@@ -534,20 +502,14 @@ impl MigrateToCpswapBuilder {
     /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
     /// Program to create NFT metadata accunt
     #[inline(always)]
-    pub fn metadata_program(
-        &mut self,
-        metadata_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn metadata_program(&mut self, metadata_program: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata_program = Some(metadata_program);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -556,20 +518,20 @@ impl MigrateToCpswapBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = MigrateToCpswap {
             payer: self.payer.expect("payer is not set"),
             base_mint: self.base_mint.expect("base_mint is not set"),
             quote_mint: self.quote_mint.expect("quote_mint is not set"),
             platform_config: self.platform_config.expect("platform_config is not set"),
-            cpswap_program: self.cpswap_program.unwrap_or(solana_program::pubkey!(
+            cpswap_program: self.cpswap_program.unwrap_or(solana_pubkey::pubkey!(
                 "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
             )),
             cpswap_pool: self.cpswap_pool.expect("cpswap_pool is not set"),
@@ -588,7 +550,7 @@ impl MigrateToCpswapBuilder {
             cpswap_observation: self
                 .cpswap_observation
                 .expect("cpswap_observation is not set"),
-            lock_program: self.lock_program.unwrap_or(solana_program::pubkey!(
+            lock_program: self.lock_program.unwrap_or(solana_pubkey::pubkey!(
                 "LockrWmn6K5twhz3y9w1dQERbmgSaRkfnTeTKbpofwE"
             )),
             lock_authority: self.lock_authority.expect("lock_authority is not set"),
@@ -599,22 +561,22 @@ impl MigrateToCpswapBuilder {
             base_vault: self.base_vault.expect("base_vault is not set"),
             quote_vault: self.quote_vault.expect("quote_vault is not set"),
             pool_lp_token: self.pool_lp_token.expect("pool_lp_token is not set"),
-            base_token_program: self.base_token_program.unwrap_or(solana_program::pubkey!(
+            base_token_program: self.base_token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
-            quote_token_program: self.quote_token_program.unwrap_or(solana_program::pubkey!(
+            quote_token_program: self.quote_token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self.associated_token_program.unwrap_or(
-                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            rent_program: self.rent_program.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            rent_program: self.rent_program.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
-            metadata_program: self.metadata_program.unwrap_or(solana_program::pubkey!(
+            metadata_program: self.metadata_program.unwrap_or(solana_pubkey::pubkey!(
                 "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
             )),
         };
@@ -627,16 +589,16 @@ impl MigrateToCpswapBuilder {
 pub struct MigrateToCpswapCpiAccounts<'a, 'b> {
     /// Only migrate_to_cpswap_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_cpswap_wallet saved in global_config
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the base token (token being sold)
-    pub base_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the quote token (token used to buy)
-    pub quote_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Platform configuration account containing platform-wide settings
     /// Used to read platform fee rate
-    pub platform_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub platform_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_program: &'b solana_account_info::AccountInfo<'a>,
     /// PDA account:
     /// seeds = [
     /// b"pool",
@@ -647,74 +609,74 @@ pub struct MigrateToCpswapCpiAccounts<'a, 'b> {
     /// seeds::program = cpswap_program,
     ///
     /// Or random account: must be signed by cli
-    pub cpswap_pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_base_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_create_pool_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_create_pool_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_observation: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_observation: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lock_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lock_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lock_lp_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_lp_vault: &'b solana_account_info::AccountInfo<'a>,
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// Global config account stores owner
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
-    pub base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
-    pub quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_lp_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_lp_token: &'b solana_account_info::AccountInfo<'a>,
     /// SPL Token program for the base token
     /// Must be the standard Token program
-    pub base_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// SPL Token program for the quote token
-    pub quote_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create an ATA for receiving fee NFT
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for rent exempt calculations
-    pub rent_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent_program: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create NFT metadata accunt
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `migrate_to_cpswap` CPI instruction.
 pub struct MigrateToCpswapCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Only migrate_to_cpswap_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_cpswap_wallet saved in global_config
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the base token (token being sold)
-    pub base_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint for the quote token (token used to buy)
-    pub quote_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_mint: &'b solana_account_info::AccountInfo<'a>,
     /// Platform configuration account containing platform-wide settings
     /// Used to read platform fee rate
-    pub platform_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub platform_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_program: &'b solana_account_info::AccountInfo<'a>,
     /// PDA account:
     /// seeds = [
     /// b"pool",
@@ -725,61 +687,61 @@ pub struct MigrateToCpswapCpi<'a, 'b> {
     /// seeds::program = cpswap_program,
     ///
     /// Or random account: must be signed by cli
-    pub cpswap_pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_base_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_create_pool_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_create_pool_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub cpswap_observation: &'b solana_program::account_info::AccountInfo<'a>,
+    pub cpswap_observation: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lock_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lock_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lock_lp_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_lp_vault: &'b solana_account_info::AccountInfo<'a>,
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
-    pub authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// Account that stores the pool's state and parameters
     /// PDA generated using POOL_SEED and both token mints
-    pub pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// Global config account stores owner
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for base tokens
     /// Will be fully drained during migration
-    pub base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The pool's vault for quote tokens
     /// Will be fully drained during migration
-    pub quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_lp_token: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_lp_token: &'b solana_account_info::AccountInfo<'a>,
     /// SPL Token program for the base token
     /// Must be the standard Token program
-    pub base_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub base_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// SPL Token program for the quote token
-    pub quote_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub quote_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create an ATA for receiving fee NFT
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// Required for rent exempt calculations
-    pub rent_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent_program: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create NFT metadata accunt
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: MigrateToCpswapCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -816,19 +778,15 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -836,7 +794,7 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -846,127 +804,120 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(28 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.base_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.quote_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.platform_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.cpswap_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.cpswap_pool.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.cpswap_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.cpswap_lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.cpswap_base_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.cpswap_quote_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.cpswap_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.cpswap_create_pool_fee.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.cpswap_observation.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.lock_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.lock_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lock_lp_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_state.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.global_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.base_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.quote_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_lp_token.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.base_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.quote_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.metadata_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -974,7 +925,7 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&MigrateToCpswapInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
@@ -1014,9 +965,9 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -1059,7 +1010,7 @@ pub struct MigrateToCpswapCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(MigrateToCpswapCpiBuilderInstruction {
             __program: program,
             payer: None,
@@ -1098,17 +1049,14 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     /// Only migrate_to_cpswap_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_cpswap_wallet saved in global_config
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
 
     /// The mint for the base token (token being sold)
     #[inline(always)]
-    pub fn base_mint(
-        &mut self,
-        base_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn base_mint(&mut self, base_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base_mint = Some(base_mint);
         self
     }
@@ -1117,7 +1065,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn quote_mint(
         &mut self,
-        quote_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        quote_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.quote_mint = Some(quote_mint);
         self
@@ -1128,7 +1076,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn platform_config(
         &mut self,
-        platform_config: &'b solana_program::account_info::AccountInfo<'a>,
+        platform_config: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.platform_config = Some(platform_config);
         self
@@ -1137,7 +1085,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpswap_program(
         &mut self,
-        cpswap_program: &'b solana_program::account_info::AccountInfo<'a>,
+        cpswap_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpswap_program = Some(cpswap_program);
         self
@@ -1156,7 +1104,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpswap_pool(
         &mut self,
-        cpswap_pool: &'b solana_program::account_info::AccountInfo<'a>,
+        cpswap_pool: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpswap_pool = Some(cpswap_pool);
         self
@@ -1165,7 +1113,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpswap_authority(
         &mut self,
-        cpswap_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        cpswap_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpswap_authority = Some(cpswap_authority);
         self
@@ -1174,7 +1122,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpswap_lp_mint(
         &mut self,
-        cpswap_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        cpswap_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpswap_lp_mint = Some(cpswap_lp_mint);
         self
@@ -1183,7 +1131,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpswap_base_vault(
         &mut self,
-        cpswap_base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        cpswap_base_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpswap_base_vault = Some(cpswap_base_vault);
         self
@@ -1192,7 +1140,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpswap_quote_vault(
         &mut self,
-        cpswap_quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        cpswap_quote_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpswap_quote_vault = Some(cpswap_quote_vault);
         self
@@ -1201,7 +1149,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpswap_config(
         &mut self,
-        cpswap_config: &'b solana_program::account_info::AccountInfo<'a>,
+        cpswap_config: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpswap_config = Some(cpswap_config);
         self
@@ -1210,7 +1158,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpswap_create_pool_fee(
         &mut self,
-        cpswap_create_pool_fee: &'b solana_program::account_info::AccountInfo<'a>,
+        cpswap_create_pool_fee: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpswap_create_pool_fee = Some(cpswap_create_pool_fee);
         self
@@ -1219,7 +1167,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn cpswap_observation(
         &mut self,
-        cpswap_observation: &'b solana_program::account_info::AccountInfo<'a>,
+        cpswap_observation: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.cpswap_observation = Some(cpswap_observation);
         self
@@ -1228,7 +1176,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn lock_program(
         &mut self,
-        lock_program: &'b solana_program::account_info::AccountInfo<'a>,
+        lock_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.lock_program = Some(lock_program);
         self
@@ -1237,7 +1185,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn lock_authority(
         &mut self,
-        lock_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        lock_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.lock_authority = Some(lock_authority);
         self
@@ -1246,7 +1194,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn lock_lp_vault(
         &mut self,
-        lock_lp_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        lock_lp_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.lock_lp_vault = Some(lock_lp_vault);
         self
@@ -1255,10 +1203,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     /// PDA that acts as the authority for pool vault operations
     /// Generated using AUTH_SEED
     #[inline(always)]
-    pub fn authority(
-        &mut self,
-        authority: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.authority = Some(authority);
         self
     }
@@ -1268,7 +1213,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_state(
         &mut self,
-        pool_state: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_state = Some(pool_state);
         self
@@ -1278,7 +1223,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn global_config(
         &mut self,
-        global_config: &'b solana_program::account_info::AccountInfo<'a>,
+        global_config: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.global_config = Some(global_config);
         self
@@ -1289,7 +1234,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn base_vault(
         &mut self,
-        base_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        base_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.base_vault = Some(base_vault);
         self
@@ -1300,7 +1245,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn quote_vault(
         &mut self,
-        quote_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        quote_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.quote_vault = Some(quote_vault);
         self
@@ -1309,7 +1254,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_lp_token(
         &mut self,
-        pool_lp_token: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_lp_token: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_lp_token = Some(pool_lp_token);
         self
@@ -1320,7 +1265,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn base_token_program(
         &mut self,
-        base_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        base_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.base_token_program = Some(base_token_program);
         self
@@ -1330,7 +1275,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn quote_token_program(
         &mut self,
-        quote_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        quote_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.quote_token_program = Some(quote_token_program);
         self
@@ -1340,7 +1285,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -1350,7 +1295,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -1360,7 +1305,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn rent_program(
         &mut self,
-        rent_program: &'b solana_program::account_info::AccountInfo<'a>,
+        rent_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.rent_program = Some(rent_program);
         self
@@ -1370,7 +1315,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
-        metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+        metadata_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.metadata_program = Some(metadata_program);
         self
@@ -1380,7 +1325,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -1397,11 +1342,7 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -1410,14 +1351,14 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = MigrateToCpswapCpi {
             __program: self.instruction.__program,
 
@@ -1552,39 +1493,35 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct MigrateToCpswapCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    quote_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    platform_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    cpswap_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    cpswap_pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    cpswap_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    cpswap_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    cpswap_base_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    cpswap_quote_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    cpswap_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    cpswap_create_pool_fee: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    cpswap_observation: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lock_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lock_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lock_lp_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    global_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    quote_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_lp_token: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    base_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    quote_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    metadata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    quote_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    platform_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_base_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_quote_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_create_pool_fee: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_observation: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lock_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lock_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lock_lp_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    global_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    quote_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_lp_token: Option<&'b solana_account_info::AccountInfo<'a>>,
+    base_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    quote_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    metadata_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

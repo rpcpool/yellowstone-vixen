@@ -5,9 +5,14 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         AddOperators as AddOperatorsIxAccounts, AddOperatorsInstructionArgs as AddOperatorsIxData,
         BuyToken as BuyTokenIxAccounts, BuyTokenInstructionArgs as BuyTokenIxData,
@@ -92,7 +97,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = BoopProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<BoopProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "Boop::InstructionParser".into() }
 
@@ -108,7 +116,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -123,466 +147,497 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<BoopProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [165, 199, 62, 214, 81, 54, 4, 150] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddOperatorsIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    config: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: AddOperatorsIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: AddOperatorsIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::AddOperators(ix_accounts, de_ix_data))
             },
             [138, 127, 14, 91, 38, 87, 115, 105] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = BuyTokenIxAccounts {
-                    mint: ix.accounts[0].0.into(),
-                    bonding_curve: ix.accounts[1].0.into(),
-                    trading_fees_vault: ix.accounts[2].0.into(),
-                    bonding_curve_vault: ix.accounts[3].0.into(),
-                    bonding_curve_sol_vault: ix.accounts[4].0.into(),
-                    recipient_token_account: ix.accounts[5].0.into(),
-                    buyer: ix.accounts[6].0.into(),
-                    config: ix.accounts[7].0.into(),
-                    vault_authority: ix.accounts[8].0.into(),
-                    wsol: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    associated_token_program: ix.accounts[12].0.into(),
+                    mint: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    trading_fees_vault: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    bonding_curve_sol_vault: next_account(accounts)?,
+                    recipient_token_account: next_account(accounts)?,
+                    buyer: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    wsol: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyTokenIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: BuyTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::BuyToken(ix_accounts, de_ix_data))
             },
             [94, 131, 125, 184, 183, 24, 125, 229] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CancelAuthorityTransferIxAccounts {
-                    authority: ix.accounts[0].0.into(),
-                    config: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    authority: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::CancelAuthorityTransfer(ix_accounts))
             },
             [189, 71, 189, 239, 113, 66, 59, 189] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CloseBondingCurveVaultIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    operator: ix.accounts[1].0.into(),
-                    vault_authority: ix.accounts[2].0.into(),
-                    bonding_curve: ix.accounts[3].0.into(),
-                    bonding_curve_vault: ix.accounts[4].0.into(),
-                    mint: ix.accounts[5].0.into(),
-                    recipient_token_account: ix.accounts[6].0.into(),
-                    recipient: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    system_program: ix.accounts[9].0.into(),
-                    associated_token_program: ix.accounts[10].0.into(),
-                    rent: ix.accounts[11].0.into(),
+                    config: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    recipient_token_account: next_account(accounts)?,
+                    recipient: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::CloseBondingCurveVault(ix_accounts))
             },
             [189, 38, 205, 234, 81, 77, 25, 1] => {
-                check_min_accounts_req(accounts_len, 24)?;
+                let expected_accounts_len = 24;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CollectTradingFeesIxAccounts {
-                    operator: ix.accounts[0].0.into(),
-                    protocol_fee_recipient: ix.accounts[1].0.into(),
-                    config: ix.accounts[2].0.into(),
-                    lock_program: ix.accounts[3].0.into(),
-                    vault_authority: ix.accounts[4].0.into(),
-                    authority: ix.accounts[5].0.into(),
-                    fee_nft_account: ix.accounts[6].0.into(),
-                    locked_liquidity: ix.accounts[7].0.into(),
-                    cpmm_program: ix.accounts[8].0.into(),
-                    cp_authority: ix.accounts[9].0.into(),
-                    pool_state: ix.accounts[10].0.into(),
-                    lp_mint: ix.accounts[11].0.into(),
-                    recipient_token0_account: ix.accounts[12].0.into(),
-                    recipient_token1_account: ix.accounts[13].0.into(),
-                    token0_vault: ix.accounts[14].0.into(),
-                    token1_vault: ix.accounts[15].0.into(),
-                    vault0_mint: ix.accounts[16].0.into(),
-                    vault1_mint: ix.accounts[17].0.into(),
-                    locked_lp_vault: ix.accounts[18].0.into(),
-                    system_program: ix.accounts[19].0.into(),
-                    associated_token_program: ix.accounts[20].0.into(),
-                    token_program: ix.accounts[21].0.into(),
-                    token_program2022: ix.accounts[22].0.into(),
-                    memo_program: ix.accounts[23].0.into(),
+                    operator: next_account(accounts)?,
+                    protocol_fee_recipient: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    lock_program: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    fee_nft_account: next_account(accounts)?,
+                    locked_liquidity: next_account(accounts)?,
+                    cpmm_program: next_account(accounts)?,
+                    cp_authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    recipient_token0_account: next_account(accounts)?,
+                    recipient_token1_account: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    vault0_mint: next_account(accounts)?,
+                    vault1_mint: next_account(accounts)?,
+                    locked_lp_vault: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_program2022: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::CollectTradingFees(ix_accounts))
             },
             [81, 233, 91, 132, 175, 31, 151, 141] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CompleteAuthorityTransferIxAccounts {
-                    pending_authority: ix.accounts[0].0.into(),
-                    config: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    pending_authority: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::CompleteAuthorityTransfer(ix_accounts))
             },
             [65, 45, 119, 77, 204, 178, 84, 2] => {
-                check_min_accounts_req(accounts_len, 22)?;
+                let expected_accounts_len = 22;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateRaydiumPoolIxAccounts {
-                    cpmm_program: ix.accounts[0].0.into(),
-                    amm_config: ix.accounts[1].0.into(),
-                    authority: ix.accounts[2].0.into(),
-                    pool_state: ix.accounts[3].0.into(),
-                    token0_mint: ix.accounts[4].0.into(),
-                    token1_mint: ix.accounts[5].0.into(),
-                    lp_mint: ix.accounts[6].0.into(),
-                    vault_authority: ix.accounts[7].0.into(),
-                    bonding_curve: ix.accounts[8].0.into(),
-                    bonding_curve_vault: ix.accounts[9].0.into(),
-                    bonding_curve_wsol_vault: ix.accounts[10].0.into(),
-                    creator_lp_token: ix.accounts[11].0.into(),
-                    token0_vault: ix.accounts[12].0.into(),
-                    token1_vault: ix.accounts[13].0.into(),
-                    create_pool_fee: ix.accounts[14].0.into(),
-                    observation_state: ix.accounts[15].0.into(),
-                    operator: ix.accounts[16].0.into(),
-                    config: ix.accounts[17].0.into(),
-                    token_program: ix.accounts[18].0.into(),
-                    associated_token_program: ix.accounts[19].0.into(),
-                    system_program: ix.accounts[20].0.into(),
-                    rent: ix.accounts[21].0.into(),
+                    cpmm_program: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    token0_mint: next_account(accounts)?,
+                    token1_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    bonding_curve_wsol_vault: next_account(accounts)?,
+                    creator_lp_token: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    create_pool_fee: next_account(accounts)?,
+                    observation_state: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::CreateRaydiumPool(ix_accounts))
             },
             [78, 44, 173, 29, 132, 180, 4, 172] => {
-                check_min_accounts_req(accounts_len, 22)?;
+                let expected_accounts_len = 22;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateRaydiumRandomPoolIxAccounts {
-                    cpmm_program: ix.accounts[0].0.into(),
-                    amm_config: ix.accounts[1].0.into(),
-                    authority: ix.accounts[2].0.into(),
-                    pool_state: ix.accounts[3].0.into(),
-                    token0_mint: ix.accounts[4].0.into(),
-                    token1_mint: ix.accounts[5].0.into(),
-                    lp_mint: ix.accounts[6].0.into(),
-                    vault_authority: ix.accounts[7].0.into(),
-                    bonding_curve: ix.accounts[8].0.into(),
-                    bonding_curve_vault: ix.accounts[9].0.into(),
-                    bonding_curve_wsol_vault: ix.accounts[10].0.into(),
-                    creator_lp_token: ix.accounts[11].0.into(),
-                    token0_vault: ix.accounts[12].0.into(),
-                    token1_vault: ix.accounts[13].0.into(),
-                    create_pool_fee: ix.accounts[14].0.into(),
-                    observation_state: ix.accounts[15].0.into(),
-                    operator: ix.accounts[16].0.into(),
-                    config: ix.accounts[17].0.into(),
-                    token_program: ix.accounts[18].0.into(),
-                    associated_token_program: ix.accounts[19].0.into(),
-                    system_program: ix.accounts[20].0.into(),
-                    rent: ix.accounts[21].0.into(),
+                    cpmm_program: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    token0_mint: next_account(accounts)?,
+                    token1_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    bonding_curve_wsol_vault: next_account(accounts)?,
+                    creator_lp_token: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    create_pool_fee: next_account(accounts)?,
+                    observation_state: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::CreateRaydiumRandomPool(ix_accounts))
             },
             [84, 52, 204, 228, 24, 140, 234, 75] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateTokenIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    metadata: ix.accounts[1].0.into(),
-                    mint: ix.accounts[2].0.into(),
-                    payer: ix.accounts[3].0.into(),
-                    rent: ix.accounts[4].0.into(),
-                    system_program: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    token_metadata_program: ix.accounts[7].0.into(),
+                    config: next_account(accounts)?,
+                    metadata: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_metadata_program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateTokenIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: CreateTokenIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::CreateToken(ix_accounts, de_ix_data))
             },
             [253, 184, 126, 199, 235, 232, 172, 162] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateTokenFallbackIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    metadata: ix.accounts[1].0.into(),
-                    mint: ix.accounts[2].0.into(),
-                    payer: ix.accounts[3].0.into(),
-                    rent: ix.accounts[4].0.into(),
-                    system_program: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    token_metadata_program: ix.accounts[7].0.into(),
+                    config: next_account(accounts)?,
+                    metadata: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_metadata_program: next_account(accounts)?,
                 };
                 let de_ix_data: CreateTokenFallbackIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::CreateTokenFallback(ix_accounts, de_ix_data))
             },
             [180, 89, 199, 76, 168, 236, 217, 138] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DeployBondingCurveIxAccounts {
-                    mint: ix.accounts[0].0.into(),
-                    vault_authority: ix.accounts[1].0.into(),
-                    bonding_curve: ix.accounts[2].0.into(),
-                    bonding_curve_sol_vault: ix.accounts[3].0.into(),
-                    bonding_curve_vault: ix.accounts[4].0.into(),
-                    config: ix.accounts[5].0.into(),
-                    payer: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
+                    mint: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    bonding_curve_sol_vault: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
                 let de_ix_data: DeployBondingCurveIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::DeployBondingCurve(ix_accounts, de_ix_data))
             },
             [53, 230, 172, 84, 77, 174, 22, 61] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DeployBondingCurveFallbackIxAccounts {
-                    mint: ix.accounts[0].0.into(),
-                    vault_authority: ix.accounts[1].0.into(),
-                    bonding_curve: ix.accounts[2].0.into(),
-                    bonding_curve_sol_vault: ix.accounts[3].0.into(),
-                    bonding_curve_vault: ix.accounts[4].0.into(),
-                    config: ix.accounts[5].0.into(),
-                    payer: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
+                    mint: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    bonding_curve_sol_vault: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
                 let de_ix_data: DeployBondingCurveFallbackIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::DeployBondingCurveFallback(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [168, 89, 99, 30, 117, 49, 88, 224] => {
-                check_min_accounts_req(accounts_len, 21)?;
+                let expected_accounts_len = 21;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DepositIntoRaydiumIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    amm_config: ix.accounts[1].0.into(),
-                    operator: ix.accounts[2].0.into(),
-                    operator_wsol_account: ix.accounts[3].0.into(),
-                    vault_authority: ix.accounts[4].0.into(),
-                    authority: ix.accounts[5].0.into(),
-                    pool_state: ix.accounts[6].0.into(),
-                    token0_vault: ix.accounts[7].0.into(),
-                    token1_vault: ix.accounts[8].0.into(),
-                    bonding_curve_vault: ix.accounts[9].0.into(),
-                    bonding_curve_wsol_vault: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    token_program2022: ix.accounts[12].0.into(),
-                    system_program: ix.accounts[13].0.into(),
-                    associated_token_program: ix.accounts[14].0.into(),
-                    lp_mint: ix.accounts[15].0.into(),
-                    cpmm_program: ix.accounts[16].0.into(),
-                    owner_lp_token: ix.accounts[17].0.into(),
-                    bonding_curve: ix.accounts[18].0.into(),
-                    token0_mint: ix.accounts[19].0.into(),
-                    token1_mint: ix.accounts[20].0.into(),
+                    config: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    operator_wsol_account: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    bonding_curve_wsol_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_program2022: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    cpmm_program: next_account(accounts)?,
+                    owner_lp_token: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    token0_mint: next_account(accounts)?,
+                    token1_mint: next_account(accounts)?,
                 };
                 let de_ix_data: DepositIntoRaydiumIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::DepositIntoRaydium(ix_accounts, de_ix_data))
             },
             [45, 235, 225, 181, 17, 218, 64, 130] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = GraduateIxAccounts {
-                    mint: ix.accounts[0].0.into(),
-                    wsol: ix.accounts[1].0.into(),
-                    protocol_fee_recipient: ix.accounts[2].0.into(),
-                    token_distributor: ix.accounts[3].0.into(),
-                    token_distributor_token_account: ix.accounts[4].0.into(),
-                    vault_authority: ix.accounts[5].0.into(),
-                    bonding_curve_sol_vault: ix.accounts[6].0.into(),
-                    bonding_curve: ix.accounts[7].0.into(),
-                    bonding_curve_vault: ix.accounts[8].0.into(),
-                    bonding_curve_wsol_account: ix.accounts[9].0.into(),
-                    operator: ix.accounts[10].0.into(),
-                    config: ix.accounts[11].0.into(),
-                    system_program: ix.accounts[12].0.into(),
-                    token_program: ix.accounts[13].0.into(),
-                    associated_token_program: ix.accounts[14].0.into(),
+                    mint: next_account(accounts)?,
+                    wsol: next_account(accounts)?,
+                    protocol_fee_recipient: next_account(accounts)?,
+                    token_distributor: next_account(accounts)?,
+                    token_distributor_token_account: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    bonding_curve_sol_vault: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    bonding_curve_wsol_account: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::Graduate(ix_accounts))
             },
             [175, 175, 109, 31, 13, 152, 155, 237] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    config: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: InitializeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: InitializeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::Initialize(ix_accounts, de_ix_data))
             },
             [210, 43, 101, 215, 119, 140, 106, 218] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitiateAuthorityTransferIxAccounts {
-                    authority: ix.accounts[0].0.into(),
-                    config: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    authority: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitiateAuthorityTransferIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::InitiateAuthorityTransfer(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [173, 255, 148, 6, 122, 99, 140, 22] => {
-                check_min_accounts_req(accounts_len, 22)?;
+                let expected_accounts_len = 22;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = LockRaydiumLiquidityIxAccounts {
-                    lock_program: ix.accounts[0].0.into(),
-                    vault_authority: ix.accounts[1].0.into(),
-                    authority: ix.accounts[2].0.into(),
-                    fee_nft_owner: ix.accounts[3].0.into(),
-                    fee_nft_mint: ix.accounts[4].0.into(),
-                    fee_nft_account: ix.accounts[5].0.into(),
-                    pool_state: ix.accounts[6].0.into(),
-                    locked_liquidity: ix.accounts[7].0.into(),
-                    lp_mint: ix.accounts[8].0.into(),
-                    liquidity_owner_lp: ix.accounts[9].0.into(),
-                    locked_lp_vault: ix.accounts[10].0.into(),
-                    token0_vault: ix.accounts[11].0.into(),
-                    token1_vault: ix.accounts[12].0.into(),
-                    operator: ix.accounts[13].0.into(),
-                    config: ix.accounts[14].0.into(),
-                    bonding_curve: ix.accounts[15].0.into(),
-                    metadata_account: ix.accounts[16].0.into(),
-                    rent: ix.accounts[17].0.into(),
-                    system_program: ix.accounts[18].0.into(),
-                    token_program: ix.accounts[19].0.into(),
-                    associated_token_program: ix.accounts[20].0.into(),
-                    metadata_program: ix.accounts[21].0.into(),
+                    lock_program: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    fee_nft_owner: next_account(accounts)?,
+                    fee_nft_mint: next_account(accounts)?,
+                    fee_nft_account: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    locked_liquidity: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    liquidity_owner_lp: next_account(accounts)?,
+                    locked_lp_vault: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    metadata_account: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::LockRaydiumLiquidity(ix_accounts))
             },
             [42, 20, 89, 83, 222, 37, 4, 109] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveOperatorsIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    config: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: RemoveOperatorsIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::RemoveOperators(ix_accounts, de_ix_data))
             },
             [109, 61, 40, 187, 230, 176, 135, 174] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SellTokenIxAccounts {
-                    mint: ix.accounts[0].0.into(),
-                    bonding_curve: ix.accounts[1].0.into(),
-                    trading_fees_vault: ix.accounts[2].0.into(),
-                    bonding_curve_vault: ix.accounts[3].0.into(),
-                    bonding_curve_sol_vault: ix.accounts[4].0.into(),
-                    seller_token_account: ix.accounts[5].0.into(),
-                    seller: ix.accounts[6].0.into(),
-                    recipient: ix.accounts[7].0.into(),
-                    config: ix.accounts[8].0.into(),
-                    system_program: ix.accounts[9].0.into(),
-                    token_program: ix.accounts[10].0.into(),
-                    associated_token_program: ix.accounts[11].0.into(),
+                    mint: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    trading_fees_vault: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    bonding_curve_sol_vault: next_account(accounts)?,
+                    seller_token_account: next_account(accounts)?,
+                    seller: next_account(accounts)?,
+                    recipient: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
-                let de_ix_data: SellTokenIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SellTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::SellToken(ix_accounts, de_ix_data))
             },
             [96, 126, 225, 47, 185, 213, 50, 58] => {
-                check_min_accounts_req(accounts_len, 24)?;
+                let expected_accounts_len = 24;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SplitTradingFeesIxAccounts {
-                    operator: ix.accounts[0].0.into(),
-                    mint: ix.accounts[1].0.into(),
-                    wsol: ix.accounts[2].0.into(),
-                    config: ix.accounts[3].0.into(),
-                    vault_authority: ix.accounts[4].0.into(),
-                    bonding_curve: ix.accounts[5].0.into(),
-                    trading_fees_vault: ix.accounts[6].0.into(),
-                    fee_splitter_program: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    associated_token_program: ix.accounts[10].0.into(),
-                    fee_splitter_config: ix.accounts[11].0.into(),
-                    fee_splitter_creator_vault: ix.accounts[12].0.into(),
-                    fee_splitter_vault_authority: ix.accounts[13].0.into(),
-                    fee_splitter_creator_vault_authority: ix.accounts[14].0.into(),
-                    fee_splitter_staking_mint: ix.accounts[15].0.into(),
-                    fee_splitter_wsol_vault: ix.accounts[16].0.into(),
-                    fee_splitter_creator_vault_authority_wsol_vault: ix.accounts[17].0.into(),
-                    fee_splitter_treasury_wsol_vault: ix.accounts[18].0.into(),
-                    fee_splitter_team_wsol_vault: ix.accounts[19].0.into(),
-                    fee_splitter_reward_pool: ix.accounts[20].0.into(),
-                    fee_splitter_reward_pool_staking_vault: ix.accounts[21].0.into(),
-                    fee_splitter_reward_pool_reward_vault: ix.accounts[22].0.into(),
-                    fee_splitter_reward_pool_program: ix.accounts[23].0.into(),
+                    operator: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    wsol: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    trading_fees_vault: next_account(accounts)?,
+                    fee_splitter_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    fee_splitter_config: next_account(accounts)?,
+                    fee_splitter_creator_vault: next_account(accounts)?,
+                    fee_splitter_vault_authority: next_account(accounts)?,
+                    fee_splitter_creator_vault_authority: next_account(accounts)?,
+                    fee_splitter_staking_mint: next_account(accounts)?,
+                    fee_splitter_wsol_vault: next_account(accounts)?,
+                    fee_splitter_creator_vault_authority_wsol_vault: next_account(accounts)?,
+                    fee_splitter_treasury_wsol_vault: next_account(accounts)?,
+                    fee_splitter_team_wsol_vault: next_account(accounts)?,
+                    fee_splitter_reward_pool: next_account(accounts)?,
+                    fee_splitter_reward_pool_staking_vault: next_account(accounts)?,
+                    fee_splitter_reward_pool_reward_vault: next_account(accounts)?,
+                    fee_splitter_reward_pool_program: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::SplitTradingFees(ix_accounts))
             },
             [107, 248, 131, 239, 152, 234, 54, 35] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapSolForTokensOnRaydiumIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    bonding_curve: ix.accounts[1].0.into(),
-                    amm_config: ix.accounts[2].0.into(),
-                    operator: ix.accounts[3].0.into(),
-                    vault_authority: ix.accounts[4].0.into(),
-                    authority: ix.accounts[5].0.into(),
-                    pool_state: ix.accounts[6].0.into(),
-                    input_vault: ix.accounts[7].0.into(),
-                    output_vault: ix.accounts[8].0.into(),
-                    bonding_curve_vault: ix.accounts[9].0.into(),
-                    bonding_curve_wsol_vault: ix.accounts[10].0.into(),
-                    output_token_mint: ix.accounts[11].0.into(),
-                    input_token_mint: ix.accounts[12].0.into(),
-                    token_program: ix.accounts[13].0.into(),
-                    cp_swap_program: ix.accounts[14].0.into(),
-                    observation_state: ix.accounts[15].0.into(),
+                    config: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    input_vault: next_account(accounts)?,
+                    output_vault: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    bonding_curve_wsol_vault: next_account(accounts)?,
+                    output_token_mint: next_account(accounts)?,
+                    input_token_mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    cp_swap_program: next_account(accounts)?,
+                    observation_state: next_account(accounts)?,
                 };
                 let de_ix_data: SwapSolForTokensOnRaydiumIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::SwapSolForTokensOnRaydium(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [216, 172, 130, 148, 34, 98, 215, 163] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapTokensForSolOnRaydiumIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    bonding_curve: ix.accounts[1].0.into(),
-                    amm_config: ix.accounts[2].0.into(),
-                    operator: ix.accounts[3].0.into(),
-                    vault_authority: ix.accounts[4].0.into(),
-                    authority: ix.accounts[5].0.into(),
-                    pool_state: ix.accounts[6].0.into(),
-                    input_vault: ix.accounts[7].0.into(),
-                    output_vault: ix.accounts[8].0.into(),
-                    bonding_curve_vault: ix.accounts[9].0.into(),
-                    bonding_curve_wsol_vault: ix.accounts[10].0.into(),
-                    input_token_mint: ix.accounts[11].0.into(),
-                    output_token_mint: ix.accounts[12].0.into(),
-                    token_program: ix.accounts[13].0.into(),
-                    cp_swap_program: ix.accounts[14].0.into(),
-                    observation_state: ix.accounts[15].0.into(),
+                    config: next_account(accounts)?,
+                    bonding_curve: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    operator: next_account(accounts)?,
+                    vault_authority: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    input_vault: next_account(accounts)?,
+                    output_vault: next_account(accounts)?,
+                    bonding_curve_vault: next_account(accounts)?,
+                    bonding_curve_wsol_vault: next_account(accounts)?,
+                    input_token_mint: next_account(accounts)?,
+                    output_token_mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    cp_swap_program: next_account(accounts)?,
+                    observation_state: next_account(accounts)?,
                 };
                 let de_ix_data: SwapTokensForSolOnRaydiumIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::SwapTokensForSolOnRaydium(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [54, 83, 147, 198, 123, 97, 218, 72] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = TogglePausedIxAccounts {
-                    authority: ix.accounts[0].0.into(),
-                    config: ix.accounts[1].0.into(),
+                    authority: next_account(accounts)?,
+                    config: next_account(accounts)?,
                 };
                 Ok(BoopProgramIx::TogglePaused(ix_accounts))
             },
             [29, 158, 252, 191, 10, 83, 219, 99] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateConfigIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    authority: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    config: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: UpdateConfigIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: UpdateConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(BoopProgramIx::UpdateConfig(ix_accounts, de_ix_data))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
@@ -612,7 +667,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -626,6 +688,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -1432,6 +1537,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

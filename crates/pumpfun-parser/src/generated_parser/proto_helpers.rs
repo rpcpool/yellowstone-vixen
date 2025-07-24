@@ -9,11 +9,39 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::{proto_def, types::LastWithdraw};
-    impl IntoProto<proto_def::LastWithdraw> for LastWithdraw {
-        fn into_proto(self) -> proto_def::LastWithdraw {
-            proto_def::LastWithdraw {
-                last_withdraw_timestamp: self.last_withdraw_timestamp,
+    use crate::{proto_def, types::CollectCreatorFeeEvent};
+    impl IntoProto<proto_def::CollectCreatorFeeEvent> for CollectCreatorFeeEvent {
+        fn into_proto(self) -> proto_def::CollectCreatorFeeEvent {
+            proto_def::CollectCreatorFeeEvent {
+                timestamp: self.timestamp,
+                creator: self.creator.to_string(),
+                creator_fee: self.creator_fee,
+            }
+        }
+    }
+    use crate::types::CompleteEvent;
+    impl IntoProto<proto_def::CompleteEvent> for CompleteEvent {
+        fn into_proto(self) -> proto_def::CompleteEvent {
+            proto_def::CompleteEvent {
+                user: self.user.to_string(),
+                mint: self.mint.to_string(),
+                bonding_curve: self.bonding_curve.to_string(),
+                timestamp: self.timestamp,
+            }
+        }
+    }
+    use crate::types::CompletePumpAmmMigrationEvent;
+    impl IntoProto<proto_def::CompletePumpAmmMigrationEvent> for CompletePumpAmmMigrationEvent {
+        fn into_proto(self) -> proto_def::CompletePumpAmmMigrationEvent {
+            proto_def::CompletePumpAmmMigrationEvent {
+                user: self.user.to_string(),
+                mint: self.mint.to_string(),
+                mint_amount: self.mint_amount,
+                sol_amount: self.sol_amount,
+                pool_migration_fee: self.pool_migration_fee,
+                bonding_curve: self.bonding_curve.to_string(),
+                timestamp: self.timestamp,
+                pool: self.pool.to_string(),
             }
         }
     }
@@ -27,6 +55,71 @@ pub mod proto_types_parsers {
                 mint: self.mint.to_string(),
                 bonding_curve: self.bonding_curve.to_string(),
                 user: self.user.to_string(),
+                creator: self.creator.to_string(),
+                timestamp: self.timestamp,
+                virtual_token_reserves: self.virtual_token_reserves,
+                virtual_sol_reserves: self.virtual_sol_reserves,
+                real_token_reserves: self.real_token_reserves,
+                token_total_supply: self.token_total_supply,
+            }
+        }
+    }
+    use crate::types::ExtendAccountEvent;
+    impl IntoProto<proto_def::ExtendAccountEvent> for ExtendAccountEvent {
+        fn into_proto(self) -> proto_def::ExtendAccountEvent {
+            proto_def::ExtendAccountEvent {
+                account: self.account.to_string(),
+                user: self.user.to_string(),
+                current_size: self.current_size,
+                new_size: self.new_size,
+                timestamp: self.timestamp,
+            }
+        }
+    }
+    use crate::types::SetCreatorEvent;
+    impl IntoProto<proto_def::SetCreatorEvent> for SetCreatorEvent {
+        fn into_proto(self) -> proto_def::SetCreatorEvent {
+            proto_def::SetCreatorEvent {
+                timestamp: self.timestamp,
+                mint: self.mint.to_string(),
+                bonding_curve: self.bonding_curve.to_string(),
+                creator: self.creator.to_string(),
+            }
+        }
+    }
+    use crate::types::SetMetaplexCreatorEvent;
+    impl IntoProto<proto_def::SetMetaplexCreatorEvent> for SetMetaplexCreatorEvent {
+        fn into_proto(self) -> proto_def::SetMetaplexCreatorEvent {
+            proto_def::SetMetaplexCreatorEvent {
+                timestamp: self.timestamp,
+                mint: self.mint.to_string(),
+                bonding_curve: self.bonding_curve.to_string(),
+                metadata: self.metadata.to_string(),
+                creator: self.creator.to_string(),
+            }
+        }
+    }
+    use crate::types::SetParamsEvent;
+    impl IntoProto<proto_def::SetParamsEvent> for SetParamsEvent {
+        fn into_proto(self) -> proto_def::SetParamsEvent {
+            proto_def::SetParamsEvent {
+                initial_virtual_token_reserves: self.initial_virtual_token_reserves,
+                initial_virtual_sol_reserves: self.initial_virtual_sol_reserves,
+                initial_real_token_reserves: self.initial_real_token_reserves,
+                final_real_sol_reserves: self.final_real_sol_reserves,
+                token_total_supply: self.token_total_supply,
+                fee_basis_points: self.fee_basis_points,
+                withdraw_authority: self.withdraw_authority.to_string(),
+                enable_migrate: self.enable_migrate,
+                pool_migration_fee: self.pool_migration_fee,
+                creator_fee_basis_points: self.creator_fee_basis_points,
+                fee_recipients: self
+                    .fee_recipients
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+                timestamp: self.timestamp,
+                set_creator_authority: self.set_creator_authority.to_string(),
             }
         }
     }
@@ -44,30 +137,23 @@ pub mod proto_types_parsers {
                 virtual_token_reserves: self.virtual_token_reserves,
                 real_sol_reserves: self.real_sol_reserves,
                 real_token_reserves: self.real_token_reserves,
-            }
-        }
-    }
-    use crate::types::CompleteEvent;
-    impl IntoProto<proto_def::CompleteEvent> for CompleteEvent {
-        fn into_proto(self) -> proto_def::CompleteEvent {
-            proto_def::CompleteEvent {
-                user: self.user.to_string(),
-                mint: self.mint.to_string(),
-                bonding_curve: self.bonding_curve.to_string(),
-                timestamp: self.timestamp,
-            }
-        }
-    }
-    use crate::types::SetParamsEvent;
-    impl IntoProto<proto_def::SetParamsEvent> for SetParamsEvent {
-        fn into_proto(self) -> proto_def::SetParamsEvent {
-            proto_def::SetParamsEvent {
                 fee_recipient: self.fee_recipient.to_string(),
-                initial_virtual_token_reserves: self.initial_virtual_token_reserves,
-                initial_virtual_sol_reserves: self.initial_virtual_sol_reserves,
-                initial_real_token_reserves: self.initial_real_token_reserves,
-                token_total_supply: self.token_total_supply,
                 fee_basis_points: self.fee_basis_points,
+                fee: self.fee,
+                creator: self.creator.to_string(),
+                creator_fee_basis_points: self.creator_fee_basis_points,
+                creator_fee: self.creator_fee,
+            }
+        }
+    }
+    use crate::types::UpdateGlobalAuthorityEvent;
+    impl IntoProto<proto_def::UpdateGlobalAuthorityEvent> for UpdateGlobalAuthorityEvent {
+        fn into_proto(self) -> proto_def::UpdateGlobalAuthorityEvent {
+            proto_def::UpdateGlobalAuthorityEvent {
+                global: self.global.to_string(),
+                authority: self.authority.to_string(),
+                new_authority: self.new_authority.to_string(),
+                timestamp: self.timestamp,
             }
         }
     }

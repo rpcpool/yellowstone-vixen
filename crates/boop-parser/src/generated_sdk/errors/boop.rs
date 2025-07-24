@@ -113,12 +113,12 @@ pub enum BoopError {
     Unauthorized = 0x1790,
 }
 
-impl solana_program::program_error::PrintProgramError for BoopError {
+impl solana_program_error::PrintProgramError for BoopError {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for BoopError {
+impl<T> solana_decode_error::DecodeError<T> for BoopError {
     fn type_of() -> &'static str { "BoopError" }
 }

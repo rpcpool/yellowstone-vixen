@@ -11,7 +11,6 @@ use std::path::PathBuf;
 
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_grpc_source::YellowstoneGrpcSource;
 use yellowstone_vixen::{self as vixen, proto::parser, vixen_core::proto::Proto};
 use yellowstone_vixen_jupiter_swap_parser::{
     accounts_parser::AccountParser as JupiterSwapAccParser,
@@ -76,6 +75,7 @@ use yellowstone_vixen_raydium_cpmm_parser::{
     instructions_parser::InstructionParser as RaydiumCpmmIxParser,
     proto_def::DESCRIPTOR_SET as RAYDIUM_CPMM_DESCRIPTOR_SET,
 };
+use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]

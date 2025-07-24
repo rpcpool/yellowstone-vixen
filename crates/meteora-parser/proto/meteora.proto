@@ -318,6 +318,10 @@ message RepeatedUint64Row {
 	repeated uint64 rows = 1;
 }
 
+message RepeatedUint32Row {
+	repeated uint32 rows = 1;
+}
+
 
 message LiquidityParameterByStrategy {
 	uint64 amount_x = 1;
@@ -566,6 +570,7 @@ message Oracle {
 	uint64 idx = 1;
 	uint64 active_size = 2;
 	uint64 length = 3;
+	repeated RepeatedUint32Row observations = 4;
 }
 
 message Position {

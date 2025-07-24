@@ -146,12 +146,12 @@ pub enum AmmV3Error {
     CalculateOverflow = 0x179b,
 }
 
-impl solana_program::program_error::PrintProgramError for AmmV3Error {
+impl solana_program_error::PrintProgramError for AmmV3Error {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for AmmV3Error {
+impl<T> solana_decode_error::DecodeError<T> for AmmV3Error {
     fn type_of() -> &'static str { "AmmV3Error" }
 }

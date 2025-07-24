@@ -10,26 +10,26 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateVirtualPoolMetadata {
-    pub virtual_pool: solana_program::pubkey::Pubkey,
+    pub virtual_pool: solana_pubkey::Pubkey,
     /// Virtual pool metadata
-    pub virtual_pool_metadata: solana_program::pubkey::Pubkey,
+    pub virtual_pool_metadata: solana_pubkey::Pubkey,
 
-    pub creator: solana_program::pubkey::Pubkey,
+    pub creator: solana_pubkey::Pubkey,
     /// Payer of the virtual pool metadata.
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
     /// System program.
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl CreateVirtualPoolMetadata {
     pub fn instruction(
         &self,
         args: CreateVirtualPoolMetadataInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -38,33 +38,31 @@ impl CreateVirtualPoolMetadata {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: CreateVirtualPoolMetadataInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.virtual_pool,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.virtual_pool_metadata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.creator,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -73,7 +71,7 @@ impl CreateVirtualPoolMetadata {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::DYNAMIC_BONDING_CURVE_ID,
             accounts,
             data,
@@ -121,25 +119,25 @@ pub struct CreateVirtualPoolMetadataInstructionArgs {
 ///   6. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct CreateVirtualPoolMetadataBuilder {
-    virtual_pool: Option<solana_program::pubkey::Pubkey>,
-    virtual_pool_metadata: Option<solana_program::pubkey::Pubkey>,
-    creator: Option<solana_program::pubkey::Pubkey>,
-    payer: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    virtual_pool: Option<solana_pubkey::Pubkey>,
+    virtual_pool_metadata: Option<solana_pubkey::Pubkey>,
+    creator: Option<solana_pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     padding: Option<[u8; 96]>,
     name: Option<String>,
     website: Option<String>,
     logo: Option<String>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateVirtualPoolMetadataBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn virtual_pool(&mut self, virtual_pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn virtual_pool(&mut self, virtual_pool: solana_pubkey::Pubkey) -> &mut Self {
         self.virtual_pool = Some(virtual_pool);
         self
     }
@@ -148,21 +146,21 @@ impl CreateVirtualPoolMetadataBuilder {
     #[inline(always)]
     pub fn virtual_pool_metadata(
         &mut self,
-        virtual_pool_metadata: solana_program::pubkey::Pubkey,
+        virtual_pool_metadata: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.virtual_pool_metadata = Some(virtual_pool_metadata);
         self
     }
 
     #[inline(always)]
-    pub fn creator(&mut self, creator: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
 
     /// Payer of the virtual pool metadata.
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
@@ -170,22 +168,19 @@ impl CreateVirtualPoolMetadataBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -216,10 +211,7 @@ impl CreateVirtualPoolMetadataBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -228,14 +220,14 @@ impl CreateVirtualPoolMetadataBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateVirtualPoolMetadata {
             virtual_pool: self.virtual_pool.expect("virtual_pool is not set"),
             virtual_pool_metadata: self
@@ -245,7 +237,7 @@ impl CreateVirtualPoolMetadataBuilder {
             payer: self.payer.expect("payer is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
@@ -262,46 +254,46 @@ impl CreateVirtualPoolMetadataBuilder {
 
 /// `create_virtual_pool_metadata` CPI accounts.
 pub struct CreateVirtualPoolMetadataCpiAccounts<'a, 'b> {
-    pub virtual_pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtual_pool: &'b solana_account_info::AccountInfo<'a>,
     /// Virtual pool metadata
-    pub virtual_pool_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtual_pool_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
     /// Payer of the virtual pool metadata.
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// System program.
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `create_virtual_pool_metadata` CPI instruction.
 pub struct CreateVirtualPoolMetadataCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtual_pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtual_pool: &'b solana_account_info::AccountInfo<'a>,
     /// Virtual pool metadata
-    pub virtual_pool_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtual_pool_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub creator: &'b solana_program::account_info::AccountInfo<'a>,
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
     /// Payer of the virtual pool metadata.
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// System program.
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: CreateVirtualPoolMetadataInstructionArgs,
 }
 
 impl<'a, 'b> CreateVirtualPoolMetadataCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: CreateVirtualPoolMetadataCpiAccounts<'a, 'b>,
         args: CreateVirtualPoolMetadataInstructionArgs,
     ) -> Self {
@@ -319,19 +311,15 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -339,7 +327,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -349,43 +337,36 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.virtual_pool.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.virtual_pool_metadata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.creator.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -395,7 +376,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::DYNAMIC_BONDING_CURVE_ID,
             accounts,
             data,
@@ -414,9 +395,9 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -438,7 +419,7 @@ pub struct CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(CreateVirtualPoolMetadataCpiBuilderInstruction {
             __program: program,
             virtual_pool: None,
@@ -460,7 +441,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn virtual_pool(
         &mut self,
-        virtual_pool: &'b solana_program::account_info::AccountInfo<'a>,
+        virtual_pool: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.virtual_pool = Some(virtual_pool);
         self
@@ -470,24 +451,21 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn virtual_pool_metadata(
         &mut self,
-        virtual_pool_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+        virtual_pool_metadata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.virtual_pool_metadata = Some(virtual_pool_metadata);
         self
     }
 
     #[inline(always)]
-    pub fn creator(
-        &mut self,
-        creator: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn creator(&mut self, creator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.creator = Some(creator);
         self
     }
 
     /// Payer of the virtual pool metadata.
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
@@ -496,7 +474,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -505,17 +483,14 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -548,7 +523,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -565,11 +540,7 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -578,14 +549,14 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = CreateVirtualPoolMetadataInstructionArgs {
             padding: self
                 .instruction
@@ -639,22 +610,18 @@ impl<'a, 'b> CreateVirtualPoolMetadataCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct CreateVirtualPoolMetadataCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    virtual_pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    virtual_pool_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    creator: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    virtual_pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    virtual_pool_metadata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    creator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     padding: Option<[u8; 96]>,
     name: Option<String>,
     website: Option<String>,
     logo: Option<String>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

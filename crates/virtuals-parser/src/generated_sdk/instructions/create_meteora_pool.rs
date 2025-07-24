@@ -10,81 +10,81 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateMeteoraPool {
-    pub vpool: solana_program::pubkey::Pubkey,
+    pub vpool: solana_pubkey::Pubkey,
 
-    pub meteora_deployer: solana_program::pubkey::Pubkey,
+    pub meteora_deployer: solana_pubkey::Pubkey,
 
-    pub meteora_deployer_virtuals_ata: solana_program::pubkey::Pubkey,
+    pub meteora_deployer_virtuals_ata: solana_pubkey::Pubkey,
 
-    pub meteora_deployer_token_ata: solana_program::pubkey::Pubkey,
+    pub meteora_deployer_token_ata: solana_pubkey::Pubkey,
 
-    pub vpool_virtuals_ata: solana_program::pubkey::Pubkey,
+    pub vpool_virtuals_ata: solana_pubkey::Pubkey,
 
-    pub vpool_token_ata: solana_program::pubkey::Pubkey,
+    pub vpool_token_ata: solana_pubkey::Pubkey,
 
-    pub lock_escrow: solana_program::pubkey::Pubkey,
+    pub lock_escrow: solana_pubkey::Pubkey,
 
-    pub escrow_vault: solana_program::pubkey::Pubkey,
+    pub escrow_vault: solana_pubkey::Pubkey,
 
-    pub pool: solana_program::pubkey::Pubkey,
+    pub pool: solana_pubkey::Pubkey,
 
-    pub config: solana_program::pubkey::Pubkey,
+    pub config: solana_pubkey::Pubkey,
 
-    pub lp_mint: solana_program::pubkey::Pubkey,
+    pub lp_mint: solana_pubkey::Pubkey,
 
-    pub virtuals_mint: solana_program::pubkey::Pubkey,
+    pub virtuals_mint: solana_pubkey::Pubkey,
 
-    pub token_mint: solana_program::pubkey::Pubkey,
+    pub token_mint: solana_pubkey::Pubkey,
 
-    pub virtuals_vault: solana_program::pubkey::Pubkey,
+    pub virtuals_vault: solana_pubkey::Pubkey,
 
-    pub token_vault: solana_program::pubkey::Pubkey,
+    pub token_vault: solana_pubkey::Pubkey,
 
-    pub virtuals_token_vault: solana_program::pubkey::Pubkey,
+    pub virtuals_token_vault: solana_pubkey::Pubkey,
 
-    pub token_token_vault: solana_program::pubkey::Pubkey,
+    pub token_token_vault: solana_pubkey::Pubkey,
 
-    pub virtuals_vault_lp_mint: solana_program::pubkey::Pubkey,
+    pub virtuals_vault_lp_mint: solana_pubkey::Pubkey,
 
-    pub token_vault_lp_mint: solana_program::pubkey::Pubkey,
+    pub token_vault_lp_mint: solana_pubkey::Pubkey,
 
-    pub virtuals_vault_lp: solana_program::pubkey::Pubkey,
+    pub virtuals_vault_lp: solana_pubkey::Pubkey,
 
-    pub token_vault_lp: solana_program::pubkey::Pubkey,
+    pub token_vault_lp: solana_pubkey::Pubkey,
 
-    pub pool_virtuals_ata: solana_program::pubkey::Pubkey,
+    pub pool_virtuals_ata: solana_pubkey::Pubkey,
 
-    pub pool_token_ata: solana_program::pubkey::Pubkey,
+    pub pool_token_ata: solana_pubkey::Pubkey,
 
-    pub meteora_deployer_pool_lp: solana_program::pubkey::Pubkey,
+    pub meteora_deployer_pool_lp: solana_pubkey::Pubkey,
 
-    pub protocol_virtuals_fee: solana_program::pubkey::Pubkey,
+    pub protocol_virtuals_fee: solana_pubkey::Pubkey,
 
-    pub protocol_token_fee: solana_program::pubkey::Pubkey,
+    pub protocol_token_fee: solana_pubkey::Pubkey,
 
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
 
-    pub token_metadata: solana_program::pubkey::Pubkey,
+    pub token_metadata: solana_pubkey::Pubkey,
     /// Rent account.
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 
-    pub mint_metadata: solana_program::pubkey::Pubkey,
+    pub mint_metadata: solana_pubkey::Pubkey,
 
-    pub metadata_program: solana_program::pubkey::Pubkey,
+    pub metadata_program: solana_pubkey::Pubkey,
 
-    pub vault_program: solana_program::pubkey::Pubkey,
+    pub vault_program: solana_pubkey::Pubkey,
     /// Token program.
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
     /// Associated token program.
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
     /// System program.
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub dynamic_amm_program: solana_program::pubkey::Pubkey,
+    pub dynamic_amm_program: solana_pubkey::Pubkey,
 }
 
 impl CreateMeteoraPool {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -92,153 +92,144 @@ impl CreateMeteoraPool {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(36 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.vpool, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.vpool, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.meteora_deployer,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.meteora_deployer_virtuals_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.meteora_deployer_token_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.vpool_virtuals_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.vpool_token_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.lock_escrow,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.escrow_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.pool, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.pool, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.lp_mint,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.lp_mint, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.virtuals_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.virtuals_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.virtuals_token_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_token_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.virtuals_vault_lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_vault_lp_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.virtuals_vault_lp,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_vault_lp,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.pool_virtuals_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.pool_token_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.meteora_deployer_pool_lp,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.protocol_virtuals_fee,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.protocol_token_fee,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.token_metadata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.mint_metadata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.metadata_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.vault_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.dynamic_amm_program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&CreateMeteoraPoolInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::VIRTUALS_PROGRAM_ID,
             accounts,
             data,
@@ -306,59 +297,56 @@ impl Default for CreateMeteoraPoolInstructionData {
 ///   35. `[optional]` dynamic_amm_program (default to `Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB`)
 #[derive(Clone, Debug, Default)]
 pub struct CreateMeteoraPoolBuilder {
-    vpool: Option<solana_program::pubkey::Pubkey>,
-    meteora_deployer: Option<solana_program::pubkey::Pubkey>,
-    meteora_deployer_virtuals_ata: Option<solana_program::pubkey::Pubkey>,
-    meteora_deployer_token_ata: Option<solana_program::pubkey::Pubkey>,
-    vpool_virtuals_ata: Option<solana_program::pubkey::Pubkey>,
-    vpool_token_ata: Option<solana_program::pubkey::Pubkey>,
-    lock_escrow: Option<solana_program::pubkey::Pubkey>,
-    escrow_vault: Option<solana_program::pubkey::Pubkey>,
-    pool: Option<solana_program::pubkey::Pubkey>,
-    config: Option<solana_program::pubkey::Pubkey>,
-    lp_mint: Option<solana_program::pubkey::Pubkey>,
-    virtuals_mint: Option<solana_program::pubkey::Pubkey>,
-    token_mint: Option<solana_program::pubkey::Pubkey>,
-    virtuals_vault: Option<solana_program::pubkey::Pubkey>,
-    token_vault: Option<solana_program::pubkey::Pubkey>,
-    virtuals_token_vault: Option<solana_program::pubkey::Pubkey>,
-    token_token_vault: Option<solana_program::pubkey::Pubkey>,
-    virtuals_vault_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    token_vault_lp_mint: Option<solana_program::pubkey::Pubkey>,
-    virtuals_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    token_vault_lp: Option<solana_program::pubkey::Pubkey>,
-    pool_virtuals_ata: Option<solana_program::pubkey::Pubkey>,
-    pool_token_ata: Option<solana_program::pubkey::Pubkey>,
-    meteora_deployer_pool_lp: Option<solana_program::pubkey::Pubkey>,
-    protocol_virtuals_fee: Option<solana_program::pubkey::Pubkey>,
-    protocol_token_fee: Option<solana_program::pubkey::Pubkey>,
-    payer: Option<solana_program::pubkey::Pubkey>,
-    token_metadata: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    mint_metadata: Option<solana_program::pubkey::Pubkey>,
-    metadata_program: Option<solana_program::pubkey::Pubkey>,
-    vault_program: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    dynamic_amm_program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    vpool: Option<solana_pubkey::Pubkey>,
+    meteora_deployer: Option<solana_pubkey::Pubkey>,
+    meteora_deployer_virtuals_ata: Option<solana_pubkey::Pubkey>,
+    meteora_deployer_token_ata: Option<solana_pubkey::Pubkey>,
+    vpool_virtuals_ata: Option<solana_pubkey::Pubkey>,
+    vpool_token_ata: Option<solana_pubkey::Pubkey>,
+    lock_escrow: Option<solana_pubkey::Pubkey>,
+    escrow_vault: Option<solana_pubkey::Pubkey>,
+    pool: Option<solana_pubkey::Pubkey>,
+    config: Option<solana_pubkey::Pubkey>,
+    lp_mint: Option<solana_pubkey::Pubkey>,
+    virtuals_mint: Option<solana_pubkey::Pubkey>,
+    token_mint: Option<solana_pubkey::Pubkey>,
+    virtuals_vault: Option<solana_pubkey::Pubkey>,
+    token_vault: Option<solana_pubkey::Pubkey>,
+    virtuals_token_vault: Option<solana_pubkey::Pubkey>,
+    token_token_vault: Option<solana_pubkey::Pubkey>,
+    virtuals_vault_lp_mint: Option<solana_pubkey::Pubkey>,
+    token_vault_lp_mint: Option<solana_pubkey::Pubkey>,
+    virtuals_vault_lp: Option<solana_pubkey::Pubkey>,
+    token_vault_lp: Option<solana_pubkey::Pubkey>,
+    pool_virtuals_ata: Option<solana_pubkey::Pubkey>,
+    pool_token_ata: Option<solana_pubkey::Pubkey>,
+    meteora_deployer_pool_lp: Option<solana_pubkey::Pubkey>,
+    protocol_virtuals_fee: Option<solana_pubkey::Pubkey>,
+    protocol_token_fee: Option<solana_pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    token_metadata: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    mint_metadata: Option<solana_pubkey::Pubkey>,
+    metadata_program: Option<solana_pubkey::Pubkey>,
+    vault_program: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    dynamic_amm_program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateMeteoraPoolBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn vpool(&mut self, vpool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vpool(&mut self, vpool: solana_pubkey::Pubkey) -> &mut Self {
         self.vpool = Some(vpool);
         self
     }
 
     #[inline(always)]
-    pub fn meteora_deployer(
-        &mut self,
-        meteora_deployer: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn meteora_deployer(&mut self, meteora_deployer: solana_pubkey::Pubkey) -> &mut Self {
         self.meteora_deployer = Some(meteora_deployer);
         self
     }
@@ -366,7 +354,7 @@ impl CreateMeteoraPoolBuilder {
     #[inline(always)]
     pub fn meteora_deployer_virtuals_ata(
         &mut self,
-        meteora_deployer_virtuals_ata: solana_program::pubkey::Pubkey,
+        meteora_deployer_virtuals_ata: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.meteora_deployer_virtuals_ata = Some(meteora_deployer_virtuals_ata);
         self
@@ -375,82 +363,76 @@ impl CreateMeteoraPoolBuilder {
     #[inline(always)]
     pub fn meteora_deployer_token_ata(
         &mut self,
-        meteora_deployer_token_ata: solana_program::pubkey::Pubkey,
+        meteora_deployer_token_ata: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.meteora_deployer_token_ata = Some(meteora_deployer_token_ata);
         self
     }
 
     #[inline(always)]
-    pub fn vpool_virtuals_ata(
-        &mut self,
-        vpool_virtuals_ata: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn vpool_virtuals_ata(&mut self, vpool_virtuals_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.vpool_virtuals_ata = Some(vpool_virtuals_ata);
         self
     }
 
     #[inline(always)]
-    pub fn vpool_token_ata(
-        &mut self,
-        vpool_token_ata: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn vpool_token_ata(&mut self, vpool_token_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.vpool_token_ata = Some(vpool_token_ata);
         self
     }
 
     #[inline(always)]
-    pub fn lock_escrow(&mut self, lock_escrow: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lock_escrow(&mut self, lock_escrow: solana_pubkey::Pubkey) -> &mut Self {
         self.lock_escrow = Some(lock_escrow);
         self
     }
 
     #[inline(always)]
-    pub fn escrow_vault(&mut self, escrow_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn escrow_vault(&mut self, escrow_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.escrow_vault = Some(escrow_vault);
         self
     }
 
     #[inline(always)]
-    pub fn pool(&mut self, pool: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
 
     /// `[optional account, default to 'B6FT4AHhQJ7BttrC1i223km5bYRUA2nVwBR7k5TVwLtx']`
     #[inline(always)]
-    pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
 
     #[inline(always)]
-    pub fn lp_mint(&mut self, lp_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
 
     /// `[optional account, default to '3iQL8BFS2vE7mww4ehAqQHAsbmRNCrPxizWAT2Zfyr9y']`
     #[inline(always)]
-    pub fn virtuals_mint(&mut self, virtuals_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn virtuals_mint(&mut self, virtuals_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.virtuals_mint = Some(virtuals_mint);
         self
     }
 
     #[inline(always)]
-    pub fn token_mint(&mut self, token_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_mint(&mut self, token_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_mint = Some(token_mint);
         self
     }
 
     #[inline(always)]
-    pub fn virtuals_vault(&mut self, virtuals_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn virtuals_vault(&mut self, virtuals_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.virtuals_vault = Some(virtuals_vault);
         self
     }
 
     #[inline(always)]
-    pub fn token_vault(&mut self, token_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_vault(&mut self, token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_vault = Some(token_vault);
         self
     }
@@ -458,17 +440,14 @@ impl CreateMeteoraPoolBuilder {
     #[inline(always)]
     pub fn virtuals_token_vault(
         &mut self,
-        virtuals_token_vault: solana_program::pubkey::Pubkey,
+        virtuals_token_vault: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.virtuals_token_vault = Some(virtuals_token_vault);
         self
     }
 
     #[inline(always)]
-    pub fn token_token_vault(
-        &mut self,
-        token_token_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_token_vault(&mut self, token_token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_token_vault = Some(token_token_vault);
         self
     }
@@ -476,47 +455,38 @@ impl CreateMeteoraPoolBuilder {
     #[inline(always)]
     pub fn virtuals_vault_lp_mint(
         &mut self,
-        virtuals_vault_lp_mint: solana_program::pubkey::Pubkey,
+        virtuals_vault_lp_mint: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.virtuals_vault_lp_mint = Some(virtuals_vault_lp_mint);
         self
     }
 
     #[inline(always)]
-    pub fn token_vault_lp_mint(
-        &mut self,
-        token_vault_lp_mint: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn token_vault_lp_mint(&mut self, token_vault_lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_vault_lp_mint = Some(token_vault_lp_mint);
         self
     }
 
     #[inline(always)]
-    pub fn virtuals_vault_lp(
-        &mut self,
-        virtuals_vault_lp: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn virtuals_vault_lp(&mut self, virtuals_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.virtuals_vault_lp = Some(virtuals_vault_lp);
         self
     }
 
     #[inline(always)]
-    pub fn token_vault_lp(&mut self, token_vault_lp: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_vault_lp(&mut self, token_vault_lp: solana_pubkey::Pubkey) -> &mut Self {
         self.token_vault_lp = Some(token_vault_lp);
         self
     }
 
     #[inline(always)]
-    pub fn pool_virtuals_ata(
-        &mut self,
-        pool_virtuals_ata: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn pool_virtuals_ata(&mut self, pool_virtuals_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_virtuals_ata = Some(pool_virtuals_ata);
         self
     }
 
     #[inline(always)]
-    pub fn pool_token_ata(&mut self, pool_token_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pool_token_ata(&mut self, pool_token_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_token_ata = Some(pool_token_ata);
         self
     }
@@ -524,7 +494,7 @@ impl CreateMeteoraPoolBuilder {
     #[inline(always)]
     pub fn meteora_deployer_pool_lp(
         &mut self,
-        meteora_deployer_pool_lp: solana_program::pubkey::Pubkey,
+        meteora_deployer_pool_lp: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.meteora_deployer_pool_lp = Some(meteora_deployer_pool_lp);
         self
@@ -533,29 +503,26 @@ impl CreateMeteoraPoolBuilder {
     #[inline(always)]
     pub fn protocol_virtuals_fee(
         &mut self,
-        protocol_virtuals_fee: solana_program::pubkey::Pubkey,
+        protocol_virtuals_fee: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.protocol_virtuals_fee = Some(protocol_virtuals_fee);
         self
     }
 
     #[inline(always)]
-    pub fn protocol_token_fee(
-        &mut self,
-        protocol_token_fee: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn protocol_token_fee(&mut self, protocol_token_fee: solana_pubkey::Pubkey) -> &mut Self {
         self.protocol_token_fee = Some(protocol_token_fee);
         self
     }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
 
     #[inline(always)]
-    pub fn token_metadata(&mut self, token_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_metadata(&mut self, token_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.token_metadata = Some(token_metadata);
         self
     }
@@ -563,30 +530,27 @@ impl CreateMeteoraPoolBuilder {
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Rent account.
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
 
     #[inline(always)]
-    pub fn mint_metadata(&mut self, mint_metadata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn mint_metadata(&mut self, mint_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.mint_metadata = Some(mint_metadata);
         self
     }
 
     /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
     #[inline(always)]
-    pub fn metadata_program(
-        &mut self,
-        metadata_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn metadata_program(&mut self, metadata_program: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata_program = Some(metadata_program);
         self
     }
 
     /// `[optional account, default to '24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi']`
     #[inline(always)]
-    pub fn vault_program(&mut self, vault_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn vault_program(&mut self, vault_program: solana_pubkey::Pubkey) -> &mut Self {
         self.vault_program = Some(vault_program);
         self
     }
@@ -594,7 +558,7 @@ impl CreateMeteoraPoolBuilder {
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program.
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -604,7 +568,7 @@ impl CreateMeteoraPoolBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
@@ -613,27 +577,21 @@ impl CreateMeteoraPoolBuilder {
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB']`
     #[inline(always)]
-    pub fn dynamic_amm_program(
-        &mut self,
-        dynamic_amm_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn dynamic_amm_program(&mut self, dynamic_amm_program: solana_pubkey::Pubkey) -> &mut Self {
         self.dynamic_amm_program = Some(dynamic_amm_program);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -642,14 +600,14 @@ impl CreateMeteoraPoolBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateMeteoraPool {
             vpool: self.vpool.expect("vpool is not set"),
             meteora_deployer: self.meteora_deployer.expect("meteora_deployer is not set"),
@@ -666,11 +624,11 @@ impl CreateMeteoraPoolBuilder {
             lock_escrow: self.lock_escrow.expect("lock_escrow is not set"),
             escrow_vault: self.escrow_vault.expect("escrow_vault is not set"),
             pool: self.pool.expect("pool is not set"),
-            config: self.config.unwrap_or(solana_program::pubkey!(
+            config: self.config.unwrap_or(solana_pubkey::pubkey!(
                 "B6FT4AHhQJ7BttrC1i223km5bYRUA2nVwBR7k5TVwLtx"
             )),
             lp_mint: self.lp_mint.expect("lp_mint is not set"),
-            virtuals_mint: self.virtuals_mint.unwrap_or(solana_program::pubkey!(
+            virtuals_mint: self.virtuals_mint.unwrap_or(solana_pubkey::pubkey!(
                 "3iQL8BFS2vE7mww4ehAqQHAsbmRNCrPxizWAT2Zfyr9y"
             )),
             token_mint: self.token_mint.expect("token_mint is not set"),
@@ -707,26 +665,26 @@ impl CreateMeteoraPoolBuilder {
                 .expect("protocol_token_fee is not set"),
             payer: self.payer.expect("payer is not set"),
             token_metadata: self.token_metadata.expect("token_metadata is not set"),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
             mint_metadata: self.mint_metadata.expect("mint_metadata is not set"),
-            metadata_program: self.metadata_program.unwrap_or(solana_program::pubkey!(
+            metadata_program: self.metadata_program.unwrap_or(solana_pubkey::pubkey!(
                 "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
             )),
-            vault_program: self.vault_program.unwrap_or(solana_program::pubkey!(
+            vault_program: self.vault_program.unwrap_or(solana_pubkey::pubkey!(
                 "24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi"
             )),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self.associated_token_program.unwrap_or(
-                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            dynamic_amm_program: self.dynamic_amm_program.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            dynamic_amm_program: self.dynamic_amm_program.unwrap_or(solana_pubkey::pubkey!(
                 "Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB"
             )),
         };
@@ -737,160 +695,160 @@ impl CreateMeteoraPoolBuilder {
 
 /// `create_meteora_pool` CPI accounts.
 pub struct CreateMeteoraPoolCpiAccounts<'a, 'b> {
-    pub vpool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub meteora_deployer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub meteora_deployer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub meteora_deployer_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub meteora_deployer_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub meteora_deployer_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub meteora_deployer_token_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vpool_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vpool_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool_token_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lock_escrow: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_escrow: &'b solana_account_info::AccountInfo<'a>,
 
-    pub escrow_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub escrow_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_token_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_token_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_vault_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_token_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub meteora_deployer_pool_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub meteora_deployer_pool_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_virtuals_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_virtuals_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_token_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_metadata: &'b solana_account_info::AccountInfo<'a>,
     /// Rent account.
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vault_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token program.
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Associated token program.
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// System program.
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub dynamic_amm_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dynamic_amm_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `create_meteora_pool` CPI instruction.
 pub struct CreateMeteoraPoolCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vpool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub meteora_deployer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub meteora_deployer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub meteora_deployer_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub meteora_deployer_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub meteora_deployer_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub meteora_deployer_token_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vpool_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vpool_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vpool_token_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lock_escrow: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lock_escrow: &'b solana_account_info::AccountInfo<'a>,
 
-    pub escrow_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub escrow_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_token_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_token_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub virtuals_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub virtuals_vault_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_vault_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pool_token_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub meteora_deployer_pool_lp: &'b solana_program::account_info::AccountInfo<'a>,
+    pub meteora_deployer_pool_lp: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_virtuals_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_virtuals_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub protocol_token_fee: &'b solana_program::account_info::AccountInfo<'a>,
+    pub protocol_token_fee: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_metadata: &'b solana_account_info::AccountInfo<'a>,
     /// Rent account.
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub metadata_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub vault_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub vault_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token program.
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Associated token program.
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// System program.
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub dynamic_amm_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dynamic_amm_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> CreateMeteoraPoolCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: CreateMeteoraPoolCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -935,19 +893,15 @@ impl<'a, 'b> CreateMeteoraPoolCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -955,7 +909,7 @@ impl<'a, 'b> CreateMeteoraPoolCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -965,159 +919,146 @@ impl<'a, 'b> CreateMeteoraPoolCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(36 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.vpool.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.vpool.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.meteora_deployer.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.meteora_deployer_virtuals_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.meteora_deployer_token_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.vpool_virtuals_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.vpool_token_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lock_escrow.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.escrow_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.pool.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.pool.key, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.virtuals_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.virtuals_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.virtuals_token_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_token_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.virtuals_vault_lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_vault_lp_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.virtuals_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_vault_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_virtuals_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pool_token_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.meteora_deployer_pool_lp.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.protocol_virtuals_fee.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.protocol_token_fee.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_metadata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.mint_metadata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.metadata_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.vault_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.dynamic_amm_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -1125,7 +1066,7 @@ impl<'a, 'b> CreateMeteoraPoolCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&CreateMeteoraPoolInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::VIRTUALS_PROGRAM_ID,
             accounts,
             data,
@@ -1173,9 +1114,9 @@ impl<'a, 'b> CreateMeteoraPoolCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -1226,7 +1167,7 @@ pub struct CreateMeteoraPoolCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(CreateMeteoraPoolCpiBuilderInstruction {
             __program: program,
             vpool: None,
@@ -1271,7 +1212,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn vpool(&mut self, vpool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn vpool(&mut self, vpool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vpool = Some(vpool);
         self
     }
@@ -1279,7 +1220,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn meteora_deployer(
         &mut self,
-        meteora_deployer: &'b solana_program::account_info::AccountInfo<'a>,
+        meteora_deployer: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.meteora_deployer = Some(meteora_deployer);
         self
@@ -1288,7 +1229,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn meteora_deployer_virtuals_ata(
         &mut self,
-        meteora_deployer_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        meteora_deployer_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.meteora_deployer_virtuals_ata = Some(meteora_deployer_virtuals_ata);
         self
@@ -1297,7 +1238,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn meteora_deployer_token_ata(
         &mut self,
-        meteora_deployer_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        meteora_deployer_token_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.meteora_deployer_token_ata = Some(meteora_deployer_token_ata);
         self
@@ -1306,7 +1247,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn vpool_virtuals_ata(
         &mut self,
-        vpool_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        vpool_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vpool_virtuals_ata = Some(vpool_virtuals_ata);
         self
@@ -1315,7 +1256,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn vpool_token_ata(
         &mut self,
-        vpool_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        vpool_token_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vpool_token_ata = Some(vpool_token_ata);
         self
@@ -1324,7 +1265,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn lock_escrow(
         &mut self,
-        lock_escrow: &'b solana_program::account_info::AccountInfo<'a>,
+        lock_escrow: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.lock_escrow = Some(lock_escrow);
         self
@@ -1333,32 +1274,26 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn escrow_vault(
         &mut self,
-        escrow_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        escrow_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.escrow_vault = Some(escrow_vault);
         self
     }
 
     #[inline(always)]
-    pub fn pool(&mut self, pool: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
 
     #[inline(always)]
-    pub fn config(
-        &mut self,
-        config: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
 
     #[inline(always)]
-    pub fn lp_mint(
-        &mut self,
-        lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
@@ -1366,7 +1301,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn virtuals_mint(
         &mut self,
-        virtuals_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        virtuals_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.virtuals_mint = Some(virtuals_mint);
         self
@@ -1375,7 +1310,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_mint(
         &mut self,
-        token_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_mint = Some(token_mint);
         self
@@ -1384,7 +1319,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn virtuals_vault(
         &mut self,
-        virtuals_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        virtuals_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.virtuals_vault = Some(virtuals_vault);
         self
@@ -1393,7 +1328,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_vault(
         &mut self,
-        token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        token_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_vault = Some(token_vault);
         self
@@ -1402,7 +1337,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn virtuals_token_vault(
         &mut self,
-        virtuals_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        virtuals_token_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.virtuals_token_vault = Some(virtuals_token_vault);
         self
@@ -1411,7 +1346,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_token_vault(
         &mut self,
-        token_token_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        token_token_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_token_vault = Some(token_token_vault);
         self
@@ -1420,7 +1355,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn virtuals_vault_lp_mint(
         &mut self,
-        virtuals_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        virtuals_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.virtuals_vault_lp_mint = Some(virtuals_vault_lp_mint);
         self
@@ -1429,7 +1364,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_vault_lp_mint(
         &mut self,
-        token_vault_lp_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        token_vault_lp_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_vault_lp_mint = Some(token_vault_lp_mint);
         self
@@ -1438,7 +1373,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn virtuals_vault_lp(
         &mut self,
-        virtuals_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        virtuals_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.virtuals_vault_lp = Some(virtuals_vault_lp);
         self
@@ -1447,7 +1382,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_vault_lp(
         &mut self,
-        token_vault_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        token_vault_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_vault_lp = Some(token_vault_lp);
         self
@@ -1456,7 +1391,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_virtuals_ata(
         &mut self,
-        pool_virtuals_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_virtuals_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_virtuals_ata = Some(pool_virtuals_ata);
         self
@@ -1465,7 +1400,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pool_token_ata(
         &mut self,
-        pool_token_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        pool_token_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pool_token_ata = Some(pool_token_ata);
         self
@@ -1474,7 +1409,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn meteora_deployer_pool_lp(
         &mut self,
-        meteora_deployer_pool_lp: &'b solana_program::account_info::AccountInfo<'a>,
+        meteora_deployer_pool_lp: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.meteora_deployer_pool_lp = Some(meteora_deployer_pool_lp);
         self
@@ -1483,7 +1418,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn protocol_virtuals_fee(
         &mut self,
-        protocol_virtuals_fee: &'b solana_program::account_info::AccountInfo<'a>,
+        protocol_virtuals_fee: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.protocol_virtuals_fee = Some(protocol_virtuals_fee);
         self
@@ -1492,14 +1427,14 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn protocol_token_fee(
         &mut self,
-        protocol_token_fee: &'b solana_program::account_info::AccountInfo<'a>,
+        protocol_token_fee: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.protocol_token_fee = Some(protocol_token_fee);
         self
     }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
@@ -1507,7 +1442,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_metadata(
         &mut self,
-        token_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+        token_metadata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_metadata = Some(token_metadata);
         self
@@ -1515,7 +1450,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
 
     /// Rent account.
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -1523,7 +1458,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn mint_metadata(
         &mut self,
-        mint_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+        mint_metadata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mint_metadata = Some(mint_metadata);
         self
@@ -1532,7 +1467,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
-        metadata_program: &'b solana_program::account_info::AccountInfo<'a>,
+        metadata_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.metadata_program = Some(metadata_program);
         self
@@ -1541,7 +1476,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn vault_program(
         &mut self,
-        vault_program: &'b solana_program::account_info::AccountInfo<'a>,
+        vault_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.vault_program = Some(vault_program);
         self
@@ -1551,7 +1486,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -1561,7 +1496,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -1571,7 +1506,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -1580,7 +1515,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn dynamic_amm_program(
         &mut self,
-        dynamic_amm_program: &'b solana_program::account_info::AccountInfo<'a>,
+        dynamic_amm_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.dynamic_amm_program = Some(dynamic_amm_program);
         self
@@ -1590,7 +1525,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -1607,11 +1542,7 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -1620,14 +1551,14 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = CreateMeteoraPoolCpi {
             __program: self.instruction.__program,
 
@@ -1799,47 +1730,43 @@ impl<'a, 'b> CreateMeteoraPoolCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct CreateMeteoraPoolCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    vpool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    meteora_deployer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    meteora_deployer_virtuals_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    meteora_deployer_token_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vpool_virtuals_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vpool_token_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lock_escrow: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    escrow_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    virtuals_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    virtuals_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    virtuals_token_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_token_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    virtuals_vault_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_vault_lp_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    virtuals_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_vault_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_virtuals_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pool_token_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    meteora_deployer_pool_lp: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    protocol_virtuals_fee: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    protocol_token_fee: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    mint_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    metadata_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    vault_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    dynamic_amm_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    vpool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    meteora_deployer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    meteora_deployer_virtuals_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    meteora_deployer_token_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vpool_virtuals_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vpool_token_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lock_escrow: Option<&'b solana_account_info::AccountInfo<'a>>,
+    escrow_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    virtuals_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    virtuals_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    virtuals_token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_token_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    virtuals_vault_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_vault_lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    virtuals_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_vault_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_virtuals_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pool_token_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    meteora_deployer_pool_lp: Option<&'b solana_account_info::AccountInfo<'a>>,
+    protocol_virtuals_fee: Option<&'b solana_account_info::AccountInfo<'a>>,
+    protocol_token_fee: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_metadata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    mint_metadata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    metadata_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    vault_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    dynamic_amm_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

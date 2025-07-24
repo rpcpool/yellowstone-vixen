@@ -7,7 +7,7 @@
 
 use crate::{
     accounts::{GlobalConfig, Order, UserSwapBalancesState},
-    ID,
+    deserialize_checked, ID,
 };
 
 /// Limo Program State
@@ -24,14 +24,14 @@ impl LimoProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
-            [134, 173, 223, 185, 77, 86, 28, 51] => {
-                Ok(LimoProgramState::Order(Order::from_bytes(data_bytes)?))
-            },
+            [134, 173, 223, 185, 77, 86, 28, 51] => Ok(LimoProgramState::Order(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             [140, 228, 152, 62, 231, 27, 245, 198] => Ok(LimoProgramState::UserSwapBalancesState(
-                UserSwapBalancesState::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             [149, 8, 156, 202, 160, 252, 176, 217] => Ok(LimoProgramState::GlobalConfig(
-                GlobalConfig::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
@@ -87,8 +87,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        LimoProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = LimoProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 

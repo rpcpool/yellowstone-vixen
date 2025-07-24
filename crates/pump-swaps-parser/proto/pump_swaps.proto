@@ -13,6 +13,10 @@ message BuyIx {
 	BuyIxData data = 2;
 }
 
+message CollectCoinCreatorFeeIx {
+	CollectCoinCreatorFeeIxAccounts accounts = 1;
+}
+
 message CreateConfigIx {
 	CreateConfigIxAccounts accounts = 1;
 	CreateConfigIxData data = 2;
@@ -40,6 +44,10 @@ message ExtendAccountIx {
 message SellIx {
 	SellIxAccounts accounts = 1;
 	SellIxData data = 2;
+}
+
+message SetCoinCreatorIx {
+	SetCoinCreatorIxAccounts accounts = 1;
 }
 
 message UpdateAdminIx {
@@ -78,6 +86,17 @@ message BuyEvent {
 	string user_quote_token_account = 18;
 	string protocol_fee_recipient = 19;
 	string protocol_fee_recipient_token_account = 20;
+	string coin_creator = 21;
+	uint64 coin_creator_fee_basis_points = 22;
+	uint64 coin_creator_fee = 23;
+}
+
+message CollectCoinCreatorFeeEvent {
+	int64 timestamp = 1;
+	string coin_creator = 2;
+	uint64 coin_creator_fee = 3;
+	string coin_creator_vault_ata = 4;
+	string coin_creator_token_account = 5;
 }
 
 message CreateConfigEvent {
@@ -86,6 +105,7 @@ message CreateConfigEvent {
 	uint64 lp_fee_basis_points = 3;
 	uint64 protocol_fee_basis_points = 4;
 	repeated string protocol_fee_recipients = 5;
+	uint64 coin_creator_fee_basis_points = 6;
 }
 
 message CreatePoolEvent {
@@ -108,6 +128,7 @@ message CreatePoolEvent {
 	string lp_mint = 17;
 	string user_base_token_account = 18;
 	string user_quote_token_account = 19;
+	string coin_creator = 20;
 }
 
 message DepositEvent {
@@ -168,6 +189,25 @@ message SellEvent {
 	string user_quote_token_account = 18;
 	string protocol_fee_recipient = 19;
 	string protocol_fee_recipient_token_account = 20;
+	string coin_creator = 21;
+	uint64 coin_creator_fee_basis_points = 22;
+	uint64 coin_creator_fee = 23;
+}
+
+message SetBondingCurveCoinCreatorEvent {
+	int64 timestamp = 1;
+	string base_mint = 2;
+	string pool = 3;
+	string bonding_curve = 4;
+	string coin_creator = 5;
+}
+
+message SetMetaplexCoinCreatorEvent {
+	int64 timestamp = 1;
+	string base_mint = 2;
+	string pool = 3;
+	string metadata = 4;
+	string coin_creator = 5;
 }
 
 message UpdateAdminEvent {
@@ -182,6 +222,7 @@ message UpdateFeeConfigEvent {
 	uint64 lp_fee_basis_points = 3;
 	uint64 protocol_fee_basis_points = 4;
 	repeated string protocol_fee_recipients = 5;
+	uint64 coin_creator_fee_basis_points = 6;
 }
 
 message WithdrawEvent {
@@ -204,12 +245,23 @@ message WithdrawEvent {
 }
 
 
+message BondingCurve {
+	uint64 virtual_token_reserves = 1;
+	uint64 virtual_sol_reserves = 2;
+	uint64 real_token_reserves = 3;
+	uint64 real_sol_reserves = 4;
+	uint64 token_total_supply = 5;
+	bool complete = 6;
+	string creator = 7;
+}
+
 message GlobalConfig {
 	string admin = 1;
 	uint64 lp_fee_basis_points = 2;
 	uint64 protocol_fee_basis_points = 3;
 	uint32 disable_flags = 4;
 	repeated string protocol_fee_recipients = 5;
+	uint64 coin_creator_fee_basis_points = 6;
 }
 
 message Pool {
@@ -222,6 +274,7 @@ message Pool {
 	string pool_base_token_account = 7;
 	string pool_quote_token_account = 8;
 	uint64 lp_supply = 9;
+	string coin_creator = 10;
 }
 
 
@@ -243,12 +296,26 @@ message BuyIxAccounts {
 	string associated_token_program = 15;
 	string event_authority = 16;
 	string program = 17;
+	string coin_creator_vault_ata = 18;
+	string coin_creator_vault_authority = 19;
 }
 
 message BuyIxData {
 	uint64 base_amount_out = 1;
 	uint64 max_quote_amount_in = 2;
 }
+
+message CollectCoinCreatorFeeIxAccounts {
+	string quote_mint = 1;
+	string quote_token_program = 2;
+	string coin_creator = 3;
+	string coin_creator_vault_authority = 4;
+	string coin_creator_vault_ata = 5;
+	string coin_creator_token_account = 6;
+	string event_authority = 7;
+	string program = 8;
+}
+
 
 message CreateConfigIxAccounts {
 	string admin = 1;
@@ -262,6 +329,7 @@ message CreateConfigIxData {
 	uint64 lp_fee_basis_points = 1;
 	uint64 protocol_fee_basis_points = 2;
 	repeated string protocol_fee_recipients = 3;
+	uint64 coin_creator_fee_basis_points = 4;
 }
 
 message CreatePoolIxAccounts {
@@ -289,6 +357,7 @@ message CreatePoolIxData {
 	uint32 index = 1;
 	uint64 base_amount_in = 2;
 	uint64 quote_amount_in = 3;
+	string coin_creator = 4;
 }
 
 message DepositIxAccounts {
@@ -357,12 +426,23 @@ message SellIxAccounts {
 	string associated_token_program = 15;
 	string event_authority = 16;
 	string program = 17;
+	string coin_creator_vault_ata = 18;
+	string coin_creator_vault_authority = 19;
 }
 
 message SellIxData {
 	uint64 base_amount_in = 1;
 	uint64 min_quote_amount_out = 2;
 }
+
+message SetCoinCreatorIxAccounts {
+	string pool = 1;
+	string metadata = 2;
+	string bonding_curve = 3;
+	string event_authority = 4;
+	string program = 5;
+}
+
 
 message UpdateAdminIxAccounts {
 	string admin = 1;
@@ -384,6 +464,7 @@ message UpdateFeeConfigIxData {
 	uint64 lp_fee_basis_points = 1;
 	uint64 protocol_fee_basis_points = 2;
 	repeated string protocol_fee_recipients = 3;
+	uint64 coin_creator_fee_basis_points = 4;
 }
 
 message WithdrawIxAccounts {
@@ -413,23 +494,26 @@ message WithdrawIxData {
 
 message ProgramState {
     oneof state_oneof {
-        	GlobalConfig global_config = 1;
-        	Pool pool = 2;
+        	BondingCurve bonding_curve = 1;
+        	GlobalConfig global_config = 2;
+        	Pool pool = 3;
         }
 }
 
 message ProgramIxs {
     oneof ix_oneof {
         	BuyIx buy = 1;
-        	CreateConfigIx create_config = 2;
-        	CreatePoolIx create_pool = 3;
-        	DepositIx deposit = 4;
-        	DisableIx disable = 5;
-        	ExtendAccountIx extend_account = 6;
-        	SellIx sell = 7;
-        	UpdateAdminIx update_admin = 8;
-        	UpdateFeeConfigIx update_fee_config = 9;
-        	WithdrawIx withdraw = 10;
+        	CollectCoinCreatorFeeIx collect_coin_creator_fee = 2;
+        	CreateConfigIx create_config = 3;
+        	CreatePoolIx create_pool = 4;
+        	DepositIx deposit = 5;
+        	DisableIx disable = 6;
+        	ExtendAccountIx extend_account = 7;
+        	SellIx sell = 8;
+        	SetCoinCreatorIx set_coin_creator = 9;
+        	UpdateAdminIx update_admin = 10;
+        	UpdateFeeConfigIx update_fee_config = 11;
+        	WithdrawIx withdraw = 12;
         }
 }
 

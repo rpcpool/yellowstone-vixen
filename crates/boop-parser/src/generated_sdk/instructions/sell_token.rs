@@ -10,36 +10,33 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct SellToken {
-    pub mint: solana_program::pubkey::Pubkey,
+    pub mint: solana_pubkey::Pubkey,
 
-    pub bonding_curve: solana_program::pubkey::Pubkey,
+    pub bonding_curve: solana_pubkey::Pubkey,
 
-    pub trading_fees_vault: solana_program::pubkey::Pubkey,
+    pub trading_fees_vault: solana_pubkey::Pubkey,
 
-    pub bonding_curve_vault: solana_program::pubkey::Pubkey,
+    pub bonding_curve_vault: solana_pubkey::Pubkey,
 
-    pub bonding_curve_sol_vault: solana_program::pubkey::Pubkey,
+    pub bonding_curve_sol_vault: solana_pubkey::Pubkey,
 
-    pub seller_token_account: solana_program::pubkey::Pubkey,
+    pub seller_token_account: solana_pubkey::Pubkey,
 
-    pub seller: solana_program::pubkey::Pubkey,
+    pub seller: solana_pubkey::Pubkey,
 
-    pub recipient: solana_program::pubkey::Pubkey,
+    pub recipient: solana_pubkey::Pubkey,
 
-    pub config: solana_program::pubkey::Pubkey,
+    pub config: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 }
 
 impl SellToken {
-    pub fn instruction(
-        &self,
-        args: SellTokenInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self, args: SellTokenInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -48,53 +45,47 @@ impl SellToken {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: SellTokenInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.mint, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.bonding_curve,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.trading_fees_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.bonding_curve_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.bonding_curve_sol_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.seller_token_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.seller,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.recipient,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.seller, true));
+        accounts.push(solana_instruction::AccountMeta::new(self.recipient, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
@@ -103,7 +94,7 @@ impl SellToken {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::BOOP_ID,
             accounts,
             data,
@@ -154,52 +145,46 @@ pub struct SellTokenInstructionArgs {
 ///   11. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 #[derive(Clone, Debug, Default)]
 pub struct SellTokenBuilder {
-    mint: Option<solana_program::pubkey::Pubkey>,
-    bonding_curve: Option<solana_program::pubkey::Pubkey>,
-    trading_fees_vault: Option<solana_program::pubkey::Pubkey>,
-    bonding_curve_vault: Option<solana_program::pubkey::Pubkey>,
-    bonding_curve_sol_vault: Option<solana_program::pubkey::Pubkey>,
-    seller_token_account: Option<solana_program::pubkey::Pubkey>,
-    seller: Option<solana_program::pubkey::Pubkey>,
-    recipient: Option<solana_program::pubkey::Pubkey>,
-    config: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
+    mint: Option<solana_pubkey::Pubkey>,
+    bonding_curve: Option<solana_pubkey::Pubkey>,
+    trading_fees_vault: Option<solana_pubkey::Pubkey>,
+    bonding_curve_vault: Option<solana_pubkey::Pubkey>,
+    bonding_curve_sol_vault: Option<solana_pubkey::Pubkey>,
+    seller_token_account: Option<solana_pubkey::Pubkey>,
+    seller: Option<solana_pubkey::Pubkey>,
+    recipient: Option<solana_pubkey::Pubkey>,
+    config: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
     sell_amount: Option<u64>,
     amount_out_min: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl SellTokenBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn mint(&mut self, mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn mint(&mut self, mint: solana_pubkey::Pubkey) -> &mut Self {
         self.mint = Some(mint);
         self
     }
 
     #[inline(always)]
-    pub fn bonding_curve(&mut self, bonding_curve: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn bonding_curve(&mut self, bonding_curve: solana_pubkey::Pubkey) -> &mut Self {
         self.bonding_curve = Some(bonding_curve);
         self
     }
 
     #[inline(always)]
-    pub fn trading_fees_vault(
-        &mut self,
-        trading_fees_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn trading_fees_vault(&mut self, trading_fees_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.trading_fees_vault = Some(trading_fees_vault);
         self
     }
 
     #[inline(always)]
-    pub fn bonding_curve_vault(
-        &mut self,
-        bonding_curve_vault: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn bonding_curve_vault(&mut self, bonding_curve_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.bonding_curve_vault = Some(bonding_curve_vault);
         self
     }
@@ -207,7 +192,7 @@ impl SellTokenBuilder {
     #[inline(always)]
     pub fn bonding_curve_sol_vault(
         &mut self,
-        bonding_curve_sol_vault: solana_program::pubkey::Pubkey,
+        bonding_curve_sol_vault: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.bonding_curve_sol_vault = Some(bonding_curve_sol_vault);
         self
@@ -216,40 +201,40 @@ impl SellTokenBuilder {
     #[inline(always)]
     pub fn seller_token_account(
         &mut self,
-        seller_token_account: solana_program::pubkey::Pubkey,
+        seller_token_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.seller_token_account = Some(seller_token_account);
         self
     }
 
     #[inline(always)]
-    pub fn seller(&mut self, seller: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn seller(&mut self, seller: solana_pubkey::Pubkey) -> &mut Self {
         self.seller = Some(seller);
         self
     }
 
     #[inline(always)]
-    pub fn recipient(&mut self, recipient: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn recipient(&mut self, recipient: solana_pubkey::Pubkey) -> &mut Self {
         self.recipient = Some(recipient);
         self
     }
 
     #[inline(always)]
-    pub fn config(&mut self, config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -258,7 +243,7 @@ impl SellTokenBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
@@ -278,10 +263,7 @@ impl SellTokenBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -290,14 +272,14 @@ impl SellTokenBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = SellToken {
             mint: self.mint.expect("mint is not set"),
             bonding_curve: self.bonding_curve.expect("bonding_curve is not set"),
@@ -318,12 +300,12 @@ impl SellTokenBuilder {
             config: self.config.expect("config is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self.associated_token_program.unwrap_or(
-                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
         };
         let args = SellTokenInstructionArgs {
@@ -340,66 +322,66 @@ impl SellTokenBuilder {
 
 /// `sell_token` CPI accounts.
 pub struct SellTokenCpiAccounts<'a, 'b> {
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub trading_fees_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub trading_fees_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve_sol_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve_sol_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub seller_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub seller_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub seller: &'b solana_program::account_info::AccountInfo<'a>,
+    pub seller: &'b solana_account_info::AccountInfo<'a>,
 
-    pub recipient: &'b solana_program::account_info::AccountInfo<'a>,
+    pub recipient: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `sell_token` CPI instruction.
 pub struct SellTokenCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub trading_fees_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub trading_fees_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub bonding_curve_sol_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub bonding_curve_sol_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub seller_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub seller_token_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub seller: &'b solana_program::account_info::AccountInfo<'a>,
+    pub seller: &'b solana_account_info::AccountInfo<'a>,
 
-    pub recipient: &'b solana_program::account_info::AccountInfo<'a>,
+    pub recipient: &'b solana_account_info::AccountInfo<'a>,
 
-    pub config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: SellTokenInstructionArgs,
 }
 
 impl<'a, 'b> SellTokenCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: SellTokenCpiAccounts<'a, 'b>,
         args: SellTokenInstructionArgs,
     ) -> Self {
@@ -422,19 +404,15 @@ impl<'a, 'b> SellTokenCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -442,7 +420,7 @@ impl<'a, 'b> SellTokenCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -452,63 +430,56 @@ impl<'a, 'b> SellTokenCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.bonding_curve.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.trading_fees_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.bonding_curve_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.bonding_curve_sol_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.seller_token_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.seller.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.seller.key, true));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.recipient.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -518,7 +489,7 @@ impl<'a, 'b> SellTokenCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::BOOP_ID,
             accounts,
             data,
@@ -542,9 +513,9 @@ impl<'a, 'b> SellTokenCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -571,7 +542,7 @@ pub struct SellTokenCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(SellTokenCpiBuilderInstruction {
             __program: program,
             mint: None,
@@ -594,7 +565,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn mint(&mut self, mint: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn mint(&mut self, mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.mint = Some(mint);
         self
     }
@@ -602,7 +573,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bonding_curve(
         &mut self,
-        bonding_curve: &'b solana_program::account_info::AccountInfo<'a>,
+        bonding_curve: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.bonding_curve = Some(bonding_curve);
         self
@@ -611,7 +582,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn trading_fees_vault(
         &mut self,
-        trading_fees_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        trading_fees_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.trading_fees_vault = Some(trading_fees_vault);
         self
@@ -620,7 +591,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bonding_curve_vault(
         &mut self,
-        bonding_curve_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        bonding_curve_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.bonding_curve_vault = Some(bonding_curve_vault);
         self
@@ -629,7 +600,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn bonding_curve_sol_vault(
         &mut self,
-        bonding_curve_sol_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        bonding_curve_sol_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.bonding_curve_sol_vault = Some(bonding_curve_sol_vault);
         self
@@ -638,35 +609,26 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn seller_token_account(
         &mut self,
-        seller_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+        seller_token_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.seller_token_account = Some(seller_token_account);
         self
     }
 
     #[inline(always)]
-    pub fn seller(
-        &mut self,
-        seller: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn seller(&mut self, seller: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.seller = Some(seller);
         self
     }
 
     #[inline(always)]
-    pub fn recipient(
-        &mut self,
-        recipient: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn recipient(&mut self, recipient: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.recipient = Some(recipient);
         self
     }
 
     #[inline(always)]
-    pub fn config(
-        &mut self,
-        config: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
@@ -674,7 +636,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -683,7 +645,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -692,7 +654,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -714,7 +676,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -731,11 +693,7 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -744,14 +702,14 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = SellTokenInstructionArgs {
             sell_amount: self
                 .instruction
@@ -825,25 +783,21 @@ impl<'a, 'b> SellTokenCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct SellTokenCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bonding_curve: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    trading_fees_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bonding_curve_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    bonding_curve_sol_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    seller_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    seller: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    recipient: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bonding_curve: Option<&'b solana_account_info::AccountInfo<'a>>,
+    trading_fees_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bonding_curve_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    bonding_curve_sol_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    seller_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    seller: Option<&'b solana_account_info::AccountInfo<'a>>,
+    recipient: Option<&'b solana_account_info::AccountInfo<'a>>,
+    config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     sell_amount: Option<u64>,
     amount_out_min: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

@@ -1,14 +1,27 @@
+
+
 [package]
 name = "yellowstone-vixen-meteora-vault-parser"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
+description = "Vixen program parser for Meteora Vault program"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+
 
 [dependencies]
 prost = "0.13.1"
-tonic = { version = "0.12.1", features = ["gzip", "zstd"] }
-solana-program = "^2.1.6"
-borsh = "^0.10"
 yellowstone-vixen-core = { workspace = true, features = ["proto"] }
+tonic = { version = "0.12.1", features = ["gzip", "zstd"] }
+solana-account-info = "2.2.1"
+solana-cpi = "2.2.1"
+solana-decode-error = "2.2.1"
+solana-pubkey = { version = "2.2.1", features = ["curve25519", "borsh"] }
+solana-instruction = "2.2.1"
+solana-msg = "2.2.1"
+solana-program-entrypoint = "2.2.1"
+solana-program-error = "2.2.1"
+borsh = "^0.10"
 num-derive = "0.4"
 thiserror = "1.0.64"
 num-traits = "^0.2"
@@ -23,6 +36,8 @@ serde = []
 test-sbf = []
 fetch = []
 tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]
+# Exposes shared transaction data like tx signature, slot and more, to be available in Vixen Handlers
+shared-data = []
 
 [build-dependencies]
 prost-build = "0.13.1"

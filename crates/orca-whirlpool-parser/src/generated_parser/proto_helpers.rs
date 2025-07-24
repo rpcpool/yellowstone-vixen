@@ -9,7 +9,51 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::{proto_def, types::PositionRewardInfo};
+    use crate::{proto_def, types::DynamicTickData};
+    impl IntoProto<proto_def::DynamicTickData> for DynamicTickData {
+        fn into_proto(self) -> proto_def::DynamicTickData {
+            proto_def::DynamicTickData {
+                liquidity_net: self.liquidity_net.to_string(),
+                liquidity_gross: self.liquidity_gross.to_string(),
+                fee_growth_outside_a: self.fee_growth_outside_a.to_string(),
+                fee_growth_outside_b: self.fee_growth_outside_b.to_string(),
+                reward_growths_outside: self
+                    .reward_growths_outside
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+            }
+        }
+    }
+    use crate::types::AdaptiveFeeConstants;
+    impl IntoProto<proto_def::AdaptiveFeeConstants> for AdaptiveFeeConstants {
+        fn into_proto(self) -> proto_def::AdaptiveFeeConstants {
+            proto_def::AdaptiveFeeConstants {
+                filter_period: self.filter_period.into(),
+                decay_period: self.decay_period.into(),
+                reduction_factor: self.reduction_factor.into(),
+                adaptive_fee_control_factor: self.adaptive_fee_control_factor,
+                max_volatility_accumulator: self.max_volatility_accumulator,
+                tick_group_size: self.tick_group_size.into(),
+                major_swap_threshold_ticks: self.major_swap_threshold_ticks.into(),
+                reserved: self.reserved.into_iter().map(|x| x.into()).collect(),
+            }
+        }
+    }
+    use crate::types::AdaptiveFeeVariables;
+    impl IntoProto<proto_def::AdaptiveFeeVariables> for AdaptiveFeeVariables {
+        fn into_proto(self) -> proto_def::AdaptiveFeeVariables {
+            proto_def::AdaptiveFeeVariables {
+                last_reference_update_timestamp: self.last_reference_update_timestamp,
+                last_major_swap_timestamp: self.last_major_swap_timestamp,
+                volatility_reference: self.volatility_reference,
+                tick_group_index_reference: self.tick_group_index_reference,
+                volatility_accumulator: self.volatility_accumulator,
+                reserved: self.reserved.into_iter().map(|x| x.into()).collect(),
+            }
+        }
+    }
+    use crate::types::PositionRewardInfo;
     impl IntoProto<proto_def::PositionRewardInfo> for PositionRewardInfo {
         fn into_proto(self) -> proto_def::PositionRewardInfo {
             proto_def::PositionRewardInfo {
@@ -61,6 +105,28 @@ pub mod proto_types_parsers {
             proto_def::RemainingAccountsSlice {
                 accounts_type: self.accounts_type as i32,
                 length: self.length.into(),
+            }
+        }
+    }
+
+    use proto_def::dynamic_tick;
+
+    use crate::types::DynamicTick;
+    impl IntoProto<proto_def::DynamicTick> for DynamicTick {
+        fn into_proto(self) -> proto_def::DynamicTick {
+            let variant = match self {
+                DynamicTick::Uninitialized => {
+                    dynamic_tick::Variant::Uninitialized(proto_def::DynamicTickUninitialized {})
+                },
+                DynamicTick::Initialized(field_0) => {
+                    dynamic_tick::Variant::Initialized(proto_def::DynamicTickInitialized {
+                        field_0: Some(field_0.into_proto()),
+                    })
+                },
+            };
+
+            proto_def::DynamicTick {
+                variant: Some(variant),
             }
         }
     }

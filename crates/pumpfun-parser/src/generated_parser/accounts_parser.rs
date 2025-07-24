@@ -7,7 +7,7 @@
 
 use crate::{
     accounts::{BondingCurve, Global},
-    ID,
+    deserialize_checked, ID,
 };
 
 /// Pump Program State
@@ -24,11 +24,11 @@ impl PumpProgramState {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
             [23, 183, 248, 55, 96, 216, 172, 96] => Ok(PumpProgramState::BondingCurve(
-                BondingCurve::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
-            [167, 232, 232, 177, 200, 108, 114, 127] => {
-                Ok(PumpProgramState::Global(Global::from_bytes(data_bytes)?))
-            },
+            [167, 232, 232, 177, 200, 108, 114, 127] => Ok(PumpProgramState::Global(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
@@ -83,8 +83,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        PumpProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = PumpProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 
@@ -108,6 +123,7 @@ mod proto_parser {
                 real_sol_reserves: self.real_sol_reserves,
                 token_total_supply: self.token_total_supply,
                 complete: self.complete,
+                creator: self.creator.to_string(),
             }
         }
     }
@@ -123,6 +139,16 @@ mod proto_parser {
                 initial_real_token_reserves: self.initial_real_token_reserves,
                 token_total_supply: self.token_total_supply,
                 fee_basis_points: self.fee_basis_points,
+                withdraw_authority: self.withdraw_authority.to_string(),
+                enable_migrate: self.enable_migrate,
+                pool_migration_fee: self.pool_migration_fee,
+                creator_fee_basis_points: self.creator_fee_basis_points,
+                fee_recipients: self
+                    .fee_recipients
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+                set_creator_authority: self.set_creator_authority.to_string(),
             }
         }
     }

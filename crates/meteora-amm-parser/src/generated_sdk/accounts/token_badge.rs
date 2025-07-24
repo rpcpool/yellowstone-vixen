@@ -6,7 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -33,12 +33,10 @@ impl TokenBadge {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for TokenBadge {
+impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for TokenBadge {
     type Error = std::io::Error;
 
-    fn try_from(
-        account_info: &solana_program::account_info::AccountInfo<'a>,
-    ) -> Result<Self, Self::Error> {
+    fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
         let mut data: &[u8] = &(*account_info.data).borrow();
         Self::deserialize(&mut data)
     }
@@ -47,7 +45,7 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for TokenBadge 
 #[cfg(feature = "fetch")]
 pub fn fetch_token_badge(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::DecodedAccount<TokenBadge>, std::io::Error> {
     let accounts = fetch_all_token_badge(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -56,7 +54,7 @@ pub fn fetch_token_badge(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_token_badge(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::DecodedAccount<TokenBadge>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -81,7 +79,7 @@ pub fn fetch_all_token_badge(
 #[cfg(feature = "fetch")]
 pub fn fetch_maybe_token_badge(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::MaybeAccount<TokenBadge>, std::io::Error> {
     let accounts = fetch_all_maybe_token_badge(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -90,7 +88,7 @@ pub fn fetch_maybe_token_badge(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_maybe_token_badge(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::MaybeAccount<TokenBadge>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)

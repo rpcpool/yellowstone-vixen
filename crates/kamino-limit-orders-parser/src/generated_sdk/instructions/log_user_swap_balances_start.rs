@@ -10,35 +10,35 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct LogUserSwapBalancesStart {
-    pub maker: solana_program::pubkey::Pubkey,
+    pub maker: solana_pubkey::Pubkey,
 
-    pub input_mint: solana_program::pubkey::Pubkey,
+    pub input_mint: solana_pubkey::Pubkey,
 
-    pub output_mint: solana_program::pubkey::Pubkey,
+    pub output_mint: solana_pubkey::Pubkey,
 
-    pub input_ta: solana_program::pubkey::Pubkey,
+    pub input_ta: solana_pubkey::Pubkey,
 
-    pub output_ta: solana_program::pubkey::Pubkey,
+    pub output_ta: solana_pubkey::Pubkey,
     /// if it's not the pda it doesn't matter
-    pub pda_referrer: Option<solana_program::pubkey::Pubkey>,
+    pub pda_referrer: Option<solana_pubkey::Pubkey>,
 
-    pub swap_program_id: solana_program::pubkey::Pubkey,
+    pub swap_program_id: solana_pubkey::Pubkey,
 
-    pub user_swap_balance_state: solana_program::pubkey::Pubkey,
+    pub user_swap_balance_state: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 
-    pub sysvar_instructions: solana_program::pubkey::Pubkey,
+    pub sysvar_instructions: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl LogUserSwapBalancesStart {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -46,70 +46,70 @@ impl LogUserSwapBalancesStart {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.maker, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.output_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_ta,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.output_ta,
             false,
         ));
         if let Some(pda_referrer) = self.pda_referrer {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 pda_referrer,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LIMO_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.swap_program_id,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.user_swap_balance_state,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.sysvar_instructions,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&LogUserSwapBalancesStartInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LIMO_ID,
             accounts,
             data,
@@ -154,51 +154,51 @@ impl Default for LogUserSwapBalancesStartInstructionData {
 ///   12. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct LogUserSwapBalancesStartBuilder {
-    maker: Option<solana_program::pubkey::Pubkey>,
-    input_mint: Option<solana_program::pubkey::Pubkey>,
-    output_mint: Option<solana_program::pubkey::Pubkey>,
-    input_ta: Option<solana_program::pubkey::Pubkey>,
-    output_ta: Option<solana_program::pubkey::Pubkey>,
-    pda_referrer: Option<solana_program::pubkey::Pubkey>,
-    swap_program_id: Option<solana_program::pubkey::Pubkey>,
-    user_swap_balance_state: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    sysvar_instructions: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    maker: Option<solana_pubkey::Pubkey>,
+    input_mint: Option<solana_pubkey::Pubkey>,
+    output_mint: Option<solana_pubkey::Pubkey>,
+    input_ta: Option<solana_pubkey::Pubkey>,
+    output_ta: Option<solana_pubkey::Pubkey>,
+    pda_referrer: Option<solana_pubkey::Pubkey>,
+    swap_program_id: Option<solana_pubkey::Pubkey>,
+    user_swap_balance_state: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    sysvar_instructions: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl LogUserSwapBalancesStartBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn maker(&mut self, maker: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn maker(&mut self, maker: solana_pubkey::Pubkey) -> &mut Self {
         self.maker = Some(maker);
         self
     }
 
     #[inline(always)]
-    pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_mint(&mut self, input_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
 
     #[inline(always)]
-    pub fn output_mint(&mut self, output_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn output_mint(&mut self, output_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.output_mint = Some(output_mint);
         self
     }
 
     #[inline(always)]
-    pub fn input_ta(&mut self, input_ta: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_ta(&mut self, input_ta: solana_pubkey::Pubkey) -> &mut Self {
         self.input_ta = Some(input_ta);
         self
     }
 
     #[inline(always)]
-    pub fn output_ta(&mut self, output_ta: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn output_ta(&mut self, output_ta: solana_pubkey::Pubkey) -> &mut Self {
         self.output_ta = Some(output_ta);
         self
     }
@@ -206,19 +206,13 @@ impl LogUserSwapBalancesStartBuilder {
     /// `[optional account]`
     /// if it's not the pda it doesn't matter
     #[inline(always)]
-    pub fn pda_referrer(
-        &mut self,
-        pda_referrer: Option<solana_program::pubkey::Pubkey>,
-    ) -> &mut Self {
+    pub fn pda_referrer(&mut self, pda_referrer: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.pda_referrer = pda_referrer;
         self
     }
 
     #[inline(always)]
-    pub fn swap_program_id(
-        &mut self,
-        swap_program_id: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn swap_program_id(&mut self, swap_program_id: solana_pubkey::Pubkey) -> &mut Self {
         self.swap_program_id = Some(swap_program_id);
         self
     }
@@ -226,7 +220,7 @@ impl LogUserSwapBalancesStartBuilder {
     #[inline(always)]
     pub fn user_swap_balance_state(
         &mut self,
-        user_swap_balance_state: solana_program::pubkey::Pubkey,
+        user_swap_balance_state: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.user_swap_balance_state = Some(user_swap_balance_state);
         self
@@ -234,49 +228,40 @@ impl LogUserSwapBalancesStartBuilder {
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
 
     /// `[optional account, default to 'Sysvar1nstructions1111111111111111111111111']`
     #[inline(always)]
-    pub fn sysvar_instructions(
-        &mut self,
-        sysvar_instructions: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn sysvar_instructions(&mut self, sysvar_instructions: solana_pubkey::Pubkey) -> &mut Self {
         self.sysvar_instructions = Some(sysvar_instructions);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -285,14 +270,14 @@ impl LogUserSwapBalancesStartBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = LogUserSwapBalancesStart {
             maker: self.maker.expect("maker is not set"),
             input_mint: self.input_mint.expect("input_mint is not set"),
@@ -306,11 +291,11 @@ impl LogUserSwapBalancesStartBuilder {
                 .expect("user_swap_balance_state is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
-            sysvar_instructions: self.sysvar_instructions.unwrap_or(solana_program::pubkey!(
+            sysvar_instructions: self.sysvar_instructions.unwrap_or(solana_pubkey::pubkey!(
                 "Sysvar1nstructions1111111111111111111111111"
             )),
             event_authority: self.event_authority.expect("event_authority is not set"),
@@ -323,68 +308,68 @@ impl LogUserSwapBalancesStartBuilder {
 
 /// `log_user_swap_balances_start` CPI accounts.
 pub struct LogUserSwapBalancesStartCpiAccounts<'a, 'b> {
-    pub maker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub maker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_ta: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_ta: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_ta: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_ta: &'b solana_account_info::AccountInfo<'a>,
     /// if it's not the pda it doesn't matter
-    pub pda_referrer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub pda_referrer: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub swap_program_id: &'b solana_program::account_info::AccountInfo<'a>,
+    pub swap_program_id: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_swap_balance_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_swap_balance_state: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub sysvar_instructions: &'b solana_program::account_info::AccountInfo<'a>,
+    pub sysvar_instructions: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `log_user_swap_balances_start` CPI instruction.
 pub struct LogUserSwapBalancesStartCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub maker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub maker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_ta: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_ta: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_ta: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_ta: &'b solana_account_info::AccountInfo<'a>,
     /// if it's not the pda it doesn't matter
-    pub pda_referrer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub pda_referrer: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub swap_program_id: &'b solana_program::account_info::AccountInfo<'a>,
+    pub swap_program_id: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_swap_balance_state: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_swap_balance_state: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub sysvar_instructions: &'b solana_program::account_info::AccountInfo<'a>,
+    pub sysvar_instructions: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> LogUserSwapBalancesStartCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: LogUserSwapBalancesStartCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -406,19 +391,15 @@ impl<'a, 'b> LogUserSwapBalancesStartCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -426,7 +407,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -436,74 +417,70 @@ impl<'a, 'b> LogUserSwapBalancesStartCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.maker.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.output_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_ta.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.output_ta.key,
             false,
         ));
         if let Some(pda_referrer) = self.pda_referrer {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 *pda_referrer.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LIMO_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.swap_program_id.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.user_swap_balance_state.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.sysvar_instructions.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -511,7 +488,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&LogUserSwapBalancesStartInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LIMO_ID,
             accounts,
             data,
@@ -538,9 +515,9 @@ impl<'a, 'b> LogUserSwapBalancesStartCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -568,7 +545,7 @@ pub struct LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(LogUserSwapBalancesStartCpiBuilderInstruction {
             __program: program,
             maker: None,
@@ -590,7 +567,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn maker(&mut self, maker: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn maker(&mut self, maker: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.maker = Some(maker);
         self
     }
@@ -598,7 +575,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_mint(
         &mut self,
-        input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        input_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_mint = Some(input_mint);
         self
@@ -607,26 +584,20 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_mint(
         &mut self,
-        output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        output_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_mint = Some(output_mint);
         self
     }
 
     #[inline(always)]
-    pub fn input_ta(
-        &mut self,
-        input_ta: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn input_ta(&mut self, input_ta: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.input_ta = Some(input_ta);
         self
     }
 
     #[inline(always)]
-    pub fn output_ta(
-        &mut self,
-        output_ta: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn output_ta(&mut self, output_ta: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.output_ta = Some(output_ta);
         self
     }
@@ -636,7 +607,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pda_referrer(
         &mut self,
-        pda_referrer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        pda_referrer: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.pda_referrer = pda_referrer;
         self
@@ -645,7 +616,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn swap_program_id(
         &mut self,
-        swap_program_id: &'b solana_program::account_info::AccountInfo<'a>,
+        swap_program_id: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.swap_program_id = Some(swap_program_id);
         self
@@ -654,7 +625,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_swap_balance_state(
         &mut self,
-        user_swap_balance_state: &'b solana_program::account_info::AccountInfo<'a>,
+        user_swap_balance_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.user_swap_balance_state = Some(user_swap_balance_state);
         self
@@ -663,14 +634,14 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
     }
 
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -678,7 +649,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn sysvar_instructions(
         &mut self,
-        sysvar_instructions: &'b solana_program::account_info::AccountInfo<'a>,
+        sysvar_instructions: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.sysvar_instructions = Some(sysvar_instructions);
         self
@@ -687,17 +658,14 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -706,7 +674,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -723,11 +691,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -736,14 +700,14 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let instruction = LogUserSwapBalancesStartCpi {
             __program: self.instruction.__program,
 
@@ -800,24 +764,20 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct LogUserSwapBalancesStartCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    maker: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_ta: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_ta: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pda_referrer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    swap_program_id: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_swap_balance_state: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    sysvar_instructions: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    maker: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_ta: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_ta: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pda_referrer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    swap_program_id: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_swap_balance_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    sysvar_instructions: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

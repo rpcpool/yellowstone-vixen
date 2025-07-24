@@ -218,6 +218,54 @@ message SwapPumpdotfunAmmSell { }
 
 message SwapGamma { }
 
+message SwapMeteoraDlmmSwapV2 {
+	RemainingAccountsInfo remaining_accounts_info = 1;
+}
+
+message SwapWoofi { }
+
+message SwapMeteoraDammV2 { }
+
+message SwapMeteoraDynamicBondingCurveSwap { }
+
+message SwapStabbleStableSwapV2 { }
+
+message SwapStabbleWeightedSwapV2 { }
+
+message SwapRaydiumLaunchlabBuy {
+	uint64 share_fee_rate = 1;
+}
+
+message SwapRaydiumLaunchlabSell {
+	uint64 share_fee_rate = 1;
+}
+
+message SwapBoopdotfunWrappedBuy { }
+
+message SwapBoopdotfunWrappedSell { }
+
+message SwapPlasma {
+	Side side = 1;
+}
+
+message SwapGoonFi {
+	bool is_bid = 1;
+	uint32 blacklist_bump = 2;
+}
+
+message SwapHumidiFi {
+	uint64 swap_id = 1;
+	bool is_base_to_quote = 2;
+}
+
+message SwapMeteoraDynamicBondingCurveSwapWithRemainingAccounts { }
+
+message SwapTesseraV {
+	Side side = 1;
+}
+
+message SwapRaydiumStable { }
+
 message ClaimIx {
 	ClaimIxAccounts accounts = 1;
 	ClaimIxData data = 2;
@@ -402,6 +450,22 @@ message Swap {
 		SwapPumpdotfunAmmBuy pumpdotfun_amm_buy = 73;
 		SwapPumpdotfunAmmSell pumpdotfun_amm_sell = 74;
 		SwapGamma gamma = 75;
+		SwapMeteoraDlmmSwapV2 meteora_dlmm_swap_v2 = 76;
+		SwapWoofi woofi = 77;
+		SwapMeteoraDammV2 meteora_damm_v2 = 78;
+		SwapMeteoraDynamicBondingCurveSwap meteora_dynamic_bonding_curve_swap = 79;
+		SwapStabbleStableSwapV2 stabble_stable_swap_v2 = 80;
+		SwapStabbleWeightedSwapV2 stabble_weighted_swap_v2 = 81;
+		SwapRaydiumLaunchlabBuy raydium_launchlab_buy = 82;
+		SwapRaydiumLaunchlabSell raydium_launchlab_sell = 83;
+		SwapBoopdotfunWrappedBuy boopdotfun_wrapped_buy = 84;
+		SwapBoopdotfunWrappedSell boopdotfun_wrapped_sell = 85;
+		SwapPlasma plasma = 86;
+		SwapGoonFi goon_fi = 87;
+		SwapHumidiFi humidi_fi = 88;
+		SwapMeteoraDynamicBondingCurveSwapWithRemainingAccounts meteora_dynamic_bonding_curve_swap_with_remaining_accounts = 89;
+		SwapTesseraV tessera_v = 90;
+		SwapRaydiumStable raydium_stable = 91;
 	}
 }
 

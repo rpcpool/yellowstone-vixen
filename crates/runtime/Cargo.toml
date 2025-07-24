@@ -1,11 +1,12 @@
 [package]
 name = "yellowstone-vixen"
 description = "An all-in-one consumer runtime library for Yellowstone"
-version = "0.3.0"
+version = "0.4.0"
 # authors = ["TODO"]
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
+readme = "./../../README.md"
 
 [dependencies]
 async-trait = "0.1.88"

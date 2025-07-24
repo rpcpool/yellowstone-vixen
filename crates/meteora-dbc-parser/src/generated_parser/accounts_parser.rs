@@ -10,7 +10,7 @@ use crate::{
         ClaimFeeOperator, Config, LockEscrow, MeteoraDammMigrationMetadata, MeteoraDammV2Metadata,
         PartnerMetadata, PoolConfig, VirtualPool, VirtualPoolMetadata,
     },
-    ID,
+    deserialize_checked, ID,
 };
 
 /// DynamicBondingCurve Program State
@@ -35,39 +35,46 @@ impl DynamicBondingCurveProgramState {
         let acc = match acc_discriminator {
             [166, 48, 134, 86, 34, 200, 188, 150] => {
                 Ok(DynamicBondingCurveProgramState::ClaimFeeOperator(
-                    ClaimFeeOperator::from_bytes(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [155, 12, 170, 224, 30, 250, 204, 130] => Ok(DynamicBondingCurveProgramState::Config(
-                Config::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
-            [190, 106, 121, 6, 200, 182, 21, 75] => Ok(
-                DynamicBondingCurveProgramState::LockEscrow(LockEscrow::from_bytes(data_bytes)?),
-            ),
+            [190, 106, 121, 6, 200, 182, 21, 75] => {
+                Ok(DynamicBondingCurveProgramState::LockEscrow(
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
+                ))
+            },
             [17, 155, 141, 215, 207, 4, 133, 156] => Ok(
-                DynamicBondingCurveProgramState::MeteoraDammMigrationMetadata(
-                    MeteoraDammMigrationMetadata::from_bytes(data_bytes)?,
-                ),
+                DynamicBondingCurveProgramState::MeteoraDammMigrationMetadata(deserialize_checked(
+                    data_bytes,
+                    &acc_discriminator,
+                )?),
             ),
             [104, 221, 219, 203, 10, 142, 250, 163] => {
                 Ok(DynamicBondingCurveProgramState::MeteoraDammV2Metadata(
-                    MeteoraDammV2Metadata::from_bytes(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             [68, 68, 130, 19, 16, 209, 98, 156] => {
                 Ok(DynamicBondingCurveProgramState::PartnerMetadata(
-                    PartnerMetadata::from_bytes(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
-            [26, 108, 14, 123, 116, 230, 129, 43] => Ok(
-                DynamicBondingCurveProgramState::PoolConfig(PoolConfig::from_bytes(data_bytes)?),
-            ),
-            [213, 224, 5, 209, 98, 69, 119, 92] => Ok(
-                DynamicBondingCurveProgramState::VirtualPool(VirtualPool::from_bytes(data_bytes)?),
-            ),
+            [26, 108, 14, 123, 116, 230, 129, 43] => {
+                Ok(DynamicBondingCurveProgramState::PoolConfig(
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
+                ))
+            },
+            [213, 224, 5, 209, 98, 69, 119, 92] => {
+                Ok(DynamicBondingCurveProgramState::VirtualPool(
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
+                ))
+            },
             [217, 37, 82, 250, 43, 47, 228, 254] => {
                 Ok(DynamicBondingCurveProgramState::VirtualPoolMetadata(
-                    VirtualPoolMetadata::from_bytes(data_bytes)?,
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
@@ -124,8 +131,23 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        DynamicBondingCurveProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = DynamicBondingCurveProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 

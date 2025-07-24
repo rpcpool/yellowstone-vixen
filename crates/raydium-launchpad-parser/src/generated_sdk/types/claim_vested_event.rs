@@ -6,7 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 /// Emitted when vesting token claimed by beneficiary
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

@@ -6,9 +6,16 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct LastWithdraw {
-    pub last_withdraw_timestamp: i64,
+pub struct CollectCreatorFeeEvent {
+    pub timestamp: i64,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub creator: Pubkey,
+    pub creator_fee: u64,
 }

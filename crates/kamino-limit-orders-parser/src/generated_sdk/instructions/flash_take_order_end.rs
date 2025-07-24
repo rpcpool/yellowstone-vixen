@@ -10,58 +10,58 @@ use borsh::{BorshDeserialize, BorshSerialize};
 /// Accounts.
 #[derive(Debug)]
 pub struct FlashTakeOrderEnd {
-    pub taker: solana_program::pubkey::Pubkey,
+    pub taker: solana_pubkey::Pubkey,
 
-    pub maker: solana_program::pubkey::Pubkey,
+    pub maker: solana_pubkey::Pubkey,
 
-    pub global_config: solana_program::pubkey::Pubkey,
+    pub global_config: solana_pubkey::Pubkey,
 
-    pub pda_authority: solana_program::pubkey::Pubkey,
+    pub pda_authority: solana_pubkey::Pubkey,
 
-    pub order: solana_program::pubkey::Pubkey,
+    pub order: solana_pubkey::Pubkey,
 
-    pub input_mint: solana_program::pubkey::Pubkey,
+    pub input_mint: solana_pubkey::Pubkey,
 
-    pub output_mint: solana_program::pubkey::Pubkey,
+    pub output_mint: solana_pubkey::Pubkey,
 
-    pub input_vault: solana_program::pubkey::Pubkey,
+    pub input_vault: solana_pubkey::Pubkey,
 
-    pub taker_input_ata: solana_program::pubkey::Pubkey,
+    pub taker_input_ata: solana_pubkey::Pubkey,
 
-    pub taker_output_ata: solana_program::pubkey::Pubkey,
+    pub taker_output_ata: solana_pubkey::Pubkey,
 
-    pub intermediary_output_token_account: Option<solana_program::pubkey::Pubkey>,
+    pub intermediary_output_token_account: Option<solana_pubkey::Pubkey>,
 
-    pub maker_output_ata: Option<solana_program::pubkey::Pubkey>,
+    pub maker_output_ata: Option<solana_pubkey::Pubkey>,
 
-    pub express_relay: solana_program::pubkey::Pubkey,
+    pub express_relay: solana_pubkey::Pubkey,
 
-    pub express_relay_metadata: solana_program::pubkey::Pubkey,
+    pub express_relay_metadata: solana_pubkey::Pubkey,
 
-    pub sysvar_instructions: solana_program::pubkey::Pubkey,
+    pub sysvar_instructions: solana_pubkey::Pubkey,
 
-    pub permission: Option<solana_program::pubkey::Pubkey>,
+    pub permission: Option<solana_pubkey::Pubkey>,
 
-    pub config_router: solana_program::pubkey::Pubkey,
+    pub config_router: solana_pubkey::Pubkey,
 
-    pub input_token_program: solana_program::pubkey::Pubkey,
+    pub input_token_program: solana_pubkey::Pubkey,
 
-    pub output_token_program: solana_program::pubkey::Pubkey,
+    pub output_token_program: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub rent: solana_program::pubkey::Pubkey,
+    pub rent: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl FlashTakeOrderEnd {
     pub fn instruction(
         &self,
         args: FlashTakeOrderEndInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -70,114 +70,108 @@ impl FlashTakeOrderEnd {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: FlashTakeOrderEndInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(23 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.taker, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.maker, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.taker, true));
+        accounts.push(solana_instruction::AccountMeta::new(self.maker, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.global_config,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.pda_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.order, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.order, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.output_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.input_vault,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.taker_input_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.taker_output_ata,
             false,
         ));
         if let Some(intermediary_output_token_account) = self.intermediary_output_token_account {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 intermediary_output_token_account,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LIMO_ID,
                 false,
             ));
         }
         if let Some(maker_output_ata) = self.maker_output_ata {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 maker_output_ata,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LIMO_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.express_relay,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.express_relay_metadata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.sysvar_instructions,
             false,
         ));
         if let Some(permission) = self.permission {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 permission, false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LIMO_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.config_router,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.output_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.rent, false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -186,7 +180,7 @@ impl FlashTakeOrderEnd {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LIMO_ID,
             accounts,
             data,
@@ -249,100 +243,94 @@ pub struct FlashTakeOrderEndInstructionArgs {
 ///   22. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct FlashTakeOrderEndBuilder {
-    taker: Option<solana_program::pubkey::Pubkey>,
-    maker: Option<solana_program::pubkey::Pubkey>,
-    global_config: Option<solana_program::pubkey::Pubkey>,
-    pda_authority: Option<solana_program::pubkey::Pubkey>,
-    order: Option<solana_program::pubkey::Pubkey>,
-    input_mint: Option<solana_program::pubkey::Pubkey>,
-    output_mint: Option<solana_program::pubkey::Pubkey>,
-    input_vault: Option<solana_program::pubkey::Pubkey>,
-    taker_input_ata: Option<solana_program::pubkey::Pubkey>,
-    taker_output_ata: Option<solana_program::pubkey::Pubkey>,
-    intermediary_output_token_account: Option<solana_program::pubkey::Pubkey>,
-    maker_output_ata: Option<solana_program::pubkey::Pubkey>,
-    express_relay: Option<solana_program::pubkey::Pubkey>,
-    express_relay_metadata: Option<solana_program::pubkey::Pubkey>,
-    sysvar_instructions: Option<solana_program::pubkey::Pubkey>,
-    permission: Option<solana_program::pubkey::Pubkey>,
-    config_router: Option<solana_program::pubkey::Pubkey>,
-    input_token_program: Option<solana_program::pubkey::Pubkey>,
-    output_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    rent: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    taker: Option<solana_pubkey::Pubkey>,
+    maker: Option<solana_pubkey::Pubkey>,
+    global_config: Option<solana_pubkey::Pubkey>,
+    pda_authority: Option<solana_pubkey::Pubkey>,
+    order: Option<solana_pubkey::Pubkey>,
+    input_mint: Option<solana_pubkey::Pubkey>,
+    output_mint: Option<solana_pubkey::Pubkey>,
+    input_vault: Option<solana_pubkey::Pubkey>,
+    taker_input_ata: Option<solana_pubkey::Pubkey>,
+    taker_output_ata: Option<solana_pubkey::Pubkey>,
+    intermediary_output_token_account: Option<solana_pubkey::Pubkey>,
+    maker_output_ata: Option<solana_pubkey::Pubkey>,
+    express_relay: Option<solana_pubkey::Pubkey>,
+    express_relay_metadata: Option<solana_pubkey::Pubkey>,
+    sysvar_instructions: Option<solana_pubkey::Pubkey>,
+    permission: Option<solana_pubkey::Pubkey>,
+    config_router: Option<solana_pubkey::Pubkey>,
+    input_token_program: Option<solana_pubkey::Pubkey>,
+    output_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    rent: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     input_amount: Option<u64>,
     min_output_amount: Option<u64>,
     tip_amount_permissionless_taking: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl FlashTakeOrderEndBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn taker(&mut self, taker: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn taker(&mut self, taker: solana_pubkey::Pubkey) -> &mut Self {
         self.taker = Some(taker);
         self
     }
 
     #[inline(always)]
-    pub fn maker(&mut self, maker: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn maker(&mut self, maker: solana_pubkey::Pubkey) -> &mut Self {
         self.maker = Some(maker);
         self
     }
 
     #[inline(always)]
-    pub fn global_config(&mut self, global_config: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn global_config(&mut self, global_config: solana_pubkey::Pubkey) -> &mut Self {
         self.global_config = Some(global_config);
         self
     }
 
     #[inline(always)]
-    pub fn pda_authority(&mut self, pda_authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn pda_authority(&mut self, pda_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pda_authority = Some(pda_authority);
         self
     }
 
     #[inline(always)]
-    pub fn order(&mut self, order: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn order(&mut self, order: solana_pubkey::Pubkey) -> &mut Self {
         self.order = Some(order);
         self
     }
 
     #[inline(always)]
-    pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_mint(&mut self, input_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
 
     #[inline(always)]
-    pub fn output_mint(&mut self, output_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn output_mint(&mut self, output_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.output_mint = Some(output_mint);
         self
     }
 
     #[inline(always)]
-    pub fn input_vault(&mut self, input_vault: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_vault(&mut self, input_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.input_vault = Some(input_vault);
         self
     }
 
     #[inline(always)]
-    pub fn taker_input_ata(
-        &mut self,
-        taker_input_ata: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn taker_input_ata(&mut self, taker_input_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.taker_input_ata = Some(taker_input_ata);
         self
     }
 
     #[inline(always)]
-    pub fn taker_output_ata(
-        &mut self,
-        taker_output_ata: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn taker_output_ata(&mut self, taker_output_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.taker_output_ata = Some(taker_output_ata);
         self
     }
@@ -351,7 +339,7 @@ impl FlashTakeOrderEndBuilder {
     #[inline(always)]
     pub fn intermediary_output_token_account(
         &mut self,
-        intermediary_output_token_account: Option<solana_program::pubkey::Pubkey>,
+        intermediary_output_token_account: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.intermediary_output_token_account = intermediary_output_token_account;
         self
@@ -361,14 +349,14 @@ impl FlashTakeOrderEndBuilder {
     #[inline(always)]
     pub fn maker_output_ata(
         &mut self,
-        maker_output_ata: Option<solana_program::pubkey::Pubkey>,
+        maker_output_ata: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.maker_output_ata = maker_output_ata;
         self
     }
 
     #[inline(always)]
-    pub fn express_relay(&mut self, express_relay: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn express_relay(&mut self, express_relay: solana_pubkey::Pubkey) -> &mut Self {
         self.express_relay = Some(express_relay);
         self
     }
@@ -376,7 +364,7 @@ impl FlashTakeOrderEndBuilder {
     #[inline(always)]
     pub fn express_relay_metadata(
         &mut self,
-        express_relay_metadata: solana_program::pubkey::Pubkey,
+        express_relay_metadata: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.express_relay_metadata = Some(express_relay_metadata);
         self
@@ -384,32 +372,26 @@ impl FlashTakeOrderEndBuilder {
 
     /// `[optional account, default to 'Sysvar1nstructions1111111111111111111111111']`
     #[inline(always)]
-    pub fn sysvar_instructions(
-        &mut self,
-        sysvar_instructions: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn sysvar_instructions(&mut self, sysvar_instructions: solana_pubkey::Pubkey) -> &mut Self {
         self.sysvar_instructions = Some(sysvar_instructions);
         self
     }
 
     /// `[optional account]`
     #[inline(always)]
-    pub fn permission(&mut self, permission: Option<solana_program::pubkey::Pubkey>) -> &mut Self {
+    pub fn permission(&mut self, permission: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.permission = permission;
         self
     }
 
     #[inline(always)]
-    pub fn config_router(&mut self, config_router: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn config_router(&mut self, config_router: solana_pubkey::Pubkey) -> &mut Self {
         self.config_router = Some(config_router);
         self
     }
 
     #[inline(always)]
-    pub fn input_token_program(
-        &mut self,
-        input_token_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn input_token_program(&mut self, input_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.input_token_program = Some(input_token_program);
         self
     }
@@ -417,7 +399,7 @@ impl FlashTakeOrderEndBuilder {
     #[inline(always)]
     pub fn output_token_program(
         &mut self,
-        output_token_program: solana_program::pubkey::Pubkey,
+        output_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.output_token_program = Some(output_token_program);
         self
@@ -425,29 +407,26 @@ impl FlashTakeOrderEndBuilder {
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
-    pub fn rent(&mut self, rent: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -475,10 +454,7 @@ impl FlashTakeOrderEndBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -487,14 +463,14 @@ impl FlashTakeOrderEndBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = FlashTakeOrderEnd {
             taker: self.taker.expect("taker is not set"),
             maker: self.maker.expect("maker is not set"),
@@ -512,7 +488,7 @@ impl FlashTakeOrderEndBuilder {
             express_relay_metadata: self
                 .express_relay_metadata
                 .expect("express_relay_metadata is not set"),
-            sysvar_instructions: self.sysvar_instructions.unwrap_or(solana_program::pubkey!(
+            sysvar_instructions: self.sysvar_instructions.unwrap_or(solana_pubkey::pubkey!(
                 "Sysvar1nstructions1111111111111111111111111"
             )),
             permission: self.permission,
@@ -525,8 +501,8 @@ impl FlashTakeOrderEndBuilder {
                 .expect("output_token_program is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            rent: self.rent.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
                 "SysvarRent111111111111111111111111111111111"
             )),
             event_authority: self.event_authority.expect("event_authority is not set"),
@@ -550,112 +526,110 @@ impl FlashTakeOrderEndBuilder {
 
 /// `flash_take_order_end` CPI accounts.
 pub struct FlashTakeOrderEndCpiAccounts<'a, 'b> {
-    pub taker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub maker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub maker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pda_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pda_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub order: &'b solana_program::account_info::AccountInfo<'a>,
+    pub order: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub taker_input_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker_input_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub taker_output_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker_output_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub intermediary_output_token_account:
-        Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub intermediary_output_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub maker_output_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub maker_output_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub express_relay: &'b solana_program::account_info::AccountInfo<'a>,
+    pub express_relay: &'b solana_account_info::AccountInfo<'a>,
 
-    pub express_relay_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub express_relay_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub sysvar_instructions: &'b solana_program::account_info::AccountInfo<'a>,
+    pub sysvar_instructions: &'b solana_account_info::AccountInfo<'a>,
 
-    pub permission: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub permission: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub config_router: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config_router: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `flash_take_order_end` CPI instruction.
 pub struct FlashTakeOrderEndCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub taker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub maker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub maker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub global_config: &'b solana_program::account_info::AccountInfo<'a>,
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pda_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub pda_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub order: &'b solana_program::account_info::AccountInfo<'a>,
+    pub order: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_vault: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_vault: &'b solana_account_info::AccountInfo<'a>,
 
-    pub taker_input_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker_input_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub taker_output_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker_output_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub intermediary_output_token_account:
-        Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub intermediary_output_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub maker_output_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub maker_output_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub express_relay: &'b solana_program::account_info::AccountInfo<'a>,
+    pub express_relay: &'b solana_account_info::AccountInfo<'a>,
 
-    pub express_relay_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub express_relay_metadata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub sysvar_instructions: &'b solana_program::account_info::AccountInfo<'a>,
+    pub sysvar_instructions: &'b solana_account_info::AccountInfo<'a>,
 
-    pub permission: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub permission: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub config_router: &'b solana_program::account_info::AccountInfo<'a>,
+    pub config_router: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub rent: &'b solana_program::account_info::AccountInfo<'a>,
+    pub rent: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: FlashTakeOrderEndInstructionArgs,
 }
 
 impl<'a, 'b> FlashTakeOrderEndCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: FlashTakeOrderEndCpiAccounts<'a, 'b>,
         args: FlashTakeOrderEndInstructionArgs,
     ) -> Self {
@@ -689,19 +663,15 @@ impl<'a, 'b> FlashTakeOrderEndCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
@@ -709,7 +679,7 @@ impl<'a, 'b> FlashTakeOrderEndCpi<'a, 'b> {
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -719,128 +689,115 @@ impl<'a, 'b> FlashTakeOrderEndCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(23 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.taker.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.maker.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.taker.key, true));
+        accounts.push(solana_instruction::AccountMeta::new(*self.maker.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.global_config.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.pda_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.order.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.order.key, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.output_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.input_vault.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.taker_input_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.taker_output_ata.key,
             false,
         ));
         if let Some(intermediary_output_token_account) = self.intermediary_output_token_account {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 *intermediary_output_token_account.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LIMO_ID,
                 false,
             ));
         }
         if let Some(maker_output_ata) = self.maker_output_ata {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 *maker_output_ata.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LIMO_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.express_relay.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.express_relay_metadata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.sysvar_instructions.key,
             false,
         ));
         if let Some(permission) = self.permission {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 *permission.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::LIMO_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.config_router.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.output_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.rent.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -850,7 +807,7 @@ impl<'a, 'b> FlashTakeOrderEndCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LIMO_ID,
             accounts,
             data,
@@ -891,9 +848,9 @@ impl<'a, 'b> FlashTakeOrderEndCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -931,7 +888,7 @@ pub struct FlashTakeOrderEndCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(FlashTakeOrderEndCpiBuilderInstruction {
             __program: program,
             taker: None,
@@ -966,13 +923,13 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn taker(&mut self, taker: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn taker(&mut self, taker: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.taker = Some(taker);
         self
     }
 
     #[inline(always)]
-    pub fn maker(&mut self, maker: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn maker(&mut self, maker: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.maker = Some(maker);
         self
     }
@@ -980,7 +937,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn global_config(
         &mut self,
-        global_config: &'b solana_program::account_info::AccountInfo<'a>,
+        global_config: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.global_config = Some(global_config);
         self
@@ -989,14 +946,14 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn pda_authority(
         &mut self,
-        pda_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        pda_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.pda_authority = Some(pda_authority);
         self
     }
 
     #[inline(always)]
-    pub fn order(&mut self, order: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn order(&mut self, order: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.order = Some(order);
         self
     }
@@ -1004,7 +961,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_mint(
         &mut self,
-        input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        input_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_mint = Some(input_mint);
         self
@@ -1013,7 +970,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_mint(
         &mut self,
-        output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        output_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_mint = Some(output_mint);
         self
@@ -1022,7 +979,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_vault(
         &mut self,
-        input_vault: &'b solana_program::account_info::AccountInfo<'a>,
+        input_vault: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_vault = Some(input_vault);
         self
@@ -1031,7 +988,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn taker_input_ata(
         &mut self,
-        taker_input_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        taker_input_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.taker_input_ata = Some(taker_input_ata);
         self
@@ -1040,7 +997,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn taker_output_ata(
         &mut self,
-        taker_output_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        taker_output_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.taker_output_ata = Some(taker_output_ata);
         self
@@ -1050,9 +1007,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn intermediary_output_token_account(
         &mut self,
-        intermediary_output_token_account: Option<
-            &'b solana_program::account_info::AccountInfo<'a>,
-        >,
+        intermediary_output_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.intermediary_output_token_account = intermediary_output_token_account;
         self
@@ -1062,7 +1017,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn maker_output_ata(
         &mut self,
-        maker_output_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        maker_output_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.maker_output_ata = maker_output_ata;
         self
@@ -1071,7 +1026,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn express_relay(
         &mut self,
-        express_relay: &'b solana_program::account_info::AccountInfo<'a>,
+        express_relay: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.express_relay = Some(express_relay);
         self
@@ -1080,7 +1035,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn express_relay_metadata(
         &mut self,
-        express_relay_metadata: &'b solana_program::account_info::AccountInfo<'a>,
+        express_relay_metadata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.express_relay_metadata = Some(express_relay_metadata);
         self
@@ -1089,7 +1044,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn sysvar_instructions(
         &mut self,
-        sysvar_instructions: &'b solana_program::account_info::AccountInfo<'a>,
+        sysvar_instructions: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.sysvar_instructions = Some(sysvar_instructions);
         self
@@ -1099,7 +1054,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn permission(
         &mut self,
-        permission: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        permission: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.permission = permission;
         self
@@ -1108,7 +1063,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn config_router(
         &mut self,
-        config_router: &'b solana_program::account_info::AccountInfo<'a>,
+        config_router: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.config_router = Some(config_router);
         self
@@ -1117,7 +1072,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_token_program(
         &mut self,
-        input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        input_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_token_program = Some(input_token_program);
         self
@@ -1126,7 +1081,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_token_program(
         &mut self,
-        output_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        output_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_token_program = Some(output_token_program);
         self
@@ -1135,14 +1090,14 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
     }
 
     #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
@@ -1150,17 +1105,14 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -1190,7 +1142,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -1207,11 +1159,7 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -1220,14 +1168,14 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(
         &self,
         signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    ) -> solana_program_entrypoint::ProgramResult {
         let args = FlashTakeOrderEndInstructionArgs {
             input_amount: self
                 .instruction
@@ -1346,37 +1294,33 @@ impl<'a, 'b> FlashTakeOrderEndCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct FlashTakeOrderEndCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    taker: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    maker: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    global_config: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    pda_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    order: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    taker_input_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    taker_output_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    intermediary_output_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    maker_output_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    express_relay: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    express_relay_metadata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    sysvar_instructions: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    permission: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    config_router: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    taker: Option<&'b solana_account_info::AccountInfo<'a>>,
+    maker: Option<&'b solana_account_info::AccountInfo<'a>>,
+    global_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pda_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    order: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
+    taker_input_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    taker_output_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    intermediary_output_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    maker_output_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    express_relay: Option<&'b solana_account_info::AccountInfo<'a>>,
+    express_relay_metadata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    sysvar_instructions: Option<&'b solana_account_info::AccountInfo<'a>>,
+    permission: Option<&'b solana_account_info::AccountInfo<'a>>,
+    config_router: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     input_amount: Option<u64>,
     min_output_amount: Option<u64>,
     tip_amount_permissionless_taking: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

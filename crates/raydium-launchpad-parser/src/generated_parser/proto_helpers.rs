@@ -139,24 +139,24 @@ pub mod proto_types_parsers {
         }
     }
 
-    use proto_def::curve_params::Variant as CurveParamsVariant;
+    use proto_def::curve_params;
 
     use crate::types::CurveParams;
     impl IntoProto<proto_def::CurveParams> for CurveParams {
         fn into_proto(self) -> proto_def::CurveParams {
             let variant = match self {
                 CurveParams::Constant { data } => {
-                    CurveParamsVariant::Constant(proto_def::CurveParamsConstant {
+                    curve_params::Variant::Constant(proto_def::CurveParamsConstant {
                         data: Some(data.into_proto()),
                     })
                 },
                 CurveParams::Fixed { data } => {
-                    CurveParamsVariant::Fixed(proto_def::CurveParamsFixed {
+                    curve_params::Variant::Fixed(proto_def::CurveParamsFixed {
                         data: Some(data.into_proto()),
                     })
                 },
                 CurveParams::Linear { data } => {
-                    CurveParamsVariant::Linear(proto_def::CurveParamsLinear {
+                    curve_params::Variant::Linear(proto_def::CurveParamsLinear {
                         data: Some(data.into_proto()),
                     })
                 },
@@ -167,38 +167,52 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use proto_def::platform_config_param::Variant;
+    use proto_def::platform_config_param;
 
     use crate::types::PlatformConfigParam;
     impl IntoProto<proto_def::PlatformConfigParam> for PlatformConfigParam {
         fn into_proto(self) -> proto_def::PlatformConfigParam {
             let variant = match self {
                 PlatformConfigParam::FeeWallet(field_0) => {
-                    Variant::FeeWallet(proto_def::PlatformConfigParamFeeWallet {
-                        field_0: field_0.to_string(),
-                    })
+                    platform_config_param::Variant::FeeWallet(
+                        proto_def::PlatformConfigParamFeeWallet {
+                            field_0: field_0.to_string(),
+                        },
+                    )
                 },
                 PlatformConfigParam::NFTWallet(field_0) => {
-                    Variant::NFTWallet(proto_def::PlatformConfigParamNftWallet {
-                        field_0: field_0.to_string(),
-                    })
+                    platform_config_param::Variant::NFTWallet(
+                        proto_def::PlatformConfigParamNftWallet {
+                            field_0: field_0.to_string(),
+                        },
+                    )
                 },
                 PlatformConfigParam::MigrateNftInfo(field_0) => {
-                    Variant::MigrateNftInfo(proto_def::PlatformConfigParamMigrateNftInfo {
-                        field_0: Some(field_0.into_proto()),
-                    })
+                    platform_config_param::Variant::MigrateNftInfo(
+                        proto_def::PlatformConfigParamMigrateNftInfo {
+                            field_0: Some(field_0.into_proto()),
+                        },
+                    )
                 },
                 PlatformConfigParam::FeeRate(field_0) => {
-                    Variant::FeeRate(proto_def::PlatformConfigParamFeeRate { field_0 })
+                    platform_config_param::Variant::FeeRate(proto_def::PlatformConfigParamFeeRate {
+                        field_0,
+                    })
                 },
                 PlatformConfigParam::Name(field_0) => {
-                    Variant::Name(proto_def::PlatformConfigParamName { field_0 })
+                    platform_config_param::Variant::Name(proto_def::PlatformConfigParamName {
+                        field_0,
+                    })
                 },
                 PlatformConfigParam::Web(field_0) => {
-                    Variant::Web(proto_def::PlatformConfigParamWeb { field_0 })
+                    platform_config_param::Variant::Web(proto_def::PlatformConfigParamWeb {
+                        field_0,
+                    })
                 },
                 PlatformConfigParam::Img(field_0) => {
-                    Variant::Img(proto_def::PlatformConfigParamImg { field_0 })
+                    platform_config_param::Variant::Img(proto_def::PlatformConfigParamImg {
+                        field_0,
+                    })
                 },
             };
 

@@ -5,13 +5,20 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+pub(crate) mod r#collect_creator_fee_event;
 pub(crate) mod r#complete_event;
+pub(crate) mod r#complete_pump_amm_migration_event;
 pub(crate) mod r#create_event;
-pub(crate) mod r#last_withdraw;
+pub(crate) mod r#extend_account_event;
+pub(crate) mod r#set_creator_event;
+pub(crate) mod r#set_metaplex_creator_event;
 pub(crate) mod r#set_params_event;
 pub(crate) mod r#trade_event;
+pub(crate) mod r#update_global_authority_event;
 
 pub use self::{
-    r#complete_event::*, r#create_event::*, r#last_withdraw::*, r#set_params_event::*,
-    r#trade_event::*,
+    r#collect_creator_fee_event::*, r#complete_event::*, r#complete_pump_amm_migration_event::*,
+    r#create_event::*, r#extend_account_event::*, r#set_creator_event::*,
+    r#set_metaplex_creator_event::*, r#set_params_event::*, r#trade_event::*,
+    r#update_global_authority_event::*,
 };

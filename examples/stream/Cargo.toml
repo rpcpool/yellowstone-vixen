@@ -13,7 +13,7 @@ toml = "0.8.12"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 yellowstone-vixen = { workspace = true, features = ["stream"] }
-yellowstone-grpc-source = { workspace = true }
+yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
 
 [build-dependencies]
 prost-build = "0.13.1"

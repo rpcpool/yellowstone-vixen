@@ -8,13 +8,13 @@ syntax = "proto3";
 
 package vixen.parser.pumpfun;
 
-message InitializeIx {
-	InitializeIxAccounts accounts = 1;
+message BuyIx {
+	BuyIxAccounts accounts = 1;
+	BuyIxData data = 2;
 }
 
-message SetParamsIx {
-	SetParamsIxAccounts accounts = 1;
-	SetParamsIxData data = 2;
+message CollectCreatorFeeIx {
+	CollectCreatorFeeIxAccounts accounts = 1;
 }
 
 message CreateIx {
@@ -22,9 +22,16 @@ message CreateIx {
 	CreateIxData data = 2;
 }
 
-message BuyIx {
-	BuyIxAccounts accounts = 1;
-	BuyIxData data = 2;
+message ExtendAccountIx {
+	ExtendAccountIxAccounts accounts = 1;
+}
+
+message InitializeIx {
+	InitializeIxAccounts accounts = 1;
+}
+
+message MigrateIx {
+	MigrateIxAccounts accounts = 1;
 }
 
 message SellIx {
@@ -32,13 +39,47 @@ message SellIx {
 	SellIxData data = 2;
 }
 
-message WithdrawIx {
-	WithdrawIxAccounts accounts = 1;
+message SetCreatorIx {
+	SetCreatorIxAccounts accounts = 1;
+	SetCreatorIxData data = 2;
+}
+
+message SetMetaplexCreatorIx {
+	SetMetaplexCreatorIxAccounts accounts = 1;
+}
+
+message SetParamsIx {
+	SetParamsIxAccounts accounts = 1;
+	SetParamsIxData data = 2;
+}
+
+message UpdateGlobalAuthorityIx {
+	UpdateGlobalAuthorityIxAccounts accounts = 1;
 }
 
 
-message LastWithdraw {
-	int64 last_withdraw_timestamp = 1;
+message CollectCreatorFeeEvent {
+	int64 timestamp = 1;
+	string creator = 2;
+	uint64 creator_fee = 3;
+}
+
+message CompleteEvent {
+	string user = 1;
+	string mint = 2;
+	string bonding_curve = 3;
+	int64 timestamp = 4;
+}
+
+message CompletePumpAmmMigrationEvent {
+	string user = 1;
+	string mint = 2;
+	uint64 mint_amount = 3;
+	uint64 sol_amount = 4;
+	uint64 pool_migration_fee = 5;
+	string bonding_curve = 6;
+	int64 timestamp = 7;
+	string pool = 8;
 }
 
 message CreateEvent {
@@ -48,6 +89,51 @@ message CreateEvent {
 	string mint = 4;
 	string bonding_curve = 5;
 	string user = 6;
+	string creator = 7;
+	int64 timestamp = 8;
+	uint64 virtual_token_reserves = 9;
+	uint64 virtual_sol_reserves = 10;
+	uint64 real_token_reserves = 11;
+	uint64 token_total_supply = 12;
+}
+
+message ExtendAccountEvent {
+	string account = 1;
+	string user = 2;
+	uint64 current_size = 3;
+	uint64 new_size = 4;
+	int64 timestamp = 5;
+}
+
+message SetCreatorEvent {
+	int64 timestamp = 1;
+	string mint = 2;
+	string bonding_curve = 3;
+	string creator = 4;
+}
+
+message SetMetaplexCreatorEvent {
+	int64 timestamp = 1;
+	string mint = 2;
+	string bonding_curve = 3;
+	string metadata = 4;
+	string creator = 5;
+}
+
+message SetParamsEvent {
+	uint64 initial_virtual_token_reserves = 1;
+	uint64 initial_virtual_sol_reserves = 2;
+	uint64 initial_real_token_reserves = 3;
+	uint64 final_real_sol_reserves = 4;
+	uint64 token_total_supply = 5;
+	uint64 fee_basis_points = 6;
+	string withdraw_authority = 7;
+	bool enable_migrate = 8;
+	uint64 pool_migration_fee = 9;
+	uint64 creator_fee_basis_points = 10;
+	repeated string fee_recipients = 11;
+	int64 timestamp = 12;
+	string set_creator_authority = 13;
 }
 
 message TradeEvent {
@@ -61,22 +147,19 @@ message TradeEvent {
 	uint64 virtual_token_reserves = 8;
 	uint64 real_sol_reserves = 9;
 	uint64 real_token_reserves = 10;
+	string fee_recipient = 11;
+	uint64 fee_basis_points = 12;
+	uint64 fee = 13;
+	string creator = 14;
+	uint64 creator_fee_basis_points = 15;
+	uint64 creator_fee = 16;
 }
 
-message CompleteEvent {
-	string user = 1;
-	string mint = 2;
-	string bonding_curve = 3;
+message UpdateGlobalAuthorityEvent {
+	string global = 1;
+	string authority = 2;
+	string new_authority = 3;
 	int64 timestamp = 4;
-}
-
-message SetParamsEvent {
-	string fee_recipient = 1;
-	uint64 initial_virtual_token_reserves = 2;
-	uint64 initial_virtual_sol_reserves = 3;
-	uint64 initial_real_token_reserves = 4;
-	uint64 token_total_supply = 5;
-	uint64 fee_basis_points = 6;
 }
 
 
@@ -87,6 +170,7 @@ message BondingCurve {
 	uint64 real_sol_reserves = 4;
 	uint64 token_total_supply = 5;
 	bool complete = 6;
+	string creator = 7;
 }
 
 message Global {
@@ -98,32 +182,43 @@ message Global {
 	uint64 initial_real_token_reserves = 6;
 	uint64 token_total_supply = 7;
 	uint64 fee_basis_points = 8;
+	string withdraw_authority = 9;
+	bool enable_migrate = 10;
+	uint64 pool_migration_fee = 11;
+	uint64 creator_fee_basis_points = 12;
+	repeated string fee_recipients = 13;
+	string set_creator_authority = 14;
 }
 
 
-message InitializeIxAccounts {
+message BuyIxAccounts {
 	string global = 1;
-	string user = 2;
-	string system_program = 3;
+	string fee_recipient = 2;
+	string mint = 3;
+	string bonding_curve = 4;
+	string associated_bonding_curve = 5;
+	string associated_user = 6;
+	string user = 7;
+	string system_program = 8;
+	string token_program = 9;
+	string creator_vault = 10;
+	string event_authority = 11;
+	string program = 12;
 }
 
+message BuyIxData {
+	uint64 amount = 1;
+	uint64 max_sol_cost = 2;
+}
 
-message SetParamsIxAccounts {
-	string global = 1;
-	string user = 2;
+message CollectCreatorFeeIxAccounts {
+	string creator = 1;
+	string creator_vault = 2;
 	string system_program = 3;
 	string event_authority = 4;
 	string program = 5;
 }
 
-message SetParamsIxData {
-	string fee_recipient = 1;
-	uint64 initial_virtual_token_reserves = 2;
-	uint64 initial_virtual_sol_reserves = 3;
-	uint64 initial_real_token_reserves = 4;
-	uint64 token_total_supply = 5;
-	uint64 fee_basis_points = 6;
-}
 
 message CreateIxAccounts {
 	string mint = 1;
@@ -149,25 +244,49 @@ message CreateIxData {
 	string creator = 4;
 }
 
-message BuyIxAccounts {
+message ExtendAccountIxAccounts {
+	string account = 1;
+	string user = 2;
+	string system_program = 3;
+	string event_authority = 4;
+	string program = 5;
+}
+
+
+message InitializeIxAccounts {
 	string global = 1;
-	string fee_recipient = 2;
+	string user = 2;
+	string system_program = 3;
+}
+
+
+message MigrateIxAccounts {
+	string global = 1;
+	string withdraw_authority = 2;
 	string mint = 3;
 	string bonding_curve = 4;
 	string associated_bonding_curve = 5;
-	string associated_user = 6;
-	string user = 7;
-	string system_program = 8;
-	string token_program = 9;
-	string rent = 10;
-	string event_authority = 11;
-	string program = 12;
+	string user = 6;
+	string system_program = 7;
+	string token_program = 8;
+	string pump_amm = 9;
+	string pool = 10;
+	string pool_authority = 11;
+	string pool_authority_mint_account = 12;
+	string pool_authority_wsol_account = 13;
+	string amm_global_config = 14;
+	string wsol_mint = 15;
+	string lp_mint = 16;
+	string user_pool_token_account = 17;
+	string pool_base_token_account = 18;
+	string pool_quote_token_account = 19;
+	string token2022_program = 20;
+	string associated_token_program = 21;
+	string pump_amm_event_authority = 22;
+	string event_authority = 23;
+	string program = 24;
 }
 
-message BuyIxData {
-	uint64 amount = 1;
-	uint64 max_sol_cost = 2;
-}
 
 message SellIxAccounts {
 	string global = 1;
@@ -178,7 +297,7 @@ message SellIxAccounts {
 	string associated_user = 6;
 	string user = 7;
 	string system_program = 8;
-	string associated_token_program = 9;
+	string creator_vault = 9;
 	string token_program = 10;
 	string event_authority = 11;
 	string program = 12;
@@ -189,19 +308,55 @@ message SellIxData {
 	uint64 min_sol_output = 2;
 }
 
-message WithdrawIxAccounts {
-	string global = 1;
-	string last_withdraw = 2;
+message SetCreatorIxAccounts {
+	string set_creator_authority = 1;
+	string global = 2;
 	string mint = 3;
-	string bonding_curve = 4;
-	string associated_bonding_curve = 5;
-	string associated_user = 6;
-	string user = 7;
-	string system_program = 8;
-	string token_program = 9;
-	string rent = 10;
-	string event_authority = 11;
-	string program = 12;
+	string metadata = 4;
+	string bonding_curve = 5;
+	string event_authority = 6;
+	string program = 7;
+}
+
+message SetCreatorIxData {
+	string creator = 1;
+}
+
+message SetMetaplexCreatorIxAccounts {
+	string mint = 1;
+	string metadata = 2;
+	string bonding_curve = 3;
+	string event_authority = 4;
+	string program = 5;
+}
+
+
+message SetParamsIxAccounts {
+	string global = 1;
+	string authority = 2;
+	string event_authority = 3;
+	string program = 4;
+}
+
+message SetParamsIxData {
+	uint64 initial_virtual_token_reserves = 1;
+	uint64 initial_virtual_sol_reserves = 2;
+	uint64 initial_real_token_reserves = 3;
+	uint64 token_total_supply = 4;
+	uint64 fee_basis_points = 5;
+	string withdraw_authority = 6;
+	bool enable_migrate = 7;
+	uint64 pool_migration_fee = 8;
+	uint64 creator_fee_basis_points = 9;
+	string set_creator_authority = 10;
+}
+
+message UpdateGlobalAuthorityIxAccounts {
+	string global = 1;
+	string authority = 2;
+	string new_authority = 3;
+	string event_authority = 4;
+	string program = 5;
 }
 
 
@@ -215,12 +370,17 @@ message ProgramState {
 
 message ProgramIxs {
     oneof ix_oneof {
-        	InitializeIx initialize = 1;
-        	SetParamsIx set_params = 2;
+        	BuyIx buy = 1;
+        	CollectCreatorFeeIx collect_creator_fee = 2;
         	CreateIx create = 3;
-        	BuyIx buy = 4;
-        	SellIx sell = 5;
-        	WithdrawIx withdraw = 6;
+        	ExtendAccountIx extend_account = 4;
+        	InitializeIx initialize = 5;
+        	MigrateIx migrate = 6;
+        	SellIx sell = 7;
+        	SetCreatorIx set_creator = 8;
+        	SetMetaplexCreatorIx set_metaplex_creator = 9;
+        	SetParamsIx set_params = 10;
+        	UpdateGlobalAuthorityIx update_global_authority = 11;
         }
 }
 

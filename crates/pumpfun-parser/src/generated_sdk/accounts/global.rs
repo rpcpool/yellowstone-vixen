@@ -6,12 +6,13 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Global {
     pub discriminator: [u8; 8],
+    /// Unused
     pub initialized: bool,
     #[cfg_attr(
         feature = "serde",
@@ -28,10 +29,25 @@ pub struct Global {
     pub initial_real_token_reserves: u64,
     pub token_total_supply: u64,
     pub fee_basis_points: u64,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub withdraw_authority: Pubkey,
+    /// Unused
+    pub enable_migrate: bool,
+    pub pool_migration_fee: u64,
+    pub creator_fee_basis_points: u64,
+    pub fee_recipients: [Pubkey; 7],
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub set_creator_authority: Pubkey,
 }
 
 impl Global {
-    pub const LEN: usize = 113;
+    pub const LEN: usize = 418;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -40,12 +56,10 @@ impl Global {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Global {
+impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for Global {
     type Error = std::io::Error;
 
-    fn try_from(
-        account_info: &solana_program::account_info::AccountInfo<'a>,
-    ) -> Result<Self, Self::Error> {
+    fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
         let mut data: &[u8] = &(*account_info.data).borrow();
         Self::deserialize(&mut data)
     }
@@ -54,7 +68,7 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Global {
 #[cfg(feature = "fetch")]
 pub fn fetch_global(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::DecodedAccount<Global>, std::io::Error> {
     let accounts = fetch_all_global(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -63,7 +77,7 @@ pub fn fetch_global(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_global(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::DecodedAccount<Global>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -88,7 +102,7 @@ pub fn fetch_all_global(
 #[cfg(feature = "fetch")]
 pub fn fetch_maybe_global(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::MaybeAccount<Global>, std::io::Error> {
     let accounts = fetch_all_maybe_global(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -97,7 +111,7 @@ pub fn fetch_maybe_global(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_maybe_global(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::MaybeAccount<Global>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)

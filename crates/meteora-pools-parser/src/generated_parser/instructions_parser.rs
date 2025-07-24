@@ -5,9 +5,14 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         AddBalanceLiquidity as AddBalanceLiquidityIxAccounts,
         AddBalanceLiquidityInstructionArgs as AddBalanceLiquidityIxData,
@@ -116,7 +121,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = AmmProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<AmmProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "Amm::InstructionParser".into() }
 
@@ -132,7 +140,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -147,432 +171,458 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<AmmProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [77, 85, 178, 157, 50, 48, 212, 126] => {
-                check_min_accounts_req(accounts_len, 24)?;
+                let expected_accounts_len = 24;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePermissionedPoolIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    token_a_mint: ix.accounts[2].0.into(),
-                    token_b_mint: ix.accounts[3].0.into(),
-                    a_vault: ix.accounts[4].0.into(),
-                    b_vault: ix.accounts[5].0.into(),
-                    a_vault_lp_mint: ix.accounts[6].0.into(),
-                    b_vault_lp_mint: ix.accounts[7].0.into(),
-                    a_vault_lp: ix.accounts[8].0.into(),
-                    b_vault_lp: ix.accounts[9].0.into(),
-                    admin_token_a: ix.accounts[10].0.into(),
-                    admin_token_b: ix.accounts[11].0.into(),
-                    admin_pool_lp: ix.accounts[12].0.into(),
-                    protocol_token_a_fee: ix.accounts[13].0.into(),
-                    protocol_token_b_fee: ix.accounts[14].0.into(),
-                    admin: ix.accounts[15].0.into(),
-                    fee_owner: ix.accounts[16].0.into(),
-                    rent: ix.accounts[17].0.into(),
-                    mint_metadata: ix.accounts[18].0.into(),
-                    metadata_program: ix.accounts[19].0.into(),
-                    vault_program: ix.accounts[20].0.into(),
-                    token_program: ix.accounts[21].0.into(),
-                    associated_token_program: ix.accounts[22].0.into(),
-                    system_program: ix.accounts[23].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    admin_token_a: next_account(accounts)?,
+                    admin_token_b: next_account(accounts)?,
+                    admin_pool_lp: next_account(accounts)?,
+                    protocol_token_a_fee: next_account(accounts)?,
+                    protocol_token_b_fee: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    fee_owner: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    mint_metadata: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePermissionedPoolIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::InitializePermissionedPool(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [118, 173, 41, 157, 173, 72, 97, 103] => {
-                check_min_accounts_req(accounts_len, 26)?;
+                let expected_accounts_len = 26;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePermissionlessPoolIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    token_a_mint: ix.accounts[2].0.into(),
-                    token_b_mint: ix.accounts[3].0.into(),
-                    a_vault: ix.accounts[4].0.into(),
-                    b_vault: ix.accounts[5].0.into(),
-                    a_token_vault: ix.accounts[6].0.into(),
-                    b_token_vault: ix.accounts[7].0.into(),
-                    a_vault_lp_mint: ix.accounts[8].0.into(),
-                    b_vault_lp_mint: ix.accounts[9].0.into(),
-                    a_vault_lp: ix.accounts[10].0.into(),
-                    b_vault_lp: ix.accounts[11].0.into(),
-                    payer_token_a: ix.accounts[12].0.into(),
-                    payer_token_b: ix.accounts[13].0.into(),
-                    payer_pool_lp: ix.accounts[14].0.into(),
-                    protocol_token_a_fee: ix.accounts[15].0.into(),
-                    protocol_token_b_fee: ix.accounts[16].0.into(),
-                    payer: ix.accounts[17].0.into(),
-                    fee_owner: ix.accounts[18].0.into(),
-                    rent: ix.accounts[19].0.into(),
-                    mint_metadata: ix.accounts[20].0.into(),
-                    metadata_program: ix.accounts[21].0.into(),
-                    vault_program: ix.accounts[22].0.into(),
-                    token_program: ix.accounts[23].0.into(),
-                    associated_token_program: ix.accounts[24].0.into(),
-                    system_program: ix.accounts[25].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    payer_token_a: next_account(accounts)?,
+                    payer_token_b: next_account(accounts)?,
+                    payer_pool_lp: next_account(accounts)?,
+                    protocol_token_a_fee: next_account(accounts)?,
+                    protocol_token_b_fee: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    fee_owner: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    mint_metadata: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePermissionlessPoolIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::InitializePermissionlessPool(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [6, 135, 68, 147, 229, 82, 169, 113] => {
-                check_min_accounts_req(accounts_len, 26)?;
+                let expected_accounts_len = 26;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePermissionlessPoolWithFeeTierIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    token_a_mint: ix.accounts[2].0.into(),
-                    token_b_mint: ix.accounts[3].0.into(),
-                    a_vault: ix.accounts[4].0.into(),
-                    b_vault: ix.accounts[5].0.into(),
-                    a_token_vault: ix.accounts[6].0.into(),
-                    b_token_vault: ix.accounts[7].0.into(),
-                    a_vault_lp_mint: ix.accounts[8].0.into(),
-                    b_vault_lp_mint: ix.accounts[9].0.into(),
-                    a_vault_lp: ix.accounts[10].0.into(),
-                    b_vault_lp: ix.accounts[11].0.into(),
-                    payer_token_a: ix.accounts[12].0.into(),
-                    payer_token_b: ix.accounts[13].0.into(),
-                    payer_pool_lp: ix.accounts[14].0.into(),
-                    protocol_token_a_fee: ix.accounts[15].0.into(),
-                    protocol_token_b_fee: ix.accounts[16].0.into(),
-                    payer: ix.accounts[17].0.into(),
-                    fee_owner: ix.accounts[18].0.into(),
-                    rent: ix.accounts[19].0.into(),
-                    mint_metadata: ix.accounts[20].0.into(),
-                    metadata_program: ix.accounts[21].0.into(),
-                    vault_program: ix.accounts[22].0.into(),
-                    token_program: ix.accounts[23].0.into(),
-                    associated_token_program: ix.accounts[24].0.into(),
-                    system_program: ix.accounts[25].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    payer_token_a: next_account(accounts)?,
+                    payer_token_b: next_account(accounts)?,
+                    payer_pool_lp: next_account(accounts)?,
+                    protocol_token_a_fee: next_account(accounts)?,
+                    protocol_token_b_fee: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    fee_owner: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    mint_metadata: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePermissionlessPoolWithFeeTierIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::InitializePermissionlessPoolWithFeeTier(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [128, 6, 228, 131, 55, 161, 52, 169] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = EnableOrDisablePoolIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
+                    pool: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
                 let de_ix_data: EnableOrDisablePoolIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::EnableOrDisablePool(ix_accounts, de_ix_data))
             },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    user_source_token: ix.accounts[1].0.into(),
-                    user_destination_token: ix.accounts[2].0.into(),
-                    a_vault: ix.accounts[3].0.into(),
-                    b_vault: ix.accounts[4].0.into(),
-                    a_token_vault: ix.accounts[5].0.into(),
-                    b_token_vault: ix.accounts[6].0.into(),
-                    a_vault_lp_mint: ix.accounts[7].0.into(),
-                    b_vault_lp_mint: ix.accounts[8].0.into(),
-                    a_vault_lp: ix.accounts[9].0.into(),
-                    b_vault_lp: ix.accounts[10].0.into(),
-                    protocol_token_fee: ix.accounts[11].0.into(),
-                    user: ix.accounts[12].0.into(),
-                    vault_program: ix.accounts[13].0.into(),
-                    token_program: ix.accounts[14].0.into(),
+                    pool: next_account(accounts)?,
+                    user_source_token: next_account(accounts)?,
+                    user_destination_token: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    protocol_token_fee: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::Swap(ix_accounts, de_ix_data))
             },
             [84, 84, 177, 66, 254, 185, 10, 251] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveLiquiditySingleSideIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    user_pool_lp: ix.accounts[2].0.into(),
-                    a_vault_lp: ix.accounts[3].0.into(),
-                    b_vault_lp: ix.accounts[4].0.into(),
-                    a_vault: ix.accounts[5].0.into(),
-                    b_vault: ix.accounts[6].0.into(),
-                    a_vault_lp_mint: ix.accounts[7].0.into(),
-                    b_vault_lp_mint: ix.accounts[8].0.into(),
-                    a_token_vault: ix.accounts[9].0.into(),
-                    b_token_vault: ix.accounts[10].0.into(),
-                    user_destination_token: ix.accounts[11].0.into(),
-                    user: ix.accounts[12].0.into(),
-                    vault_program: ix.accounts[13].0.into(),
-                    token_program: ix.accounts[14].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_pool_lp: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    user_destination_token: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 let de_ix_data: RemoveLiquiditySingleSideIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::RemoveLiquiditySingleSide(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [79, 35, 122, 84, 173, 15, 93, 191] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddImbalanceLiquidityIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    user_pool_lp: ix.accounts[2].0.into(),
-                    a_vault_lp: ix.accounts[3].0.into(),
-                    b_vault_lp: ix.accounts[4].0.into(),
-                    a_vault: ix.accounts[5].0.into(),
-                    b_vault: ix.accounts[6].0.into(),
-                    a_vault_lp_mint: ix.accounts[7].0.into(),
-                    b_vault_lp_mint: ix.accounts[8].0.into(),
-                    a_token_vault: ix.accounts[9].0.into(),
-                    b_token_vault: ix.accounts[10].0.into(),
-                    user_a_token: ix.accounts[11].0.into(),
-                    user_b_token: ix.accounts[12].0.into(),
-                    user: ix.accounts[13].0.into(),
-                    vault_program: ix.accounts[14].0.into(),
-                    token_program: ix.accounts[15].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_pool_lp: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    user_a_token: next_account(accounts)?,
+                    user_b_token: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 let de_ix_data: AddImbalanceLiquidityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::AddImbalanceLiquidity(ix_accounts, de_ix_data))
             },
             [133, 109, 44, 179, 56, 238, 114, 33] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = RemoveBalanceLiquidityIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    user_pool_lp: ix.accounts[2].0.into(),
-                    a_vault_lp: ix.accounts[3].0.into(),
-                    b_vault_lp: ix.accounts[4].0.into(),
-                    a_vault: ix.accounts[5].0.into(),
-                    b_vault: ix.accounts[6].0.into(),
-                    a_vault_lp_mint: ix.accounts[7].0.into(),
-                    b_vault_lp_mint: ix.accounts[8].0.into(),
-                    a_token_vault: ix.accounts[9].0.into(),
-                    b_token_vault: ix.accounts[10].0.into(),
-                    user_a_token: ix.accounts[11].0.into(),
-                    user_b_token: ix.accounts[12].0.into(),
-                    user: ix.accounts[13].0.into(),
-                    vault_program: ix.accounts[14].0.into(),
-                    token_program: ix.accounts[15].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_pool_lp: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    user_a_token: next_account(accounts)?,
+                    user_b_token: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 let de_ix_data: RemoveBalanceLiquidityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::RemoveBalanceLiquidity(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [168, 227, 50, 62, 189, 171, 84, 176] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = AddBalanceLiquidityIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    user_pool_lp: ix.accounts[2].0.into(),
-                    a_vault_lp: ix.accounts[3].0.into(),
-                    b_vault_lp: ix.accounts[4].0.into(),
-                    a_vault: ix.accounts[5].0.into(),
-                    b_vault: ix.accounts[6].0.into(),
-                    a_vault_lp_mint: ix.accounts[7].0.into(),
-                    b_vault_lp_mint: ix.accounts[8].0.into(),
-                    a_token_vault: ix.accounts[9].0.into(),
-                    b_token_vault: ix.accounts[10].0.into(),
-                    user_a_token: ix.accounts[11].0.into(),
-                    user_b_token: ix.accounts[12].0.into(),
-                    user: ix.accounts[13].0.into(),
-                    vault_program: ix.accounts[14].0.into(),
-                    token_program: ix.accounts[15].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_pool_lp: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    user_a_token: next_account(accounts)?,
+                    user_b_token: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 let de_ix_data: AddBalanceLiquidityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::AddBalanceLiquidity(ix_accounts, de_ix_data))
             },
             [102, 44, 158, 54, 205, 37, 126, 78] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetPoolFeesIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    fee_operator: ix.accounts[1].0.into(),
+                    pool: next_account(accounts)?,
+                    fee_operator: next_account(accounts)?,
                 };
-                let de_ix_data: SetPoolFeesIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SetPoolFeesIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::SetPoolFees(ix_accounts, de_ix_data))
             },
             [98, 86, 204, 51, 94, 71, 69, 187] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = OverrideCurveParamIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
+                    pool: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
                 let de_ix_data: OverrideCurveParamIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::OverrideCurveParam(ix_accounts, de_ix_data))
             },
             [9, 48, 220, 101, 22, 240, 78, 200] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = GetPoolInfoIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    a_vault_lp: ix.accounts[2].0.into(),
-                    b_vault_lp: ix.accounts[3].0.into(),
-                    a_vault: ix.accounts[4].0.into(),
-                    b_vault: ix.accounts[5].0.into(),
-                    a_vault_lp_mint: ix.accounts[6].0.into(),
-                    b_vault_lp_mint: ix.accounts[7].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
                 };
                 Ok(AmmProgramIx::GetPoolInfo(ix_accounts))
             },
             [4, 228, 215, 71, 225, 253, 119, 206] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = BootstrapLiquidityIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    user_pool_lp: ix.accounts[2].0.into(),
-                    a_vault_lp: ix.accounts[3].0.into(),
-                    b_vault_lp: ix.accounts[4].0.into(),
-                    a_vault: ix.accounts[5].0.into(),
-                    b_vault: ix.accounts[6].0.into(),
-                    a_vault_lp_mint: ix.accounts[7].0.into(),
-                    b_vault_lp_mint: ix.accounts[8].0.into(),
-                    a_token_vault: ix.accounts[9].0.into(),
-                    b_token_vault: ix.accounts[10].0.into(),
-                    user_a_token: ix.accounts[11].0.into(),
-                    user_b_token: ix.accounts[12].0.into(),
-                    user: ix.accounts[13].0.into(),
-                    vault_program: ix.accounts[14].0.into(),
-                    token_program: ix.accounts[15].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    user_pool_lp: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    user_a_token: next_account(accounts)?,
+                    user_b_token: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 let de_ix_data: BootstrapLiquidityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::BootstrapLiquidity(ix_accounts, de_ix_data))
             },
             [13, 70, 168, 41, 250, 100, 148, 90] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateMintMetadataIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    a_vault_lp: ix.accounts[2].0.into(),
-                    mint_metadata: ix.accounts[3].0.into(),
-                    metadata_program: ix.accounts[4].0.into(),
-                    system_program: ix.accounts[5].0.into(),
-                    payer: ix.accounts[6].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    mint_metadata: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    payer: next_account(accounts)?,
                 };
                 Ok(AmmProgramIx::CreateMintMetadata(ix_accounts))
             },
             [54, 87, 165, 19, 69, 227, 218, 224] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateLockEscrowIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lock_escrow: ix.accounts[1].0.into(),
-                    owner: ix.accounts[2].0.into(),
-                    lp_mint: ix.accounts[3].0.into(),
-                    payer: ix.accounts[4].0.into(),
-                    system_program: ix.accounts[5].0.into(),
+                    pool: next_account(accounts)?,
+                    lock_escrow: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(AmmProgramIx::CreateLockEscrow(ix_accounts))
             },
             [21, 19, 208, 43, 237, 62, 255, 87] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = LockIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    lock_escrow: ix.accounts[2].0.into(),
-                    owner: ix.accounts[3].0.into(),
-                    source_tokens: ix.accounts[4].0.into(),
-                    escrow_vault: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    a_vault: ix.accounts[7].0.into(),
-                    b_vault: ix.accounts[8].0.into(),
-                    a_vault_lp: ix.accounts[9].0.into(),
-                    b_vault_lp: ix.accounts[10].0.into(),
-                    a_vault_lp_mint: ix.accounts[11].0.into(),
-                    b_vault_lp_mint: ix.accounts[12].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    lock_escrow: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    source_tokens: next_account(accounts)?,
+                    escrow_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
                 };
-                let de_ix_data: LockIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: LockIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::Lock(ix_accounts, de_ix_data))
             },
             [169, 32, 79, 137, 136, 232, 70, 137] => {
-                check_min_accounts_req(accounts_len, 18)?;
+                let expected_accounts_len = 18;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClaimFeeIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    lp_mint: ix.accounts[1].0.into(),
-                    lock_escrow: ix.accounts[2].0.into(),
-                    owner: ix.accounts[3].0.into(),
-                    source_tokens: ix.accounts[4].0.into(),
-                    escrow_vault: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    a_token_vault: ix.accounts[7].0.into(),
-                    b_token_vault: ix.accounts[8].0.into(),
-                    a_vault: ix.accounts[9].0.into(),
-                    b_vault: ix.accounts[10].0.into(),
-                    a_vault_lp: ix.accounts[11].0.into(),
-                    b_vault_lp: ix.accounts[12].0.into(),
-                    a_vault_lp_mint: ix.accounts[13].0.into(),
-                    b_vault_lp_mint: ix.accounts[14].0.into(),
-                    user_a_token: ix.accounts[15].0.into(),
-                    user_b_token: ix.accounts[16].0.into(),
-                    vault_program: ix.accounts[17].0.into(),
+                    pool: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    lock_escrow: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    source_tokens: next_account(accounts)?,
+                    escrow_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    user_a_token: next_account(accounts)?,
+                    user_b_token: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
                 };
-                let de_ix_data: ClaimFeeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ClaimFeeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::ClaimFee(ix_accounts, de_ix_data))
             },
             [201, 207, 243, 114, 75, 111, 47, 189] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreateConfigIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    config: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateConfigIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: CreateConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::CreateConfig(ix_accounts, de_ix_data))
             },
             [145, 9, 72, 157, 95, 125, 61, 85] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CloseConfigIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
-                    rent_receiver: ix.accounts[2].0.into(),
+                    config: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
                 };
                 Ok(AmmProgramIx::CloseConfig(ix_accounts))
             },
             [7, 166, 138, 171, 206, 171, 236, 244] => {
-                check_min_accounts_req(accounts_len, 26)?;
+                let expected_accounts_len = 26;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePermissionlessConstantProductPoolWithConfigIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    config: ix.accounts[1].0.into(),
-                    lp_mint: ix.accounts[2].0.into(),
-                    token_a_mint: ix.accounts[3].0.into(),
-                    token_b_mint: ix.accounts[4].0.into(),
-                    a_vault: ix.accounts[5].0.into(),
-                    b_vault: ix.accounts[6].0.into(),
-                    a_token_vault: ix.accounts[7].0.into(),
-                    b_token_vault: ix.accounts[8].0.into(),
-                    a_vault_lp_mint: ix.accounts[9].0.into(),
-                    b_vault_lp_mint: ix.accounts[10].0.into(),
-                    a_vault_lp: ix.accounts[11].0.into(),
-                    b_vault_lp: ix.accounts[12].0.into(),
-                    payer_token_a: ix.accounts[13].0.into(),
-                    payer_token_b: ix.accounts[14].0.into(),
-                    payer_pool_lp: ix.accounts[15].0.into(),
-                    protocol_token_a_fee: ix.accounts[16].0.into(),
-                    protocol_token_b_fee: ix.accounts[17].0.into(),
-                    payer: ix.accounts[18].0.into(),
-                    rent: ix.accounts[19].0.into(),
-                    mint_metadata: ix.accounts[20].0.into(),
-                    metadata_program: ix.accounts[21].0.into(),
-                    vault_program: ix.accounts[22].0.into(),
-                    token_program: ix.accounts[23].0.into(),
-                    associated_token_program: ix.accounts[24].0.into(),
-                    system_program: ix.accounts[25].0.into(),
+                    pool: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    a_vault: next_account(accounts)?,
+                    b_vault: next_account(accounts)?,
+                    a_token_vault: next_account(accounts)?,
+                    b_token_vault: next_account(accounts)?,
+                    a_vault_lp_mint: next_account(accounts)?,
+                    b_vault_lp_mint: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    b_vault_lp: next_account(accounts)?,
+                    payer_token_a: next_account(accounts)?,
+                    payer_token_b: next_account(accounts)?,
+                    payer_pool_lp: next_account(accounts)?,
+                    protocol_token_a_fee: next_account(accounts)?,
+                    protocol_token_b_fee: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    mint_metadata: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    vault_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePermissionlessConstantProductPoolWithConfigIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(
                     AmmProgramIx::InitializePermissionlessConstantProductPoolWithConfig(
                         ix_accounts,
@@ -581,38 +631,39 @@ impl InstructionParser {
                 )
             },
             [48, 149, 220, 130, 61, 11, 9, 178] => {
-                check_min_accounts_req(accounts_len, 26)?;
+                let expected_accounts_len = 26;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts =
                     InitializePermissionlessConstantProductPoolWithConfig2IxAccounts {
-                        pool: ix.accounts[0].0.into(),
-                        config: ix.accounts[1].0.into(),
-                        lp_mint: ix.accounts[2].0.into(),
-                        token_a_mint: ix.accounts[3].0.into(),
-                        token_b_mint: ix.accounts[4].0.into(),
-                        a_vault: ix.accounts[5].0.into(),
-                        b_vault: ix.accounts[6].0.into(),
-                        a_token_vault: ix.accounts[7].0.into(),
-                        b_token_vault: ix.accounts[8].0.into(),
-                        a_vault_lp_mint: ix.accounts[9].0.into(),
-                        b_vault_lp_mint: ix.accounts[10].0.into(),
-                        a_vault_lp: ix.accounts[11].0.into(),
-                        b_vault_lp: ix.accounts[12].0.into(),
-                        payer_token_a: ix.accounts[13].0.into(),
-                        payer_token_b: ix.accounts[14].0.into(),
-                        payer_pool_lp: ix.accounts[15].0.into(),
-                        protocol_token_a_fee: ix.accounts[16].0.into(),
-                        protocol_token_b_fee: ix.accounts[17].0.into(),
-                        payer: ix.accounts[18].0.into(),
-                        rent: ix.accounts[19].0.into(),
-                        mint_metadata: ix.accounts[20].0.into(),
-                        metadata_program: ix.accounts[21].0.into(),
-                        vault_program: ix.accounts[22].0.into(),
-                        token_program: ix.accounts[23].0.into(),
-                        associated_token_program: ix.accounts[24].0.into(),
-                        system_program: ix.accounts[25].0.into(),
+                        pool: next_account(accounts)?,
+                        config: next_account(accounts)?,
+                        lp_mint: next_account(accounts)?,
+                        token_a_mint: next_account(accounts)?,
+                        token_b_mint: next_account(accounts)?,
+                        a_vault: next_account(accounts)?,
+                        b_vault: next_account(accounts)?,
+                        a_token_vault: next_account(accounts)?,
+                        b_token_vault: next_account(accounts)?,
+                        a_vault_lp_mint: next_account(accounts)?,
+                        b_vault_lp_mint: next_account(accounts)?,
+                        a_vault_lp: next_account(accounts)?,
+                        b_vault_lp: next_account(accounts)?,
+                        payer_token_a: next_account(accounts)?,
+                        payer_token_b: next_account(accounts)?,
+                        payer_pool_lp: next_account(accounts)?,
+                        protocol_token_a_fee: next_account(accounts)?,
+                        protocol_token_b_fee: next_account(accounts)?,
+                        payer: next_account(accounts)?,
+                        rent: next_account(accounts)?,
+                        mint_metadata: next_account(accounts)?,
+                        metadata_program: next_account(accounts)?,
+                        vault_program: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        associated_token_program: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
                     };
                 let de_ix_data: InitializePermissionlessConstantProductPoolWithConfig2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(
                     AmmProgramIx::InitializePermissionlessConstantProductPoolWithConfig2(
                         ix_accounts,
@@ -621,37 +672,38 @@ impl InstructionParser {
                 )
             },
             [145, 24, 172, 194, 219, 125, 3, 190] => {
-                check_min_accounts_req(accounts_len, 25)?;
+                let expected_accounts_len = 25;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts =
                     InitializeCustomizablePermissionlessConstantProductPoolIxAccounts {
-                        pool: ix.accounts[0].0.into(),
-                        lp_mint: ix.accounts[1].0.into(),
-                        token_a_mint: ix.accounts[2].0.into(),
-                        token_b_mint: ix.accounts[3].0.into(),
-                        a_vault: ix.accounts[4].0.into(),
-                        b_vault: ix.accounts[5].0.into(),
-                        a_token_vault: ix.accounts[6].0.into(),
-                        b_token_vault: ix.accounts[7].0.into(),
-                        a_vault_lp_mint: ix.accounts[8].0.into(),
-                        b_vault_lp_mint: ix.accounts[9].0.into(),
-                        a_vault_lp: ix.accounts[10].0.into(),
-                        b_vault_lp: ix.accounts[11].0.into(),
-                        payer_token_a: ix.accounts[12].0.into(),
-                        payer_token_b: ix.accounts[13].0.into(),
-                        payer_pool_lp: ix.accounts[14].0.into(),
-                        protocol_token_a_fee: ix.accounts[15].0.into(),
-                        protocol_token_b_fee: ix.accounts[16].0.into(),
-                        payer: ix.accounts[17].0.into(),
-                        rent: ix.accounts[18].0.into(),
-                        mint_metadata: ix.accounts[19].0.into(),
-                        metadata_program: ix.accounts[20].0.into(),
-                        vault_program: ix.accounts[21].0.into(),
-                        token_program: ix.accounts[22].0.into(),
-                        associated_token_program: ix.accounts[23].0.into(),
-                        system_program: ix.accounts[24].0.into(),
+                        pool: next_account(accounts)?,
+                        lp_mint: next_account(accounts)?,
+                        token_a_mint: next_account(accounts)?,
+                        token_b_mint: next_account(accounts)?,
+                        a_vault: next_account(accounts)?,
+                        b_vault: next_account(accounts)?,
+                        a_token_vault: next_account(accounts)?,
+                        b_token_vault: next_account(accounts)?,
+                        a_vault_lp_mint: next_account(accounts)?,
+                        b_vault_lp_mint: next_account(accounts)?,
+                        a_vault_lp: next_account(accounts)?,
+                        b_vault_lp: next_account(accounts)?,
+                        payer_token_a: next_account(accounts)?,
+                        payer_token_b: next_account(accounts)?,
+                        payer_pool_lp: next_account(accounts)?,
+                        protocol_token_a_fee: next_account(accounts)?,
+                        protocol_token_b_fee: next_account(accounts)?,
+                        payer: next_account(accounts)?,
+                        rent: next_account(accounts)?,
+                        mint_metadata: next_account(accounts)?,
+                        metadata_program: next_account(accounts)?,
+                        vault_program: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        associated_token_program: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
                     };
                 let de_ix_data: InitializeCustomizablePermissionlessConstantProductPoolIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(
                     AmmProgramIx::InitializeCustomizablePermissionlessConstantProductPool(
                         ix_accounts,
@@ -660,52 +712,56 @@ impl InstructionParser {
                 )
             },
             [150, 62, 125, 219, 171, 220, 26, 237] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateActivationPointIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
+                    pool: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
                 let de_ix_data: UpdateActivationPointIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::UpdateActivationPoint(ix_accounts, de_ix_data))
             },
             [11, 68, 165, 98, 18, 208, 134, 73] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawProtocolFeesIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    a_vault_lp: ix.accounts[1].0.into(),
-                    protocol_token_a_fee: ix.accounts[2].0.into(),
-                    protocol_token_b_fee: ix.accounts[3].0.into(),
-                    treasury_token_a: ix.accounts[4].0.into(),
-                    treasury_token_b: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
+                    pool: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    protocol_token_a_fee: next_account(accounts)?,
+                    protocol_token_b_fee: next_account(accounts)?,
+                    treasury_token_a: next_account(accounts)?,
+                    treasury_token_b: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 Ok(AmmProgramIx::WithdrawProtocolFees(ix_accounts))
             },
             [12, 148, 94, 42, 55, 57, 83, 247] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetWhitelistedVaultIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    admin: ix.accounts[1].0.into(),
+                    pool: next_account(accounts)?,
+                    admin: next_account(accounts)?,
                 };
                 let de_ix_data: SetWhitelistedVaultIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::SetWhitelistedVault(ix_accounts, de_ix_data))
             },
             [57, 53, 176, 30, 123, 70, 52, 64] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = PartnerClaimFeeIxAccounts {
-                    pool: ix.accounts[0].0.into(),
-                    a_vault_lp: ix.accounts[1].0.into(),
-                    protocol_token_a_fee: ix.accounts[2].0.into(),
-                    protocol_token_b_fee: ix.accounts[3].0.into(),
-                    partner_token_a: ix.accounts[4].0.into(),
-                    partner_token_b: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    partner_authority: ix.accounts[7].0.into(),
+                    pool: next_account(accounts)?,
+                    a_vault_lp: next_account(accounts)?,
+                    protocol_token_a_fee: next_account(accounts)?,
+                    protocol_token_b_fee: next_account(accounts)?,
+                    partner_token_a: next_account(accounts)?,
+                    partner_token_b: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    partner_authority: next_account(accounts)?,
                 };
                 let de_ix_data: PartnerClaimFeeIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(AmmProgramIx::PartnerClaimFee(ix_accounts, de_ix_data))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
@@ -735,7 +791,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -749,6 +812,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -1667,6 +1773,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

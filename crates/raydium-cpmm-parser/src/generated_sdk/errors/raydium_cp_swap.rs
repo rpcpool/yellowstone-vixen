@@ -42,12 +42,12 @@ pub enum RaydiumCpSwapError {
     InitLpAmountTooLess = 0x1779,
 }
 
-impl solana_program::program_error::PrintProgramError for RaydiumCpSwapError {
+impl solana_program_error::PrintProgramError for RaydiumCpSwapError {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for RaydiumCpSwapError {
+impl<T> solana_decode_error::DecodeError<T> for RaydiumCpSwapError {
     fn type_of() -> &'static str { "RaydiumCpSwapError" }
 }

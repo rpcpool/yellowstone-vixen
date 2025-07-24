@@ -60,12 +60,12 @@ pub enum RaydiumLaunchpadError {
     PoolNotMigrated = 0x177f,
 }
 
-impl solana_program::program_error::PrintProgramError for RaydiumLaunchpadError {
+impl solana_program_error::PrintProgramError for RaydiumLaunchpadError {
     fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+        solana_msg::msg!(&self.to_string());
     }
 }
 
-impl<T> solana_program::decode_error::DecodeError<T> for RaydiumLaunchpadError {
+impl<T> solana_decode_error::DecodeError<T> for RaydiumLaunchpadError {
     fn type_of() -> &'static str { "RaydiumLaunchpadError" }
 }

@@ -1,0 +1,84 @@
+[package]
+name = "example-vixen-streams-tracing"
+description = "Demostration of integrating Vixen with tracing subscriber and OTEL"
+publish = false
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+
+[dependencies]
+clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+toml = "0.8.12"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+yellowstone-vixen = { workspace = true, features = ["stream", "prometheus"] }
+yellowstone-vixen-parser = { workspace = true, features = [
+  "proto",
+  "token-extensions",
+  "token-program",
+] }
+yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
+
+yellowstone-vixen-boop-parser = { workspace = true, features = ["tracing"] }
+yellowstone-vixen-jupiter-swap-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-kamino-limit-orders-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-meteora-amm-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-meteora-dbc-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-meteora-parser = { workspace = true, features = ["tracing"] }
+yellowstone-vixen-meteora-pools-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-meteora-vault-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-moonshot-parser = { workspace = true, features = ["tracing"] }
+yellowstone-vixen-orca-whirlpool-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-pump-swaps-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-pumpfun-parser = { workspace = true, features = ["tracing"] }
+yellowstone-vixen-raydium-amm-v4-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-raydium-clmm-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-raydium-cpmm-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-raydium-launchpad-parser = { workspace = true, features = [
+  "tracing",
+] }
+yellowstone-vixen-virtuals-parser = { workspace = true, features = ["tracing"] }
+
+opentelemetry = "0.29.1"
+opentelemetry_sdk = { version = "0.29.0", features = [
+  "metrics",
+  "rt-tokio",
+  "trace",
+  # "rt-tokio-current-thread" # Spawn telemetry tasks on a separate runtime so that the main runtime won’t be blocked.
+] }
+opentelemetry-otlp = { version = "0.29.0", features = [
+  "trace",
+  "grpc-tonic",
+  "gzip-tonic",
+  "zstd-tonic",
+] }
+opentelemetry-stdout = "0.29.0"
+
+tracing-opentelemetry = "0.30.0"
+opentelemetry-appender-tracing = "0.29.0"
+tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
+
+[build-dependencies]
+prost-build = "0.13.1"

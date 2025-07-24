@@ -5,9 +5,14 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         CloseBundledPosition as CloseBundledPositionIxAccounts,
         CloseBundledPositionInstructionArgs as CloseBundledPositionIxData,
@@ -27,20 +32,26 @@ use crate::{
         DecreaseLiquidityV2 as DecreaseLiquidityV2IxAccounts,
         DecreaseLiquidityV2InstructionArgs as DecreaseLiquidityV2IxData,
         DeletePositionBundle as DeletePositionBundleIxAccounts,
-        DeleteTokenBadge as DeleteTokenBadgeIxAccounts,
+        DeleteTokenBadge as DeleteTokenBadgeIxAccounts, IdlInclude as IdlIncludeIxAccounts,
         IncreaseLiquidity as IncreaseLiquidityIxAccounts,
         IncreaseLiquidityInstructionArgs as IncreaseLiquidityIxData,
         IncreaseLiquidityV2 as IncreaseLiquidityV2IxAccounts,
         IncreaseLiquidityV2InstructionArgs as IncreaseLiquidityV2IxData,
+        InitializeAdaptiveFeeTier as InitializeAdaptiveFeeTierIxAccounts,
+        InitializeAdaptiveFeeTierInstructionArgs as InitializeAdaptiveFeeTierIxData,
         InitializeConfig as InitializeConfigIxAccounts,
         InitializeConfigExtension as InitializeConfigExtensionIxAccounts,
         InitializeConfigInstructionArgs as InitializeConfigIxData,
+        InitializeDynamicTickArray as InitializeDynamicTickArrayIxAccounts,
+        InitializeDynamicTickArrayInstructionArgs as InitializeDynamicTickArrayIxData,
         InitializeFeeTier as InitializeFeeTierIxAccounts,
         InitializeFeeTierInstructionArgs as InitializeFeeTierIxData,
         InitializePool as InitializePoolIxAccounts,
         InitializePoolInstructionArgs as InitializePoolIxData,
         InitializePoolV2 as InitializePoolV2IxAccounts,
         InitializePoolV2InstructionArgs as InitializePoolV2IxData,
+        InitializePoolWithAdaptiveFee as InitializePoolWithAdaptiveFeeIxAccounts,
+        InitializePoolWithAdaptiveFeeInstructionArgs as InitializePoolWithAdaptiveFeeIxData,
         InitializePositionBundle as InitializePositionBundleIxAccounts,
         InitializePositionBundleWithMetadata as InitializePositionBundleWithMetadataIxAccounts,
         InitializeReward as InitializeRewardIxAccounts,
@@ -58,14 +69,24 @@ use crate::{
         OpenPositionWithMetadataInstructionArgs as OpenPositionWithMetadataIxData,
         OpenPositionWithTokenExtensions as OpenPositionWithTokenExtensionsIxAccounts,
         OpenPositionWithTokenExtensionsInstructionArgs as OpenPositionWithTokenExtensionsIxData,
+        ResetPositionRange as ResetPositionRangeIxAccounts,
+        ResetPositionRangeInstructionArgs as ResetPositionRangeIxData,
         SetCollectProtocolFeesAuthority as SetCollectProtocolFeesAuthorityIxAccounts,
         SetConfigExtensionAuthority as SetConfigExtensionAuthorityIxAccounts,
+        SetDefaultBaseFeeRate as SetDefaultBaseFeeRateIxAccounts,
+        SetDefaultBaseFeeRateInstructionArgs as SetDefaultBaseFeeRateIxData,
         SetDefaultFeeRate as SetDefaultFeeRateIxAccounts,
         SetDefaultFeeRateInstructionArgs as SetDefaultFeeRateIxData,
         SetDefaultProtocolFeeRate as SetDefaultProtocolFeeRateIxAccounts,
         SetDefaultProtocolFeeRateInstructionArgs as SetDefaultProtocolFeeRateIxData,
+        SetDelegatedFeeAuthority as SetDelegatedFeeAuthorityIxAccounts,
         SetFeeAuthority as SetFeeAuthorityIxAccounts, SetFeeRate as SetFeeRateIxAccounts,
+        SetFeeRateByDelegatedFeeAuthority as SetFeeRateByDelegatedFeeAuthorityIxAccounts,
+        SetFeeRateByDelegatedFeeAuthorityInstructionArgs as SetFeeRateByDelegatedFeeAuthorityIxData,
         SetFeeRateInstructionArgs as SetFeeRateIxData,
+        SetInitializePoolAuthority as SetInitializePoolAuthorityIxAccounts,
+        SetPresetAdaptiveFeeConstants as SetPresetAdaptiveFeeConstantsIxAccounts,
+        SetPresetAdaptiveFeeConstantsInstructionArgs as SetPresetAdaptiveFeeConstantsIxData,
         SetProtocolFeeRate as SetProtocolFeeRateIxAccounts,
         SetProtocolFeeRateInstructionArgs as SetProtocolFeeRateIxData,
         SetRewardAuthority as SetRewardAuthorityIxAccounts,
@@ -79,9 +100,10 @@ use crate::{
         SetRewardEmissionsV2InstructionArgs as SetRewardEmissionsV2IxData,
         SetTokenBadgeAuthority as SetTokenBadgeAuthorityIxAccounts, Swap as SwapIxAccounts,
         SwapInstructionArgs as SwapIxData, SwapV2 as SwapV2IxAccounts,
-        SwapV2InstructionArgs as SwapV2IxData, TwoHopSwap as TwoHopSwapIxAccounts,
-        TwoHopSwapInstructionArgs as TwoHopSwapIxData, TwoHopSwapV2 as TwoHopSwapV2IxAccounts,
-        TwoHopSwapV2InstructionArgs as TwoHopSwapV2IxData,
+        SwapV2InstructionArgs as SwapV2IxData,
+        TransferLockedPosition as TransferLockedPositionIxAccounts,
+        TwoHopSwap as TwoHopSwapIxAccounts, TwoHopSwapInstructionArgs as TwoHopSwapIxData,
+        TwoHopSwapV2 as TwoHopSwapV2IxAccounts, TwoHopSwapV2InstructionArgs as TwoHopSwapV2IxData,
         UpdateFeesAndRewards as UpdateFeesAndRewardsIxAccounts,
     },
     ID,
@@ -94,6 +116,10 @@ pub enum WhirlpoolProgramIx {
     InitializeConfig(InitializeConfigIxAccounts, InitializeConfigIxData),
     InitializePool(InitializePoolIxAccounts, InitializePoolIxData),
     InitializeTickArray(InitializeTickArrayIxAccounts, InitializeTickArrayIxData),
+    InitializeDynamicTickArray(
+        InitializeDynamicTickArrayIxAccounts,
+        InitializeDynamicTickArrayIxData,
+    ),
     InitializeFeeTier(InitializeFeeTierIxAccounts, InitializeFeeTierIxData),
     InitializeReward(InitializeRewardIxAccounts, InitializeRewardIxData),
     SetRewardEmissions(SetRewardEmissionsIxAccounts, SetRewardEmissionsIxData),
@@ -137,6 +163,27 @@ pub enum WhirlpoolProgramIx {
     ),
     ClosePositionWithTokenExtensions(ClosePositionWithTokenExtensionsIxAccounts),
     LockPosition(LockPositionIxAccounts, LockPositionIxData),
+    ResetPositionRange(ResetPositionRangeIxAccounts, ResetPositionRangeIxData),
+    TransferLockedPosition(TransferLockedPositionIxAccounts),
+    InitializeAdaptiveFeeTier(
+        InitializeAdaptiveFeeTierIxAccounts,
+        InitializeAdaptiveFeeTierIxData,
+    ),
+    SetDefaultBaseFeeRate(SetDefaultBaseFeeRateIxAccounts, SetDefaultBaseFeeRateIxData),
+    SetDelegatedFeeAuthority(SetDelegatedFeeAuthorityIxAccounts),
+    SetInitializePoolAuthority(SetInitializePoolAuthorityIxAccounts),
+    SetPresetAdaptiveFeeConstants(
+        SetPresetAdaptiveFeeConstantsIxAccounts,
+        SetPresetAdaptiveFeeConstantsIxData,
+    ),
+    InitializePoolWithAdaptiveFee(
+        InitializePoolWithAdaptiveFeeIxAccounts,
+        InitializePoolWithAdaptiveFeeIxData,
+    ),
+    SetFeeRateByDelegatedFeeAuthority(
+        SetFeeRateByDelegatedFeeAuthorityIxAccounts,
+        SetFeeRateByDelegatedFeeAuthorityIxData,
+    ),
     CollectFeesV2(CollectFeesV2IxAccounts, CollectFeesV2IxData),
     CollectProtocolFeesV2(CollectProtocolFeesV2IxAccounts, CollectProtocolFeesV2IxData),
     CollectRewardV2(CollectRewardV2IxAccounts, CollectRewardV2IxData),
@@ -152,6 +199,7 @@ pub enum WhirlpoolProgramIx {
     SetTokenBadgeAuthority(SetTokenBadgeAuthorityIxAccounts),
     InitializeTokenBadge(InitializeTokenBadgeIxAccounts),
     DeleteTokenBadge(DeleteTokenBadgeIxAccounts),
+    IdlInclude(IdlIncludeIxAccounts),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -159,7 +207,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = WhirlpoolProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<WhirlpoolProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<str> { "Whirlpool::InstructionParser".into() }
 
@@ -175,7 +226,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -190,826 +257,1055 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<WhirlpoolProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [208, 127, 21, 1, 194, 190, 196, 70] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeConfigIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    funder: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    config: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeConfigIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::InitializeConfig(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [95, 180, 10, 172, 84, 174, 232, 40] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePoolIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    token_mint_a: ix.accounts[1].0.into(),
-                    token_mint_b: ix.accounts[2].0.into(),
-                    funder: ix.accounts[3].0.into(),
-                    whirlpool: ix.accounts[4].0.into(),
-                    token_vault_a: ix.accounts[5].0.into(),
-                    token_vault_b: ix.accounts[6].0.into(),
-                    fee_tier: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    system_program: ix.accounts[9].0.into(),
-                    rent: ix.accounts[10].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    token_mint_a: next_account(accounts)?,
+                    token_mint_b: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    fee_tier: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
-                let de_ix_data: InitializePoolIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: InitializePoolIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::InitializePool(ix_accounts, de_ix_data))
             },
             [11, 188, 193, 214, 141, 91, 149, 184] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeTickArrayIxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    funder: ix.accounts[1].0.into(),
-                    tick_array: ix.accounts[2].0.into(),
-                    system_program: ix.accounts[3].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    tick_array: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeTickArrayIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::InitializeTickArray(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
+            [41, 33, 165, 200, 120, 231, 142, 50] => {
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = InitializeDynamicTickArrayIxAccounts {
+                    whirlpool: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    tick_array: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                };
+                let de_ix_data: InitializeDynamicTickArrayIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(WhirlpoolProgramIx::InitializeDynamicTickArray(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
             [183, 74, 156, 160, 112, 2, 42, 30] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeFeeTierIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    fee_tier: ix.accounts[1].0.into(),
-                    funder: ix.accounts[2].0.into(),
-                    fee_authority: ix.accounts[3].0.into(),
-                    system_program: ix.accounts[4].0.into(),
+                    config: next_account(accounts)?,
+                    fee_tier: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeFeeTierIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::InitializeFeeTier(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [95, 135, 192, 196, 242, 129, 230, 68] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeRewardIxAccounts {
-                    reward_authority: ix.accounts[0].0.into(),
-                    funder: ix.accounts[1].0.into(),
-                    whirlpool: ix.accounts[2].0.into(),
-                    reward_mint: ix.accounts[3].0.into(),
-                    reward_vault: ix.accounts[4].0.into(),
-                    token_program: ix.accounts[5].0.into(),
-                    system_program: ix.accounts[6].0.into(),
-                    rent: ix.accounts[7].0.into(),
+                    reward_authority: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeRewardIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::InitializeReward(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [13, 197, 86, 168, 109, 176, 27, 244] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetRewardEmissionsIxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    reward_authority: ix.accounts[1].0.into(),
-                    reward_vault: ix.accounts[2].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    reward_authority: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
                 };
                 let de_ix_data: SetRewardEmissionsIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::SetRewardEmissions(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [135, 128, 47, 77, 15, 152, 240, 49] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = OpenPositionIxAccounts {
-                    funder: ix.accounts[0].0.into(),
-                    owner: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_mint: ix.accounts[3].0.into(),
-                    position_token_account: ix.accounts[4].0.into(),
-                    whirlpool: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    rent: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
+                    funder: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_mint: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
-                let de_ix_data: OpenPositionIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: OpenPositionIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::OpenPosition(ix_accounts, de_ix_data))
             },
             [242, 29, 134, 48, 58, 110, 14, 60] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = OpenPositionWithMetadataIxAccounts {
-                    funder: ix.accounts[0].0.into(),
-                    owner: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_mint: ix.accounts[3].0.into(),
-                    position_metadata_account: ix.accounts[4].0.into(),
-                    position_token_account: ix.accounts[5].0.into(),
-                    whirlpool: ix.accounts[6].0.into(),
-                    token_program: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    rent: ix.accounts[9].0.into(),
-                    associated_token_program: ix.accounts[10].0.into(),
-                    metadata_program: ix.accounts[11].0.into(),
-                    metadata_update_auth: ix.accounts[12].0.into(),
+                    funder: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_mint: next_account(accounts)?,
+                    position_metadata_account: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    metadata_update_auth: next_account(accounts)?,
                 };
                 let de_ix_data: OpenPositionWithMetadataIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::OpenPositionWithMetadata(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [46, 156, 243, 118, 13, 205, 251, 178] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = IncreaseLiquidityIxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    token_program: ix.accounts[1].0.into(),
-                    position_authority: ix.accounts[2].0.into(),
-                    position: ix.accounts[3].0.into(),
-                    position_token_account: ix.accounts[4].0.into(),
-                    token_owner_account_a: ix.accounts[5].0.into(),
-                    token_owner_account_b: ix.accounts[6].0.into(),
-                    token_vault_a: ix.accounts[7].0.into(),
-                    token_vault_b: ix.accounts[8].0.into(),
-                    tick_array_lower: ix.accounts[9].0.into(),
-                    tick_array_upper: ix.accounts[10].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    token_owner_account_a: next_account(accounts)?,
+                    token_owner_account_b: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    tick_array_lower: next_account(accounts)?,
+                    tick_array_upper: next_account(accounts)?,
                 };
                 let de_ix_data: IncreaseLiquidityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::IncreaseLiquidity(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [160, 38, 208, 111, 104, 91, 44, 1] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DecreaseLiquidityIxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    token_program: ix.accounts[1].0.into(),
-                    position_authority: ix.accounts[2].0.into(),
-                    position: ix.accounts[3].0.into(),
-                    position_token_account: ix.accounts[4].0.into(),
-                    token_owner_account_a: ix.accounts[5].0.into(),
-                    token_owner_account_b: ix.accounts[6].0.into(),
-                    token_vault_a: ix.accounts[7].0.into(),
-                    token_vault_b: ix.accounts[8].0.into(),
-                    tick_array_lower: ix.accounts[9].0.into(),
-                    tick_array_upper: ix.accounts[10].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    token_owner_account_a: next_account(accounts)?,
+                    token_owner_account_b: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    tick_array_lower: next_account(accounts)?,
+                    tick_array_upper: next_account(accounts)?,
                 };
                 let de_ix_data: DecreaseLiquidityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::DecreaseLiquidity(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [154, 230, 250, 13, 236, 209, 75, 223] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateFeesAndRewardsIxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    position: ix.accounts[1].0.into(),
-                    tick_array_lower: ix.accounts[2].0.into(),
-                    tick_array_upper: ix.accounts[3].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    tick_array_lower: next_account(accounts)?,
+                    tick_array_upper: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::UpdateFeesAndRewards(ix_accounts))
             },
             [164, 152, 207, 99, 30, 186, 19, 182] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CollectFeesIxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    position_authority: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_token_account: ix.accounts[3].0.into(),
-                    token_owner_account_a: ix.accounts[4].0.into(),
-                    token_vault_a: ix.accounts[5].0.into(),
-                    token_owner_account_b: ix.accounts[6].0.into(),
-                    token_vault_b: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    token_owner_account_a: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_owner_account_b: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::CollectFees(ix_accounts))
             },
             [70, 5, 132, 87, 86, 235, 177, 34] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CollectRewardIxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    position_authority: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_token_account: ix.accounts[3].0.into(),
-                    reward_owner_account: ix.accounts[4].0.into(),
-                    reward_vault: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    reward_owner_account: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
-                let de_ix_data: CollectRewardIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: CollectRewardIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::CollectReward(ix_accounts, de_ix_data))
             },
             [22, 67, 23, 98, 150, 178, 70, 220] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CollectProtocolFeesIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    whirlpool: ix.accounts[1].0.into(),
-                    collect_protocol_fees_authority: ix.accounts[2].0.into(),
-                    token_vault_a: ix.accounts[3].0.into(),
-                    token_vault_b: ix.accounts[4].0.into(),
-                    token_destination_a: ix.accounts[5].0.into(),
-                    token_destination_b: ix.accounts[6].0.into(),
-                    token_program: ix.accounts[7].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    collect_protocol_fees_authority: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    token_destination_a: next_account(accounts)?,
+                    token_destination_b: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::CollectProtocolFees(ix_accounts))
             },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapIxAccounts {
-                    token_program: ix.accounts[0].0.into(),
-                    token_authority: ix.accounts[1].0.into(),
-                    whirlpool: ix.accounts[2].0.into(),
-                    token_owner_account_a: ix.accounts[3].0.into(),
-                    token_vault_a: ix.accounts[4].0.into(),
-                    token_owner_account_b: ix.accounts[5].0.into(),
-                    token_vault_b: ix.accounts[6].0.into(),
-                    tick_array0: ix.accounts[7].0.into(),
-                    tick_array1: ix.accounts[8].0.into(),
-                    tick_array2: ix.accounts[9].0.into(),
-                    oracle: ix.accounts[10].0.into(),
+                    token_program: next_account(accounts)?,
+                    token_authority: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    token_owner_account_a: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_owner_account_b: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    tick_array0: next_account(accounts)?,
+                    tick_array1: next_account(accounts)?,
+                    tick_array2: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::Swap(ix_accounts, de_ix_data))
             },
             [123, 134, 81, 0, 49, 68, 98, 98] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClosePositionIxAccounts {
-                    position_authority: ix.accounts[0].0.into(),
-                    receiver: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_mint: ix.accounts[3].0.into(),
-                    position_token_account: ix.accounts[4].0.into(),
-                    token_program: ix.accounts[5].0.into(),
+                    position_authority: next_account(accounts)?,
+                    receiver: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_mint: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::ClosePosition(ix_accounts))
             },
             [118, 215, 214, 157, 182, 229, 208, 228] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetDefaultFeeRateIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    fee_tier: ix.accounts[1].0.into(),
-                    fee_authority: ix.accounts[2].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    fee_tier: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
                 };
                 let de_ix_data: SetDefaultFeeRateIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::SetDefaultFeeRate(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [107, 205, 249, 226, 151, 35, 86, 0] => {
-                check_min_accounts_req(accounts_len, 2)?;
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetDefaultProtocolFeeRateIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    fee_authority: ix.accounts[1].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
                 };
                 let de_ix_data: SetDefaultProtocolFeeRateIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::SetDefaultProtocolFeeRate(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [53, 243, 137, 65, 8, 140, 158, 6] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetFeeRateIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    whirlpool: ix.accounts[1].0.into(),
-                    fee_authority: ix.accounts[2].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
                 };
-                let de_ix_data: SetFeeRateIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SetFeeRateIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::SetFeeRate(ix_accounts, de_ix_data))
             },
             [95, 7, 4, 50, 154, 79, 156, 131] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetProtocolFeeRateIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    whirlpool: ix.accounts[1].0.into(),
-                    fee_authority: ix.accounts[2].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
                 };
                 let de_ix_data: SetProtocolFeeRateIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::SetProtocolFeeRate(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [31, 1, 50, 87, 237, 101, 97, 132] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetFeeAuthorityIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    fee_authority: ix.accounts[1].0.into(),
-                    new_fee_authority: ix.accounts[2].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    new_fee_authority: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::SetFeeAuthority(ix_accounts))
             },
             [34, 150, 93, 244, 139, 225, 233, 67] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetCollectProtocolFeesAuthorityIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    collect_protocol_fees_authority: ix.accounts[1].0.into(),
-                    new_collect_protocol_fees_authority: ix.accounts[2].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    collect_protocol_fees_authority: next_account(accounts)?,
+                    new_collect_protocol_fees_authority: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::SetCollectProtocolFeesAuthority(
                     ix_accounts,
                 ))
             },
             [34, 39, 183, 252, 83, 28, 85, 127] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetRewardAuthorityIxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    reward_authority: ix.accounts[1].0.into(),
-                    new_reward_authority: ix.accounts[2].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    reward_authority: next_account(accounts)?,
+                    new_reward_authority: next_account(accounts)?,
                 };
                 let de_ix_data: SetRewardAuthorityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::SetRewardAuthority(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [240, 154, 201, 198, 148, 93, 56, 25] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetRewardAuthorityBySuperAuthorityIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    whirlpool: ix.accounts[1].0.into(),
-                    reward_emissions_super_authority: ix.accounts[2].0.into(),
-                    new_reward_authority: ix.accounts[3].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    reward_emissions_super_authority: next_account(accounts)?,
+                    new_reward_authority: next_account(accounts)?,
                 };
                 let de_ix_data: SetRewardAuthorityBySuperAuthorityIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::SetRewardAuthorityBySuperAuthority(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [207, 5, 200, 209, 122, 56, 82, 183] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetRewardEmissionsSuperAuthorityIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    reward_emissions_super_authority: ix.accounts[1].0.into(),
-                    new_reward_emissions_super_authority: ix.accounts[2].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    reward_emissions_super_authority: next_account(accounts)?,
+                    new_reward_emissions_super_authority: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::SetRewardEmissionsSuperAuthority(
                     ix_accounts,
                 ))
             },
             [195, 96, 237, 108, 68, 162, 219, 230] => {
-                check_min_accounts_req(accounts_len, 20)?;
+                let expected_accounts_len = 20;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = TwoHopSwapIxAccounts {
-                    token_program: ix.accounts[0].0.into(),
-                    token_authority: ix.accounts[1].0.into(),
-                    whirlpool_one: ix.accounts[2].0.into(),
-                    whirlpool_two: ix.accounts[3].0.into(),
-                    token_owner_account_one_a: ix.accounts[4].0.into(),
-                    token_vault_one_a: ix.accounts[5].0.into(),
-                    token_owner_account_one_b: ix.accounts[6].0.into(),
-                    token_vault_one_b: ix.accounts[7].0.into(),
-                    token_owner_account_two_a: ix.accounts[8].0.into(),
-                    token_vault_two_a: ix.accounts[9].0.into(),
-                    token_owner_account_two_b: ix.accounts[10].0.into(),
-                    token_vault_two_b: ix.accounts[11].0.into(),
-                    tick_array_one0: ix.accounts[12].0.into(),
-                    tick_array_one1: ix.accounts[13].0.into(),
-                    tick_array_one2: ix.accounts[14].0.into(),
-                    tick_array_two0: ix.accounts[15].0.into(),
-                    tick_array_two1: ix.accounts[16].0.into(),
-                    tick_array_two2: ix.accounts[17].0.into(),
-                    oracle_one: ix.accounts[18].0.into(),
-                    oracle_two: ix.accounts[19].0.into(),
+                    token_program: next_account(accounts)?,
+                    token_authority: next_account(accounts)?,
+                    whirlpool_one: next_account(accounts)?,
+                    whirlpool_two: next_account(accounts)?,
+                    token_owner_account_one_a: next_account(accounts)?,
+                    token_vault_one_a: next_account(accounts)?,
+                    token_owner_account_one_b: next_account(accounts)?,
+                    token_vault_one_b: next_account(accounts)?,
+                    token_owner_account_two_a: next_account(accounts)?,
+                    token_vault_two_a: next_account(accounts)?,
+                    token_owner_account_two_b: next_account(accounts)?,
+                    token_vault_two_b: next_account(accounts)?,
+                    tick_array_one0: next_account(accounts)?,
+                    tick_array_one1: next_account(accounts)?,
+                    tick_array_one2: next_account(accounts)?,
+                    tick_array_two0: next_account(accounts)?,
+                    tick_array_two1: next_account(accounts)?,
+                    tick_array_two2: next_account(accounts)?,
+                    oracle_one: next_account(accounts)?,
+                    oracle_two: next_account(accounts)?,
                 };
-                let de_ix_data: TwoHopSwapIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: TwoHopSwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::TwoHopSwap(ix_accounts, de_ix_data))
             },
             [117, 45, 241, 149, 24, 18, 194, 65] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePositionBundleIxAccounts {
-                    position_bundle: ix.accounts[0].0.into(),
-                    position_bundle_mint: ix.accounts[1].0.into(),
-                    position_bundle_token_account: ix.accounts[2].0.into(),
-                    position_bundle_owner: ix.accounts[3].0.into(),
-                    funder: ix.accounts[4].0.into(),
-                    token_program: ix.accounts[5].0.into(),
-                    system_program: ix.accounts[6].0.into(),
-                    rent: ix.accounts[7].0.into(),
-                    associated_token_program: ix.accounts[8].0.into(),
+                    position_bundle: next_account(accounts)?,
+                    position_bundle_mint: next_account(accounts)?,
+                    position_bundle_token_account: next_account(accounts)?,
+                    position_bundle_owner: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::InitializePositionBundle(ix_accounts))
             },
             [93, 124, 16, 179, 249, 131, 115, 245] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePositionBundleWithMetadataIxAccounts {
-                    position_bundle: ix.accounts[0].0.into(),
-                    position_bundle_mint: ix.accounts[1].0.into(),
-                    position_bundle_metadata: ix.accounts[2].0.into(),
-                    position_bundle_token_account: ix.accounts[3].0.into(),
-                    position_bundle_owner: ix.accounts[4].0.into(),
-                    funder: ix.accounts[5].0.into(),
-                    metadata_update_auth: ix.accounts[6].0.into(),
-                    token_program: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    rent: ix.accounts[9].0.into(),
-                    associated_token_program: ix.accounts[10].0.into(),
-                    metadata_program: ix.accounts[11].0.into(),
+                    position_bundle: next_account(accounts)?,
+                    position_bundle_mint: next_account(accounts)?,
+                    position_bundle_metadata: next_account(accounts)?,
+                    position_bundle_token_account: next_account(accounts)?,
+                    position_bundle_owner: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    metadata_update_auth: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::InitializePositionBundleWithMetadata(
                     ix_accounts,
                 ))
             },
             [100, 25, 99, 2, 217, 239, 124, 173] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DeletePositionBundleIxAccounts {
-                    position_bundle: ix.accounts[0].0.into(),
-                    position_bundle_mint: ix.accounts[1].0.into(),
-                    position_bundle_token_account: ix.accounts[2].0.into(),
-                    position_bundle_owner: ix.accounts[3].0.into(),
-                    receiver: ix.accounts[4].0.into(),
-                    token_program: ix.accounts[5].0.into(),
+                    position_bundle: next_account(accounts)?,
+                    position_bundle_mint: next_account(accounts)?,
+                    position_bundle_token_account: next_account(accounts)?,
+                    position_bundle_owner: next_account(accounts)?,
+                    receiver: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::DeletePositionBundle(ix_accounts))
             },
             [169, 113, 126, 171, 213, 172, 212, 49] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = OpenBundledPositionIxAccounts {
-                    bundled_position: ix.accounts[0].0.into(),
-                    position_bundle: ix.accounts[1].0.into(),
-                    position_bundle_token_account: ix.accounts[2].0.into(),
-                    position_bundle_authority: ix.accounts[3].0.into(),
-                    whirlpool: ix.accounts[4].0.into(),
-                    funder: ix.accounts[5].0.into(),
-                    system_program: ix.accounts[6].0.into(),
-                    rent: ix.accounts[7].0.into(),
+                    bundled_position: next_account(accounts)?,
+                    position_bundle: next_account(accounts)?,
+                    position_bundle_token_account: next_account(accounts)?,
+                    position_bundle_authority: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
                 let de_ix_data: OpenBundledPositionIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::OpenBundledPosition(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [41, 36, 216, 245, 27, 85, 103, 67] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CloseBundledPositionIxAccounts {
-                    bundled_position: ix.accounts[0].0.into(),
-                    position_bundle: ix.accounts[1].0.into(),
-                    position_bundle_token_account: ix.accounts[2].0.into(),
-                    position_bundle_authority: ix.accounts[3].0.into(),
-                    receiver: ix.accounts[4].0.into(),
+                    bundled_position: next_account(accounts)?,
+                    position_bundle: next_account(accounts)?,
+                    position_bundle_token_account: next_account(accounts)?,
+                    position_bundle_authority: next_account(accounts)?,
+                    receiver: next_account(accounts)?,
                 };
                 let de_ix_data: CloseBundledPositionIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::CloseBundledPosition(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [212, 47, 95, 92, 114, 102, 131, 250] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = OpenPositionWithTokenExtensionsIxAccounts {
-                    funder: ix.accounts[0].0.into(),
-                    owner: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_mint: ix.accounts[3].0.into(),
-                    position_token_account: ix.accounts[4].0.into(),
-                    whirlpool: ix.accounts[5].0.into(),
-                    token2022_program: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    associated_token_program: ix.accounts[8].0.into(),
-                    metadata_update_auth: ix.accounts[9].0.into(),
+                    funder: next_account(accounts)?,
+                    owner: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_mint: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    metadata_update_auth: next_account(accounts)?,
                 };
                 let de_ix_data: OpenPositionWithTokenExtensionsIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::OpenPositionWithTokenExtensions(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [1, 182, 135, 59, 155, 25, 99, 223] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = ClosePositionWithTokenExtensionsIxAccounts {
-                    position_authority: ix.accounts[0].0.into(),
-                    receiver: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_mint: ix.accounts[3].0.into(),
-                    position_token_account: ix.accounts[4].0.into(),
-                    token2022_program: ix.accounts[5].0.into(),
+                    position_authority: next_account(accounts)?,
+                    receiver: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_mint: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::ClosePositionWithTokenExtensions(
                     ix_accounts,
                 ))
             },
             [227, 62, 2, 252, 247, 10, 171, 185] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = LockPositionIxAccounts {
-                    funder: ix.accounts[0].0.into(),
-                    position_authority: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_mint: ix.accounts[3].0.into(),
-                    position_token_account: ix.accounts[4].0.into(),
-                    lock_config: ix.accounts[5].0.into(),
-                    whirlpool: ix.accounts[6].0.into(),
-                    token2022_program: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
+                    funder: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_mint: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    lock_config: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: LockPositionIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: LockPositionIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::LockPosition(ix_accounts, de_ix_data))
             },
-            [207, 117, 95, 191, 229, 180, 226, 15] => {
-                check_min_accounts_req(accounts_len, 13)?;
-                let ix_accounts = CollectFeesV2IxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    position_authority: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_token_account: ix.accounts[3].0.into(),
-                    token_mint_a: ix.accounts[4].0.into(),
-                    token_mint_b: ix.accounts[5].0.into(),
-                    token_owner_account_a: ix.accounts[6].0.into(),
-                    token_vault_a: ix.accounts[7].0.into(),
-                    token_owner_account_b: ix.accounts[8].0.into(),
-                    token_vault_b: ix.accounts[9].0.into(),
-                    token_program_a: ix.accounts[10].0.into(),
-                    token_program_b: ix.accounts[11].0.into(),
-                    memo_program: ix.accounts[12].0.into(),
+            [164, 123, 180, 141, 194, 100, 160, 175] => {
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = ResetPositionRangeIxAccounts {
+                    funder: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: CollectFeesV2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: ResetPositionRangeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(WhirlpoolProgramIx::ResetPositionRange(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [179, 121, 229, 46, 67, 138, 194, 138] => {
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = TransferLockedPositionIxAccounts {
+                    position_authority: next_account(accounts)?,
+                    receiver: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_mint: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    lock_config: next_account(accounts)?,
+                    token2022_program: next_account(accounts)?,
+                };
+                Ok(WhirlpoolProgramIx::TransferLockedPosition(ix_accounts))
+            },
+            [77, 99, 208, 200, 141, 123, 117, 48] => {
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = InitializeAdaptiveFeeTierIxAccounts {
+                    whirlpools_config: next_account(accounts)?,
+                    adaptive_fee_tier: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                };
+                let de_ix_data: InitializeAdaptiveFeeTierIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(WhirlpoolProgramIx::InitializeAdaptiveFeeTier(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [229, 66, 84, 251, 164, 134, 183, 7] => {
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SetDefaultBaseFeeRateIxAccounts {
+                    whirlpools_config: next_account(accounts)?,
+                    adaptive_fee_tier: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                };
+                let de_ix_data: SetDefaultBaseFeeRateIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(WhirlpoolProgramIx::SetDefaultBaseFeeRate(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [193, 234, 231, 147, 138, 57, 3, 122] => {
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SetDelegatedFeeAuthorityIxAccounts {
+                    whirlpools_config: next_account(accounts)?,
+                    adaptive_fee_tier: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    new_delegated_fee_authority: next_account(accounts)?,
+                };
+                Ok(WhirlpoolProgramIx::SetDelegatedFeeAuthority(ix_accounts))
+            },
+            [125, 43, 127, 235, 149, 26, 106, 236] => {
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SetInitializePoolAuthorityIxAccounts {
+                    whirlpools_config: next_account(accounts)?,
+                    adaptive_fee_tier: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    new_initialize_pool_authority: next_account(accounts)?,
+                };
+                Ok(WhirlpoolProgramIx::SetInitializePoolAuthority(ix_accounts))
+            },
+            [132, 185, 66, 148, 83, 88, 134, 198] => {
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SetPresetAdaptiveFeeConstantsIxAccounts {
+                    whirlpools_config: next_account(accounts)?,
+                    adaptive_fee_tier: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                };
+                let de_ix_data: SetPresetAdaptiveFeeConstantsIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(WhirlpoolProgramIx::SetPresetAdaptiveFeeConstants(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [143, 94, 96, 76, 172, 124, 119, 199] => {
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = InitializePoolWithAdaptiveFeeIxAccounts {
+                    whirlpools_config: next_account(accounts)?,
+                    token_mint_a: next_account(accounts)?,
+                    token_mint_b: next_account(accounts)?,
+                    token_badge_a: next_account(accounts)?,
+                    token_badge_b: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    initialize_pool_authority: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    adaptive_fee_tier: next_account(accounts)?,
+                    token_program_a: next_account(accounts)?,
+                    token_program_b: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
+                };
+                let de_ix_data: InitializePoolWithAdaptiveFeeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(WhirlpoolProgramIx::InitializePoolWithAdaptiveFee(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [121, 121, 54, 114, 131, 230, 162, 104] => {
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SetFeeRateByDelegatedFeeAuthorityIxAccounts {
+                    whirlpool: next_account(accounts)?,
+                    adaptive_fee_tier: next_account(accounts)?,
+                    delegated_fee_authority: next_account(accounts)?,
+                };
+                let de_ix_data: SetFeeRateByDelegatedFeeAuthorityIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(WhirlpoolProgramIx::SetFeeRateByDelegatedFeeAuthority(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [207, 117, 95, 191, 229, 180, 226, 15] => {
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = CollectFeesV2IxAccounts {
+                    whirlpool: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    token_mint_a: next_account(accounts)?,
+                    token_mint_b: next_account(accounts)?,
+                    token_owner_account_a: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_owner_account_b: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    token_program_a: next_account(accounts)?,
+                    token_program_b: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                };
+                let de_ix_data: CollectFeesV2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::CollectFeesV2(ix_accounts, de_ix_data))
             },
             [103, 128, 222, 134, 114, 200, 22, 200] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CollectProtocolFeesV2IxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    whirlpool: ix.accounts[1].0.into(),
-                    collect_protocol_fees_authority: ix.accounts[2].0.into(),
-                    token_mint_a: ix.accounts[3].0.into(),
-                    token_mint_b: ix.accounts[4].0.into(),
-                    token_vault_a: ix.accounts[5].0.into(),
-                    token_vault_b: ix.accounts[6].0.into(),
-                    token_destination_a: ix.accounts[7].0.into(),
-                    token_destination_b: ix.accounts[8].0.into(),
-                    token_program_a: ix.accounts[9].0.into(),
-                    token_program_b: ix.accounts[10].0.into(),
-                    memo_program: ix.accounts[11].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    collect_protocol_fees_authority: next_account(accounts)?,
+                    token_mint_a: next_account(accounts)?,
+                    token_mint_b: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    token_destination_a: next_account(accounts)?,
+                    token_destination_b: next_account(accounts)?,
+                    token_program_a: next_account(accounts)?,
+                    token_program_b: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
                 };
                 let de_ix_data: CollectProtocolFeesV2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::CollectProtocolFeesV2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [177, 107, 37, 180, 160, 19, 49, 209] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CollectRewardV2IxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    position_authority: ix.accounts[1].0.into(),
-                    position: ix.accounts[2].0.into(),
-                    position_token_account: ix.accounts[3].0.into(),
-                    reward_owner_account: ix.accounts[4].0.into(),
-                    reward_mint: ix.accounts[5].0.into(),
-                    reward_vault: ix.accounts[6].0.into(),
-                    reward_token_program: ix.accounts[7].0.into(),
-                    memo_program: ix.accounts[8].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    reward_owner_account: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_token_program: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
                 };
                 let de_ix_data: CollectRewardV2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::CollectRewardV2(ix_accounts, de_ix_data))
             },
             [58, 127, 188, 62, 79, 82, 196, 96] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DecreaseLiquidityV2IxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    token_program_a: ix.accounts[1].0.into(),
-                    token_program_b: ix.accounts[2].0.into(),
-                    memo_program: ix.accounts[3].0.into(),
-                    position_authority: ix.accounts[4].0.into(),
-                    position: ix.accounts[5].0.into(),
-                    position_token_account: ix.accounts[6].0.into(),
-                    token_mint_a: ix.accounts[7].0.into(),
-                    token_mint_b: ix.accounts[8].0.into(),
-                    token_owner_account_a: ix.accounts[9].0.into(),
-                    token_owner_account_b: ix.accounts[10].0.into(),
-                    token_vault_a: ix.accounts[11].0.into(),
-                    token_vault_b: ix.accounts[12].0.into(),
-                    tick_array_lower: ix.accounts[13].0.into(),
-                    tick_array_upper: ix.accounts[14].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    token_program_a: next_account(accounts)?,
+                    token_program_b: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    token_mint_a: next_account(accounts)?,
+                    token_mint_b: next_account(accounts)?,
+                    token_owner_account_a: next_account(accounts)?,
+                    token_owner_account_b: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    tick_array_lower: next_account(accounts)?,
+                    tick_array_upper: next_account(accounts)?,
                 };
                 let de_ix_data: DecreaseLiquidityV2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::DecreaseLiquidityV2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [133, 29, 89, 223, 69, 238, 176, 10] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = IncreaseLiquidityV2IxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    token_program_a: ix.accounts[1].0.into(),
-                    token_program_b: ix.accounts[2].0.into(),
-                    memo_program: ix.accounts[3].0.into(),
-                    position_authority: ix.accounts[4].0.into(),
-                    position: ix.accounts[5].0.into(),
-                    position_token_account: ix.accounts[6].0.into(),
-                    token_mint_a: ix.accounts[7].0.into(),
-                    token_mint_b: ix.accounts[8].0.into(),
-                    token_owner_account_a: ix.accounts[9].0.into(),
-                    token_owner_account_b: ix.accounts[10].0.into(),
-                    token_vault_a: ix.accounts[11].0.into(),
-                    token_vault_b: ix.accounts[12].0.into(),
-                    tick_array_lower: ix.accounts[13].0.into(),
-                    tick_array_upper: ix.accounts[14].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    token_program_a: next_account(accounts)?,
+                    token_program_b: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    position_authority: next_account(accounts)?,
+                    position: next_account(accounts)?,
+                    position_token_account: next_account(accounts)?,
+                    token_mint_a: next_account(accounts)?,
+                    token_mint_b: next_account(accounts)?,
+                    token_owner_account_a: next_account(accounts)?,
+                    token_owner_account_b: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    tick_array_lower: next_account(accounts)?,
+                    tick_array_upper: next_account(accounts)?,
                 };
                 let de_ix_data: IncreaseLiquidityV2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::IncreaseLiquidityV2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [207, 45, 87, 242, 27, 63, 204, 67] => {
-                check_min_accounts_req(accounts_len, 14)?;
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializePoolV2IxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    token_mint_a: ix.accounts[1].0.into(),
-                    token_mint_b: ix.accounts[2].0.into(),
-                    token_badge_a: ix.accounts[3].0.into(),
-                    token_badge_b: ix.accounts[4].0.into(),
-                    funder: ix.accounts[5].0.into(),
-                    whirlpool: ix.accounts[6].0.into(),
-                    token_vault_a: ix.accounts[7].0.into(),
-                    token_vault_b: ix.accounts[8].0.into(),
-                    fee_tier: ix.accounts[9].0.into(),
-                    token_program_a: ix.accounts[10].0.into(),
-                    token_program_b: ix.accounts[11].0.into(),
-                    system_program: ix.accounts[12].0.into(),
-                    rent: ix.accounts[13].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    token_mint_a: next_account(accounts)?,
+                    token_mint_b: next_account(accounts)?,
+                    token_badge_a: next_account(accounts)?,
+                    token_badge_b: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    fee_tier: next_account(accounts)?,
+                    token_program_a: next_account(accounts)?,
+                    token_program_b: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
                 let de_ix_data: InitializePoolV2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::InitializePoolV2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [91, 1, 77, 50, 235, 229, 133, 49] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeRewardV2IxAccounts {
-                    reward_authority: ix.accounts[0].0.into(),
-                    funder: ix.accounts[1].0.into(),
-                    whirlpool: ix.accounts[2].0.into(),
-                    reward_mint: ix.accounts[3].0.into(),
-                    reward_token_badge: ix.accounts[4].0.into(),
-                    reward_vault: ix.accounts[5].0.into(),
-                    reward_token_program: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    rent: ix.accounts[8].0.into(),
+                    reward_authority: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    reward_mint: next_account(accounts)?,
+                    reward_token_badge: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
+                    reward_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeRewardV2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::InitializeRewardV2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [114, 228, 72, 32, 193, 48, 160, 102] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetRewardEmissionsV2IxAccounts {
-                    whirlpool: ix.accounts[0].0.into(),
-                    reward_authority: ix.accounts[1].0.into(),
-                    reward_vault: ix.accounts[2].0.into(),
+                    whirlpool: next_account(accounts)?,
+                    reward_authority: next_account(accounts)?,
+                    reward_vault: next_account(accounts)?,
                 };
                 let de_ix_data: SetRewardEmissionsV2IxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::SetRewardEmissionsV2(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [43, 4, 237, 11, 26, 201, 30, 98] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapV2IxAccounts {
-                    token_program_a: ix.accounts[0].0.into(),
-                    token_program_b: ix.accounts[1].0.into(),
-                    memo_program: ix.accounts[2].0.into(),
-                    token_authority: ix.accounts[3].0.into(),
-                    whirlpool: ix.accounts[4].0.into(),
-                    token_mint_a: ix.accounts[5].0.into(),
-                    token_mint_b: ix.accounts[6].0.into(),
-                    token_owner_account_a: ix.accounts[7].0.into(),
-                    token_vault_a: ix.accounts[8].0.into(),
-                    token_owner_account_b: ix.accounts[9].0.into(),
-                    token_vault_b: ix.accounts[10].0.into(),
-                    tick_array0: ix.accounts[11].0.into(),
-                    tick_array1: ix.accounts[12].0.into(),
-                    tick_array2: ix.accounts[13].0.into(),
-                    oracle: ix.accounts[14].0.into(),
+                    token_program_a: next_account(accounts)?,
+                    token_program_b: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                    token_authority: next_account(accounts)?,
+                    whirlpool: next_account(accounts)?,
+                    token_mint_a: next_account(accounts)?,
+                    token_mint_b: next_account(accounts)?,
+                    token_owner_account_a: next_account(accounts)?,
+                    token_vault_a: next_account(accounts)?,
+                    token_owner_account_b: next_account(accounts)?,
+                    token_vault_b: next_account(accounts)?,
+                    tick_array0: next_account(accounts)?,
+                    tick_array1: next_account(accounts)?,
+                    tick_array2: next_account(accounts)?,
+                    oracle: next_account(accounts)?,
                 };
-                let de_ix_data: SwapV2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: SwapV2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::SwapV2(ix_accounts, de_ix_data))
             },
             [186, 143, 209, 29, 254, 2, 194, 117] => {
-                check_min_accounts_req(accounts_len, 24)?;
+                let expected_accounts_len = 24;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = TwoHopSwapV2IxAccounts {
-                    whirlpool_one: ix.accounts[0].0.into(),
-                    whirlpool_two: ix.accounts[1].0.into(),
-                    token_mint_input: ix.accounts[2].0.into(),
-                    token_mint_intermediate: ix.accounts[3].0.into(),
-                    token_mint_output: ix.accounts[4].0.into(),
-                    token_program_input: ix.accounts[5].0.into(),
-                    token_program_intermediate: ix.accounts[6].0.into(),
-                    token_program_output: ix.accounts[7].0.into(),
-                    token_owner_account_input: ix.accounts[8].0.into(),
-                    token_vault_one_input: ix.accounts[9].0.into(),
-                    token_vault_one_intermediate: ix.accounts[10].0.into(),
-                    token_vault_two_intermediate: ix.accounts[11].0.into(),
-                    token_vault_two_output: ix.accounts[12].0.into(),
-                    token_owner_account_output: ix.accounts[13].0.into(),
-                    token_authority: ix.accounts[14].0.into(),
-                    tick_array_one0: ix.accounts[15].0.into(),
-                    tick_array_one1: ix.accounts[16].0.into(),
-                    tick_array_one2: ix.accounts[17].0.into(),
-                    tick_array_two0: ix.accounts[18].0.into(),
-                    tick_array_two1: ix.accounts[19].0.into(),
-                    tick_array_two2: ix.accounts[20].0.into(),
-                    oracle_one: ix.accounts[21].0.into(),
-                    oracle_two: ix.accounts[22].0.into(),
-                    memo_program: ix.accounts[23].0.into(),
+                    whirlpool_one: next_account(accounts)?,
+                    whirlpool_two: next_account(accounts)?,
+                    token_mint_input: next_account(accounts)?,
+                    token_mint_intermediate: next_account(accounts)?,
+                    token_mint_output: next_account(accounts)?,
+                    token_program_input: next_account(accounts)?,
+                    token_program_intermediate: next_account(accounts)?,
+                    token_program_output: next_account(accounts)?,
+                    token_owner_account_input: next_account(accounts)?,
+                    token_vault_one_input: next_account(accounts)?,
+                    token_vault_one_intermediate: next_account(accounts)?,
+                    token_vault_two_intermediate: next_account(accounts)?,
+                    token_vault_two_output: next_account(accounts)?,
+                    token_owner_account_output: next_account(accounts)?,
+                    token_authority: next_account(accounts)?,
+                    tick_array_one0: next_account(accounts)?,
+                    tick_array_one1: next_account(accounts)?,
+                    tick_array_one2: next_account(accounts)?,
+                    tick_array_two0: next_account(accounts)?,
+                    tick_array_two1: next_account(accounts)?,
+                    tick_array_two2: next_account(accounts)?,
+                    oracle_one: next_account(accounts)?,
+                    oracle_two: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
                 };
-                let de_ix_data: TwoHopSwapV2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: TwoHopSwapV2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(WhirlpoolProgramIx::TwoHopSwapV2(ix_accounts, de_ix_data))
             },
             [55, 9, 53, 9, 114, 57, 209, 52] => {
-                check_min_accounts_req(accounts_len, 5)?;
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeConfigExtensionIxAccounts {
-                    config: ix.accounts[0].0.into(),
-                    config_extension: ix.accounts[1].0.into(),
-                    funder: ix.accounts[2].0.into(),
-                    fee_authority: ix.accounts[3].0.into(),
-                    system_program: ix.accounts[4].0.into(),
+                    config: next_account(accounts)?,
+                    config_extension: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::InitializeConfigExtension(ix_accounts))
             },
             [44, 94, 241, 116, 24, 188, 60, 143] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetConfigExtensionAuthorityIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    whirlpools_config_extension: ix.accounts[1].0.into(),
-                    config_extension_authority: ix.accounts[2].0.into(),
-                    new_config_extension_authority: ix.accounts[3].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    whirlpools_config_extension: next_account(accounts)?,
+                    config_extension_authority: next_account(accounts)?,
+                    new_config_extension_authority: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::SetConfigExtensionAuthority(ix_accounts))
             },
             [207, 202, 4, 32, 205, 79, 13, 178] => {
-                check_min_accounts_req(accounts_len, 4)?;
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SetTokenBadgeAuthorityIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    whirlpools_config_extension: ix.accounts[1].0.into(),
-                    config_extension_authority: ix.accounts[2].0.into(),
-                    new_token_badge_authority: ix.accounts[3].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    whirlpools_config_extension: next_account(accounts)?,
+                    config_extension_authority: next_account(accounts)?,
+                    new_token_badge_authority: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::SetTokenBadgeAuthority(ix_accounts))
             },
             [253, 77, 205, 95, 27, 224, 89, 223] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeTokenBadgeIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    whirlpools_config_extension: ix.accounts[1].0.into(),
-                    token_badge_authority: ix.accounts[2].0.into(),
-                    token_mint: ix.accounts[3].0.into(),
-                    token_badge: ix.accounts[4].0.into(),
-                    funder: ix.accounts[5].0.into(),
-                    system_program: ix.accounts[6].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    whirlpools_config_extension: next_account(accounts)?,
+                    token_badge_authority: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    token_badge: next_account(accounts)?,
+                    funder: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::InitializeTokenBadge(ix_accounts))
             },
             [53, 146, 68, 8, 18, 117, 17, 185] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DeleteTokenBadgeIxAccounts {
-                    whirlpools_config: ix.accounts[0].0.into(),
-                    whirlpools_config_extension: ix.accounts[1].0.into(),
-                    token_badge_authority: ix.accounts[2].0.into(),
-                    token_mint: ix.accounts[3].0.into(),
-                    token_badge: ix.accounts[4].0.into(),
-                    receiver: ix.accounts[5].0.into(),
+                    whirlpools_config: next_account(accounts)?,
+                    whirlpools_config_extension: next_account(accounts)?,
+                    token_badge_authority: next_account(accounts)?,
+                    token_mint: next_account(accounts)?,
+                    token_badge: next_account(accounts)?,
+                    receiver: next_account(accounts)?,
                 };
                 Ok(WhirlpoolProgramIx::DeleteTokenBadge(ix_accounts))
+            },
+            [223, 253, 121, 121, 60, 193, 129, 31] => {
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = IdlIncludeIxAccounts {
+                    tick_array: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                };
+                Ok(WhirlpoolProgramIx::IdlInclude(ix_accounts))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
@@ -1038,7 +1334,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -1052,6 +1355,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -1125,6 +1471,28 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::InitializeTickArrayIxData {
             proto_def::InitializeTickArrayIxData {
                 start_tick_index: self.start_tick_index,
+            }
+        }
+    }
+    use super::InitializeDynamicTickArrayIxAccounts;
+    impl IntoProto<proto_def::InitializeDynamicTickArrayIxAccounts>
+        for InitializeDynamicTickArrayIxAccounts
+    {
+        fn into_proto(self) -> proto_def::InitializeDynamicTickArrayIxAccounts {
+            proto_def::InitializeDynamicTickArrayIxAccounts {
+                whirlpool: self.whirlpool.to_string(),
+                funder: self.funder.to_string(),
+                tick_array: self.tick_array.to_string(),
+                system_program: self.system_program.to_string(),
+            }
+        }
+    }
+    use super::InitializeDynamicTickArrayIxData;
+    impl IntoProto<proto_def::InitializeDynamicTickArrayIxData> for InitializeDynamicTickArrayIxData {
+        fn into_proto(self) -> proto_def::InitializeDynamicTickArrayIxData {
+            proto_def::InitializeDynamicTickArrayIxData {
+                start_tick_index: self.start_tick_index,
+                idempotent: self.idempotent,
             }
         }
     }
@@ -1774,6 +2142,206 @@ mod proto_parser {
             }
         }
     }
+    use super::ResetPositionRangeIxAccounts;
+    impl IntoProto<proto_def::ResetPositionRangeIxAccounts> for ResetPositionRangeIxAccounts {
+        fn into_proto(self) -> proto_def::ResetPositionRangeIxAccounts {
+            proto_def::ResetPositionRangeIxAccounts {
+                funder: self.funder.to_string(),
+                position_authority: self.position_authority.to_string(),
+                whirlpool: self.whirlpool.to_string(),
+                position: self.position.to_string(),
+                position_token_account: self.position_token_account.to_string(),
+                system_program: self.system_program.to_string(),
+            }
+        }
+    }
+    use super::ResetPositionRangeIxData;
+    impl IntoProto<proto_def::ResetPositionRangeIxData> for ResetPositionRangeIxData {
+        fn into_proto(self) -> proto_def::ResetPositionRangeIxData {
+            proto_def::ResetPositionRangeIxData {
+                new_tick_lower_index: self.new_tick_lower_index,
+                new_tick_upper_index: self.new_tick_upper_index,
+            }
+        }
+    }
+    use super::TransferLockedPositionIxAccounts;
+    impl IntoProto<proto_def::TransferLockedPositionIxAccounts> for TransferLockedPositionIxAccounts {
+        fn into_proto(self) -> proto_def::TransferLockedPositionIxAccounts {
+            proto_def::TransferLockedPositionIxAccounts {
+                position_authority: self.position_authority.to_string(),
+                receiver: self.receiver.to_string(),
+                position: self.position.to_string(),
+                position_mint: self.position_mint.to_string(),
+                position_token_account: self.position_token_account.to_string(),
+                destination_token_account: self.destination_token_account.to_string(),
+                lock_config: self.lock_config.to_string(),
+                token2022_program: self.token2022_program.to_string(),
+            }
+        }
+    }
+    use super::InitializeAdaptiveFeeTierIxAccounts;
+    impl IntoProto<proto_def::InitializeAdaptiveFeeTierIxAccounts>
+        for InitializeAdaptiveFeeTierIxAccounts
+    {
+        fn into_proto(self) -> proto_def::InitializeAdaptiveFeeTierIxAccounts {
+            proto_def::InitializeAdaptiveFeeTierIxAccounts {
+                whirlpools_config: self.whirlpools_config.to_string(),
+                adaptive_fee_tier: self.adaptive_fee_tier.to_string(),
+                funder: self.funder.to_string(),
+                fee_authority: self.fee_authority.to_string(),
+                system_program: self.system_program.to_string(),
+            }
+        }
+    }
+    use super::InitializeAdaptiveFeeTierIxData;
+    impl IntoProto<proto_def::InitializeAdaptiveFeeTierIxData> for InitializeAdaptiveFeeTierIxData {
+        fn into_proto(self) -> proto_def::InitializeAdaptiveFeeTierIxData {
+            proto_def::InitializeAdaptiveFeeTierIxData {
+                fee_tier_index: self.fee_tier_index.into(),
+                tick_spacing: self.tick_spacing.into(),
+                initialize_pool_authority: self.initialize_pool_authority.to_string(),
+                delegated_fee_authority: self.delegated_fee_authority.to_string(),
+                default_base_fee_rate: self.default_base_fee_rate.into(),
+                filter_period: self.filter_period.into(),
+                decay_period: self.decay_period.into(),
+                reduction_factor: self.reduction_factor.into(),
+                adaptive_fee_control_factor: self.adaptive_fee_control_factor,
+                max_volatility_accumulator: self.max_volatility_accumulator,
+                tick_group_size: self.tick_group_size.into(),
+                major_swap_threshold_ticks: self.major_swap_threshold_ticks.into(),
+            }
+        }
+    }
+    use super::SetDefaultBaseFeeRateIxAccounts;
+    impl IntoProto<proto_def::SetDefaultBaseFeeRateIxAccounts> for SetDefaultBaseFeeRateIxAccounts {
+        fn into_proto(self) -> proto_def::SetDefaultBaseFeeRateIxAccounts {
+            proto_def::SetDefaultBaseFeeRateIxAccounts {
+                whirlpools_config: self.whirlpools_config.to_string(),
+                adaptive_fee_tier: self.adaptive_fee_tier.to_string(),
+                fee_authority: self.fee_authority.to_string(),
+            }
+        }
+    }
+    use super::SetDefaultBaseFeeRateIxData;
+    impl IntoProto<proto_def::SetDefaultBaseFeeRateIxData> for SetDefaultBaseFeeRateIxData {
+        fn into_proto(self) -> proto_def::SetDefaultBaseFeeRateIxData {
+            proto_def::SetDefaultBaseFeeRateIxData {
+                default_base_fee_rate: self.default_base_fee_rate.into(),
+            }
+        }
+    }
+    use super::SetDelegatedFeeAuthorityIxAccounts;
+    impl IntoProto<proto_def::SetDelegatedFeeAuthorityIxAccounts>
+        for SetDelegatedFeeAuthorityIxAccounts
+    {
+        fn into_proto(self) -> proto_def::SetDelegatedFeeAuthorityIxAccounts {
+            proto_def::SetDelegatedFeeAuthorityIxAccounts {
+                whirlpools_config: self.whirlpools_config.to_string(),
+                adaptive_fee_tier: self.adaptive_fee_tier.to_string(),
+                fee_authority: self.fee_authority.to_string(),
+                new_delegated_fee_authority: self.new_delegated_fee_authority.to_string(),
+            }
+        }
+    }
+    use super::SetInitializePoolAuthorityIxAccounts;
+    impl IntoProto<proto_def::SetInitializePoolAuthorityIxAccounts>
+        for SetInitializePoolAuthorityIxAccounts
+    {
+        fn into_proto(self) -> proto_def::SetInitializePoolAuthorityIxAccounts {
+            proto_def::SetInitializePoolAuthorityIxAccounts {
+                whirlpools_config: self.whirlpools_config.to_string(),
+                adaptive_fee_tier: self.adaptive_fee_tier.to_string(),
+                fee_authority: self.fee_authority.to_string(),
+                new_initialize_pool_authority: self.new_initialize_pool_authority.to_string(),
+            }
+        }
+    }
+    use super::SetPresetAdaptiveFeeConstantsIxAccounts;
+    impl IntoProto<proto_def::SetPresetAdaptiveFeeConstantsIxAccounts>
+        for SetPresetAdaptiveFeeConstantsIxAccounts
+    {
+        fn into_proto(self) -> proto_def::SetPresetAdaptiveFeeConstantsIxAccounts {
+            proto_def::SetPresetAdaptiveFeeConstantsIxAccounts {
+                whirlpools_config: self.whirlpools_config.to_string(),
+                adaptive_fee_tier: self.adaptive_fee_tier.to_string(),
+                fee_authority: self.fee_authority.to_string(),
+            }
+        }
+    }
+    use super::SetPresetAdaptiveFeeConstantsIxData;
+    impl IntoProto<proto_def::SetPresetAdaptiveFeeConstantsIxData>
+        for SetPresetAdaptiveFeeConstantsIxData
+    {
+        fn into_proto(self) -> proto_def::SetPresetAdaptiveFeeConstantsIxData {
+            proto_def::SetPresetAdaptiveFeeConstantsIxData {
+                filter_period: self.filter_period.into(),
+                decay_period: self.decay_period.into(),
+                reduction_factor: self.reduction_factor.into(),
+                adaptive_fee_control_factor: self.adaptive_fee_control_factor,
+                max_volatility_accumulator: self.max_volatility_accumulator,
+                tick_group_size: self.tick_group_size.into(),
+                major_swap_threshold_ticks: self.major_swap_threshold_ticks.into(),
+            }
+        }
+    }
+    use super::InitializePoolWithAdaptiveFeeIxAccounts;
+    impl IntoProto<proto_def::InitializePoolWithAdaptiveFeeIxAccounts>
+        for InitializePoolWithAdaptiveFeeIxAccounts
+    {
+        fn into_proto(self) -> proto_def::InitializePoolWithAdaptiveFeeIxAccounts {
+            proto_def::InitializePoolWithAdaptiveFeeIxAccounts {
+                whirlpools_config: self.whirlpools_config.to_string(),
+                token_mint_a: self.token_mint_a.to_string(),
+                token_mint_b: self.token_mint_b.to_string(),
+                token_badge_a: self.token_badge_a.to_string(),
+                token_badge_b: self.token_badge_b.to_string(),
+                funder: self.funder.to_string(),
+                initialize_pool_authority: self.initialize_pool_authority.to_string(),
+                whirlpool: self.whirlpool.to_string(),
+                oracle: self.oracle.to_string(),
+                token_vault_a: self.token_vault_a.to_string(),
+                token_vault_b: self.token_vault_b.to_string(),
+                adaptive_fee_tier: self.adaptive_fee_tier.to_string(),
+                token_program_a: self.token_program_a.to_string(),
+                token_program_b: self.token_program_b.to_string(),
+                system_program: self.system_program.to_string(),
+                rent: self.rent.to_string(),
+            }
+        }
+    }
+    use super::InitializePoolWithAdaptiveFeeIxData;
+    impl IntoProto<proto_def::InitializePoolWithAdaptiveFeeIxData>
+        for InitializePoolWithAdaptiveFeeIxData
+    {
+        fn into_proto(self) -> proto_def::InitializePoolWithAdaptiveFeeIxData {
+            proto_def::InitializePoolWithAdaptiveFeeIxData {
+                initial_sqrt_price: self.initial_sqrt_price.to_string(),
+                trade_enable_timestamp: self.trade_enable_timestamp,
+            }
+        }
+    }
+    use super::SetFeeRateByDelegatedFeeAuthorityIxAccounts;
+    impl IntoProto<proto_def::SetFeeRateByDelegatedFeeAuthorityIxAccounts>
+        for SetFeeRateByDelegatedFeeAuthorityIxAccounts
+    {
+        fn into_proto(self) -> proto_def::SetFeeRateByDelegatedFeeAuthorityIxAccounts {
+            proto_def::SetFeeRateByDelegatedFeeAuthorityIxAccounts {
+                whirlpool: self.whirlpool.to_string(),
+                adaptive_fee_tier: self.adaptive_fee_tier.to_string(),
+                delegated_fee_authority: self.delegated_fee_authority.to_string(),
+            }
+        }
+    }
+    use super::SetFeeRateByDelegatedFeeAuthorityIxData;
+    impl IntoProto<proto_def::SetFeeRateByDelegatedFeeAuthorityIxData>
+        for SetFeeRateByDelegatedFeeAuthorityIxData
+    {
+        fn into_proto(self) -> proto_def::SetFeeRateByDelegatedFeeAuthorityIxData {
+            proto_def::SetFeeRateByDelegatedFeeAuthorityIxData {
+                fee_rate: self.fee_rate.into(),
+            }
+        }
+    }
     use super::CollectFeesV2IxAccounts;
     impl IntoProto<proto_def::CollectFeesV2IxAccounts> for CollectFeesV2IxAccounts {
         fn into_proto(self) -> proto_def::CollectFeesV2IxAccounts {
@@ -2139,6 +2707,15 @@ mod proto_parser {
             }
         }
     }
+    use super::IdlIncludeIxAccounts;
+    impl IntoProto<proto_def::IdlIncludeIxAccounts> for IdlIncludeIxAccounts {
+        fn into_proto(self) -> proto_def::IdlIncludeIxAccounts {
+            proto_def::IdlIncludeIxAccounts {
+                tick_array: self.tick_array.to_string(),
+                system_program: self.system_program.to_string(),
+            }
+        }
+    }
 
     impl IntoProto<proto_def::ProgramIxs> for WhirlpoolProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
@@ -2166,6 +2743,18 @@ mod proto_parser {
                             data: Some(data.into_proto()),
                         },
                     )),
+                },
+                WhirlpoolProgramIx::InitializeDynamicTickArray(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::InitializeDynamicTickArray(
+                                proto_def::InitializeDynamicTickArrayIx {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
+                        ),
+                    }
                 },
                 WhirlpoolProgramIx::InitializeFeeTier(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeFeeTier(
@@ -2424,6 +3013,87 @@ mod proto_parser {
                         },
                     )),
                 },
+                WhirlpoolProgramIx::ResetPositionRange(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ResetPositionRange(
+                        proto_def::ResetPositionRangeIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                WhirlpoolProgramIx::TransferLockedPosition(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::TransferLockedPosition(
+                        proto_def::TransferLockedPositionIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                WhirlpoolProgramIx::InitializeAdaptiveFeeTier(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeAdaptiveFeeTier(
+                        proto_def::InitializeAdaptiveFeeTierIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                WhirlpoolProgramIx::SetDefaultBaseFeeRate(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetDefaultBaseFeeRate(
+                        proto_def::SetDefaultBaseFeeRateIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                WhirlpoolProgramIx::SetDelegatedFeeAuthority(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetDelegatedFeeAuthority(
+                        proto_def::SetDelegatedFeeAuthorityIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                WhirlpoolProgramIx::SetInitializePoolAuthority(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetInitializePoolAuthority(
+                        proto_def::SetInitializePoolAuthorityIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                WhirlpoolProgramIx::SetPresetAdaptiveFeeConstants(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::SetPresetAdaptiveFeeConstants(
+                                proto_def::SetPresetAdaptiveFeeConstantsIx {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
+                        ),
+                    }
+                },
+                WhirlpoolProgramIx::InitializePoolWithAdaptiveFee(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::InitializePoolWithAdaptiveFee(
+                                proto_def::InitializePoolWithAdaptiveFeeIx {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
+                        ),
+                    }
+                },
+                WhirlpoolProgramIx::SetFeeRateByDelegatedFeeAuthority(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::SetFeeRateByDelegatedFeeAuthority(
+                                proto_def::SetFeeRateByDelegatedFeeAuthorityIx {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
+                        ),
+                    }
+                },
                 WhirlpoolProgramIx::CollectFeesV2(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::CollectFeesV2(
                         proto_def::CollectFeesV2Ix {
@@ -2541,6 +3211,13 @@ mod proto_parser {
                         },
                     )),
                 },
+                WhirlpoolProgramIx::IdlInclude(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::IdlInclude(
+                        proto_def::IdlIncludeIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
             }
         }
     }
@@ -2548,6 +3225,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }
