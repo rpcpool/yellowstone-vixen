@@ -30,6 +30,7 @@ strum = { version = "0.24", optional = true }
 strum_macros = { version = "0.24", optional = true }
 
 [features]
+default = []
 anchor = []
 anchor-idl-build = []
 serde = []

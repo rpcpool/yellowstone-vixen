@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{self as vixen, Pipeline};
+use yellowstone_vixen::{self as vixen, filter_pipeline::FilterPipeline, Pipeline};
 use yellowstone_vixen_parser::block_meta::BlockMetaParser;
 use yellowstone_vixen_raydium_amm_v4_parser::{
     accounts_parser::AccountParser as RaydiumAmmV4AccParser,
@@ -51,7 +51,10 @@ fn main() {
         .source(YellowstoneGrpcSource::new())
         .source(SolanaAccountsRpcSource::new())
         .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
-        .instruction(Pipeline::new(RaydiumAmmV4IxParser, [Logger]))
+        .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [Logger])
+            .include_accounts(["GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6", "4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar"])
+            .required_accounts(["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"]),
+        )
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
         .metrics(vixen::metrics::Prometheus)
         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)

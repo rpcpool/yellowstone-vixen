@@ -219,16 +219,26 @@ impl AccountPrefilter {
 /// A prefilter for matching transactions.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct TransactionPrefilter {
-    /// The accounts that this prefilter will match.
-    pub accounts: HashSet<Pubkey>,
+    /// The transaction **must** include at least **ONE** of these accounts. Otherwise, the transaction
+    ///  won't be retrieved.
+    pub accounts_include: HashSet<Pubkey>,
+    /// These accounts **must** be present in the transaction.
+    ///  That means if any of the accounts are not included in the transaction, the transaction
+    ///  won't be retrieved.
+    pub accounts_required: HashSet<Pubkey>,
 }
 
 impl TransactionPrefilter {
     /// Merge another transaction prefilter into this one, producing a prefilter
     /// that describes the union of the two.
     pub fn merge(&mut self, other: TransactionPrefilter) {
-        let Self { accounts } = self;
-        accounts.extend(other.accounts);
+        let Self {
+            accounts_include,
+            accounts_required,
+        } = self;
+
+        accounts_include.extend(other.accounts_include);
+        accounts_required.extend(other.accounts_required);
     }
 }
 
@@ -437,7 +447,10 @@ pub struct PrefilterBuilder {
     error: Option<PrefilterError>,
     accounts: Option<HashSet<Pubkey>>,
     account_owners: Option<HashSet<Pubkey>>,
-    transaction_accounts: Option<HashSet<Pubkey>>,
+    /// Matching [`TransactionPrefilter::accounts_include`]
+    transaction_accounts_include: Option<HashSet<Pubkey>>,
+    /// Matching [`TransactionPrefilter::accounts_required`]
+    transaction_accounts_required: Option<HashSet<Pubkey>>,
 }
 
 fn set_opt<T>(opt: &mut Option<T>, field: &'static str, val: T) -> Result<(), PrefilterError> {
@@ -471,7 +484,8 @@ impl PrefilterBuilder {
             error,
             accounts,
             account_owners,
-            transaction_accounts,
+            transaction_accounts_include,
+            transaction_accounts_required,
         } = self;
         if let Some(err) = error {
             return Err(err);
@@ -483,7 +497,8 @@ impl PrefilterBuilder {
         };
 
         let transaction = TransactionPrefilter {
-            accounts: transaction_accounts.unwrap_or_default(),
+            accounts_include: transaction_accounts_include.unwrap_or_default(),
+            accounts_required: transaction_accounts_required.unwrap_or_default(),
         };
 
         let block_meta = BlockMetaPrefilter {};
@@ -521,14 +536,32 @@ impl PrefilterBuilder {
         })
     }
 
-    /// Set the accounts mentioned by transactions that this prefilter will
-    /// match.
+    /// Set the required accounts for this transaction prefilter.
+    ///  The accounts set here **must** be present in the transaction.
+    ///
+    /// **Note:** If the transaction does not include ALL of the accounts set here, the
+    /// transaction will not be retrieved.
     pub fn transaction_accounts<I: IntoIterator>(self, it: I) -> Self
     where I::Item: AsRef<[u8]> {
         self.mutate(|this| {
             set_opt(
-                &mut this.transaction_accounts,
-                "transaction_accounts",
+                &mut this.transaction_accounts_required,
+                "transaction_accounts_required",
+                collect_pubkeys(it)?,
+            )
+        })
+    }
+
+    /// Set the included accounts for this transaction prefilter.
+    ///
+    /// **Note:** If the transaction does not include at least ONE of the accounts set here, the
+    /// transaction will not be retrieved.
+    pub fn transaction_accounts_include<I: IntoIterator>(self, it: I) -> Self
+    where I::Item: AsRef<[u8]> {
+        self.mutate(|this| {
+            set_opt(
+                &mut this.transaction_accounts_include,
+                "transaction_accounts_include",
                 collect_pubkeys(it)?,
             )
         })
@@ -614,9 +647,17 @@ impl From<Filters> for SubscribeRequest {
                         // TODO: make this configurable
                         failed: Some(false),
                         signature: None,
-                        account_include: v.accounts.iter().map(ToString::to_string).collect(),
+                        account_include: v
+                            .accounts_include
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect(),
                         account_exclude: [].into_iter().collect(),
-                        account_required: [].into_iter().collect(),
+                        account_required: v
+                            .accounts_required
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect(),
                     }))
                 })
                 .collect(),
