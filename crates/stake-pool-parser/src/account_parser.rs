@@ -19,11 +19,11 @@ impl SplStakePoolProgramState {
             )),
             1 => {
                 let stake_pool = try_from_slice_unchecked::<StakePool>(data_bytes)?;
-                return Ok(SplStakePoolProgramState::StakePool(stake_pool));
+                Ok(SplStakePoolProgramState::StakePool(stake_pool))
             },
             2 => {
                 let validator_list = try_from_slice_unchecked::<ValidatorList>(data_bytes)?;
-                return Ok(SplStakePoolProgramState::ValidatorList(validator_list));
+                Ok(SplStakePoolProgramState::ValidatorList(validator_list))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account".to_owned(),
