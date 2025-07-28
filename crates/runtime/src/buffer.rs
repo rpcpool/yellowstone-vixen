@@ -83,11 +83,18 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
                     .await;
             },
             UpdateOneof::Transaction(t) => {
-                pipelines
-                    .transaction
+                let transaction_fut =
+                    pipelines
+                        .transaction
+                        .get_handlers(&filters)
+                        .run(span.clone(), &t, counters);
+
+                let instruction_fut = pipelines
+                    .instruction
                     .get_handlers(&filters)
-                    .run(span, &t, counters)
-                    .await;
+                    .run(span, &t, counters);
+
+                futures_util::future::join_all([transaction_fut, instruction_fut]).await;
             },
             UpdateOneof::BlockMeta(b) => {
                 pipelines

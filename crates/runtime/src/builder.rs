@@ -8,8 +8,8 @@ use yellowstone_grpc_proto::geyser::CommitmentLevel;
 
 use crate::{
     config::{MaybeDefault, VixenConfig},
-    handler::{BoxPipeline, DynPipeline, PipelineSets},
-    instruction::InstructionPipeline,
+    handler::{BoxPipeline, DynPipeline, PipelineSet, PipelineSets},
+    instruction::SingleInstructionPipeline,
     metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
     sources::Source,
     util, Runtime,
@@ -213,7 +213,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         let Self {
             err,
             account,
-            mut transaction,
+            transaction,
             instruction,
             block_meta,
             commitment_level,
@@ -239,8 +239,19 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             .create(metrics_cfg, "vixen")
             .map_err(|e| BuilderError::Metrics(e.into()))?;
 
-        if let Some(i) = InstructionPipeline::new(instruction, &instrumenter) {
-            transaction.push(Box::new(i));
+        let mut ixs = PipelineSet::new();
+
+        for ix in instruction {
+            let id = ix.id().into_owned();
+            let pre_existent_parser = ixs.insert(
+                id.clone(),
+                Box::new(SingleInstructionPipeline::new(ix, &instrumenter))
+                    as BoxPipeline<'static, TransactionUpdate>,
+            );
+
+            if pre_existent_parser.is_some() {
+                tracing::warn!("Duplicate parser ID detected: {}", id);
+            }
         }
 
         let account_len = account.len();
@@ -250,6 +261,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         let pipelines = PipelineSets {
             account: account.into_iter().collect(),
             transaction: transaction.into_iter().collect(),
+            instruction: ixs,
             block_meta: block_meta.into_iter().collect(),
         };
 

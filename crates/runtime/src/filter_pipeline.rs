@@ -1,12 +1,10 @@
 //! `Pipeline` equivalent that allows for transaction custom filters
 
-use std::{borrow::Cow, fmt::Debug, str::FromStr};
+use std::{borrow::Cow, fmt::Debug};
 
 use futures_util::{Future, StreamExt};
 use smallvec::SmallVec;
-use vixen_core::{
-    GetPrefilter, ParseError, Parser, ParserId, Prefilter, Pubkey, TransactionPrefilter,
-};
+use vixen_core::{GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder};
 
 use crate::{
     handler::{DynPipeline, PipelineErrors},
@@ -17,25 +15,15 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct FilterPipeline<P: Parser, H> {
     parser: P,
-    include_accounts: Vec<Pubkey>,
-    required_accounts: Vec<Pubkey>,
     handlers: H,
+    additional_filters: Prefilter,
 }
 
 impl<P: Parser, H> GetPrefilter for FilterPipeline<P, H> {
     #[inline]
     fn prefilter(&self) -> Prefilter {
         let mut prefilter = self.parser.prefilter();
-        let mut tx_prefilter = prefilter
-            .transaction
-            .expect("Instruction Parser must have a transaction prefilter");
-
-        tx_prefilter.merge(TransactionPrefilter {
-            accounts_include: self.include_accounts.iter().copied().collect(),
-            accounts_required: self.required_accounts.iter().copied().collect(),
-        });
-
-        prefilter.transaction = Some(tx_prefilter);
+        prefilter.merge(self.additional_filters.clone());
 
         prefilter
     }
@@ -57,19 +45,26 @@ impl<P: Parser, H> FilterPipeline<P, H> {
     ///    vixen::Runtime::builder()
     ///        .source(YellowstoneGrpcSource::new())
     ///        .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
-    ///        .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [Logger])
-    ///            .include_accounts(["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"])
-    ///            .required_accounts(["675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"]),
-    ///        )
+    ///        .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [RaydiumAmmV4IxLogger], Prefilter::builder()
+    ///            .transaction_accounts_include([
+    ///                Pubkey::from_str("GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6").unwrap(),
+    ///                Pubkey::from_str("4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar").unwrap()
+    ///            ])
+    ///            .transaction_accounts([
+    ///                Pubkey::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA").unwrap()
+    ///            ]),
+    ///        ))
     ///        .build(config)
     ///        .run();
     /// ```
-    pub fn new(parser: P, handlers: H) -> Self {
+    ///
+    /// # Panics
+    /// If the additional filters are invalid, this function will panic.
+    pub fn new(parser: P, handlers: H, additional_filters: PrefilterBuilder) -> Self {
         Self {
             parser,
             handlers,
-            include_accounts: vec![],
-            required_accounts: vec![],
+            additional_filters: additional_filters.build().unwrap(),
         }
     }
 }
@@ -82,41 +77,6 @@ where
     for<'i> &'i H: IntoIterator,
     for<'i> <&'i H as IntoIterator>::Item: Handler<P::Output>,
 {
-    /// Set the included accounts for this transaction prefilter.
-    ///
-    /// **Note:** If the transaction does not include at least ONE of the accounts set here, the
-    /// transaction will not be retrieved.
-    #[must_use]
-    #[allow(private_bounds)] // CustomPrefiltersAccount is meant to be used internally
-    pub fn include_accounts<F: CustomPrefiltersAccount>(
-        mut self,
-        include_accounts: impl IntoIterator<Item = F>,
-    ) -> Self {
-        self.include_accounts
-            .extend(include_accounts.into_iter().map(|f| f.get_pubkey()));
-
-        self
-    }
-
-    /// Set the required accounts for this transaction prefilter.
-    ///  The accounts set here **must** be present in the transaction.
-    ///
-    /// **Note:** If the transaction does not include ALL of the accounts set here, the
-    /// transaction will not be retrieved.
-    ///
-    /// **The Program ID of the Parser program will always be included in this list
-    #[must_use]
-    #[allow(private_bounds)] // CustomPrefiltersAccount is meant to be used internally
-    pub fn required_accounts<F: CustomPrefiltersAccount>(
-        mut self,
-        required_accounts: impl IntoIterator<Item = F>,
-    ) -> Self {
-        self.required_accounts
-            .extend(required_accounts.into_iter().map(|f| f.get_pubkey()));
-
-        self
-    }
-
     /// Handle fn for `FilterPipeline`
     ///
     /// # Errors
@@ -144,18 +104,6 @@ where
 
         Ok(())
     }
-}
-
-pub(crate) trait CustomPrefiltersAccount {
-    fn get_pubkey(&self) -> Pubkey;
-}
-
-impl CustomPrefiltersAccount for Pubkey {
-    fn get_pubkey(&self) -> Pubkey { *self }
-}
-
-impl CustomPrefiltersAccount for &'static str {
-    fn get_pubkey(&self) -> Pubkey { Pubkey::from_str(self).unwrap() }
 }
 
 impl<P, H> DynPipeline<P::Input> for FilterPipeline<P, H>

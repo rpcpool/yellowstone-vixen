@@ -7,15 +7,20 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{self as vixen, filter_pipeline::FilterPipeline, Pipeline};
+use yellowstone_vixen::{
+    self as vixen,
+    filter_pipeline::FilterPipeline,
+    vixen_core::{InstructionUpdateOutput, Prefilter, Pubkey},
+    Pipeline,
+};
 use yellowstone_vixen_parser::block_meta::BlockMetaParser;
 use yellowstone_vixen_raydium_amm_v4_parser::{
     accounts_parser::AccountParser as RaydiumAmmV4AccParser,
-    instructions_parser::InstructionParser as RaydiumAmmV4IxParser,
+    instructions_parser::{InstructionParser as RaydiumAmmV4IxParser, RaydiumAmmV4ProgramIx},
 };
 use yellowstone_vixen_solana_rpc_source::SolanaAccountsRpcSource;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
@@ -30,9 +35,46 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
+#[derive(Debug)]
+pub struct RaydiumAmmV4IxLogger;
+
 impl<V: std::fmt::Debug + Sync> vixen::Handler<V> for Logger {
-    async fn handle(&self, value: &V) -> vixen::HandlerResult<()> {
-        tracing::info!(?value);
+    async fn handle(&self, _value: &V) -> vixen::HandlerResult<()> { Ok(()) }
+}
+
+impl vixen::Handler<InstructionUpdateOutput<RaydiumAmmV4ProgramIx>> for RaydiumAmmV4IxLogger {
+    async fn handle(
+        &self,
+        value: &InstructionUpdateOutput<RaydiumAmmV4ProgramIx>,
+    ) -> vixen::HandlerResult<()> {
+        match &value.parsed_ix {
+            RaydiumAmmV4ProgramIx::SwapBaseIn(accounts, _data) => {
+                let accounts_expected = [
+                    "GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6",
+                    "4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar",
+                ];
+                if !accounts_expected.contains(&accounts.amm.to_string().as_str()) {
+                    tracing::info!(
+                        "Not expected tx sig: {}",
+                        vixen::bs58::encode(&value.shared_data.signature).into_string()
+                    );
+                }
+            },
+            RaydiumAmmV4ProgramIx::SwapBaseOut(accounts, _data) => {
+                let accounts_expected = [
+                    "GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6",
+                    "4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar",
+                ];
+                if !accounts_expected.contains(&accounts.amm.to_string().as_str()) {
+                    tracing::info!(
+                        "Not expected tx sig: {}",
+                        vixen::bs58::encode(&value.shared_data.signature).into_string()
+                    );
+                }
+            },
+            _ => {},
+        }
+
         Ok(())
     }
 }
@@ -51,10 +93,14 @@ fn main() {
         .source(YellowstoneGrpcSource::new())
         .source(SolanaAccountsRpcSource::new())
         .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
-        .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [Logger])
-            .include_accounts(["GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6", "4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar"])
-            .required_accounts(["TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"]),
-        )
+        .instruction(Pipeline::new(yellowstone_vixen_meteora_amm_parser::instructions_parser::InstructionParser, [Logger]))
+        .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [RaydiumAmmV4IxLogger], Prefilter::builder()
+            .transaction_accounts_include([
+                Pubkey::from_str("GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6").unwrap(),
+                Pubkey::from_str("4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar").unwrap()
+                ]) // At least one of these accounts must be in the transaction
+            .transaction_accounts([Pubkey::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA").unwrap()]), // All of these accounts must be in the transaction plus the Parser programId
+        ))
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
         .metrics(vixen::metrics::Prometheus)
         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
