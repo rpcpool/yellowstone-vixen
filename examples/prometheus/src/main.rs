@@ -18,7 +18,6 @@ use yellowstone_vixen_raydium_amm_v4_parser::{
     instructions_parser::InstructionParser as RaydiumAmmV4IxParser,
 };
 use yellowstone_vixen_solana_rpc_source::SolanaAccountsRpcSource;
-use yellowstone_vixen_yellowstone_fumarole_source::YellowstoneFumaroleSource;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -51,7 +50,6 @@ fn main() {
     vixen::Runtime::builder()
         .source(YellowstoneGrpcSource::new())
         .source(SolanaAccountsRpcSource::new())
-        .source(YellowstoneFumaroleSource::new())
         .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
         .instruction(Pipeline::new(RaydiumAmmV4IxParser, [Logger]))
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))

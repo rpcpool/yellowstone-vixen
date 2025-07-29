@@ -1424,7 +1424,6 @@ dependencies = [
  "yellowstone-vixen-parser",
  "yellowstone-vixen-raydium-amm-v4-parser",
  "yellowstone-vixen-solana-rpc-source",
- "yellowstone-vixen-yellowstone-fumarole-source",
  "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
@@ -1502,6 +1501,7 @@ dependencies = [
  "yellowstone-vixen-raydium-cpmm-parser",
  "yellowstone-vixen-raydium-launchpad-parser",
  "yellowstone-vixen-virtuals-parser",
+ "yellowstone-vixen-yellowstone-fumarole-source",
  "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
