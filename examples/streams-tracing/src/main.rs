@@ -22,8 +22,8 @@ use yellowstone_vixen_parser::{
         AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
     },
 };
-use yellowstone_vixen_yellowstone_fumarole_source::YellowstoneFumaroleSource;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
+// use yellowstone_vixen_yellowstone_fumarole_source::YellowstoneFumaroleSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -84,7 +84,7 @@ async fn main() {
 
     vixen::stream::Server::builder()
         .source(YellowstoneGrpcSource::new())
-        .source(YellowstoneFumaroleSource::new().subscriber_name("default_subscriber".to_string()))
+        // .source(YellowstoneFumaroleSource::new().subscriber_name("default_subscriber".to_string())) // Needs Fumarole valid credentials
         .account(Proto::new(yellowstone_vixen_boop_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_jupiter_swap_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_kamino_limit_orders_parser::accounts_parser::AccountParser))

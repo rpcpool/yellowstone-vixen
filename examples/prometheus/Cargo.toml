@@ -17,7 +17,6 @@ yellowstone-vixen-parser = { workspace = true, features = [
   "token-program",
   "block-meta",
 ] }
-
 yellowstone-vixen-raydium-amm-v4-parser = { workspace = true }
 
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
