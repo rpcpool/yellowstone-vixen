@@ -5,8 +5,6 @@ pub use generated_parser::*;
 use generated_sdk as generated;
 use solana_pubkey::Pubkey;
 
-mod custom_impl;
-
 pub const ID: Pubkey = WHIRLPOOL_ID;
 
 // #[cfg(feature = "proto")]
