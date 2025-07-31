@@ -48,6 +48,8 @@ pub mod sources;
 pub mod stream;
 mod util;
 
+pub mod filter_pipeline;
+
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use util::*;
 pub use yellowstone_grpc_proto::geyser::CommitmentLevel;

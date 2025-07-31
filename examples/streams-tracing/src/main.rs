@@ -68,6 +68,7 @@ async fn main() {
                 | "incorrectly_parsed_instruction"
                 | "correctly_parsed_instruction"
                 | "correctly_parsed_account"
+                | "non_zeroed_end_bytes"
         );
 
         metadata.is_event() && name_matches

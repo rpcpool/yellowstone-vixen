@@ -205,10 +205,20 @@ mod prometheus_impl {
             name: impl Into<Cow<'static, str>>,
             desc: impl Into<Cow<'static, str>>,
         ) -> Self::Counter {
+            let name = name.into();
+
             let counter =
-                prometheus::IntCounter::with_opts(prometheus::Opts::new(name.into(), desc.into()))
+                prometheus::IntCounter::with_opts(prometheus::Opts::new(name.clone(), desc.into()))
                     .unwrap();
-            self.register(Box::new(counter.clone())).unwrap();
+            match self.register(Box::new(counter.clone())) {
+                Ok(()) => (),
+                Err(prometheus::Error::AlreadyReg) => {
+                    tracing::warn!("Counter already registered: {:?}", name);
+                },
+                Err(e) => {
+                    tracing::error!("Error registering counter: {}", e);
+                },
+            }
             counter
         }
     }
