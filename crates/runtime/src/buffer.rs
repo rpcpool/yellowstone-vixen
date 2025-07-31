@@ -31,10 +31,16 @@ impl Buffer {
     }
 
     pub async fn wait_for_stop(&mut self) -> Result<(), crate::Error> {
-        (&mut self.0)
-            .await
-            .map_err(|e| std::io::Error::from(e).into())
-            .map(|_| ())
+        // Potential SubscribeUpdate errors are already converted to `crate::Error::YellowstoneStatus` errors
+        let result = match (&mut self.0).await {
+            Ok(update_result) => update_result,
+            Err(e) => return Err(crate::Error::Io(std::io::Error::from(e))),
+        };
+
+        match result {
+            Ok(_stop_code) => Ok(()),
+            Err(e) => Err(e),
+        }
     }
 }
 
@@ -166,7 +172,7 @@ impl Buffer {
             counters,
             std::convert::identity,
             |exec, mut stop_rx, counters| {
-                tokio::task::spawn(async move {
+                let handle = tokio::task::spawn(async move {
                     enum Event {
                         Update(Option<Result<SubscribeUpdate, Status>>),
                         Stop(StopCode),
@@ -179,7 +185,16 @@ impl Buffer {
                         };
 
                         let update = match event {
-                            Event::Update(Some(u)) => u,
+                            Event::Update(Some(u)) => match u {
+                                Ok(u) => u,
+                                Err(e) => {
+                                    tracing::error!(
+                                        "Yellowstone grpc stream error: {:?}",
+                                        e.code()
+                                    );
+                                    return Err(crate::Error::YellowstoneStatus(e));
+                                },
+                            },
                             Event::Update(None) => {
                                 tracing::warn!("Server stopped sending updates");
                                 break Ok(StopCode::default());
@@ -187,9 +202,11 @@ impl Buffer {
                             Event::Stop(c) => break Ok(c),
                         };
 
-                        Self::dispatch(&exec, update?, &counters);
+                        Self::dispatch(&exec, update, &counters);
                     }
-                })
+                });
+
+                handle
             },
         )
     }
