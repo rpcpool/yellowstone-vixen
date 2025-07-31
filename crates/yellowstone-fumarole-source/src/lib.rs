@@ -38,8 +38,8 @@ impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfi
             x_token: base_config.x_token,
             max_decoding_message_size_bytes: 512_000_000,
             x_metadata: BTreeMap::new(),
-            response_compression: None,
-            request_compression: None,
+            response_compression: Some(CompressionEncoding::Zstd),
+            request_compression: Some(CompressionEncoding::Zstd),
             initial_connection_window_size: ByteSize::mb(100),
             initial_stream_window_size: ByteSize::mib(9),
             enable_http2_adaptive_window: true,
@@ -76,9 +76,6 @@ impl Source for YellowstoneFumaroleSource {
 
         const MAX_PARA_DATA_STREAMS: u8 = 4; //Fumarole const
 
-        let config = config.clone();
-        let subscriber_name = subscriber_name.clone();
-        let tx = tx.clone();
         let fumarole_subscribe_config = FumaroleSubscribeConfig {
             num_data_plane_tcp_connections: NonZero::new(MAX_PARA_DATA_STREAMS).unwrap(),
             ..Default::default()
