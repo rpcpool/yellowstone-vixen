@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    num::NonZero,
-};
+use std::{collections::BTreeMap, num::NonZero};
 
 use async_trait::async_trait;
 use bytesize::ByteSize;
@@ -29,7 +26,7 @@ pub struct YellowstoneFumaroleSource {
 pub struct FumaroleConfig {
     base: Option<YellowstoneConfig>,
     /// Name of the persistent subscriber to use
-    subscriber_name: Option<String>,
+    subscriber_name: String,
 }
 
 impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfig {
@@ -56,17 +53,11 @@ impl YellowstoneFumaroleSource {
     pub fn new(subscriber_name: &str) -> Self {
         Self {
             config: FumaroleConfig {
-                subscriber_name: Some(subscriber_name.to_string()),
+                subscriber_name: subscriber_name.to_string(),
                 base: None,
             },
             filters: None,
         }
-    }
-
-    /// Optional method meant to customize the subscriber group name if needed.
-    pub fn subscriber_name(mut self, subscriber_name: String) -> Self {
-        self.config.subscriber_name = Some(subscriber_name);
-        self
     }
 }
 
@@ -78,93 +69,81 @@ impl Source for YellowstoneFumaroleSource {
         // We require that config and filters are set before connecting to the `Source`
         let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
         let config = self.config.clone();
-        let subscriber_name = self
-            .config
-            .subscriber_name
-            .clone()
-            .ok_or(VixenError::ConfigError)?;
+        let subscriber_name = self.config.subscriber_name.clone();
 
         // TODO: add tasks pool concurrency limit through config
         let mut tasks_set = JoinSet::new();
 
-        let mut filters_count = filters.parsers_filters.len() as u8;
         const MAX_PARA_DATA_STREAMS: u8 = 4; //Fumarole const
-        if filters_count > MAX_PARA_DATA_STREAMS {
-            filters_count = MAX_PARA_DATA_STREAMS;
-        }
 
-        for (filter_id, prefilter) in filters.parsers_filters {
-            let mut filter = Filters::new(HashMap::from([(filter_id, prefilter)]));
-            filter.global_filters = filters.global_filters;
-            let config = config.clone();
-            let subscriber_name = subscriber_name.clone();
-            let tx = tx.clone();
-            let fumarole_subscribe_config = FumaroleSubscribeConfig {
-                num_data_plane_tcp_connections: NonZero::new(filters_count).unwrap(),
-                ..Default::default()
+        let config = config.clone();
+        let subscriber_name = subscriber_name.clone();
+        let tx = tx.clone();
+        let fumarole_subscribe_config = FumaroleSubscribeConfig {
+            num_data_plane_tcp_connections: NonZero::new(MAX_PARA_DATA_STREAMS).unwrap(),
+            ..Default::default()
+        };
+
+        let (initial_offset_policy, from_slot) =
+            if let Some(from_slot) = filters.global_filters.from_slot {
+                (InitialOffsetPolicy::FromSlot, Some(from_slot))
+            } else {
+                (InitialOffsetPolicy::Latest, None)
             };
 
-            let (initial_offset_policy, from_slot) =
-                if let Some(from_slot) = filters.global_filters.from_slot {
-                    (InitialOffsetPolicy::FromSlot, Some(from_slot))
-                } else {
-                    (InitialOffsetPolicy::Latest, None)
-                };
+        let mut fumarole_client = FumaroleClient::connect(config.into())
+            .await
+            .expect("failing to connect to fumarole");
 
-            let mut fumarole_client = FumaroleClient::connect(config.into())
-                .await
-                .expect("failing to connect to fumarole");
+        let group_result = fumarole_client
+            .create_consumer_group(CreateConsumerGroupRequest {
+                consumer_group_name: subscriber_name.clone(),
+                initial_offset_policy: initial_offset_policy.into(),
+                // If the initial offset policy is "from-slot", this is the slot to start from.
+                // If not specified, the subscriber will start from the latest slot.
+                from_slot,
+            })
+            .await;
 
-            let group_result = fumarole_client
-                .create_consumer_group(CreateConsumerGroupRequest {
-                    consumer_group_name: subscriber_name.clone(),
-                    initial_offset_policy: initial_offset_policy.into(),
-                    // If the initial offset policy is "from-slot", this is the slot to start from.
-                    // If not specified, the subscriber will start from the latest slot.
-                    from_slot,
-                })
-                .await;
-
-            match group_result {
-                Ok(_) => (),
-                Err(status) => {
-                    let code = status.code();
-                    match code {
-                        Code::AlreadyExists => {
-                            tracing::warn!(
-                                "Fumarole consumer group: '{:?}' already existent",
-                                subscriber_name
-                            )
-                        },
-                        _ => panic!("Failed to create consumer group: {status:?}"),
-                    }
-                },
-            }
-
-            let dragonsmouth_session = fumarole_client
-                .dragonsmouth_subscribe_with_config(
-                    subscriber_name,
-                    filter.into(),
-                    fumarole_subscribe_config,
-                )
-                .await
-                .expect("failing to subscribe to fumarole");
-
-            let DragonsmouthAdapterSession {
-                sink: _,
-                mut source,
-                fumarole_handle: _,
-            } = dragonsmouth_session;
-
-            tasks_set.spawn(async move {
-                while let Some(update) = source.recv().await {
-                    let res = tx.send(update).await;
-                    if res.is_err() {
-                        tracing::error!("Failed to send update to buffer");
-                    }
+        match group_result {
+            Ok(_) => (),
+            Err(status) => {
+                let code = status.code();
+                match code {
+                    Code::AlreadyExists => {
+                        tracing::warn!(
+                            "Fumarole consumer group: '{:?}' already existent",
+                            subscriber_name
+                        )
+                    },
+                    _ => panic!("Failed to create consumer group: {status:?}"),
                 }
-            });
+            },
         }
+
+        let dragonsmouth_session = fumarole_client
+            .dragonsmouth_subscribe_with_config(
+                subscriber_name,
+                filters.into(),
+                fumarole_subscribe_config,
+            )
+            .await
+            .expect("failing to subscribe to fumarole");
+
+        let DragonsmouthAdapterSession {
+            sink: _,
+            mut source,
+            fumarole_handle: _,
+        } = dragonsmouth_session;
+
+        tasks_set.spawn(async move {
+            while let Some(update) = source.recv().await {
+                let res = tx.send(update).await;
+                if res.is_err() {
+                    tracing::error!("Failed to send update to buffer");
+                }
+            }
+        });
 
         tasks_set.join_all().await;
 
