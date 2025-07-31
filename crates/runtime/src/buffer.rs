@@ -8,7 +8,7 @@ use topograph::{
 use tracing::warn;
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdatePing},
-    tonic::{Code, Status},
+    tonic::Status,
 };
 
 use crate::{
@@ -39,15 +39,7 @@ impl Buffer {
 
         match result {
             Ok(_stop_code) => Ok(()),
-            Err(e) => match e {
-                crate::Error::YellowstoneStatus(e) => {
-                    if e.code() == Code::Internal {
-                        tracing::error!("Yellowstone server credentials error");
-                    }
-                    Err(e.into())
-                },
-                _ => Err(e),
-            },
+            Err(e) => Err(e),
         }
     }
 }
@@ -196,6 +188,10 @@ impl Buffer {
                             Event::Update(Some(u)) => match u {
                                 Ok(u) => u,
                                 Err(e) => {
+                                    tracing::error!(
+                                        "Yellowstone grpc stream error: {:?}",
+                                        e.code()
+                                    );
                                     return Err(crate::Error::YellowstoneStatus(e));
                                 },
                             },
