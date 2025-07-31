@@ -1,12 +1,16 @@
-use std::collections::{BTreeMap, HashMap};
+use std::{
+    collections::{BTreeMap, HashMap},
+    num::NonZero,
+};
 
 use async_trait::async_trait;
 use bytesize::ByteSize;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use yellowstone_fumarole_client::{
     proto::{CreateConsumerGroupRequest, InitialOffsetPolicy},
-    DragonsmouthAdapterSession, FumaroleClient,
+    DragonsmouthAdapterSession, FumaroleClient, FumaroleSubscribeConfig,
 };
+pub use yellowstone_grpc_proto::tonic::codec::CompressionEncoding;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdate,
     tonic::{Code, Status},
@@ -49,7 +53,15 @@ impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfi
 impl YellowstoneFumaroleSource {
     /// Create a new `YellowstoneFumaroleSource` with default values.
     #[must_use]
-    pub fn new() -> Self { Self::default() }
+    pub fn new(subscriber_name: &str) -> Self {
+        Self {
+            config: FumaroleConfig {
+                subscriber_name: Some(subscriber_name.to_string()),
+                base: None,
+            },
+            filters: None,
+        }
+    }
 
     /// Optional method meant to customize the subscriber group name if needed.
     pub fn subscriber_name(mut self, subscriber_name: String) -> Self {
@@ -75,12 +87,29 @@ impl Source for YellowstoneFumaroleSource {
         // TODO: add tasks pool concurrency limit through config
         let mut tasks_set = JoinSet::new();
 
+        let mut filters_count = filters.parsers_filters.len() as u8;
+        const MAX_PARA_DATA_STREAMS: u8 = 4; //Fumarole const
+        if filters_count > MAX_PARA_DATA_STREAMS {
+            filters_count = MAX_PARA_DATA_STREAMS;
+        }
+
         for (filter_id, prefilter) in filters.parsers_filters {
             let mut filter = Filters::new(HashMap::from([(filter_id, prefilter)]));
             filter.global_filters = filters.global_filters;
             let config = config.clone();
             let subscriber_name = subscriber_name.clone();
             let tx = tx.clone();
+            let fumarole_subscribe_config = FumaroleSubscribeConfig {
+                num_data_plane_tcp_connections: NonZero::new(filters_count).unwrap(),
+                ..Default::default()
+            };
+
+            let (initial_offset_policy, from_slot) =
+                if let Some(from_slot) = filters.global_filters.from_slot {
+                    (InitialOffsetPolicy::FromSlot, Some(from_slot))
+                } else {
+                    (InitialOffsetPolicy::Latest, None)
+                };
 
             let mut fumarole_client = FumaroleClient::connect(config.into())
                 .await
@@ -89,10 +118,10 @@ impl Source for YellowstoneFumaroleSource {
             let group_result = fumarole_client
                 .create_consumer_group(CreateConsumerGroupRequest {
                     consumer_group_name: subscriber_name.clone(),
-                    initial_offset_policy: InitialOffsetPolicy::Latest.into(),
+                    initial_offset_policy: initial_offset_policy.into(),
                     // If the initial offset policy is "from-slot", this is the slot to start from.
                     // If not specified, the subscriber will start from the latest slot.
-                    from_slot: None,
+                    from_slot,
                 })
                 .await;
 
@@ -113,7 +142,11 @@ impl Source for YellowstoneFumaroleSource {
             }
 
             let dragonsmouth_session = fumarole_client
-                .dragonsmouth_subscribe(subscriber_name, filter.into())
+                .dragonsmouth_subscribe_with_config(
+                    subscriber_name,
+                    filter.into(),
+                    fumarole_subscribe_config,
+                )
                 .await
                 .expect("failing to subscribe to fumarole");
 
@@ -142,9 +175,6 @@ impl Source for YellowstoneFumaroleSource {
 
     fn set_config_unchecked(&mut self, config: YellowstoneConfig) {
         self.config.base = Some(config);
-        if self.config.subscriber_name.is_none() {
-            self.config.subscriber_name = Some("default_subscriber".to_string());
-        }
     }
 
     fn get_filters(&self) -> &Option<Filters> { &self.filters }
