@@ -142,7 +142,11 @@ where
     P: Parser,
     for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output>,
 {
-    async fn handle(&self, value: &P::Input) -> Result<(), PipelineErrors> {
+    /// Handle fn for `Pipeline`
+    ///
+    /// # Errors
+    /// If any of the related handlers executions errors, returns those errors
+    pub async fn handle(&self, value: &P::Input) -> Result<(), PipelineErrors> {
         let parsed = match self.0.parse(value).await {
             Ok(p) => p,
             Err(ParseError::Filtered) => return Ok(()),
@@ -224,6 +228,7 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
 pub(crate) struct PipelineSets {
     pub account: PipelineSet<BoxPipeline<'static, AccountUpdate>>,
     pub transaction: PipelineSet<BoxPipeline<'static, TransactionUpdate>>,
+    pub instruction: PipelineSet<BoxPipeline<'static, TransactionUpdate>>,
     pub block_meta: PipelineSet<BoxPipeline<'static, BlockMetaUpdate>>,
 }
 
@@ -234,6 +239,7 @@ impl PipelineSets {
             self.account
                 .filters()
                 .chain(self.transaction.filters())
+                .chain(self.instruction.filters())
                 .chain(self.block_meta.filters())
                 .collect(),
         )
@@ -247,6 +253,13 @@ impl<P> PipelineSet<P> {
     #[inline]
     #[must_use]
     pub fn len(&self) -> usize { self.0.len() }
+
+    #[inline]
+    #[must_use]
+    pub fn new() -> Self { Self(HashMap::new()) }
+
+    #[inline]
+    pub fn insert(&mut self, key: String, value: P) -> Option<P> { self.0.insert(key, value) }
 }
 
 impl<P: GetPrefilter> PipelineSet<P> {
