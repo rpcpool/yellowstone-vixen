@@ -4,8 +4,8 @@ exclude = ["examples/streams-ts/"]
 resolver = "2"
 
 [workspace.dependencies]
-yellowstone-grpc-client = { version = "6.1.0" }
-yellowstone-grpc-proto = { version = "6.1.0", default-features = false }
+yellowstone-grpc-client = { version = "8" }
+yellowstone-grpc-proto = { version = "8", default-features = false }
 yellowstone-vixen = { path = "crates/runtime", version = "0.4.0" }
 yellowstone-vixen-core = { path = "crates/core", version = "0.4.0" }
 yellowstone-vixen-mock = { path = "crates/mock", version = "0.4.0" }
@@ -33,6 +33,7 @@ yellowstone-vixen-virtuals-parser = { path = "crates/virtuals-parser", version =
 # Sources
 yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.2.0" }
 yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.2.0" }
+yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.2.0" }
 
 
 # helps resolving zeroize dependency conflicts betweeen solana creates depending on curve25519-dalek and yellowstone-grpc 
