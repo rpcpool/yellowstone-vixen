@@ -26,7 +26,7 @@ pub fn deserialize_checked<T: borsh::BorshDeserialize>(
             name = "non_zeroed_end_bytes",
             length = data_bytes.len(),
             program = crate::ID.to_string(),
-            type_name = discriminator,
+            type_name = ?discriminator,
         );
     }
 
