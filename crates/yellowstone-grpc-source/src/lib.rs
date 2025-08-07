@@ -14,7 +14,6 @@ use yellowstone_vixen_core::Filters;
 /// A `Source` implementation for the Yellowstone gRPC API.
 #[derive(Debug, Default)]
 pub struct YellowstoneGrpcSource {
-    config: Option<YellowstoneConfig>,
     filters: Option<Filters>,
 }
 
@@ -28,10 +27,16 @@ impl YellowstoneGrpcSource {
 impl Source for YellowstoneGrpcSource {
     fn name(&self) -> String { "yellowstone-grpc".to_string() }
 
-    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+        raw_config: toml::Value,
+    ) -> Result<(), VixenError> {
         // We require that config and filters are set before connecting to the `Source`
         let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
-        let config = self.config.clone().ok_or(VixenError::ConfigError)?;
+
+        let config: YellowstoneConfig = serde::Deserialize::deserialize(raw_config)
+            .expect("Failed to deserialize YellowstoneConfig");
 
         let timeout = Duration::from_secs(config.timeout);
 
@@ -73,9 +78,5 @@ impl Source for YellowstoneGrpcSource {
 
     fn set_filters_unchecked(&mut self, filters: Filters) { self.filters = Some(filters); }
 
-    fn set_config_unchecked(&mut self, config: YellowstoneConfig) { self.config = Some(config); }
-
     fn get_filters(&self) -> &Option<Filters> { &self.filters }
-
-    fn get_config(&self) -> Option<YellowstoneConfig> { self.config.clone() }
 }

@@ -16,3 +16,5 @@ yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-fumarole-client = "0.2.0-rc6"
 bytesize = "2"
+toml = "0.8.12"
+serde = { version = "1.0.198", features = ["derive"] }

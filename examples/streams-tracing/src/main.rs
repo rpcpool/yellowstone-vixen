@@ -85,7 +85,7 @@ async fn main() {
 
     let result = vixen::stream::Server::builder()
         .source(YellowstoneGrpcSource::new())
-        // .source(YellowstoneFumaroleSource::new("my_subscribe_group")) // Needs Fumarole valid credentials
+        // .source(YellowstoneFumaroleSource::new()) // Needs Fumarole valid credentials
         .account(Proto::new(yellowstone_vixen_boop_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_jupiter_swap_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_kamino_limit_orders_parser::accounts_parser::AccountParser))
