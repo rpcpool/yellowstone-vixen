@@ -22,7 +22,6 @@ use yellowstone_vixen_core::{Filters, GlobalFilters};
 /// A `Source` implementation for the Solana Accounts RPC API.
 #[derive(Debug, Default)]
 pub struct SolanaAccountsRpcSource {
-    config: Option<SolanaAccountsRpcConfig>,
     filters: Option<Filters>,
 }
 
@@ -55,7 +54,7 @@ impl SolanaAccountsRpcSource {
 }
 
 /// The configuration for the Solana Accounts RPC source.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct SolanaAccountsRpcConfig {
     /// The endpoint of the RPC server.
     pub endpoint: String,
@@ -67,10 +66,15 @@ pub struct SolanaAccountsRpcConfig {
 impl Source for SolanaAccountsRpcSource {
     fn name(&self) -> String { "solana-accounts-rpc".to_string() }
 
-    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+        raw_config: toml::Value,
+    ) -> Result<(), VixenError> {
         // // We require that config and filters are set before connecting to the `Source`
         let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
-        let config = self.config.clone().ok_or(VixenError::ConfigError)?;
+        let config: SolanaAccountsRpcConfig = serde::Deserialize::deserialize(raw_config)
+            .expect("Failed to deserialize SolanaAccountsRpcConfig");
 
         let mut tasks_set = JoinSet::new();
 
@@ -171,15 +175,7 @@ impl Source for SolanaAccountsRpcSource {
 
     fn set_filters_unchecked(&mut self, filters: Filters) { self.filters = Some(filters); }
 
-    fn set_config_unchecked(&mut self, config: YellowstoneConfig) {
-        self.config = Some(config.into());
-    }
-
     fn get_filters(&self) -> &Option<Filters> { &self.filters }
-
-    fn get_config(&self) -> Option<YellowstoneConfig> {
-        self.config.clone().map(SolanaAccountsRpcConfig::into)
-    }
 }
 
 impl From<SolanaAccountsRpcConfig> for YellowstoneConfig {

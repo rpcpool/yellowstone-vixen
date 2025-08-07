@@ -225,7 +225,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         let () = err?;
 
         let VixenConfig {
-            yellowstone: yellowstone_cfg,
+            sources: sources_cfg,
             buffer: buffer_cfg,
             metrics: metrics_cfg,
         } = config;
@@ -282,7 +282,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         }
 
         Ok(Runtime {
-            yellowstone_cfg,
+            sources_cfg,
             sources,
             buffer_cfg,
             pipelines,

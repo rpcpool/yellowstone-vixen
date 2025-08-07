@@ -12,8 +12,10 @@
 //! Vixen provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
+use std::collections::HashMap;
+
 use builder::RuntimeBuilder;
-use config::{BufferConfig, YellowstoneConfig};
+use config::BufferConfig;
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
 use sources::Source;
@@ -87,7 +89,7 @@ pub enum Error {
 /// The main runtime for Vixen.
 #[derive(Debug)]
 pub struct Runtime<M: MetricsFactory> {
-    yellowstone_cfg: YellowstoneConfig,
+    sources_cfg: HashMap<String, toml::Value>,
     sources: Vec<Box<dyn Source>>,
     commitment_filter: Option<CommitmentLevel>,
     from_slot_filter: Option<u64>,
@@ -212,7 +214,7 @@ impl<M: MetricsFactory> Runtime<M> {
         let (runtime, updates_rx, _set_handles) = self.connect_to_sources();
 
         let Self {
-            yellowstone_cfg: _,
+            sources_cfg: _,
             sources: _,
             commitment_filter: _,
             from_slot_filter: _,
@@ -373,11 +375,19 @@ impl<M: MetricsFactory> Runtime<M> {
 
         for mut source in self.sources.drain(..) {
             let tx = tx.clone();
-            source.config(self.yellowstone_cfg.clone());
             source.filters(filters.clone());
 
+            let source_name = source.name();
+            let source_cfg = match self.sources_cfg.get(&source_name) {
+                Some(cfg) => cfg.clone(),
+                None => panic!(
+                    "Source config not found for {source_name}. This should be set in your vixen \
+                     toml config file in the `[source.{source_name}]` section."
+                ),
+            };
+
             set.spawn(async move {
-                source.connect(tx).await.unwrap_or_else(|_| {
+                source.connect(tx, source_cfg).await.unwrap_or_else(|_| {
                     panic!("Source connection failed for: {}", source.name());
                 });
             });
