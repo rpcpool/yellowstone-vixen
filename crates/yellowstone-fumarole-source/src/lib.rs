@@ -2,6 +2,8 @@ use std::{collections::BTreeMap, num::NonZero};
 
 use async_trait::async_trait;
 use bytesize::ByteSize;
+#[cfg(feature = "prometheus")]
+use tokio::task::JoinHandle;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use yellowstone_fumarole_client::{
     proto::{CreateConsumerGroupRequest, InitialOffsetPolicy},
@@ -30,6 +32,13 @@ pub struct FumaroleConfig {
     pub x_token: Option<String>,
     /// Name of the persistent subscriber to use
     pub subscriber_name: String,
+    /// Prometheus metrics configuration (only available with 'prometheus' feature)
+    #[cfg(feature = "prometheus")]
+    pub metrics_endpoint: String,
+    #[cfg(feature = "prometheus")]
+    pub metrics_job_name: String,
+    #[cfg(feature = "prometheus")]
+    pub metrics_interval: u64,
 }
 
 impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfig {
@@ -52,6 +61,44 @@ impl YellowstoneFumaroleSource {
     /// Create a new `YellowstoneFumaroleSource` with default values.
     #[must_use]
     pub fn new() -> Self { Default::default() }
+
+    #[cfg(feature = "prometheus")]
+    fn register_metrics(&self, config: &FumaroleConfig) -> JoinHandle<()> {
+        use std::time::Duration;
+
+        let prometheus_registry = prometheus::Registry::new();
+        yellowstone_fumarole_client::metrics::register_metrics(&prometheus_registry);
+
+        // Use the conditional config fields
+        let export_interval = Duration::from_secs(config.metrics_interval);
+        let job_name = config.metrics_job_name.clone();
+        let metrics_endpoint = config.metrics_endpoint.clone();
+
+        // Spawn metrics pusher task
+        let registry_clone = prometheus_registry.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(export_interval);
+            loop {
+                interval.tick().await;
+
+                let metrics = registry_clone.gather();
+                let job_name = job_name.clone();
+                let metrics_endpoint = metrics_endpoint.clone();
+                let _ = tokio::task::spawn_blocking(move || {
+                    if let Err(e) = prometheus::push_metrics(
+                        &job_name,
+                        prometheus::labels! {},
+                        &metrics_endpoint,
+                        metrics,
+                        None,
+                    ) {
+                        tracing::error!("Failed to push Fumarole metrics: {e:?}");
+                    }
+                })
+                .await;
+            }
+        })
+    }
 }
 
 #[async_trait]
@@ -67,6 +114,9 @@ impl Source for YellowstoneFumaroleSource {
             .expect("Failed to deserialize FumaroleConfig");
         let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
         let subscriber_name = config.subscriber_name.clone();
+
+        #[cfg(feature = "prometheus")]
+        self.register_metrics(&config);
 
         // TODO: add tasks pool concurrency limit through config
         let mut tasks_set = JoinSet::new();
