@@ -16,45 +16,18 @@ use yellowstone_grpc_proto::{
     },
     tonic::Status,
 };
-use yellowstone_vixen::{config::YellowstoneConfig, sources::Source, Error as VixenError};
-use yellowstone_vixen_core::{Filters, GlobalFilters};
+use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
+use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Solana Accounts RPC API.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SolanaAccountsRpcSource {
-    filters: Option<Filters>,
-}
-
-impl SolanaAccountsRpcSource {
-    /// Create a new `SolanaAccountsRpcSource`.
-    #[must_use]
-    pub fn new() -> Self { Self::default() }
-
-    fn get_commitment_config(&self) -> CommitmentConfig {
-        match self.filters {
-            Some(Filters {
-                global_filters:
-                    GlobalFilters {
-                        commitment: Some(CommitmentLevel::Finalized),
-                        ..
-                    },
-                ..
-            }) => CommitmentConfig::finalized(),
-            Some(Filters {
-                global_filters:
-                    GlobalFilters {
-                        commitment: Some(CommitmentLevel::Processed),
-                        ..
-                    },
-                ..
-            }) => CommitmentConfig::processed(),
-            _ => CommitmentConfig::confirmed(),
-        }
-    }
+    filters: Filters,
+    config: SolanaAccountsRpcConfig,
 }
 
 /// The configuration for the Solana Accounts RPC source.
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, Default, serde::Deserialize)]
 pub struct SolanaAccountsRpcConfig {
     /// The endpoint of the RPC server.
     pub endpoint: String,
@@ -62,33 +35,48 @@ pub struct SolanaAccountsRpcConfig {
     pub timeout: u64,
 }
 
-#[async_trait]
-impl Source for SolanaAccountsRpcSource {
-    fn name(&self) -> String { "solana-accounts-rpc".to_string() }
+impl SolanaAccountsRpcSource {
+    /// Create a new `SolanaAccountsRpcSource`.
+    #[must_use]
+    pub fn new(config: SolanaAccountsRpcConfig, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
-    async fn connect(
-        &self,
-        tx: Sender<Result<SubscribeUpdate, Status>>,
-        raw_config: toml::Value,
-    ) -> Result<(), VixenError> {
-        // // We require that config and filters are set before connecting to the `Source`
-        let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
-        let config: SolanaAccountsRpcConfig = serde::Deserialize::deserialize(raw_config)
-            .expect("Failed to deserialize SolanaAccountsRpcConfig");
+    fn get_commitment_config(&self) -> CommitmentConfig {
+        match self.filters.global_filters.commitment {
+            Some(CommitmentLevel::Finalized) => CommitmentConfig::finalized(),
+            Some(CommitmentLevel::Processed) => CommitmentConfig::processed(),
+            _ => CommitmentConfig::confirmed(),
+        }
+    }
+}
+
+#[async_trait]
+impl SourceTrait for SolanaAccountsRpcSource {
+    type Config = SolanaAccountsRpcConfig;
+
+    fn name() -> String { "solana-accounts-rpc".to_string() }
+
+    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+
+    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
+        let filters = &self.filters;
+        let config = &self.config;
+        let name = Self::name();
 
         let mut tasks_set = JoinSet::new();
 
-        for (filter_id, prefilter) in filters.parsers_filters {
-            if let Some(account_prefilter) = prefilter.account {
-                for program in account_prefilter.owners {
+        for (filter_id, prefilter) in &filters.parsers_filters {
+            if let Some(account_prefilter) = &prefilter.account {
+                for program in &account_prefilter.owners {
                     let program_id = Pubkey::new_from_array(program.0);
                     let config = config.clone();
                     let tx = tx.clone();
                     let filter_id = filter_id.clone();
-                    let source_name = self.name();
+                    let name = name.clone();
 
                     let client = RpcClient::new_with_timeout_and_commitment(
-                        config.endpoint,
+                        config.endpoint.clone(),
                         Duration::from_secs(config.timeout),
                         self.get_commitment_config(),
                     );
@@ -100,7 +88,7 @@ impl Source for SolanaAccountsRpcSource {
                             tracing::error!(
                                 "Failed to get slot: {} for source: {}, filter: {}",
                                 e,
-                                source_name,
+                                &name,
                                 filter_id
                             );
                         }
@@ -128,7 +116,7 @@ impl Source for SolanaAccountsRpcSource {
                             tracing::error!(
                                 "Failed to get program accounts: {} for source: {}, filter: {}",
                                 e,
-                                source_name,
+                                &name,
                                 filter_id
                             );
                         }
@@ -158,7 +146,7 @@ impl Source for SolanaAccountsRpcSource {
                             if res.is_err() {
                                 tracing::error!(
                                     "Failed to send update to buffer for source: {}, filter: {}",
-                                    source_name,
+                                    &name,
                                     filter_id
                                 );
                             }
@@ -171,28 +159,5 @@ impl Source for SolanaAccountsRpcSource {
         tasks_set.join_all().await;
 
         Ok(())
-    }
-
-    fn set_filters_unchecked(&mut self, filters: Filters) { self.filters = Some(filters); }
-
-    fn get_filters(&self) -> &Option<Filters> { &self.filters }
-}
-
-impl From<SolanaAccountsRpcConfig> for YellowstoneConfig {
-    fn from(config: SolanaAccountsRpcConfig) -> Self {
-        Self {
-            endpoint: config.endpoint,
-            timeout: config.timeout,
-            x_token: None,
-        }
-    }
-}
-
-impl From<YellowstoneConfig> for SolanaAccountsRpcConfig {
-    fn from(config: YellowstoneConfig) -> Self {
-        Self {
-            endpoint: config.endpoint,
-            timeout: config.timeout,
-        }
     }
 }

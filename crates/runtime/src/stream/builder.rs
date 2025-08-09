@@ -19,7 +19,7 @@ use crate::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
     handler::{BoxPipeline, Pipeline},
     metrics::{MetricsFactory, NullMetrics},
-    sources::Source,
+    sources::{Source, SourceTrait},
     util,
 };
 
@@ -150,9 +150,11 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
         self.insert(instruction, |s| &mut s.instruction)
     }
 
-    /// Add a new data `Source` to which the Vixen runtime will subscribe.
-    pub fn source<T: Source>(self, source: T) -> Self {
-        self.mutate(|s| s.sources.push(Box::new(source)))
+    /// Add a new data `Source` to which the runtime will subscribe.
+    ///
+    /// **NOTE:** All added Sources are going to be processed concurrently
+    pub fn source<S: SourceTrait + Send + Sync + 'static>(self) -> Self {
+        self.mutate(|builder| builder.sources.push(Box::new(Source::<S>::new())))
     }
 
     /// Attempt to build a new [`Server`] instance from the current builder
