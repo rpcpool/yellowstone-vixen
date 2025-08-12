@@ -5,6 +5,7 @@ use vixen_core::{
     instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, Parser, ProgramParser, Pubkey,
     TransactionUpdate,
 };
+use yellowstone_grpc_proto::geyser::CommitmentLevel;
 use yellowstone_vixen_proto::{
     prost::{Message, Name},
     prost_types::Any,
@@ -153,6 +154,17 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
     /// Add a new data `Source` to which the Vixen runtime will subscribe.
     pub fn source<T: Source>(self, source: T) -> Self {
         self.mutate(|s| s.sources.push(Box::new(source)))
+    }
+
+    /// Set the confirmation level for the Yellowstone client.
+    pub fn commitment_level(self, commitment_level: CommitmentLevel) -> Self {
+        self.mutate(|s| s.commitment_level = Some(commitment_level))
+    }
+
+    /// Set the from slot filter for the Yellowstone client. The server will attempt to replay
+    /// messages from the specified slot onward
+    pub fn from_slot(self, from_slot: u64) -> Self {
+        self.mutate(|s| s.from_slot_filter = Some(from_slot))
     }
 
     /// Attempt to build a new [`Server`] instance from the current builder

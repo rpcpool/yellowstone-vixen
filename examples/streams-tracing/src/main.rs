@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use clap::Parser as _;
 use opentelemetry::trace::TracerProvider;
 use tracing_subscriber::layer::SubscriberExt;
-use yellowstone_vixen::{self as vixen, vixen_core::proto::Proto};
+use yellowstone_vixen::{self as vixen, vixen_core::proto::Proto, CommitmentLevel};
 use yellowstone_vixen_parser::{
     token_extension_program::{
         AccountParser as TokenExtensionProgramAccParser,
@@ -121,6 +121,7 @@ async fn main() {
         .instruction(Proto::new(TokenProgramIxParser))
         .instruction(Proto::new(TokenExtensionProgramIxParser))
         .metrics(vixen::metrics::Prometheus)
+        .commitment_level(CommitmentLevel::Confirmed)
         .build(config)
         .run_async()
         .await;

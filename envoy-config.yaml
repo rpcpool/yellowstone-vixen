@@ -1,0 +1,102 @@
+static_resources:
+  clusters:
+  - name: vixen_processed
+    type: STRICT_DNS
+    connect_timeout: 1s
+    http2_protocol_options: {}
+    dns_lookup_family: V4_ONLY
+    load_assignment:
+      cluster_name: vixen_processed
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: host.docker.internal # Server IP
+                port_value: 3030
+  - name: vixen_confirmed
+    type: STRICT_DNS
+    connect_timeout: 1s
+    http2_protocol_options: {}
+    dns_lookup_family: V4_ONLY
+    load_assignment:
+      cluster_name: vixen_confirmed
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: host.docker.internal # Server IP
+                port_value: 3030
+  - name: vixen_finalized
+    type: STRICT_DNS
+    connect_timeout: 1s
+    http2_protocol_options: {}
+    dns_lookup_family: V4_ONLY
+    load_assignment:
+      cluster_name: vixen_finalized
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: host.docker.internal # Server IP
+                port_value: 3030
+
+  listeners:
+  - name: grpc_server
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 10000 }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          http2_protocol_options: {}
+          route_config:
+            name: vixen_route
+            virtual_hosts:
+            - name: vixen_streams
+              domains: ["*"]
+              routes:
+              # Processed
+              - match:
+                  prefix: "/"
+                  headers:
+                  - name: x-vixen-commitment
+                    string_match:
+                      exact: processed
+                route:
+                  cluster: vixen_processed
+                  timeout: 0s
+              # Confirmed
+              - match:
+                  prefix: "/"
+                  headers:
+                  - name: x-vixen-commitment
+                    string_match:
+                      exact: confirmed
+                route:
+                  cluster: vixen_confirmed
+                  timeout: 0s
+              # Finalized
+              - match:
+                  prefix: "/"
+                  headers:
+                  - name: x-vixen-commitment
+                    string_match:
+                      exact: finalized
+                route:
+                  cluster: vixen_finalized
+                  timeout: 0s
+              # Default route
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: vixen_confirmed
+                  timeout: 0s
+          http_filters:
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
