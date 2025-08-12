@@ -18,7 +18,6 @@ use builder::RuntimeBuilder;
 use config::BufferConfig;
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
-use sources::Source;
 use stop::{StopCode, StopTx};
 use tokio::{
     sync::mpsc::{self, Receiver},
@@ -57,6 +56,8 @@ pub use util::*;
 pub use yellowstone_grpc_proto::geyser::CommitmentLevel;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 
+use crate::sources::DynSource;
+
 /// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -90,7 +91,7 @@ pub enum Error {
 #[derive(Debug)]
 pub struct Runtime<M: MetricsFactory> {
     sources_cfg: HashMap<String, toml::Value>,
-    sources: Vec<Box<dyn Source>>,
+    sources: Vec<Box<dyn DynSource>>,
     commitment_filter: Option<CommitmentLevel>,
     from_slot_filter: Option<u64>,
     buffer_cfg: BufferConfig,
@@ -373,23 +374,25 @@ impl<M: MetricsFactory> Runtime<M> {
 
         let mut set = JoinSet::new();
 
-        for mut source in self.sources.drain(..) {
+        for source in self.sources.drain(..) {
             let tx = tx.clone();
-            source.filters(filters.clone());
-
+            let config = self
+                .sources_cfg
+                .get(&source.name())
+                .expect("No source config");
             let source_name = source.name();
-            let source_cfg = match self.sources_cfg.get(&source_name) {
-                Some(cfg) => cfg.clone(),
-                None => panic!(
-                    "Source config not found for {source_name}. This should be set in your vixen \
-                     toml config file in the `[source.{source_name}]` section."
-                ),
-            };
+
+            let handle = source.connect(config.clone(), filters.clone(), tx);
 
             set.spawn(async move {
-                source.connect(tx, source_cfg).await.unwrap_or_else(|_| {
-                    panic!("Source connection failed for: {}", source.name());
-                });
+                handle
+                    .await
+                    .unwrap_or_else(|_| {
+                        panic!("Source connection failed for: {source_name}");
+                    })
+                    .unwrap_or_else(|_| {
+                        panic!("Source connection failed for: {source_name}");
+                    });
             });
         }
 

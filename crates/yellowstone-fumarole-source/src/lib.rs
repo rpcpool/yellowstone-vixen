@@ -2,8 +2,6 @@ use std::{collections::BTreeMap, num::NonZero};
 
 use async_trait::async_trait;
 use bytesize::ByteSize;
-#[cfg(feature = "prometheus")]
-use tokio::task::JoinHandle;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use yellowstone_fumarole_client::{
     proto::{CreateConsumerGroupRequest, InitialOffsetPolicy},
@@ -14,13 +12,14 @@ use yellowstone_grpc_proto::{
     geyser::SubscribeUpdate,
     tonic::{Code, Status},
 };
-use yellowstone_vixen::{sources::Source, Error as VixenError};
+use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Yellowstone gRPC API.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct YellowstoneFumaroleSource {
-    filters: Option<Filters>,
+    filters: Filters,
+    config: FumaroleConfig,
 }
 
 #[derive(Debug, Clone, Default, serde::Deserialize)]
@@ -57,66 +56,17 @@ impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfi
     }
 }
 
-impl YellowstoneFumaroleSource {
-    /// Create a new `YellowstoneFumaroleSource` with default values.
-    #[must_use]
-    pub fn new() -> Self { Default::default() }
-
-    #[cfg(feature = "prometheus")]
-    fn register_metrics(&self, config: &FumaroleConfig) -> JoinHandle<()> {
-        use std::time::Duration;
-
-        let prometheus_registry = prometheus::Registry::new();
-        yellowstone_fumarole_client::metrics::register_metrics(&prometheus_registry);
-
-        // Use the conditional config fields
-        let export_interval = Duration::from_secs(config.metrics_interval);
-        let job_name = config.metrics_job_name.clone();
-        let metrics_endpoint = config.metrics_endpoint.clone();
-
-        // Spawn metrics pusher task
-        let registry_clone = prometheus_registry.clone();
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(export_interval);
-            loop {
-                interval.tick().await;
-
-                let metrics = registry_clone.gather();
-                let job_name = job_name.clone();
-                let metrics_endpoint = metrics_endpoint.clone();
-                let _ = tokio::task::spawn_blocking(move || {
-                    if let Err(e) = prometheus::push_metrics(
-                        &job_name,
-                        prometheus::labels! {},
-                        &metrics_endpoint,
-                        metrics,
-                        None,
-                    ) {
-                        tracing::error!("Failed to push Fumarole metrics: {e:?}");
-                    }
-                })
-                .await;
-            }
-        })
-    }
-}
-
 #[async_trait]
-impl Source for YellowstoneFumaroleSource {
-    fn name(&self) -> String { "fumarole".to_string() }
+impl SourceTrait for YellowstoneFumaroleSource {
+    type Config = FumaroleConfig;
 
-    async fn connect(
-        &self,
-        tx: Sender<Result<SubscribeUpdate, Status>>,
-        raw_config: toml::Value,
-    ) -> Result<(), VixenError> {
-        let config: FumaroleConfig = serde::Deserialize::deserialize(raw_config)
-            .expect("Failed to deserialize FumaroleConfig");
-        let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
-        let subscriber_name = config.subscriber_name.clone();
+    fn name() -> String { "fumarole".to_string() }
 
-        #[cfg(feature = "prometheus")]
-        self.register_metrics(&config);
+    fn new(config: Self::Config, filters: Filters) -> Self { Self { filters, config } }
+
+    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
+        let filters = self.filters.clone();
+        let subscriber_name = self.config.subscriber_name.clone();
 
         // TODO: add tasks pool concurrency limit through config
         let mut tasks_set = JoinSet::new();
@@ -135,7 +85,7 @@ impl Source for YellowstoneFumaroleSource {
                 (InitialOffsetPolicy::Latest, None)
             };
 
-        let mut fumarole_client = FumaroleClient::connect(config.into())
+        let mut fumarole_client = FumaroleClient::connect(self.config.clone().into())
             .await
             .expect("failing to connect to fumarole");
 
@@ -193,8 +143,4 @@ impl Source for YellowstoneFumaroleSource {
 
         Ok(())
     }
-
-    fn set_filters_unchecked(&mut self, filters: Filters) { self.filters = Some(filters); }
-
-    fn get_filters(&self) -> &Option<Filters> { &self.filters }
 }

@@ -5,6 +5,8 @@
 //!
 //! The `Source` trait is implemented by the `yellowstone_grpc` module.
 
+use std::{fmt::Debug, marker::PhantomData};
+
 use async_trait::async_trait;
 use tokio::sync::mpsc::Sender;
 use vixen_core::Filters;
@@ -76,32 +78,70 @@ use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
 ///
 /// * `connect` - Establishes connection to the data source and streams updates
 /// * `name` - Returns a unique identifier for the source
-/// * `set_filters_unchecked` - Sets filters for data processing
-/// * `get_filters` - Retrieves current filters
 #[async_trait]
-pub trait Source: std::fmt::Debug + Send + 'static {
+pub trait SourceTrait: std::fmt::Debug + Send + 'static {
+    type Config: serde::de::DeserializeOwned;
+
+    fn name() -> String;
+
+    fn new(config: Self::Config, filters: Filters) -> Self;
+
     /// Connect to the `Source` and send the updates to the `tx` channel.
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
-        raw_config: toml::Value,
     ) -> Result<(), crate::Error>;
+}
 
-    /// Should return the name of the `Source`.
-    fn name(&self) -> String;
+#[derive(Debug)]
+pub struct Source<S>
+where S: SourceTrait + Debug + Send + Sync + 'static
+{
+    _source: PhantomData<S>,
+}
 
-    /// Set the filters to use for the `Source`. In general you define the implementations here but then the method
-    ///  the users call is `filters`, which has a check to not override the filters if they are already set on top of this method.
-    fn set_filters_unchecked(&mut self, filters: Filters);
-
-    /// Should return the filters to use for the `Source`.
-    fn get_filters(&self) -> &Option<Filters>;
-
-    /// Optional method, the default behavior is only set the filters with `set_filters` if no filters
-    ///  are already set.
-    fn filters(&mut self, filters: Filters) {
-        if self.get_filters().is_none() {
-            self.set_filters_unchecked(filters);
+impl<S> Source<S>
+where S: SourceTrait + Debug + Send + Sync + 'static
+{
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            _source: PhantomData,
         }
+    }
+}
+
+impl<S> Default for Source<S>
+where S: SourceTrait + Debug + Send + Sync + 'static
+{
+    fn default() -> Self { Self::new() }
+}
+
+pub trait DynSource: std::fmt::Debug {
+    fn name(&self) -> String;
+    fn connect(
+        &self,
+        config: toml::Value,
+        filters: Filters,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+    ) -> tokio::task::JoinHandle<Result<(), crate::Error>>;
+}
+
+impl<S> DynSource for Source<S>
+where S: SourceTrait + Debug + Send + Sync + 'static
+{
+    fn name(&self) -> String { S::name() }
+
+    fn connect(
+        &self,
+        config: toml::Value,
+        filters: Filters,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+    ) -> tokio::task::JoinHandle<Result<(), crate::Error>> {
+        let config: S::Config = serde::Deserialize::deserialize(config)
+            .unwrap_or_else(|_| panic!("Failed to deserialize config for source {}", self.name()));
+        let source = S::new(config, filters);
+
+        tokio::spawn(async move { source.connect(tx).await })
     }
 }
