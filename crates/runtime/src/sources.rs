@@ -5,12 +5,12 @@
 //!
 //! The `Source` trait is implemented by the `yellowstone_grpc` module.
 
+use std::{fmt::Debug, marker::PhantomData};
+
 use async_trait::async_trait;
 use tokio::sync::mpsc::Sender;
 use vixen_core::Filters;
 use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
-
-use crate::config::YellowstoneConfig;
 
 /// # Sources trait
 ///
@@ -31,13 +31,11 @@ use crate::config::YellowstoneConfig;
 /// use async_trait::async_trait;
 /// use tokio::sync::mpsc::Sender;
 /// use yellowstone_vixen::sources::Source;
-/// use yellowstone_vixen::config::YellowstoneConfig;
 /// use vixen_core::Filters;
 ///
 /// #[derive(Debug)]
 /// struct MyCustomSource {
 ///     filters: Option<Filters>,
-///     config: Option<YellowstoneConfig>,
 /// }
 ///
 /// #[async_trait]
@@ -45,6 +43,7 @@ use crate::config::YellowstoneConfig;
 ///     async fn connect(
 ///         &self,
 ///         tx: Sender<Result<SubscribeUpdate, Status>>,
+///         raw_config: toml::Value,
 ///     ) -> Result<(), crate::Error> {
 ///         // Implementation for connecting to your data source
 ///         // and sending updates through the channel
@@ -59,16 +58,8 @@ use crate::config::YellowstoneConfig;
 ///         self.filters = Some(filters);
 ///     }
 ///
-///     fn set_config_unchecked(&mut self, config: YellowstoneConfig) {
-///         self.config = Some(config);
-///     }
-///
 ///     fn get_filters(&self) -> &Option<Filters> {
 ///         &self.filters
-///     }
-///
-///     fn get_config(&self) -> Option<YellowstoneConfig> {
-///         self.config.clone()
 ///     }
 /// }
 /// ```
@@ -87,48 +78,80 @@ use crate::config::YellowstoneConfig;
 ///
 /// * `connect` - Establishes connection to the data source and streams updates
 /// * `name` - Returns a unique identifier for the source
-/// * `set_filters_unchecked` - Sets filters for data processing
-/// * `set_config_unchecked` - Sets source-specific configuration
-/// * `get_filters` - Retrieves current filters
-/// * `get_config` - Retrieves current configuration
 #[async_trait]
-pub trait Source: std::fmt::Debug + Send + 'static {
+pub trait SourceTrait: std::fmt::Debug + Send + 'static {
+    /// The configuration type for the source.
+    type Config: serde::de::DeserializeOwned;
+
+    /// The name of the source.
+    /// Also used to identify where the source is going to be declared in the config toml file.
+    fn name() -> String;
+
+    /// Creates a new instance of the source.
+    fn new(config: Self::Config, filters: Filters) -> Self;
+
     /// Connect to the `Source` and send the updates to the `tx` channel.
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,
     ) -> Result<(), crate::Error>;
+}
 
-    /// Should return the name of the `Source`.
-    fn name(&self) -> String;
+/// Source object meant for storing dynamic sources in the runtime.
+#[derive(Debug)]
+pub struct Source<S>
+where S: SourceTrait + Debug + Send + Sync + 'static
+{
+    _source: PhantomData<S>,
+}
 
-    /// Set the filters to use for the `Source`. In general you define the implementations here but then the method
-    ///  the users call is `filters`, which has a check to not override the filters if they are already set on top of this method.
-    fn set_filters_unchecked(&mut self, filters: Filters);
-
-    /// Set the config to use for the `Source`. In general you define the implementations here but then the method
-    ///  the users call is `config`, which has a check to not override the config if they are already set on top of this method.
-    fn set_config_unchecked(&mut self, config: YellowstoneConfig);
-
-    /// Should return the filters to use for the `Source`.
-    fn get_filters(&self) -> &Option<Filters>;
-
-    /// Should return the config to use for the `Source`.
-    fn get_config(&self) -> Option<YellowstoneConfig>;
-
-    /// Optional method, the default behavior is only set the filters with `set_filters` if no filters
-    ///  are already set.
-    fn filters(&mut self, filters: Filters) {
-        if self.get_filters().is_none() {
-            self.set_filters_unchecked(filters);
+impl<S> Source<S>
+where S: SourceTrait + Debug + Send + Sync + 'static
+{
+    /// Creates a new `Source` object.
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            _source: PhantomData,
         }
     }
+}
 
-    /// Optional method, the default behavior is only set the config with `set_config` if no config
-    ///  is already set.
-    fn config(&mut self, config: YellowstoneConfig) {
-        if self.get_config().is_none() {
-            self.set_config_unchecked(config);
-        }
+impl<S> Default for Source<S>
+where S: SourceTrait + Debug + Send + Sync + 'static
+{
+    fn default() -> Self { Self::new() }
+}
+
+/// Dynamic wrapper around `SourceTrait` that allows for trait objects.
+pub trait DynSource: std::fmt::Debug {
+    /// The name of the source.
+    fn name(&self) -> String;
+
+    /// Connect to the `Source` and send the updates to the `tx` channel.
+    fn connect(
+        &self,
+        config: toml::Value,
+        filters: Filters,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+    ) -> tokio::task::JoinHandle<Result<(), crate::Error>>;
+}
+
+impl<S> DynSource for Source<S>
+where S: SourceTrait + Debug + Send + Sync + 'static
+{
+    fn name(&self) -> String { S::name() }
+
+    fn connect(
+        &self,
+        config: toml::Value,
+        filters: Filters,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+    ) -> tokio::task::JoinHandle<Result<(), crate::Error>> {
+        let config: S::Config = serde::Deserialize::deserialize(config)
+            .unwrap_or_else(|_| panic!("Failed to deserialize config for source {}", self.name()));
+        let source = S::new(config, filters);
+
+        tokio::spawn(async move { source.connect(tx).await })
     }
 }

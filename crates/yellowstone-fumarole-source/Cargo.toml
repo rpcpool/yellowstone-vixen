@@ -14,5 +14,13 @@ futures-util = { version = "0.3.30", features = ["sink"] }
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
-yellowstone-fumarole-client = "0.2.0-rc6"
+yellowstone-fumarole-client = { version = "0.2.0-rc8", features = ["prometheus"] }
 bytesize = "2"
+toml = "0.8.12"
+serde = { version = "1.0.198", features = ["derive"] }
+tonic = { version = "0.14.0", features = ["gzip", "zstd"] }
+
+prometheus = { version = "0.14.0" }
+
+[features]
+prometheus = []

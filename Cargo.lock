@@ -472,14 +472,40 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edca88bc138befd0323b20752846e6587272d3b03b0343c8ea28a6f819e6e71f"
 dependencies = [
  "async-trait",
- "axum-core",
+ "axum-core 0.4.5",
  "bytes",
  "futures-util",
  "http 1.2.0",
  "http-body",
  "http-body-util",
  "itoa",
- "matchit",
+ "matchit 0.7.3",
+ "memchr",
+ "mime",
+ "percent-encoding",
+ "pin-project-lite",
+ "rustversion",
+ "serde",
+ "sync_wrapper",
+ "tower 0.5.2",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
+name = "axum"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "021e862c184ae977658b36c4500f7feac3221ca5da43e3f25bd04ab6c79a29b5"
+dependencies = [
+ "axum-core 0.5.2",
+ "bytes",
+ "futures-util",
+ "http 1.2.0",
+ "http-body",
+ "http-body-util",
+ "itoa",
+ "matchit 0.8.4",
  "memchr",
  "mime",
  "percent-encoding",
@@ -501,6 +527,25 @@ dependencies = [
  "async-trait",
  "bytes",
  "futures-util",
+ "http 1.2.0",
+ "http-body",
+ "http-body-util",
+ "mime",
+ "pin-project-lite",
+ "rustversion",
+ "sync_wrapper",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
+name = "axum-core"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68464cd0412f486726fb3373129ef5d2993f90c34bc2bc1c1e9943b2f4fc7ca6"
+dependencies = [
+ "bytes",
+ "futures-core",
  "http 1.2.0",
  "http-body",
  "http-body-util",
@@ -1433,8 +1478,8 @@ name = "example-vixen-stream"
 version = "0.0.0"
 dependencies = [
  "clap",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
@@ -1447,7 +1492,7 @@ name = "example-vixen-stream-parser"
 version = "0.0.0"
 dependencies = [
  "clap",
- "prost-build",
+ "prost-build 0.13.5",
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
@@ -1477,7 +1522,7 @@ dependencies = [
  "opentelemetry-otlp",
  "opentelemetry-stdout 0.29.0",
  "opentelemetry_sdk 0.29.0",
- "prost-build",
+ "prost-build 0.13.5",
  "tokio",
  "toml 0.8.20",
  "tracing",
@@ -2546,6 +2591,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e7465ac9959cc2b1404e8e2367b43684a6d13790fe23056cc8c6c5a6b7bcb94"
 
 [[package]]
+name = "matchit"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
+
+[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2962,11 +3013,11 @@ dependencies = [
  "opentelemetry-http",
  "opentelemetry-proto",
  "opentelemetry_sdk 0.29.0",
- "prost",
+ "prost 0.13.5",
  "reqwest",
  "thiserror 2.0.12",
  "tokio",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
 ]
 
@@ -2978,8 +3029,8 @@ checksum = "8c40da242381435e18570d5b9d50aca2a4f4f4d8e146231adb4e7768023309b3"
 dependencies = [
  "opentelemetry 0.29.1",
  "opentelemetry_sdk 0.29.0",
- "prost",
- "tonic",
+ "prost 0.13.5",
+ "tonic 0.12.3",
 ]
 
 [[package]]
@@ -3302,7 +3353,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2796faa41db3ec313a31f7624d9286acf277b52de526150b7e69f3debf891ee5"
 dependencies = [
  "bytes",
- "prost-derive",
+ "prost-derive 0.13.5",
+]
+
+[[package]]
+name = "prost"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7231bd9b3d3d33c86b58adbac74b5ec0ad9f496b19d22801d773636feaa95f3d"
+dependencies = [
+ "bytes",
+ "prost-derive 0.14.1",
 ]
 
 [[package]]
@@ -3318,8 +3379,30 @@ dependencies = [
  "once_cell",
  "petgraph",
  "prettyplease",
- "prost",
- "prost-types",
+ "prost 0.13.5",
+ "prost-types 0.13.5",
+ "regex",
+ "syn 2.0.98",
+ "tempfile",
+]
+
+[[package]]
+name = "prost-build"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac6c3320f9abac597dcbc668774ef006702672474aad53c6d596b62e487b40b1"
+dependencies = [
+ "heck 0.5.0",
+ "itertools 0.14.0",
+ "log",
+ "multimap",
+ "once_cell",
+ "petgraph",
+ "prettyplease",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
+ "pulldown-cmark",
+ "pulldown-cmark-to-cmark",
  "regex",
  "syn 2.0.98",
  "tempfile",
@@ -3339,12 +3422,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost-derive"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9120690fafc389a67ba3803df527d0ec9cbbc9cc45e4cc20b332996dfb672425"
+dependencies = [
+ "anyhow",
+ "itertools 0.14.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.98",
+]
+
+[[package]]
 name = "prost-types"
 version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52c2c1bf36ddb1a1c396b3601a3cec27c2462e45f07c386894ec3ccf5332bd16"
 dependencies = [
- "prost",
+ "prost 0.13.5",
+]
+
+[[package]]
+name = "prost-types"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9b4db3d6da204ed77bb26ba83b6122a73aeb2e87e25fbf7ad2e84c4ccbf8f72"
+dependencies = [
+ "prost 0.14.1",
 ]
 
 [[package]]
@@ -3374,6 +3479,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e36c2f31e0a47f9280fb347ef5e461ffcd2c52dd520d8e216b52f93b0b0d7d6"
 dependencies = [
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "pulldown-cmark"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e8bbe1a966bd2f362681a44f6edce3c2310ac21e4d5067a6e7ec396297a6ea0"
+dependencies = [
+ "bitflags 2.8.0",
+ "memchr",
+ "unicase",
+]
+
+[[package]]
+name = "pulldown-cmark-to-cmark"
+version = "21.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5b6a0769a491a08b31ea5c62494a8f144ee0987d86d670a8af4df1e1b7cde75"
+dependencies = [
+ "pulldown-cmark",
 ]
 
 [[package]]
@@ -3817,15 +3942,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustls-pemfile"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
-dependencies = [
- "rustls-pki-types",
-]
-
-[[package]]
 name = "rustls-pki-types"
 version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4019,9 +4135,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.141"
+version = "1.0.142"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30b9eff21ebe718216c6ec64e1d9ac57087aad11efc64e32002bce4a0d4c03d3"
+checksum = "030fedb782600dcbd6f02d479bf0d817ac3bb40d644745b769d6a96bc3afc5a7"
 dependencies = [
  "itoa",
  "memchr",
@@ -7352,6 +7468,7 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]
@@ -7433,7 +7550,7 @@ checksum = "877c5b330756d856ffcc4553ab34a5684481ade925ecc54bcd1bf02b1d0d4d52"
 dependencies = [
  "async-stream",
  "async-trait",
- "axum",
+ "axum 0.7.9",
  "base64 0.22.1",
  "bytes",
  "flate2",
@@ -7446,14 +7563,44 @@ dependencies = [
  "hyper-util",
  "percent-encoding",
  "pin-project",
- "prost",
- "rustls-native-certs",
- "rustls-pemfile",
+ "prost 0.13.5",
  "socket2 0.5.10",
+ "tokio",
+ "tokio-stream",
+ "tower 0.4.13",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+ "zstd",
+]
+
+[[package]]
+name = "tonic"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67ac5a8627ada0968acec063a4746bf79588aa03ccb66db2f75d7dce26722a40"
+dependencies = [
+ "async-trait",
+ "axum 0.8.4",
+ "base64 0.22.1",
+ "bytes",
+ "flate2",
+ "h2",
+ "http 1.2.0",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "hyper-timeout",
+ "hyper-util",
+ "percent-encoding",
+ "pin-project",
+ "rustls-native-certs",
+ "socket2 0.6.0",
+ "sync_wrapper",
  "tokio",
  "tokio-rustls 0.26.1",
  "tokio-stream",
- "tower 0.4.13",
+ "tower 0.5.2",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -7468,23 +7615,62 @@ checksum = "9557ce109ea773b399c9b9e5dca39294110b74f1f342cb347a80d1fce8c26a11"
 dependencies = [
  "prettyplease",
  "proc-macro2",
- "prost-build",
- "prost-types",
+ "prost-build 0.13.5",
+ "prost-types 0.13.5",
+ "quote",
+ "syn 2.0.98",
+]
+
+[[package]]
+name = "tonic-build"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49e323d8bba3be30833707e36d046deabf10a35ae8ad3cae576943ea8933e25d"
+dependencies = [
+ "prettyplease",
+ "proc-macro2",
  "quote",
  "syn 2.0.98",
 ]
 
 [[package]]
 name = "tonic-health"
-version = "0.12.3"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1eaf34ddb812120f5c601162d5429933c9b527d901ab0e7f930d3147e33a09b2"
+checksum = "d8aa31379f0851de4f223496a469ffcaae24ad4ce736493179c3e42135e2af5c"
 dependencies = [
- "async-stream",
- "prost",
+ "prost 0.14.1",
  "tokio",
  "tokio-stream",
- "tonic",
+ "tonic 0.14.1",
+ "tonic-prost",
+]
+
+[[package]]
+name = "tonic-prost"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9c511b9a96d40cb12b7d5d00464446acf3b9105fd3ce25437cfe41c92b1c87d"
+dependencies = [
+ "bytes",
+ "prost 0.14.1",
+ "tonic 0.14.1",
+]
+
+[[package]]
+name = "tonic-prost-build"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ef298fcd01b15e135440c4b8c974460ceca4e6a5af7f1c933b08e4d2875efa1"
+dependencies = [
+ "prettyplease",
+ "proc-macro2",
+ "prost-build 0.14.1",
+ "prost-types 0.14.1",
+ "quote",
+ "syn 2.0.98",
+ "tempfile",
+ "tonic-build 0.14.1",
 ]
 
 [[package]]
@@ -7493,11 +7679,11 @@ version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "878d81f52e7fcfd80026b7fdb6a9b578b3c3653ba987f87f0dce4b64043cba27"
 dependencies = [
- "prost",
- "prost-types",
+ "prost 0.13.5",
+ "prost-types 0.13.5",
  "tokio",
  "tokio-stream",
- "tonic",
+ "tonic 0.12.3",
 ]
 
 [[package]]
@@ -7545,11 +7731,15 @@ checksum = "d039ad9159c98b70ecfd540b2573b97f7f52c3e8d9f8ad57a24b916a536975f9"
 dependencies = [
  "futures-core",
  "futures-util",
+ "indexmap 2.10.0",
  "pin-project-lite",
+ "slab",
  "sync_wrapper",
  "tokio",
+ "tokio-util",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -7712,6 +7902,12 @@ name = "typenum"
 version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
+
+[[package]]
+name = "unicase"
+version = "2.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75b844d17643ee918803943289730bec8aac480150456169e647ed0b576ba539"
 
 [[package]]
 name = "unicode-ident"
@@ -8283,9 +8479,9 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-fumarole-client"
-version = "0.2.0-rc6+solana.2"
+version = "0.2.0-rc8+solana.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a98bfbe2d37c47cebe06c043e7d40774f21ce86411f2f2f2857683e0cd6e7d28"
+checksum = "31cbfb02f201b67adb454b78562c883c01c19912c75750b08b23fdce6567e135"
 dependencies = [
  "async-trait",
  "bytesize",
@@ -8294,17 +8490,21 @@ dependencies = [
  "http 1.2.0",
  "hyper",
  "lazy_static",
- "prost",
+ "prometheus",
+ "prost 0.14.1",
  "protobuf-src",
  "serde",
+ "serde_json",
  "serde_with",
  "serde_yaml",
  "solana-clock",
  "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
- "tonic",
- "tonic-build",
+ "tonic 0.14.1",
+ "tonic-build 0.14.1",
+ "tonic-prost",
+ "tonic-prost-build",
  "tower 0.5.2",
  "tracing",
  "uuid",
@@ -8313,28 +8513,28 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-grpc-client"
-version = "8.0.0"
+version = "9.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16a47271b3fc935ef50b8af1344852b14139d1ad99a6745f76c5aec4fee1a5d4"
+checksum = "aa1f12f04366aff925c567f87909ddaa4e9d557fc9fe71d8d61b09a6549eb4bb"
 dependencies = [
  "bytes",
  "futures",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.14.1",
  "tonic-health",
  "yellowstone-grpc-proto",
 ]
 
 [[package]]
 name = "yellowstone-grpc-proto"
-version = "8.0.0"
+version = "9.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6367570bc15796024aaac70a5fcb26f7aedb83341e9281f2795040b281348c8f"
+checksum = "dab1296ca56ab02ead0fa60ca085f89ac95cba5b6ff2680c9946a0320efe2b64"
 dependencies = [
  "anyhow",
  "bincode",
- "prost",
- "prost-types",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "protobuf-src",
  "solana-account",
  "solana-account-decoder",
@@ -8347,8 +8547,10 @@ dependencies = [
  "solana-transaction-context",
  "solana-transaction-error",
  "solana-transaction-status",
- "tonic",
- "tonic-build",
+ "tonic 0.14.1",
+ "tonic-build 0.14.1",
+ "tonic-prost",
+ "tonic-prost-build",
 ]
 
 [[package]]
@@ -8366,6 +8568,7 @@ dependencies = [
  "smallvec",
  "thiserror 1.0.69",
  "tokio",
+ "toml 0.8.20",
  "topograph",
  "tracing",
  "yellowstone-grpc-client",
@@ -8381,8 +8584,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8394,7 +8597,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8416,8 +8619,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8429,7 +8632,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8441,8 +8644,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8454,7 +8657,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8466,8 +8669,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8479,7 +8682,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8491,8 +8694,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8504,7 +8707,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8516,8 +8719,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8529,7 +8732,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8541,8 +8744,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8554,7 +8757,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8566,8 +8769,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8579,7 +8782,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8607,8 +8810,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8620,7 +8823,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8632,8 +8835,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8645,7 +8848,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8677,11 +8880,11 @@ dependencies = [
 name = "yellowstone-vixen-proto"
 version = "0.4.0"
 dependencies = [
- "prost",
- "prost-build",
- "prost-types",
- "tonic",
- "tonic-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
+ "prost-types 0.13.5",
+ "tonic 0.12.3",
+ "tonic-build 0.12.3",
  "tonic-reflection",
 ]
 
@@ -8692,8 +8895,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8705,7 +8908,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8717,8 +8920,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8730,7 +8933,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8742,8 +8945,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8755,7 +8958,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8767,8 +8970,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8780,7 +8983,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8792,8 +8995,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8805,7 +9008,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8817,8 +9020,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8830,7 +9033,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8840,11 +9043,13 @@ name = "yellowstone-vixen-solana-rpc-source"
 version = "0.2.0"
 dependencies = [
  "async-trait",
+ "serde",
  "solana-account-decoder-client-types",
  "solana-client",
  "solana-commitment-config",
  "solana-pubkey",
  "tokio",
+ "toml 0.8.20",
  "tracing",
  "yellowstone-grpc-proto",
  "yellowstone-vixen",
@@ -8879,8 +9084,8 @@ dependencies = [
  "borsh 0.10.4",
  "num-derive",
  "num-traits",
- "prost",
- "prost-build",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
  "solana-account-info",
  "solana-cpi",
  "solana-decode-error",
@@ -8892,7 +9097,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
- "tonic",
+ "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
 ]
@@ -8904,7 +9109,11 @@ dependencies = [
  "async-trait",
  "bytesize",
  "futures-util",
+ "prometheus",
+ "serde",
  "tokio",
+ "toml 0.8.20",
+ "tonic 0.14.1",
  "tracing",
  "yellowstone-fumarole-client",
  "yellowstone-grpc-proto",
@@ -8918,7 +9127,9 @@ version = "0.2.0"
 dependencies = [
  "async-trait",
  "futures-util",
+ "serde",
  "tokio",
+ "toml 0.8.20",
  "tracing",
  "yellowstone-grpc-client",
  "yellowstone-grpc-proto",

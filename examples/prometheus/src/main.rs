@@ -22,7 +22,6 @@ use yellowstone_vixen_raydium_amm_v4_parser::{
     accounts_parser::AccountParser as RaydiumAmmV4AccParser,
     instructions_parser::{InstructionParser as RaydiumAmmV4IxParser, RaydiumAmmV4ProgramIx},
 };
-use yellowstone_vixen_solana_rpc_source::SolanaAccountsRpcSource;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -90,8 +89,7 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .source(YellowstoneGrpcSource::new())
-        .source(SolanaAccountsRpcSource::new())
+        .source::<YellowstoneGrpcSource>()
         .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
         .instruction(Pipeline::new(yellowstone_vixen_meteora_amm_parser::instructions_parser::InstructionParser, [Logger]))
         .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [RaydiumAmmV4IxLogger], Prefilter::builder()

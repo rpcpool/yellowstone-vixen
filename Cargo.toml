@@ -4,8 +4,8 @@ exclude = ["examples/streams-ts/"]
 resolver = "2"
 
 [workspace.dependencies]
-yellowstone-grpc-client = { version = "8" }
-yellowstone-grpc-proto = { version = "8", default-features = false }
+yellowstone-grpc-client = { version = "9" }
+yellowstone-grpc-proto = { version = "9", default-features = false }
 yellowstone-vixen = { path = "crates/runtime", version = "0.4.0" }
 yellowstone-vixen-core = { path = "crates/core", version = "0.4.0" }
 yellowstone-vixen-mock = { path = "crates/mock", version = "0.4.0" }

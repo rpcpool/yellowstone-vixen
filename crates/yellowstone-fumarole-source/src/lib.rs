@@ -3,39 +3,45 @@ use std::{collections::BTreeMap, num::NonZero};
 use async_trait::async_trait;
 use bytesize::ByteSize;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
+use tonic::{codec::CompressionEncoding, Code};
 use yellowstone_fumarole_client::{
     proto::{CreateConsumerGroupRequest, InitialOffsetPolicy},
     DragonsmouthAdapterSession, FumaroleClient, FumaroleSubscribeConfig,
 };
-pub use yellowstone_grpc_proto::tonic::codec::CompressionEncoding;
-use yellowstone_grpc_proto::{
-    geyser::SubscribeUpdate,
-    tonic::{Code, Status},
-};
-use yellowstone_vixen::{config::YellowstoneConfig, sources::Source, Error as VixenError};
+use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
+use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Yellowstone gRPC API.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct YellowstoneFumaroleSource {
+    filters: Filters,
     config: FumaroleConfig,
-    filters: Option<Filters>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct FumaroleConfig {
-    base: Option<YellowstoneConfig>,
+    /// The endpoint of the Yellowstone Fumarole server.
+    pub endpoint: String,
+    /// The token to use for authentication.
+    pub x_token: Option<String>,
     /// Name of the persistent subscriber to use
-    subscriber_name: String,
+    pub subscriber_name: String,
+    /// Prometheus metrics configuration (only available with 'prometheus' feature)
+    #[cfg(feature = "prometheus")]
+    pub metrics_endpoint: String,
+    #[cfg(feature = "prometheus")]
+    pub metrics_job_name: String,
+    #[cfg(feature = "prometheus")]
+    pub metrics_interval: u64,
 }
 
 impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfig {
     fn from(config: FumaroleConfig) -> Self {
-        let base_config = config.base.expect("FumaroleConfig.base is required");
-
         yellowstone_fumarole_client::config::FumaroleConfig {
-            endpoint: base_config.endpoint,
-            x_token: base_config.x_token,
+            endpoint: config.endpoint,
+            x_token: config.x_token,
             max_decoding_message_size_bytes: 512_000_000,
             x_metadata: BTreeMap::new(),
             response_compression: Some(CompressionEncoding::Zstd),
@@ -47,28 +53,16 @@ impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfi
     }
 }
 
-impl YellowstoneFumaroleSource {
-    /// Create a new `YellowstoneFumaroleSource` with default values.
-    #[must_use]
-    pub fn new(subscriber_name: &str) -> Self {
-        Self {
-            config: FumaroleConfig {
-                subscriber_name: subscriber_name.to_string(),
-                base: None,
-            },
-            filters: None,
-        }
-    }
-}
-
 #[async_trait]
-impl Source for YellowstoneFumaroleSource {
-    fn name(&self) -> String { "yellowstone-fumarole".to_string() }
+impl SourceTrait for YellowstoneFumaroleSource {
+    type Config = FumaroleConfig;
+
+    fn name() -> String { "fumarole".to_string() }
+
+    fn new(config: Self::Config, filters: Filters) -> Self { Self { filters, config } }
 
     async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
-        // We require that config and filters are set before connecting to the `Source`
-        let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
-        let config = self.config.clone();
+        let filters = self.filters.clone();
         let subscriber_name = self.config.subscriber_name.clone();
 
         // TODO: add tasks pool concurrency limit through config
@@ -88,7 +82,7 @@ impl Source for YellowstoneFumaroleSource {
                 (InitialOffsetPolicy::Latest, None)
             };
 
-        let mut fumarole_client = FumaroleClient::connect(config.into())
+        let mut fumarole_client = FumaroleClient::connect(self.config.clone().into())
             .await
             .expect("failing to connect to fumarole");
 
@@ -146,14 +140,4 @@ impl Source for YellowstoneFumaroleSource {
 
         Ok(())
     }
-
-    fn set_filters_unchecked(&mut self, filters: Filters) { self.filters = Some(filters); }
-
-    fn set_config_unchecked(&mut self, config: YellowstoneConfig) {
-        self.config.base = Some(config);
-    }
-
-    fn get_filters(&self) -> &Option<Filters> { &self.filters }
-
-    fn get_config(&self) -> Option<YellowstoneConfig> { self.config.base.clone() }
 }

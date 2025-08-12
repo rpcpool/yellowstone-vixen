@@ -12,11 +12,12 @@
 //! Vixen provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
+use std::collections::HashMap;
+
 use builder::RuntimeBuilder;
-use config::{BufferConfig, YellowstoneConfig};
+use config::BufferConfig;
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
-use sources::Source;
 use stop::{StopCode, StopTx};
 use tokio::{
     sync::mpsc::{self, Receiver},
@@ -55,6 +56,8 @@ pub use util::*;
 pub use yellowstone_grpc_proto::geyser::CommitmentLevel;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 
+use crate::sources::DynSource;
+
 /// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -87,8 +90,8 @@ pub enum Error {
 /// The main runtime for Vixen.
 #[derive(Debug)]
 pub struct Runtime<M: MetricsFactory> {
-    yellowstone_cfg: YellowstoneConfig,
-    sources: Vec<Box<dyn Source>>,
+    sources_cfg: HashMap<String, toml::Value>,
+    sources: Vec<Box<dyn DynSource>>,
     commitment_filter: Option<CommitmentLevel>,
     from_slot_filter: Option<u64>,
     buffer_cfg: BufferConfig,
@@ -212,7 +215,7 @@ impl<M: MetricsFactory> Runtime<M> {
         let (runtime, updates_rx, _set_handles) = self.connect_to_sources();
 
         let Self {
-            yellowstone_cfg: _,
+            sources_cfg: _,
             sources: _,
             commitment_filter: _,
             from_slot_filter: _,
@@ -371,15 +374,25 @@ impl<M: MetricsFactory> Runtime<M> {
 
         let mut set = JoinSet::new();
 
-        for mut source in self.sources.drain(..) {
+        for source in self.sources.drain(..) {
             let tx = tx.clone();
-            source.config(self.yellowstone_cfg.clone());
-            source.filters(filters.clone());
+            let config = self
+                .sources_cfg
+                .get(&source.name())
+                .expect("No source config");
+            let source_name = source.name();
+
+            let handle = source.connect(config.clone(), filters.clone(), tx);
 
             set.spawn(async move {
-                source.connect(tx).await.unwrap_or_else(|_| {
-                    panic!("Source connection failed for: {}", source.name());
-                });
+                handle
+                    .await
+                    .unwrap_or_else(|_| {
+                        panic!("Source connection failed for: {source_name}");
+                    })
+                    .unwrap_or_else(|_| {
+                        panic!("Source connection failed for: {source_name}");
+                    });
             });
         }
 
