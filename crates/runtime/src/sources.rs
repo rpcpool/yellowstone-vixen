@@ -80,10 +80,14 @@ use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
 /// * `name` - Returns a unique identifier for the source
 #[async_trait]
 pub trait SourceTrait: std::fmt::Debug + Send + 'static {
+    /// The configuration type for the source.
     type Config: serde::de::DeserializeOwned;
 
+    /// The name of the source.
+    /// Also used to identify where the source is going to be declared in the config toml file.
     fn name() -> String;
 
+    /// Creates a new instance of the source.
     fn new(config: Self::Config, filters: Filters) -> Self;
 
     /// Connect to the `Source` and send the updates to the `tx` channel.
@@ -93,6 +97,7 @@ pub trait SourceTrait: std::fmt::Debug + Send + 'static {
     ) -> Result<(), crate::Error>;
 }
 
+/// Source object meant for storing dynamic sources in the runtime.
 #[derive(Debug)]
 pub struct Source<S>
 where S: SourceTrait + Debug + Send + Sync + 'static
@@ -103,6 +108,7 @@ where S: SourceTrait + Debug + Send + Sync + 'static
 impl<S> Source<S>
 where S: SourceTrait + Debug + Send + Sync + 'static
 {
+    /// Creates a new `Source` object.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -117,8 +123,12 @@ where S: SourceTrait + Debug + Send + Sync + 'static
     fn default() -> Self { Self::new() }
 }
 
+/// Dynamic wrapper around `SourceTrait` that allows for trait objects.
 pub trait DynSource: std::fmt::Debug {
+    /// The name of the source.
     fn name(&self) -> String;
+
+    /// Connect to the `Source` and send the updates to the `tx` channel.
     fn connect(
         &self,
         config: toml::Value,

@@ -3,15 +3,12 @@ use std::{collections::BTreeMap, num::NonZero};
 use async_trait::async_trait;
 use bytesize::ByteSize;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
+use tonic::{codec::CompressionEncoding, Code};
 use yellowstone_fumarole_client::{
     proto::{CreateConsumerGroupRequest, InitialOffsetPolicy},
     DragonsmouthAdapterSession, FumaroleClient, FumaroleSubscribeConfig,
 };
-pub use yellowstone_grpc_proto::tonic::codec::CompressionEncoding;
-use yellowstone_grpc_proto::{
-    geyser::SubscribeUpdate,
-    tonic::{Code, Status},
-};
+use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
 use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
