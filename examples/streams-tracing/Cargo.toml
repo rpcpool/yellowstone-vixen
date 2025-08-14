@@ -11,8 +11,8 @@ clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 toml = "0.8.12"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-yellowstone-vixen-stream = { workspace = true }
 yellowstone-vixen = { workspace = true, features = ["prometheus"] }
+yellowstone-vixen-stream = { workspace = true, features = ["prometheus"] }
 yellowstone-vixen-parser = { workspace = true, features = [
   "proto",
   "token-extensions",
@@ -80,6 +80,7 @@ opentelemetry-stdout = "0.29.0"
 tracing-opentelemetry = "0.30.0"
 opentelemetry-appender-tracing = "0.29.0"
 tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
+prometheus = { version = "0.14.0", features = ["push"] }
 
 # Sources
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }

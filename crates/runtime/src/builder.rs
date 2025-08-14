@@ -4,10 +4,9 @@ use vixen_core::{
 };
 
 use crate::{
-    config::{MaybeDefault, VixenConfig},
+    config::VixenConfig,
     handler::{BoxPipeline, DynPipeline, PipelineSet, PipelineSets},
     instruction::SingleInstructionPipeline,
-    metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
     sources::SourceTrait,
     util, Runtime,
 };
@@ -48,7 +47,7 @@ pub enum BuilderError {
 /// [`stream::Server`](crate::stream::Server) types.
 #[derive(Debug)]
 #[must_use = "Consider calling .build() on this builder"]
-pub struct Builder<K: BuilderKind, M, S: SourceTrait> {
+pub struct Builder<K: BuilderKind, S: SourceTrait> {
     /// The error result of the builder.    
     pub err: Result<(), K::Error>,
     /// The account pipelines.
@@ -62,14 +61,15 @@ pub struct Builder<K: BuilderKind, M, S: SourceTrait> {
     /// The slot pipelines.
     pub slot: Vec<BoxPipeline<'static, SlotUpdate>>,
     /// The metrics.
-    pub metrics: M,
+    #[cfg(feature = "prometheus")]
+    pub metrics_registry: Option<prometheus::Registry>,
     /// The extra builder kind.
     pub extra: K,
     /// The source trait.
     pub _source: std::marker::PhantomData<S>,
 }
 
-impl<K: BuilderKind, S: SourceTrait> Default for Builder<K, NullMetrics, S> {
+impl<K: BuilderKind, S: SourceTrait> Default for Builder<K, S> {
     fn default() -> Self {
         Self {
             err: Ok(()),
@@ -78,19 +78,15 @@ impl<K: BuilderKind, S: SourceTrait> Default for Builder<K, NullMetrics, S> {
             instruction: vec![],
             block_meta: vec![],
             slot: vec![],
-            metrics: NullMetrics,
+            #[cfg(feature = "prometheus")]
+            metrics_registry: None,
             extra: K::default(),
             _source: std::marker::PhantomData,
         }
     }
 }
 
-#[inline]
-pub(crate) fn unwrap_cfg<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
-    val.ok_or(BuilderError::MissingConfig(name))
-}
-
-impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
+impl<K: BuilderKind, S: SourceTrait> Builder<K, S> {
     /// Mutate the builder in place.
     #[inline]
     pub fn mutate(self, mutate: impl FnOnce(&mut Self)) -> Self {
@@ -109,9 +105,9 @@ impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
         self
     }
 
-    /// Replace the metrics backend currently configured with a new one,
-    /// updating the type of the builder in the process.
-    pub fn metrics<N>(self, metrics: N) -> Builder<K, N, S> {
+    /// Sets the metrics registry for the runtime.
+    #[cfg(feature = "prometheus")]
+    pub fn metrics(self, metrics_registry: prometheus::Registry) -> Builder<K, S> {
         let Self {
             err,
             account,
@@ -119,7 +115,7 @@ impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
             instruction,
             block_meta,
             slot,
-            metrics: _,
+            metrics_registry: _,
             extra,
             _source: source,
         } = self;
@@ -131,7 +127,7 @@ impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
             instruction,
             block_meta,
             slot,
-            metrics,
+            metrics_registry: Some(metrics_registry),
             extra,
             _source: source,
         }
@@ -142,13 +138,13 @@ impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
 #[derive(Debug, Default, Clone, Copy)]
 pub struct RuntimeKind;
 /// A builder for the [`Runtime`] type.
-pub type RuntimeBuilder<S, M = NullMetrics> = Builder<RuntimeKind, M, S>;
+pub type RuntimeBuilder<S> = Builder<RuntimeKind, S>;
 
 impl BuilderKind for RuntimeKind {
     type Error = BuilderError;
 }
 
-impl<S: SourceTrait, M: MetricsFactory> RuntimeBuilder<S, M> {
+impl<S: SourceTrait> RuntimeBuilder<S> {
     /// Add a new account pipeline to the builder.
     pub fn account<A: DynPipeline<AccountUpdate> + Send + Sync + 'static>(
         self,
@@ -195,10 +191,7 @@ impl<S: SourceTrait, M: MetricsFactory> RuntimeBuilder<S, M> {
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
-    pub fn try_build(
-        self,
-        config: VixenConfig<M::Config, S::Config>,
-    ) -> Result<Runtime<M, S>, BuilderError> {
+    pub fn try_build(self, config: VixenConfig<S::Config>) -> Result<Runtime<S>, BuilderError> {
         let Self {
             err,
             account,
@@ -206,7 +199,8 @@ impl<S: SourceTrait, M: MetricsFactory> RuntimeBuilder<S, M> {
             instruction,
             block_meta,
             slot,
-            metrics,
+            #[cfg(feature = "prometheus")]
+            metrics_registry,
             extra: RuntimeKind,
             _source,
         } = self;
@@ -215,17 +209,7 @@ impl<S: SourceTrait, M: MetricsFactory> RuntimeBuilder<S, M> {
         let VixenConfig {
             source: source_cfg,
             buffer: buffer_cfg,
-            metrics: metrics_cfg,
         } = config;
-
-        let metrics_cfg = unwrap_cfg(
-            "metrics",
-            metrics_cfg.opt().or_else(MaybeDefault::default_opt),
-        )?;
-
-        let Metrics(instrumenter, exporter) = metrics
-            .create(metrics_cfg, "vixen")
-            .map_err(|e| BuilderError::Metrics(e.into()))?;
 
         let mut ixs = PipelineSet::new();
 
@@ -233,7 +217,7 @@ impl<S: SourceTrait, M: MetricsFactory> RuntimeBuilder<S, M> {
             let id = ix.id().into_owned();
             let pre_existent_parser = ixs.insert(
                 id.clone(),
-                Box::new(SingleInstructionPipeline::new(ix, &instrumenter))
+                Box::new(SingleInstructionPipeline::new(ix))
                     as BoxPipeline<'static, TransactionUpdate>,
             );
 
@@ -275,8 +259,8 @@ impl<S: SourceTrait, M: MetricsFactory> RuntimeBuilder<S, M> {
             buffer: buffer_cfg,
             source: source_cfg,
             pipelines,
-            counters: Counters::new(&instrumenter),
-            exporter,
+            #[cfg(feature = "prometheus")]
+            metrics_registry: metrics_registry.unwrap_or_else(|| prometheus::Registry::new()),
             _source: std::marker::PhantomData,
         })
     }
@@ -285,7 +269,8 @@ impl<S: SourceTrait, M: MetricsFactory> RuntimeBuilder<S, M> {
     /// provided configuration, terminating the current process if an error
     /// occurs.
     #[inline]
-    pub fn build(self, config: VixenConfig<M::Config, S::Config>) -> Runtime<M, S> {
+    #[must_use]
+    pub fn build(self, config: VixenConfig<S::Config>) -> Runtime<S> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen runtime")
     }
 }

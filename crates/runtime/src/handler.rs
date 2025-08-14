@@ -3,6 +3,9 @@
 
 use std::{borrow::Cow, collections::HashMap, pin::Pin};
 
+#[cfg(feature = "prometheus")]
+use crate::metrics;
+
 use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
 use tracing::{warn, Instrument, Span};
@@ -10,8 +13,6 @@ use vixen_core::{
     AccountUpdate, BlockMetaUpdate, GetPrefilter, ParserId, SlotUpdate, TransactionUpdate,
 };
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
-
-use crate::metrics::{Counters, Instrumenter, JobResult, Update};
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 /// The result returned by a handler.
@@ -43,7 +44,9 @@ mod pipeline_error {
 
     impl Handled {
         #[inline]
-        pub fn as_unit(self) { let Self(()) = self; }
+        pub fn as_unit(self) {
+            let Self(()) = self;
+        }
     }
 
     #[derive(Debug)]
@@ -123,17 +126,23 @@ impl<P, H> Pipeline<P, H> {
     /// Create a new pipeline from a parser and a list of handlers.
     #[inline]
     #[must_use]
-    pub fn new(parser: P, handlers: H) -> Self { Self(parser, handlers) }
+    pub fn new(parser: P, handlers: H) -> Self {
+        Self(parser, handlers)
+    }
 }
 
 impl<P: ParserId, H> ParserId for Pipeline<P, H> {
     #[inline]
-    fn id(&self) -> Cow<str> { self.0.id() }
+    fn id(&self) -> Cow<str> {
+        self.0.id()
+    }
 }
 
 impl<P: GetPrefilter, H> GetPrefilter for Pipeline<P, H> {
     #[inline]
-    fn prefilter(&self) -> Prefilter { self.0.prefilter() }
+    fn prefilter(&self) -> Prefilter {
+        self.0.prefilter()
+    }
 }
 
 /// A boxed pipeline.
@@ -209,12 +218,16 @@ where
 }
 
 impl<T> ParserId for BoxPipeline<'_, T> {
-    fn id(&self) -> Cow<str> { <dyn DynPipeline<T>>::id(&**self) }
+    fn id(&self) -> Cow<str> {
+        <dyn DynPipeline<T>>::id(&**self)
+    }
 }
 
 impl<T> GetPrefilter for BoxPipeline<'_, T> {
     #[inline]
-    fn prefilter(&self) -> Prefilter { <dyn DynPipeline<T>>::prefilter(&**self) }
+    fn prefilter(&self) -> Prefilter {
+        <dyn DynPipeline<T>>::prefilter(&**self)
+    }
 }
 
 impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
@@ -257,14 +270,20 @@ pub(crate) struct PipelineSet<P>(HashMap<String, P>);
 impl<P> PipelineSet<P> {
     #[inline]
     #[must_use]
-    pub fn len(&self) -> usize { self.0.len() }
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 
     #[inline]
     #[must_use]
-    pub fn new() -> Self { Self(HashMap::new()) }
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
 
     #[inline]
-    pub fn insert(&mut self, key: String, value: P) -> Option<P> { self.0.insert(key, value) }
+    pub fn insert(&mut self, key: String, value: P) -> Option<P> {
+        self.0.insert(key, value)
+    }
 }
 
 impl<P: GetPrefilter> PipelineSet<P> {
@@ -280,7 +299,9 @@ impl<P: GetPrefilter> PipelineSet<P> {
 }
 
 impl<P> PipelineSet<P> {
-    pub(crate) fn get_handlers<I>(&self, it: I) -> Pipelines<P, I> { Pipelines(self, it) }
+    pub(crate) fn get_handlers<I>(&self, it: I) -> Pipelines<P, I> {
+        Pipelines(self, it)
+    }
 }
 
 impl<P: ParserId> FromIterator<P> for PipelineSet<P> {
@@ -293,7 +314,8 @@ impl<P: ParserId> FromIterator<P> for PipelineSet<P> {
 pub(crate) struct Pipelines<'m, H, I>(&'m PipelineSet<H>, I);
 
 impl<'m, H, I: IntoIterator> Pipelines<'m, H, I>
-where I::Item: AsRef<str> + Send + 'm
+where
+    I::Item: AsRef<str> + Send + 'm,
 {
     fn get_pipelines(self) -> impl Iterator<Item = (I::Item, &'m H)> {
         let Self(pipelines, it) = self;
@@ -309,11 +331,11 @@ where I::Item: AsRef<str> + Send + 'm
         })
     }
 
-    pub fn run<'h, T: Update, M: Instrumenter>(
+    pub fn run<'h, T>(
         self,
         span: Span,
         value: &'h T,
-        metrics: &'h Counters<M>,
+        #[cfg(feature = "prometheus")] update_type: metrics::UpdateType,
     ) -> impl Future<Output = ()> + Send + 'h
     where
         H: DynPipeline<T>,
@@ -323,9 +345,9 @@ where I::Item: AsRef<str> + Send + 'm
         futures_util::future::join_all(self.get_pipelines().map(move |(f, h)| {
             h.handle(value)
                 .map(move |r| {
-                    if let Some(r) = JobResult::from_pipeline(&r) {
-                        metrics.inc_processed(T::TYPE, r);
-                    }
+                    #[cfg(feature = "prometheus")]
+                    metrics::increment_processed_updates(&r, update_type);
+
                     match r {
                         Ok(()) => (),
                         Err(v) => v.handle::<T>(f.as_ref()).as_unit(),

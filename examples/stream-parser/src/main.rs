@@ -95,7 +95,7 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    yellowstone_vixen_stream::Server::<_, YellowstoneGrpcSource>::builder()
+    yellowstone_vixen_stream::Server::<YellowstoneGrpcSource>::builder()
         .descriptor_set(parser::token::DESCRIPTOR_SET)
         .descriptor_set(parser::token_extensions::DESCRIPTOR_SET)
         .descriptor_set(METEORA_DESCRIPTOR_SET)

@@ -4,7 +4,6 @@ use tokio::sync::broadcast;
 use yellowstone_vixen::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
     handler::{BoxPipeline, Pipeline},
-    metrics::{MetricsFactory, NullMetrics},
     sources::SourceTrait,
     util,
 };
@@ -38,18 +37,22 @@ pub enum BuilderError {
 #[derive(Debug, Default)]
 pub struct StreamKind<'a>(Vec<&'a [u8]>, Channels<HashMap<String, Receiver>>);
 /// A builder for the [`Server`] type.
-pub struct StreamBuilder<'a, S: SourceTrait, M = NullMetrics>(Builder<StreamKind<'a>, M, S>);
+pub struct StreamBuilder<'a, S: SourceTrait>(Builder<StreamKind<'a>, S>);
 
 impl BuilderKind for StreamKind<'_> {
     type Error = BuilderError;
 }
 
-impl<S: SourceTrait> Default for StreamBuilder<'_, S, NullMetrics> {
-    fn default() -> Self { Self(Builder::default()) }
+impl<S: SourceTrait> Default for StreamBuilder<'_, S> {
+    fn default() -> Self {
+        Self(Builder::default())
+    }
 }
 
-impl<'a, M: MetricsFactory + 'a, S: SourceTrait> StreamBuilder<'a, S, M> {
-    pub fn new(builder: Builder<StreamKind<'a>, M, S>) -> Self { Self(builder) }
+impl<'a, S: SourceTrait> StreamBuilder<'a, S> {
+    pub fn new(builder: Builder<StreamKind<'a>, S>) -> Self {
+        Self(builder)
+    }
 }
 
 fn wrap_parser<P: Debug + Parser + Send + Sync + 'static>(
@@ -63,11 +66,11 @@ where
     Box::new(Pipeline::new(parser, [GrpcHandler(tx)]))
 }
 
-impl<'a, M: MetricsFactory + 'a, S: SourceTrait> StreamBuilder<'a, S, M> {
+impl<'a, S: SourceTrait> StreamBuilder<'a, S> {
     fn insert<
         P: Debug + ProgramParser + Send + Sync + 'static,
         F: for<'b> FnOnce(
-            &'b mut Builder<StreamKind<'a>, M, S>,
+            &'b mut Builder<StreamKind<'a>, S>,
         ) -> &'b mut Vec<BoxPipeline<'static, P::Input>>,
     >(
         self,
@@ -110,6 +113,12 @@ impl<'a, M: MetricsFactory + 'a, S: SourceTrait> StreamBuilder<'a, S, M> {
     /// Add a new descriptor set to the builder.
     pub fn descriptor_set(self, desc: &'a [u8]) -> Self {
         Self(self.0.mutate(|s| s.extra.0.push(desc)))
+    }
+
+    /// Sets the metrics registry for the runtime.
+    #[cfg(feature = "prometheus")]
+    pub fn metrics(self, metrics_registry: prometheus::Registry) -> Self {
+        Self(self.0.metrics(metrics_registry))
     }
 
     /// Add a new account parser to the builder.
@@ -170,17 +179,14 @@ impl<'a, M: MetricsFactory + 'a, S: SourceTrait> StreamBuilder<'a, S, M> {
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
-    pub fn try_build(
-        self,
-        config: StreamConfig<M::Config, S::Config>,
-    ) -> Result<Server<'a, M, S>, BuilderError> {
+    pub fn try_build(self, config: StreamConfig<S::Config>) -> Result<Server<'a, S>, BuilderError> {
         let Builder {
             err,
             account,
             transaction,
             instruction,
             block_meta,
-            metrics,
+            metrics_registry,
             extra: StreamKind(desc_sets, channels),
             slot,
             _source,
@@ -203,7 +209,7 @@ impl<'a, M: MetricsFactory + 'a, S: SourceTrait> StreamBuilder<'a, S, M> {
             transaction,
             instruction,
             block_meta,
-            metrics,
+            metrics_registry,
             extra: RuntimeKind,
             slot,
             _source,
@@ -222,7 +228,7 @@ impl<'a, M: MetricsFactory + 'a, S: SourceTrait> StreamBuilder<'a, S, M> {
     /// provided configuration, terminating the current process if an error
     /// occurs.
     #[inline]
-    pub fn build(self, config: StreamConfig<M::Config, S::Config>) -> Server<'a, M, S> {
+    pub fn build(self, config: StreamConfig<S::Config>) -> Server<'a, S> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen stream server")
     }
 }
