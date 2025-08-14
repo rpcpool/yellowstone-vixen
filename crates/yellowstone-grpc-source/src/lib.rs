@@ -8,34 +8,30 @@ use yellowstone_grpc_proto::{
     geyser::SubscribeUpdate,
     tonic::{transport::ClientTlsConfig, Status},
 };
-use yellowstone_vixen::{config::YellowstoneConfig, sources::Source, Error as VixenError};
+use yellowstone_vixen::{config::YellowstoneConfig, sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Yellowstone gRPC API.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct YellowstoneGrpcSource {
-    config: Option<YellowstoneConfig>,
-    filters: Option<Filters>,
-}
-
-impl YellowstoneGrpcSource {
-    /// Create a new `YellowstoneGrpcSource` with default values.
-    #[must_use]
-    pub fn new() -> Self { Self::default() }
+    filters: Filters,
+    config: YellowstoneConfig,
 }
 
 #[async_trait]
-impl Source for YellowstoneGrpcSource {
-    fn name(&self) -> String { "yellowstone-grpc".to_string() }
+impl SourceTrait for YellowstoneGrpcSource {
+    type Config = YellowstoneConfig;
+
+    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+
+    fn name() -> String { "yellowstone-grpc".to_string() }
 
     async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
-        // We require that config and filters are set before connecting to the `Source`
-        let filters = self.filters.clone().ok_or(VixenError::ConfigError)?;
-        let config = self.config.clone().ok_or(VixenError::ConfigError)?;
+        let filters = self.filters.clone();
+        let config = self.config.clone();
 
         let timeout = Duration::from_secs(config.timeout);
 
-        // TODO: add tasks pool concurrency limit through config
         let mut tasks_set = JoinSet::new();
 
         for (filter_id, prefilter) in filters.parsers_filters {
@@ -70,12 +66,4 @@ impl Source for YellowstoneGrpcSource {
 
         Ok(())
     }
-
-    fn set_filters_unchecked(&mut self, filters: Filters) { self.filters = Some(filters); }
-
-    fn set_config_unchecked(&mut self, config: YellowstoneConfig) { self.config = Some(config); }
-
-    fn get_filters(&self) -> &Option<Filters> { &self.filters }
-
-    fn get_config(&self) -> Option<YellowstoneConfig> { self.config.clone() }
 }

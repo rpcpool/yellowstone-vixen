@@ -1,5 +1,7 @@
 //! Configuration types for the Vixen runtime.
 
+use std::collections::HashMap;
+
 #[cfg(feature = "prometheus")]
 pub use prometheus_impl::*;
 
@@ -20,8 +22,8 @@ impl<T: Default> MaybeDefault for T {
 #[serde(rename_all = "kebab-case")]
 pub struct VixenConfig<M: clap::Args> {
     /// Configuration for connecting to the Yellowstone server.
-    #[command(flatten)]
-    pub yellowstone: YellowstoneConfig,
+    #[clap(skip)]
+    pub sources: HashMap<String, toml::Value>,
 
     /// Configuration for scheduling jobs.
     #[command(flatten)]

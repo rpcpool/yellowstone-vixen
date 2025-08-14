@@ -11,7 +11,7 @@ use crate::{
     handler::{BoxPipeline, DynPipeline, PipelineSet, PipelineSets},
     instruction::SingleInstructionPipeline,
     metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
-    sources::Source,
+    sources::{DynSource, Source, SourceTrait},
     util, Runtime,
 };
 
@@ -57,7 +57,7 @@ pub struct Builder<K: BuilderKind, M> {
     pub(crate) commitment_level: Option<CommitmentLevel>,
     pub(crate) from_slot_filter: Option<u64>,
     pub(crate) metrics: M,
-    pub(crate) sources: Vec<Box<dyn Source>>,
+    pub(crate) sources: Vec<Box<dyn DynSource>>,
     pub(crate) extra: K,
 }
 
@@ -193,8 +193,8 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
     /// Add a new data `Source` to which the runtime will subscribe.
     ///
     /// **NOTE:** All added Sources are going to be processed concurrently
-    pub fn source<T: Source>(self, source: T) -> Self {
-        self.mutate(|s| s.sources.push(Box::new(source)))
+    pub fn source<S: SourceTrait + Send + Sync + 'static>(self) -> Self {
+        self.mutate(|builder| builder.sources.push(Box::new(Source::<S>::new())))
     }
 
     /// Set the from slot filter for the Yellowstone client. The server will attempt to replay
@@ -225,7 +225,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         let () = err?;
 
         let VixenConfig {
-            yellowstone: yellowstone_cfg,
+            sources: sources_cfg,
             buffer: buffer_cfg,
             metrics: metrics_cfg,
         } = config;
@@ -282,7 +282,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         }
 
         Ok(Runtime {
-            yellowstone_cfg,
+            sources_cfg,
             sources,
             buffer_cfg,
             pipelines,

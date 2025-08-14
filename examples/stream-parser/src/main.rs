@@ -95,7 +95,7 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::stream::Server::builder()
-        .source(YellowstoneGrpcSource::new())
+        .source::<YellowstoneGrpcSource>()
         .descriptor_set(parser::token::DESCRIPTOR_SET)
         .descriptor_set(parser::token_extensions::DESCRIPTOR_SET)
         .descriptor_set(METEORA_DESCRIPTOR_SET)

@@ -22,6 +22,7 @@ use yellowstone_vixen_parser::{
         AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
     },
 };
+// use yellowstone_vixen_yellowstone_fumarole_source::YellowstoneFumaroleSource;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -82,8 +83,9 @@ async fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::stream::Server::builder()
-        .source(YellowstoneGrpcSource::new())
+    let result = vixen::stream::Server::builder()
+        .source::<YellowstoneGrpcSource>()
+        // .source::<YellowstoneFumaroleSource>() // Needs Fumarole valid credentials
         .account(Proto::new(yellowstone_vixen_boop_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_jupiter_swap_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_kamino_limit_orders_parser::accounts_parser::AccountParser))
@@ -122,6 +124,14 @@ async fn main() {
         .instruction(Proto::new(TokenExtensionProgramIxParser))
         .metrics(vixen::metrics::Prometheus)
         .build(config)
-        .run_async()
+        .try_run_async()
         .await;
+
+    match result {
+        Ok(()) => (),
+        Err(e) => {
+            tracing::error!("Error running Vixen: {e:?}");
+            std::process::exit(1);
+        }
+    }
 }
