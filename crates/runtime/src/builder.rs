@@ -7,10 +7,9 @@ use vixen_core::{
 use yellowstone_grpc_proto::geyser::CommitmentLevel;
 
 use crate::{
-    config::{MaybeDefault, VixenConfig},
+    config::VixenConfig,
     handler::{BoxPipeline, DynPipeline, PipelineSet, PipelineSets},
     instruction::SingleInstructionPipeline,
-    metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
     sources::Source,
     util, Runtime,
 };
@@ -48,7 +47,7 @@ pub enum BuilderError {
 /// [`stream::Server`](crate::stream::Server) types.
 #[derive(Debug)]
 #[must_use = "Consider calling .build() on this builder"]
-pub struct Builder<K: BuilderKind, M> {
+pub struct Builder<K: BuilderKind> {
     pub(crate) err: Result<(), K::Error>,
     pub(crate) account: Vec<BoxPipeline<'static, AccountUpdate>>,
     pub(crate) transaction: Vec<BoxPipeline<'static, TransactionUpdate>>,
@@ -56,12 +55,12 @@ pub struct Builder<K: BuilderKind, M> {
     pub(crate) block_meta: Vec<BoxPipeline<'static, BlockMetaUpdate>>,
     pub(crate) commitment_level: Option<CommitmentLevel>,
     pub(crate) from_slot_filter: Option<u64>,
-    pub(crate) metrics: M,
     pub(crate) sources: Vec<Box<dyn Source>>,
+    pub(crate) metrics_registry: Option<prometheus::Registry>,
     pub(crate) extra: K,
 }
 
-impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
+impl<K: BuilderKind> Default for Builder<K> {
     fn default() -> Self {
         Self {
             err: Ok(()),
@@ -71,24 +70,14 @@ impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
             block_meta: vec![],
             commitment_level: None,
             from_slot_filter: None,
-            metrics: NullMetrics,
+            metrics_registry: None,
             sources: vec![],
             extra: K::default(),
         }
     }
 }
 
-// #[inline]
-// pub(crate) fn unwrap<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
-//     val.ok_or(BuilderError::MissingField(name))
-// }
-
-#[inline]
-pub(crate) fn unwrap_cfg<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
-    val.ok_or(BuilderError::MissingConfig(name))
-}
-
-impl<K: BuilderKind, M> Builder<K, M> {
+impl<K: BuilderKind> Builder<K> {
     #[inline]
     pub(crate) fn mutate(self, mutate: impl FnOnce(&mut Self)) -> Self {
         self.try_mutate(|s| {
@@ -108,9 +97,8 @@ impl<K: BuilderKind, M> Builder<K, M> {
         self
     }
 
-    /// Replace the metrics backend currently configured with a new one,
-    /// updating the type of the builder in the process.
-    pub fn metrics<N>(self, metrics: N) -> Builder<K, N> {
+    /// Sets the metrics registry for the runtime.
+    pub fn metrics(self, metrics_registry: prometheus::Registry) -> Builder<K> {
         let Self {
             err,
             account,
@@ -119,7 +107,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             block_meta,
             commitment_level,
             from_slot_filter,
-            metrics: _,
+            metrics_registry: _,
             sources,
             extra,
         } = self;
@@ -132,7 +120,7 @@ impl<K: BuilderKind, M> Builder<K, M> {
             block_meta,
             commitment_level,
             from_slot_filter,
-            metrics,
+            metrics_registry: Some(metrics_registry),
             sources,
             extra,
         }
@@ -143,13 +131,13 @@ impl<K: BuilderKind, M> Builder<K, M> {
 #[derive(Debug, Default, Clone, Copy)]
 pub struct RuntimeKind;
 /// A builder for the [`Runtime`] type.
-pub type RuntimeBuilder<M = NullMetrics> = Builder<RuntimeKind, M>;
+pub type RuntimeBuilder = Builder<RuntimeKind>;
 
 impl BuilderKind for RuntimeKind {
     type Error = BuilderError;
 }
 
-impl<M: MetricsFactory> RuntimeBuilder<M> {
+impl RuntimeBuilder {
     /// Add a new account pipeline to the builder.
     pub fn account<A: DynPipeline<AccountUpdate> + Send + Sync + 'static>(
         self,
@@ -209,7 +197,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
-    pub fn try_build(self, config: VixenConfig<M::Config>) -> Result<Runtime<M>, BuilderError> {
+    pub fn try_build(self, config: VixenConfig) -> Result<Runtime, BuilderError> {
         let Self {
             err,
             account,
@@ -218,7 +206,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             block_meta,
             commitment_level,
             from_slot_filter,
-            metrics,
+            metrics_registry,
             sources,
             extra: RuntimeKind,
         } = self;
@@ -227,17 +215,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         let VixenConfig {
             yellowstone: yellowstone_cfg,
             buffer: buffer_cfg,
-            metrics: metrics_cfg,
         } = config;
-
-        let metrics_cfg = unwrap_cfg(
-            "metrics",
-            metrics_cfg.opt().or_else(MaybeDefault::default_opt),
-        )?;
-
-        let Metrics(instrumenter, exporter) = metrics
-            .create(metrics_cfg, "vixen")
-            .map_err(|e| BuilderError::Metrics(e.into()))?;
 
         let mut ixs = PipelineSet::new();
 
@@ -245,7 +223,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             let id = ix.id().into_owned();
             let pre_existent_parser = ixs.insert(
                 id.clone(),
-                Box::new(SingleInstructionPipeline::new(ix, &instrumenter))
+                Box::new(SingleInstructionPipeline::new(ix))
                     as BoxPipeline<'static, TransactionUpdate>,
             );
 
@@ -288,8 +266,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
             pipelines,
             commitment_filter: commitment_level,
             from_slot_filter,
-            counters: Counters::new(&instrumenter),
-            exporter,
+            metrics_registry,
         })
     }
 
@@ -297,7 +274,8 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
     /// provided configuration, terminating the current process if an error
     /// occurs.
     #[inline]
-    pub fn build(self, config: VixenConfig<M::Config>) -> Runtime<M> {
+    #[must_use]
+    pub fn build(self, config: VixenConfig) -> Runtime {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen runtime")
     }
 }

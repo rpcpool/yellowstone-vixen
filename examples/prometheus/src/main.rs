@@ -7,7 +7,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -79,7 +79,8 @@ impl vixen::Handler<InstructionUpdateOutput<RaydiumAmmV4ProgramIx>> for RaydiumA
     }
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
@@ -88,6 +89,29 @@ fn main() {
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
+
+    let prometheus_registry = prometheus::Registry::new();
+    let registry_clone = prometheus_registry.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(30));
+        loop {
+            interval.tick().await;
+
+            let metrics = registry_clone.gather();
+            let _ = tokio::task::spawn_blocking(move || {
+                if let Err(e) = prometheus::push_metrics(
+                    "vixen",
+                    prometheus::labels! {},
+                    "http://localhost:9091",
+                    metrics,
+                    None,
+                ) {
+                    tracing::error!("Failed to push Fumarole metrics: {e:?}");
+                }
+            })
+            .await;
+        }
+    });
 
     vixen::Runtime::builder()
         .source(YellowstoneGrpcSource::new())
@@ -102,9 +126,10 @@ fn main() {
             .transaction_accounts([Pubkey::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA").unwrap()]), // All of these accounts must be in the transaction plus the Parser programId
         ))
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
-        .metrics(vixen::metrics::Prometheus)
+        .metrics(prometheus_registry)
         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
         // .from_slot(slot_number)
         .build(config)
-        .run();
+        .run_async()
+        .await;
 }

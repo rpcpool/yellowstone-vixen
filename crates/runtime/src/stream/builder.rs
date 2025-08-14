@@ -19,7 +19,6 @@ use super::{
 use crate::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
     handler::{BoxPipeline, Pipeline},
-    metrics::{MetricsFactory, NullMetrics},
     sources::Source,
     util,
 };
@@ -39,7 +38,7 @@ pub enum BuilderError {
 #[derive(Debug, Default)]
 pub struct StreamKind<'a>(Vec<&'a [u8]>, Channels<HashMap<String, Receiver>>);
 /// A builder for the [`Server`] type.
-pub type StreamBuilder<'a, M = NullMetrics> = Builder<StreamKind<'a>, M>;
+pub type StreamBuilder<'a> = Builder<StreamKind<'a>>;
 
 impl BuilderKind for StreamKind<'_> {
     type Error = BuilderError;
@@ -56,7 +55,7 @@ where
     Box::new(Pipeline::new(parser, [GrpcHandler(tx)]))
 }
 
-impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
+impl<'a> StreamBuilder<'a> {
     fn insert<
         P: Debug + ProgramParser + Send + Sync + 'static,
         F: FnOnce(&mut Self) -> &mut Vec<BoxPipeline<'static, P::Input>>,
@@ -173,14 +172,14 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
-    pub fn try_build(self, config: StreamConfig<M::Config>) -> Result<Server<'a, M>, BuilderError> {
+    pub fn try_build(self, config: StreamConfig) -> Result<Server<'a>, BuilderError> {
         let Self {
             err,
             account,
             transaction,
             instruction,
             block_meta,
-            metrics,
+            metrics_registry,
             sources,
             commitment_level,
             from_slot_filter,
@@ -205,7 +204,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             instruction,
             commitment_level,
             block_meta,
-            metrics,
+            metrics_registry,
             sources,
             extra: RuntimeKind,
             from_slot_filter,
@@ -224,7 +223,8 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
     /// provided configuration, terminating the current process if an error
     /// occurs.
     #[inline]
-    pub fn build(self, config: StreamConfig<M::Config>) -> Server<'a, M> {
+    #[must_use]
+    pub fn build(self, config: StreamConfig) -> Server<'a> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen stream server")
     }
 }

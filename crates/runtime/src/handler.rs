@@ -9,7 +9,7 @@ use tracing::{warn, Instrument, Span};
 use vixen_core::{AccountUpdate, BlockMetaUpdate, GetPrefilter, ParserId, TransactionUpdate};
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
-use crate::metrics::{Counters, Instrumenter, JobResult, Update};
+use crate::metrics;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 /// The result returned by a handler.
@@ -304,11 +304,11 @@ where I::Item: AsRef<str> + Send + 'm
         })
     }
 
-    pub fn run<'h, T: Update, M: Instrumenter>(
+    pub fn run<'h, T>(
         self,
         span: Span,
         value: &'h T,
-        metrics: &'h Counters<M>,
+        update_type: metrics::UpdateType,
     ) -> impl Future<Output = ()> + Send + 'h
     where
         H: DynPipeline<T>,
@@ -318,9 +318,8 @@ where I::Item: AsRef<str> + Send + 'm
         futures_util::future::join_all(self.get_pipelines().map(move |(f, h)| {
             h.handle(value)
                 .map(move |r| {
-                    if let Some(r) = JobResult::from_pipeline(&r) {
-                        metrics.inc_processed(T::TYPE, r);
-                    }
+                    metrics::increment_processed_updates(&r, update_type);
+
                     match r {
                         Ok(()) => (),
                         Err(v) => v.handle::<T>(f.as_ref()).as_unit(),

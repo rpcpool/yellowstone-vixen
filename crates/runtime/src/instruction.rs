@@ -7,39 +7,27 @@ use vixen_core::{instruction::InstructionUpdate, GetPrefilter, ParserId, Transac
 
 use crate::{
     handler::{BoxPipeline, DynPipeline, PipelineErrors},
-    metrics::{InstructionCounters, Instrumenter, JobResult},
+    metrics,
 };
 
 /// A pipeline for dispatching instruction updates given a transaction update.
-pub struct InstructionPipeline<M: Instrumenter>(
-    Box<[BoxPipeline<'static, InstructionUpdate>]>,
-    InstructionCounters<M>,
-);
+pub struct InstructionPipeline(Box<[BoxPipeline<'static, InstructionUpdate>]>);
 
-impl<M: Instrumenter> fmt::Debug for InstructionPipeline<M> {
+impl fmt::Debug for InstructionPipeline {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("InstructionPipeline")
-            .field(&self.0)
-            .field(&self.1)
-            .finish()
+        f.debug_tuple("InstructionPipeline").field(&self.0).finish()
     }
 }
 
-impl<M: Instrumenter> InstructionPipeline<M> {
+impl InstructionPipeline {
     /// Create a new instruction pipeline from a list of sub-pipelines.
     #[must_use]
-    pub fn new(
-        pipelines: Vec<BoxPipeline<'static, InstructionUpdate>>,
-        instrumenter: &M,
-    ) -> Option<Self> {
+    pub fn new(pipelines: Vec<BoxPipeline<'static, InstructionUpdate>>) -> Option<Self> {
         if pipelines.is_empty() {
             return None;
         }
 
-        Some(Self(
-            pipelines.into_boxed_slice(),
-            InstructionCounters::new(instrumenter),
-        ))
+        Some(Self(pipelines.into_boxed_slice()))
     }
 
     /// Handle a transaction update by dispatching its instruction updates to
@@ -53,11 +41,10 @@ impl<M: Instrumenter> InstructionPipeline<M> {
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
         for insn in ixs.iter().flat_map(|i| i.visit_all()) {
             for pipe in &*self.0 {
-                // TODO: run these concurrently?
                 let res = pipe.handle(insn).await;
-                if let Some(r) = JobResult::from_pipeline(&res) {
-                    self.1.inc_processed(r);
-                }
+
+                metrics::increment_processed_updates(&res, metrics::UpdateType::Instruction);
+
                 match res {
                     Ok(()) => (),
                     Err(PipelineErrors::AlreadyHandled(h)) => h.as_unit(),
@@ -74,17 +61,17 @@ impl<M: Instrumenter> InstructionPipeline<M> {
     }
 }
 
-impl<M: Instrumenter> ParserId for InstructionPipeline<M> {
+impl ParserId for InstructionPipeline {
     fn id(&self) -> std::borrow::Cow<str> { "InstructionPipeline".into() }
 }
 
-impl<M: Instrumenter> GetPrefilter for InstructionPipeline<M> {
+impl GetPrefilter for InstructionPipeline {
     fn prefilter(&self) -> vixen_core::Prefilter {
         self.0.iter().map(GetPrefilter::prefilter).collect()
     }
 }
 
-impl<M: Instrumenter> DynPipeline<TransactionUpdate> for InstructionPipeline<M> {
+impl DynPipeline<TransactionUpdate> for InstructionPipeline {
     fn handle<'h>(
         &'h self,
         value: &'h TransactionUpdate,
@@ -95,17 +82,12 @@ impl<M: Instrumenter> DynPipeline<TransactionUpdate> for InstructionPipeline<M> 
 }
 
 /// A pipeline for dispatching instruction updates for a single parser given a transaction update.
-pub struct SingleInstructionPipeline<M: Instrumenter>(
-    BoxPipeline<'static, InstructionUpdate>,
-    InstructionCounters<M>,
-);
+pub struct SingleInstructionPipeline(BoxPipeline<'static, InstructionUpdate>);
 
-impl<M: Instrumenter> SingleInstructionPipeline<M> {
+impl SingleInstructionPipeline {
     /// Create a new instruction pipeline from a single sub-pipeline.
     #[must_use]
-    pub fn new(pipeline: BoxPipeline<'static, InstructionUpdate>, instrumenter: &M) -> Self {
-        Self(pipeline, InstructionCounters::new(instrumenter))
-    }
+    pub fn new(pipeline: BoxPipeline<'static, InstructionUpdate>) -> Self { Self(pipeline) }
 
     /// Handle a transaction update by dispatching its instruction updates to
     /// its sub-pipeline.
@@ -119,9 +101,7 @@ impl<M: Instrumenter> SingleInstructionPipeline<M> {
         for insn in ixs.iter().flat_map(|i| i.visit_all()) {
             let res = pipe.handle(insn).await;
 
-            if let Some(r) = JobResult::from_pipeline(&res) {
-                self.1.inc_processed(r);
-            }
+            metrics::increment_processed_updates(&res, metrics::UpdateType::Instruction);
 
             match res {
                 Ok(()) => (),
@@ -138,24 +118,23 @@ impl<M: Instrumenter> SingleInstructionPipeline<M> {
     }
 }
 
-impl<M: Instrumenter> ParserId for SingleInstructionPipeline<M> {
+impl ParserId for SingleInstructionPipeline {
     fn id(&self) -> std::borrow::Cow<str> { self.0.id() }
 }
 
-impl<M: Instrumenter> GetPrefilter for SingleInstructionPipeline<M> {
+impl GetPrefilter for SingleInstructionPipeline {
     fn prefilter(&self) -> vixen_core::Prefilter { self.0.prefilter() }
 }
 
-impl<M: Instrumenter> Debug for SingleInstructionPipeline<M> {
+impl Debug for SingleInstructionPipeline {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("SingleInstructionPipeline")
             .field(&self.0)
-            .field(&self.1)
             .finish()
     }
 }
 
-impl<M: Instrumenter> DynPipeline<TransactionUpdate> for SingleInstructionPipeline<M> {
+impl DynPipeline<TransactionUpdate> for SingleInstructionPipeline {
     fn handle<'h>(
         &'h self,
         value: &'h TransactionUpdate,

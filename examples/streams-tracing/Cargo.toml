@@ -79,6 +79,7 @@ opentelemetry-stdout = "0.29.0"
 tracing-opentelemetry = "0.30.0"
 opentelemetry-appender-tracing = "0.29.0"
 tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
+prometheus = { version = "0.14.0", features = ["push"] }
 
 [build-dependencies]
 prost-build = "0.13.1"

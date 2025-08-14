@@ -14,7 +14,7 @@ use yellowstone_grpc_proto::{
 use crate::{
     config::BufferConfig,
     handler::PipelineSets,
-    metrics::{Counters, Instrumenter, UpdateType},
+    metrics,
     stop::{self, StopCode, StopRx, StopTx},
 };
 
@@ -46,30 +46,22 @@ impl Buffer {
 
 struct Job(tracing::Span, SubscribeUpdate);
 
-struct Handler<M: Instrumenter> {
+struct Handler {
     pipelines: Arc<PipelineSets>,
-    counters: Arc<Counters<M>>,
 }
-impl<M: Instrumenter> Clone for Handler<M> {
+impl Clone for Handler {
     fn clone(&self) -> Self {
-        let Self {
-            pipelines,
-            counters,
-        } = self;
+        let Self { pipelines } = self;
         Self {
             pipelines: Arc::clone(pipelines),
-            counters: Arc::clone(counters),
         }
     }
 }
-impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
+impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
     type Output = ();
 
     async fn handle(&self, update: Job, _: H) {
-        let Self {
-            pipelines,
-            counters,
-        } = self;
+        let Self { pipelines } = self;
         let Job(
             span,
             SubscribeUpdate {
@@ -79,13 +71,14 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
             },
         ) = update;
         let Some(update) = update_oneof else { return };
+        let update_type = metrics::UpdateType::from(&update);
 
         match update {
             UpdateOneof::Account(a) => {
                 pipelines
                     .account
                     .get_handlers(&filters)
-                    .run(span, &a, counters)
+                    .run(span, &a, update_type)
                     .await;
             },
             UpdateOneof::Transaction(t) => {
@@ -93,12 +86,13 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
                     pipelines
                         .transaction
                         .get_handlers(&filters)
-                        .run(span.clone(), &t, counters);
+                        .run(span.clone(), &t, update_type);
 
-                let instruction_fut = pipelines
-                    .instruction
-                    .get_handlers(&filters)
-                    .run(span, &t, counters);
+                let instruction_fut =
+                    pipelines
+                        .instruction
+                        .get_handlers(&filters)
+                        .run(span, &t, update_type);
 
                 futures_util::future::join_all([transaction_fut, instruction_fut]).await;
             },
@@ -106,7 +100,7 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
                 pipelines
                     .block_meta
                     .get_handlers(&filters)
-                    .run(span, &b, counters)
+                    .run(span, &b, update_type)
                     .await;
             },
             UpdateOneof::Ping(SubscribeUpdatePing {}) => (),
@@ -116,26 +110,21 @@ impl<M: Instrumenter, H: Send> topograph::AsyncHandler<Job, H> for Handler<M> {
 }
 
 impl Buffer {
-    fn dispatch<M: Instrumenter, E: ExecutorHandle<Job>>(
-        exec: &E,
-        update: SubscribeUpdate,
-        counters: &Counters<M>,
-    ) {
+    fn dispatch<E: ExecutorHandle<Job>>(exec: &E, update: SubscribeUpdate) {
         let span = tracing::trace_span!("process_update", ?update).entered();
-        if let Some(ty) = UpdateType::get(update.update_oneof.as_ref()) {
-            counters.inc_received(ty);
+        if let Some(update_oneof) = update.update_oneof.as_ref() {
+            let update_type = metrics::UpdateType::from(update_oneof);
+            metrics::increment_received_updates(update_type);
         }
         exec.push(Job(span.exit(), update));
     }
 
     fn run_impl<
-        M: Instrumenter,
         B: FnOnce(executor::Builder<Job, Nonblock<Tokio>>) -> executor::Builder<Job, Nonblock<Tokio>>,
-        S: FnOnce(Executor<Job, Nonblock<Tokio>>, StopRx, Arc<Counters<M>>) -> TaskHandle,
+        S: FnOnce(Executor<Job, Nonblock<Tokio>>, StopRx) -> TaskHandle,
     >(
         config: BufferConfig,
         pipelines: PipelineSets,
-        counters: Counters<M>,
         build: B,
         spawn: S,
     ) -> Self {
@@ -145,33 +134,28 @@ impl Buffer {
         } = config;
 
         let pipelines = Arc::new(pipelines);
-        let counters = Arc::new(counters);
+
         let exec = build(Executor::builder(Nonblock(Tokio)).max_concurrency(jobs))
-            .build_async(Handler {
-                pipelines,
-                counters: Arc::clone(&counters),
-            })
+            .build_async(Handler { pipelines })
             .unwrap_or_else(|i| match i {});
 
         let (stop_tx, rx) = stop::channel();
 
-        let task = spawn(exec, rx, counters);
+        let task = spawn(exec, rx);
         Self(task, stop_tx)
     }
 
     #[allow(clippy::large_enum_variant)]
-    pub fn run_yellowstone<M: Instrumenter>(
+    pub fn run_yellowstone(
         config: BufferConfig,
         mut stream: Receiver<Result<SubscribeUpdate, Status>>,
         pipelines: PipelineSets,
-        counters: Counters<M>,
     ) -> Self {
         Self::run_impl(
             config,
             pipelines,
-            counters,
             std::convert::identity,
-            |exec, mut stop_rx, counters| {
+            |exec, mut stop_rx| {
                 let handle = tokio::task::spawn(async move {
                     enum Event {
                         Update(Option<Result<SubscribeUpdate, Status>>),
@@ -202,7 +186,7 @@ impl Buffer {
                             Event::Stop(c) => break Ok(c),
                         };
 
-                        Self::dispatch(&exec, update, &counters);
+                        Self::dispatch(&exec, update);
                     }
                 });
 

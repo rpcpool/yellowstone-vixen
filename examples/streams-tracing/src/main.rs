@@ -7,7 +7,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 
 use clap::Parser as _;
 use opentelemetry::trace::TracerProvider;
@@ -82,6 +82,29 @@ async fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
+    let prometheus_registry = prometheus::Registry::new();
+    let registry_clone = prometheus_registry.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(30));
+        loop {
+            interval.tick().await;
+
+            let metrics = registry_clone.gather();
+            let _ = tokio::task::spawn_blocking(move || {
+                if let Err(e) = prometheus::push_metrics(
+                    "vixen",
+                    prometheus::labels! {},
+                    "http://localhost:9091",
+                    metrics,
+                    None,
+                ) {
+                    tracing::error!("Failed to push Fumarole metrics: {e:?}");
+                }
+            })
+            .await;
+        }
+    });
+
     vixen::stream::Server::builder()
         .source(YellowstoneGrpcSource::new())
         .account(Proto::new(yellowstone_vixen_boop_parser::accounts_parser::AccountParser))
@@ -120,7 +143,7 @@ async fn main() {
         .instruction(Proto::new(yellowstone_vixen_raydium_launchpad_parser::instructions_parser::InstructionParser))
         .instruction(Proto::new(TokenProgramIxParser))
         .instruction(Proto::new(TokenExtensionProgramIxParser))
-        .metrics(vixen::metrics::Prometheus)
+        .metrics(prometheus_registry)
         .commitment_level(CommitmentLevel::Confirmed)
         .build(config)
         .run_async()
