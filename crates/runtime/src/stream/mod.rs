@@ -13,10 +13,7 @@ use config::GrpcConfig;
 use grpc::Channels;
 use tracing::info;
 
-use crate::{
-    metrics::{MetricsFactory, NullMetrics},
-    util, Runtime,
-};
+use crate::{util, Runtime};
 
 mod builder;
 pub mod config;
@@ -41,18 +38,14 @@ impl From<std::io::Error> for Error {
 }
 
 /// A Vixen program stream server.
-pub struct Server<'a, M: MetricsFactory> {
+pub struct Server<'a> {
     grpc_cfg: GrpcConfig,
     desc_sets: Vec<&'a [u8]>,
     channels: Channels,
-    runtime: Runtime<M>,
+    runtime: Runtime,
 }
 
-impl<M: MetricsFactory + fmt::Debug> fmt::Debug for Server<'_, M>
-where
-    M::Instrumenter: fmt::Debug,
-    M::Exporter: fmt::Debug,
-{
+impl fmt::Debug for Server<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let Self {
             grpc_cfg,
@@ -69,12 +62,12 @@ where
     }
 }
 
-impl Server<'_, NullMetrics> {
+impl Server<'_> {
     /// Create a new stream server builder.
     pub fn builder() -> StreamBuilder<'static> { StreamBuilder::default() }
 }
 
-impl<M: MetricsFactory> Server<'_, M> {
+impl Server<'_> {
     /// Create a new Tokio runtime and run the Vixen stream server within it,
     /// terminating the current process if the runtime or gRPC server crash.
     ///
