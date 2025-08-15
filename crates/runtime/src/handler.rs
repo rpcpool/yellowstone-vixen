@@ -6,7 +6,9 @@ use std::{borrow::Cow, collections::HashMap, pin::Pin};
 use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
 use tracing::{warn, Instrument, Span};
-use vixen_core::{AccountUpdate, BlockMetaUpdate, GetPrefilter, ParserId, TransactionUpdate};
+use vixen_core::{
+    AccountUpdate, BlockMetaUpdate, GetPrefilter, ParserId, SlotUpdate, TransactionUpdate,
+};
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
 use crate::metrics::{Counters, Instrumenter, JobResult, Update};
@@ -41,7 +43,9 @@ mod pipeline_error {
 
     impl Handled {
         #[inline]
-        pub fn as_unit(self) { let Self(()) = self; }
+        pub fn as_unit(self) {
+            let Self(()) = self;
+        }
     }
 
     #[derive(Debug)]
@@ -121,17 +125,23 @@ impl<P, H> Pipeline<P, H> {
     /// Create a new pipeline from a parser and a list of handlers.
     #[inline]
     #[must_use]
-    pub fn new(parser: P, handlers: H) -> Self { Self(parser, handlers) }
+    pub fn new(parser: P, handlers: H) -> Self {
+        Self(parser, handlers)
+    }
 }
 
 impl<P: ParserId, H> ParserId for Pipeline<P, H> {
     #[inline]
-    fn id(&self) -> Cow<str> { self.0.id() }
+    fn id(&self) -> Cow<str> {
+        self.0.id()
+    }
 }
 
 impl<P: GetPrefilter, H> GetPrefilter for Pipeline<P, H> {
     #[inline]
-    fn prefilter(&self) -> Prefilter { self.0.prefilter() }
+    fn prefilter(&self) -> Prefilter {
+        self.0.prefilter()
+    }
 }
 
 pub(crate) type BoxPipeline<'h, T> = Box<dyn DynPipeline<T> + Send + Sync + 'h>;
@@ -206,12 +216,16 @@ where
 }
 
 impl<T> ParserId for BoxPipeline<'_, T> {
-    fn id(&self) -> Cow<str> { <dyn DynPipeline<T>>::id(&**self) }
+    fn id(&self) -> Cow<str> {
+        <dyn DynPipeline<T>>::id(&**self)
+    }
 }
 
 impl<T> GetPrefilter for BoxPipeline<'_, T> {
     #[inline]
-    fn prefilter(&self) -> Prefilter { <dyn DynPipeline<T>>::prefilter(&**self) }
+    fn prefilter(&self) -> Prefilter {
+        <dyn DynPipeline<T>>::prefilter(&**self)
+    }
 }
 
 impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
@@ -230,6 +244,7 @@ pub(crate) struct PipelineSets {
     pub transaction: PipelineSet<BoxPipeline<'static, TransactionUpdate>>,
     pub instruction: PipelineSet<BoxPipeline<'static, TransactionUpdate>>,
     pub block_meta: PipelineSet<BoxPipeline<'static, BlockMetaUpdate>>,
+    pub slot: PipelineSet<BoxPipeline<'static, SlotUpdate>>,
 }
 
 impl PipelineSets {
@@ -241,6 +256,7 @@ impl PipelineSets {
                 .chain(self.transaction.filters())
                 .chain(self.instruction.filters())
                 .chain(self.block_meta.filters())
+                .chain(self.slot.filters())
                 .collect(),
         )
     }
@@ -252,14 +268,20 @@ pub(crate) struct PipelineSet<P>(HashMap<String, P>);
 impl<P> PipelineSet<P> {
     #[inline]
     #[must_use]
-    pub fn len(&self) -> usize { self.0.len() }
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 
     #[inline]
     #[must_use]
-    pub fn new() -> Self { Self(HashMap::new()) }
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
 
     #[inline]
-    pub fn insert(&mut self, key: String, value: P) -> Option<P> { self.0.insert(key, value) }
+    pub fn insert(&mut self, key: String, value: P) -> Option<P> {
+        self.0.insert(key, value)
+    }
 }
 
 impl<P: GetPrefilter> PipelineSet<P> {
@@ -275,7 +297,9 @@ impl<P: GetPrefilter> PipelineSet<P> {
 }
 
 impl<P> PipelineSet<P> {
-    pub(crate) fn get_handlers<I>(&self, it: I) -> Pipelines<P, I> { Pipelines(self, it) }
+    pub(crate) fn get_handlers<I>(&self, it: I) -> Pipelines<P, I> {
+        Pipelines(self, it)
+    }
 }
 
 impl<P: ParserId> FromIterator<P> for PipelineSet<P> {
@@ -288,7 +312,8 @@ impl<P: ParserId> FromIterator<P> for PipelineSet<P> {
 pub(crate) struct Pipelines<'m, H, I>(&'m PipelineSet<H>, I);
 
 impl<'m, H, I: IntoIterator> Pipelines<'m, H, I>
-where I::Item: AsRef<str> + Send + 'm
+where
+    I::Item: AsRef<str> + Send + 'm,
 {
     fn get_pipelines(self) -> impl Iterator<Item = (I::Item, &'m H)> {
         let Self(pipelines, it) = self;

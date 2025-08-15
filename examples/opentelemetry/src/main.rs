@@ -65,9 +65,7 @@ async fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::Runtime::builder()
-        .source::<YellowstoneGrpcSource>()
-        .commitment_level(CommitmentLevel::Confirmed)
+    vixen::Runtime::<_, YellowstoneGrpcSource>::builder()
         .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
         .account(Pipeline::new(TokenProgramAccParser, [Handler]))
         .metrics(vixen::metrics::OpenTelemetry::new(meter_provider))

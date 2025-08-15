@@ -80,7 +80,9 @@ pub trait Exporter {
 pub trait Counter: Send + Sync {
     /// Increment the counter by one.
     #[inline]
-    fn inc(&self) { self.inc_by(1); }
+    fn inc(&self) {
+        self.inc_by(1);
+    }
 
     /// Increment the counter by the given amount.
     fn inc_by(&self, by: u64);
@@ -88,10 +90,14 @@ pub trait Counter: Send + Sync {
 
 impl<T: Counter> Counter for &T {
     #[inline]
-    fn inc(&self) { T::inc(self); }
+    fn inc(&self) {
+        T::inc(self);
+    }
 
     #[inline]
-    fn inc_by(&self, by: u64) { T::inc_by(self, by); }
+    fn inc_by(&self, by: u64) {
+        T::inc_by(self, by);
+    }
 }
 
 /// A no-op metrics backend.
@@ -130,7 +136,9 @@ impl Counter for NullMetrics {
 impl Exporter for Infallible {
     type Error = Infallible;
 
-    async fn run(self, _: StopRx) -> Result<StopCode, Self::Error> { match self {} }
+    async fn run(self, _: StopRx) -> Result<StopCode, Self::Error> {
+        match self {}
+    }
 }
 
 #[cfg(feature = "prometheus")]
@@ -224,7 +232,9 @@ mod prometheus_impl {
     }
 
     impl super::Counter for prometheus::IntCounter {
-        fn inc_by(&self, by: u64) { prometheus::IntCounter::inc_by(self, by); }
+        fn inc_by(&self, by: u64) {
+            prometheus::IntCounter::inc_by(self, by);
+        }
     }
 }
 
@@ -253,7 +263,9 @@ mod opentelemetry_impl {
         /// provider.
         #[inline]
         #[must_use]
-        pub fn global() -> Self { Self(global::meter_provider()) }
+        pub fn global() -> Self {
+            Self(global::meter_provider())
+        }
     }
 
     impl<M> OpenTelemetry<M> {
@@ -261,7 +273,9 @@ mod opentelemetry_impl {
         /// provider.
         #[inline]
         #[must_use]
-        pub fn new(meter_provider: M) -> Self { Self(meter_provider) }
+        pub fn new(meter_provider: M) -> Self {
+            Self(meter_provider)
+        }
     }
 
     impl<M: MeterProvider + Send + 'static> super::MetricsFactory for OpenTelemetry<M> {
@@ -308,7 +322,9 @@ mod opentelemetry_impl {
     }
 
     impl super::Counter for Counter<u64> {
-        fn inc_by(&self, by: u64) { self.add(by, &[]); }
+        fn inc_by(&self, by: u64) {
+            self.add(by, &[]);
+        }
     }
 }
 
@@ -346,6 +362,10 @@ impl Update for vixen_core::BlockMetaUpdate {
     const TYPE: UpdateType = UpdateType::BlockMeta;
 }
 
+impl Update for vixen_core::SlotUpdate {
+    const TYPE: UpdateType = UpdateType::Slot;
+}
+
 /// Tuple of `(singular, plural)`
 #[derive(Clone, Copy)]
 struct Noun(&'static str, &'static str);
@@ -364,6 +384,7 @@ pub(crate) enum UpdateType {
     Account,
     Transaction,
     BlockMeta,
+    Slot,
 }
 
 impl UpdateType {
@@ -376,6 +397,7 @@ impl UpdateType {
             Some(UpdateOneof::BlockMeta(vixen_core::BlockMetaUpdate { .. })) => {
                 Some(Self::BlockMeta)
             },
+            Some(UpdateOneof::Slot(vixen_core::SlotUpdate { .. })) => Some(Self::Slot),
             _ => None,
         }
     }
@@ -385,6 +407,7 @@ impl UpdateType {
             UpdateType::Account => Noun("account", "accounts"),
             UpdateType::Transaction => Noun("transaction", "transactions"),
             UpdateType::BlockMeta => Noun("block_meta", "block_metas"),
+            UpdateType::Slot => Noun("slot", "slots"),
         }
     }
 }
@@ -393,6 +416,7 @@ struct UpdateCounters<B: Instrumenter> {
     account: B::Counter,
     transaction: B::Counter,
     block_meta: B::Counter,
+    slot: B::Counter,
 }
 
 impl<B: Instrumenter> UpdateCounters<B> {
@@ -402,6 +426,7 @@ impl<B: Instrumenter> UpdateCounters<B> {
             account: f(UpdateType::Account),
             transaction: f(UpdateType::Transaction),
             block_meta: f(UpdateType::BlockMeta),
+            slot: f(UpdateType::Slot),
         }
     }
 
@@ -410,6 +435,7 @@ impl<B: Instrumenter> UpdateCounters<B> {
             UpdateType::Account => &self.account,
             UpdateType::Transaction => &self.transaction,
             UpdateType::BlockMeta => &self.block_meta,
+            UpdateType::Slot => &self.slot,
         }
     }
 }
@@ -486,11 +512,15 @@ impl<B: Instrumenter> Counters<B> {
 }
 
 impl<B: Instrumenter> fmt::Debug for Counters<B> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.debug_struct("Counters").finish() }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Counters").finish()
+    }
 }
 
 impl<B: Instrumenter> Counters<B> {
-    pub fn inc_received(&self, ty: UpdateType) { self.updates_recvd.get(ty).inc(); }
+    pub fn inc_received(&self, ty: UpdateType) {
+        self.updates_recvd.get(ty).inc();
+    }
 
     #[inline]
     pub fn inc_processed(&self, ty: UpdateType, res: JobResult) {
@@ -520,5 +550,7 @@ impl<B: Instrumenter> InstructionCounters<B> {
     }
 
     #[inline]
-    pub fn inc_processed(&self, res: JobResult) { self.result.inc(res, std::convert::identity); }
+    pub fn inc_processed(&self, res: JobResult) {
+        self.result.inc(res, std::convert::identity);
+    }
 }

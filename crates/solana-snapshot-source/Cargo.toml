@@ -1,8 +1,8 @@
 [package]
-name = "yellowstone-vixen-yellowstone-grpc-source"
+name = "yellowstone-vixen-solana-snapshot-source"
 version = "0.2.0"
 edition = "2024"
-description = "Yellowstone gRPC source for the Yellowstone Vixen"
+description = "Run a Solana snapshot through Yellowstone Vixen"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 readme = "./README.md"
@@ -16,5 +16,11 @@ yellowstone-vixen = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
+toml = "0.8.12"
 serde = { version = "1.0.198", features = ["derive"] }
-clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+solana-pubkey = { version = "2.2.1", features = ["curve25519", "borsh"] }
+solana-accounts-db = "2"
+tempfile = "3"
+zstd = "0.13"
+tar = "0.4"
+solana-account = "3.0.0"

@@ -1,9 +1,9 @@
 //! Configuration types for the Vixen runtime.
 
-use std::collections::HashMap;
-
+use clap::Args;
 #[cfg(feature = "prometheus")]
 pub use prometheus_impl::*;
+use serde::{de::DeserializeOwned, Deserialize};
 
 /// A helper trait for types that may or may not have a default value,
 /// determined at runtime.
@@ -14,42 +14,56 @@ pub trait MaybeDefault: Sized {
 
 impl<T: Default> MaybeDefault for T {
     #[inline]
-    fn default_opt() -> Option<Self> { Some(Self::default()) }
+    fn default_opt() -> Option<Self> {
+        Some(Self::default())
+    }
 }
 
 /// Root configuration for [the Vixen runtime](crate::Runtime).
-#[derive(Debug, clap::Args, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct VixenConfig<M: clap::Args> {
-    /// Configuration for connecting to the Yellowstone server.
-    #[clap(skip)]
-    pub sources: HashMap<String, toml::Value>,
-
-    /// Configuration for scheduling jobs.
+#[derive(Debug, Args)]
+pub struct VixenConfig<M, S>
+where
+    M: Args,
+    S: Args,
+{
     #[command(flatten)]
-    #[serde(default)]
+    pub source: S,
+
+    #[command(flatten)]
     pub buffer: BufferConfig,
 
-    // TODO: this doesn't show up in clap usage correctly, not sure why
-    /// Configuration for the requested metrics backend.
     #[command(flatten)]
-    #[serde(default = "OptConfig::default")]
     pub metrics: OptConfig<M>,
 }
 
-/// Yellowstone connection configuration.
-#[derive(Debug, clap::Args, serde::Deserialize, Clone)]
-#[serde(rename_all = "kebab-case")]
-pub struct YellowstoneConfig {
-    /// The endpoint of the Yellowstone server.
-    #[arg(long, env)]
-    pub endpoint: String,
-    /// The token to use for authentication.
-    #[arg(long, env)]
-    pub x_token: Option<String>,
-    /// The timeout for the connection.
-    #[arg(long, env)]
-    pub timeout: u64,
+impl<'de, M, S> Deserialize<'de> for VixenConfig<M, S>
+where
+    M: Args + Deserialize<'de>,
+    S: Args + Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct Inner<M, S> {
+            source: S,
+            buffer: BufferConfig,
+            metrics: OptConfig<M>,
+        }
+
+        let Inner {
+            source,
+            buffer,
+            metrics,
+        } = Inner::<M, S>::deserialize(deserializer)?;
+
+        Ok(Self {
+            source,
+            buffer,
+            metrics,
+        })
+    }
 }
 
 /// Job scheduler configuration.
@@ -58,9 +72,11 @@ pub struct YellowstoneConfig {
 pub struct BufferConfig {
     /// The maximum number of concurrent jobs to run.  If unset, defaults to
     /// the number of CPUs.
+    #[arg(long, env)]
     pub jobs: Option<usize>,
     /// The maximum number of concurrent sources to run.
     /// Defaults to 100.
+    #[arg(long, env)]
     pub sources_channel_size: usize,
 }
 
@@ -91,7 +107,9 @@ pub struct NullConfig;
 
 impl From<Option<NullConfig>> for NullConfig {
     #[inline]
-    fn from(value: Option<NullConfig>) -> Self { value.unwrap_or_default() }
+    fn from(value: Option<NullConfig>) -> Self {
+        value.unwrap_or_default()
+    }
 }
 
 /// Helper type for optional configuration sections.
@@ -101,40 +119,54 @@ pub struct OptConfig<T>(Option<T>);
 
 impl<T> Default for OptConfig<T> {
     #[inline]
-    fn default() -> Self { Self(None) }
+    fn default() -> Self {
+        Self(None)
+    }
 }
 
 impl<T> OptConfig<T> {
     /// Get the underlying `Option`.
     #[inline]
-    pub fn opt(self) -> Option<T> { self.into() }
+    pub fn opt(self) -> Option<T> {
+        self.into()
+    }
 }
 
 impl<T> From<T> for OptConfig<T> {
     #[inline]
-    fn from(value: T) -> Self { Some(value).into() }
+    fn from(value: T) -> Self {
+        Some(value).into()
+    }
 }
 
 impl<T> From<Option<T>> for OptConfig<T> {
     #[inline]
-    fn from(value: Option<T>) -> Self { Self(value) }
+    fn from(value: Option<T>) -> Self {
+        Self(value)
+    }
 }
 
 impl<T> From<OptConfig<T>> for Option<T> {
     #[inline]
-    fn from(OptConfig(value): OptConfig<T>) -> Self { value }
+    fn from(OptConfig(value): OptConfig<T>) -> Self {
+        value
+    }
 }
 
 impl<T> std::ops::Deref for OptConfig<T> {
     type Target = Option<T>;
 
     #[inline]
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl<T> std::ops::DerefMut for OptConfig<T> {
     #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 impl<T: clap::FromArgMatches> clap::FromArgMatches for OptConfig<T> {
@@ -165,9 +197,13 @@ impl<T: clap::FromArgMatches> clap::FromArgMatches for OptConfig<T> {
 }
 
 impl<T: clap::Args> clap::Args for OptConfig<T> {
-    fn group_id() -> Option<clap::Id> { T::group_id() }
+    fn group_id() -> Option<clap::Id> {
+        T::group_id()
+    }
 
-    fn augment_args(cmd: clap::Command) -> clap::Command { T::augment_args(cmd) }
+    fn augment_args(cmd: clap::Command) -> clap::Command {
+        T::augment_args(cmd)
+    }
 
     fn augment_args_for_update(cmd: clap::Command) -> clap::Command {
         T::augment_args_for_update(cmd)
@@ -177,7 +213,9 @@ impl<T: clap::Args> clap::Args for OptConfig<T> {
 // Used for clap hacks below
 #[allow(dead_code)] // Currently unused if feature 'prometheus' is disabled
 fn update_clone<T: ToOwned, U: Into<T>, F: FnOnce(&mut U) -> V, V>(t: &mut T, f: F) -> V
-where T::Owned: Into<U> {
+where
+    T::Owned: Into<U>,
+{
     let mut u = t.to_owned().into();
     let ret = f(&mut u);
     *t = u.into();
@@ -208,7 +246,9 @@ mod prometheus_impl {
     #[cfg(feature = "prometheus")]
     impl MaybeDefault for PrometheusConfig {
         #[inline]
-        fn default_opt() -> Option<Self> { None }
+        fn default_opt() -> Option<Self> {
+            None
+        }
     }
 
     impl PrometheusConfig {
@@ -232,7 +272,7 @@ mod prometheus_impl {
         use crate::config::update_clone;
 
         #[allow(clippy::struct_field_names)]
-        #[derive(clap::Args)]
+        #[derive(clap::Args, serde::Deserialize)]
         struct PrometheusConfig {
             #[arg(long, env)]
             prometheus_endpoint: String,
@@ -313,7 +353,9 @@ mod prometheus_impl {
         }
 
         impl Args for super::PrometheusConfig {
-            fn group_id() -> Option<clap::Id> { PrometheusConfig::group_id() }
+            fn group_id() -> Option<clap::Id> {
+                PrometheusConfig::group_id()
+            }
 
             fn augment_args(cmd: clap::Command) -> clap::Command {
                 PrometheusConfig::augment_args_for_update(cmd)

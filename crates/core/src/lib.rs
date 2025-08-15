@@ -26,8 +26,9 @@ use std::{
 
 use yellowstone_grpc_proto::geyser::{
     CommitmentLevel, SubscribeRequest, SubscribeRequestFilterAccounts,
-    SubscribeRequestFilterBlocksMeta, SubscribeRequestFilterTransactions, SubscribeUpdateAccount,
-    SubscribeUpdateBlockMeta, SubscribeUpdateTransaction,
+    SubscribeRequestFilterBlocksMeta, SubscribeRequestFilterSlots,
+    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateBlockMeta,
+    SubscribeUpdateSlot, SubscribeUpdateTransaction,
 };
 
 pub extern crate bs58;
@@ -53,7 +54,9 @@ pub enum ParseError {
 
 impl<T: Into<BoxedError>> From<T> for ParseError {
     #[inline]
-    fn from(value: T) -> Self { Self::Other(value.into()) }
+    fn from(value: T) -> Self {
+        Self::Other(value.into())
+    }
 }
 
 /// The result of parsing an update.
@@ -65,6 +68,8 @@ pub type AccountUpdate = SubscribeUpdateAccount;
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 /// A block meta update from Yellowstone.
 pub type BlockMetaUpdate = SubscribeUpdateBlockMeta;
+/// A slot update from Yellowstone.
+pub type SlotUpdate = SubscribeUpdateSlot;
 
 /// Generic output type for instruction parsers that wraps shared data for all instructions
 /// in the given transaction.
@@ -121,12 +126,16 @@ pub trait ParserId {
 
 impl ParserId for std::convert::Infallible {
     #[inline]
-    fn id(&self) -> Cow<str> { match *self {} }
+    fn id(&self) -> Cow<str> {
+        match *self {}
+    }
 }
 
 impl<T: Parser> ParserId for T {
     #[inline]
-    fn id(&self) -> Cow<str> { Parser::id(self) }
+    fn id(&self) -> Cow<str> {
+        Parser::id(self)
+    }
 }
 
 /// Helper trait for getting the prefilter of a parser.
@@ -137,12 +146,16 @@ pub trait GetPrefilter {
 
 impl GetPrefilter for std::convert::Infallible {
     #[inline]
-    fn prefilter(&self) -> Prefilter { match *self {} }
+    fn prefilter(&self) -> Prefilter {
+        match *self {}
+    }
 }
 
 impl<T: Parser> GetPrefilter for T {
     #[inline]
-    fn prefilter(&self) -> Prefilter { Parser::prefilter(self) }
+    fn prefilter(&self) -> Prefilter {
+        Parser::prefilter(self)
+    }
 }
 
 // TODO: why are so many fields on the prefilters and prefilter builder optional???
@@ -154,7 +167,9 @@ pub struct Prefilter {
     /// Filters for transaction updates.
     pub transaction: Option<TransactionPrefilter>,
     /// Filters for block meta updates.
-    pub(crate) block_meta: Option<BlockMetaPrefilter>,
+    pub block_meta: Option<BlockMetaPrefilter>,
+    /// Filters for slot updates.
+    pub slot: Option<SlotPrefilter>,
 }
 
 fn merge_opt<T, F: FnOnce(&mut T, T)>(lhs: &mut Option<T>, rhs: Option<T>, f: F) {
@@ -168,7 +183,9 @@ fn merge_opt<T, F: FnOnce(&mut T, T)>(lhs: &mut Option<T>, rhs: Option<T>, f: F)
 impl Prefilter {
     /// Create a new prefilter builder.
     #[inline]
-    pub fn builder() -> PrefilterBuilder { PrefilterBuilder::default() }
+    pub fn builder() -> PrefilterBuilder {
+        PrefilterBuilder::default()
+    }
 
     /// Merge another prefilter into this one, producing a prefilter that
     /// describes the union of the two.
@@ -177,10 +194,12 @@ impl Prefilter {
             account,
             transaction,
             block_meta,
+            slot,
         } = self;
         merge_opt(account, other.account, AccountPrefilter::merge);
         merge_opt(transaction, other.transaction, TransactionPrefilter::merge);
         merge_opt(block_meta, other.block_meta, BlockMetaPrefilter::merge);
+        merge_opt(slot, other.slot, SlotPrefilter::merge)
     }
 }
 
@@ -242,10 +261,23 @@ impl TransactionPrefilter {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
-pub(crate) struct BlockMetaPrefilter {}
+/// A prefilter for matching block metadata updates.
+#[derive(Debug, Default, Clone, PartialEq, Copy)]
+pub struct BlockMetaPrefilter {}
 
 impl BlockMetaPrefilter {
+    /// Merge another block metadata prefilter into this one.
+    /// This function currently does nothing as the struct has no fields.
+    pub fn merge(_lhs: &mut Self, _rhs: Self) {}
+}
+
+/// A prefilter for matching slot updates.
+#[derive(Debug, Default, Clone, PartialEq, Copy)]
+pub struct SlotPrefilter {}
+
+impl SlotPrefilter {
+    /// Merge another slot prefilter into this one.
+    /// This function currently does nothing as the struct has no fields.
     pub fn merge(_lhs: &mut Self, _rhs: Self) {}
 }
 
@@ -267,9 +299,13 @@ impl BlockMetaPrefilter {
 #[macro_export]
 macro_rules! pubkey_convert_helpers {
     ($ty:ty) => {
-        pub(crate) fn into_vixen_pubkey(value: $ty) -> $crate::Pubkey { value.to_bytes().into() }
+        pub(crate) fn into_vixen_pubkey(value: $ty) -> $crate::Pubkey {
+            value.to_bytes().into()
+        }
 
-        pub(crate) fn from_vixen_pubkey(value: $crate::Pubkey) -> $ty { value.into_bytes().into() }
+        pub(crate) fn from_vixen_pubkey(value: $crate::Pubkey) -> $ty {
+            value.into_bytes().into()
+        }
     };
 }
 
@@ -304,54 +340,78 @@ impl<const LEN: usize> fmt::Display for KeyBytes<LEN> {
 
 impl<const LEN: usize> From<[u8; LEN]> for KeyBytes<LEN> {
     #[inline]
-    fn from(value: [u8; LEN]) -> Self { Self(value) }
+    fn from(value: [u8; LEN]) -> Self {
+        Self(value)
+    }
 }
 
 impl<const LEN: usize> From<KeyBytes<LEN>> for [u8; LEN] {
     #[inline]
-    fn from(value: KeyBytes<LEN>) -> Self { value.0 }
+    fn from(value: KeyBytes<LEN>) -> Self {
+        value.0
+    }
 }
 
 impl<const LEN: usize> std::ops::Deref for KeyBytes<LEN> {
     type Target = [u8; LEN];
 
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl<const LEN: usize> std::ops::DerefMut for KeyBytes<LEN> {
-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 impl<const LEN: usize> AsRef<[u8; LEN]> for KeyBytes<LEN> {
-    fn as_ref(&self) -> &[u8; LEN] { self }
+    fn as_ref(&self) -> &[u8; LEN] {
+        self
+    }
 }
 
 impl<const LEN: usize> AsMut<[u8; LEN]> for KeyBytes<LEN> {
-    fn as_mut(&mut self) -> &mut [u8; LEN] { self }
+    fn as_mut(&mut self) -> &mut [u8; LEN] {
+        self
+    }
 }
 
 impl<const LEN: usize> std::borrow::Borrow<[u8; LEN]> for KeyBytes<LEN> {
-    fn borrow(&self) -> &[u8; LEN] { self }
+    fn borrow(&self) -> &[u8; LEN] {
+        self
+    }
 }
 
 impl<const LEN: usize> std::borrow::BorrowMut<[u8; LEN]> for KeyBytes<LEN> {
-    fn borrow_mut(&mut self) -> &mut [u8; LEN] { self }
+    fn borrow_mut(&mut self) -> &mut [u8; LEN] {
+        self
+    }
 }
 
 impl<const LEN: usize> AsRef<[u8]> for KeyBytes<LEN> {
-    fn as_ref(&self) -> &[u8] { self.as_slice() }
+    fn as_ref(&self) -> &[u8] {
+        self.as_slice()
+    }
 }
 
 impl<const LEN: usize> AsMut<[u8]> for KeyBytes<LEN> {
-    fn as_mut(&mut self) -> &mut [u8] { self.as_mut_slice() }
+    fn as_mut(&mut self) -> &mut [u8] {
+        self.as_mut_slice()
+    }
 }
 
 impl<const LEN: usize> std::borrow::Borrow<[u8]> for KeyBytes<LEN> {
-    fn borrow(&self) -> &[u8] { self.as_ref() }
+    fn borrow(&self) -> &[u8] {
+        self.as_ref()
+    }
 }
 
 impl<const LEN: usize> std::borrow::BorrowMut<[u8]> for KeyBytes<LEN> {
-    fn borrow_mut(&mut self) -> &mut [u8] { self.as_mut() }
+    fn borrow_mut(&mut self) -> &mut [u8] {
+        self.as_mut()
+    }
 }
 
 type KeyFromSliceError = std::array::TryFromSliceError;
@@ -360,17 +420,23 @@ impl<const LEN: usize> TryFrom<&[u8]> for KeyBytes<LEN> {
     type Error = KeyFromSliceError;
 
     #[inline]
-    fn try_from(value: &[u8]) -> Result<Self, Self::Error> { value.try_into().map(Self) }
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        value.try_into().map(Self)
+    }
 }
 
 impl<const LEN: usize> KeyBytes<LEN> {
     /// Construct a new instance from the provided key bytes
     #[must_use]
-    pub fn new(bytes: [u8; LEN]) -> Self { bytes.into() }
+    pub fn new(bytes: [u8; LEN]) -> Self {
+        bytes.into()
+    }
 
     /// Return the public key bytes contained in this instance
     #[must_use]
-    pub fn into_bytes(self) -> [u8; LEN] { self.into() }
+    pub fn into_bytes(self) -> [u8; LEN] {
+        self.into()
+    }
 
     /// Attempt to convert the provided byte slice to a new key byte array
     ///
@@ -414,19 +480,25 @@ impl<const LEN: usize> FromStr for KeyBytes<LEN> {
 impl<const LEN: usize> TryFrom<&str> for KeyBytes<LEN> {
     type Error = KeyFromStrError<LEN>;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> { value.parse() }
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse()
+    }
 }
 
 impl<const LEN: usize> TryFrom<String> for KeyBytes<LEN> {
     type Error = KeyFromStrError<LEN>;
 
-    fn try_from(value: String) -> Result<Self, Self::Error> { value.parse() }
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        value.parse()
+    }
 }
 
 impl<const LEN: usize> TryFrom<Cow<'_, str>> for KeyBytes<LEN> {
     type Error = KeyFromStrError<LEN>;
 
-    fn try_from(value: Cow<str>) -> Result<Self, Self::Error> { value.parse() }
+    fn try_from(value: Cow<str>) -> Result<Self, Self::Error> {
+        value.parse()
+    }
 }
 
 /// An error that can occur when building a prefilter.
@@ -445,6 +517,7 @@ pub enum PrefilterError {
 #[must_use = "Consider calling .build() on this builder"]
 pub struct PrefilterBuilder {
     error: Option<PrefilterError>,
+    slots: Option<()>,
     accounts: Option<HashSet<Pubkey>>,
     account_owners: Option<HashSet<Pubkey>>,
     /// Matching [`TransactionPrefilter::accounts_include`]
@@ -464,7 +537,9 @@ fn set_opt<T>(opt: &mut Option<T>, field: &'static str, val: T) -> Result<(), Pr
 
 // TODO: if Solana ever adds Into<[u8; 32]> for Pubkey this can be simplified
 fn collect_pubkeys<I: IntoIterator>(it: I) -> Result<HashSet<Pubkey>, PrefilterError>
-where I::Item: AsRef<[u8]> {
+where
+    I::Item: AsRef<[u8]>,
+{
     it.into_iter()
         .map(|p| {
             let p = p.as_ref();
@@ -484,6 +559,7 @@ impl PrefilterBuilder {
             error,
             accounts,
             account_owners,
+            slots,
             transaction_accounts_include,
             transaction_accounts_required,
         } = self;
@@ -502,11 +578,13 @@ impl PrefilterBuilder {
         };
 
         let block_meta = BlockMetaPrefilter {};
+        let slot = slots.map(|_| SlotPrefilter {});
 
         Ok(Prefilter {
             account: (account != AccountPrefilter::default()).then_some(account),
             transaction: (transaction != TransactionPrefilter::default()).then_some(transaction),
             block_meta: (block_meta != BlockMetaPrefilter::default()).then_some(block_meta),
+            slot,
         })
     }
 
@@ -518,15 +596,24 @@ impl PrefilterBuilder {
         self
     }
 
+    /// Set prefilter will request slot updates.
+    pub fn slots(self) -> Self {
+        self.mutate(|this| set_opt(&mut this.slots, "slots", ()))
+    }
+
     /// Set the accounts that this prefilter will match.
     pub fn accounts<I: IntoIterator>(self, it: I) -> Self
-    where I::Item: AsRef<[u8]> {
+    where
+        I::Item: AsRef<[u8]>,
+    {
         self.mutate(|this| set_opt(&mut this.accounts, "accounts", collect_pubkeys(it)?))
     }
 
     /// Set the `account_owners` that this prefilter will match.
     pub fn account_owners<I: IntoIterator>(self, it: I) -> Self
-    where I::Item: AsRef<[u8]> {
+    where
+        I::Item: AsRef<[u8]>,
+    {
         self.mutate(|this| {
             set_opt(
                 &mut this.account_owners,
@@ -542,7 +629,9 @@ impl PrefilterBuilder {
     /// **Note:** If the transaction does not include ALL of the accounts set here, the
     /// transaction will not be retrieved.
     pub fn transaction_accounts<I: IntoIterator>(self, it: I) -> Self
-    where I::Item: AsRef<[u8]> {
+    where
+        I::Item: AsRef<[u8]>,
+    {
         self.mutate(|this| {
             set_opt(
                 &mut this.transaction_accounts_required,
@@ -557,7 +646,9 @@ impl PrefilterBuilder {
     /// **Note:** If the transaction does not include at least ONE of the accounts set here, the
     /// transaction will not be retrieved.
     pub fn transaction_accounts_include<I: IntoIterator>(self, it: I) -> Self
-    where I::Item: AsRef<[u8]> {
+    where
+        I::Item: AsRef<[u8]>,
+    {
         self.mutate(|this| {
             set_opt(
                 &mut this.transaction_accounts_include,
@@ -625,40 +716,58 @@ impl From<Filters> for SubscribeRequest {
                 .filter_map(|(k, v)| {
                     let v = v.account.as_ref()?;
 
-                    Some((k.clone(), SubscribeRequestFilterAccounts {
-                        account: v.accounts.iter().map(ToString::to_string).collect(),
-                        owner: v.owners.iter().map(ToString::to_string).collect(),
-                        // TODO: probably a good thing to look into
-                        filters: vec![],
-                        // We receive all accounts updates
-                        nonempty_txn_signature: None,
-                    }))
+                    Some((
+                        k.clone(),
+                        SubscribeRequestFilterAccounts {
+                            account: v.accounts.iter().map(ToString::to_string).collect(),
+                            owner: v.owners.iter().map(ToString::to_string).collect(),
+                            // TODO: probably a good thing to look into
+                            filters: vec![],
+                            // We receive all accounts updates
+                            nonempty_txn_signature: None,
+                        },
+                    ))
                 })
                 .collect(),
-            slots: [].into_iter().collect(),
+            slots: value
+                .parsers_filters
+                .keys()
+                .map(|k| {
+                    (
+                        k.clone(),
+                        SubscribeRequestFilterSlots {
+                            filter_by_commitment: Some(true),
+                            interslot_updates: None,
+                        },
+                    )
+                })
+                .collect(),
             transactions: value
                 .parsers_filters
                 .iter()
                 .filter_map(|(k, v)| {
                     let v = v.transaction.as_ref()?;
 
-                    Some((k.clone(), SubscribeRequestFilterTransactions {
-                        vote: None,
-                        // TODO: make this configurable
-                        failed: Some(false),
-                        signature: None,
-                        account_include: v
-                            .accounts_include
-                            .iter()
-                            .map(ToString::to_string)
-                            .collect(),
-                        account_exclude: [].into_iter().collect(),
-                        account_required: v
-                            .accounts_required
-                            .iter()
-                            .map(ToString::to_string)
-                            .collect(),
-                    }))
+                    Some((
+                        k.clone(),
+                        SubscribeRequestFilterTransactions {
+                            vote: None,
+                            // TODO: make this configurable
+                            failed: Some(false),
+                            signature: None,
+                            account_include: v
+                                .accounts_include
+                                .iter()
+                                .map(ToString::to_string)
+                                .collect(),
+                            account_exclude: [].into_iter().collect(),
+                            account_required: v
+                                .accounts_required
+                                .iter()
+                                .map(ToString::to_string)
+                                .collect(),
+                        },
+                    ))
                 })
                 .collect(),
             transactions_status: [].into_iter().collect(),

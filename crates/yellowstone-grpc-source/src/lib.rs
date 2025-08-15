@@ -3,13 +3,37 @@ use std::{collections::HashMap, time::Duration};
 use async_trait::async_trait;
 use futures_util::StreamExt;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
+use tracing::info;
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdate,
     tonic::{transport::ClientTlsConfig, Status},
 };
-use yellowstone_vixen::{config::YellowstoneConfig, sources::SourceTrait, Error as VixenError};
+use yellowstone_vixen::{
+    config::YellowstoneConfig, sources::SourceTrait, CommitmentLevel, Error as VixenError,
+};
 use yellowstone_vixen_core::Filters;
+
+/// Yellowstone connection configuration.
+#[derive(Debug, clap::Args, serde::Deserialize, Clone)]
+#[serde(rename_all = "kebab-case")]
+pub struct YellowstoneGrpcConfig {
+    /// The endpoint of the Yellowstone server.
+    #[arg(long, env)]
+    pub endpoint: String,
+    /// The token to use for authentication.
+    #[arg(long, env)]
+    pub x_token: Option<String>,
+    /// The timeout for the connection.
+    #[arg(long, env, default_value_t = 120)]
+    pub timeout: u64,
+
+    #[arg(long, env)]
+    pub commitment_level: Option<CommitmentLevel>,
+
+    #[arg(long, env)]
+    pub from_slot: Option<u64>,
+}
 
 /// A `Source` implementation for the Yellowstone gRPC API.
 #[derive(Debug)]
@@ -22,9 +46,9 @@ pub struct YellowstoneGrpcSource {
 impl SourceTrait for YellowstoneGrpcSource {
     type Config = YellowstoneConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
-
-    fn name() -> String { "yellowstone-grpc".to_string() }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
         let filters = self.filters.clone();
@@ -36,8 +60,11 @@ impl SourceTrait for YellowstoneGrpcSource {
 
         for (filter_id, prefilter) in filters.parsers_filters {
             let mut filter = Filters::new(HashMap::from([(filter_id, prefilter)]));
-            filter.global_filters = filters.global_filters;
+
             let config = config.clone();
+            filter.from_slot(config.from_slot);
+            filter.commitment(config.commitment);
+
             let tx = tx.clone();
 
             let mut client = GeyserGrpcClient::build_from_shared(config.endpoint)?

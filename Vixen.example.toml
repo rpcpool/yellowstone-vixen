@@ -2,7 +2,7 @@
 # Copy to Vixen.toml and them modify as needed.
 
 # Only needed if you are using the Yellowstone gRPC as a source.
-[sources.yellowstone]
+[sources.yellowstone-grpc]
 # The endpoint of the dragon's mouth stream.
 # This is the URL where the stream can be accessed.
 endpoint = "https://index.rpcpool.com"

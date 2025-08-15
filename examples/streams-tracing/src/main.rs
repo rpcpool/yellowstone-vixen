@@ -83,9 +83,7 @@ async fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    let result = vixen::stream::Server::builder()
-        .source::<YellowstoneGrpcSource>()
-        // .source::<YellowstoneFumaroleSource>() // Needs Fumarole valid credentials
+    let result = vixen::stream::Server::<_, YellowstoneGrpcSource>::builder()
         .account(Proto::new(yellowstone_vixen_boop_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_jupiter_swap_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_kamino_limit_orders_parser::accounts_parser::AccountParser))

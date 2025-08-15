@@ -15,10 +15,8 @@ solana-client = "2.2"
 solana-commitment-config = "2.2"
 solana-pubkey = { version = "2.2", features = ["serde", "borsh", "curve25519"] }
 solana-account-decoder-client-types = "2.2"
-
-toml = "0.8.12"
 serde = { version = "1.0.198", features = ["derive"] }
-
+clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }

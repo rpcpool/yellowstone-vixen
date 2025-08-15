@@ -1,8 +1,6 @@
 //! Builder types for the Vixen runtime and stream server.
-
-use tracing::error;
 use vixen_core::{
-    instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, TransactionUpdate,
+    instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, SlotUpdate, TransactionUpdate,
 };
 use yellowstone_grpc_proto::geyser::CommitmentLevel;
 
@@ -11,7 +9,7 @@ use crate::{
     handler::{BoxPipeline, DynPipeline, PipelineSet, PipelineSets},
     instruction::SingleInstructionPipeline,
     metrics::{Counters, Metrics, MetricsFactory, NullMetrics},
-    sources::{DynSource, Source, SourceTrait},
+    sources::SourceTrait,
     util, Runtime,
 };
 
@@ -30,6 +28,9 @@ pub enum BuilderError {
     /// Two transaction pipelines were registered with the same parser ID.
     #[error("ID collision detected among transaction pipelines")]
     TransactionPipelineCollision,
+    /// Two slot pipelines were registered with the same parser ID.
+    #[error("ID collision detected among slot pipelines")]
+    SlotPipelineCollision,
     /// Two block meta pipelines were registered with the same parser ID.
     #[error("ID collision detected among block meta pipelines")]
     BlockMetaCollision,
@@ -48,20 +49,19 @@ pub enum BuilderError {
 /// [`stream::Server`](crate::stream::Server) types.
 #[derive(Debug)]
 #[must_use = "Consider calling .build() on this builder"]
-pub struct Builder<K: BuilderKind, M> {
+pub struct Builder<K: BuilderKind, M, S: SourceTrait> {
     pub(crate) err: Result<(), K::Error>,
     pub(crate) account: Vec<BoxPipeline<'static, AccountUpdate>>,
     pub(crate) transaction: Vec<BoxPipeline<'static, TransactionUpdate>>,
     pub(crate) instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
     pub(crate) block_meta: Vec<BoxPipeline<'static, BlockMetaUpdate>>,
-    pub(crate) commitment_level: Option<CommitmentLevel>,
-    pub(crate) from_slot_filter: Option<u64>,
+    pub(crate) slot: Vec<BoxPipeline<'static, SlotUpdate>>,
     pub(crate) metrics: M,
-    pub(crate) sources: Vec<Box<dyn DynSource>>,
     pub(crate) extra: K,
+    pub(crate) _source: std::marker::PhantomData<S>,
 }
 
-impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
+impl<K: BuilderKind, S: SourceTrait> Default for Builder<K, NullMetrics, S> {
     fn default() -> Self {
         Self {
             err: Ok(()),
@@ -69,26 +69,20 @@ impl<K: BuilderKind> Default for Builder<K, NullMetrics> {
             transaction: vec![],
             instruction: vec![],
             block_meta: vec![],
-            commitment_level: None,
-            from_slot_filter: None,
+            slot: vec![],
             metrics: NullMetrics,
-            sources: vec![],
             extra: K::default(),
+            _source: std::marker::PhantomData,
         }
     }
 }
-
-// #[inline]
-// pub(crate) fn unwrap<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
-//     val.ok_or(BuilderError::MissingField(name))
-// }
 
 #[inline]
 pub(crate) fn unwrap_cfg<T>(name: &'static str, val: Option<T>) -> Result<T, BuilderError> {
     val.ok_or(BuilderError::MissingConfig(name))
 }
 
-impl<K: BuilderKind, M> Builder<K, M> {
+impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
     #[inline]
     pub(crate) fn mutate(self, mutate: impl FnOnce(&mut Self)) -> Self {
         self.try_mutate(|s| {
@@ -110,18 +104,17 @@ impl<K: BuilderKind, M> Builder<K, M> {
 
     /// Replace the metrics backend currently configured with a new one,
     /// updating the type of the builder in the process.
-    pub fn metrics<N>(self, metrics: N) -> Builder<K, N> {
+    pub fn metrics<N>(self, metrics: N) -> Builder<K, N, S> {
         let Self {
             err,
             account,
             transaction,
             instruction,
             block_meta,
-            commitment_level,
-            from_slot_filter,
+            slot,
             metrics: _,
-            sources,
             extra,
+            _source,
         } = self;
 
         Builder {
@@ -130,11 +123,10 @@ impl<K: BuilderKind, M> Builder<K, M> {
             transaction,
             instruction,
             block_meta,
-            commitment_level,
-            from_slot_filter,
+            slot,
             metrics,
-            sources,
             extra,
+            _source,
         }
     }
 }
@@ -143,13 +135,13 @@ impl<K: BuilderKind, M> Builder<K, M> {
 #[derive(Debug, Default, Clone, Copy)]
 pub struct RuntimeKind;
 /// A builder for the [`Runtime`] type.
-pub type RuntimeBuilder<M = NullMetrics> = Builder<RuntimeKind, M>;
+pub type RuntimeBuilder<S: SourceTrait, M = NullMetrics> = Builder<RuntimeKind, M, S>;
 
 impl BuilderKind for RuntimeKind {
     type Error = BuilderError;
 }
 
-impl<M: MetricsFactory> RuntimeBuilder<M> {
+impl<S: SourceTrait, M: MetricsFactory> RuntimeBuilder<S, M> {
     /// Add a new account pipeline to the builder.
     pub fn account<A: DynPipeline<AccountUpdate> + Send + Sync + 'static>(
         self,
@@ -177,7 +169,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.instruction.push(Box::new(instruction)))
     }
 
-    /// Add a new block metad pipeline to the builder.
+    /// Add a new block meta pipeline to the builder.
     pub fn block_meta<T: DynPipeline<BlockMetaUpdate> + Send + Sync + 'static>(
         self,
         block_meta: T,
@@ -185,22 +177,9 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         self.mutate(|s| s.block_meta.push(Box::new(block_meta)))
     }
 
-    /// Set the confirmation level for the Yellowstone client.
-    pub fn commitment_level(self, commitment_level: CommitmentLevel) -> Self {
-        self.mutate(|s| s.commitment_level = Some(commitment_level))
-    }
-
-    /// Add a new data `Source` to which the runtime will subscribe.
-    ///
-    /// **NOTE:** All added Sources are going to be processed concurrently
-    pub fn source<S: SourceTrait + Send + Sync + 'static>(self) -> Self {
-        self.mutate(|builder| builder.sources.push(Box::new(Source::<S>::new())))
-    }
-
-    /// Set the from slot filter for the Yellowstone client. The server will attempt to replay
-    /// messages from the specified slot onward
-    pub fn from_slot(self, from_slot: u64) -> Self {
-        self.mutate(|s| s.from_slot_filter = Some(from_slot))
+    /// Add a new slot pipeline to the builder.
+    pub fn slot<T: DynPipeline<SlotUpdate> + Send + Sync + 'static>(self, slot: T) -> Self {
+        self.mutate(|s| s.slot.push(Box::new(slot)))
     }
 
     /// Attempt to build a new [`Runtime`] instance from the current builder
@@ -209,23 +188,25 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
-    pub fn try_build(self, config: VixenConfig<M::Config>) -> Result<Runtime<M>, BuilderError> {
+    pub fn try_build(
+        self,
+        config: VixenConfig<M::Config, S::Config>,
+    ) -> Result<Runtime<M, S>, BuilderError> {
         let Self {
             err,
             account,
             transaction,
             instruction,
             block_meta,
-            commitment_level,
-            from_slot_filter,
+            slot,
             metrics,
-            sources,
             extra: RuntimeKind,
+            _source,
         } = self;
         let () = err?;
 
         let VixenConfig {
-            sources: sources_cfg,
+            source: source_cfg,
             buffer: buffer_cfg,
             metrics: metrics_cfg,
         } = config;
@@ -257,12 +238,14 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         let account_len = account.len();
         let transaction_len = transaction.len();
         let block_meta_len = block_meta.len();
+        let slot_len = slot.len();
 
         let pipelines = PipelineSets {
             account: account.into_iter().collect(),
             transaction: transaction.into_iter().collect(),
             instruction: ixs,
             block_meta: block_meta.into_iter().collect(),
+            slot: slot.into_iter().collect(),
         };
 
         if pipelines.account.len() != account_len {
@@ -274,22 +257,20 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
         }
 
         if pipelines.block_meta.len() != block_meta_len {
-            return Err(BuilderError::MissingField("block_meta"));
+            return Err(BuilderError::BlockMetaCollision);
         }
 
-        if sources.is_empty() {
-            return Err(BuilderError::MissingField("sources"));
+        if pipelines.slot.len() != slot_len {
+            return Err(BuilderError::SlotPipelineCollision);
         }
 
         Ok(Runtime {
-            sources_cfg,
-            sources,
-            buffer_cfg,
+            buffer: buffer_cfg,
+            source: source_cfg,
             pipelines,
-            commitment_filter: commitment_level,
-            from_slot_filter,
             counters: Counters::new(&instrumenter),
             exporter,
+            _source: std::marker::PhantomData,
         })
     }
 
@@ -297,7 +278,7 @@ impl<M: MetricsFactory> RuntimeBuilder<M> {
     /// provided configuration, terminating the current process if an error
     /// occurs.
     #[inline]
-    pub fn build(self, config: VixenConfig<M::Config>) -> Runtime<M> {
+    pub fn build(self, config: VixenConfig<M::Config, S::Config>) -> Runtime<M, S> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen runtime")
     }
 }
