@@ -1,7 +1,5 @@
 //! Configuration types for the Vixen runtime.
 
-use std::collections::HashMap;
-
 #[cfg(feature = "prometheus")]
 pub use prometheus_impl::*;
 
@@ -20,10 +18,10 @@ impl<T: Default> MaybeDefault for T {
 /// Root configuration for [the Vixen runtime](crate::Runtime).
 #[derive(Debug, clap::Args, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct VixenConfig<M: clap::Args> {
+pub struct VixenConfig<M: clap::Args, S: Default> {
     /// Configuration for connecting to the Yellowstone server.
     #[clap(skip)]
-    pub sources: HashMap<String, toml::Value>,
+    pub source: S,
 
     /// Configuration for scheduling jobs.
     #[command(flatten)]
@@ -38,7 +36,7 @@ pub struct VixenConfig<M: clap::Args> {
 }
 
 /// Yellowstone connection configuration.
-#[derive(Debug, clap::Args, serde::Deserialize, Clone)]
+#[derive(Debug, clap::Args, serde::Deserialize, Clone, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct YellowstoneConfig {
     /// The endpoint of the Yellowstone server.

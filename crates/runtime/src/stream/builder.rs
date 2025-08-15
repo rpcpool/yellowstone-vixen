@@ -19,7 +19,7 @@ use crate::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
     handler::{BoxPipeline, Pipeline},
     metrics::{MetricsFactory, NullMetrics},
-    sources::{Source, SourceTrait},
+    sources::SourceTrait,
     util,
 };
 
@@ -38,7 +38,7 @@ pub enum BuilderError {
 #[derive(Debug, Default)]
 pub struct StreamKind<'a>(Vec<&'a [u8]>, Channels<HashMap<String, Receiver>>);
 /// A builder for the [`Server`] type.
-pub type StreamBuilder<'a, M = NullMetrics> = Builder<StreamKind<'a>, M>;
+pub type StreamBuilder<'a, S, M = NullMetrics> = Builder<StreamKind<'a>, M, S>;
 
 impl BuilderKind for StreamKind<'_> {
     type Error = BuilderError;
@@ -55,7 +55,7 @@ where
     Box::new(Pipeline::new(parser, [GrpcHandler(tx)]))
 }
 
-impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
+impl<'a, S: SourceTrait, M: MetricsFactory> StreamBuilder<'a, S, M> {
     fn insert<
         P: Debug + ProgramParser + Send + Sync + 'static,
         F: FnOnce(&mut Self) -> &mut Vec<BoxPipeline<'static, P::Input>>,
@@ -153,9 +153,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
     /// Add a new data `Source` to which the runtime will subscribe.
     ///
     /// **NOTE:** All added Sources are going to be processed concurrently
-    pub fn source<S: SourceTrait + Send + Sync + 'static>(self) -> Self {
-        self.mutate(|builder| builder.sources.push(Box::new(Source::<S>::new())))
-    }
+    pub fn source(self, source: S) -> Self { self.mutate(|builder| builder.source = Some(source)) }
 
     /// Attempt to build a new [`Server`] instance from the current builder
     /// state and the provided configuration.
@@ -163,7 +161,10 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
-    pub fn try_build(self, config: StreamConfig<M::Config>) -> Result<Server<'a, M>, BuilderError> {
+    pub fn try_build(
+        self,
+        config: StreamConfig<M::Config, S::Config>,
+    ) -> Result<Server<'a, S, M>, BuilderError> {
         let Self {
             err,
             account,
@@ -171,7 +172,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             instruction,
             block_meta,
             metrics,
-            sources,
+            source,
             commitment_level,
             from_slot_filter,
             extra: StreamKind(desc_sets, channels),
@@ -196,7 +197,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
             commitment_level,
             block_meta,
             metrics,
-            sources,
+            source,
             extra: RuntimeKind,
             from_slot_filter,
         }
@@ -214,7 +215,7 @@ impl<'a, M: MetricsFactory> StreamBuilder<'a, M> {
     /// provided configuration, terminating the current process if an error
     /// occurs.
     #[inline]
-    pub fn build(self, config: StreamConfig<M::Config>) -> Server<'a, M> {
+    pub fn build(self, config: StreamConfig<M::Config, S::Config>) -> Server<'a, S, M> {
         util::handle_fatal_msg(self.try_build(config), "Error building Vixen stream server")
     }
 }

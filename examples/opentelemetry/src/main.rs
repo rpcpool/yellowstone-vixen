@@ -66,7 +66,7 @@ async fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .source::<YellowstoneGrpcSource>()
+        .source(YellowstoneGrpcSource)
         .commitment_level(CommitmentLevel::Confirmed)
         .account(Pipeline::new(TokenExtensionProgramAccParser, [Handler]))
         .account(Pipeline::new(TokenProgramAccParser, [Handler]))

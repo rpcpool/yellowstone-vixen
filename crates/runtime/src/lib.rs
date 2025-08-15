@@ -12,7 +12,7 @@
 //! Vixen provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
-use std::collections::HashMap;
+use std::marker::PhantomData;
 
 use builder::RuntimeBuilder;
 use config::BufferConfig;
@@ -21,7 +21,7 @@ use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
 use stop::{StopCode, StopTx};
 use tokio::{
     sync::mpsc::{self, Receiver},
-    task::JoinSet,
+    task::JoinHandle,
 };
 use yellowstone_grpc_proto::{
     // prelude::*,
@@ -56,7 +56,7 @@ pub use util::*;
 pub use yellowstone_grpc_proto::geyser::CommitmentLevel;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 
-use crate::sources::DynSource;
+use crate::sources::SourceTrait;
 
 /// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
@@ -89,9 +89,9 @@ pub enum Error {
 
 /// The main runtime for Vixen.
 #[derive(Debug)]
-pub struct Runtime<M: MetricsFactory> {
-    sources_cfg: HashMap<String, toml::Value>,
-    sources: Vec<Box<dyn DynSource>>,
+pub struct Runtime<M: MetricsFactory, S: SourceTrait> {
+    source_cfg: S::Config,
+    source: PhantomData<S>,
     commitment_filter: Option<CommitmentLevel>,
     from_slot_filter: Option<u64>,
     buffer_cfg: BufferConfig,
@@ -100,12 +100,12 @@ pub struct Runtime<M: MetricsFactory> {
     exporter: Option<M::Exporter>,
 }
 
-impl Runtime<NullMetrics> {
+impl<S: SourceTrait> Runtime<NullMetrics, S> {
     /// Create a new runtime builder.
-    pub fn builder() -> RuntimeBuilder { RuntimeBuilder::default() }
+    pub fn builder() -> RuntimeBuilder<S, NullMetrics> { RuntimeBuilder::default() }
 }
 
-impl<M: MetricsFactory> Runtime<M> {
+impl<M: MetricsFactory, S: SourceTrait> Runtime<M, S> {
     /// Create a new Tokio runtime and run the Vixen runtime within it,
     /// terminating the current process if the runtime crashes.
     ///
@@ -212,11 +212,11 @@ impl<M: MetricsFactory> Runtime<M> {
             Exporter(Result<Result<stop::StopCode, X>, tokio::task::JoinError>),
         }
 
-        let (runtime, updates_rx, _set_handles) = self.connect_to_sources();
+        let (runtime, updates_rx, _set_handles) = self.connect_to_source();
 
         let Self {
-            sources_cfg: _,
-            sources: _,
+            source_cfg: _,
+            source: _,
             commitment_filter: _,
             from_slot_filter: _,
             buffer_cfg,
@@ -360,9 +360,13 @@ impl<M: MetricsFactory> Runtime<M> {
     }
 
     /// Connect to the sources and return the runtime, the receiver for the updates, and the join set for the sources.
-    fn connect_to_sources(
-        mut self,
-    ) -> (Self, Receiver<Result<SubscribeUpdate, Status>>, JoinSet<()>) {
+    fn connect_to_source(
+        self,
+    ) -> (
+        Self,
+        Receiver<Result<SubscribeUpdate, Status>>,
+        JoinHandle<()>,
+    ) {
         let (tx, rx) =
             mpsc::channel::<Result<SubscribeUpdate, Status>>(self.buffer_cfg.sources_channel_size);
 
@@ -372,30 +376,14 @@ impl<M: MetricsFactory> Runtime<M> {
             .commitment(self.commitment_filter)
             .from_slot(self.from_slot_filter);
 
-        let mut set = JoinSet::new();
+        let handle = S::connect(self.source_cfg.clone(), filters.clone(), tx);
 
-        for source in self.sources.drain(..) {
-            let tx = tx.clone();
-            let config = self
-                .sources_cfg
-                .get(&source.name())
-                .expect("No source config");
-            let source_name = source.name();
-
-            let handle = source.connect(config.clone(), filters.clone(), tx);
-
-            set.spawn(async move {
-                handle
-                    .await
-                    .unwrap_or_else(|_| {
-                        panic!("Source connection failed for: {source_name}");
-                    })
-                    .unwrap_or_else(|_| {
-                        panic!("Source connection failed for: {source_name}");
-                    });
+        let handle = tokio::spawn(async move {
+            handle.await.unwrap_or_else(|_| {
+                panic!("Source connection failed for: {}", S::name());
             });
-        }
+        });
 
-        (self, rx, set)
+        (self, rx, handle)
     }
 }

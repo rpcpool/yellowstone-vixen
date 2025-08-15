@@ -21,10 +21,7 @@ use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Solana Accounts RPC API.
 #[derive(Debug)]
-pub struct SolanaAccountsRpcSource {
-    filters: Filters,
-    config: SolanaAccountsRpcConfig,
-}
+pub struct SolanaAccountsRpcSource;
 
 /// The configuration for the Solana Accounts RPC source.
 #[derive(Debug, Clone, Default, serde::Deserialize)]
@@ -36,14 +33,8 @@ pub struct SolanaAccountsRpcConfig {
 }
 
 impl SolanaAccountsRpcSource {
-    /// Create a new `SolanaAccountsRpcSource`.
-    #[must_use]
-    pub fn new(config: SolanaAccountsRpcConfig, filters: Filters) -> Self {
-        Self { config, filters }
-    }
-
-    fn get_commitment_config(&self) -> CommitmentConfig {
-        match self.filters.global_filters.commitment {
+    fn get_commitment_config(filters: &Filters) -> CommitmentConfig {
+        match filters.global_filters.commitment {
             Some(CommitmentLevel::Finalized) => CommitmentConfig::finalized(),
             Some(CommitmentLevel::Processed) => CommitmentConfig::processed(),
             _ => CommitmentConfig::confirmed(),
@@ -57,11 +48,11 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
     fn name() -> String { "solana-accounts-rpc".to_string() }
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
-
-    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
-        let filters = &self.filters;
-        let config = &self.config;
+    async fn connect(
+        config: Self::Config,
+        filters: Filters,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+    ) -> Result<(), VixenError> {
         let name = Self::name();
 
         let mut tasks_set = JoinSet::new();
@@ -78,7 +69,7 @@ impl SourceTrait for SolanaAccountsRpcSource {
                     let client = RpcClient::new_with_timeout_and_commitment(
                         config.endpoint.clone(),
                         Duration::from_secs(config.timeout),
-                        self.get_commitment_config(),
+                        Self::get_commitment_config(&filters),
                     );
 
                     tasks_set.spawn(async move {
