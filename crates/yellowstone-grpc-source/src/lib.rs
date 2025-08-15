@@ -13,23 +13,19 @@ use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Yellowstone gRPC API.
 #[derive(Debug)]
-pub struct YellowstoneGrpcSource {
-    filters: Filters,
-    config: YellowstoneConfig,
-}
+pub struct YellowstoneGrpcSource;
 
 #[async_trait]
 impl SourceTrait for YellowstoneGrpcSource {
     type Config = YellowstoneConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
-
     fn name() -> String { "yellowstone-grpc".to_string() }
 
-    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
-        let filters = self.filters.clone();
-        let config = self.config.clone();
-
+    async fn connect(
+        config: Self::Config,
+        filters: Filters,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+    ) -> Result<(), VixenError> {
         let timeout = Duration::from_secs(config.timeout);
 
         let mut tasks_set = JoinSet::new();

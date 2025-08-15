@@ -14,10 +14,7 @@ use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Yellowstone gRPC API.
 #[derive(Debug)]
-pub struct YellowstoneFumaroleSource {
-    filters: Filters,
-    config: FumaroleConfig,
-}
+pub struct YellowstoneFumaroleSource;
 
 #[derive(Debug, Clone, Default, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -59,11 +56,12 @@ impl SourceTrait for YellowstoneFumaroleSource {
 
     fn name() -> String { "fumarole".to_string() }
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { filters, config } }
-
-    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
-        let filters = self.filters.clone();
-        let subscriber_name = self.config.subscriber_name.clone();
+    async fn connect(
+        config: Self::Config,
+        filters: Filters,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+    ) -> Result<(), VixenError> {
+        let subscriber_name = config.subscriber_name.clone();
 
         // TODO: add tasks pool concurrency limit through config
         let mut tasks_set = JoinSet::new();
@@ -82,7 +80,7 @@ impl SourceTrait for YellowstoneFumaroleSource {
                 (InitialOffsetPolicy::Latest, None)
             };
 
-        let mut fumarole_client = FumaroleClient::connect(self.config.clone().into())
+        let mut fumarole_client = FumaroleClient::connect(config.into())
             .await
             .expect("failing to connect to fumarole");
 

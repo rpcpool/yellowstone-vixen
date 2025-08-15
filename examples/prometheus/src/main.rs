@@ -89,7 +89,7 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     vixen::Runtime::builder()
-        .source::<YellowstoneGrpcSource>()
+        .source(YellowstoneGrpcSource)
         .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
         .instruction(Pipeline::new(yellowstone_vixen_meteora_amm_parser::instructions_parser::InstructionParser, [Logger]))
         .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [RaydiumAmmV4IxLogger], Prefilter::builder()

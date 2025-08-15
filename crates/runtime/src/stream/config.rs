@@ -7,7 +7,7 @@ use crate::config::VixenConfig;
 /// Root configuration type for [the Vixen stream server](super::Server).
 #[derive(Debug, clap::Args, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct StreamConfig<M: clap::Args> {
+pub struct StreamConfig<M: clap::Args, S: Default> {
     /// gRPC server configuration.
     #[command(flatten)]
     #[serde(default = "default_grpc")]
@@ -16,7 +16,7 @@ pub struct StreamConfig<M: clap::Args> {
     /// Configuration for the underlying Vixen runtime.
     #[command(flatten)]
     #[serde(flatten)]
-    pub runtime: VixenConfig<M>,
+    pub runtime: VixenConfig<M, S>,
 }
 
 /// gRPC server configuration.
