@@ -1,9 +1,8 @@
-use std::{fs::File, path::PathBuf};
+use std::{fs::File, path::PathBuf, sync::mpsc};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use solana_accounts_db::accounts_file::AccountsFile;
-use std::sync::mpsc;
 use tar::Archive;
 use tempfile::{tempdir, TempDir};
 use tokio::task::JoinSet;
@@ -88,9 +87,7 @@ pub struct SolanaSnapshotSource {
 impl SourceTrait for SolanaSnapshotSource {
     type Config = SolanaSnapshotConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self {
-        Self { config, filters }
-    }
+    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
     async fn connect(
         &self,

@@ -10,13 +10,14 @@ use yellowstone_vixen_core::Pubkey;
 use yellowstone_vixen_proto::{
     prost::{Message, Name},
     prost_types::Any,
-    stream::program_streams_server::{ProgramStreams, ProgramStreamsServer},
-    tonic::{transport, Response, Status},
+    stream::{
+        self,
+        program_streams_server::{ProgramStreams, ProgramStreamsServer},
+        SubscribeRequest, SubscribeUpdate,
+    },
+    tonic::{self, transport, Request, Response, Status},
     tonic_reflection,
 };
-
-use yellowstone_vixen_proto::stream::{self, SubscribeRequest, SubscribeUpdate};
-use yellowstone_vixen_proto::tonic::{self, Request};
 
 use super::config::GrpcConfig;
 

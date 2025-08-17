@@ -47,8 +47,7 @@ pub use util::*;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 pub use yellowstone_vixen_core::CommitmentLevel;
 
-use crate::builder::RuntimeBuilder;
-use crate::sources::SourceTrait;
+use crate::{builder::RuntimeBuilder, sources::SourceTrait};
 
 /// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
@@ -92,9 +91,7 @@ pub struct Runtime<M: MetricsFactory, S: SourceTrait> {
 
 impl<S: SourceTrait> Runtime<NullMetrics, S> {
     /// Create a new runtime builder.
-    pub fn builder() -> RuntimeBuilder<S> {
-        RuntimeBuilder::<S>::default()
-    }
+    pub fn builder() -> RuntimeBuilder<S> { RuntimeBuilder::<S>::default() }
 }
 impl<M: MetricsFactory, S: SourceTrait> Runtime<M, S> {
     /// Create a new Tokio runtime and run the Vixen runtime within it,
@@ -133,9 +130,7 @@ impl<M: MetricsFactory, S: SourceTrait> Runtime<M, S> {
     /// }
     /// ```
     #[inline]
-    pub fn run(self) {
-        util::handle_fatal(self.try_run());
-    }
+    pub fn run(self) { util::handle_fatal(self.try_run()); }
 
     /// Error returning variant of [`Self::run`].
     ///
@@ -185,9 +180,7 @@ impl<M: MetricsFactory, S: SourceTrait> Runtime<M, S> {
     /// }
     /// ```
     #[inline]
-    pub async fn run_async(self) {
-        util::handle_fatal(self.try_run_async().await);
-    }
+    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
 
     /// Error returning variant of [`Self::run_async`].
     ///
@@ -250,9 +243,7 @@ impl<M: MetricsFactory, S: SourceTrait> Runtime<M, S> {
             struct CtrlC;
 
             impl fmt::Debug for CtrlC {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    f.write_str("^C")
-                }
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
             }
 
             signal = tokio::signal::ctrl_c()

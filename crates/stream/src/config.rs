@@ -31,9 +31,7 @@ where
     S: Args + Deserialize<'de>,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
+    where D: serde::Deserializer<'de> {
         let StreamConfigInner { grpc, runtime } =
             StreamConfigInner::<M, S>::deserialize(deserializer)?;
         Ok(Self { grpc, runtime })
@@ -51,6 +49,4 @@ pub struct GrpcConfig {
 }
 
 #[inline]
-fn default_addr() -> SocketAddr {
-    "[::]:3030".parse().unwrap()
-}
+fn default_addr() -> SocketAddr { "[::]:3030".parse().unwrap() }

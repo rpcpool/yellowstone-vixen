@@ -60,9 +60,7 @@ impl SolanaAccountsRpcSource {
 impl SourceTrait for SolanaAccountsRpcSource {
     type Config = SolanaAccountsRpcConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self {
-        Self { config, filters }
-    }
+    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
     async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
         let filters = &self.filters;
@@ -116,7 +114,8 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
                         if let Err(e) = &accounts {
                             tracing::error!(
-                                "Failed to get program accounts: {} for source: solana-rpc, filter: {}",
+                                "Failed to get program accounts: {} for source: solana-rpc, \
+                                 filter: {}",
                                 e,
                                 filter_id
                             );
@@ -146,7 +145,8 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
                             if res.is_err() {
                                 tracing::error!(
-                                    "Failed to send update to buffer for source: solana-rpc, filter: {}",
+                                    "Failed to send update to buffer for source: solana-rpc, \
+                                     filter: {}",
                                     filter_id
                                 );
                             }

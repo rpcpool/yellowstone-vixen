@@ -9,17 +9,11 @@ impl Parser for SlotParser {
     type Input = SlotUpdate;
     type Output = SlotUpdate;
 
-    fn id(&self) -> Cow<str> {
-        "yellowstone::SlotParser".into()
-    }
+    fn id(&self) -> Cow<str> { "yellowstone::SlotParser".into() }
 
-    fn prefilter(&self) -> Prefilter {
-        Prefilter::builder().slots().build().unwrap()
-    }
+    fn prefilter(&self) -> Prefilter { Prefilter::builder().slots().build().unwrap() }
 
-    async fn parse(&self, slot: &SlotUpdate) -> ParseResult<Self::Output> {
-        Ok(slot.to_owned())
-    }
+    async fn parse(&self, slot: &SlotUpdate) -> ParseResult<Self::Output> { Ok(slot.to_owned()) }
 }
 
 impl ProgramParser for SlotParser {

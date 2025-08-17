@@ -1,6 +1,13 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use tokio::sync::broadcast;
+use yellowstone_vixen::{
+    builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
+    handler::{BoxPipeline, Pipeline},
+    metrics::{MetricsFactory, NullMetrics},
+    sources::SourceTrait,
+    util,
+};
 use yellowstone_vixen_core::{
     instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, Parser, ProgramParser, Pubkey,
     TransactionUpdate,
@@ -14,13 +21,6 @@ use super::{
     config::StreamConfig,
     grpc::{Channels, GrpcHandler, Receiver},
     Server,
-};
-use yellowstone_vixen::{
-    builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
-    handler::{BoxPipeline, Pipeline},
-    metrics::{MetricsFactory, NullMetrics},
-    sources::SourceTrait,
-    util,
 };
 
 /// An error thrown by the Vixen stream server builder.
@@ -45,15 +45,11 @@ impl BuilderKind for StreamKind<'_> {
 }
 
 impl<S: SourceTrait> Default for StreamBuilder<'_, S, NullMetrics> {
-    fn default() -> Self {
-        Self(Builder::default())
-    }
+    fn default() -> Self { Self(Builder::default()) }
 }
 
 impl<'a, M: MetricsFactory + 'a, S: SourceTrait> StreamBuilder<'a, S, M> {
-    pub fn new(builder: Builder<StreamKind<'a>, M, S>) -> Self {
-        Self(builder)
-    }
+    pub fn new(builder: Builder<StreamKind<'a>, M, S>) -> Self { Self(builder) }
 }
 
 fn wrap_parser<P: Debug + Parser + Send + Sync + 'static>(
