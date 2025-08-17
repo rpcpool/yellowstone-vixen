@@ -144,7 +144,8 @@ impl<P: GetPrefilter, H> GetPrefilter for Pipeline<P, H> {
     }
 }
 
-pub(crate) type BoxPipeline<'h, T> = Box<dyn DynPipeline<T> + Send + Sync + 'h>;
+/// A boxed pipeline.
+pub type BoxPipeline<'h, T> = Box<dyn DynPipeline<T> + Send + Sync + 'h>;
 
 impl<P, I> Pipeline<P, I>
 where

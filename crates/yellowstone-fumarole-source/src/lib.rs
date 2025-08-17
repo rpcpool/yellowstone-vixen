@@ -3,14 +3,13 @@ use std::{collections::BTreeMap, num::NonZero};
 use async_trait::async_trait;
 use bytesize::ByteSize;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
-use tonic::{codec::CompressionEncoding, Code};
 use yellowstone_fumarole_client::{
     proto::{CreateConsumerGroupRequest, InitialOffsetPolicy},
     DragonsmouthAdapterSession, FumaroleClient, FumaroleSubscribeConfig,
 };
 pub use yellowstone_grpc_proto::tonic::codec::CompressionEncoding;
 use yellowstone_grpc_proto::{
-    geyser::SubscribeUpdate,
+    geyser::{SubscribeRequest, SubscribeUpdate},
     tonic::{Code, Status},
 };
 use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
@@ -81,7 +80,7 @@ impl SourceTrait for YellowstoneFumaroleSource {
             ..Default::default()
         };
 
-        let (initial_offset_policy, from_slot) = match config.from_slot {
+        let (initial_offset_policy, from_slot) = match self.config.from_slot {
             Some(slot) => (InitialOffsetPolicy::FromSlot, Some(slot)),
             None => (InitialOffsetPolicy::Latest, None),
         };
@@ -116,10 +115,15 @@ impl SourceTrait for YellowstoneFumaroleSource {
             },
         }
 
+        let mut subscribe_request = SubscribeRequest::from(filters);
+        if let Some(commitment_level) = self.config.commitment_level {
+            subscribe_request.commitment = Some(commitment_level as i32);
+        }
+
         let dragonsmouth_session = fumarole_client
             .dragonsmouth_subscribe_with_config(
                 subscriber_name,
-                filters.into(),
+                subscribe_request,
                 fumarole_subscribe_config,
             )
             .await

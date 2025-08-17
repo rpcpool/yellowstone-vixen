@@ -24,11 +24,11 @@ use std::{
     sync::Arc,
 };
 
+use serde::Deserialize;
 use yellowstone_grpc_proto::geyser::{
-    CommitmentLevel, SubscribeRequest, SubscribeRequestFilterAccounts,
-    SubscribeRequestFilterBlocksMeta, SubscribeRequestFilterSlots,
-    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateBlockMeta,
-    SubscribeUpdateSlot, SubscribeUpdateTransaction,
+    self, SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterBlocksMeta,
+    SubscribeRequestFilterSlots, SubscribeRequestFilterTransactions, SubscribeUpdateAccount,
+    SubscribeUpdateBlockMeta, SubscribeUpdateSlot, SubscribeUpdateTransaction,
 };
 
 pub extern crate bs58;
@@ -199,7 +199,7 @@ impl Prefilter {
         merge_opt(account, other.account, AccountPrefilter::merge);
         merge_opt(transaction, other.transaction, TransactionPrefilter::merge);
         merge_opt(block_meta, other.block_meta, BlockMetaPrefilter::merge);
-        merge_opt(slot, other.slot, SlotPrefilter::merge)
+        merge_opt(slot, other.slot, SlotPrefilter::merge);
     }
 }
 
@@ -578,7 +578,7 @@ impl PrefilterBuilder {
         };
 
         let block_meta = BlockMetaPrefilter {};
-        let slot = slots.map(|_| SlotPrefilter {});
+        let slot = slots.map(|()| SlotPrefilter {});
 
         Ok(Prefilter {
             account: (account != AccountPrefilter::default()).then_some(account),
@@ -704,6 +704,29 @@ impl Filters {
         self.global_filters.from_slot = from_slot;
 
         self
+    }
+}
+
+/// Type mirroring the `CommitmentLevel` enum in the `geyser` crate but serializable.
+/// Used to avoid need for custom deserialization logic.
+#[derive(Debug, Clone, Copy, Deserialize, clap::ValueEnum)]
+#[serde(rename_all = "lowercase")]
+pub enum CommitmentLevel {
+    /// Processed
+    Processed,
+    /// Confirmed
+    Confirmed,
+    /// Finalized
+    Finalized,
+}
+
+impl From<geyser::CommitmentLevel> for CommitmentLevel {
+    fn from(value: geyser::CommitmentLevel) -> Self {
+        match value {
+            geyser::CommitmentLevel::Processed => Self::Processed,
+            geyser::CommitmentLevel::Confirmed => Self::Confirmed,
+            geyser::CommitmentLevel::Finalized => Self::Finalized,
+        }
     }
 }
 

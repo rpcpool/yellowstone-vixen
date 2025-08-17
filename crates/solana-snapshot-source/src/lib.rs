@@ -71,7 +71,7 @@ impl SolanaSnapshot {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, clap::Args)]
 pub struct SolanaSnapshotConfig {
     path: PathBuf,
     max_workers: usize,
@@ -122,7 +122,7 @@ impl SourceTrait for SolanaSnapshotSource {
         let filters = filters
             .parsers_filters
             .iter()
-            .filter_map(|(key, parser_filter)| parser_filter.slot.clone().map(|_| key.to_string()))
+            .filter_map(|(key, parser_filter)| parser_filter.slot.map(|_| key.to_string()))
             .collect::<Vec<String>>();
 
         info!("Filters: {:?}", filters.clone());
@@ -171,7 +171,7 @@ impl SourceTrait for SolanaSnapshotSource {
 
         for AccountFile(path, current_len) in solana_snapshot.accounts {
             let sync_tx = sync_tx.clone();
-            let slot = solana_snapshot.slot.clone();
+            let slot = solana_snapshot.slot;
             let owners = owners.clone();
 
             account_file_workers.spawn(async move {

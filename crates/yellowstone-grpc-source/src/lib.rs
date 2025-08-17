@@ -3,15 +3,12 @@ use std::{collections::HashMap, time::Duration};
 use async_trait::async_trait;
 use futures_util::StreamExt;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
-use tracing::info;
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdate,
     tonic::{transport::ClientTlsConfig, Status},
 };
-use yellowstone_vixen::{
-    config::YellowstoneConfig, sources::SourceTrait, CommitmentLevel, Error as VixenError,
-};
+use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
 /// Yellowstone connection configuration.
@@ -39,12 +36,12 @@ pub struct YellowstoneGrpcConfig {
 #[derive(Debug)]
 pub struct YellowstoneGrpcSource {
     filters: Filters,
-    config: YellowstoneConfig,
+    config: YellowstoneGrpcConfig,
 }
 
 #[async_trait]
 impl SourceTrait for YellowstoneGrpcSource {
-    type Config = YellowstoneConfig;
+    type Config = YellowstoneGrpcConfig;
 
     fn new(config: Self::Config, filters: Filters) -> Self {
         Self { config, filters }
@@ -59,16 +56,14 @@ impl SourceTrait for YellowstoneGrpcSource {
         let mut tasks_set = JoinSet::new();
 
         for (filter_id, prefilter) in filters.parsers_filters {
-            let mut filter = Filters::new(HashMap::from([(filter_id, prefilter)]));
-
-            let config = config.clone();
-            filter.from_slot(config.from_slot);
-            filter.commitment(config.commitment);
+            let filter = Filters::new(HashMap::from([(filter_id, prefilter)]))
+                .from_slot(config.from_slot)
+                .commitment(config.commitment_level);
 
             let tx = tx.clone();
 
-            let mut client = GeyserGrpcClient::build_from_shared(config.endpoint)?
-                .x_token(config.x_token)?
+            let mut client = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
+                .x_token(config.x_token.clone())?
                 .connect_timeout(timeout)
                 .timeout(timeout)
                 .tls_config(ClientTlsConfig::new().with_native_roots())?

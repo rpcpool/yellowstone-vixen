@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use clap::Parser as _;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{self as vixen, proto::parser, vixen_core::proto::Proto};
+use yellowstone_vixen::vixen_core::proto::Proto;
 use yellowstone_vixen_jupiter_swap_parser::{
     accounts_parser::AccountParser as JupiterSwapAccParser,
     instructions_parser::InstructionParser as JupiterSwapIxParser,
@@ -51,6 +51,7 @@ use yellowstone_vixen_parser::{
         AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
     },
 };
+use yellowstone_vixen_proto::parser;
 use yellowstone_vixen_pump_swaps_parser::{
     accounts_parser::AccountParser as PumpAmmAccParser,
     instructions_parser::InstructionParser as PumpAmmIxParser,
@@ -94,7 +95,7 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::stream::Server::<YellowstoneGrpcSource>::builder()
+    yellowstone_vixen_stream::Server::<_, YellowstoneGrpcSource>::builder()
         .descriptor_set(parser::token::DESCRIPTOR_SET)
         .descriptor_set(parser::token_extensions::DESCRIPTOR_SET)
         .descriptor_set(METEORA_DESCRIPTOR_SET)

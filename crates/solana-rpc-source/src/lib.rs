@@ -11,12 +11,12 @@ use solana_pubkey::Pubkey;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use yellowstone_grpc_proto::{
     geyser::{
-        subscribe_update::UpdateOneof, CommitmentLevel, SubscribeUpdate, SubscribeUpdateAccount,
+        subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdateAccount,
         SubscribeUpdateAccountInfo,
     },
     tonic::Status,
 };
-use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
+use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Solana Accounts RPC API.
@@ -77,7 +77,6 @@ impl SourceTrait for SolanaAccountsRpcSource {
                     let config = config.clone();
                     let tx = tx.clone();
                     let filter_id = filter_id.clone();
-                    let name = name.clone();
 
                     let client = RpcClient::new_with_timeout_and_commitment(
                         config.endpoint.clone(),

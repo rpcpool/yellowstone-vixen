@@ -1518,7 +1518,9 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "yellowstone-vixen",
+ "yellowstone-vixen-proto",
  "yellowstone-vixen-stream",
+ "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
 [[package]]
@@ -1530,6 +1532,7 @@ dependencies = [
  "toml 0.8.20",
  "tracing",
  "tracing-subscriber",
+ "yellowstone-vixen",
  "yellowstone-vixen-jupiter-swap-parser",
  "yellowstone-vixen-kamino-limit-orders-parser",
  "yellowstone-vixen-meteora-amm-parser",
@@ -1537,6 +1540,7 @@ dependencies = [
  "yellowstone-vixen-moonshot-parser",
  "yellowstone-vixen-orca-whirlpool-parser",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-proto",
  "yellowstone-vixen-pump-swaps-parser",
  "yellowstone-vixen-pumpfun-parser",
  "yellowstone-vixen-raydium-amm-v4-parser",
@@ -9027,6 +9031,8 @@ name = "yellowstone-vixen-core"
 version = "0.4.0"
 dependencies = [
  "bs58",
+ "clap",
+ "serde",
  "thiserror 1.0.69",
  "yellowstone-grpc-proto",
  "yellowstone-vixen-proto",
@@ -9481,6 +9487,7 @@ name = "yellowstone-vixen-solana-snapshot-source"
 version = "0.2.0"
 dependencies = [
  "async-trait",
+ "clap",
  "futures-util",
  "serde",
  "solana-account 3.0.0",

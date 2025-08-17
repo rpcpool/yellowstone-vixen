@@ -5,24 +5,20 @@ use tokio::{
     sync::broadcast,
     task::{JoinError, JoinHandle},
 };
-use vixen_core::Pubkey;
+use yellowstone_vixen::{stop, Handler, HandlerResult};
+use yellowstone_vixen_core::Pubkey;
 use yellowstone_vixen_proto::{
     prost::{Message, Name},
     prost_types::Any,
-    stream::{
-        self,
-        program_streams_server::{ProgramStreams, ProgramStreamsServer},
-        SubscribeRequest, SubscribeUpdate,
-    },
-    tonic::{self, transport, Request, Response, Status},
+    stream::program_streams_server::{ProgramStreams, ProgramStreamsServer},
+    tonic::{transport, Response, Status},
     tonic_reflection,
 };
 
+use yellowstone_vixen_proto::stream::{self, SubscribeRequest, SubscribeUpdate};
+use yellowstone_vixen_proto::tonic::{self, Request};
+
 use super::config::GrpcConfig;
-use crate::{
-    handler::{Handler, HandlerResult},
-    stop,
-};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -55,14 +51,11 @@ impl ProgramStreams for Service {
         &self,
         request: Request<SubscribeRequest>,
     ) -> Result<Response<Self::SubscribeStream>, Status> {
-        let pubkey: Pubkey =
-            request
-                .into_inner()
-                .program
-                .parse()
-                .map_err(|e: vixen_core::KeyFromStrError| {
-                    Status::new(tonic::Code::InvalidArgument, e.to_string())
-                })?;
+        let pubkey: Pubkey = request.into_inner().program.parse().map_err(
+            |e: yellowstone_vixen_core::KeyFromStrError| {
+                Status::new(tonic::Code::InvalidArgument, e.to_string())
+            },
+        )?;
 
         static NO_RX: [Receiver; 0] = [];
         let rxs = self.0.get(&pubkey).map_or(NO_RX.as_slice(), AsRef::as_ref);

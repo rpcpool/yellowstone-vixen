@@ -28,8 +28,6 @@ pub extern crate prometheus;
 pub extern crate thiserror;
 pub extern crate yellowstone_vixen_core as vixen_core;
 pub use vixen_core::bs58;
-#[cfg(feature = "stream")]
-pub extern crate yellowstone_vixen_proto as proto;
 
 mod buffer;
 pub mod builder;
@@ -39,14 +37,15 @@ pub mod instruction;
 pub mod metrics;
 pub mod sources;
 
-mod util;
+/// Utility functions for the Vixen runtime.
+pub mod util;
 
 pub mod filter_pipeline;
 
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use util::*;
-pub use yellowstone_grpc_proto::geyser::CommitmentLevel;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
+pub use yellowstone_vixen_core::CommitmentLevel;
 
 use crate::builder::RuntimeBuilder;
 use crate::sources::SourceTrait;

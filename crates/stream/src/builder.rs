@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use tokio::sync::broadcast;
-use vixen_core::{
+use yellowstone_vixen_core::{
     instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, Parser, ProgramParser, Pubkey,
     TransactionUpdate,
 };
@@ -15,7 +15,7 @@ use super::{
     grpc::{Channels, GrpcHandler, Receiver},
     Server,
 };
-use crate::{
+use yellowstone_vixen::{
     builder::{Builder, BuilderKind, RuntimeBuilder, RuntimeKind},
     handler::{BoxPipeline, Pipeline},
     metrics::{MetricsFactory, NullMetrics},
@@ -31,17 +31,29 @@ pub enum BuilderError {
     DuplicateId(Pubkey, String),
     /// An error occurred while building the underlying Vixen runtime.
     #[error("Error building Vixen runtime")]
-    Runtime(#[from] crate::builder::BuilderError),
+    Runtime(#[from] yellowstone_vixen::builder::BuilderError),
 }
 
 /// Marker type for the [`StreamBuilder`] type.
 #[derive(Debug, Default)]
 pub struct StreamKind<'a>(Vec<&'a [u8]>, Channels<HashMap<String, Receiver>>);
 /// A builder for the [`Server`] type.
-pub type StreamBuilder<'a, S: SourceTrait, M = NullMetrics> = Builder<StreamKind<'a>, M, S>;
+pub struct StreamBuilder<'a, S: SourceTrait, M = NullMetrics>(Builder<StreamKind<'a>, M, S>);
 
 impl BuilderKind for StreamKind<'_> {
     type Error = BuilderError;
+}
+
+impl<S: SourceTrait> Default for StreamBuilder<'_, S, NullMetrics> {
+    fn default() -> Self {
+        Self(Builder::default())
+    }
+}
+
+impl<'a, M: MetricsFactory + 'a, S: SourceTrait> StreamBuilder<'a, S, M> {
+    pub fn new(builder: Builder<StreamKind<'a>, M, S>) -> Self {
+        Self(builder)
+    }
 }
 
 fn wrap_parser<P: Debug + Parser + Send + Sync + 'static>(
@@ -55,10 +67,12 @@ where
     Box::new(Pipeline::new(parser, [GrpcHandler(tx)]))
 }
 
-impl<'a, M: MetricsFactory, S: SourceTrait> StreamBuilder<'a, S, M> {
+impl<'a, M: MetricsFactory + 'a, S: SourceTrait> StreamBuilder<'a, S, M> {
     fn insert<
         P: Debug + ProgramParser + Send + Sync + 'static,
-        F: FnOnce(&mut Self) -> &mut Vec<BoxPipeline<'static, P::Input>>,
+        F: for<'b> FnOnce(
+            &'b mut Builder<StreamKind<'a>, M, S>,
+        ) -> &'b mut Vec<BoxPipeline<'static, P::Input>>,
     >(
         self,
         parser: P,
@@ -68,7 +82,7 @@ impl<'a, M: MetricsFactory, S: SourceTrait> StreamBuilder<'a, S, M> {
         P::Input: Sync,
         P::Output: Message + Name + Send + Sync,
     {
-        self.try_mutate(|s| {
+        let res = self.0.try_mutate(|s| {
             use std::collections::hash_map::Entry;
 
             // TODO: configure channel size
@@ -92,12 +106,14 @@ impl<'a, M: MetricsFactory, S: SourceTrait> StreamBuilder<'a, S, M> {
             }
             f(s).push(wrap_parser(parser, tx));
             Ok(())
-        })
+        });
+
+        Self(res)
     }
 
     /// Add a new descriptor set to the builder.
     pub fn descriptor_set(self, desc: &'a [u8]) -> Self {
-        self.mutate(|s| s.extra.0.push(desc))
+        Self(self.0.mutate(|s| s.extra.0.push(desc)))
     }
 
     /// Add a new account parser to the builder.
@@ -162,7 +178,7 @@ impl<'a, M: MetricsFactory, S: SourceTrait> StreamBuilder<'a, S, M> {
         self,
         config: StreamConfig<M::Config, S::Config>,
     ) -> Result<Server<'a, M, S>, BuilderError> {
-        let Self {
+        let Builder {
             err,
             account,
             transaction,
@@ -172,7 +188,7 @@ impl<'a, M: MetricsFactory, S: SourceTrait> StreamBuilder<'a, S, M> {
             extra: StreamKind(desc_sets, channels),
             slot,
             _source,
-        } = self;
+        } = self.0;
         let () = err?;
 
         let StreamConfig {

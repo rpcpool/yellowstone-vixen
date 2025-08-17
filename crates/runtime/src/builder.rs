@@ -2,7 +2,6 @@
 use vixen_core::{
     instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, SlotUpdate, TransactionUpdate,
 };
-use yellowstone_grpc_proto::geyser::CommitmentLevel;
 
 use crate::{
     config::{MaybeDefault, VixenConfig},
@@ -50,15 +49,24 @@ pub enum BuilderError {
 #[derive(Debug)]
 #[must_use = "Consider calling .build() on this builder"]
 pub struct Builder<K: BuilderKind, M, S: SourceTrait> {
-    pub(crate) err: Result<(), K::Error>,
-    pub(crate) account: Vec<BoxPipeline<'static, AccountUpdate>>,
-    pub(crate) transaction: Vec<BoxPipeline<'static, TransactionUpdate>>,
-    pub(crate) instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
-    pub(crate) block_meta: Vec<BoxPipeline<'static, BlockMetaUpdate>>,
-    pub(crate) slot: Vec<BoxPipeline<'static, SlotUpdate>>,
-    pub(crate) metrics: M,
-    pub(crate) extra: K,
-    pub(crate) _source: std::marker::PhantomData<S>,
+    /// The error result of the builder.    
+    pub err: Result<(), K::Error>,
+    /// The account pipelines.
+    pub account: Vec<BoxPipeline<'static, AccountUpdate>>,
+    /// The transaction pipelines.
+    pub transaction: Vec<BoxPipeline<'static, TransactionUpdate>>,
+    /// The instruction pipelines.
+    pub instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
+    /// The block meta pipelines.
+    pub block_meta: Vec<BoxPipeline<'static, BlockMetaUpdate>>,
+    /// The slot pipelines.
+    pub slot: Vec<BoxPipeline<'static, SlotUpdate>>,
+    /// The metrics.
+    pub metrics: M,
+    /// The extra builder kind.
+    pub extra: K,
+    /// The source trait.
+    pub _source: std::marker::PhantomData<S>,
 }
 
 impl<K: BuilderKind, S: SourceTrait> Default for Builder<K, NullMetrics, S> {
@@ -83,19 +91,18 @@ pub(crate) fn unwrap_cfg<T>(name: &'static str, val: Option<T>) -> Result<T, Bui
 }
 
 impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
+    /// Mutate the builder in place.
     #[inline]
-    pub(crate) fn mutate(self, mutate: impl FnOnce(&mut Self)) -> Self {
+    pub fn mutate(self, mutate: impl FnOnce(&mut Self)) -> Self {
         self.try_mutate(|s| {
             mutate(s);
             Ok(())
         })
     }
 
+    /// Try to mutate the builder in place.
     #[inline]
-    pub(crate) fn try_mutate(
-        mut self,
-        mutate: impl FnOnce(&mut Self) -> Result<(), K::Error>,
-    ) -> Self {
+    pub fn try_mutate(mut self, mutate: impl FnOnce(&mut Self) -> Result<(), K::Error>) -> Self {
         if let Ok(()) = self.err {
             self.err = mutate(&mut self);
         }
@@ -114,7 +121,7 @@ impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
             slot,
             metrics: _,
             extra,
-            _source,
+            _source: source,
         } = self;
 
         Builder {
@@ -126,7 +133,7 @@ impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
             slot,
             metrics,
             extra,
-            _source,
+            _source: source,
         }
     }
 }
@@ -135,7 +142,7 @@ impl<K: BuilderKind, M, S: SourceTrait> Builder<K, M, S> {
 #[derive(Debug, Default, Clone, Copy)]
 pub struct RuntimeKind;
 /// A builder for the [`Runtime`] type.
-pub type RuntimeBuilder<S: SourceTrait, M = NullMetrics> = Builder<RuntimeKind, M, S>;
+pub type RuntimeBuilder<S, M = NullMetrics> = Builder<RuntimeKind, M, S>;
 
 impl BuilderKind for RuntimeKind {
     type Error = BuilderError;

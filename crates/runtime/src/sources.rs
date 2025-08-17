@@ -5,8 +5,6 @@
 //!
 //! The `Source` trait is implemented by the `yellowstone_grpc` module.
 
-use std::{fmt::Debug, marker::PhantomData};
-
 use async_trait::async_trait;
 use tokio::sync::mpsc::Sender;
 use vixen_core::Filters;
@@ -69,7 +67,8 @@ use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
 /// * `name` - Returns a unique identifier for the source
 #[async_trait]
 pub trait SourceTrait: std::fmt::Debug + Send + 'static {
-    type Config: serde::de::DeserializeOwned + clap::Args;
+    /// The configuration for the source.
+    type Config: serde::de::DeserializeOwned + clap::Args + std::fmt::Debug;
 
     /// Creates a new instance of the source.
     fn new(config: Self::Config, filters: Filters) -> Self;

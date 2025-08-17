@@ -1,11 +1,13 @@
 use std::{error::Error, fmt};
 
+/// Handle a fatal error by logging it and exiting the process.
 #[inline]
-pub(crate) fn handle_fatal<T, E: Error>(res: Result<T, E>) -> T {
+pub fn handle_fatal<T, E: Error>(res: Result<T, E>) -> T {
     handle_fatal_msg(res, "Fatal error encountered")
 }
 
-pub(crate) fn handle_fatal_msg<T, E: Error>(res: Result<T, E>, msg: &str) -> T {
+/// Handle a fatal error by logging it and exiting the process.
+pub fn handle_fatal_msg<T, E: Error>(res: Result<T, E>, msg: &str) -> T {
     match res {
         Ok(o) => o,
         Err(e) => {

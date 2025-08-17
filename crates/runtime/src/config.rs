@@ -3,7 +3,7 @@
 use clap::Args;
 #[cfg(feature = "prometheus")]
 pub use prometheus_impl::*;
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::Deserialize;
 
 /// A helper trait for types that may or may not have a default value,
 /// determined at runtime.
@@ -26,12 +26,15 @@ where
     M: Args,
     S: Args,
 {
+    /// The source configuration.
     #[command(flatten)]
     pub source: S,
 
+    /// The buffer configuration.
     #[command(flatten)]
     pub buffer: BufferConfig,
 
+    /// The metrics configuration.
     #[command(flatten)]
     pub metrics: OptConfig<M>,
 }

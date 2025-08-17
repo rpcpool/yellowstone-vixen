@@ -32,7 +32,7 @@ yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
-yellowstone-vixen-proto = { workspace = true }
+yellowstone-vixen-proto = { workspace = true, features = ["stream"] }
 
 [features]
 opentelemetry = ["dep:opentelemetry"]

@@ -2,7 +2,7 @@
 # Copy to Vixen.toml and them modify as needed.
 
 # Only needed if you are using the Yellowstone gRPC as a source.
-[sources.yellowstone-grpc]
+[source]
 # The endpoint of the dragon's mouth stream.
 # This is the URL where the stream can be accessed.
 endpoint = "https://index.rpcpool.com"
@@ -15,11 +15,11 @@ x-token = "<X-TOKEN>"
 # This defines how long to wait for a connection before timing out.
 timeout = 60
 
-# Only needed if you are using Fumarole as a source.
-[sources.fumarole]
-endpoint = "https://index.rpcpool.com"
-x-token = "<X-TOKEN>"
-subscriber-name = "my_subscribe_group"
+# # Only needed if you are using Fumarole as a source.
+# [source]
+# endpoint = "https://index.rpcpool.com"
+# x-token = "<X-TOKEN>"
+# subscriber-name = "my_subscribe_group"
 
 # Metrics configuration section.
 # Uncomment the following lines if you are running Prometheus 

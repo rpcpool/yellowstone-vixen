@@ -24,3 +24,4 @@ tempfile = "3"
 zstd = "0.13"
 tar = "0.4"
 solana-account = "3.0.0"
+clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
