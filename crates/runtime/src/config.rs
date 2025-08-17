@@ -45,9 +45,12 @@ where
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
         #[derive(Deserialize)]
+        #[serde(bound = "M: Deserialize<'de>, S: Deserialize<'de>")]
         struct Inner<M, S> {
             source: S,
+            #[serde(default)]
             buffer: BufferConfig,
+            #[serde(default)]
             metrics: OptConfig<M>,
         }
 

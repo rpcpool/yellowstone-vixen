@@ -21,7 +21,9 @@ where
 
 #[derive(Deserialize)]
 struct StreamConfigInner<M: Args, S: Args> {
+    #[serde(default)]
     grpc: GrpcConfig,
+    #[serde(flatten)]
     runtime: VixenConfig<M, S>,
 }
 
@@ -46,6 +48,14 @@ pub struct GrpcConfig {
     #[arg(long = "grpc-address", env = "GRPC_ADDRESS", default_value_t = default_addr())]
     #[serde(default = "default_addr")]
     pub address: SocketAddr,
+}
+
+impl Default for GrpcConfig {
+    fn default() -> Self {
+        Self {
+            address: default_addr(),
+        }
+    }
 }
 
 #[inline]
