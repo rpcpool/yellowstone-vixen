@@ -4,6 +4,7 @@ use std::{collections::VecDeque, sync::Arc};
 
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
+    prelude::MessageHeader,
     solana::storage::confirmed_block::{
         CompiledInstruction, InnerInstruction, InnerInstructions, Message, Reward, TokenBalance,
         Transaction, TransactionError, TransactionStatusMeta,
@@ -37,6 +38,8 @@ pub enum Missing {
     TransactionMeta,
     /// The `transaction.transaction.message` field was not present.
     TransactionMessage,
+    /// The `transaction.transaction.message.header` field was not present.
+    TransactionMessageHeader,
 }
 
 impl Missing {
@@ -47,6 +50,7 @@ impl Missing {
             Self::Transaction => "transaction",
             Self::TransactionMeta => "transaction status and metadata",
             Self::TransactionMessage => "transaction message",
+            Self::TransactionMessageHeader => "transaction message header",
         }
     }
 }
@@ -89,6 +93,8 @@ pub struct InstructionShared {
     pub recent_blockhash: Vec<u8>,
     /// The keys of the accounts involved in the transaction.
     pub accounts: AccountKeys,
+    /// The header of the transaction.
+    pub message_header: MessageHeader,
 }
 
 /// A parsed instruction from a transaction update.
@@ -196,7 +202,7 @@ impl InstructionUpdate {
             compute_units_consumed,
         } = meta.ok_or(Missing::TransactionMeta)?;
         let Message {
-            header: _,
+            header,
             account_keys,
             recent_blockhash,
             instructions,
@@ -224,6 +230,7 @@ impl InstructionUpdate {
                 dynamic_rw: loaded_writable_addresses,
                 dynamic_ro: loaded_readonly_addresses,
             },
+            message_header: header.ok_or(Missing::TransactionMessageHeader)?,
         });
 
         let mut outer = instructions
