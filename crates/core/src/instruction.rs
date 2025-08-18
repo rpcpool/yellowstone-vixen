@@ -116,11 +116,11 @@ pub struct InstructionUpdate {
 #[derive(Debug, Default)]
 pub struct AccountKeys {
     /// Account keys submitted directly with the transaction.
-    static_keys: Vec<Vec<u8>>,
+    pub static_keys: Vec<Vec<u8>>,
     /// Resolved writable account keys.
-    dynamic_rw: Vec<Vec<u8>>,
+    pub dynamic_rw: Vec<Vec<u8>>,
     /// Resolved readonly account keys.
-    dynamic_ro: Vec<Vec<u8>>,
+    pub dynamic_ro: Vec<Vec<u8>>,
 }
 
 /// Errors that can occur when parsing an account key.
