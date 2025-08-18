@@ -318,6 +318,7 @@ where I::Item: AsRef<str> + Send + 'm
         futures_util::future::join_all(self.get_pipelines().map(move |(f, h)| {
             h.handle(value)
                 .map(move |r| {
+                    #[cfg(feature = "prometheus")]
                     metrics::increment_processed_updates(&r, update_type);
 
                     match r {

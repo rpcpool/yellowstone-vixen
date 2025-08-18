@@ -112,10 +112,13 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
 impl Buffer {
     fn dispatch<E: ExecutorHandle<Job>>(exec: &E, update: SubscribeUpdate) {
         let span = tracing::trace_span!("process_update", ?update).entered();
+
+        #[cfg(feature = "prometheus")]
         if let Some(update_oneof) = update.update_oneof.as_ref() {
             let update_type = metrics::UpdateType::from(update_oneof);
             metrics::increment_received_updates(update_type);
         }
+
         exec.push(Job(span.exit(), update));
     }
 

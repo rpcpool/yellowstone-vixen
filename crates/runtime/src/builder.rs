@@ -97,6 +97,7 @@ impl<K: BuilderKind> Builder<K> {
         self
     }
 
+    #[cfg(feature = "prometheus")]
     /// Sets the metrics registry for the runtime.
     pub fn metrics(self, metrics_registry: prometheus::Registry) -> Builder<K> {
         let Self {

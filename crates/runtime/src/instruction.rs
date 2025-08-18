@@ -43,6 +43,7 @@ impl InstructionPipeline {
             for pipe in &*self.0 {
                 let res = pipe.handle(insn).await;
 
+                #[cfg(feature = "prometheus")]
                 metrics::increment_processed_updates(&res, metrics::UpdateType::Instruction);
 
                 match res {
@@ -101,6 +102,7 @@ impl SingleInstructionPipeline {
         for insn in ixs.iter().flat_map(|i| i.visit_all()) {
             let res = pipe.handle(insn).await;
 
+            #[cfg(feature = "prometheus")]
             metrics::increment_processed_updates(&res, metrics::UpdateType::Instruction);
 
             match res {

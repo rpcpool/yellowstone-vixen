@@ -19,10 +19,7 @@ use tokio::{
     sync::mpsc::{self, Receiver},
     task::JoinSet,
 };
-use yellowstone_grpc_proto::{
-    // prelude::*,
-    tonic::Status,
-};
+use yellowstone_grpc_proto::tonic::Status;
 
 #[cfg(feature = "prometheus")]
 pub extern crate prometheus;
@@ -37,7 +34,9 @@ pub mod builder;
 pub mod config;
 pub mod handler;
 pub mod instruction;
+#[cfg(feature = "prometheus")]
 pub mod metrics;
+
 pub mod sources;
 #[cfg(feature = "stream")]
 pub mod stream;
@@ -211,6 +210,7 @@ impl Runtime {
             metrics_registry,
         } = runtime;
 
+        #[cfg(feature = "prometheus")]
         if let Some(metrics_registry) = metrics_registry {
             metrics::register_metrics(&metrics_registry);
         }
