@@ -600,8 +600,6 @@ impl PrefilterBuilder {
 pub struct Filters {
     /// Filters for each parser.
     pub parsers_filters: HashMap<String, Prefilter>,
-    /// Global filters for the subscription.
-    pub global_filters: GlobalFilters,
 }
 
 /// A collection of global filters shared by all parsers for a Vixen subscription.
@@ -620,26 +618,7 @@ impl Filters {
     pub fn new(filters: HashMap<String, Prefilter>) -> Self {
         Self {
             parsers_filters: filters,
-            global_filters: GlobalFilters::default(),
         }
-    }
-
-    /// Set the commitment level filter.
-    #[inline]
-    #[must_use]
-    pub fn commitment(mut self, commitment: Option<CommitmentLevel>) -> Self {
-        self.global_filters.commitment = commitment;
-
-        self
-    }
-
-    /// Set the from slot filter.
-    #[inline]
-    #[must_use]
-    pub fn from_slot(mut self, from_slot: Option<u64>) -> Self {
-        self.global_filters.from_slot = from_slot;
-
-        self
     }
 }
 
@@ -728,13 +707,10 @@ impl From<Filters> for SubscribeRequest {
                 .map(|k| (k.clone(), SubscribeRequestFilterBlocksMeta {}))
                 .collect(),
             entry: [].into_iter().collect(),
-            commitment: value
-                .global_filters
-                .commitment
-                .map(|commitment| commitment as i32),
+            commitment: None,
             accounts_data_slice: vec![],
             ping: None,
-            from_slot: value.global_filters.from_slot,
+            from_slot: None,
         }
     }
 }

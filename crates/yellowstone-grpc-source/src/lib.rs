@@ -5,7 +5,7 @@ use futures_util::StreamExt;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
-    geyser::SubscribeUpdate,
+    geyser::{SubscribeRequest, SubscribeUpdate},
     tonic::{transport::ClientTlsConfig, Status},
 };
 use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
@@ -54,9 +54,7 @@ impl SourceTrait for YellowstoneGrpcSource {
         let mut tasks_set = JoinSet::new();
 
         for (filter_id, prefilter) in filters.parsers_filters {
-            let filter = Filters::new(HashMap::from([(filter_id, prefilter)]))
-                .from_slot(config.from_slot)
-                .commitment(config.commitment_level);
+            let filter = Filters::new(HashMap::from([(filter_id, prefilter)]));
 
             let tx = tx.clone();
 
@@ -68,7 +66,17 @@ impl SourceTrait for YellowstoneGrpcSource {
                 .connect()
                 .await?;
 
-            let (_sub_tx, stream) = client.subscribe_with_request(Some(filter.into())).await?;
+            let mut subscribe_request: SubscribeRequest = filter.into();
+            if let Some(from_slot) = config.from_slot {
+                subscribe_request.from_slot = Some(from_slot);
+            }
+            if let Some(commitment_level) = config.commitment_level {
+                subscribe_request.commitment = Some(commitment_level as i32);
+            }
+
+            let (_sub_tx, stream) = client
+                .subscribe_with_request(Some(subscribe_request))
+                .await?;
 
             tasks_set.spawn(async move {
                 let mut stream = std::pin::pin!(stream);
