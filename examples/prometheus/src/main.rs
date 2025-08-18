@@ -38,9 +38,7 @@ pub struct Logger;
 pub struct RaydiumAmmV4IxLogger;
 
 impl<V: std::fmt::Debug + Sync> vixen::Handler<V> for Logger {
-    async fn handle(&self, _value: &V) -> vixen::HandlerResult<()> {
-        Ok(())
-    }
+    async fn handle(&self, _value: &V) -> vixen::HandlerResult<()> { Ok(()) }
 }
 
 impl vixen::Handler<InstructionUpdateOutput<RaydiumAmmV4ProgramIx>> for RaydiumAmmV4IxLogger {

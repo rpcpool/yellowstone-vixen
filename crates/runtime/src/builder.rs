@@ -105,6 +105,7 @@ impl<K: BuilderKind, S: SourceTrait> Builder<K, S> {
         self
     }
 
+    #[cfg(feature = "prometheus")]
     /// Sets the metrics registry for the runtime.
     #[cfg(feature = "prometheus")]
     pub fn metrics(self, metrics_registry: prometheus::Registry) -> Builder<K, S> {

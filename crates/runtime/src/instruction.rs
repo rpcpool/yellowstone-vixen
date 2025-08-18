@@ -1,10 +1,11 @@
 //! Helper types for parsing and dispatching instructions from transaction
 //! updates.
 
-use crate::handler::{BoxPipeline, DynPipeline, PipelineErrors};
 use std::fmt::{self, Debug};
+
 use vixen_core::{instruction::InstructionUpdate, GetPrefilter, ParserId, TransactionUpdate};
 
+use crate::handler::{BoxPipeline, DynPipeline, PipelineErrors};
 #[cfg(feature = "prometheus")]
 use crate::metrics;
 
@@ -61,9 +62,7 @@ impl InstructionPipeline {
 }
 
 impl ParserId for InstructionPipeline {
-    fn id(&self) -> std::borrow::Cow<str> {
-        "InstructionPipeline".into()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { "InstructionPipeline".into() }
 }
 
 impl GetPrefilter for InstructionPipeline {
@@ -88,9 +87,7 @@ pub struct SingleInstructionPipeline(BoxPipeline<'static, InstructionUpdate>);
 impl SingleInstructionPipeline {
     /// Create a new instruction pipeline from a single sub-pipeline.
     #[must_use]
-    pub fn new(pipeline: BoxPipeline<'static, InstructionUpdate>) -> Self {
-        Self(pipeline)
-    }
+    pub fn new(pipeline: BoxPipeline<'static, InstructionUpdate>) -> Self { Self(pipeline) }
 
     /// Handle a transaction update by dispatching its instruction updates to
     /// its sub-pipeline.
@@ -123,15 +120,11 @@ impl SingleInstructionPipeline {
 }
 
 impl ParserId for SingleInstructionPipeline {
-    fn id(&self) -> std::borrow::Cow<str> {
-        self.0.id()
-    }
+    fn id(&self) -> std::borrow::Cow<str> { self.0.id() }
 }
 
 impl GetPrefilter for SingleInstructionPipeline {
-    fn prefilter(&self) -> vixen_core::Prefilter {
-        self.0.prefilter()
-    }
+    fn prefilter(&self) -> vixen_core::Prefilter { self.0.prefilter() }
 }
 
 impl Debug for SingleInstructionPipeline {

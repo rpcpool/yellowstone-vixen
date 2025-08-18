@@ -11,14 +11,13 @@ use yellowstone_grpc_proto::{
     tonic::Status,
 };
 
+#[cfg(feature = "prometheus")]
+use crate::metrics;
 use crate::{
     config::BufferConfig,
     handler::PipelineSets,
     stop::{self, StopCode, StopRx, StopTx},
 };
-
-#[cfg(feature = "prometheus")]
-use crate::metrics;
 
 type TaskHandle = tokio::task::JoinHandle<Result<StopCode, crate::Error>>;
 pub struct Buffer(TaskHandle, StopTx);

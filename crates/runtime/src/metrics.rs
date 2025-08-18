@@ -214,68 +214,30 @@ pub(crate) fn increment_received_updates(update_type: UpdateType) {
 }
 
 /// Register the metrics with the provided registry.
-/// # Panics
-/// If the metrics cannot be registered.
+/// This function is idempotent - if metrics are already registered, it will not panic.
 pub fn register_metrics(registry: &Registry) {
-    registry
-        .register(Box::new(VIXEN_TRANSACTIONS_RECEIVED.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_TRANSACTIONS_SUCCESSFUL.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_TRANSACTIONS_PARSING_ERRORS.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_TRANSACTIONS_HANDLER_ERRORS.clone()))
-        .unwrap();
+    // Try to register each metric, but ignore "AlreadyReg" errors
+    let _ = registry.register(Box::new(VIXEN_TRANSACTIONS_RECEIVED.clone()));
+    let _ = registry.register(Box::new(VIXEN_TRANSACTIONS_SUCCESSFUL.clone()));
+    let _ = registry.register(Box::new(VIXEN_TRANSACTIONS_PARSING_ERRORS.clone()));
+    let _ = registry.register(Box::new(VIXEN_TRANSACTIONS_HANDLER_ERRORS.clone()));
 
-    registry
-        .register(Box::new(VIXEN_ACCOUNTS_RECEIVED.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_ACCOUNTS_SUCCESSFUL.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_ACCOUNTS_PARSING_ERRORS.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_ACCOUNTS_HANDLER_ERRORS.clone()))
-        .unwrap();
+    let _ = registry.register(Box::new(VIXEN_ACCOUNTS_RECEIVED.clone()));
+    let _ = registry.register(Box::new(VIXEN_ACCOUNTS_SUCCESSFUL.clone()));
+    let _ = registry.register(Box::new(VIXEN_ACCOUNTS_PARSING_ERRORS.clone()));
+    let _ = registry.register(Box::new(VIXEN_ACCOUNTS_HANDLER_ERRORS.clone()));
 
-    registry
-        .register(Box::new(VIXEN_BLOCK_METAS_RECEIVED.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_BLOCK_METAS_SUCCESSFUL.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_BLOCK_METAS_PARSING_ERRORS.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_BLOCK_METAS_HANDLER_ERRORS.clone()))
-        .unwrap();
+    let _ = registry.register(Box::new(VIXEN_BLOCK_METAS_RECEIVED.clone()));
+    let _ = registry.register(Box::new(VIXEN_BLOCK_METAS_SUCCESSFUL.clone()));
+    let _ = registry.register(Box::new(VIXEN_BLOCK_METAS_PARSING_ERRORS.clone()));
+    let _ = registry.register(Box::new(VIXEN_BLOCK_METAS_HANDLER_ERRORS.clone()));
 
-    registry
-        .register(Box::new(VIXEN_INSTRUCTIONS_SUCCESSFUL.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_INSTRUCTIONS_PARSING_ERRORS.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_INSTRUCTIONS_HANDLER_ERRORS.clone()))
-        .unwrap();
+    let _ = registry.register(Box::new(VIXEN_INSTRUCTIONS_SUCCESSFUL.clone()));
+    let _ = registry.register(Box::new(VIXEN_INSTRUCTIONS_PARSING_ERRORS.clone()));
+    let _ = registry.register(Box::new(VIXEN_INSTRUCTIONS_HANDLER_ERRORS.clone()));
 
-    registry
-        .register(Box::new(VIXEN_SLOTS_RECEIVED.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_SLOTS_SUCCESSFUL.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_SLOTS_PARSING_ERRORS.clone()))
-        .unwrap();
-    registry
-        .register(Box::new(VIXEN_SLOTS_HANDLER_ERRORS.clone()))
-        .unwrap();
+    let _ = registry.register(Box::new(VIXEN_SLOTS_RECEIVED.clone()));
+    let _ = registry.register(Box::new(VIXEN_SLOTS_SUCCESSFUL.clone()));
+    let _ = registry.register(Box::new(VIXEN_SLOTS_PARSING_ERRORS.clone()));
+    let _ = registry.register(Box::new(VIXEN_SLOTS_HANDLER_ERRORS.clone()));
 }

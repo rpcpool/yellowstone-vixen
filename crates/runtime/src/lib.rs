@@ -31,6 +31,7 @@ pub mod builder;
 pub mod config;
 pub mod handler;
 pub mod instruction;
+
 pub mod sources;
 
 /// Utility functions for the Vixen runtime.
@@ -84,9 +85,7 @@ pub struct Runtime<S: SourceTrait> {
 
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new runtime builder.
-    pub fn builder() -> RuntimeBuilder<S> {
-        RuntimeBuilder::<S>::default()
-    }
+    pub fn builder() -> RuntimeBuilder<S> { RuntimeBuilder::<S>::default() }
 }
 impl<S: SourceTrait> Runtime<S> {
     /// Create a new Tokio runtime and run the Vixen runtime within it,
@@ -125,9 +124,7 @@ impl<S: SourceTrait> Runtime<S> {
     /// }
     /// ```
     #[inline]
-    pub fn run(self) {
-        util::handle_fatal(self.try_run());
-    }
+    pub fn run(self) { util::handle_fatal(self.try_run()); }
 
     /// Error returning variant of [`Self::run`].
     ///
@@ -177,9 +174,7 @@ impl<S: SourceTrait> Runtime<S> {
     /// }
     /// ```
     #[inline]
-    pub async fn run_async(self) {
-        util::handle_fatal(self.try_run_async().await);
-    }
+    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
 
     /// Error returning variant of [`Self::run_async`].
     ///
@@ -241,9 +236,7 @@ impl<S: SourceTrait> Runtime<S> {
             struct CtrlC;
 
             impl fmt::Debug for CtrlC {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    f.write_str("^C")
-                }
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("^C") }
             }
 
             signal = tokio::signal::ctrl_c()
