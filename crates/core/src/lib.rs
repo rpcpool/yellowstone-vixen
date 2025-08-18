@@ -159,7 +159,7 @@ pub struct Prefilter {
     /// Filters for block meta updates.
     pub block_meta: Option<BlockMetaPrefilter>,
     /// Filters for slot updates.
-    pub slot: Option<SlotPrefilter>,
+    pub slot: bool,
 }
 
 fn merge_opt<T, F: FnOnce(&mut T, T)>(lhs: &mut Option<T>, rhs: Option<T>, f: F) {
@@ -182,12 +182,12 @@ impl Prefilter {
             account,
             transaction,
             block_meta,
-            slot,
+            slot: _,
         } = self;
         merge_opt(account, other.account, AccountPrefilter::merge);
         merge_opt(transaction, other.transaction, TransactionPrefilter::merge);
         merge_opt(block_meta, other.block_meta, BlockMetaPrefilter::merge);
-        merge_opt(slot, other.slot, SlotPrefilter::merge);
+        self.slot = self.slot || other.slot;
     }
 }
 
@@ -255,16 +255,6 @@ pub struct BlockMetaPrefilter {}
 
 impl BlockMetaPrefilter {
     /// Merge another block metadata prefilter into this one.
-    /// This function currently does nothing as the struct has no fields.
-    pub fn merge(_lhs: &mut Self, _rhs: Self) {}
-}
-
-/// A prefilter for matching slot updates.
-#[derive(Debug, Default, Clone, PartialEq, Copy)]
-pub struct SlotPrefilter {}
-
-impl SlotPrefilter {
-    /// Merge another slot prefilter into this one.
     /// This function currently does nothing as the struct has no fields.
     pub fn merge(_lhs: &mut Self, _rhs: Self) {}
 }
@@ -465,7 +455,7 @@ pub enum PrefilterError {
 #[must_use = "Consider calling .build() on this builder"]
 pub struct PrefilterBuilder {
     error: Option<PrefilterError>,
-    slots: Option<()>,
+    slots: bool,
     accounts: Option<HashSet<Pubkey>>,
     account_owners: Option<HashSet<Pubkey>>,
     /// Matching [`TransactionPrefilter::accounts_include`]
@@ -524,13 +514,12 @@ impl PrefilterBuilder {
         };
 
         let block_meta = BlockMetaPrefilter {};
-        let slot = slots.map(|()| SlotPrefilter {});
 
         Ok(Prefilter {
             account: (account != AccountPrefilter::default()).then_some(account),
             transaction: (transaction != TransactionPrefilter::default()).then_some(transaction),
             block_meta: (block_meta != BlockMetaPrefilter::default()).then_some(block_meta),
-            slot,
+            slot: slots,
         })
     }
 
@@ -543,7 +532,12 @@ impl PrefilterBuilder {
     }
 
     /// Set prefilter will request slot updates.
-    pub fn slots(self) -> Self { self.mutate(|this| set_opt(&mut this.slots, "slots", ())) }
+    pub fn slots(self) -> Self {
+        self.mutate(|this| {
+            this.slots = true;
+            Ok(())
+        })
+    }
 
     /// Set the accounts that this prefilter will match.
     pub fn accounts<I: IntoIterator>(self, it: I) -> Self

@@ -119,7 +119,13 @@ impl SourceTrait for SolanaSnapshotSource {
         let filters = filters
             .parsers_filters
             .iter()
-            .filter_map(|(key, parser_filter)| parser_filter.slot.map(|_| key.to_string()))
+            .filter_map(|(key, parser_filter)| {
+                if parser_filter.slot {
+                    Some(key.to_string())
+                } else {
+                    None
+                }
+            })
             .collect::<Vec<String>>();
 
         info!("Filters: {:?}", filters.clone());
