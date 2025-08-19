@@ -87,7 +87,9 @@ pub struct SolanaSnapshotSource {
 impl SourceTrait for SolanaSnapshotSource {
     type Config = SolanaSnapshotConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     async fn connect(
         &self,
@@ -119,13 +121,7 @@ impl SourceTrait for SolanaSnapshotSource {
         let filters = filters
             .parsers_filters
             .iter()
-            .filter_map(|(key, parser_filter)| {
-                if parser_filter.slot {
-                    Some(key.to_string())
-                } else {
-                    None
-                }
-            })
+            .filter_map(|(key, parser_filter)| parser_filter.slot.map(|_| key.to_string()))
             .collect::<Vec<String>>();
 
         info!("Filters: {:?}", filters.clone());
