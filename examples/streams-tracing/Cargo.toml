@@ -11,7 +11,8 @@ clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 toml = "0.8.12"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-yellowstone-vixen = { workspace = true, features = ["stream", "prometheus"] }
+yellowstone-vixen-stream = { workspace = true }
+yellowstone-vixen = { workspace = true, features = ["prometheus"] }
 yellowstone-vixen-parser = { workspace = true, features = [
   "proto",
   "token-extensions",
@@ -82,7 +83,9 @@ tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
 
 # Sources
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
-yellowstone-vixen-yellowstone-fumarole-source = { workspace = true, features = ["prometheus"] }
+yellowstone-vixen-yellowstone-fumarole-source = { workspace = true, features = [
+  "prometheus",
+] }
 
 [build-dependencies]
 prost-build = "0.13.1"

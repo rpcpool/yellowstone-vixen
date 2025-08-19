@@ -11,12 +11,12 @@ use solana_pubkey::Pubkey;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use yellowstone_grpc_proto::{
     geyser::{
-        subscribe_update::UpdateOneof, CommitmentLevel, SubscribeUpdate, SubscribeUpdateAccount,
+        subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdateAccount,
         SubscribeUpdateAccountInfo,
     },
     tonic::Status,
 };
-use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
+use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Solana Accounts RPC API.
@@ -27,12 +27,17 @@ pub struct SolanaAccountsRpcSource {
 }
 
 /// The configuration for the Solana Accounts RPC source.
-#[derive(Debug, Clone, Default, serde::Deserialize)]
+#[derive(Debug, Clone, Default, serde::Deserialize, clap::Args)]
 pub struct SolanaAccountsRpcConfig {
     /// The endpoint of the RPC server.
+    #[arg(long, env)]
     pub endpoint: String,
     /// The timeout for the connection.
+    #[arg(long, env)]
     pub timeout: u64,
+
+    #[arg(long, env)]
+    pub commitment_level: Option<CommitmentLevel>,
 }
 
 impl SolanaAccountsRpcSource {
@@ -43,7 +48,7 @@ impl SolanaAccountsRpcSource {
     }
 
     fn get_commitment_config(&self) -> CommitmentConfig {
-        match self.filters.global_filters.commitment {
+        match self.config.commitment_level {
             Some(CommitmentLevel::Finalized) => CommitmentConfig::finalized(),
             Some(CommitmentLevel::Processed) => CommitmentConfig::processed(),
             _ => CommitmentConfig::confirmed(),
@@ -55,14 +60,11 @@ impl SolanaAccountsRpcSource {
 impl SourceTrait for SolanaAccountsRpcSource {
     type Config = SolanaAccountsRpcConfig;
 
-    fn name() -> String { "solana-accounts-rpc".to_string() }
-
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
     async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
         let filters = &self.filters;
         let config = &self.config;
-        let name = Self::name();
 
         let mut tasks_set = JoinSet::new();
 
@@ -73,7 +75,6 @@ impl SourceTrait for SolanaAccountsRpcSource {
                     let config = config.clone();
                     let tx = tx.clone();
                     let filter_id = filter_id.clone();
-                    let name = name.clone();
 
                     let client = RpcClient::new_with_timeout_and_commitment(
                         config.endpoint.clone(),
@@ -86,9 +87,8 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
                         if let Err(e) = &slot {
                             tracing::error!(
-                                "Failed to get slot: {} for source: {}, filter: {}",
+                                "Failed to get slot: {} for source: solana-rpc, filter: {}",
                                 e,
-                                &name,
                                 filter_id
                             );
                         }
@@ -114,9 +114,9 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
                         if let Err(e) = &accounts {
                             tracing::error!(
-                                "Failed to get program accounts: {} for source: {}, filter: {}",
+                                "Failed to get program accounts: {} for source: solana-rpc, \
+                                 filter: {}",
                                 e,
-                                &name,
                                 filter_id
                             );
                         }
@@ -145,8 +145,8 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
                             if res.is_err() {
                                 tracing::error!(
-                                    "Failed to send update to buffer for source: {}, filter: {}",
-                                    &name,
+                                    "Failed to send update to buffer for source: solana-rpc, \
+                                     filter: {}",
                                     filter_id
                                 );
                             }

@@ -1,9 +1,9 @@
 //! Configuration types for the Vixen runtime.
 
-use std::collections::HashMap;
-
+use clap::Args;
 #[cfg(feature = "prometheus")]
 pub use prometheus_impl::*;
+use serde::Deserialize;
 
 /// A helper trait for types that may or may not have a default value,
 /// determined at runtime.
@@ -18,38 +18,54 @@ impl<T: Default> MaybeDefault for T {
 }
 
 /// Root configuration for [the Vixen runtime](crate::Runtime).
-#[derive(Debug, clap::Args, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct VixenConfig<M: clap::Args> {
-    /// Configuration for connecting to the Yellowstone server.
-    #[clap(skip)]
-    pub sources: HashMap<String, toml::Value>,
-
-    /// Configuration for scheduling jobs.
+#[derive(Debug, Args)]
+pub struct VixenConfig<M, S>
+where
+    M: Args,
+    S: Args,
+{
+    /// The source configuration.
     #[command(flatten)]
-    #[serde(default)]
+    pub source: S,
+
+    /// The buffer configuration.
+    #[command(flatten)]
     pub buffer: BufferConfig,
 
-    // TODO: this doesn't show up in clap usage correctly, not sure why
-    /// Configuration for the requested metrics backend.
+    /// The metrics configuration.
     #[command(flatten)]
-    #[serde(default = "OptConfig::default")]
     pub metrics: OptConfig<M>,
 }
 
-/// Yellowstone connection configuration.
-#[derive(Debug, clap::Args, serde::Deserialize, Clone)]
-#[serde(rename_all = "kebab-case")]
-pub struct YellowstoneConfig {
-    /// The endpoint of the Yellowstone server.
-    #[arg(long, env)]
-    pub endpoint: String,
-    /// The token to use for authentication.
-    #[arg(long, env)]
-    pub x_token: Option<String>,
-    /// The timeout for the connection.
-    #[arg(long, env)]
-    pub timeout: u64,
+impl<'de, M, S> Deserialize<'de> for VixenConfig<M, S>
+where
+    M: Args + Deserialize<'de>,
+    S: Args + Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        #[derive(Deserialize)]
+        #[serde(bound = "M: Deserialize<'de>, S: Deserialize<'de>")]
+        struct Inner<M, S> {
+            source: S,
+            #[serde(default)]
+            buffer: BufferConfig,
+            #[serde(default)]
+            metrics: OptConfig<M>,
+        }
+
+        let Inner {
+            source,
+            buffer,
+            metrics,
+        } = Inner::<M, S>::deserialize(deserializer)?;
+
+        Ok(Self {
+            source,
+            buffer,
+            metrics,
+        })
+    }
 }
 
 /// Job scheduler configuration.
@@ -58,9 +74,11 @@ pub struct YellowstoneConfig {
 pub struct BufferConfig {
     /// The maximum number of concurrent jobs to run.  If unset, defaults to
     /// the number of CPUs.
+    #[arg(long, env)]
     pub jobs: Option<usize>,
     /// The maximum number of concurrent sources to run.
     /// Defaults to 100.
+    #[arg(long, env)]
     pub sources_channel_size: usize,
 }
 
@@ -232,7 +250,7 @@ mod prometheus_impl {
         use crate::config::update_clone;
 
         #[allow(clippy::struct_field_names)]
-        #[derive(clap::Args)]
+        #[derive(clap::Args, serde::Deserialize)]
         struct PrometheusConfig {
             #[arg(long, env)]
             prometheus_endpoint: String,

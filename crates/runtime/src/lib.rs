@@ -12,21 +12,14 @@
 //! Vixen provides a simple API for requesting, parsing, and consuming data
 //! from Yellowstone.
 
-use std::collections::HashMap;
+use std::marker::PhantomData;
 
-use builder::RuntimeBuilder;
 use config::BufferConfig;
 use futures_util::future::OptionFuture;
 use metrics::{Counters, Exporter, MetricsFactory, NullMetrics};
 use stop::{StopCode, StopTx};
-use tokio::{
-    sync::mpsc::{self, Receiver},
-    task::JoinSet,
-};
-use yellowstone_grpc_proto::{
-    // prelude::*,
-    tonic::Status,
-};
+use tokio::sync::mpsc;
+use yellowstone_grpc_proto::tonic::Status;
 
 #[cfg(feature = "opentelemetry")]
 pub extern crate opentelemetry;
@@ -35,8 +28,6 @@ pub extern crate prometheus;
 pub extern crate thiserror;
 pub extern crate yellowstone_vixen_core as vixen_core;
 pub use vixen_core::bs58;
-#[cfg(feature = "stream")]
-pub extern crate yellowstone_vixen_proto as proto;
 
 mod buffer;
 pub mod builder;
@@ -45,18 +36,18 @@ pub mod handler;
 pub mod instruction;
 pub mod metrics;
 pub mod sources;
-#[cfg(feature = "stream")]
-pub mod stream;
-mod util;
+
+/// Utility functions for the Vixen runtime.
+pub mod util;
 
 pub mod filter_pipeline;
 
 pub use handler::{Handler, HandlerResult, Pipeline};
 pub use util::*;
-pub use yellowstone_grpc_proto::geyser::CommitmentLevel;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
+pub use yellowstone_vixen_core::CommitmentLevel;
 
-use crate::sources::DynSource;
+use crate::{builder::RuntimeBuilder, sources::SourceTrait};
 
 /// An error thrown by the Vixen runtime.
 #[derive(Debug, thiserror::Error)]
@@ -89,23 +80,20 @@ pub enum Error {
 
 /// The main runtime for Vixen.
 #[derive(Debug)]
-pub struct Runtime<M: MetricsFactory> {
-    sources_cfg: HashMap<String, toml::Value>,
-    sources: Vec<Box<dyn DynSource>>,
-    commitment_filter: Option<CommitmentLevel>,
-    from_slot_filter: Option<u64>,
-    buffer_cfg: BufferConfig,
+pub struct Runtime<M: MetricsFactory, S: SourceTrait> {
+    buffer: BufferConfig,
+    source: S::Config,
     pipelines: handler::PipelineSets,
     counters: Counters<M::Instrumenter>,
     exporter: Option<M::Exporter>,
+    _source: PhantomData<S>,
 }
 
-impl Runtime<NullMetrics> {
+impl<S: SourceTrait> Runtime<NullMetrics, S> {
     /// Create a new runtime builder.
-    pub fn builder() -> RuntimeBuilder { RuntimeBuilder::default() }
+    pub fn builder() -> RuntimeBuilder<S> { RuntimeBuilder::<S>::default() }
 }
-
-impl<M: MetricsFactory> Runtime<M> {
+impl<M: MetricsFactory, S: SourceTrait> Runtime<M, S> {
     /// Create a new Tokio runtime and run the Vixen runtime within it,
     /// terminating the current process if the runtime crashes.
     ///
@@ -132,14 +120,11 @@ impl<M: MetricsFactory> Runtime<M> {
     /// // MyHandler is a handler that implements the Handler trait
     /// // NOTE: The main function is not async
     /// fn main() {
-    ///     Runtime::builder()
-    ///         .source(YellowstoneGrpcSource::new())
+    ///     Runtime::builder::<YellowstoneGrpcSource>()
     ///         .account(Pipeline::new(TokenProgramAccParser, [MyHandler]))
     ///         .account(Pipeline::new(TokenExtensionProgramAccParser, [MyHandler]))
     ///         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [MyHandler]))
     ///         .instruction(Pipeline::new(TokenProgramIxParser, [MyHandler]))
-    ///         .metrics(yellowstone_vixen::metrics::Prometheus)
-    ///         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
     ///         .build(config)
     ///         .run(); // Process will exit if an error occurs
     /// }
@@ -184,14 +169,11 @@ impl<M: MetricsFactory> Runtime<M> {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     Runtime::builder()
-    ///         .source(YellowstoneGrpcSource::new())
+    ///     Runtime::builder::<YellowstoneGrpcSource>()
     ///         .account(Pipeline::new(TokenProgramAccParser, [MyHandler]))
     ///         .account(Pipeline::new(TokenExtensionProgramAccParser, [MyHandler]))
     ///         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [MyHandler]))
     ///         .instruction(Pipeline::new(TokenProgramIxParser, [MyHandler]))
-    ///         .metrics(yellowstone_vixen::metrics::Prometheus)
-    ///         .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
     ///         .build(config)
     ///         .run_async()
     ///         .await;
@@ -212,21 +194,19 @@ impl<M: MetricsFactory> Runtime<M> {
             Exporter(Result<Result<stop::StopCode, X>, tokio::task::JoinError>),
         }
 
-        let (runtime, updates_rx, _set_handles) = self.connect_to_sources();
+        let (tx, updates_rx) =
+            mpsc::channel::<Result<SubscribeUpdate, Status>>(self.buffer.sources_channel_size);
 
-        let Self {
-            sources_cfg: _,
-            sources: _,
-            commitment_filter: _,
-            from_slot_filter: _,
-            buffer_cfg,
-            pipelines,
-            counters,
-            exporter,
-        } = runtime;
+        let filters = self.pipelines.filters();
+
+        let source = S::new(self.source, filters);
+
+        tokio::spawn(async move {
+            let _ = source.connect(tx).await;
+        });
 
         let (stop_exporter, rx) = stop::channel();
-        let mut exporter = OptionFuture::from(exporter.map(|e| tokio::spawn(e.run(rx))));
+        let mut exporter = OptionFuture::from(self.exporter.map(|e| tokio::spawn(e.run(rx))));
 
         let signal;
 
@@ -272,7 +252,7 @@ impl<M: MetricsFactory> Runtime<M> {
         }
 
         let mut buffer =
-            buffer::Buffer::run_yellowstone(buffer_cfg, updates_rx, pipelines, counters);
+            buffer::Buffer::run_yellowstone(self.buffer, updates_rx, self.pipelines, self.counters);
 
         let stop_ty = tokio::select! {
             s = signal => StopType::Signal(s),
@@ -357,45 +337,5 @@ impl<M: MetricsFactory> Runtime<M> {
                 Ok(Ok(c)) => c.as_unit(),
             }
         }
-    }
-
-    /// Connect to the sources and return the runtime, the receiver for the updates, and the join set for the sources.
-    fn connect_to_sources(
-        mut self,
-    ) -> (Self, Receiver<Result<SubscribeUpdate, Status>>, JoinSet<()>) {
-        let (tx, rx) =
-            mpsc::channel::<Result<SubscribeUpdate, Status>>(self.buffer_cfg.sources_channel_size);
-
-        let filters = self
-            .pipelines
-            .filters()
-            .commitment(self.commitment_filter)
-            .from_slot(self.from_slot_filter);
-
-        let mut set = JoinSet::new();
-
-        for source in self.sources.drain(..) {
-            let tx = tx.clone();
-            let config = self
-                .sources_cfg
-                .get(&source.name())
-                .expect("No source config");
-            let source_name = source.name();
-
-            let handle = source.connect(config.clone(), filters.clone(), tx);
-
-            set.spawn(async move {
-                handle
-                    .await
-                    .unwrap_or_else(|_| {
-                        panic!("Source connection failed for: {source_name}");
-                    })
-                    .unwrap_or_else(|_| {
-                        panic!("Source connection failed for: {source_name}");
-                    });
-            });
-        }
-
-        (self, rx, set)
     }
 }

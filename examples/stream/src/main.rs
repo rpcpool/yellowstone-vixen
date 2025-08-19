@@ -15,7 +15,7 @@ use yellowstone_vixen::{self as vixen, vixen_core};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 mod account {
-    use yellowstone_vixen::proto::tonic;
+    use yellowstone_vixen_proto::tonic;
 
     tonic::include_proto!("account");
 }
@@ -74,8 +74,7 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::stream::Server::builder()
-        .source::<YellowstoneGrpcSource>()
+    yellowstone_vixen_stream::Server::<_, YellowstoneGrpcSource>::builder()
         .account(Parser)
         .build(config)
         .run();
