@@ -8,8 +8,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use num_derive::FromPrimitive;
 
-/// The direction to round.  Used for pool token to trading token conversions to
-/// avoid losing value on any deposit or withdrawal.
 #[derive(
     BorshSerialize,
     BorshDeserialize,
@@ -23,7 +21,8 @@ use num_derive::FromPrimitive;
     FromPrimitive,
 )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum RoundDirection {
-    Floor,
-    Ceiling,
+pub enum CreatorFeeOn {
+    BothToken,
+    OnlyToken0,
+    OnlyToken1,
 }

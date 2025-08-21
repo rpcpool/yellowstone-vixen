@@ -7,13 +7,13 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::generated::types::{CurveParams, MintParams, VestingParams};
+use crate::generated::types::{AmmCreatorFeeOn, CurveParams, MintParams, VestingParams};
 
-pub const INITIALIZE_DISCRIMINATOR: [u8; 8] = [175, 175, 109, 31, 13, 152, 155, 237];
+pub const INITIALIZE_V2_DISCRIMINATOR: [u8; 8] = [67, 153, 175, 39, 218, 16, 38, 32];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct Initialize {
+pub struct InitializeV2 {
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     pub payer: solana_pubkey::Pubkey,
@@ -64,8 +64,11 @@ pub struct Initialize {
     pub program: solana_pubkey::Pubkey,
 }
 
-impl Initialize {
-    pub fn instruction(&self, args: InitializeInstructionArgs) -> solana_instruction::Instruction {
+impl InitializeV2 {
+    pub fn instruction(
+        &self,
+        args: InitializeV2InstructionArgs,
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -73,7 +76,7 @@ impl Initialize {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: InitializeInstructionArgs,
+        args: InitializeV2InstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(18 + remaining_accounts.len());
@@ -138,7 +141,7 @@ impl Initialize {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&InitializeInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&InitializeV2InstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
@@ -152,31 +155,32 @@ impl Initialize {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct InitializeInstructionData {
+pub struct InitializeV2InstructionData {
     discriminator: [u8; 8],
 }
 
-impl InitializeInstructionData {
+impl InitializeV2InstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [175, 175, 109, 31, 13, 152, 155, 237],
+            discriminator: [67, 153, 175, 39, 218, 16, 38, 32],
         }
     }
 }
 
-impl Default for InitializeInstructionData {
+impl Default for InitializeV2InstructionData {
     fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct InitializeInstructionArgs {
+pub struct InitializeV2InstructionArgs {
     pub base_mint_param: MintParams,
     pub curve_param: CurveParams,
     pub vesting_param: VestingParams,
+    pub amm_fee_on: AmmCreatorFeeOn,
 }
 
-/// Instruction builder for `Initialize`.
+/// Instruction builder for `InitializeV2`.
 ///
 /// ### Accounts:
 ///
@@ -199,7 +203,7 @@ pub struct InitializeInstructionArgs {
 ///   16. `[]` event_authority
 ///   17. `[]` program
 #[derive(Clone, Debug, Default)]
-pub struct InitializeBuilder {
+pub struct InitializeV2Builder {
     payer: Option<solana_pubkey::Pubkey>,
     creator: Option<solana_pubkey::Pubkey>,
     global_config: Option<solana_pubkey::Pubkey>,
@@ -221,10 +225,11 @@ pub struct InitializeBuilder {
     base_mint_param: Option<MintParams>,
     curve_param: Option<CurveParams>,
     vesting_param: Option<VestingParams>,
+    amm_fee_on: Option<AmmCreatorFeeOn>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl InitializeBuilder {
+impl InitializeV2Builder {
     pub fn new() -> Self { Self::default() }
 
     /// The account paying for the initialization costs
@@ -385,6 +390,12 @@ impl InitializeBuilder {
         self
     }
 
+    #[inline(always)]
+    pub fn amm_fee_on(&mut self, amm_fee_on: AmmCreatorFeeOn) -> &mut Self {
+        self.amm_fee_on = Some(amm_fee_on);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
@@ -404,7 +415,7 @@ impl InitializeBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = Initialize {
+        let accounts = InitializeV2 {
             payer: self.payer.expect("payer is not set"),
             creator: self.creator.expect("creator is not set"),
             global_config: self.global_config.expect("global_config is not set"),
@@ -434,7 +445,7 @@ impl InitializeBuilder {
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
-        let args = InitializeInstructionArgs {
+        let args = InitializeV2InstructionArgs {
             base_mint_param: self
                 .base_mint_param
                 .clone()
@@ -444,14 +455,15 @@ impl InitializeBuilder {
                 .vesting_param
                 .clone()
                 .expect("vesting_param is not set"),
+            amm_fee_on: self.amm_fee_on.clone().expect("amm_fee_on is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `initialize` CPI accounts.
-pub struct InitializeCpiAccounts<'a, 'b> {
+/// `initialize_v2` CPI accounts.
+pub struct InitializeV2CpiAccounts<'a, 'b> {
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     pub payer: &'b solana_account_info::AccountInfo<'a>,
@@ -502,8 +514,8 @@ pub struct InitializeCpiAccounts<'a, 'b> {
     pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `initialize` CPI instruction.
-pub struct InitializeCpi<'a, 'b> {
+/// `initialize_v2` CPI instruction.
+pub struct InitializeV2Cpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// The account paying for the initialization costs
@@ -555,14 +567,14 @@ pub struct InitializeCpi<'a, 'b> {
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: InitializeInstructionArgs,
+    pub __args: InitializeV2InstructionArgs,
 }
 
-impl<'a, 'b> InitializeCpi<'a, 'b> {
+impl<'a, 'b> InitializeV2Cpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: InitializeCpiAccounts<'a, 'b>,
-        args: InitializeInstructionArgs,
+        accounts: InitializeV2CpiAccounts<'a, 'b>,
+        args: InitializeV2InstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -694,7 +706,7 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&InitializeInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&InitializeV2InstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
@@ -735,7 +747,7 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `Initialize` via CPI.
+/// Instruction builder for `InitializeV2` via CPI.
 ///
 /// ### Accounts:
 ///
@@ -758,13 +770,13 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
 ///   16. `[]` event_authority
 ///   17. `[]` program
 #[derive(Clone, Debug)]
-pub struct InitializeCpiBuilder<'a, 'b> {
-    instruction: Box<InitializeCpiBuilderInstruction<'a, 'b>>,
+pub struct InitializeV2CpiBuilder<'a, 'b> {
+    instruction: Box<InitializeV2CpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
+impl<'a, 'b> InitializeV2CpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(InitializeCpiBuilderInstruction {
+        let instruction = Box::new(InitializeV2CpiBuilderInstruction {
             __program: program,
             payer: None,
             creator: None,
@@ -787,6 +799,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
             base_mint_param: None,
             curve_param: None,
             vesting_param: None,
+            amm_fee_on: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -984,6 +997,12 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self
     }
 
+    #[inline(always)]
+    pub fn amm_fee_on(&mut self, amm_fee_on: AmmCreatorFeeOn) -> &mut Self {
+        self.instruction.amm_fee_on = Some(amm_fee_on);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1022,7 +1041,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program_entrypoint::ProgramResult {
-        let args = InitializeInstructionArgs {
+        let args = InitializeV2InstructionArgs {
             base_mint_param: self
                 .instruction
                 .base_mint_param
@@ -1038,8 +1057,13 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
                 .vesting_param
                 .clone()
                 .expect("vesting_param is not set"),
+            amm_fee_on: self
+                .instruction
+                .amm_fee_on
+                .clone()
+                .expect("amm_fee_on is not set"),
         };
-        let instruction = InitializeCpi {
+        let instruction = InitializeV2Cpi {
             __program: self.instruction.__program,
 
             payer: self.instruction.payer.expect("payer is not set"),
@@ -1117,7 +1141,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct InitializeCpiBuilderInstruction<'a, 'b> {
+struct InitializeV2CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     payer: Option<&'b solana_account_info::AccountInfo<'a>>,
     creator: Option<&'b solana_account_info::AccountInfo<'a>>,
@@ -1140,6 +1164,7 @@ struct InitializeCpiBuilderInstruction<'a, 'b> {
     base_mint_param: Option<MintParams>,
     curve_param: Option<CurveParams>,
     vesting_param: Option<VestingParams>,
+    amm_fee_on: Option<AmmCreatorFeeOn>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

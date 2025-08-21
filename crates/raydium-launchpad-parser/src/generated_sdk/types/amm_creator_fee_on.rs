@@ -8,6 +8,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use num_derive::FromPrimitive;
 
+/// migrate to cpmm, creator fee on quote token or both token
 #[derive(
     BorshSerialize,
     BorshDeserialize,
@@ -21,7 +22,7 @@ use num_derive::FromPrimitive;
     FromPrimitive,
 )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum PoolStatusBitFlag {
-    Enable,
-    Disable,
+pub enum AmmCreatorFeeOn {
+    QuoteToken,
+    BothToken,
 }

@@ -7,13 +7,17 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const CREATE_VESTING_ACCOUNT_DISCRIMINATOR: [u8; 8] = [129, 178, 2, 13, 217, 172, 230, 218];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateVestingAccount {
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     pub creator: solana_pubkey::Pubkey,
-
+    /// The beneficiary is used to receive the allocated linear release of tokens.
+    /// Once this account is set, it cannot be modified, so please ensure the validity of this account,
+    /// otherwise, the unlocked tokens will not be claimable.
     pub beneficiary: solana_pubkey::Pubkey,
     /// The pool state account
     pub pool_state: solana_pubkey::Pubkey,
@@ -121,6 +125,9 @@ impl CreateVestingAccountBuilder {
         self
     }
 
+    /// The beneficiary is used to receive the allocated linear release of tokens.
+    /// Once this account is set, it cannot be modified, so please ensure the validity of this account,
+    /// otherwise, the unlocked tokens will not be claimable.
     #[inline(always)]
     pub fn beneficiary(&mut self, beneficiary: solana_pubkey::Pubkey) -> &mut Self {
         self.beneficiary = Some(beneficiary);
@@ -196,7 +203,9 @@ pub struct CreateVestingAccountCpiAccounts<'a, 'b> {
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     pub creator: &'b solana_account_info::AccountInfo<'a>,
-
+    /// The beneficiary is used to receive the allocated linear release of tokens.
+    /// Once this account is set, it cannot be modified, so please ensure the validity of this account,
+    /// otherwise, the unlocked tokens will not be claimable.
     pub beneficiary: &'b solana_account_info::AccountInfo<'a>,
     /// The pool state account
     pub pool_state: &'b solana_account_info::AccountInfo<'a>,
@@ -213,7 +222,9 @@ pub struct CreateVestingAccountCpi<'a, 'b> {
     /// The account paying for the initialization costs
     /// This can be any account with sufficient SOL to cover the transaction
     pub creator: &'b solana_account_info::AccountInfo<'a>,
-
+    /// The beneficiary is used to receive the allocated linear release of tokens.
+    /// Once this account is set, it cannot be modified, so please ensure the validity of this account,
+    /// otherwise, the unlocked tokens will not be claimable.
     pub beneficiary: &'b solana_account_info::AccountInfo<'a>,
     /// The pool state account
     pub pool_state: &'b solana_account_info::AccountInfo<'a>,
@@ -364,6 +375,9 @@ impl<'a, 'b> CreateVestingAccountCpiBuilder<'a, 'b> {
         self
     }
 
+    /// The beneficiary is used to receive the allocated linear release of tokens.
+    /// Once this account is set, it cannot be modified, so please ensure the validity of this account,
+    /// otherwise, the unlocked tokens will not be claimable.
     #[inline(always)]
     pub fn beneficiary(
         &mut self,

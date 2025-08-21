@@ -40,6 +40,21 @@ pub enum RaydiumCpSwapError {
     /// 6009 - Init lp amount is too less(Because 100 amount lp will be locked)
     #[error("Init lp amount is too less(Because 100 amount lp will be locked)")]
     InitLpAmountTooLess = 0x1779,
+    /// 6010 - TransferFee calculate not match
+    #[error("TransferFee calculate not match")]
+    TransferFeeCalculateNotMatch = 0x177a,
+    /// 6011 - Math overflow
+    #[error("Math overflow")]
+    MathOverflow = 0x177b,
+    /// 6012 - Insufficient vault
+    #[error("Insufficient vault")]
+    InsufficientVault = 0x177c,
+    /// 6013 - Invalid fee model
+    #[error("Invalid fee model")]
+    InvalidFeeModel = 0x177d,
+    /// 6014 - Fee is zero
+    #[error("Fee is zero")]
+    NoFeeCollect = 0x177e,
 }
 
 impl solana_program_error::PrintProgramError for RaydiumCpSwapError {

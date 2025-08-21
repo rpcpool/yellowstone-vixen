@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const BUY_EXACT_OUT_DISCRIMINATOR: [u8; 8] = [24, 211, 116, 40, 105, 3, 153, 56];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct BuyExactOut {

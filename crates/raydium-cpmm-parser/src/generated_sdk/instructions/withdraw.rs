@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const WITHDRAW_DISCRIMINATOR: [u8; 8] = [183, 18, 70, 156, 148, 109, 161, 34];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct Withdraw {
@@ -18,9 +20,9 @@ pub struct Withdraw {
     pub pool_state: solana_pubkey::Pubkey,
     /// Owner lp token account
     pub owner_lp_token: solana_pubkey::Pubkey,
-    /// The owner's token account for receive token_0
+    /// The token account for receive token_0,
     pub token0_account: solana_pubkey::Pubkey,
-    /// The owner's token account for receive token_1
+    /// The token account for receive token_1
     pub token1_account: solana_pubkey::Pubkey,
     /// The address that holds pool tokens for token_0
     pub token0_vault: solana_pubkey::Pubkey,
@@ -154,11 +156,11 @@ pub struct WithdrawInstructionArgs {
 ///   6. `[writable]` token0_vault
 ///   7. `[writable]` token1_vault
 ///   8. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   9. `[]` token_program2022
+///   9. `[optional]` token_program2022 (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
 ///   10. `[]` vault0_mint
 ///   11. `[]` vault1_mint
 ///   12. `[writable]` lp_mint
-///   13. `[]` memo_program
+///   13. `[optional]` memo_program (default to `MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`)
 #[derive(Clone, Debug, Default)]
 pub struct WithdrawBuilder {
     owner: Option<solana_pubkey::Pubkey>,
@@ -211,14 +213,14 @@ impl WithdrawBuilder {
         self
     }
 
-    /// The owner's token account for receive token_0
+    /// The token account for receive token_0,
     #[inline(always)]
     pub fn token0_account(&mut self, token0_account: solana_pubkey::Pubkey) -> &mut Self {
         self.token0_account = Some(token0_account);
         self
     }
 
-    /// The owner's token account for receive token_1
+    /// The token account for receive token_1
     #[inline(always)]
     pub fn token1_account(&mut self, token1_account: solana_pubkey::Pubkey) -> &mut Self {
         self.token1_account = Some(token1_account);
@@ -247,6 +249,7 @@ impl WithdrawBuilder {
         self
     }
 
+    /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// Token program 2022
     #[inline(always)]
     pub fn token_program2022(&mut self, token_program2022: solana_pubkey::Pubkey) -> &mut Self {
@@ -275,6 +278,7 @@ impl WithdrawBuilder {
         self
     }
 
+    /// `[optional account, default to 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr']`
     /// memo program
     #[inline(always)]
     pub fn memo_program(&mut self, memo_program: solana_pubkey::Pubkey) -> &mut Self {
@@ -331,13 +335,15 @@ impl WithdrawBuilder {
             token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
-            token_program2022: self
-                .token_program2022
-                .expect("token_program2022 is not set"),
+            token_program2022: self.token_program2022.unwrap_or(solana_pubkey::pubkey!(
+                "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+            )),
             vault0_mint: self.vault0_mint.expect("vault0_mint is not set"),
             vault1_mint: self.vault1_mint.expect("vault1_mint is not set"),
             lp_mint: self.lp_mint.expect("lp_mint is not set"),
-            memo_program: self.memo_program.expect("memo_program is not set"),
+            memo_program: self.memo_program.unwrap_or(solana_pubkey::pubkey!(
+                "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+            )),
         };
         let args = WithdrawInstructionArgs {
             lp_token_amount: self
@@ -368,9 +374,9 @@ pub struct WithdrawCpiAccounts<'a, 'b> {
     pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// Owner lp token account
     pub owner_lp_token: &'b solana_account_info::AccountInfo<'a>,
-    /// The owner's token account for receive token_0
+    /// The token account for receive token_0,
     pub token0_account: &'b solana_account_info::AccountInfo<'a>,
-    /// The owner's token account for receive token_1
+    /// The token account for receive token_1
     pub token1_account: &'b solana_account_info::AccountInfo<'a>,
     /// The address that holds pool tokens for token_0
     pub token0_vault: &'b solana_account_info::AccountInfo<'a>,
@@ -402,9 +408,9 @@ pub struct WithdrawCpi<'a, 'b> {
     pub pool_state: &'b solana_account_info::AccountInfo<'a>,
     /// Owner lp token account
     pub owner_lp_token: &'b solana_account_info::AccountInfo<'a>,
-    /// The owner's token account for receive token_0
+    /// The token account for receive token_0,
     pub token0_account: &'b solana_account_info::AccountInfo<'a>,
-    /// The owner's token account for receive token_1
+    /// The token account for receive token_1
     pub token1_account: &'b solana_account_info::AccountInfo<'a>,
     /// The address that holds pool tokens for token_0
     pub token0_vault: &'b solana_account_info::AccountInfo<'a>,
@@ -664,7 +670,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self
     }
 
-    /// The owner's token account for receive token_0
+    /// The token account for receive token_0,
     #[inline(always)]
     pub fn token0_account(
         &mut self,
@@ -674,7 +680,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self
     }
 
-    /// The owner's token account for receive token_1
+    /// The token account for receive token_1
     #[inline(always)]
     pub fn token1_account(
         &mut self,

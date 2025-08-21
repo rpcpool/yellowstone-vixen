@@ -14,14 +14,20 @@ use yellowstone_vixen_core::InstructionUpdateOutput;
 use crate::{
     deserialize_checked,
     instructions::{
+        ClosePermissionPda as ClosePermissionPdaIxAccounts,
+        CollectCreatorFee as CollectCreatorFeeIxAccounts,
         CollectFundFee as CollectFundFeeIxAccounts,
         CollectFundFeeInstructionArgs as CollectFundFeeIxData,
         CollectProtocolFee as CollectProtocolFeeIxAccounts,
         CollectProtocolFeeInstructionArgs as CollectProtocolFeeIxData,
         CreateAmmConfig as CreateAmmConfigIxAccounts,
-        CreateAmmConfigInstructionArgs as CreateAmmConfigIxData, Deposit as DepositIxAccounts,
+        CreateAmmConfigInstructionArgs as CreateAmmConfigIxData,
+        CreatePermissionPda as CreatePermissionPdaIxAccounts, Deposit as DepositIxAccounts,
         DepositInstructionArgs as DepositIxData, Initialize as InitializeIxAccounts,
-        InitializeInstructionArgs as InitializeIxData, SwapBaseInput as SwapBaseInputIxAccounts,
+        InitializeInstructionArgs as InitializeIxData,
+        InitializeWithPermission as InitializeWithPermissionIxAccounts,
+        InitializeWithPermissionInstructionArgs as InitializeWithPermissionIxData,
+        SwapBaseInput as SwapBaseInputIxAccounts,
         SwapBaseInputInstructionArgs as SwapBaseInputIxData,
         SwapBaseOutput as SwapBaseOutputIxAccounts,
         SwapBaseOutputInstructionArgs as SwapBaseOutputIxData,
@@ -38,16 +44,23 @@ use crate::{
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum RaydiumCpSwapProgramIx {
-    CreateAmmConfig(CreateAmmConfigIxAccounts, CreateAmmConfigIxData),
-    UpdateAmmConfig(UpdateAmmConfigIxAccounts, UpdateAmmConfigIxData),
-    UpdatePoolStatus(UpdatePoolStatusIxAccounts, UpdatePoolStatusIxData),
-    CollectProtocolFee(CollectProtocolFeeIxAccounts, CollectProtocolFeeIxData),
+    ClosePermissionPda(ClosePermissionPdaIxAccounts),
+    CollectCreatorFee(CollectCreatorFeeIxAccounts),
     CollectFundFee(CollectFundFeeIxAccounts, CollectFundFeeIxData),
-    Initialize(InitializeIxAccounts, InitializeIxData),
+    CollectProtocolFee(CollectProtocolFeeIxAccounts, CollectProtocolFeeIxData),
+    CreateAmmConfig(CreateAmmConfigIxAccounts, CreateAmmConfigIxData),
+    CreatePermissionPda(CreatePermissionPdaIxAccounts),
     Deposit(DepositIxAccounts, DepositIxData),
-    Withdraw(WithdrawIxAccounts, WithdrawIxData),
+    Initialize(InitializeIxAccounts, InitializeIxData),
+    InitializeWithPermission(
+        InitializeWithPermissionIxAccounts,
+        InitializeWithPermissionIxData,
+    ),
     SwapBaseInput(SwapBaseInputIxAccounts, SwapBaseInputIxData),
     SwapBaseOutput(SwapBaseOutputIxAccounts, SwapBaseOutputIxData),
+    UpdateAmmConfig(UpdateAmmConfigIxAccounts, UpdateAmmConfigIxData),
+    UpdatePoolStatus(UpdatePoolStatusIxAccounts, UpdatePoolStatusIxData),
+    Withdraw(WithdrawIxAccounts, WithdrawIxData),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -115,45 +128,58 @@ impl InstructionParser {
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
-            [137, 52, 237, 212, 215, 117, 108, 104] => {
-                let expected_accounts_len = 3;
+            [156, 84, 32, 118, 69, 135, 70, 123] => {
+                let expected_accounts_len = 4;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = CreateAmmConfigIxAccounts {
+                let ix_accounts = ClosePermissionPdaIxAccounts {
                     owner: next_account(accounts)?,
-                    amm_config: next_account(accounts)?,
+                    permission_authority: next_account(accounts)?,
+                    permission: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                 };
-                let de_ix_data: CreateAmmConfigIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(RaydiumCpSwapProgramIx::CreateAmmConfig(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(RaydiumCpSwapProgramIx::ClosePermissionPda(ix_accounts))
             },
-            [49, 60, 174, 136, 154, 28, 116, 200] => {
-                let expected_accounts_len = 2;
+            [20, 22, 86, 123, 198, 28, 219, 132] => {
+                let expected_accounts_len = 14;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = UpdateAmmConfigIxAccounts {
-                    owner: next_account(accounts)?,
-                    amm_config: next_account(accounts)?,
-                };
-                let de_ix_data: UpdateAmmConfigIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(RaydiumCpSwapProgramIx::UpdateAmmConfig(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [130, 87, 108, 6, 46, 224, 117, 123] => {
-                let expected_accounts_len = 2;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = UpdatePoolStatusIxAccounts {
+                let ix_accounts = CollectCreatorFeeIxAccounts {
+                    creator: next_account(accounts)?,
                     authority: next_account(accounts)?,
                     pool_state: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    vault0_mint: next_account(accounts)?,
+                    vault1_mint: next_account(accounts)?,
+                    creator_token0: next_account(accounts)?,
+                    creator_token1: next_account(accounts)?,
+                    token0_program: next_account(accounts)?,
+                    token1_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: UpdatePoolStatusIxData =
+                Ok(RaydiumCpSwapProgramIx::CollectCreatorFee(ix_accounts))
+            },
+            [167, 138, 78, 149, 223, 194, 6, 126] => {
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = CollectFundFeeIxAccounts {
+                    owner: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    vault0_mint: next_account(accounts)?,
+                    vault1_mint: next_account(accounts)?,
+                    recipient_token0_account: next_account(accounts)?,
+                    recipient_token1_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_program2022: next_account(accounts)?,
+                };
+                let de_ix_data: CollectFundFeeIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(RaydiumCpSwapProgramIx::UpdatePoolStatus(
+                Ok(RaydiumCpSwapProgramIx::CollectFundFee(
                     ix_accounts,
                     de_ix_data,
                 ))
@@ -182,29 +208,52 @@ impl InstructionParser {
                     de_ix_data,
                 ))
             },
-            [167, 138, 78, 149, 223, 194, 6, 126] => {
-                let expected_accounts_len = 12;
+            [137, 52, 237, 212, 215, 117, 108, 104] => {
+                let expected_accounts_len = 3;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = CollectFundFeeIxAccounts {
+                let ix_accounts = CreateAmmConfigIxAccounts {
                     owner: next_account(accounts)?,
-                    authority: next_account(accounts)?,
-                    pool_state: next_account(accounts)?,
                     amm_config: next_account(accounts)?,
-                    token0_vault: next_account(accounts)?,
-                    token1_vault: next_account(accounts)?,
-                    vault0_mint: next_account(accounts)?,
-                    vault1_mint: next_account(accounts)?,
-                    recipient_token0_account: next_account(accounts)?,
-                    recipient_token1_account: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    token_program2022: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: CollectFundFeeIxData =
+                let de_ix_data: CreateAmmConfigIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(RaydiumCpSwapProgramIx::CollectFundFee(
+                Ok(RaydiumCpSwapProgramIx::CreateAmmConfig(
                     ix_accounts,
                     de_ix_data,
                 ))
+            },
+            [135, 136, 2, 216, 137, 169, 181, 202] => {
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = CreatePermissionPdaIxAccounts {
+                    owner: next_account(accounts)?,
+                    permission_authority: next_account(accounts)?,
+                    permission: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                };
+                Ok(RaydiumCpSwapProgramIx::CreatePermissionPda(ix_accounts))
+            },
+            [242, 35, 198, 137, 82, 225, 242, 182] => {
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = DepositIxAccounts {
+                    owner: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    owner_lp_token: next_account(accounts)?,
+                    token0_account: next_account(accounts)?,
+                    token1_account: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_program2022: next_account(accounts)?,
+                    vault0_mint: next_account(accounts)?,
+                    vault1_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                };
+                let de_ix_data: DepositIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(RaydiumCpSwapProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [175, 175, 109, 31, 13, 152, 155, 237] => {
                 let expected_accounts_len = 20;
@@ -234,48 +283,38 @@ impl InstructionParser {
                 let de_ix_data: InitializeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::Initialize(ix_accounts, de_ix_data))
             },
-            [242, 35, 198, 137, 82, 225, 242, 182] => {
-                let expected_accounts_len = 13;
+            [63, 55, 254, 65, 49, 178, 89, 121] => {
+                let expected_accounts_len = 21;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = DepositIxAccounts {
-                    owner: next_account(accounts)?,
+                let ix_accounts = InitializeWithPermissionIxAccounts {
+                    payer: next_account(accounts)?,
+                    creator: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
                     authority: next_account(accounts)?,
                     pool_state: next_account(accounts)?,
-                    owner_lp_token: next_account(accounts)?,
-                    token0_account: next_account(accounts)?,
-                    token1_account: next_account(accounts)?,
+                    token0_mint: next_account(accounts)?,
+                    token1_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    payer_token0: next_account(accounts)?,
+                    payer_token1: next_account(accounts)?,
+                    payer_lp_token: next_account(accounts)?,
                     token0_vault: next_account(accounts)?,
                     token1_vault: next_account(accounts)?,
+                    create_pool_fee: next_account(accounts)?,
+                    observation_state: next_account(accounts)?,
+                    permission: next_account(accounts)?,
                     token_program: next_account(accounts)?,
-                    token_program2022: next_account(accounts)?,
-                    vault0_mint: next_account(accounts)?,
-                    vault1_mint: next_account(accounts)?,
-                    lp_mint: next_account(accounts)?,
+                    token0_program: next_account(accounts)?,
+                    token1_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: DepositIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(RaydiumCpSwapProgramIx::Deposit(ix_accounts, de_ix_data))
-            },
-            [183, 18, 70, 156, 148, 109, 161, 34] => {
-                let expected_accounts_len = 14;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = WithdrawIxAccounts {
-                    owner: next_account(accounts)?,
-                    authority: next_account(accounts)?,
-                    pool_state: next_account(accounts)?,
-                    owner_lp_token: next_account(accounts)?,
-                    token0_account: next_account(accounts)?,
-                    token1_account: next_account(accounts)?,
-                    token0_vault: next_account(accounts)?,
-                    token1_vault: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    token_program2022: next_account(accounts)?,
-                    vault0_mint: next_account(accounts)?,
-                    vault1_mint: next_account(accounts)?,
-                    lp_mint: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                };
-                let de_ix_data: WithdrawIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(RaydiumCpSwapProgramIx::Withdraw(ix_accounts, de_ix_data))
+                let de_ix_data: InitializeWithPermissionIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(RaydiumCpSwapProgramIx::InitializeWithPermission(
+                    ix_accounts,
+                    de_ix_data,
+                ))
             },
             [143, 190, 90, 218, 196, 30, 51, 222] => {
                 let expected_accounts_len = 13;
@@ -326,6 +365,56 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
+            },
+            [49, 60, 174, 136, 154, 28, 116, 200] => {
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = UpdateAmmConfigIxAccounts {
+                    owner: next_account(accounts)?,
+                    amm_config: next_account(accounts)?,
+                };
+                let de_ix_data: UpdateAmmConfigIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(RaydiumCpSwapProgramIx::UpdateAmmConfig(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [130, 87, 108, 6, 46, 224, 117, 123] => {
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = UpdatePoolStatusIxAccounts {
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                };
+                let de_ix_data: UpdatePoolStatusIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(RaydiumCpSwapProgramIx::UpdatePoolStatus(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [183, 18, 70, 156, 148, 109, 161, 34] => {
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = WithdrawIxAccounts {
+                    owner: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    owner_lp_token: next_account(accounts)?,
+                    token0_account: next_account(accounts)?,
+                    token1_account: next_account(accounts)?,
+                    token0_vault: next_account(accounts)?,
+                    token1_vault: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    token_program2022: next_account(accounts)?,
+                    vault0_mint: next_account(accounts)?,
+                    vault1_mint: next_account(accounts)?,
+                    lp_mint: next_account(accounts)?,
+                    memo_program: next_account(accounts)?,
+                };
+                let de_ix_data: WithdrawIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(RaydiumCpSwapProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
@@ -425,61 +514,64 @@ pub fn next_program_id_optional_account<
 mod proto_parser {
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{CreateAmmConfigIxAccounts, InstructionParser, RaydiumCpSwapProgramIx};
+    use super::{ClosePermissionPdaIxAccounts, InstructionParser, RaydiumCpSwapProgramIx};
     use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
-    impl IntoProto<proto_def::CreateAmmConfigIxAccounts> for CreateAmmConfigIxAccounts {
-        fn into_proto(self) -> proto_def::CreateAmmConfigIxAccounts {
-            proto_def::CreateAmmConfigIxAccounts {
+    impl IntoProto<proto_def::ClosePermissionPdaIxAccounts> for ClosePermissionPdaIxAccounts {
+        fn into_proto(self) -> proto_def::ClosePermissionPdaIxAccounts {
+            proto_def::ClosePermissionPdaIxAccounts {
                 owner: self.owner.to_string(),
-                amm_config: self.amm_config.to_string(),
+                permission_authority: self.permission_authority.to_string(),
+                permission: self.permission.to_string(),
                 system_program: self.system_program.to_string(),
             }
         }
     }
-    use super::CreateAmmConfigIxData;
-    impl IntoProto<proto_def::CreateAmmConfigIxData> for CreateAmmConfigIxData {
-        fn into_proto(self) -> proto_def::CreateAmmConfigIxData {
-            proto_def::CreateAmmConfigIxData {
-                index: self.index.into(),
-                trade_fee_rate: self.trade_fee_rate,
-                protocol_fee_rate: self.protocol_fee_rate,
-                fund_fee_rate: self.fund_fee_rate,
-                create_pool_fee: self.create_pool_fee,
-            }
-        }
-    }
-    use super::UpdateAmmConfigIxAccounts;
-    impl IntoProto<proto_def::UpdateAmmConfigIxAccounts> for UpdateAmmConfigIxAccounts {
-        fn into_proto(self) -> proto_def::UpdateAmmConfigIxAccounts {
-            proto_def::UpdateAmmConfigIxAccounts {
-                owner: self.owner.to_string(),
-                amm_config: self.amm_config.to_string(),
-            }
-        }
-    }
-    use super::UpdateAmmConfigIxData;
-    impl IntoProto<proto_def::UpdateAmmConfigIxData> for UpdateAmmConfigIxData {
-        fn into_proto(self) -> proto_def::UpdateAmmConfigIxData {
-            proto_def::UpdateAmmConfigIxData {
-                param: self.param.into(),
-                value: self.value,
-            }
-        }
-    }
-    use super::UpdatePoolStatusIxAccounts;
-    impl IntoProto<proto_def::UpdatePoolStatusIxAccounts> for UpdatePoolStatusIxAccounts {
-        fn into_proto(self) -> proto_def::UpdatePoolStatusIxAccounts {
-            proto_def::UpdatePoolStatusIxAccounts {
+    use super::CollectCreatorFeeIxAccounts;
+    impl IntoProto<proto_def::CollectCreatorFeeIxAccounts> for CollectCreatorFeeIxAccounts {
+        fn into_proto(self) -> proto_def::CollectCreatorFeeIxAccounts {
+            proto_def::CollectCreatorFeeIxAccounts {
+                creator: self.creator.to_string(),
                 authority: self.authority.to_string(),
                 pool_state: self.pool_state.to_string(),
+                amm_config: self.amm_config.to_string(),
+                token0_vault: self.token0_vault.to_string(),
+                token1_vault: self.token1_vault.to_string(),
+                vault0_mint: self.vault0_mint.to_string(),
+                vault1_mint: self.vault1_mint.to_string(),
+                creator_token0: self.creator_token0.to_string(),
+                creator_token1: self.creator_token1.to_string(),
+                token0_program: self.token0_program.to_string(),
+                token1_program: self.token1_program.to_string(),
+                associated_token_program: self.associated_token_program.to_string(),
+                system_program: self.system_program.to_string(),
             }
         }
     }
-    use super::UpdatePoolStatusIxData;
-    impl IntoProto<proto_def::UpdatePoolStatusIxData> for UpdatePoolStatusIxData {
-        fn into_proto(self) -> proto_def::UpdatePoolStatusIxData {
-            proto_def::UpdatePoolStatusIxData {
-                status: self.status.into(),
+    use super::CollectFundFeeIxAccounts;
+    impl IntoProto<proto_def::CollectFundFeeIxAccounts> for CollectFundFeeIxAccounts {
+        fn into_proto(self) -> proto_def::CollectFundFeeIxAccounts {
+            proto_def::CollectFundFeeIxAccounts {
+                owner: self.owner.to_string(),
+                authority: self.authority.to_string(),
+                pool_state: self.pool_state.to_string(),
+                amm_config: self.amm_config.to_string(),
+                token0_vault: self.token0_vault.to_string(),
+                token1_vault: self.token1_vault.to_string(),
+                vault0_mint: self.vault0_mint.to_string(),
+                vault1_mint: self.vault1_mint.to_string(),
+                recipient_token0_account: self.recipient_token0_account.to_string(),
+                recipient_token1_account: self.recipient_token1_account.to_string(),
+                token_program: self.token_program.to_string(),
+                token_program2022: self.token_program2022.to_string(),
+            }
+        }
+    }
+    use super::CollectFundFeeIxData;
+    impl IntoProto<proto_def::CollectFundFeeIxData> for CollectFundFeeIxData {
+        fn into_proto(self) -> proto_def::CollectFundFeeIxData {
+            proto_def::CollectFundFeeIxData {
+                amount0_requested: self.amount0_requested,
+                amount1_requested: self.amount1_requested,
             }
         }
     }
@@ -511,31 +603,67 @@ mod proto_parser {
             }
         }
     }
-    use super::CollectFundFeeIxAccounts;
-    impl IntoProto<proto_def::CollectFundFeeIxAccounts> for CollectFundFeeIxAccounts {
-        fn into_proto(self) -> proto_def::CollectFundFeeIxAccounts {
-            proto_def::CollectFundFeeIxAccounts {
+    use super::CreateAmmConfigIxAccounts;
+    impl IntoProto<proto_def::CreateAmmConfigIxAccounts> for CreateAmmConfigIxAccounts {
+        fn into_proto(self) -> proto_def::CreateAmmConfigIxAccounts {
+            proto_def::CreateAmmConfigIxAccounts {
                 owner: self.owner.to_string(),
-                authority: self.authority.to_string(),
-                pool_state: self.pool_state.to_string(),
                 amm_config: self.amm_config.to_string(),
-                token0_vault: self.token0_vault.to_string(),
-                token1_vault: self.token1_vault.to_string(),
-                vault0_mint: self.vault0_mint.to_string(),
-                vault1_mint: self.vault1_mint.to_string(),
-                recipient_token0_account: self.recipient_token0_account.to_string(),
-                recipient_token1_account: self.recipient_token1_account.to_string(),
-                token_program: self.token_program.to_string(),
-                token_program2022: self.token_program2022.to_string(),
+                system_program: self.system_program.to_string(),
             }
         }
     }
-    use super::CollectFundFeeIxData;
-    impl IntoProto<proto_def::CollectFundFeeIxData> for CollectFundFeeIxData {
-        fn into_proto(self) -> proto_def::CollectFundFeeIxData {
-            proto_def::CollectFundFeeIxData {
-                amount0_requested: self.amount0_requested,
-                amount1_requested: self.amount1_requested,
+    use super::CreateAmmConfigIxData;
+    impl IntoProto<proto_def::CreateAmmConfigIxData> for CreateAmmConfigIxData {
+        fn into_proto(self) -> proto_def::CreateAmmConfigIxData {
+            proto_def::CreateAmmConfigIxData {
+                index: self.index.into(),
+                trade_fee_rate: self.trade_fee_rate,
+                protocol_fee_rate: self.protocol_fee_rate,
+                fund_fee_rate: self.fund_fee_rate,
+                create_pool_fee: self.create_pool_fee,
+                creator_fee_rate: self.creator_fee_rate,
+            }
+        }
+    }
+    use super::CreatePermissionPdaIxAccounts;
+    impl IntoProto<proto_def::CreatePermissionPdaIxAccounts> for CreatePermissionPdaIxAccounts {
+        fn into_proto(self) -> proto_def::CreatePermissionPdaIxAccounts {
+            proto_def::CreatePermissionPdaIxAccounts {
+                owner: self.owner.to_string(),
+                permission_authority: self.permission_authority.to_string(),
+                permission: self.permission.to_string(),
+                system_program: self.system_program.to_string(),
+            }
+        }
+    }
+    use super::DepositIxAccounts;
+    impl IntoProto<proto_def::DepositIxAccounts> for DepositIxAccounts {
+        fn into_proto(self) -> proto_def::DepositIxAccounts {
+            proto_def::DepositIxAccounts {
+                owner: self.owner.to_string(),
+                authority: self.authority.to_string(),
+                pool_state: self.pool_state.to_string(),
+                owner_lp_token: self.owner_lp_token.to_string(),
+                token0_account: self.token0_account.to_string(),
+                token1_account: self.token1_account.to_string(),
+                token0_vault: self.token0_vault.to_string(),
+                token1_vault: self.token1_vault.to_string(),
+                token_program: self.token_program.to_string(),
+                token_program2022: self.token_program2022.to_string(),
+                vault0_mint: self.vault0_mint.to_string(),
+                vault1_mint: self.vault1_mint.to_string(),
+                lp_mint: self.lp_mint.to_string(),
+            }
+        }
+    }
+    use super::DepositIxData;
+    impl IntoProto<proto_def::DepositIxData> for DepositIxData {
+        fn into_proto(self) -> proto_def::DepositIxData {
+            proto_def::DepositIxData {
+                lp_token_amount: self.lp_token_amount,
+                maximum_token0_amount: self.maximum_token0_amount,
+                maximum_token1_amount: self.maximum_token1_amount,
             }
         }
     }
@@ -576,64 +704,44 @@ mod proto_parser {
             }
         }
     }
-    use super::DepositIxAccounts;
-    impl IntoProto<proto_def::DepositIxAccounts> for DepositIxAccounts {
-        fn into_proto(self) -> proto_def::DepositIxAccounts {
-            proto_def::DepositIxAccounts {
-                owner: self.owner.to_string(),
+    use super::InitializeWithPermissionIxAccounts;
+    impl IntoProto<proto_def::InitializeWithPermissionIxAccounts>
+        for InitializeWithPermissionIxAccounts
+    {
+        fn into_proto(self) -> proto_def::InitializeWithPermissionIxAccounts {
+            proto_def::InitializeWithPermissionIxAccounts {
+                payer: self.payer.to_string(),
+                creator: self.creator.to_string(),
+                amm_config: self.amm_config.to_string(),
                 authority: self.authority.to_string(),
                 pool_state: self.pool_state.to_string(),
-                owner_lp_token: self.owner_lp_token.to_string(),
-                token0_account: self.token0_account.to_string(),
-                token1_account: self.token1_account.to_string(),
+                token0_mint: self.token0_mint.to_string(),
+                token1_mint: self.token1_mint.to_string(),
+                lp_mint: self.lp_mint.to_string(),
+                payer_token0: self.payer_token0.to_string(),
+                payer_token1: self.payer_token1.to_string(),
+                payer_lp_token: self.payer_lp_token.to_string(),
                 token0_vault: self.token0_vault.to_string(),
                 token1_vault: self.token1_vault.to_string(),
+                create_pool_fee: self.create_pool_fee.to_string(),
+                observation_state: self.observation_state.to_string(),
+                permission: self.permission.to_string(),
                 token_program: self.token_program.to_string(),
-                token_program2022: self.token_program2022.to_string(),
-                vault0_mint: self.vault0_mint.to_string(),
-                vault1_mint: self.vault1_mint.to_string(),
-                lp_mint: self.lp_mint.to_string(),
+                token0_program: self.token0_program.to_string(),
+                token1_program: self.token1_program.to_string(),
+                associated_token_program: self.associated_token_program.to_string(),
+                system_program: self.system_program.to_string(),
             }
         }
     }
-    use super::DepositIxData;
-    impl IntoProto<proto_def::DepositIxData> for DepositIxData {
-        fn into_proto(self) -> proto_def::DepositIxData {
-            proto_def::DepositIxData {
-                lp_token_amount: self.lp_token_amount,
-                maximum_token0_amount: self.maximum_token0_amount,
-                maximum_token1_amount: self.maximum_token1_amount,
-            }
-        }
-    }
-    use super::WithdrawIxAccounts;
-    impl IntoProto<proto_def::WithdrawIxAccounts> for WithdrawIxAccounts {
-        fn into_proto(self) -> proto_def::WithdrawIxAccounts {
-            proto_def::WithdrawIxAccounts {
-                owner: self.owner.to_string(),
-                authority: self.authority.to_string(),
-                pool_state: self.pool_state.to_string(),
-                owner_lp_token: self.owner_lp_token.to_string(),
-                token0_account: self.token0_account.to_string(),
-                token1_account: self.token1_account.to_string(),
-                token0_vault: self.token0_vault.to_string(),
-                token1_vault: self.token1_vault.to_string(),
-                token_program: self.token_program.to_string(),
-                token_program2022: self.token_program2022.to_string(),
-                vault0_mint: self.vault0_mint.to_string(),
-                vault1_mint: self.vault1_mint.to_string(),
-                lp_mint: self.lp_mint.to_string(),
-                memo_program: self.memo_program.to_string(),
-            }
-        }
-    }
-    use super::WithdrawIxData;
-    impl IntoProto<proto_def::WithdrawIxData> for WithdrawIxData {
-        fn into_proto(self) -> proto_def::WithdrawIxData {
-            proto_def::WithdrawIxData {
-                lp_token_amount: self.lp_token_amount,
-                minimum_token0_amount: self.minimum_token0_amount,
-                minimum_token1_amount: self.minimum_token1_amount,
+    use super::InitializeWithPermissionIxData;
+    impl IntoProto<proto_def::InitializeWithPermissionIxData> for InitializeWithPermissionIxData {
+        fn into_proto(self) -> proto_def::InitializeWithPermissionIxData {
+            proto_def::InitializeWithPermissionIxData {
+                init_amount0: self.init_amount0,
+                init_amount1: self.init_amount1,
+                open_time: self.open_time,
+                creator_fee_on: self.creator_fee_on as i32,
             }
         }
     }
@@ -695,13 +803,158 @@ mod proto_parser {
             }
         }
     }
+    use super::UpdateAmmConfigIxAccounts;
+    impl IntoProto<proto_def::UpdateAmmConfigIxAccounts> for UpdateAmmConfigIxAccounts {
+        fn into_proto(self) -> proto_def::UpdateAmmConfigIxAccounts {
+            proto_def::UpdateAmmConfigIxAccounts {
+                owner: self.owner.to_string(),
+                amm_config: self.amm_config.to_string(),
+            }
+        }
+    }
+    use super::UpdateAmmConfigIxData;
+    impl IntoProto<proto_def::UpdateAmmConfigIxData> for UpdateAmmConfigIxData {
+        fn into_proto(self) -> proto_def::UpdateAmmConfigIxData {
+            proto_def::UpdateAmmConfigIxData {
+                param: self.param.into(),
+                value: self.value,
+            }
+        }
+    }
+    use super::UpdatePoolStatusIxAccounts;
+    impl IntoProto<proto_def::UpdatePoolStatusIxAccounts> for UpdatePoolStatusIxAccounts {
+        fn into_proto(self) -> proto_def::UpdatePoolStatusIxAccounts {
+            proto_def::UpdatePoolStatusIxAccounts {
+                authority: self.authority.to_string(),
+                pool_state: self.pool_state.to_string(),
+            }
+        }
+    }
+    use super::UpdatePoolStatusIxData;
+    impl IntoProto<proto_def::UpdatePoolStatusIxData> for UpdatePoolStatusIxData {
+        fn into_proto(self) -> proto_def::UpdatePoolStatusIxData {
+            proto_def::UpdatePoolStatusIxData {
+                status: self.status.into(),
+            }
+        }
+    }
+    use super::WithdrawIxAccounts;
+    impl IntoProto<proto_def::WithdrawIxAccounts> for WithdrawIxAccounts {
+        fn into_proto(self) -> proto_def::WithdrawIxAccounts {
+            proto_def::WithdrawIxAccounts {
+                owner: self.owner.to_string(),
+                authority: self.authority.to_string(),
+                pool_state: self.pool_state.to_string(),
+                owner_lp_token: self.owner_lp_token.to_string(),
+                token0_account: self.token0_account.to_string(),
+                token1_account: self.token1_account.to_string(),
+                token0_vault: self.token0_vault.to_string(),
+                token1_vault: self.token1_vault.to_string(),
+                token_program: self.token_program.to_string(),
+                token_program2022: self.token_program2022.to_string(),
+                vault0_mint: self.vault0_mint.to_string(),
+                vault1_mint: self.vault1_mint.to_string(),
+                lp_mint: self.lp_mint.to_string(),
+                memo_program: self.memo_program.to_string(),
+            }
+        }
+    }
+    use super::WithdrawIxData;
+    impl IntoProto<proto_def::WithdrawIxData> for WithdrawIxData {
+        fn into_proto(self) -> proto_def::WithdrawIxData {
+            proto_def::WithdrawIxData {
+                lp_token_amount: self.lp_token_amount,
+                minimum_token0_amount: self.minimum_token0_amount,
+                minimum_token1_amount: self.minimum_token1_amount,
+            }
+        }
+    }
 
     impl IntoProto<proto_def::ProgramIxs> for RaydiumCpSwapProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
+                RaydiumCpSwapProgramIx::ClosePermissionPda(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePermissionPda(
+                        proto_def::ClosePermissionPdaIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                RaydiumCpSwapProgramIx::CollectCreatorFee(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CollectCreatorFee(
+                        proto_def::CollectCreatorFeeIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                RaydiumCpSwapProgramIx::CollectFundFee(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CollectFundFee(
+                        proto_def::CollectFundFeeIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                RaydiumCpSwapProgramIx::CollectProtocolFee(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CollectProtocolFee(
+                        proto_def::CollectProtocolFeeIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
                 RaydiumCpSwapProgramIx::CreateAmmConfig(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateAmmConfig(
                         proto_def::CreateAmmConfigIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                RaydiumCpSwapProgramIx::CreatePermissionPda(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CreatePermissionPda(
+                        proto_def::CreatePermissionPdaIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                RaydiumCpSwapProgramIx::Deposit(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Deposit(
+                        proto_def::DepositIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                RaydiumCpSwapProgramIx::Initialize(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Initialize(
+                        proto_def::InitializeIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                RaydiumCpSwapProgramIx::InitializeWithPermission(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeWithPermission(
+                            proto_def::InitializeWithPermissionIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
+                },
+                RaydiumCpSwapProgramIx::SwapBaseInput(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseInput(
+                        proto_def::SwapBaseInputIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                RaydiumCpSwapProgramIx::SwapBaseOutput(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseOutput(
+                        proto_def::SwapBaseOutputIx {
                             accounts: Some(acc.into_proto()),
                             data: Some(data.into_proto()),
                         },
@@ -723,57 +976,9 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumCpSwapProgramIx::CollectProtocolFee(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CollectProtocolFee(
-                        proto_def::CollectProtocolFeeIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                RaydiumCpSwapProgramIx::CollectFundFee(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CollectFundFee(
-                        proto_def::CollectFundFeeIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                RaydiumCpSwapProgramIx::Initialize(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Initialize(
-                        proto_def::InitializeIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                RaydiumCpSwapProgramIx::Deposit(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Deposit(
-                        proto_def::DepositIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
                 RaydiumCpSwapProgramIx::Withdraw(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Withdraw(
                         proto_def::WithdrawIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                RaydiumCpSwapProgramIx::SwapBaseInput(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseInput(
-                        proto_def::SwapBaseInputIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
-                RaydiumCpSwapProgramIx::SwapBaseOutput(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseOutput(
-                        proto_def::SwapBaseOutputIx {
                             accounts: Some(acc.into_proto()),
                             data: Some(data.into_proto()),
                         },

@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const DEPOSIT_DISCRIMINATOR: [u8; 8] = [242, 35, 198, 137, 82, 225, 242, 182];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct Deposit {
@@ -16,7 +18,7 @@ pub struct Deposit {
     pub authority: solana_pubkey::Pubkey,
 
     pub pool_state: solana_pubkey::Pubkey,
-    /// Owner lp tokan account
+    /// Owner lp token account
     pub owner_lp_token: solana_pubkey::Pubkey,
     /// The payer's token account for token_0
     pub token0_account: solana_pubkey::Pubkey,
@@ -148,7 +150,7 @@ pub struct DepositInstructionArgs {
 ///   6. `[writable]` token0_vault
 ///   7. `[writable]` token1_vault
 ///   8. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   9. `[]` token_program2022
+///   9. `[optional]` token_program2022 (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
 ///   10. `[]` vault0_mint
 ///   11. `[]` vault1_mint
 ///   12. `[writable]` lp_mint
@@ -195,7 +197,7 @@ impl DepositBuilder {
         self
     }
 
-    /// Owner lp tokan account
+    /// Owner lp token account
     #[inline(always)]
     pub fn owner_lp_token(&mut self, owner_lp_token: solana_pubkey::Pubkey) -> &mut Self {
         self.owner_lp_token = Some(owner_lp_token);
@@ -238,6 +240,7 @@ impl DepositBuilder {
         self
     }
 
+    /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// Token program 2022
     #[inline(always)]
     pub fn token_program2022(&mut self, token_program2022: solana_pubkey::Pubkey) -> &mut Self {
@@ -315,9 +318,9 @@ impl DepositBuilder {
             token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
-            token_program2022: self
-                .token_program2022
-                .expect("token_program2022 is not set"),
+            token_program2022: self.token_program2022.unwrap_or(solana_pubkey::pubkey!(
+                "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+            )),
             vault0_mint: self.vault0_mint.expect("vault0_mint is not set"),
             vault1_mint: self.vault1_mint.expect("vault1_mint is not set"),
             lp_mint: self.lp_mint.expect("lp_mint is not set"),
@@ -349,7 +352,7 @@ pub struct DepositCpiAccounts<'a, 'b> {
     pub authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub pool_state: &'b solana_account_info::AccountInfo<'a>,
-    /// Owner lp tokan account
+    /// Owner lp token account
     pub owner_lp_token: &'b solana_account_info::AccountInfo<'a>,
     /// The payer's token account for token_0
     pub token0_account: &'b solana_account_info::AccountInfo<'a>,
@@ -381,7 +384,7 @@ pub struct DepositCpi<'a, 'b> {
     pub authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub pool_state: &'b solana_account_info::AccountInfo<'a>,
-    /// Owner lp tokan account
+    /// Owner lp token account
     pub owner_lp_token: &'b solana_account_info::AccountInfo<'a>,
     /// The payer's token account for token_0
     pub token0_account: &'b solana_account_info::AccountInfo<'a>,
@@ -624,7 +627,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
         self
     }
 
-    /// Owner lp tokan account
+    /// Owner lp token account
     #[inline(always)]
     pub fn owner_lp_token(
         &mut self,

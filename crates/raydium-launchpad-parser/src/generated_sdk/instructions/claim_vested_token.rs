@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const CLAIM_VESTED_TOKEN_DISCRIMINATOR: [u8; 8] = [49, 33, 104, 30, 189, 157, 79, 35];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct ClaimVestedToken {
@@ -62,7 +64,7 @@ impl ClaimVestedToken {
         accounts.push(solana_instruction::AccountMeta::new(self.base_vault, false));
         accounts.push(solana_instruction::AccountMeta::new(
             self.user_base_token,
-            true,
+            false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.base_token_mint,
@@ -118,7 +120,7 @@ impl Default for ClaimVestedTokenInstructionData {
 ///   2. `[writable]` pool_state
 ///   3. `[writable]` vesting_record
 ///   4. `[writable]` base_vault
-///   5. `[writable, signer]` user_base_token
+///   5. `[writable]` user_base_token
 ///   6. `[]` base_token_mint
 ///   7. `[optional]` base_token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
 ///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
@@ -395,7 +397,7 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
         ));
         accounts.push(solana_instruction::AccountMeta::new(
             *self.user_base_token.key,
-            true,
+            false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.base_token_mint.key,
@@ -460,7 +462,7 @@ impl<'a, 'b> ClaimVestedTokenCpi<'a, 'b> {
 ///   2. `[writable]` pool_state
 ///   3. `[writable]` vesting_record
 ///   4. `[writable]` base_vault
-///   5. `[writable, signer]` user_base_token
+///   5. `[writable]` user_base_token
 ///   6. `[]` base_token_mint
 ///   7. `[]` base_token_program
 ///   8. `[]` system_program

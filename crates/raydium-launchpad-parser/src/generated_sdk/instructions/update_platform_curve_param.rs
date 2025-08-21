@@ -7,23 +7,29 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::generated::types::PlatformConfigParam;
+use crate::generated::types::BondingCurveParam;
 
-pub const UPDATE_PLATFORM_CONFIG_DISCRIMINATOR: [u8; 8] = [195, 60, 76, 129, 146, 45, 67, 143];
+pub const UPDATE_PLATFORM_CURVE_PARAM_DISCRIMINATOR: [u8; 8] =
+    [138, 144, 138, 250, 220, 128, 4, 57];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct UpdatePlatformConfig {
+pub struct UpdatePlatformCurveParam {
     /// The account paying for the initialization costs
     pub platform_admin: solana_pubkey::Pubkey,
     /// Platform config account to be changed
     pub platform_config: solana_pubkey::Pubkey,
+    /// Global configuration account containing protocol-wide settings
+    /// Includes settings like quote token mint and fee parameters
+    pub global_config: solana_pubkey::Pubkey,
+    /// System program for lamport transfers
+    pub system_program: solana_pubkey::Pubkey,
 }
 
-impl UpdatePlatformConfig {
+impl UpdatePlatformCurveParam {
     pub fn instruction(
         &self,
-        args: UpdatePlatformConfigInstructionArgs,
+        args: UpdatePlatformCurveParamInstructionArgs,
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
@@ -32,11 +38,11 @@ impl UpdatePlatformConfig {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: UpdatePlatformConfigInstructionArgs,
+        args: UpdatePlatformCurveParamInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(
             self.platform_admin,
             true,
         ));
@@ -44,8 +50,16 @@ impl UpdatePlatformConfig {
             self.platform_config,
             false,
         ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.global_config,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.system_program,
+            false,
+        ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&UpdatePlatformConfigInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&UpdatePlatformCurveParamInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
@@ -59,43 +73,49 @@ impl UpdatePlatformConfig {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UpdatePlatformConfigInstructionData {
+pub struct UpdatePlatformCurveParamInstructionData {
     discriminator: [u8; 8],
 }
 
-impl UpdatePlatformConfigInstructionData {
+impl UpdatePlatformCurveParamInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [195, 60, 76, 129, 146, 45, 67, 143],
+            discriminator: [138, 144, 138, 250, 220, 128, 4, 57],
         }
     }
 }
 
-impl Default for UpdatePlatformConfigInstructionData {
+impl Default for UpdatePlatformCurveParamInstructionData {
     fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UpdatePlatformConfigInstructionArgs {
-    pub param: PlatformConfigParam,
+pub struct UpdatePlatformCurveParamInstructionArgs {
+    pub index: u8,
+    pub bonding_curve_param: BondingCurveParam,
 }
 
-/// Instruction builder for `UpdatePlatformConfig`.
+/// Instruction builder for `UpdatePlatformCurveParam`.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` platform_admin
+///   0. `[writable, signer]` platform_admin
 ///   1. `[writable]` platform_config
+///   2. `[]` global_config
+///   3. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
-pub struct UpdatePlatformConfigBuilder {
+pub struct UpdatePlatformCurveParamBuilder {
     platform_admin: Option<solana_pubkey::Pubkey>,
     platform_config: Option<solana_pubkey::Pubkey>,
-    param: Option<PlatformConfigParam>,
+    global_config: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    index: Option<u8>,
+    bonding_curve_param: Option<BondingCurveParam>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl UpdatePlatformConfigBuilder {
+impl UpdatePlatformCurveParamBuilder {
     pub fn new() -> Self { Self::default() }
 
     /// The account paying for the initialization costs
@@ -112,9 +132,31 @@ impl UpdatePlatformConfigBuilder {
         self
     }
 
+    /// Global configuration account containing protocol-wide settings
+    /// Includes settings like quote token mint and fee parameters
     #[inline(always)]
-    pub fn param(&mut self, param: PlatformConfigParam) -> &mut Self {
-        self.param = Some(param);
+    pub fn global_config(&mut self, global_config: solana_pubkey::Pubkey) -> &mut Self {
+        self.global_config = Some(global_config);
+        self
+    }
+
+    /// `[optional account, default to '11111111111111111111111111111111']`
+    /// System program for lamport transfers
+    #[inline(always)]
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
+        self.system_program = Some(system_program);
+        self
+    }
+
+    #[inline(always)]
+    pub fn index(&mut self, index: u8) -> &mut Self {
+        self.index = Some(index);
+        self
+    }
+
+    #[inline(always)]
+    pub fn bonding_curve_param(&mut self, bonding_curve_param: BondingCurveParam) -> &mut Self {
+        self.bonding_curve_param = Some(bonding_curve_param);
         self
     }
 
@@ -137,48 +179,68 @@ impl UpdatePlatformConfigBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = UpdatePlatformConfig {
+        let accounts = UpdatePlatformCurveParam {
             platform_admin: self.platform_admin.expect("platform_admin is not set"),
             platform_config: self.platform_config.expect("platform_config is not set"),
+            global_config: self.global_config.expect("global_config is not set"),
+            system_program: self
+                .system_program
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
         };
-        let args = UpdatePlatformConfigInstructionArgs {
-            param: self.param.clone().expect("param is not set"),
+        let args = UpdatePlatformCurveParamInstructionArgs {
+            index: self.index.clone().expect("index is not set"),
+            bonding_curve_param: self
+                .bonding_curve_param
+                .clone()
+                .expect("bonding_curve_param is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `update_platform_config` CPI accounts.
-pub struct UpdatePlatformConfigCpiAccounts<'a, 'b> {
+/// `update_platform_curve_param` CPI accounts.
+pub struct UpdatePlatformCurveParamCpiAccounts<'a, 'b> {
     /// The account paying for the initialization costs
     pub platform_admin: &'b solana_account_info::AccountInfo<'a>,
     /// Platform config account to be changed
     pub platform_config: &'b solana_account_info::AccountInfo<'a>,
+    /// Global configuration account containing protocol-wide settings
+    /// Includes settings like quote token mint and fee parameters
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
+    /// System program for lamport transfers
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `update_platform_config` CPI instruction.
-pub struct UpdatePlatformConfigCpi<'a, 'b> {
+/// `update_platform_curve_param` CPI instruction.
+pub struct UpdatePlatformCurveParamCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// The account paying for the initialization costs
     pub platform_admin: &'b solana_account_info::AccountInfo<'a>,
     /// Platform config account to be changed
     pub platform_config: &'b solana_account_info::AccountInfo<'a>,
+    /// Global configuration account containing protocol-wide settings
+    /// Includes settings like quote token mint and fee parameters
+    pub global_config: &'b solana_account_info::AccountInfo<'a>,
+    /// System program for lamport transfers
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: UpdatePlatformConfigInstructionArgs,
+    pub __args: UpdatePlatformCurveParamInstructionArgs,
 }
 
-impl<'a, 'b> UpdatePlatformConfigCpi<'a, 'b> {
+impl<'a, 'b> UpdatePlatformCurveParamCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: UpdatePlatformConfigCpiAccounts<'a, 'b>,
-        args: UpdatePlatformConfigInstructionArgs,
+        accounts: UpdatePlatformCurveParamCpiAccounts<'a, 'b>,
+        args: UpdatePlatformCurveParamInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
             platform_admin: accounts.platform_admin,
             platform_config: accounts.platform_config,
+            global_config: accounts.global_config,
+            system_program: accounts.system_program,
             __args: args,
         }
     }
@@ -212,13 +274,21 @@ impl<'a, 'b> UpdatePlatformConfigCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.platform_admin.key,
             true,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
             *self.platform_config.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.global_config.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.system_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
@@ -228,7 +298,7 @@ impl<'a, 'b> UpdatePlatformConfigCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&UpdatePlatformConfigInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&UpdatePlatformCurveParamInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
@@ -237,10 +307,12 @@ impl<'a, 'b> UpdatePlatformConfigCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(3 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(5 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.platform_admin.clone());
         account_infos.push(self.platform_config.clone());
+        account_infos.push(self.global_config.clone());
+        account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -253,24 +325,29 @@ impl<'a, 'b> UpdatePlatformConfigCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `UpdatePlatformConfig` via CPI.
+/// Instruction builder for `UpdatePlatformCurveParam` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` platform_admin
+///   0. `[writable, signer]` platform_admin
 ///   1. `[writable]` platform_config
+///   2. `[]` global_config
+///   3. `[]` system_program
 #[derive(Clone, Debug)]
-pub struct UpdatePlatformConfigCpiBuilder<'a, 'b> {
-    instruction: Box<UpdatePlatformConfigCpiBuilderInstruction<'a, 'b>>,
+pub struct UpdatePlatformCurveParamCpiBuilder<'a, 'b> {
+    instruction: Box<UpdatePlatformCurveParamCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> UpdatePlatformConfigCpiBuilder<'a, 'b> {
+impl<'a, 'b> UpdatePlatformCurveParamCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(UpdatePlatformConfigCpiBuilderInstruction {
+        let instruction = Box::new(UpdatePlatformCurveParamCpiBuilderInstruction {
             __program: program,
             platform_admin: None,
             platform_config: None,
-            param: None,
+            global_config: None,
+            system_program: None,
+            index: None,
+            bonding_curve_param: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -296,9 +373,36 @@ impl<'a, 'b> UpdatePlatformConfigCpiBuilder<'a, 'b> {
         self
     }
 
+    /// Global configuration account containing protocol-wide settings
+    /// Includes settings like quote token mint and fee parameters
     #[inline(always)]
-    pub fn param(&mut self, param: PlatformConfigParam) -> &mut Self {
-        self.instruction.param = Some(param);
+    pub fn global_config(
+        &mut self,
+        global_config: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.global_config = Some(global_config);
+        self
+    }
+
+    /// System program for lamport transfers
+    #[inline(always)]
+    pub fn system_program(
+        &mut self,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.system_program = Some(system_program);
+        self
+    }
+
+    #[inline(always)]
+    pub fn index(&mut self, index: u8) -> &mut Self {
+        self.instruction.index = Some(index);
+        self
+    }
+
+    #[inline(always)]
+    pub fn bonding_curve_param(&mut self, bonding_curve_param: BondingCurveParam) -> &mut Self {
+        self.instruction.bonding_curve_param = Some(bonding_curve_param);
         self
     }
 
@@ -340,10 +444,15 @@ impl<'a, 'b> UpdatePlatformConfigCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program_entrypoint::ProgramResult {
-        let args = UpdatePlatformConfigInstructionArgs {
-            param: self.instruction.param.clone().expect("param is not set"),
+        let args = UpdatePlatformCurveParamInstructionArgs {
+            index: self.instruction.index.clone().expect("index is not set"),
+            bonding_curve_param: self
+                .instruction
+                .bonding_curve_param
+                .clone()
+                .expect("bonding_curve_param is not set"),
         };
-        let instruction = UpdatePlatformConfigCpi {
+        let instruction = UpdatePlatformCurveParamCpi {
             __program: self.instruction.__program,
 
             platform_admin: self
@@ -355,6 +464,16 @@ impl<'a, 'b> UpdatePlatformConfigCpiBuilder<'a, 'b> {
                 .instruction
                 .platform_config
                 .expect("platform_config is not set"),
+
+            global_config: self
+                .instruction
+                .global_config
+                .expect("global_config is not set"),
+
+            system_program: self
+                .instruction
+                .system_program
+                .expect("system_program is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -365,11 +484,14 @@ impl<'a, 'b> UpdatePlatformConfigCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct UpdatePlatformConfigCpiBuilderInstruction<'a, 'b> {
+struct UpdatePlatformCurveParamCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     platform_admin: Option<&'b solana_account_info::AccountInfo<'a>>,
     platform_config: Option<&'b solana_account_info::AccountInfo<'a>>,
-    param: Option<PlatformConfigParam>,
+    global_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    index: Option<u8>,
+    bonding_curve_param: Option<BondingCurveParam>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

@@ -5,6 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+pub(crate) mod r#amm_creator_fee_on;
+pub(crate) mod r#bonding_curve_param;
 pub(crate) mod r#claim_vested_event;
 pub(crate) mod r#constant_curve;
 pub(crate) mod r#create_vesting_event;
@@ -13,17 +15,22 @@ pub(crate) mod r#fixed_curve;
 pub(crate) mod r#linear_curve;
 pub(crate) mod r#migrate_nft_info;
 pub(crate) mod r#mint_params;
+pub(crate) mod r#platform_config_info;
 pub(crate) mod r#platform_config_param;
+pub(crate) mod r#platform_curve_param;
 pub(crate) mod r#pool_create_event;
 pub(crate) mod r#pool_status;
 pub(crate) mod r#trade_direction;
 pub(crate) mod r#trade_event;
+pub(crate) mod r#transfer_fee_extension_params;
 pub(crate) mod r#vesting_params;
 pub(crate) mod r#vesting_schedule;
 
 pub use self::{
-    r#claim_vested_event::*, r#constant_curve::*, r#create_vesting_event::*, r#curve_params::*,
-    r#fixed_curve::*, r#linear_curve::*, r#migrate_nft_info::*, r#mint_params::*,
-    r#platform_config_param::*, r#pool_create_event::*, r#pool_status::*, r#trade_direction::*,
-    r#trade_event::*, r#vesting_params::*, r#vesting_schedule::*,
+    r#amm_creator_fee_on::*, r#bonding_curve_param::*, r#claim_vested_event::*,
+    r#constant_curve::*, r#create_vesting_event::*, r#curve_params::*, r#fixed_curve::*,
+    r#linear_curve::*, r#migrate_nft_info::*, r#mint_params::*, r#platform_config_info::*,
+    r#platform_config_param::*, r#platform_curve_param::*, r#pool_create_event::*,
+    r#pool_status::*, r#trade_direction::*, r#trade_event::*, r#transfer_fee_extension_params::*,
+    r#vesting_params::*, r#vesting_schedule::*,
 };

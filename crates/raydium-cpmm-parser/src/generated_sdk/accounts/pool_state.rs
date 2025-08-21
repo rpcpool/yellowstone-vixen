@@ -75,15 +75,15 @@ pub struct PoolState {
     pub observation_key: Pubkey,
     pub auth_bump: u8,
     /// Bitwise representation of the state of the pool
-    /// bit0, 1: disable deposit(vaule is 1), 0: normal
-    /// bit1, 1: disable withdraw(vaule is 2), 0: normal
-    /// bit2, 1: disable swap(vaule is 4), 0: normal
+    /// bit0, 1: disable deposit(value is 1), 0: normal
+    /// bit1, 1: disable withdraw(value is 2), 0: normal
+    /// bit2, 1: disable swap(value is 4), 0: normal
     pub status: u8,
     pub lp_mint_decimals: u8,
     /// mint0 and mint1 decimals
     pub mint0_decimals: u8,
     pub mint1_decimals: u8,
-    /// lp mint supply
+    /// True circulating supply without burns and lock ups
     pub lp_supply: u64,
     /// The amounts of token_0 and token_1 that are owed to the liquidity provider.
     pub protocol_fees_token0: u64,
@@ -92,9 +92,22 @@ pub struct PoolState {
     pub fund_fees_token1: u64,
     /// The timestamp allowed for swap in the pool.
     pub open_time: u64,
+    /// recent epoch
+    pub recent_epoch: u64,
+    /// Creator fee collect mode
+    /// 0: both token_0 and token_1 can be used as trade fees. It depends on what the input token is when swapping
+    /// 1: only token_0 as trade fee
+    /// 2: only token_1 as trade fee
+    pub creator_fee_on: u8,
+    pub enable_creator_fee: bool,
+    pub padding1: [u8; 6],
+    pub creator_fees_token0: u64,
+    pub creator_fees_token1: u64,
     /// padding for future updates
-    pub padding: [u64; 32],
+    pub padding: [u64; 28],
 }
+
+pub const POOL_STATE_DISCRIMINATOR: [u8; 8] = [247, 237, 227, 245, 215, 195, 222, 70];
 
 impl PoolState {
     pub const LEN: usize = 637;

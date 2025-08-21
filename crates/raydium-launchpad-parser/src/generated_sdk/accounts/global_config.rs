@@ -70,6 +70,8 @@ pub struct GlobalConfig {
     pub padding: [u64; 16],
 }
 
+pub const GLOBAL_CONFIG_DISCRIMINATOR: [u8; 8] = [149, 8, 156, 202, 160, 252, 176, 217];
+
 impl GlobalConfig {
     pub const LEN: usize = 371;
 

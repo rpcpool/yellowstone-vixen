@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const COLLECT_PROTOCOL_FEE_DISCRIMINATOR: [u8; 8] = [136, 136, 252, 221, 194, 66, 126, 89];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct CollectProtocolFee {
@@ -149,7 +151,7 @@ pub struct CollectProtocolFeeInstructionArgs {
 ///   8. `[writable]` recipient_token0_account
 ///   9. `[writable]` recipient_token1_account
 ///   10. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   11. `[]` token_program2022
+///   11. `[optional]` token_program2022 (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
 #[derive(Clone, Debug, Default)]
 pub struct CollectProtocolFeeBuilder {
     owner: Option<solana_pubkey::Pubkey>,
@@ -255,6 +257,7 @@ impl CollectProtocolFeeBuilder {
         self
     }
 
+    /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// The SPL program 2022 to perform token transfers
     #[inline(always)]
     pub fn token_program2022(&mut self, token_program2022: solana_pubkey::Pubkey) -> &mut Self {
@@ -311,9 +314,9 @@ impl CollectProtocolFeeBuilder {
             token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
-            token_program2022: self
-                .token_program2022
-                .expect("token_program2022 is not set"),
+            token_program2022: self.token_program2022.unwrap_or(solana_pubkey::pubkey!(
+                "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+            )),
         };
         let args = CollectProtocolFeeInstructionArgs {
             amount0_requested: self

@@ -7,20 +7,21 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-pub const UPDATE_POOL_STATUS_DISCRIMINATOR: [u8; 8] = [130, 87, 108, 6, 46, 224, 117, 123];
+pub const REMOVE_PLATFORM_CURVE_PARAM_DISCRIMINATOR: [u8; 8] = [27, 30, 62, 169, 93, 224, 24, 145];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct UpdatePoolStatus {
-    pub authority: solana_pubkey::Pubkey,
-
-    pub pool_state: solana_pubkey::Pubkey,
+pub struct RemovePlatformCurveParam {
+    /// The account paying for the initialization costs
+    pub platform_admin: solana_pubkey::Pubkey,
+    /// Platform config account to be changed
+    pub platform_config: solana_pubkey::Pubkey,
 }
 
-impl UpdatePoolStatus {
+impl RemovePlatformCurveParam {
     pub fn instruction(
         &self,
-        args: UpdatePoolStatusInstructionArgs,
+        args: RemovePlatformCurveParamInstructionArgs,
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
@@ -29,22 +30,25 @@ impl UpdatePoolStatus {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: UpdatePoolStatusInstructionArgs,
+        args: RemovePlatformCurveParamInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.authority,
+            self.platform_admin,
             true,
         ));
-        accounts.push(solana_instruction::AccountMeta::new(self.pool_state, false));
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.platform_config,
+            false,
+        ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&UpdatePoolStatusInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&RemovePlatformCurveParamInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
-            program_id: crate::RAYDIUM_CP_SWAP_ID,
+            program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
         }
@@ -53,61 +57,62 @@ impl UpdatePoolStatus {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UpdatePoolStatusInstructionData {
+pub struct RemovePlatformCurveParamInstructionData {
     discriminator: [u8; 8],
 }
 
-impl UpdatePoolStatusInstructionData {
+impl RemovePlatformCurveParamInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [130, 87, 108, 6, 46, 224, 117, 123],
+            discriminator: [27, 30, 62, 169, 93, 224, 24, 145],
         }
     }
 }
 
-impl Default for UpdatePoolStatusInstructionData {
+impl Default for RemovePlatformCurveParamInstructionData {
     fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UpdatePoolStatusInstructionArgs {
-    pub status: u8,
+pub struct RemovePlatformCurveParamInstructionArgs {
+    pub index: u8,
 }
 
-/// Instruction builder for `UpdatePoolStatus`.
+/// Instruction builder for `RemovePlatformCurveParam`.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer, optional]` authority (default to `GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ`)
-///   1. `[writable]` pool_state
+///   0. `[signer]` platform_admin
+///   1. `[writable]` platform_config
 #[derive(Clone, Debug, Default)]
-pub struct UpdatePoolStatusBuilder {
-    authority: Option<solana_pubkey::Pubkey>,
-    pool_state: Option<solana_pubkey::Pubkey>,
-    status: Option<u8>,
+pub struct RemovePlatformCurveParamBuilder {
+    platform_admin: Option<solana_pubkey::Pubkey>,
+    platform_config: Option<solana_pubkey::Pubkey>,
+    index: Option<u8>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl UpdatePoolStatusBuilder {
+impl RemovePlatformCurveParamBuilder {
     pub fn new() -> Self { Self::default() }
 
-    /// `[optional account, default to 'GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ']`
+    /// The account paying for the initialization costs
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
-        self.authority = Some(authority);
+    pub fn platform_admin(&mut self, platform_admin: solana_pubkey::Pubkey) -> &mut Self {
+        self.platform_admin = Some(platform_admin);
+        self
+    }
+
+    /// Platform config account to be changed
+    #[inline(always)]
+    pub fn platform_config(&mut self, platform_config: solana_pubkey::Pubkey) -> &mut Self {
+        self.platform_config = Some(platform_config);
         self
     }
 
     #[inline(always)]
-    pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
-        self.pool_state = Some(pool_state);
-        self
-    }
-
-    #[inline(always)]
-    pub fn status(&mut self, status: u8) -> &mut Self {
-        self.status = Some(status);
+    pub fn index(&mut self, index: u8) -> &mut Self {
+        self.index = Some(index);
         self
     }
 
@@ -130,49 +135,48 @@ impl UpdatePoolStatusBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = UpdatePoolStatus {
-            authority: self.authority.unwrap_or(solana_pubkey::pubkey!(
-                "GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ"
-            )),
-            pool_state: self.pool_state.expect("pool_state is not set"),
+        let accounts = RemovePlatformCurveParam {
+            platform_admin: self.platform_admin.expect("platform_admin is not set"),
+            platform_config: self.platform_config.expect("platform_config is not set"),
         };
-        let args = UpdatePoolStatusInstructionArgs {
-            status: self.status.clone().expect("status is not set"),
+        let args = RemovePlatformCurveParamInstructionArgs {
+            index: self.index.clone().expect("index is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `update_pool_status` CPI accounts.
-pub struct UpdatePoolStatusCpiAccounts<'a, 'b> {
-    pub authority: &'b solana_account_info::AccountInfo<'a>,
-
-    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
+/// `remove_platform_curve_param` CPI accounts.
+pub struct RemovePlatformCurveParamCpiAccounts<'a, 'b> {
+    /// The account paying for the initialization costs
+    pub platform_admin: &'b solana_account_info::AccountInfo<'a>,
+    /// Platform config account to be changed
+    pub platform_config: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `update_pool_status` CPI instruction.
-pub struct UpdatePoolStatusCpi<'a, 'b> {
+/// `remove_platform_curve_param` CPI instruction.
+pub struct RemovePlatformCurveParamCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
-
-    pub authority: &'b solana_account_info::AccountInfo<'a>,
-
-    pub pool_state: &'b solana_account_info::AccountInfo<'a>,
+    /// The account paying for the initialization costs
+    pub platform_admin: &'b solana_account_info::AccountInfo<'a>,
+    /// Platform config account to be changed
+    pub platform_config: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: UpdatePoolStatusInstructionArgs,
+    pub __args: RemovePlatformCurveParamInstructionArgs,
 }
 
-impl<'a, 'b> UpdatePoolStatusCpi<'a, 'b> {
+impl<'a, 'b> RemovePlatformCurveParamCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: UpdatePoolStatusCpiAccounts<'a, 'b>,
-        args: UpdatePoolStatusInstructionArgs,
+        accounts: RemovePlatformCurveParamCpiAccounts<'a, 'b>,
+        args: RemovePlatformCurveParamInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
-            authority: accounts.authority,
-            pool_state: accounts.pool_state,
+            platform_admin: accounts.platform_admin,
+            platform_config: accounts.platform_config,
             __args: args,
         }
     }
@@ -208,11 +212,11 @@ impl<'a, 'b> UpdatePoolStatusCpi<'a, 'b> {
     ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.authority.key,
+            *self.platform_admin.key,
             true,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.pool_state.key,
+            *self.platform_config.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
@@ -222,19 +226,19 @@ impl<'a, 'b> UpdatePoolStatusCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&UpdatePoolStatusInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&RemovePlatformCurveParamInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
-            program_id: crate::RAYDIUM_CP_SWAP_ID,
+            program_id: crate::RAYDIUM_LAUNCHPAD_ID,
             accounts,
             data,
         };
         let mut account_infos = Vec::with_capacity(3 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
-        account_infos.push(self.authority.clone());
-        account_infos.push(self.pool_state.clone());
+        account_infos.push(self.platform_admin.clone());
+        account_infos.push(self.platform_config.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -247,47 +251,52 @@ impl<'a, 'b> UpdatePoolStatusCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `UpdatePoolStatus` via CPI.
+/// Instruction builder for `RemovePlatformCurveParam` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` authority
-///   1. `[writable]` pool_state
+///   0. `[signer]` platform_admin
+///   1. `[writable]` platform_config
 #[derive(Clone, Debug)]
-pub struct UpdatePoolStatusCpiBuilder<'a, 'b> {
-    instruction: Box<UpdatePoolStatusCpiBuilderInstruction<'a, 'b>>,
+pub struct RemovePlatformCurveParamCpiBuilder<'a, 'b> {
+    instruction: Box<RemovePlatformCurveParamCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> UpdatePoolStatusCpiBuilder<'a, 'b> {
+impl<'a, 'b> RemovePlatformCurveParamCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(UpdatePoolStatusCpiBuilderInstruction {
+        let instruction = Box::new(RemovePlatformCurveParamCpiBuilderInstruction {
             __program: program,
-            authority: None,
-            pool_state: None,
-            status: None,
+            platform_admin: None,
+            platform_config: None,
+            index: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
 
+    /// The account paying for the initialization costs
     #[inline(always)]
-    pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.authority = Some(authority);
-        self
-    }
-
-    #[inline(always)]
-    pub fn pool_state(
+    pub fn platform_admin(
         &mut self,
-        pool_state: &'b solana_account_info::AccountInfo<'a>,
+        platform_admin: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.pool_state = Some(pool_state);
+        self.instruction.platform_admin = Some(platform_admin);
+        self
+    }
+
+    /// Platform config account to be changed
+    #[inline(always)]
+    pub fn platform_config(
+        &mut self,
+        platform_config: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.platform_config = Some(platform_config);
         self
     }
 
     #[inline(always)]
-    pub fn status(&mut self, status: u8) -> &mut Self {
-        self.instruction.status = Some(status);
+    pub fn index(&mut self, index: u8) -> &mut Self {
+        self.instruction.index = Some(index);
         self
     }
 
@@ -329,15 +338,21 @@ impl<'a, 'b> UpdatePoolStatusCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program_entrypoint::ProgramResult {
-        let args = UpdatePoolStatusInstructionArgs {
-            status: self.instruction.status.clone().expect("status is not set"),
+        let args = RemovePlatformCurveParamInstructionArgs {
+            index: self.instruction.index.clone().expect("index is not set"),
         };
-        let instruction = UpdatePoolStatusCpi {
+        let instruction = RemovePlatformCurveParamCpi {
             __program: self.instruction.__program,
 
-            authority: self.instruction.authority.expect("authority is not set"),
+            platform_admin: self
+                .instruction
+                .platform_admin
+                .expect("platform_admin is not set"),
 
-            pool_state: self.instruction.pool_state.expect("pool_state is not set"),
+            platform_config: self
+                .instruction
+                .platform_config
+                .expect("platform_config is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -348,11 +363,11 @@ impl<'a, 'b> UpdatePoolStatusCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct UpdatePoolStatusCpiBuilderInstruction<'a, 'b> {
+struct RemovePlatformCurveParamCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
-    authority: Option<&'b solana_account_info::AccountInfo<'a>>,
-    pool_state: Option<&'b solana_account_info::AccountInfo<'a>>,
-    status: Option<u8>,
+    platform_admin: Option<&'b solana_account_info::AccountInfo<'a>>,
+    platform_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    index: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

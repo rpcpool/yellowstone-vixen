@@ -48,6 +48,12 @@ message PlatformConfigParamImg {
   string field_0 = 1;
 }
 
+message PlatformConfigParamCpSwapConfig { }
+
+message PlatformConfigParamAllInfo {
+  PlatformConfigInfo field_0 = 1;
+}
+
 message BuyExactInIx {
 	BuyExactInIxAccounts accounts = 1;
 	BuyExactInIxData data = 2;
@@ -58,8 +64,16 @@ message BuyExactOutIx {
 	BuyExactOutIxData data = 2;
 }
 
+message ClaimCreatorFeeIx {
+	ClaimCreatorFeeIxAccounts accounts = 1;
+}
+
 message ClaimPlatformFeeIx {
 	ClaimPlatformFeeIxAccounts accounts = 1;
+}
+
+message ClaimPlatformFeeFromVaultIx {
+	ClaimPlatformFeeFromVaultIxAccounts accounts = 1;
 }
 
 message ClaimVestedTokenIx {
@@ -94,6 +108,16 @@ message InitializeIx {
 	InitializeIxData data = 2;
 }
 
+message InitializeV2Ix {
+	InitializeV2IxAccounts accounts = 1;
+	InitializeV2IxData data = 2;
+}
+
+message InitializeWithToken2022Ix {
+	InitializeWithToken2022IxAccounts accounts = 1;
+	InitializeWithToken2022IxData data = 2;
+}
+
 message MigrateToAmmIx {
 	MigrateToAmmIxAccounts accounts = 1;
 	MigrateToAmmIxData data = 2;
@@ -101,6 +125,11 @@ message MigrateToAmmIx {
 
 message MigrateToCpswapIx {
 	MigrateToCpswapIxAccounts accounts = 1;
+}
+
+message RemovePlatformCurveParamIx {
+	RemovePlatformCurveParamIxAccounts accounts = 1;
+	RemovePlatformCurveParamIxData data = 2;
 }
 
 message SellExactInIx {
@@ -123,6 +152,27 @@ message UpdatePlatformConfigIx {
 	UpdatePlatformConfigIxData data = 2;
 }
 
+message UpdatePlatformCurveParamIx {
+	UpdatePlatformCurveParamIxAccounts accounts = 1;
+	UpdatePlatformCurveParamIxData data = 2;
+}
+
+
+enum AmmCreatorFeeOn {
+	AmmCreatorFeeOnQuoteToken = 0;
+	AmmCreatorFeeOnBothToken = 1;
+}
+
+message BondingCurveParam {
+	uint32 migrate_type = 1;
+	uint32 migrate_cpmm_fee_on = 2;
+	uint64 supply = 3;
+	uint64 total_base_sell = 4;
+	uint64 total_quote_fund_raising = 5;
+	uint64 total_locked_amount = 6;
+	uint64 cliff_period = 7;
+	uint64 unlock_period = 8;
+}
 
 message ClaimVestedEvent {
 	string pool_state = 1;
@@ -176,6 +226,18 @@ message MintParams {
 	string uri = 4;
 }
 
+message PlatformConfigInfo {
+	string fee_wallet = 1;
+	string nft_wallet = 2;
+	MigrateNftInfo migrate_nft_info = 3;
+	uint64 fee_rate = 4;
+	string name = 5;
+	string web = 6;
+	string img = 7;
+	string transfer_fee_extension_auth = 8;
+	uint64 creator_fee_rate = 9;
+}
+
 message PlatformConfigParam {
 	oneof variant{
 		PlatformConfigParamFeeWallet fee_wallet = 1;
@@ -185,7 +247,17 @@ message PlatformConfigParam {
 		PlatformConfigParamName name = 5;
 		PlatformConfigParamWeb web = 6;
 		PlatformConfigParamImg img = 7;
+		PlatformConfigParamCpSwapConfig cp_swap_config = 8;
+		PlatformConfigParamAllInfo all_info = 9;
 	}
+}
+
+message PlatformCurveParam {
+	uint64 epoch = 1;
+	uint32 index = 2;
+	string global_config = 3;
+	BondingCurveParam bonding_curve_param = 4;
+	repeated uint64 padding = 5;
 }
 
 message PoolCreateEvent {
@@ -195,6 +267,7 @@ message PoolCreateEvent {
 	MintParams base_mint_param = 4;
 	CurveParams curve_param = 5;
 	VestingParams vesting_param = 6;
+	AmmCreatorFeeOn amm_fee_on = 7;
 }
 
 enum PoolStatus {
@@ -221,9 +294,16 @@ message TradeEvent {
 	uint64 amount_out = 10;
 	uint64 protocol_fee = 11;
 	uint64 platform_fee = 12;
-	uint64 share_fee = 13;
-	TradeDirection trade_direction = 14;
-	PoolStatus pool_status = 15;
+	uint64 creator_fee = 13;
+	uint64 share_fee = 14;
+	TradeDirection trade_direction = 15;
+	PoolStatus pool_status = 16;
+	bool exact_in = 17;
+}
+
+message TransferFeeExtensionParams {
+	uint32 transfer_fee_basis_points = 1;
+	uint64 maximum_fee = 2;
 }
 
 message VestingParams {
@@ -272,7 +352,11 @@ message PlatformConfig {
 	repeated uint32 name = 8;
 	repeated uint32 web = 9;
 	repeated uint32 img = 10;
-	repeated uint32 padding = 11;
+	string cpswap_config = 11;
+	uint64 creator_fee_rate = 12;
+	string transfer_fee_extension_auth = 13;
+	repeated uint32 padding = 14;
+	repeated PlatformCurveParam curve_params = 15;
 }
 
 message PoolState {
@@ -300,7 +384,9 @@ message PoolState {
 	string base_vault = 22;
 	string quote_vault = 23;
 	string creator = 24;
-	repeated uint64 padding = 25;
+	uint32 token_program_flag = 25;
+	AmmCreatorFeeOn amm_creator_fee_on = 26;
+	repeated uint32 padding = 27;
 }
 
 message VestingRecord {
@@ -361,6 +447,18 @@ message BuyExactOutIxData {
 	uint64 share_fee_rate = 3;
 }
 
+message ClaimCreatorFeeIxAccounts {
+	string creator = 1;
+	string fee_vault_authority = 2;
+	string creator_fee_vault = 3;
+	string recipient_token_account = 4;
+	string quote_mint = 5;
+	string token_program = 6;
+	string system_program = 7;
+	string associated_token_program = 8;
+}
+
+
 message ClaimPlatformFeeIxAccounts {
 	string platform_fee_wallet = 1;
 	string authority = 2;
@@ -372,6 +470,19 @@ message ClaimPlatformFeeIxAccounts {
 	string token_program = 8;
 	string system_program = 9;
 	string associated_token_program = 10;
+}
+
+
+message ClaimPlatformFeeFromVaultIxAccounts {
+	string platform_fee_wallet = 1;
+	string fee_vault_authority = 2;
+	string platform_config = 3;
+	string platform_fee_vault = 4;
+	string recipient_token_account = 5;
+	string quote_mint = 6;
+	string token_program = 7;
+	string system_program = 8;
+	string associated_token_program = 9;
 }
 
 
@@ -436,7 +547,9 @@ message CreatePlatformConfigIxAccounts {
 	string platform_fee_wallet = 2;
 	string platform_nft_wallet = 3;
 	string platform_config = 4;
-	string system_program = 5;
+	string cpswap_config = 5;
+	string system_program = 6;
+	string transfer_fee_extension_authority = 7;
 }
 
 message CreatePlatformConfigIxData {
@@ -445,6 +558,7 @@ message CreatePlatformConfigIxData {
 	string name = 3;
 	string web = 4;
 	string img = 5;
+	uint64 creator_fee_rate = 6;
 }
 
 message CreateVestingAccountIxAccounts {
@@ -484,6 +598,60 @@ message InitializeIxData {
 	MintParams base_mint_param = 1;
 	CurveParams curve_param = 2;
 	VestingParams vesting_param = 3;
+}
+
+message InitializeV2IxAccounts {
+	string payer = 1;
+	string creator = 2;
+	string global_config = 3;
+	string platform_config = 4;
+	string authority = 5;
+	string pool_state = 6;
+	string base_mint = 7;
+	string quote_mint = 8;
+	string base_vault = 9;
+	string quote_vault = 10;
+	string metadata_account = 11;
+	string base_token_program = 12;
+	string quote_token_program = 13;
+	string metadata_program = 14;
+	string system_program = 15;
+	string rent_program = 16;
+	string event_authority = 17;
+	string program = 18;
+}
+
+message InitializeV2IxData {
+	MintParams base_mint_param = 1;
+	CurveParams curve_param = 2;
+	VestingParams vesting_param = 3;
+	AmmCreatorFeeOn amm_fee_on = 4;
+}
+
+message InitializeWithToken2022IxAccounts {
+	string payer = 1;
+	string creator = 2;
+	string global_config = 3;
+	string platform_config = 4;
+	string authority = 5;
+	string pool_state = 6;
+	string base_mint = 7;
+	string quote_mint = 8;
+	string base_vault = 9;
+	string quote_vault = 10;
+	string base_token_program = 11;
+	string quote_token_program = 12;
+	string system_program = 13;
+	string event_authority = 14;
+	string program = 15;
+}
+
+message InitializeWithToken2022IxData {
+	MintParams base_mint_param = 1;
+	CurveParams curve_param = 2;
+	VestingParams vesting_param = 3;
+	AmmCreatorFeeOn amm_fee_on = 4;
+	optional TransferFeeExtensionParams transfer_fee_extension_param = 5;
 }
 
 message MigrateToAmmIxAccounts {
@@ -559,6 +727,15 @@ message MigrateToCpswapIxAccounts {
 }
 
 
+message RemovePlatformCurveParamIxAccounts {
+	string platform_admin = 1;
+	string platform_config = 2;
+}
+
+message RemovePlatformCurveParamIxData {
+	uint32 index = 1;
+}
+
 message SellExactInIxAccounts {
 	string payer = 1;
 	string authority = 2;
@@ -626,6 +803,18 @@ message UpdatePlatformConfigIxData {
 	PlatformConfigParam param = 1;
 }
 
+message UpdatePlatformCurveParamIxAccounts {
+	string platform_admin = 1;
+	string platform_config = 2;
+	string global_config = 3;
+	string system_program = 4;
+}
+
+message UpdatePlatformCurveParamIxData {
+	uint32 index = 1;
+	BondingCurveParam bonding_curve_param = 2;
+}
+
 
 message ProgramState {
     oneof state_oneof {
@@ -640,20 +829,26 @@ message ProgramIxs {
     oneof ix_oneof {
         	BuyExactInIx buy_exact_in = 1;
         	BuyExactOutIx buy_exact_out = 2;
-        	ClaimPlatformFeeIx claim_platform_fee = 3;
-        	ClaimVestedTokenIx claim_vested_token = 4;
-        	CollectFeeIx collect_fee = 5;
-        	CollectMigrateFeeIx collect_migrate_fee = 6;
-        	CreateConfigIx create_config = 7;
-        	CreatePlatformConfigIx create_platform_config = 8;
-        	CreateVestingAccountIx create_vesting_account = 9;
-        	InitializeIx initialize = 10;
-        	MigrateToAmmIx migrate_to_amm = 11;
-        	MigrateToCpswapIx migrate_to_cpswap = 12;
-        	SellExactInIx sell_exact_in = 13;
-        	SellExactOutIx sell_exact_out = 14;
-        	UpdateConfigIx update_config = 15;
-        	UpdatePlatformConfigIx update_platform_config = 16;
+        	ClaimCreatorFeeIx claim_creator_fee = 3;
+        	ClaimPlatformFeeIx claim_platform_fee = 4;
+        	ClaimPlatformFeeFromVaultIx claim_platform_fee_from_vault = 5;
+        	ClaimVestedTokenIx claim_vested_token = 6;
+        	CollectFeeIx collect_fee = 7;
+        	CollectMigrateFeeIx collect_migrate_fee = 8;
+        	CreateConfigIx create_config = 9;
+        	CreatePlatformConfigIx create_platform_config = 10;
+        	CreateVestingAccountIx create_vesting_account = 11;
+        	InitializeIx initialize = 12;
+        	InitializeV2Ix initialize_v2 = 13;
+        	InitializeWithToken2022Ix initialize_with_token2022 = 14;
+        	MigrateToAmmIx migrate_to_amm = 15;
+        	MigrateToCpswapIx migrate_to_cpswap = 16;
+        	RemovePlatformCurveParamIx remove_platform_curve_param = 17;
+        	SellExactInIx sell_exact_in = 18;
+        	SellExactOutIx sell_exact_out = 19;
+        	UpdateConfigIx update_config = 20;
+        	UpdatePlatformConfigIx update_platform_config = 21;
+        	UpdatePlatformCurveParamIx update_platform_curve_param = 22;
         }
 }
 

@@ -6,7 +6,7 @@
 //!
 
 use crate::{
-    accounts::{AmmConfig, ObservationState, PoolState},
+    accounts::{AmmConfig, ObservationState, Permission, PoolState},
     deserialize_checked, ID,
 };
 
@@ -17,6 +17,7 @@ use crate::{
 pub enum RaydiumCpSwapProgramState {
     AmmConfig(AmmConfig),
     ObservationState(ObservationState),
+    Permission(Permission),
     PoolState(PoolState),
 }
 
@@ -32,6 +33,9 @@ impl RaydiumCpSwapProgramState {
                     deserialize_checked(data_bytes, &acc_discriminator)?,
                 ))
             },
+            [224, 83, 28, 79, 10, 253, 161, 28] => Ok(RaydiumCpSwapProgramState::Permission(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             [247, 237, 227, 245, 215, 195, 222, 70] => Ok(RaydiumCpSwapProgramState::PoolState(
                 deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
@@ -132,6 +136,7 @@ mod proto_parser {
                 create_pool_fee: self.create_pool_fee,
                 protocol_owner: self.protocol_owner.to_string(),
                 fund_owner: self.fund_owner.to_string(),
+                creator_fee_rate: self.creator_fee_rate,
                 padding: self.padding.to_vec(),
             }
         }
@@ -148,6 +153,15 @@ mod proto_parser {
                     .into_iter()
                     .map(|x| x.into_proto())
                     .collect(),
+                padding: self.padding.to_vec(),
+            }
+        }
+    }
+    use super::Permission;
+    impl IntoProto<proto_def::Permission> for Permission {
+        fn into_proto(self) -> proto_def::Permission {
+            proto_def::Permission {
+                authority: self.authority.to_string(),
                 padding: self.padding.to_vec(),
             }
         }
@@ -177,6 +191,12 @@ mod proto_parser {
                 fund_fees_token0: self.fund_fees_token0,
                 fund_fees_token1: self.fund_fees_token1,
                 open_time: self.open_time,
+                recent_epoch: self.recent_epoch,
+                creator_fee_on: self.creator_fee_on.into(),
+                enable_creator_fee: self.enable_creator_fee,
+                padding1: self.padding1.into_iter().map(|x| x.into()).collect(),
+                creator_fees_token0: self.creator_fees_token0,
+                creator_fees_token1: self.creator_fees_token1,
                 padding: self.padding.to_vec(),
             }
         }
@@ -190,6 +210,9 @@ mod proto_parser {
                 },
                 RaydiumCpSwapProgramState::ObservationState(data) => {
                     proto_def::program_state::StateOneof::ObservationState(data.into_proto())
+                },
+                RaydiumCpSwapProgramState::Permission(data) => {
+                    proto_def::program_state::StateOneof::Permission(data.into_proto())
                 },
                 RaydiumCpSwapProgramState::PoolState(data) => {
                     proto_def::program_state::StateOneof::PoolState(data.into_proto())

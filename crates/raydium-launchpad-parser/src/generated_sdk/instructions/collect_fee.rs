@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const COLLECT_FEE_DISCRIMINATOR: [u8; 8] = [60, 173, 247, 103, 4, 93, 130, 48];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct CollectFee {

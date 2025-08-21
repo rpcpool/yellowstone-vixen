@@ -9,6 +9,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 use crate::generated::types::MigrateNftInfo;
 
+pub const CREATE_PLATFORM_CONFIG_DISCRIMINATOR: [u8; 8] = [176, 90, 196, 175, 253, 113, 220, 20];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct CreatePlatformConfig {
@@ -20,8 +22,12 @@ pub struct CreatePlatformConfig {
     pub platform_nft_wallet: solana_pubkey::Pubkey,
     /// The platform config account
     pub platform_config: solana_pubkey::Pubkey,
+
+    pub cpswap_config: solana_pubkey::Pubkey,
     /// Required for account creation
     pub system_program: solana_pubkey::Pubkey,
+
+    pub transfer_fee_extension_authority: solana_pubkey::Pubkey,
 }
 
 impl CreatePlatformConfig {
@@ -39,7 +45,7 @@ impl CreatePlatformConfig {
         args: CreatePlatformConfigInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
             self.platform_admin,
             true,
@@ -57,7 +63,15 @@ impl CreatePlatformConfig {
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.cpswap_config,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.transfer_fee_extension_authority,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
@@ -99,6 +113,7 @@ pub struct CreatePlatformConfigInstructionArgs {
     pub name: String,
     pub web: String,
     pub img: String,
+    pub creator_fee_rate: u64,
 }
 
 /// Instruction builder for `CreatePlatformConfig`.
@@ -109,19 +124,24 @@ pub struct CreatePlatformConfigInstructionArgs {
 ///   1. `[]` platform_fee_wallet
 ///   2. `[]` platform_nft_wallet
 ///   3. `[writable]` platform_config
-///   4. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   4. `[]` cpswap_config
+///   5. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   6. `[]` transfer_fee_extension_authority
 #[derive(Clone, Debug, Default)]
 pub struct CreatePlatformConfigBuilder {
     platform_admin: Option<solana_pubkey::Pubkey>,
     platform_fee_wallet: Option<solana_pubkey::Pubkey>,
     platform_nft_wallet: Option<solana_pubkey::Pubkey>,
     platform_config: Option<solana_pubkey::Pubkey>,
+    cpswap_config: Option<solana_pubkey::Pubkey>,
     system_program: Option<solana_pubkey::Pubkey>,
+    transfer_fee_extension_authority: Option<solana_pubkey::Pubkey>,
     migrate_nft_info: Option<MigrateNftInfo>,
     fee_rate: Option<u64>,
     name: Option<String>,
     web: Option<String>,
     img: Option<String>,
+    creator_fee_rate: Option<u64>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -154,11 +174,26 @@ impl CreatePlatformConfigBuilder {
         self
     }
 
+    #[inline(always)]
+    pub fn cpswap_config(&mut self, cpswap_config: solana_pubkey::Pubkey) -> &mut Self {
+        self.cpswap_config = Some(cpswap_config);
+        self
+    }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Required for account creation
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
+        self
+    }
+
+    #[inline(always)]
+    pub fn transfer_fee_extension_authority(
+        &mut self,
+        transfer_fee_extension_authority: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.transfer_fee_extension_authority = Some(transfer_fee_extension_authority);
         self
     }
 
@@ -192,6 +227,12 @@ impl CreatePlatformConfigBuilder {
         self
     }
 
+    #[inline(always)]
+    pub fn creator_fee_rate(&mut self, creator_fee_rate: u64) -> &mut Self {
+        self.creator_fee_rate = Some(creator_fee_rate);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
@@ -220,9 +261,13 @@ impl CreatePlatformConfigBuilder {
                 .platform_nft_wallet
                 .expect("platform_nft_wallet is not set"),
             platform_config: self.platform_config.expect("platform_config is not set"),
+            cpswap_config: self.cpswap_config.expect("cpswap_config is not set"),
             system_program: self
                 .system_program
                 .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            transfer_fee_extension_authority: self
+                .transfer_fee_extension_authority
+                .expect("transfer_fee_extension_authority is not set"),
         };
         let args = CreatePlatformConfigInstructionArgs {
             migrate_nft_info: self
@@ -233,6 +278,10 @@ impl CreatePlatformConfigBuilder {
             name: self.name.clone().expect("name is not set"),
             web: self.web.clone().expect("web is not set"),
             img: self.img.clone().expect("img is not set"),
+            creator_fee_rate: self
+                .creator_fee_rate
+                .clone()
+                .expect("creator_fee_rate is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -249,8 +298,12 @@ pub struct CreatePlatformConfigCpiAccounts<'a, 'b> {
     pub platform_nft_wallet: &'b solana_account_info::AccountInfo<'a>,
     /// The platform config account
     pub platform_config: &'b solana_account_info::AccountInfo<'a>,
+
+    pub cpswap_config: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
+
+    pub transfer_fee_extension_authority: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `create_platform_config` CPI instruction.
@@ -265,8 +318,12 @@ pub struct CreatePlatformConfigCpi<'a, 'b> {
     pub platform_nft_wallet: &'b solana_account_info::AccountInfo<'a>,
     /// The platform config account
     pub platform_config: &'b solana_account_info::AccountInfo<'a>,
+
+    pub cpswap_config: &'b solana_account_info::AccountInfo<'a>,
     /// Required for account creation
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
+
+    pub transfer_fee_extension_authority: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: CreatePlatformConfigInstructionArgs,
 }
@@ -283,7 +340,9 @@ impl<'a, 'b> CreatePlatformConfigCpi<'a, 'b> {
             platform_fee_wallet: accounts.platform_fee_wallet,
             platform_nft_wallet: accounts.platform_nft_wallet,
             platform_config: accounts.platform_config,
+            cpswap_config: accounts.cpswap_config,
             system_program: accounts.system_program,
+            transfer_fee_extension_authority: accounts.transfer_fee_extension_authority,
             __args: args,
         }
     }
@@ -317,7 +376,7 @@ impl<'a, 'b> CreatePlatformConfigCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
             *self.platform_admin.key,
             true,
@@ -335,7 +394,15 @@ impl<'a, 'b> CreatePlatformConfigCpi<'a, 'b> {
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.cpswap_config.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.transfer_fee_extension_authority.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
@@ -354,13 +421,15 @@ impl<'a, 'b> CreatePlatformConfigCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(6 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(8 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.platform_admin.clone());
         account_infos.push(self.platform_fee_wallet.clone());
         account_infos.push(self.platform_nft_wallet.clone());
         account_infos.push(self.platform_config.clone());
+        account_infos.push(self.cpswap_config.clone());
         account_infos.push(self.system_program.clone());
+        account_infos.push(self.transfer_fee_extension_authority.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -381,7 +450,9 @@ impl<'a, 'b> CreatePlatformConfigCpi<'a, 'b> {
 ///   1. `[]` platform_fee_wallet
 ///   2. `[]` platform_nft_wallet
 ///   3. `[writable]` platform_config
-///   4. `[]` system_program
+///   4. `[]` cpswap_config
+///   5. `[]` system_program
+///   6. `[]` transfer_fee_extension_authority
 #[derive(Clone, Debug)]
 pub struct CreatePlatformConfigCpiBuilder<'a, 'b> {
     instruction: Box<CreatePlatformConfigCpiBuilderInstruction<'a, 'b>>,
@@ -395,12 +466,15 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
             platform_fee_wallet: None,
             platform_nft_wallet: None,
             platform_config: None,
+            cpswap_config: None,
             system_program: None,
+            transfer_fee_extension_authority: None,
             migrate_nft_info: None,
             fee_rate: None,
             name: None,
             web: None,
             img: None,
+            creator_fee_rate: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -444,6 +518,15 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
         self
     }
 
+    #[inline(always)]
+    pub fn cpswap_config(
+        &mut self,
+        cpswap_config: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.cpswap_config = Some(cpswap_config);
+        self
+    }
+
     /// Required for account creation
     #[inline(always)]
     pub fn system_program(
@@ -451,6 +534,15 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
         system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
+        self
+    }
+
+    #[inline(always)]
+    pub fn transfer_fee_extension_authority(
+        &mut self,
+        transfer_fee_extension_authority: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.transfer_fee_extension_authority = Some(transfer_fee_extension_authority);
         self
     }
 
@@ -481,6 +573,12 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn img(&mut self, img: String) -> &mut Self {
         self.instruction.img = Some(img);
+        self
+    }
+
+    #[inline(always)]
+    pub fn creator_fee_rate(&mut self, creator_fee_rate: u64) -> &mut Self {
+        self.instruction.creator_fee_rate = Some(creator_fee_rate);
         self
     }
 
@@ -536,6 +634,11 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
             name: self.instruction.name.clone().expect("name is not set"),
             web: self.instruction.web.clone().expect("web is not set"),
             img: self.instruction.img.clone().expect("img is not set"),
+            creator_fee_rate: self
+                .instruction
+                .creator_fee_rate
+                .clone()
+                .expect("creator_fee_rate is not set"),
         };
         let instruction = CreatePlatformConfigCpi {
             __program: self.instruction.__program,
@@ -560,10 +663,20 @@ impl<'a, 'b> CreatePlatformConfigCpiBuilder<'a, 'b> {
                 .platform_config
                 .expect("platform_config is not set"),
 
+            cpswap_config: self
+                .instruction
+                .cpswap_config
+                .expect("cpswap_config is not set"),
+
             system_program: self
                 .instruction
                 .system_program
                 .expect("system_program is not set"),
+
+            transfer_fee_extension_authority: self
+                .instruction
+                .transfer_fee_extension_authority
+                .expect("transfer_fee_extension_authority is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -580,12 +693,15 @@ struct CreatePlatformConfigCpiBuilderInstruction<'a, 'b> {
     platform_fee_wallet: Option<&'b solana_account_info::AccountInfo<'a>>,
     platform_nft_wallet: Option<&'b solana_account_info::AccountInfo<'a>>,
     platform_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    cpswap_config: Option<&'b solana_account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    transfer_fee_extension_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     migrate_nft_info: Option<MigrateNftInfo>,
     fee_rate: Option<u64>,
     name: Option<String>,
     web: Option<String>,
     img: Option<String>,
+    creator_fee_rate: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

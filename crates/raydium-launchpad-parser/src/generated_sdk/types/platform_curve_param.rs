@@ -8,26 +8,24 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
-use crate::generated::types::{MigrateNftInfo, PlatformConfigInfo};
+use crate::generated::types::BondingCurveParam;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum PlatformConfigParam {
+pub struct PlatformCurveParam {
+    /// The epoch for update interval, 0 means not update
+    pub epoch: u64,
+    /// The curve params index
+    pub index: u8,
+    /// The global config address
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    FeeWallet(Pubkey),
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    NFTWallet(Pubkey),
-    MigrateNftInfo(MigrateNftInfo),
-    FeeRate(u64),
-    Name(String),
-    Web(String),
-    Img(String),
-    CpSwapConfig,
-    AllInfo(PlatformConfigInfo),
+    pub global_config: Pubkey,
+    /// bonding curve param
+    pub bonding_curve_param: BondingCurveParam,
+    /// padding for future updates
+    #[cfg_attr(feature = "serde", serde(with = "serde_big_array::BigArray"))]
+    pub padding: [u64; 50],
 }

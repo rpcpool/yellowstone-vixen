@@ -7,12 +7,16 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-pub const INITIALIZE_DISCRIMINATOR: [u8; 8] = [175, 175, 109, 31, 13, 152, 155, 237];
+use crate::generated::types::CreatorFeeOn;
+
+pub const INITIALIZE_WITH_PERMISSION_DISCRIMINATOR: [u8; 8] = [63, 55, 254, 65, 49, 178, 89, 121];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct Initialize {
+pub struct InitializeWithPermission {
     /// Address paying to create the pool. Can be anyone
+    pub payer: solana_pubkey::Pubkey,
+
     pub creator: solana_pubkey::Pubkey,
     /// Which config the pool belongs to.
     pub amm_config: solana_pubkey::Pubkey,
@@ -35,11 +39,11 @@ pub struct Initialize {
     /// pool lp mint
     pub lp_mint: solana_pubkey::Pubkey,
     /// payer token0 account
-    pub creator_token0: solana_pubkey::Pubkey,
-    /// creator token1 account
-    pub creator_token1: solana_pubkey::Pubkey,
-    /// creator lp token account
-    pub creator_lp_token: solana_pubkey::Pubkey,
+    pub payer_token0: solana_pubkey::Pubkey,
+    /// payer token1 account
+    pub payer_token1: solana_pubkey::Pubkey,
+    /// payer lp token account
+    pub payer_lp_token: solana_pubkey::Pubkey,
 
     pub token0_vault: solana_pubkey::Pubkey,
 
@@ -48,6 +52,8 @@ pub struct Initialize {
     pub create_pool_fee: solana_pubkey::Pubkey,
     /// an account to store oracle observations
     pub observation_state: solana_pubkey::Pubkey,
+
+    pub permission: solana_pubkey::Pubkey,
     /// Program to create mint account and mint tokens
     pub token_program: solana_pubkey::Pubkey,
     /// Spl token program or token program 2022
@@ -58,12 +64,13 @@ pub struct Initialize {
     pub associated_token_program: solana_pubkey::Pubkey,
     /// To create a new program account
     pub system_program: solana_pubkey::Pubkey,
-    /// Sysvar for program account
-    pub rent: solana_pubkey::Pubkey,
 }
 
-impl Initialize {
-    pub fn instruction(&self, args: InitializeInstructionArgs) -> solana_instruction::Instruction {
+impl InitializeWithPermission {
+    pub fn instruction(
+        &self,
+        args: InitializeWithPermissionInstructionArgs,
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -71,11 +78,15 @@ impl Initialize {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: InitializeInstructionArgs,
+        args: InitializeWithPermissionInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(20 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new(self.creator, true));
+        let mut accounts = Vec::with_capacity(21 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.creator,
+            false,
+        ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.amm_config,
             false,
@@ -95,15 +106,15 @@ impl Initialize {
         ));
         accounts.push(solana_instruction::AccountMeta::new(self.lp_mint, false));
         accounts.push(solana_instruction::AccountMeta::new(
-            self.creator_token0,
+            self.payer_token0,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            self.creator_token1,
+            self.payer_token1,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            self.creator_lp_token,
+            self.payer_lp_token,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
@@ -120,6 +131,10 @@ impl Initialize {
         ));
         accounts.push(solana_instruction::AccountMeta::new(
             self.observation_state,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.permission,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -142,11 +157,8 @@ impl Initialize {
             self.system_program,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.rent, false,
-        ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&InitializeInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&InitializeWithPermissionInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
@@ -160,56 +172,59 @@ impl Initialize {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct InitializeInstructionData {
+pub struct InitializeWithPermissionInstructionData {
     discriminator: [u8; 8],
 }
 
-impl InitializeInstructionData {
+impl InitializeWithPermissionInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [175, 175, 109, 31, 13, 152, 155, 237],
+            discriminator: [63, 55, 254, 65, 49, 178, 89, 121],
         }
     }
 }
 
-impl Default for InitializeInstructionData {
+impl Default for InitializeWithPermissionInstructionData {
     fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct InitializeInstructionArgs {
+pub struct InitializeWithPermissionInstructionArgs {
     pub init_amount0: u64,
     pub init_amount1: u64,
     pub open_time: u64,
+    pub creator_fee_on: CreatorFeeOn,
 }
 
-/// Instruction builder for `Initialize`.
+/// Instruction builder for `InitializeWithPermission`.
 ///
 /// ### Accounts:
 ///
-///   0. `[writable, signer]` creator
-///   1. `[]` amm_config
-///   2. `[]` authority
-///   3. `[writable]` pool_state
-///   4. `[]` token0_mint
-///   5. `[]` token1_mint
-///   6. `[writable]` lp_mint
-///   7. `[writable]` creator_token0
-///   8. `[writable]` creator_token1
-///   9. `[writable]` creator_lp_token
-///   10. `[writable]` token0_vault
-///   11. `[writable]` token1_vault
-///   12. `[writable, optional]` create_pool_fee (default to `DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8`)
-///   13. `[writable]` observation_state
-///   14. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   15. `[]` token0_program
-///   16. `[]` token1_program
-///   17. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
-///   18. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   19. `[optional]` rent (default to `SysvarRent111111111111111111111111111111111`)
+///   0. `[writable, signer]` payer
+///   1. `[]` creator
+///   2. `[]` amm_config
+///   3. `[]` authority
+///   4. `[writable]` pool_state
+///   5. `[]` token0_mint
+///   6. `[]` token1_mint
+///   7. `[writable]` lp_mint
+///   8. `[writable]` payer_token0
+///   9. `[writable]` payer_token1
+///   10. `[writable]` payer_lp_token
+///   11. `[writable]` token0_vault
+///   12. `[writable]` token1_vault
+///   13. `[writable, optional]` create_pool_fee (default to `DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8`)
+///   14. `[writable]` observation_state
+///   15. `[]` permission
+///   16. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   17. `[]` token0_program
+///   18. `[]` token1_program
+///   19. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
+///   20. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
-pub struct InitializeBuilder {
+pub struct InitializeWithPermissionBuilder {
+    payer: Option<solana_pubkey::Pubkey>,
     creator: Option<solana_pubkey::Pubkey>,
     amm_config: Option<solana_pubkey::Pubkey>,
     authority: Option<solana_pubkey::Pubkey>,
@@ -217,29 +232,36 @@ pub struct InitializeBuilder {
     token0_mint: Option<solana_pubkey::Pubkey>,
     token1_mint: Option<solana_pubkey::Pubkey>,
     lp_mint: Option<solana_pubkey::Pubkey>,
-    creator_token0: Option<solana_pubkey::Pubkey>,
-    creator_token1: Option<solana_pubkey::Pubkey>,
-    creator_lp_token: Option<solana_pubkey::Pubkey>,
+    payer_token0: Option<solana_pubkey::Pubkey>,
+    payer_token1: Option<solana_pubkey::Pubkey>,
+    payer_lp_token: Option<solana_pubkey::Pubkey>,
     token0_vault: Option<solana_pubkey::Pubkey>,
     token1_vault: Option<solana_pubkey::Pubkey>,
     create_pool_fee: Option<solana_pubkey::Pubkey>,
     observation_state: Option<solana_pubkey::Pubkey>,
+    permission: Option<solana_pubkey::Pubkey>,
     token_program: Option<solana_pubkey::Pubkey>,
     token0_program: Option<solana_pubkey::Pubkey>,
     token1_program: Option<solana_pubkey::Pubkey>,
     associated_token_program: Option<solana_pubkey::Pubkey>,
     system_program: Option<solana_pubkey::Pubkey>,
-    rent: Option<solana_pubkey::Pubkey>,
     init_amount0: Option<u64>,
     init_amount1: Option<u64>,
     open_time: Option<u64>,
+    creator_fee_on: Option<CreatorFeeOn>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl InitializeBuilder {
+impl InitializeWithPermissionBuilder {
     pub fn new() -> Self { Self::default() }
 
     /// Address paying to create the pool. Can be anyone
+    #[inline(always)]
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
+        self.payer = Some(payer);
+        self
+    }
+
     #[inline(always)]
     pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
@@ -298,22 +320,22 @@ impl InitializeBuilder {
 
     /// payer token0 account
     #[inline(always)]
-    pub fn creator_token0(&mut self, creator_token0: solana_pubkey::Pubkey) -> &mut Self {
-        self.creator_token0 = Some(creator_token0);
+    pub fn payer_token0(&mut self, payer_token0: solana_pubkey::Pubkey) -> &mut Self {
+        self.payer_token0 = Some(payer_token0);
         self
     }
 
-    /// creator token1 account
+    /// payer token1 account
     #[inline(always)]
-    pub fn creator_token1(&mut self, creator_token1: solana_pubkey::Pubkey) -> &mut Self {
-        self.creator_token1 = Some(creator_token1);
+    pub fn payer_token1(&mut self, payer_token1: solana_pubkey::Pubkey) -> &mut Self {
+        self.payer_token1 = Some(payer_token1);
         self
     }
 
-    /// creator lp token account
+    /// payer lp token account
     #[inline(always)]
-    pub fn creator_lp_token(&mut self, creator_lp_token: solana_pubkey::Pubkey) -> &mut Self {
-        self.creator_lp_token = Some(creator_lp_token);
+    pub fn payer_lp_token(&mut self, payer_lp_token: solana_pubkey::Pubkey) -> &mut Self {
+        self.payer_lp_token = Some(payer_lp_token);
         self
     }
 
@@ -341,6 +363,12 @@ impl InitializeBuilder {
     #[inline(always)]
     pub fn observation_state(&mut self, observation_state: solana_pubkey::Pubkey) -> &mut Self {
         self.observation_state = Some(observation_state);
+        self
+    }
+
+    #[inline(always)]
+    pub fn permission(&mut self, permission: solana_pubkey::Pubkey) -> &mut Self {
+        self.permission = Some(permission);
         self
     }
 
@@ -385,14 +413,6 @@ impl InitializeBuilder {
         self
     }
 
-    /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
-    /// Sysvar for program account
-    #[inline(always)]
-    pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
-        self.rent = Some(rent);
-        self
-    }
-
     #[inline(always)]
     pub fn init_amount0(&mut self, init_amount0: u64) -> &mut Self {
         self.init_amount0 = Some(init_amount0);
@@ -408,6 +428,12 @@ impl InitializeBuilder {
     #[inline(always)]
     pub fn open_time(&mut self, open_time: u64) -> &mut Self {
         self.open_time = Some(open_time);
+        self
+    }
+
+    #[inline(always)]
+    pub fn creator_fee_on(&mut self, creator_fee_on: CreatorFeeOn) -> &mut Self {
+        self.creator_fee_on = Some(creator_fee_on);
         self
     }
 
@@ -430,7 +456,8 @@ impl InitializeBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = Initialize {
+        let accounts = InitializeWithPermission {
+            payer: self.payer.expect("payer is not set"),
             creator: self.creator.expect("creator is not set"),
             amm_config: self.amm_config.expect("amm_config is not set"),
             authority: self.authority.expect("authority is not set"),
@@ -438,9 +465,9 @@ impl InitializeBuilder {
             token0_mint: self.token0_mint.expect("token0_mint is not set"),
             token1_mint: self.token1_mint.expect("token1_mint is not set"),
             lp_mint: self.lp_mint.expect("lp_mint is not set"),
-            creator_token0: self.creator_token0.expect("creator_token0 is not set"),
-            creator_token1: self.creator_token1.expect("creator_token1 is not set"),
-            creator_lp_token: self.creator_lp_token.expect("creator_lp_token is not set"),
+            payer_token0: self.payer_token0.expect("payer_token0 is not set"),
+            payer_token1: self.payer_token1.expect("payer_token1 is not set"),
+            payer_lp_token: self.payer_lp_token.expect("payer_lp_token is not set"),
             token0_vault: self.token0_vault.expect("token0_vault is not set"),
             token1_vault: self.token1_vault.expect("token1_vault is not set"),
             create_pool_fee: self.create_pool_fee.unwrap_or(solana_pubkey::pubkey!(
@@ -449,6 +476,7 @@ impl InitializeBuilder {
             observation_state: self
                 .observation_state
                 .expect("observation_state is not set"),
+            permission: self.permission.expect("permission is not set"),
             token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
@@ -460,23 +488,26 @@ impl InitializeBuilder {
             system_program: self
                 .system_program
                 .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
-            rent: self.rent.unwrap_or(solana_pubkey::pubkey!(
-                "SysvarRent111111111111111111111111111111111"
-            )),
         };
-        let args = InitializeInstructionArgs {
+        let args = InitializeWithPermissionInstructionArgs {
             init_amount0: self.init_amount0.clone().expect("init_amount0 is not set"),
             init_amount1: self.init_amount1.clone().expect("init_amount1 is not set"),
             open_time: self.open_time.clone().expect("open_time is not set"),
+            creator_fee_on: self
+                .creator_fee_on
+                .clone()
+                .expect("creator_fee_on is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `initialize` CPI accounts.
-pub struct InitializeCpiAccounts<'a, 'b> {
+/// `initialize_with_permission` CPI accounts.
+pub struct InitializeWithPermissionCpiAccounts<'a, 'b> {
     /// Address paying to create the pool. Can be anyone
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
+
     pub creator: &'b solana_account_info::AccountInfo<'a>,
     /// Which config the pool belongs to.
     pub amm_config: &'b solana_account_info::AccountInfo<'a>,
@@ -499,11 +530,11 @@ pub struct InitializeCpiAccounts<'a, 'b> {
     /// pool lp mint
     pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// payer token0 account
-    pub creator_token0: &'b solana_account_info::AccountInfo<'a>,
-    /// creator token1 account
-    pub creator_token1: &'b solana_account_info::AccountInfo<'a>,
-    /// creator lp token account
-    pub creator_lp_token: &'b solana_account_info::AccountInfo<'a>,
+    pub payer_token0: &'b solana_account_info::AccountInfo<'a>,
+    /// payer token1 account
+    pub payer_token1: &'b solana_account_info::AccountInfo<'a>,
+    /// payer lp token account
+    pub payer_lp_token: &'b solana_account_info::AccountInfo<'a>,
 
     pub token0_vault: &'b solana_account_info::AccountInfo<'a>,
 
@@ -512,6 +543,8 @@ pub struct InitializeCpiAccounts<'a, 'b> {
     pub create_pool_fee: &'b solana_account_info::AccountInfo<'a>,
     /// an account to store oracle observations
     pub observation_state: &'b solana_account_info::AccountInfo<'a>,
+
+    pub permission: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create mint account and mint tokens
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Spl token program or token program 2022
@@ -522,15 +555,15 @@ pub struct InitializeCpiAccounts<'a, 'b> {
     pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// To create a new program account
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
-    /// Sysvar for program account
-    pub rent: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `initialize` CPI instruction.
-pub struct InitializeCpi<'a, 'b> {
+/// `initialize_with_permission` CPI instruction.
+pub struct InitializeWithPermissionCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
     /// Address paying to create the pool. Can be anyone
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
+
     pub creator: &'b solana_account_info::AccountInfo<'a>,
     /// Which config the pool belongs to.
     pub amm_config: &'b solana_account_info::AccountInfo<'a>,
@@ -553,11 +586,11 @@ pub struct InitializeCpi<'a, 'b> {
     /// pool lp mint
     pub lp_mint: &'b solana_account_info::AccountInfo<'a>,
     /// payer token0 account
-    pub creator_token0: &'b solana_account_info::AccountInfo<'a>,
-    /// creator token1 account
-    pub creator_token1: &'b solana_account_info::AccountInfo<'a>,
-    /// creator lp token account
-    pub creator_lp_token: &'b solana_account_info::AccountInfo<'a>,
+    pub payer_token0: &'b solana_account_info::AccountInfo<'a>,
+    /// payer token1 account
+    pub payer_token1: &'b solana_account_info::AccountInfo<'a>,
+    /// payer lp token account
+    pub payer_lp_token: &'b solana_account_info::AccountInfo<'a>,
 
     pub token0_vault: &'b solana_account_info::AccountInfo<'a>,
 
@@ -566,6 +599,8 @@ pub struct InitializeCpi<'a, 'b> {
     pub create_pool_fee: &'b solana_account_info::AccountInfo<'a>,
     /// an account to store oracle observations
     pub observation_state: &'b solana_account_info::AccountInfo<'a>,
+
+    pub permission: &'b solana_account_info::AccountInfo<'a>,
     /// Program to create mint account and mint tokens
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
     /// Spl token program or token program 2022
@@ -576,20 +611,19 @@ pub struct InitializeCpi<'a, 'b> {
     pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     /// To create a new program account
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
-    /// Sysvar for program account
-    pub rent: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: InitializeInstructionArgs,
+    pub __args: InitializeWithPermissionInstructionArgs,
 }
 
-impl<'a, 'b> InitializeCpi<'a, 'b> {
+impl<'a, 'b> InitializeWithPermissionCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: InitializeCpiAccounts<'a, 'b>,
-        args: InitializeInstructionArgs,
+        accounts: InitializeWithPermissionCpiAccounts<'a, 'b>,
+        args: InitializeWithPermissionInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
+            payer: accounts.payer,
             creator: accounts.creator,
             amm_config: accounts.amm_config,
             authority: accounts.authority,
@@ -597,19 +631,19 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
             token0_mint: accounts.token0_mint,
             token1_mint: accounts.token1_mint,
             lp_mint: accounts.lp_mint,
-            creator_token0: accounts.creator_token0,
-            creator_token1: accounts.creator_token1,
-            creator_lp_token: accounts.creator_lp_token,
+            payer_token0: accounts.payer_token0,
+            payer_token1: accounts.payer_token1,
+            payer_lp_token: accounts.payer_lp_token,
             token0_vault: accounts.token0_vault,
             token1_vault: accounts.token1_vault,
             create_pool_fee: accounts.create_pool_fee,
             observation_state: accounts.observation_state,
+            permission: accounts.permission,
             token_program: accounts.token_program,
             token0_program: accounts.token0_program,
             token1_program: accounts.token1_program,
             associated_token_program: accounts.associated_token_program,
             system_program: accounts.system_program,
-            rent: accounts.rent,
             __args: args,
         }
     }
@@ -643,10 +677,11 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(20 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new(
+        let mut accounts = Vec::with_capacity(21 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.creator.key,
-            true,
+            false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.amm_config.key,
@@ -673,15 +708,15 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.creator_token0.key,
+            *self.payer_token0.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.creator_token1.key,
+            *self.payer_token1.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.creator_lp_token.key,
+            *self.payer_lp_token.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
@@ -698,6 +733,10 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
         ));
         accounts.push(solana_instruction::AccountMeta::new(
             *self.observation_state.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.permission.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -720,10 +759,6 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.rent.key,
-            false,
-        ));
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
@@ -731,7 +766,7 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&InitializeInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&InitializeWithPermissionInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
@@ -740,8 +775,9 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(21 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(22 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
+        account_infos.push(self.payer.clone());
         account_infos.push(self.creator.clone());
         account_infos.push(self.amm_config.clone());
         account_infos.push(self.authority.clone());
@@ -749,19 +785,19 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
         account_infos.push(self.token0_mint.clone());
         account_infos.push(self.token1_mint.clone());
         account_infos.push(self.lp_mint.clone());
-        account_infos.push(self.creator_token0.clone());
-        account_infos.push(self.creator_token1.clone());
-        account_infos.push(self.creator_lp_token.clone());
+        account_infos.push(self.payer_token0.clone());
+        account_infos.push(self.payer_token1.clone());
+        account_infos.push(self.payer_lp_token.clone());
         account_infos.push(self.token0_vault.clone());
         account_infos.push(self.token1_vault.clone());
         account_infos.push(self.create_pool_fee.clone());
         account_infos.push(self.observation_state.clone());
+        account_infos.push(self.permission.clone());
         account_infos.push(self.token_program.clone());
         account_infos.push(self.token0_program.clone());
         account_infos.push(self.token1_program.clone());
         account_infos.push(self.associated_token_program.clone());
         account_infos.push(self.system_program.clone());
-        account_infos.push(self.rent.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -774,39 +810,41 @@ impl<'a, 'b> InitializeCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `Initialize` via CPI.
+/// Instruction builder for `InitializeWithPermission` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[writable, signer]` creator
-///   1. `[]` amm_config
-///   2. `[]` authority
-///   3. `[writable]` pool_state
-///   4. `[]` token0_mint
-///   5. `[]` token1_mint
-///   6. `[writable]` lp_mint
-///   7. `[writable]` creator_token0
-///   8. `[writable]` creator_token1
-///   9. `[writable]` creator_lp_token
-///   10. `[writable]` token0_vault
-///   11. `[writable]` token1_vault
-///   12. `[writable]` create_pool_fee
-///   13. `[writable]` observation_state
-///   14. `[]` token_program
-///   15. `[]` token0_program
-///   16. `[]` token1_program
-///   17. `[]` associated_token_program
-///   18. `[]` system_program
-///   19. `[]` rent
+///   0. `[writable, signer]` payer
+///   1. `[]` creator
+///   2. `[]` amm_config
+///   3. `[]` authority
+///   4. `[writable]` pool_state
+///   5. `[]` token0_mint
+///   6. `[]` token1_mint
+///   7. `[writable]` lp_mint
+///   8. `[writable]` payer_token0
+///   9. `[writable]` payer_token1
+///   10. `[writable]` payer_lp_token
+///   11. `[writable]` token0_vault
+///   12. `[writable]` token1_vault
+///   13. `[writable]` create_pool_fee
+///   14. `[writable]` observation_state
+///   15. `[]` permission
+///   16. `[]` token_program
+///   17. `[]` token0_program
+///   18. `[]` token1_program
+///   19. `[]` associated_token_program
+///   20. `[]` system_program
 #[derive(Clone, Debug)]
-pub struct InitializeCpiBuilder<'a, 'b> {
-    instruction: Box<InitializeCpiBuilderInstruction<'a, 'b>>,
+pub struct InitializeWithPermissionCpiBuilder<'a, 'b> {
+    instruction: Box<InitializeWithPermissionCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
+impl<'a, 'b> InitializeWithPermissionCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(InitializeCpiBuilderInstruction {
+        let instruction = Box::new(InitializeWithPermissionCpiBuilderInstruction {
             __program: program,
+            payer: None,
             creator: None,
             amm_config: None,
             authority: None,
@@ -814,28 +852,35 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
             token0_mint: None,
             token1_mint: None,
             lp_mint: None,
-            creator_token0: None,
-            creator_token1: None,
-            creator_lp_token: None,
+            payer_token0: None,
+            payer_token1: None,
+            payer_lp_token: None,
             token0_vault: None,
             token1_vault: None,
             create_pool_fee: None,
             observation_state: None,
+            permission: None,
             token_program: None,
             token0_program: None,
             token1_program: None,
             associated_token_program: None,
             system_program: None,
-            rent: None,
             init_amount0: None,
             init_amount1: None,
             open_time: None,
+            creator_fee_on: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
 
     /// Address paying to create the pool. Can be anyone
+    #[inline(always)]
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.payer = Some(payer);
+        self
+    }
+
     #[inline(always)]
     pub fn creator(&mut self, creator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.creator = Some(creator);
@@ -906,31 +951,31 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
 
     /// payer token0 account
     #[inline(always)]
-    pub fn creator_token0(
+    pub fn payer_token0(
         &mut self,
-        creator_token0: &'b solana_account_info::AccountInfo<'a>,
+        payer_token0: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.creator_token0 = Some(creator_token0);
+        self.instruction.payer_token0 = Some(payer_token0);
         self
     }
 
-    /// creator token1 account
+    /// payer token1 account
     #[inline(always)]
-    pub fn creator_token1(
+    pub fn payer_token1(
         &mut self,
-        creator_token1: &'b solana_account_info::AccountInfo<'a>,
+        payer_token1: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.creator_token1 = Some(creator_token1);
+        self.instruction.payer_token1 = Some(payer_token1);
         self
     }
 
-    /// creator lp token account
+    /// payer lp token account
     #[inline(always)]
-    pub fn creator_lp_token(
+    pub fn payer_lp_token(
         &mut self,
-        creator_lp_token: &'b solana_account_info::AccountInfo<'a>,
+        payer_lp_token: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.creator_lp_token = Some(creator_lp_token);
+        self.instruction.payer_lp_token = Some(payer_lp_token);
         self
     }
 
@@ -969,6 +1014,15 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         observation_state: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.observation_state = Some(observation_state);
+        self
+    }
+
+    #[inline(always)]
+    pub fn permission(
+        &mut self,
+        permission: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.permission = Some(permission);
         self
     }
 
@@ -1022,13 +1076,6 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         self
     }
 
-    /// Sysvar for program account
-    #[inline(always)]
-    pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.rent = Some(rent);
-        self
-    }
-
     #[inline(always)]
     pub fn init_amount0(&mut self, init_amount0: u64) -> &mut Self {
         self.instruction.init_amount0 = Some(init_amount0);
@@ -1044,6 +1091,12 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn open_time(&mut self, open_time: u64) -> &mut Self {
         self.instruction.open_time = Some(open_time);
+        self
+    }
+
+    #[inline(always)]
+    pub fn creator_fee_on(&mut self, creator_fee_on: CreatorFeeOn) -> &mut Self {
+        self.instruction.creator_fee_on = Some(creator_fee_on);
         self
     }
 
@@ -1085,7 +1138,7 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program_entrypoint::ProgramResult {
-        let args = InitializeInstructionArgs {
+        let args = InitializeWithPermissionInstructionArgs {
             init_amount0: self
                 .instruction
                 .init_amount0
@@ -1101,9 +1154,16 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
                 .open_time
                 .clone()
                 .expect("open_time is not set"),
+            creator_fee_on: self
+                .instruction
+                .creator_fee_on
+                .clone()
+                .expect("creator_fee_on is not set"),
         };
-        let instruction = InitializeCpi {
+        let instruction = InitializeWithPermissionCpi {
             __program: self.instruction.__program,
+
+            payer: self.instruction.payer.expect("payer is not set"),
 
             creator: self.instruction.creator.expect("creator is not set"),
 
@@ -1125,20 +1185,20 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
 
             lp_mint: self.instruction.lp_mint.expect("lp_mint is not set"),
 
-            creator_token0: self
+            payer_token0: self
                 .instruction
-                .creator_token0
-                .expect("creator_token0 is not set"),
+                .payer_token0
+                .expect("payer_token0 is not set"),
 
-            creator_token1: self
+            payer_token1: self
                 .instruction
-                .creator_token1
-                .expect("creator_token1 is not set"),
+                .payer_token1
+                .expect("payer_token1 is not set"),
 
-            creator_lp_token: self
+            payer_lp_token: self
                 .instruction
-                .creator_lp_token
-                .expect("creator_lp_token is not set"),
+                .payer_lp_token
+                .expect("payer_lp_token is not set"),
 
             token0_vault: self
                 .instruction
@@ -1159,6 +1219,8 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
                 .instruction
                 .observation_state
                 .expect("observation_state is not set"),
+
+            permission: self.instruction.permission.expect("permission is not set"),
 
             token_program: self
                 .instruction
@@ -1184,8 +1246,6 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
                 .instruction
                 .system_program
                 .expect("system_program is not set"),
-
-            rent: self.instruction.rent.expect("rent is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -1196,8 +1256,9 @@ impl<'a, 'b> InitializeCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct InitializeCpiBuilderInstruction<'a, 'b> {
+struct InitializeWithPermissionCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
     creator: Option<&'b solana_account_info::AccountInfo<'a>>,
     amm_config: Option<&'b solana_account_info::AccountInfo<'a>>,
     authority: Option<&'b solana_account_info::AccountInfo<'a>>,
@@ -1205,22 +1266,23 @@ struct InitializeCpiBuilderInstruction<'a, 'b> {
     token0_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     token1_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     lp_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
-    creator_token0: Option<&'b solana_account_info::AccountInfo<'a>>,
-    creator_token1: Option<&'b solana_account_info::AccountInfo<'a>>,
-    creator_lp_token: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer_token0: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer_token1: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer_lp_token: Option<&'b solana_account_info::AccountInfo<'a>>,
     token0_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     token1_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     create_pool_fee: Option<&'b solana_account_info::AccountInfo<'a>>,
     observation_state: Option<&'b solana_account_info::AccountInfo<'a>>,
+    permission: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     token0_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     token1_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    rent: Option<&'b solana_account_info::AccountInfo<'a>>,
     init_amount0: Option<u64>,
     init_amount1: Option<u64>,
     open_time: Option<u64>,
+    creator_fee_on: Option<CreatorFeeOn>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

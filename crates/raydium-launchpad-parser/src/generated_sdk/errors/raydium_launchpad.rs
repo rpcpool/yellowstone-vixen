@@ -58,6 +58,21 @@ pub enum RaydiumLaunchpadError {
     /// 6015 - Pool not migrated
     #[error("Pool not migrated")]
     PoolNotMigrated = 0x177f,
+    /// 6016 - The input cp swap config account is invalid
+    #[error("The input cp swap config account is invalid")]
+    InvalidCpSwapConfig = 0x1780,
+    /// 6017 - No support extension
+    #[error("No support extension")]
+    NoSupportExtension = 0x1781,
+    /// 6018 - Not enough remaining accounts
+    #[error("Not enough remaining accounts")]
+    NotEnoughRemainingAccounts = 0x1782,
+    /// 6019 - TransferFee calculate not match
+    #[error("TransferFee calculate not match")]
+    TransferFeeCalculateNotMatch = 0x1783,
+    /// 6020 - Curve param is not exist
+    #[error("Curve param is not exist")]
+    CurveParamIsNotExist = 0x1784,
 }
 
 impl solana_program_error::PrintProgramError for RaydiumLaunchpadError {

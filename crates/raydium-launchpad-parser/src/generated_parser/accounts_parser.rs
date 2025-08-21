@@ -165,7 +165,15 @@ mod proto_parser {
                 name: self.name.into_iter().map(|x| x.into()).collect(),
                 web: self.web.into_iter().map(|x| x.into()).collect(),
                 img: self.img.into_iter().map(|x| x.into()).collect(),
+                cpswap_config: self.cpswap_config.to_string(),
+                creator_fee_rate: self.creator_fee_rate,
+                transfer_fee_extension_auth: self.transfer_fee_extension_auth.to_string(),
                 padding: self.padding.into_iter().map(|x| x.into()).collect(),
+                curve_params: self
+                    .curve_params
+                    .into_iter()
+                    .map(|x| x.into_proto())
+                    .collect(),
             }
         }
     }
@@ -197,7 +205,9 @@ mod proto_parser {
                 base_vault: self.base_vault.to_string(),
                 quote_vault: self.quote_vault.to_string(),
                 creator: self.creator.to_string(),
-                padding: self.padding.to_vec(),
+                token_program_flag: self.token_program_flag.into(),
+                amm_creator_fee_on: self.amm_creator_fee_on as i32,
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
             }
         }
     }

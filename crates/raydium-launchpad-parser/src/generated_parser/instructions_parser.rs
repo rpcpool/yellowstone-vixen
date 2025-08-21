@@ -16,7 +16,9 @@ use crate::{
     instructions::{
         BuyExactIn as BuyExactInIxAccounts, BuyExactInInstructionArgs as BuyExactInIxData,
         BuyExactOut as BuyExactOutIxAccounts, BuyExactOutInstructionArgs as BuyExactOutIxData,
+        ClaimCreatorFee as ClaimCreatorFeeIxAccounts,
         ClaimPlatformFee as ClaimPlatformFeeIxAccounts,
+        ClaimPlatformFeeFromVault as ClaimPlatformFeeFromVaultIxAccounts,
         ClaimVestedToken as ClaimVestedTokenIxAccounts, CollectFee as CollectFeeIxAccounts,
         CollectMigrateFee as CollectMigrateFeeIxAccounts, CreateConfig as CreateConfigIxAccounts,
         CreateConfigInstructionArgs as CreateConfigIxData,
@@ -25,13 +27,20 @@ use crate::{
         CreateVestingAccount as CreateVestingAccountIxAccounts,
         CreateVestingAccountInstructionArgs as CreateVestingAccountIxData,
         Initialize as InitializeIxAccounts, InitializeInstructionArgs as InitializeIxData,
+        InitializeV2 as InitializeV2IxAccounts, InitializeV2InstructionArgs as InitializeV2IxData,
+        InitializeWithToken2022 as InitializeWithToken2022IxAccounts,
+        InitializeWithToken2022InstructionArgs as InitializeWithToken2022IxData,
         MigrateToAmm as MigrateToAmmIxAccounts, MigrateToAmmInstructionArgs as MigrateToAmmIxData,
-        MigrateToCpswap as MigrateToCpswapIxAccounts, SellExactIn as SellExactInIxAccounts,
-        SellExactInInstructionArgs as SellExactInIxData, SellExactOut as SellExactOutIxAccounts,
-        SellExactOutInstructionArgs as SellExactOutIxData, UpdateConfig as UpdateConfigIxAccounts,
-        UpdateConfigInstructionArgs as UpdateConfigIxData,
+        MigrateToCpswap as MigrateToCpswapIxAccounts,
+        RemovePlatformCurveParam as RemovePlatformCurveParamIxAccounts,
+        RemovePlatformCurveParamInstructionArgs as RemovePlatformCurveParamIxData,
+        SellExactIn as SellExactInIxAccounts, SellExactInInstructionArgs as SellExactInIxData,
+        SellExactOut as SellExactOutIxAccounts, SellExactOutInstructionArgs as SellExactOutIxData,
+        UpdateConfig as UpdateConfigIxAccounts, UpdateConfigInstructionArgs as UpdateConfigIxData,
         UpdatePlatformConfig as UpdatePlatformConfigIxAccounts,
         UpdatePlatformConfigInstructionArgs as UpdatePlatformConfigIxData,
+        UpdatePlatformCurveParam as UpdatePlatformCurveParamIxAccounts,
+        UpdatePlatformCurveParamInstructionArgs as UpdatePlatformCurveParamIxData,
     },
     ID,
 };
@@ -42,7 +51,9 @@ use crate::{
 pub enum RaydiumLaunchpadProgramIx {
     BuyExactIn(BuyExactInIxAccounts, BuyExactInIxData),
     BuyExactOut(BuyExactOutIxAccounts, BuyExactOutIxData),
+    ClaimCreatorFee(ClaimCreatorFeeIxAccounts),
     ClaimPlatformFee(ClaimPlatformFeeIxAccounts),
+    ClaimPlatformFeeFromVault(ClaimPlatformFeeFromVaultIxAccounts),
     ClaimVestedToken(ClaimVestedTokenIxAccounts),
     CollectFee(CollectFeeIxAccounts),
     CollectMigrateFee(CollectMigrateFeeIxAccounts),
@@ -50,12 +61,25 @@ pub enum RaydiumLaunchpadProgramIx {
     CreatePlatformConfig(CreatePlatformConfigIxAccounts, CreatePlatformConfigIxData),
     CreateVestingAccount(CreateVestingAccountIxAccounts, CreateVestingAccountIxData),
     Initialize(InitializeIxAccounts, InitializeIxData),
+    InitializeV2(InitializeV2IxAccounts, InitializeV2IxData),
+    InitializeWithToken2022(
+        InitializeWithToken2022IxAccounts,
+        InitializeWithToken2022IxData,
+    ),
     MigrateToAmm(MigrateToAmmIxAccounts, MigrateToAmmIxData),
     MigrateToCpswap(MigrateToCpswapIxAccounts),
+    RemovePlatformCurveParam(
+        RemovePlatformCurveParamIxAccounts,
+        RemovePlatformCurveParamIxData,
+    ),
     SellExactIn(SellExactInIxAccounts, SellExactInIxData),
     SellExactOut(SellExactOutIxAccounts, SellExactOutIxData),
     UpdateConfig(UpdateConfigIxAccounts, UpdateConfigIxData),
     UpdatePlatformConfig(UpdatePlatformConfigIxAccounts, UpdatePlatformConfigIxData),
+    UpdatePlatformCurveParam(
+        UpdatePlatformCurveParamIxAccounts,
+        UpdatePlatformCurveParamIxData,
+    ),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -176,6 +200,21 @@ impl InstructionParser {
                     de_ix_data,
                 ))
             },
+            [26, 97, 138, 203, 132, 171, 141, 252] => {
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = ClaimCreatorFeeIxAccounts {
+                    creator: next_account(accounts)?,
+                    fee_vault_authority: next_account(accounts)?,
+                    creator_fee_vault: next_account(accounts)?,
+                    recipient_token_account: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                };
+                Ok(RaydiumLaunchpadProgramIx::ClaimCreatorFee(ix_accounts))
+            },
             [156, 39, 208, 135, 76, 237, 61, 72] => {
                 let expected_accounts_len = 10;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
@@ -192,6 +231,24 @@ impl InstructionParser {
                     associated_token_program: next_account(accounts)?,
                 };
                 Ok(RaydiumLaunchpadProgramIx::ClaimPlatformFee(ix_accounts))
+            },
+            [117, 241, 198, 168, 248, 218, 80, 29] => {
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = ClaimPlatformFeeFromVaultIxAccounts {
+                    platform_fee_wallet: next_account(accounts)?,
+                    fee_vault_authority: next_account(accounts)?,
+                    platform_config: next_account(accounts)?,
+                    platform_fee_vault: next_account(accounts)?,
+                    recipient_token_account: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                };
+                Ok(RaydiumLaunchpadProgramIx::ClaimPlatformFeeFromVault(
+                    ix_accounts,
+                ))
             },
             [49, 33, 104, 30, 189, 157, 79, 35] => {
                 let expected_accounts_len = 10;
@@ -261,14 +318,16 @@ impl InstructionParser {
                 ))
             },
             [176, 90, 196, 175, 253, 113, 220, 20] => {
-                let expected_accounts_len = 5;
+                let expected_accounts_len = 7;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CreatePlatformConfigIxAccounts {
                     platform_admin: next_account(accounts)?,
                     platform_fee_wallet: next_account(accounts)?,
                     platform_nft_wallet: next_account(accounts)?,
                     platform_config: next_account(accounts)?,
+                    cpswap_config: next_account(accounts)?,
                     system_program: next_account(accounts)?,
+                    transfer_fee_extension_authority: next_account(accounts)?,
                 };
                 let de_ix_data: CreatePlatformConfigIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
@@ -319,6 +378,63 @@ impl InstructionParser {
                 };
                 let de_ix_data: InitializeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::Initialize(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [67, 153, 175, 39, 218, 16, 38, 32] => {
+                let expected_accounts_len = 18;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = InitializeV2IxAccounts {
+                    payer: next_account(accounts)?,
+                    creator: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    platform_config: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    base_mint: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    base_vault: next_account(accounts)?,
+                    quote_vault: next_account(accounts)?,
+                    metadata_account: next_account(accounts)?,
+                    base_token_program: next_account(accounts)?,
+                    quote_token_program: next_account(accounts)?,
+                    metadata_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    rent_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: InitializeV2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(RaydiumLaunchpadProgramIx::InitializeV2(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [37, 190, 126, 222, 44, 154, 171, 17] => {
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = InitializeWithToken2022IxAccounts {
+                    payer: next_account(accounts)?,
+                    creator: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    platform_config: next_account(accounts)?,
+                    authority: next_account(accounts)?,
+                    pool_state: next_account(accounts)?,
+                    base_mint: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    base_vault: next_account(accounts)?,
+                    quote_vault: next_account(accounts)?,
+                    base_token_program: next_account(accounts)?,
+                    quote_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: InitializeWithToken2022IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(RaydiumLaunchpadProgramIx::InitializeWithToken2022(
                     ix_accounts,
                     de_ix_data,
                 ))
@@ -402,6 +518,20 @@ impl InstructionParser {
                 };
                 Ok(RaydiumLaunchpadProgramIx::MigrateToCpswap(ix_accounts))
             },
+            [27, 30, 62, 169, 93, 224, 24, 145] => {
+                let expected_accounts_len = 2;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = RemovePlatformCurveParamIxAccounts {
+                    platform_admin: next_account(accounts)?,
+                    platform_config: next_account(accounts)?,
+                };
+                let de_ix_data: RemovePlatformCurveParamIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(RaydiumLaunchpadProgramIx::RemovePlatformCurveParam(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
             [149, 39, 222, 155, 211, 124, 152, 26] => {
                 let expected_accounts_len = 15;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
@@ -480,6 +610,22 @@ impl InstructionParser {
                 let de_ix_data: UpdatePlatformConfigIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumLaunchpadProgramIx::UpdatePlatformConfig(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [138, 144, 138, 250, 220, 128, 4, 57] => {
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = UpdatePlatformCurveParamIxAccounts {
+                    platform_admin: next_account(accounts)?,
+                    platform_config: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                };
+                let de_ix_data: UpdatePlatformCurveParamIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(RaydiumLaunchpadProgramIx::UpdatePlatformCurveParam(
                     ix_accounts,
                     de_ix_data,
                 ))
@@ -647,6 +793,21 @@ mod proto_parser {
             }
         }
     }
+    use super::ClaimCreatorFeeIxAccounts;
+    impl IntoProto<proto_def::ClaimCreatorFeeIxAccounts> for ClaimCreatorFeeIxAccounts {
+        fn into_proto(self) -> proto_def::ClaimCreatorFeeIxAccounts {
+            proto_def::ClaimCreatorFeeIxAccounts {
+                creator: self.creator.to_string(),
+                fee_vault_authority: self.fee_vault_authority.to_string(),
+                creator_fee_vault: self.creator_fee_vault.to_string(),
+                recipient_token_account: self.recipient_token_account.to_string(),
+                quote_mint: self.quote_mint.to_string(),
+                token_program: self.token_program.to_string(),
+                system_program: self.system_program.to_string(),
+                associated_token_program: self.associated_token_program.to_string(),
+            }
+        }
+    }
     use super::ClaimPlatformFeeIxAccounts;
     impl IntoProto<proto_def::ClaimPlatformFeeIxAccounts> for ClaimPlatformFeeIxAccounts {
         fn into_proto(self) -> proto_def::ClaimPlatformFeeIxAccounts {
@@ -656,6 +817,24 @@ mod proto_parser {
                 pool_state: self.pool_state.to_string(),
                 platform_config: self.platform_config.to_string(),
                 quote_vault: self.quote_vault.to_string(),
+                recipient_token_account: self.recipient_token_account.to_string(),
+                quote_mint: self.quote_mint.to_string(),
+                token_program: self.token_program.to_string(),
+                system_program: self.system_program.to_string(),
+                associated_token_program: self.associated_token_program.to_string(),
+            }
+        }
+    }
+    use super::ClaimPlatformFeeFromVaultIxAccounts;
+    impl IntoProto<proto_def::ClaimPlatformFeeFromVaultIxAccounts>
+        for ClaimPlatformFeeFromVaultIxAccounts
+    {
+        fn into_proto(self) -> proto_def::ClaimPlatformFeeFromVaultIxAccounts {
+            proto_def::ClaimPlatformFeeFromVaultIxAccounts {
+                platform_fee_wallet: self.platform_fee_wallet.to_string(),
+                fee_vault_authority: self.fee_vault_authority.to_string(),
+                platform_config: self.platform_config.to_string(),
+                platform_fee_vault: self.platform_fee_vault.to_string(),
                 recipient_token_account: self.recipient_token_account.to_string(),
                 quote_mint: self.quote_mint.to_string(),
                 token_program: self.token_program.to_string(),
@@ -745,7 +924,9 @@ mod proto_parser {
                 platform_fee_wallet: self.platform_fee_wallet.to_string(),
                 platform_nft_wallet: self.platform_nft_wallet.to_string(),
                 platform_config: self.platform_config.to_string(),
+                cpswap_config: self.cpswap_config.to_string(),
                 system_program: self.system_program.to_string(),
+                transfer_fee_extension_authority: self.transfer_fee_extension_authority.to_string(),
             }
         }
     }
@@ -758,6 +939,7 @@ mod proto_parser {
                 name: self.name,
                 web: self.web,
                 img: self.img,
+                creator_fee_rate: self.creator_fee_rate,
             }
         }
     }
@@ -813,6 +995,78 @@ mod proto_parser {
                 base_mint_param: Some(self.base_mint_param.into_proto()),
                 curve_param: Some(self.curve_param.into_proto()),
                 vesting_param: Some(self.vesting_param.into_proto()),
+            }
+        }
+    }
+    use super::InitializeV2IxAccounts;
+    impl IntoProto<proto_def::InitializeV2IxAccounts> for InitializeV2IxAccounts {
+        fn into_proto(self) -> proto_def::InitializeV2IxAccounts {
+            proto_def::InitializeV2IxAccounts {
+                payer: self.payer.to_string(),
+                creator: self.creator.to_string(),
+                global_config: self.global_config.to_string(),
+                platform_config: self.platform_config.to_string(),
+                authority: self.authority.to_string(),
+                pool_state: self.pool_state.to_string(),
+                base_mint: self.base_mint.to_string(),
+                quote_mint: self.quote_mint.to_string(),
+                base_vault: self.base_vault.to_string(),
+                quote_vault: self.quote_vault.to_string(),
+                metadata_account: self.metadata_account.to_string(),
+                base_token_program: self.base_token_program.to_string(),
+                quote_token_program: self.quote_token_program.to_string(),
+                metadata_program: self.metadata_program.to_string(),
+                system_program: self.system_program.to_string(),
+                rent_program: self.rent_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::InitializeV2IxData;
+    impl IntoProto<proto_def::InitializeV2IxData> for InitializeV2IxData {
+        fn into_proto(self) -> proto_def::InitializeV2IxData {
+            proto_def::InitializeV2IxData {
+                base_mint_param: Some(self.base_mint_param.into_proto()),
+                curve_param: Some(self.curve_param.into_proto()),
+                vesting_param: Some(self.vesting_param.into_proto()),
+                amm_fee_on: self.amm_fee_on as i32,
+            }
+        }
+    }
+    use super::InitializeWithToken2022IxAccounts;
+    impl IntoProto<proto_def::InitializeWithToken2022IxAccounts> for InitializeWithToken2022IxAccounts {
+        fn into_proto(self) -> proto_def::InitializeWithToken2022IxAccounts {
+            proto_def::InitializeWithToken2022IxAccounts {
+                payer: self.payer.to_string(),
+                creator: self.creator.to_string(),
+                global_config: self.global_config.to_string(),
+                platform_config: self.platform_config.to_string(),
+                authority: self.authority.to_string(),
+                pool_state: self.pool_state.to_string(),
+                base_mint: self.base_mint.to_string(),
+                quote_mint: self.quote_mint.to_string(),
+                base_vault: self.base_vault.to_string(),
+                quote_vault: self.quote_vault.to_string(),
+                base_token_program: self.base_token_program.to_string(),
+                quote_token_program: self.quote_token_program.to_string(),
+                system_program: self.system_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::InitializeWithToken2022IxData;
+    impl IntoProto<proto_def::InitializeWithToken2022IxData> for InitializeWithToken2022IxData {
+        fn into_proto(self) -> proto_def::InitializeWithToken2022IxData {
+            proto_def::InitializeWithToken2022IxData {
+                base_mint_param: Some(self.base_mint_param.into_proto()),
+                curve_param: Some(self.curve_param.into_proto()),
+                vesting_param: Some(self.vesting_param.into_proto()),
+                amm_fee_on: self.amm_fee_on as i32,
+                transfer_fee_extension_param: self
+                    .transfer_fee_extension_param
+                    .map(|x| x.into_proto()),
             }
         }
     }
@@ -897,6 +1151,25 @@ mod proto_parser {
                 system_program: self.system_program.to_string(),
                 rent_program: self.rent_program.to_string(),
                 metadata_program: self.metadata_program.to_string(),
+            }
+        }
+    }
+    use super::RemovePlatformCurveParamIxAccounts;
+    impl IntoProto<proto_def::RemovePlatformCurveParamIxAccounts>
+        for RemovePlatformCurveParamIxAccounts
+    {
+        fn into_proto(self) -> proto_def::RemovePlatformCurveParamIxAccounts {
+            proto_def::RemovePlatformCurveParamIxAccounts {
+                platform_admin: self.platform_admin.to_string(),
+                platform_config: self.platform_config.to_string(),
+            }
+        }
+    }
+    use super::RemovePlatformCurveParamIxData;
+    impl IntoProto<proto_def::RemovePlatformCurveParamIxData> for RemovePlatformCurveParamIxData {
+        fn into_proto(self) -> proto_def::RemovePlatformCurveParamIxData {
+            proto_def::RemovePlatformCurveParamIxData {
+                index: self.index.into(),
             }
         }
     }
@@ -999,6 +1272,28 @@ mod proto_parser {
             }
         }
     }
+    use super::UpdatePlatformCurveParamIxAccounts;
+    impl IntoProto<proto_def::UpdatePlatformCurveParamIxAccounts>
+        for UpdatePlatformCurveParamIxAccounts
+    {
+        fn into_proto(self) -> proto_def::UpdatePlatformCurveParamIxAccounts {
+            proto_def::UpdatePlatformCurveParamIxAccounts {
+                platform_admin: self.platform_admin.to_string(),
+                platform_config: self.platform_config.to_string(),
+                global_config: self.global_config.to_string(),
+                system_program: self.system_program.to_string(),
+            }
+        }
+    }
+    use super::UpdatePlatformCurveParamIxData;
+    impl IntoProto<proto_def::UpdatePlatformCurveParamIxData> for UpdatePlatformCurveParamIxData {
+        fn into_proto(self) -> proto_def::UpdatePlatformCurveParamIxData {
+            proto_def::UpdatePlatformCurveParamIxData {
+                index: self.index.into(),
+                bonding_curve_param: Some(self.bonding_curve_param.into_proto()),
+            }
+        }
+    }
 
     impl IntoProto<proto_def::ProgramIxs> for RaydiumLaunchpadProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
@@ -1019,12 +1314,28 @@ mod proto_parser {
                         },
                     )),
                 },
+                RaydiumLaunchpadProgramIx::ClaimCreatorFee(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimCreatorFee(
+                        proto_def::ClaimCreatorFeeIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
                 RaydiumLaunchpadProgramIx::ClaimPlatformFee(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimPlatformFee(
                         proto_def::ClaimPlatformFeeIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
+                },
+                RaydiumLaunchpadProgramIx::ClaimPlatformFeeFromVault(acc) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimPlatformFeeFromVault(
+                            proto_def::ClaimPlatformFeeFromVaultIx {
+                                accounts: Some(acc.into_proto()),
+                            },
+                        )),
+                    }
                 },
                 RaydiumLaunchpadProgramIx::ClaimVestedToken(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimVestedToken(
@@ -1083,6 +1394,24 @@ mod proto_parser {
                         },
                     )),
                 },
+                RaydiumLaunchpadProgramIx::InitializeV2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeV2(
+                        proto_def::InitializeV2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                RaydiumLaunchpadProgramIx::InitializeWithToken2022(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::InitializeWithToken2022(
+                            proto_def::InitializeWithToken2022Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
+                },
                 RaydiumLaunchpadProgramIx::MigrateToAmm(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::MigrateToAmm(
                         proto_def::MigrateToAmmIx {
@@ -1097,6 +1426,16 @@ mod proto_parser {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
+                },
+                RaydiumLaunchpadProgramIx::RemovePlatformCurveParam(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::RemovePlatformCurveParam(
+                            proto_def::RemovePlatformCurveParamIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
                 },
                 RaydiumLaunchpadProgramIx::SellExactIn(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SellExactIn(
@@ -1126,6 +1465,16 @@ mod proto_parser {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdatePlatformConfig(
                             proto_def::UpdatePlatformConfigIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
+                },
+                RaydiumLaunchpadProgramIx::UpdatePlatformCurveParam(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::UpdatePlatformCurveParam(
+                            proto_def::UpdatePlatformCurveParamIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
                             },

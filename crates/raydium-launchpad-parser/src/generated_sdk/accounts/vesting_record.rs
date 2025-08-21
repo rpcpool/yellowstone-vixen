@@ -34,6 +34,8 @@ pub struct VestingRecord {
     pub padding: [u64; 8],
 }
 
+pub const VESTING_RECORD_DISCRIMINATOR: [u8; 8] = [106, 243, 221, 205, 230, 126, 85, 83];
+
 impl VestingRecord {
     pub const LEN: usize = 160;
 

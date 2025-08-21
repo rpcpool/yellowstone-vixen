@@ -8,8 +8,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
-/// Holds the current owner of the factory
-
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AmmConfig {
@@ -40,9 +38,13 @@ pub struct AmmConfig {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub fund_owner: Pubkey,
+    /// The pool creator fee, denominated in hundredths of a bip (10^-6)
+    pub creator_fee_rate: u64,
     /// padding
-    pub padding: [u64; 16],
+    pub padding: [u64; 15],
 }
+
+pub const AMM_CONFIG_DISCRIMINATOR: [u8; 8] = [218, 244, 33, 104, 203, 203, 43, 111];
 
 impl AmmConfig {
     pub const LEN: usize = 236;
