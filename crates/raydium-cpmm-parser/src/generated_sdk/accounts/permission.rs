@@ -8,32 +8,24 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
-use crate::generated::types::Observation;
-
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ObservationState {
+pub struct Permission {
     pub discriminator: [u8; 8],
-    /// Whether the ObservationState is initialized
-    pub initialized: bool,
-    /// the most-recently updated index of the observations array
-    pub observation_index: u16,
+    /// authority
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    pub pool_id: Pubkey,
-    /// observation array
-    #[cfg_attr(feature = "serde", serde(with = "serde_big_array::BigArray"))]
-    pub observations: [Observation; 100],
-    /// padding for feature update
-    pub padding: [u64; 4],
+    pub authority: Pubkey,
+    /// padding
+    pub padding: [u64; 30],
 }
 
-pub const OBSERVATION_STATE_DISCRIMINATOR: [u8; 8] = [122, 174, 197, 53, 129, 9, 165, 132];
+pub const PERMISSION_DISCRIMINATOR: [u8; 8] = [224, 83, 28, 79, 10, 253, 161, 28];
 
-impl ObservationState {
-    pub const LEN: usize = 4075;
+impl Permission {
+    pub const LEN: usize = 280;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -42,7 +34,7 @@ impl ObservationState {
     }
 }
 
-impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for ObservationState {
+impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for Permission {
     type Error = std::io::Error;
 
     fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
@@ -52,30 +44,30 @@ impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for ObservationState {
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_observation_state(
+pub fn fetch_permission(
     rpc: &solana_client::rpc_client::RpcClient,
     address: &solana_pubkey::Pubkey,
-) -> Result<crate::shared::DecodedAccount<ObservationState>, std::io::Error> {
-    let accounts = fetch_all_observation_state(rpc, &[*address])?;
+) -> Result<crate::shared::DecodedAccount<Permission>, std::io::Error> {
+    let accounts = fetch_all_permission(rpc, &[*address])?;
     Ok(accounts[0].clone())
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_all_observation_state(
+pub fn fetch_all_permission(
     rpc: &solana_client::rpc_client::RpcClient,
     addresses: &[solana_pubkey::Pubkey],
-) -> Result<Vec<crate::shared::DecodedAccount<ObservationState>>, std::io::Error> {
+) -> Result<Vec<crate::shared::DecodedAccount<Permission>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-    let mut decoded_accounts: Vec<crate::shared::DecodedAccount<ObservationState>> = Vec::new();
+    let mut decoded_accounts: Vec<crate::shared::DecodedAccount<Permission>> = Vec::new();
     for i in 0..addresses.len() {
         let address = addresses[i];
         let account = accounts[i].as_ref().ok_or(std::io::Error::new(
             std::io::ErrorKind::Other,
             format!("Account not found: {}", address),
         ))?;
-        let data = ObservationState::from_bytes(&account.data)?;
+        let data = Permission::from_bytes(&account.data)?;
         decoded_accounts.push(crate::shared::DecodedAccount {
             address,
             account: account.clone(),
@@ -86,27 +78,27 @@ pub fn fetch_all_observation_state(
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_maybe_observation_state(
+pub fn fetch_maybe_permission(
     rpc: &solana_client::rpc_client::RpcClient,
     address: &solana_pubkey::Pubkey,
-) -> Result<crate::shared::MaybeAccount<ObservationState>, std::io::Error> {
-    let accounts = fetch_all_maybe_observation_state(rpc, &[*address])?;
+) -> Result<crate::shared::MaybeAccount<Permission>, std::io::Error> {
+    let accounts = fetch_all_maybe_permission(rpc, &[*address])?;
     Ok(accounts[0].clone())
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_all_maybe_observation_state(
+pub fn fetch_all_maybe_permission(
     rpc: &solana_client::rpc_client::RpcClient,
     addresses: &[solana_pubkey::Pubkey],
-) -> Result<Vec<crate::shared::MaybeAccount<ObservationState>>, std::io::Error> {
+) -> Result<Vec<crate::shared::MaybeAccount<Permission>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-    let mut decoded_accounts: Vec<crate::shared::MaybeAccount<ObservationState>> = Vec::new();
+    let mut decoded_accounts: Vec<crate::shared::MaybeAccount<Permission>> = Vec::new();
     for i in 0..addresses.len() {
         let address = addresses[i];
         if let Some(account) = accounts[i].as_ref() {
-            let data = ObservationState::from_bytes(&account.data)?;
+            let data = Permission::from_bytes(&account.data)?;
             decoded_accounts.push(crate::shared::MaybeAccount::Exists(
                 crate::shared::DecodedAccount {
                     address,
@@ -122,24 +114,24 @@ pub fn fetch_all_maybe_observation_state(
 }
 
 #[cfg(feature = "anchor")]
-impl anchor_lang::AccountDeserialize for ObservationState {
+impl anchor_lang::AccountDeserialize for Permission {
     fn try_deserialize_unchecked(buf: &mut &[u8]) -> anchor_lang::Result<Self> {
         Ok(Self::deserialize(buf)?)
     }
 }
 
 #[cfg(feature = "anchor")]
-impl anchor_lang::AccountSerialize for ObservationState {}
+impl anchor_lang::AccountSerialize for Permission {}
 
 #[cfg(feature = "anchor")]
-impl anchor_lang::Owner for ObservationState {
+impl anchor_lang::Owner for Permission {
     fn owner() -> Pubkey { crate::RAYDIUM_CP_SWAP_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]
-impl anchor_lang::IdlBuild for ObservationState {}
+impl anchor_lang::IdlBuild for Permission {}
 
 #[cfg(feature = "anchor-idl-build")]
-impl anchor_lang::Discriminator for ObservationState {
+impl anchor_lang::Discriminator for Permission {
     const DISCRIMINATOR: [u8; 8] = [0; 8];
 }

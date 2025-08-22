@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const CREATE_AMM_CONFIG_DISCRIMINATOR: [u8; 8] = [137, 52, 237, 212, 215, 117, 108, 104];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateAmmConfig {
@@ -79,13 +81,14 @@ pub struct CreateAmmConfigInstructionArgs {
     pub protocol_fee_rate: u64,
     pub fund_fee_rate: u64,
     pub create_pool_fee: u64,
+    pub creator_fee_rate: u64,
 }
 
 /// Instruction builder for `CreateAmmConfig`.
 ///
 /// ### Accounts:
 ///
-///   0. `[writable, signer]` owner
+///   0. `[writable, signer, optional]` owner (default to `GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ`)
 ///   1. `[writable]` amm_config
 ///   2. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
@@ -98,12 +101,14 @@ pub struct CreateAmmConfigBuilder {
     protocol_fee_rate: Option<u64>,
     fund_fee_rate: Option<u64>,
     create_pool_fee: Option<u64>,
+    creator_fee_rate: Option<u64>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateAmmConfigBuilder {
     pub fn new() -> Self { Self::default() }
 
+    /// `[optional account, default to 'GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ']`
     /// Address to be set as protocol owner.
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
@@ -155,6 +160,12 @@ impl CreateAmmConfigBuilder {
         self
     }
 
+    #[inline(always)]
+    pub fn creator_fee_rate(&mut self, creator_fee_rate: u64) -> &mut Self {
+        self.creator_fee_rate = Some(creator_fee_rate);
+        self
+    }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
@@ -175,7 +186,9 @@ impl CreateAmmConfigBuilder {
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateAmmConfig {
-            owner: self.owner.expect("owner is not set"),
+            owner: self.owner.unwrap_or(solana_pubkey::pubkey!(
+                "GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ"
+            )),
             amm_config: self.amm_config.expect("amm_config is not set"),
             system_program: self
                 .system_program
@@ -199,6 +212,10 @@ impl CreateAmmConfigBuilder {
                 .create_pool_fee
                 .clone()
                 .expect("create_pool_fee is not set"),
+            creator_fee_rate: self
+                .creator_fee_rate
+                .clone()
+                .expect("creator_fee_rate is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -340,6 +357,7 @@ impl<'a, 'b> CreateAmmConfigCpiBuilder<'a, 'b> {
             protocol_fee_rate: None,
             fund_fee_rate: None,
             create_pool_fee: None,
+            creator_fee_rate: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -398,6 +416,12 @@ impl<'a, 'b> CreateAmmConfigCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn create_pool_fee(&mut self, create_pool_fee: u64) -> &mut Self {
         self.instruction.create_pool_fee = Some(create_pool_fee);
+        self
+    }
+
+    #[inline(always)]
+    pub fn creator_fee_rate(&mut self, creator_fee_rate: u64) -> &mut Self {
+        self.instruction.creator_fee_rate = Some(creator_fee_rate);
         self
     }
 
@@ -461,6 +485,11 @@ impl<'a, 'b> CreateAmmConfigCpiBuilder<'a, 'b> {
                 .create_pool_fee
                 .clone()
                 .expect("create_pool_fee is not set"),
+            creator_fee_rate: self
+                .instruction
+                .creator_fee_rate
+                .clone()
+                .expect("creator_fee_rate is not set"),
         };
         let instruction = CreateAmmConfigCpi {
             __program: self.instruction.__program,
@@ -493,6 +522,7 @@ struct CreateAmmConfigCpiBuilderInstruction<'a, 'b> {
     protocol_fee_rate: Option<u64>,
     fund_fee_rate: Option<u64>,
     create_pool_fee: Option<u64>,
+    creator_fee_rate: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

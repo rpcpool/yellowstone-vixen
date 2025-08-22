@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const SWAP_BASE_OUTPUT_DISCRIMINATOR: [u8; 8] = [55, 217, 98, 86, 163, 74, 180, 173];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct SwapBaseOutput {

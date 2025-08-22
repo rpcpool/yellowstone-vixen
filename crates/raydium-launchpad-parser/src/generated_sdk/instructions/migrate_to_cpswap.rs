@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const MIGRATE_TO_CPSWAP_DISCRIMINATOR: [u8; 8] = [136, 92, 200, 103, 28, 218, 144, 140];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct MigrateToCpswap {
@@ -97,10 +99,7 @@ impl MigrateToCpswap {
     ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(28 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.base_mint,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.base_mint, false));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.quote_mint,
             false,
@@ -230,7 +229,7 @@ impl Default for MigrateToCpswapInstructionData {
 /// ### Accounts:
 ///
 ///   0. `[writable, signer]` payer
-///   1. `[]` base_mint
+///   1. `[writable]` base_mint
 ///   2. `[]` quote_mint
 ///   3. `[]` platform_config
 ///   4. `[optional]` cpswap_program (default to `CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C`)
@@ -251,7 +250,7 @@ impl Default for MigrateToCpswapInstructionData {
 ///   19. `[writable]` base_vault
 ///   20. `[writable]` quote_vault
 ///   21. `[writable]` pool_lp_token
-///   22. `[optional]` base_token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   22. `[]` base_token_program
 ///   23. `[optional]` quote_token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
 ///   24. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   25. `[optional]` system_program (default to `11111111111111111111111111111111`)
@@ -455,7 +454,6 @@ impl MigrateToCpswapBuilder {
         self
     }
 
-    /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// SPL Token program for the base token
     /// Must be the standard Token program
     #[inline(always)]
@@ -561,9 +559,9 @@ impl MigrateToCpswapBuilder {
             base_vault: self.base_vault.expect("base_vault is not set"),
             quote_vault: self.quote_vault.expect("quote_vault is not set"),
             pool_lp_token: self.pool_lp_token.expect("pool_lp_token is not set"),
-            base_token_program: self.base_token_program.unwrap_or(solana_pubkey::pubkey!(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )),
+            base_token_program: self
+                .base_token_program
+                .expect("base_token_program is not set"),
             quote_token_program: self.quote_token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
@@ -808,7 +806,7 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
     ) -> solana_program_entrypoint::ProgramResult {
         let mut accounts = Vec::with_capacity(28 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.base_mint.key,
             false,
         ));
@@ -977,7 +975,7 @@ impl<'a, 'b> MigrateToCpswapCpi<'a, 'b> {
 /// ### Accounts:
 ///
 ///   0. `[writable, signer]` payer
-///   1. `[]` base_mint
+///   1. `[writable]` base_mint
 ///   2. `[]` quote_mint
 ///   3. `[]` platform_config
 ///   4. `[]` cpswap_program

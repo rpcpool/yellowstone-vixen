@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const UPDATE_AMM_CONFIG_DISCRIMINATOR: [u8; 8] = [49, 60, 174, 136, 154, 28, 116, 200];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct UpdateAmmConfig {
@@ -78,7 +80,7 @@ pub struct UpdateAmmConfigInstructionArgs {
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` owner
+///   0. `[signer, optional]` owner (default to `GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ`)
 ///   1. `[writable]` amm_config
 #[derive(Clone, Debug, Default)]
 pub struct UpdateAmmConfigBuilder {
@@ -92,6 +94,7 @@ pub struct UpdateAmmConfigBuilder {
 impl UpdateAmmConfigBuilder {
     pub fn new() -> Self { Self::default() }
 
+    /// `[optional account, default to 'GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ']`
     /// The amm config owner or admin
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
@@ -138,7 +141,9 @@ impl UpdateAmmConfigBuilder {
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = UpdateAmmConfig {
-            owner: self.owner.expect("owner is not set"),
+            owner: self.owner.unwrap_or(solana_pubkey::pubkey!(
+                "GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ"
+            )),
             amm_config: self.amm_config.expect("amm_config is not set"),
         };
         let args = UpdateAmmConfigInstructionArgs {

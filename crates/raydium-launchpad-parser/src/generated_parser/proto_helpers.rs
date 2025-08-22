@@ -9,7 +9,22 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::{proto_def, types::ClaimVestedEvent};
+    use crate::{proto_def, types::BondingCurveParam};
+    impl IntoProto<proto_def::BondingCurveParam> for BondingCurveParam {
+        fn into_proto(self) -> proto_def::BondingCurveParam {
+            proto_def::BondingCurveParam {
+                migrate_type: self.migrate_type.into(),
+                migrate_cpmm_fee_on: self.migrate_cpmm_fee_on.into(),
+                supply: self.supply,
+                total_base_sell: self.total_base_sell,
+                total_quote_fund_raising: self.total_quote_fund_raising,
+                total_locked_amount: self.total_locked_amount,
+                cliff_period: self.cliff_period,
+                unlock_period: self.unlock_period,
+            }
+        }
+    }
+    use crate::types::ClaimVestedEvent;
     impl IntoProto<proto_def::ClaimVestedEvent> for ClaimVestedEvent {
         fn into_proto(self) -> proto_def::ClaimVestedEvent {
             proto_def::ClaimVestedEvent {
@@ -81,6 +96,34 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::PlatformConfigInfo;
+    impl IntoProto<proto_def::PlatformConfigInfo> for PlatformConfigInfo {
+        fn into_proto(self) -> proto_def::PlatformConfigInfo {
+            proto_def::PlatformConfigInfo {
+                fee_wallet: self.fee_wallet.to_string(),
+                nft_wallet: self.nft_wallet.to_string(),
+                migrate_nft_info: Some(self.migrate_nft_info.into_proto()),
+                fee_rate: self.fee_rate,
+                name: self.name,
+                web: self.web,
+                img: self.img,
+                transfer_fee_extension_auth: self.transfer_fee_extension_auth.to_string(),
+                creator_fee_rate: self.creator_fee_rate,
+            }
+        }
+    }
+    use crate::types::PlatformCurveParam;
+    impl IntoProto<proto_def::PlatformCurveParam> for PlatformCurveParam {
+        fn into_proto(self) -> proto_def::PlatformCurveParam {
+            proto_def::PlatformCurveParam {
+                epoch: self.epoch,
+                index: self.index.into(),
+                global_config: self.global_config.to_string(),
+                bonding_curve_param: Some(self.bonding_curve_param.into_proto()),
+                padding: self.padding.to_vec(),
+            }
+        }
+    }
     use crate::types::PoolCreateEvent;
     impl IntoProto<proto_def::PoolCreateEvent> for PoolCreateEvent {
         fn into_proto(self) -> proto_def::PoolCreateEvent {
@@ -91,6 +134,7 @@ pub mod proto_types_parsers {
                 base_mint_param: Some(self.base_mint_param.into_proto()),
                 curve_param: Some(self.curve_param.into_proto()),
                 vesting_param: Some(self.vesting_param.into_proto()),
+                amm_fee_on: self.amm_fee_on as i32,
             }
         }
     }
@@ -110,9 +154,20 @@ pub mod proto_types_parsers {
                 amount_out: self.amount_out,
                 protocol_fee: self.protocol_fee,
                 platform_fee: self.platform_fee,
+                creator_fee: self.creator_fee,
                 share_fee: self.share_fee,
                 trade_direction: self.trade_direction as i32,
                 pool_status: self.pool_status as i32,
+                exact_in: self.exact_in,
+            }
+        }
+    }
+    use crate::types::TransferFeeExtensionParams;
+    impl IntoProto<proto_def::TransferFeeExtensionParams> for TransferFeeExtensionParams {
+        fn into_proto(self) -> proto_def::TransferFeeExtensionParams {
+            proto_def::TransferFeeExtensionParams {
+                transfer_fee_basis_points: self.transfer_fee_basis_points.into(),
+                maximum_fee: self.maximum_fee,
             }
         }
     }
@@ -212,6 +267,14 @@ pub mod proto_types_parsers {
                 PlatformConfigParam::Img(field_0) => {
                     platform_config_param::Variant::Img(proto_def::PlatformConfigParamImg {
                         field_0,
+                    })
+                },
+                PlatformConfigParam::CpSwapConfig => platform_config_param::Variant::CpSwapConfig(
+                    proto_def::PlatformConfigParamCpSwapConfig {},
+                ),
+                PlatformConfigParam::AllInfo(field_0) => {
+                    platform_config_param::Variant::AllInfo(proto_def::PlatformConfigParamAllInfo {
+                        field_0: Some(field_0.into_proto()),
                     })
                 },
             };

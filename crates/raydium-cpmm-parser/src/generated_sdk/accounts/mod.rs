@@ -7,6 +7,7 @@
 
 pub(crate) mod r#amm_config;
 pub(crate) mod r#observation_state;
+pub(crate) mod r#permission;
 pub(crate) mod r#pool_state;
 
-pub use self::{r#amm_config::*, r#observation_state::*, r#pool_state::*};
+pub use self::{r#amm_config::*, r#observation_state::*, r#permission::*, r#pool_state::*};

@@ -7,13 +7,13 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-pub const COLLECT_FUND_FEE_DISCRIMINATOR: [u8; 8] = [167, 138, 78, 149, 223, 194, 6, 126];
+pub const COLLECT_CREATOR_FEE_DISCRIMINATOR: [u8; 8] = [20, 22, 86, 123, 198, 28, 219, 132];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct CollectFundFee {
-    /// Only admin or fund_owner can collect fee now
-    pub owner: solana_pubkey::Pubkey,
+pub struct CollectCreatorFee {
+    /// Only pool creator can collect fee
+    pub creator: solana_pubkey::Pubkey,
 
     pub authority: solana_pubkey::Pubkey,
     /// Pool state stores accumulated protocol fee amount
@@ -29,34 +29,32 @@ pub struct CollectFundFee {
     /// The mint of token_1 vault
     pub vault1_mint: solana_pubkey::Pubkey,
     /// The address that receives the collected token_0 fund fees
-    pub recipient_token0_account: solana_pubkey::Pubkey,
+    pub creator_token0: solana_pubkey::Pubkey,
     /// The address that receives the collected token_1 fund fees
-    pub recipient_token1_account: solana_pubkey::Pubkey,
-    /// The SPL program to perform token transfers
-    pub token_program: solana_pubkey::Pubkey,
-    /// The SPL program 2022 to perform token transfers
-    pub token_program2022: solana_pubkey::Pubkey,
+    pub creator_token1: solana_pubkey::Pubkey,
+    /// Spl token program or token program 2022
+    pub token0_program: solana_pubkey::Pubkey,
+    /// Spl token program or token program 2022
+    pub token1_program: solana_pubkey::Pubkey,
+    /// Program to create an ATA for receiving position NFT
+    pub associated_token_program: solana_pubkey::Pubkey,
+    /// To create a new program account
+    pub system_program: solana_pubkey::Pubkey,
 }
 
-impl CollectFundFee {
-    pub fn instruction(
-        &self,
-        args: CollectFundFeeInstructionArgs,
-    ) -> solana_instruction::Instruction {
-        self.instruction_with_remaining_accounts(args, &[])
+impl CollectCreatorFee {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
+        self.instruction_with_remaining_accounts(&[])
     }
 
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: CollectFundFeeInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.owner, true,
-        ));
+        let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(self.creator, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.authority,
             false,
@@ -83,25 +81,31 @@ impl CollectFundFee {
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            self.recipient_token0_account,
+            self.creator_token0,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            self.recipient_token1_account,
+            self.creator_token1,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.token_program,
+            self.token0_program,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.token_program2022,
+            self.token1_program,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.associated_token_program,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.system_program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&CollectFundFeeInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
-        data.append(&mut args);
+        let data = borsh::to_vec(&CollectCreatorFeeInstructionData::new()).unwrap();
 
         solana_instruction::Instruction {
             program_id: crate::RAYDIUM_CP_SWAP_ID,
@@ -113,34 +117,27 @@ impl CollectFundFee {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct CollectFundFeeInstructionData {
+pub struct CollectCreatorFeeInstructionData {
     discriminator: [u8; 8],
 }
 
-impl CollectFundFeeInstructionData {
+impl CollectCreatorFeeInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [167, 138, 78, 149, 223, 194, 6, 126],
+            discriminator: [20, 22, 86, 123, 198, 28, 219, 132],
         }
     }
 }
 
-impl Default for CollectFundFeeInstructionData {
+impl Default for CollectCreatorFeeInstructionData {
     fn default() -> Self { Self::new() }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct CollectFundFeeInstructionArgs {
-    pub amount0_requested: u64,
-    pub amount1_requested: u64,
-}
-
-/// Instruction builder for `CollectFundFee`.
+/// Instruction builder for `CollectCreatorFee`.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` owner
+///   0. `[writable, signer]` creator
 ///   1. `[]` authority
 ///   2. `[writable]` pool_state
 ///   3. `[]` amm_config
@@ -148,13 +145,15 @@ pub struct CollectFundFeeInstructionArgs {
 ///   5. `[writable]` token1_vault
 ///   6. `[]` vault0_mint
 ///   7. `[]` vault1_mint
-///   8. `[writable]` recipient_token0_account
-///   9. `[writable]` recipient_token1_account
-///   10. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   11. `[optional]` token_program2022 (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
+///   8. `[writable]` creator_token0
+///   9. `[writable]` creator_token1
+///   10. `[]` token0_program
+///   11. `[]` token1_program
+///   12. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
+///   13. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
-pub struct CollectFundFeeBuilder {
-    owner: Option<solana_pubkey::Pubkey>,
+pub struct CollectCreatorFeeBuilder {
+    creator: Option<solana_pubkey::Pubkey>,
     authority: Option<solana_pubkey::Pubkey>,
     pool_state: Option<solana_pubkey::Pubkey>,
     amm_config: Option<solana_pubkey::Pubkey>,
@@ -162,22 +161,22 @@ pub struct CollectFundFeeBuilder {
     token1_vault: Option<solana_pubkey::Pubkey>,
     vault0_mint: Option<solana_pubkey::Pubkey>,
     vault1_mint: Option<solana_pubkey::Pubkey>,
-    recipient_token0_account: Option<solana_pubkey::Pubkey>,
-    recipient_token1_account: Option<solana_pubkey::Pubkey>,
-    token_program: Option<solana_pubkey::Pubkey>,
-    token_program2022: Option<solana_pubkey::Pubkey>,
-    amount0_requested: Option<u64>,
-    amount1_requested: Option<u64>,
+    creator_token0: Option<solana_pubkey::Pubkey>,
+    creator_token1: Option<solana_pubkey::Pubkey>,
+    token0_program: Option<solana_pubkey::Pubkey>,
+    token1_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl CollectFundFeeBuilder {
+impl CollectCreatorFeeBuilder {
     pub fn new() -> Self { Self::default() }
 
-    /// Only admin or fund_owner can collect fee now
+    /// Only pool creator can collect fee
     #[inline(always)]
-    pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
-        self.owner = Some(owner);
+    pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
+        self.creator = Some(creator);
         self
     }
 
@@ -231,49 +230,48 @@ impl CollectFundFeeBuilder {
 
     /// The address that receives the collected token_0 fund fees
     #[inline(always)]
-    pub fn recipient_token0_account(
-        &mut self,
-        recipient_token0_account: solana_pubkey::Pubkey,
-    ) -> &mut Self {
-        self.recipient_token0_account = Some(recipient_token0_account);
+    pub fn creator_token0(&mut self, creator_token0: solana_pubkey::Pubkey) -> &mut Self {
+        self.creator_token0 = Some(creator_token0);
         self
     }
 
     /// The address that receives the collected token_1 fund fees
     #[inline(always)]
-    pub fn recipient_token1_account(
+    pub fn creator_token1(&mut self, creator_token1: solana_pubkey::Pubkey) -> &mut Self {
+        self.creator_token1 = Some(creator_token1);
+        self
+    }
+
+    /// Spl token program or token program 2022
+    #[inline(always)]
+    pub fn token0_program(&mut self, token0_program: solana_pubkey::Pubkey) -> &mut Self {
+        self.token0_program = Some(token0_program);
+        self
+    }
+
+    /// Spl token program or token program 2022
+    #[inline(always)]
+    pub fn token1_program(&mut self, token1_program: solana_pubkey::Pubkey) -> &mut Self {
+        self.token1_program = Some(token1_program);
+        self
+    }
+
+    /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
+    /// Program to create an ATA for receiving position NFT
+    #[inline(always)]
+    pub fn associated_token_program(
         &mut self,
-        recipient_token1_account: solana_pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
-        self.recipient_token1_account = Some(recipient_token1_account);
+        self.associated_token_program = Some(associated_token_program);
         self
     }
 
-    /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
-    /// The SPL program to perform token transfers
+    /// `[optional account, default to '11111111111111111111111111111111']`
+    /// To create a new program account
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
-        self.token_program = Some(token_program);
-        self
-    }
-
-    /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
-    /// The SPL program 2022 to perform token transfers
-    #[inline(always)]
-    pub fn token_program2022(&mut self, token_program2022: solana_pubkey::Pubkey) -> &mut Self {
-        self.token_program2022 = Some(token_program2022);
-        self
-    }
-
-    #[inline(always)]
-    pub fn amount0_requested(&mut self, amount0_requested: u64) -> &mut Self {
-        self.amount0_requested = Some(amount0_requested);
-        self
-    }
-
-    #[inline(always)]
-    pub fn amount1_requested(&mut self, amount1_requested: u64) -> &mut Self {
-        self.amount1_requested = Some(amount1_requested);
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
+        self.system_program = Some(system_program);
         self
     }
 
@@ -296,8 +294,8 @@ impl CollectFundFeeBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = CollectFundFee {
-            owner: self.owner.expect("owner is not set"),
+        let accounts = CollectCreatorFee {
+            creator: self.creator.expect("creator is not set"),
             authority: self.authority.expect("authority is not set"),
             pool_state: self.pool_state.expect("pool_state is not set"),
             amm_config: self.amm_config.expect("amm_config is not set"),
@@ -305,38 +303,26 @@ impl CollectFundFeeBuilder {
             token1_vault: self.token1_vault.expect("token1_vault is not set"),
             vault0_mint: self.vault0_mint.expect("vault0_mint is not set"),
             vault1_mint: self.vault1_mint.expect("vault1_mint is not set"),
-            recipient_token0_account: self
-                .recipient_token0_account
-                .expect("recipient_token0_account is not set"),
-            recipient_token1_account: self
-                .recipient_token1_account
-                .expect("recipient_token1_account is not set"),
-            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )),
-            token_program2022: self.token_program2022.unwrap_or(solana_pubkey::pubkey!(
-                "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
-            )),
-        };
-        let args = CollectFundFeeInstructionArgs {
-            amount0_requested: self
-                .amount0_requested
-                .clone()
-                .expect("amount0_requested is not set"),
-            amount1_requested: self
-                .amount1_requested
-                .clone()
-                .expect("amount1_requested is not set"),
+            creator_token0: self.creator_token0.expect("creator_token0 is not set"),
+            creator_token1: self.creator_token1.expect("creator_token1 is not set"),
+            token0_program: self.token0_program.expect("token0_program is not set"),
+            token1_program: self.token1_program.expect("token1_program is not set"),
+            associated_token_program: self.associated_token_program.unwrap_or(
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+            ),
+            system_program: self
+                .system_program
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
         };
 
-        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
+        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
     }
 }
 
-/// `collect_fund_fee` CPI accounts.
-pub struct CollectFundFeeCpiAccounts<'a, 'b> {
-    /// Only admin or fund_owner can collect fee now
-    pub owner: &'b solana_account_info::AccountInfo<'a>,
+/// `collect_creator_fee` CPI accounts.
+pub struct CollectCreatorFeeCpiAccounts<'a, 'b> {
+    /// Only pool creator can collect fee
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
 
     pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// Pool state stores accumulated protocol fee amount
@@ -352,21 +338,25 @@ pub struct CollectFundFeeCpiAccounts<'a, 'b> {
     /// The mint of token_1 vault
     pub vault1_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The address that receives the collected token_0 fund fees
-    pub recipient_token0_account: &'b solana_account_info::AccountInfo<'a>,
+    pub creator_token0: &'b solana_account_info::AccountInfo<'a>,
     /// The address that receives the collected token_1 fund fees
-    pub recipient_token1_account: &'b solana_account_info::AccountInfo<'a>,
-    /// The SPL program to perform token transfers
-    pub token_program: &'b solana_account_info::AccountInfo<'a>,
-    /// The SPL program 2022 to perform token transfers
-    pub token_program2022: &'b solana_account_info::AccountInfo<'a>,
+    pub creator_token1: &'b solana_account_info::AccountInfo<'a>,
+    /// Spl token program or token program 2022
+    pub token0_program: &'b solana_account_info::AccountInfo<'a>,
+    /// Spl token program or token program 2022
+    pub token1_program: &'b solana_account_info::AccountInfo<'a>,
+    /// Program to create an ATA for receiving position NFT
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
+    /// To create a new program account
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `collect_fund_fee` CPI instruction.
-pub struct CollectFundFeeCpi<'a, 'b> {
+/// `collect_creator_fee` CPI instruction.
+pub struct CollectCreatorFeeCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
-    /// Only admin or fund_owner can collect fee now
-    pub owner: &'b solana_account_info::AccountInfo<'a>,
+    /// Only pool creator can collect fee
+    pub creator: &'b solana_account_info::AccountInfo<'a>,
 
     pub authority: &'b solana_account_info::AccountInfo<'a>,
     /// Pool state stores accumulated protocol fee amount
@@ -382,26 +372,27 @@ pub struct CollectFundFeeCpi<'a, 'b> {
     /// The mint of token_1 vault
     pub vault1_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The address that receives the collected token_0 fund fees
-    pub recipient_token0_account: &'b solana_account_info::AccountInfo<'a>,
+    pub creator_token0: &'b solana_account_info::AccountInfo<'a>,
     /// The address that receives the collected token_1 fund fees
-    pub recipient_token1_account: &'b solana_account_info::AccountInfo<'a>,
-    /// The SPL program to perform token transfers
-    pub token_program: &'b solana_account_info::AccountInfo<'a>,
-    /// The SPL program 2022 to perform token transfers
-    pub token_program2022: &'b solana_account_info::AccountInfo<'a>,
-    /// The arguments for the instruction.
-    pub __args: CollectFundFeeInstructionArgs,
+    pub creator_token1: &'b solana_account_info::AccountInfo<'a>,
+    /// Spl token program or token program 2022
+    pub token0_program: &'b solana_account_info::AccountInfo<'a>,
+    /// Spl token program or token program 2022
+    pub token1_program: &'b solana_account_info::AccountInfo<'a>,
+    /// Program to create an ATA for receiving position NFT
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
+    /// To create a new program account
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-impl<'a, 'b> CollectFundFeeCpi<'a, 'b> {
+impl<'a, 'b> CollectCreatorFeeCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: CollectFundFeeCpiAccounts<'a, 'b>,
-        args: CollectFundFeeInstructionArgs,
+        accounts: CollectCreatorFeeCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
             __program: program,
-            owner: accounts.owner,
+            creator: accounts.creator,
             authority: accounts.authority,
             pool_state: accounts.pool_state,
             amm_config: accounts.amm_config,
@@ -409,11 +400,12 @@ impl<'a, 'b> CollectFundFeeCpi<'a, 'b> {
             token1_vault: accounts.token1_vault,
             vault0_mint: accounts.vault0_mint,
             vault1_mint: accounts.vault1_mint,
-            recipient_token0_account: accounts.recipient_token0_account,
-            recipient_token1_account: accounts.recipient_token1_account,
-            token_program: accounts.token_program,
-            token_program2022: accounts.token_program2022,
-            __args: args,
+            creator_token0: accounts.creator_token0,
+            creator_token1: accounts.creator_token1,
+            token0_program: accounts.token0_program,
+            token1_program: accounts.token1_program,
+            associated_token_program: accounts.associated_token_program,
+            system_program: accounts.system_program,
         }
     }
 
@@ -446,9 +438,9 @@ impl<'a, 'b> CollectFundFeeCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.owner.key,
+        let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.creator.key,
             true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -480,19 +472,27 @@ impl<'a, 'b> CollectFundFeeCpi<'a, 'b> {
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.recipient_token0_account.key,
+            *self.creator_token0.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.recipient_token1_account.key,
+            *self.creator_token1.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.token_program.key,
+            *self.token0_program.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.token_program2022.key,
+            *self.token1_program.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.associated_token_program.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.system_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
@@ -502,18 +502,16 @@ impl<'a, 'b> CollectFundFeeCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&CollectFundFeeInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
-        data.append(&mut args);
+        let data = borsh::to_vec(&CollectCreatorFeeInstructionData::new()).unwrap();
 
         let instruction = solana_instruction::Instruction {
             program_id: crate::RAYDIUM_CP_SWAP_ID,
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(13 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(15 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
-        account_infos.push(self.owner.clone());
+        account_infos.push(self.creator.clone());
         account_infos.push(self.authority.clone());
         account_infos.push(self.pool_state.clone());
         account_infos.push(self.amm_config.clone());
@@ -521,10 +519,12 @@ impl<'a, 'b> CollectFundFeeCpi<'a, 'b> {
         account_infos.push(self.token1_vault.clone());
         account_infos.push(self.vault0_mint.clone());
         account_infos.push(self.vault1_mint.clone());
-        account_infos.push(self.recipient_token0_account.clone());
-        account_infos.push(self.recipient_token1_account.clone());
-        account_infos.push(self.token_program.clone());
-        account_infos.push(self.token_program2022.clone());
+        account_infos.push(self.creator_token0.clone());
+        account_infos.push(self.creator_token1.clone());
+        account_infos.push(self.token0_program.clone());
+        account_infos.push(self.token1_program.clone());
+        account_infos.push(self.associated_token_program.clone());
+        account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -537,11 +537,11 @@ impl<'a, 'b> CollectFundFeeCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `CollectFundFee` via CPI.
+/// Instruction builder for `CollectCreatorFee` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` owner
+///   0. `[writable, signer]` creator
 ///   1. `[]` authority
 ///   2. `[writable]` pool_state
 ///   3. `[]` amm_config
@@ -549,20 +549,22 @@ impl<'a, 'b> CollectFundFeeCpi<'a, 'b> {
 ///   5. `[writable]` token1_vault
 ///   6. `[]` vault0_mint
 ///   7. `[]` vault1_mint
-///   8. `[writable]` recipient_token0_account
-///   9. `[writable]` recipient_token1_account
-///   10. `[]` token_program
-///   11. `[]` token_program2022
+///   8. `[writable]` creator_token0
+///   9. `[writable]` creator_token1
+///   10. `[]` token0_program
+///   11. `[]` token1_program
+///   12. `[]` associated_token_program
+///   13. `[]` system_program
 #[derive(Clone, Debug)]
-pub struct CollectFundFeeCpiBuilder<'a, 'b> {
-    instruction: Box<CollectFundFeeCpiBuilderInstruction<'a, 'b>>,
+pub struct CollectCreatorFeeCpiBuilder<'a, 'b> {
+    instruction: Box<CollectCreatorFeeCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CollectFundFeeCpiBuilder<'a, 'b> {
+impl<'a, 'b> CollectCreatorFeeCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CollectFundFeeCpiBuilderInstruction {
+        let instruction = Box::new(CollectCreatorFeeCpiBuilderInstruction {
             __program: program,
-            owner: None,
+            creator: None,
             authority: None,
             pool_state: None,
             amm_config: None,
@@ -570,21 +572,21 @@ impl<'a, 'b> CollectFundFeeCpiBuilder<'a, 'b> {
             token1_vault: None,
             vault0_mint: None,
             vault1_mint: None,
-            recipient_token0_account: None,
-            recipient_token1_account: None,
-            token_program: None,
-            token_program2022: None,
-            amount0_requested: None,
-            amount1_requested: None,
+            creator_token0: None,
+            creator_token1: None,
+            token0_program: None,
+            token1_program: None,
+            associated_token_program: None,
+            system_program: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
 
-    /// Only admin or fund_owner can collect fee now
+    /// Only pool creator can collect fee
     #[inline(always)]
-    pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.owner = Some(owner);
+    pub fn creator(&mut self, creator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.creator = Some(creator);
         self
     }
 
@@ -656,53 +658,61 @@ impl<'a, 'b> CollectFundFeeCpiBuilder<'a, 'b> {
 
     /// The address that receives the collected token_0 fund fees
     #[inline(always)]
-    pub fn recipient_token0_account(
+    pub fn creator_token0(
         &mut self,
-        recipient_token0_account: &'b solana_account_info::AccountInfo<'a>,
+        creator_token0: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.recipient_token0_account = Some(recipient_token0_account);
+        self.instruction.creator_token0 = Some(creator_token0);
         self
     }
 
     /// The address that receives the collected token_1 fund fees
     #[inline(always)]
-    pub fn recipient_token1_account(
+    pub fn creator_token1(
         &mut self,
-        recipient_token1_account: &'b solana_account_info::AccountInfo<'a>,
+        creator_token1: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.recipient_token1_account = Some(recipient_token1_account);
+        self.instruction.creator_token1 = Some(creator_token1);
         self
     }
 
-    /// The SPL program to perform token transfers
+    /// Spl token program or token program 2022
     #[inline(always)]
-    pub fn token_program(
+    pub fn token0_program(
         &mut self,
-        token_program: &'b solana_account_info::AccountInfo<'a>,
+        token0_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.token_program = Some(token_program);
+        self.instruction.token0_program = Some(token0_program);
         self
     }
 
-    /// The SPL program 2022 to perform token transfers
+    /// Spl token program or token program 2022
     #[inline(always)]
-    pub fn token_program2022(
+    pub fn token1_program(
         &mut self,
-        token_program2022: &'b solana_account_info::AccountInfo<'a>,
+        token1_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.token_program2022 = Some(token_program2022);
+        self.instruction.token1_program = Some(token1_program);
         self
     }
 
+    /// Program to create an ATA for receiving position NFT
     #[inline(always)]
-    pub fn amount0_requested(&mut self, amount0_requested: u64) -> &mut Self {
-        self.instruction.amount0_requested = Some(amount0_requested);
+    pub fn associated_token_program(
+        &mut self,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
 
+    /// To create a new program account
     #[inline(always)]
-    pub fn amount1_requested(&mut self, amount1_requested: u64) -> &mut Self {
-        self.instruction.amount1_requested = Some(amount1_requested);
+    pub fn system_program(
+        &mut self,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.system_program = Some(system_program);
         self
     }
 
@@ -744,22 +754,10 @@ impl<'a, 'b> CollectFundFeeCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program_entrypoint::ProgramResult {
-        let args = CollectFundFeeInstructionArgs {
-            amount0_requested: self
-                .instruction
-                .amount0_requested
-                .clone()
-                .expect("amount0_requested is not set"),
-            amount1_requested: self
-                .instruction
-                .amount1_requested
-                .clone()
-                .expect("amount1_requested is not set"),
-        };
-        let instruction = CollectFundFeeCpi {
+        let instruction = CollectCreatorFeeCpi {
             __program: self.instruction.__program,
 
-            owner: self.instruction.owner.expect("owner is not set"),
+            creator: self.instruction.creator.expect("creator is not set"),
 
             authority: self.instruction.authority.expect("authority is not set"),
 
@@ -787,26 +785,35 @@ impl<'a, 'b> CollectFundFeeCpiBuilder<'a, 'b> {
                 .vault1_mint
                 .expect("vault1_mint is not set"),
 
-            recipient_token0_account: self
+            creator_token0: self
                 .instruction
-                .recipient_token0_account
-                .expect("recipient_token0_account is not set"),
+                .creator_token0
+                .expect("creator_token0 is not set"),
 
-            recipient_token1_account: self
+            creator_token1: self
                 .instruction
-                .recipient_token1_account
-                .expect("recipient_token1_account is not set"),
+                .creator_token1
+                .expect("creator_token1 is not set"),
 
-            token_program: self
+            token0_program: self
                 .instruction
-                .token_program
-                .expect("token_program is not set"),
+                .token0_program
+                .expect("token0_program is not set"),
 
-            token_program2022: self
+            token1_program: self
                 .instruction
-                .token_program2022
-                .expect("token_program2022 is not set"),
-            __args: args,
+                .token1_program
+                .expect("token1_program is not set"),
+
+            associated_token_program: self
+                .instruction
+                .associated_token_program
+                .expect("associated_token_program is not set"),
+
+            system_program: self
+                .instruction
+                .system_program
+                .expect("system_program is not set"),
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -816,9 +823,9 @@ impl<'a, 'b> CollectFundFeeCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct CollectFundFeeCpiBuilderInstruction<'a, 'b> {
+struct CollectCreatorFeeCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
-    owner: Option<&'b solana_account_info::AccountInfo<'a>>,
+    creator: Option<&'b solana_account_info::AccountInfo<'a>>,
     authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     pool_state: Option<&'b solana_account_info::AccountInfo<'a>>,
     amm_config: Option<&'b solana_account_info::AccountInfo<'a>>,
@@ -826,12 +833,12 @@ struct CollectFundFeeCpiBuilderInstruction<'a, 'b> {
     token1_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     vault0_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     vault1_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
-    recipient_token0_account: Option<&'b solana_account_info::AccountInfo<'a>>,
-    recipient_token1_account: Option<&'b solana_account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    token_program2022: Option<&'b solana_account_info::AccountInfo<'a>>,
-    amount0_requested: Option<u64>,
-    amount1_requested: Option<u64>,
+    creator_token0: Option<&'b solana_account_info::AccountInfo<'a>>,
+    creator_token1: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token0_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token1_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

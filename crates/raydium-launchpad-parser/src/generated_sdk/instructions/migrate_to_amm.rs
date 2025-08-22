@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const MIGRATE_TO_AMM_DISCRIMINATOR: [u8; 8] = [207, 82, 192, 145, 254, 207, 145, 223];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct MigrateToAmm {

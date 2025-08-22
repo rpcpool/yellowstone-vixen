@@ -8,26 +8,25 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
-use crate::generated::types::{MigrateNftInfo, PlatformConfigInfo};
-
+/// Emitted when deposit and withdraw
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum PlatformConfigParam {
+pub struct LpChangeEvent {
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    FeeWallet(Pubkey),
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    NFTWallet(Pubkey),
-    MigrateNftInfo(MigrateNftInfo),
-    FeeRate(u64),
-    Name(String),
-    Web(String),
-    Img(String),
-    CpSwapConfig,
-    AllInfo(PlatformConfigInfo),
+    pub pool_id: Pubkey,
+    pub lp_amount_before: u64,
+    /// pool vault sub trade fees
+    pub token0_vault_before: u64,
+    /// pool vault sub trade fees
+    pub token1_vault_before: u64,
+    /// calculate result without transfer fee
+    pub token0_amount: u64,
+    /// calculate result without transfer fee
+    pub token1_amount: u64,
+    pub token0_transfer_fee: u64,
+    pub token1_transfer_fee: u64,
+    pub change_type: u8,
 }

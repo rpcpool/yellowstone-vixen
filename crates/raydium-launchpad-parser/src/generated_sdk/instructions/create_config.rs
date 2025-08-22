@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const CREATE_CONFIG_DISCRIMINATOR: [u8; 8] = [201, 207, 243, 114, 75, 111, 47, 189];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateConfig {

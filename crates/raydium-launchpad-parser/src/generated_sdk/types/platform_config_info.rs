@@ -8,29 +8,30 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
-use crate::generated::types::{AmmCreatorFeeOn, CurveParams, MintParams, VestingParams};
+use crate::generated::types::MigrateNftInfo;
 
-/// Emitted when pool created
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct PoolCreateEvent {
+pub struct PlatformConfigInfo {
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    pub pool_state: Pubkey,
+    pub fee_wallet: Pubkey,
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    pub creator: Pubkey,
+    pub nft_wallet: Pubkey,
+    pub migrate_nft_info: MigrateNftInfo,
+    pub fee_rate: u64,
+    pub name: String,
+    pub web: String,
+    pub img: String,
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    pub config: Pubkey,
-    pub base_mint_param: MintParams,
-    pub curve_param: CurveParams,
-    pub vesting_param: VestingParams,
-    pub amm_fee_on: AmmCreatorFeeOn,
+    pub transfer_fee_extension_auth: Pubkey,
+    pub creator_fee_rate: u64,
 }

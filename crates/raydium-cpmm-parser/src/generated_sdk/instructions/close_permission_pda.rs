@@ -7,47 +7,47 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-pub const UPDATE_CONFIG_DISCRIMINATOR: [u8; 8] = [29, 158, 252, 191, 10, 83, 219, 99];
+pub const CLOSE_PERMISSION_PDA_DISCRIMINATOR: [u8; 8] = [156, 84, 32, 118, 69, 135, 70, 123];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct UpdateConfig {
-    /// The global config owner or admin
+pub struct ClosePermissionPda {
     pub owner: solana_pubkey::Pubkey,
-    /// Global config account to be changed
-    pub global_config: solana_pubkey::Pubkey,
+
+    pub permission_authority: solana_pubkey::Pubkey,
+    /// Initialize config state account to store protocol owner address and fee rates.
+    pub permission: solana_pubkey::Pubkey,
+
+    pub system_program: solana_pubkey::Pubkey,
 }
 
-impl UpdateConfig {
-    pub fn instruction(
-        &self,
-        args: UpdateConfigInstructionArgs,
-    ) -> solana_instruction::Instruction {
-        self.instruction_with_remaining_accounts(args, &[])
+impl ClosePermissionPda {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
+        self.instruction_with_remaining_accounts(&[])
     }
 
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: UpdateConfigInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(self.owner, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.owner, true,
+            self.permission_authority,
+            false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new(
-            self.global_config,
+        accounts.push(solana_instruction::AccountMeta::new(self.permission, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.system_program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&UpdateConfigInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
-        data.append(&mut args);
+        let data = borsh::to_vec(&ClosePermissionPdaInstructionData::new()).unwrap();
 
         solana_instruction::Instruction {
-            program_id: crate::RAYDIUM_LAUNCHPAD_ID,
+            program_id: crate::RAYDIUM_CP_SWAP_ID,
             accounts,
             data,
         }
@@ -56,71 +56,69 @@ impl UpdateConfig {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UpdateConfigInstructionData {
+pub struct ClosePermissionPdaInstructionData {
     discriminator: [u8; 8],
 }
 
-impl UpdateConfigInstructionData {
+impl ClosePermissionPdaInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [29, 158, 252, 191, 10, 83, 219, 99],
+            discriminator: [156, 84, 32, 118, 69, 135, 70, 123],
         }
     }
 }
 
-impl Default for UpdateConfigInstructionData {
+impl Default for ClosePermissionPdaInstructionData {
     fn default() -> Self { Self::new() }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UpdateConfigInstructionArgs {
-    pub param: u8,
-    pub value: u64,
-}
-
-/// Instruction builder for `UpdateConfig`.
+/// Instruction builder for `ClosePermissionPda`.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer, optional]` owner (default to `GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ`)
-///   1. `[writable]` global_config
+///   0. `[writable, signer, optional]` owner (default to `GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ`)
+///   1. `[]` permission_authority
+///   2. `[writable]` permission
+///   3. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
-pub struct UpdateConfigBuilder {
+pub struct ClosePermissionPdaBuilder {
     owner: Option<solana_pubkey::Pubkey>,
-    global_config: Option<solana_pubkey::Pubkey>,
-    param: Option<u8>,
-    value: Option<u64>,
+    permission_authority: Option<solana_pubkey::Pubkey>,
+    permission: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl UpdateConfigBuilder {
+impl ClosePermissionPdaBuilder {
     pub fn new() -> Self { Self::default() }
 
     /// `[optional account, default to 'GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ']`
-    /// The global config owner or admin
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
 
-    /// Global config account to be changed
     #[inline(always)]
-    pub fn global_config(&mut self, global_config: solana_pubkey::Pubkey) -> &mut Self {
-        self.global_config = Some(global_config);
+    pub fn permission_authority(
+        &mut self,
+        permission_authority: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.permission_authority = Some(permission_authority);
         self
     }
 
+    /// Initialize config state account to store protocol owner address and fee rates.
     #[inline(always)]
-    pub fn param(&mut self, param: u8) -> &mut Self {
-        self.param = Some(param);
+    pub fn permission(&mut self, permission: solana_pubkey::Pubkey) -> &mut Self {
+        self.permission = Some(permission);
         self
     }
 
+    /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn value(&mut self, value: u64) -> &mut Self {
-        self.value = Some(value);
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
+        self.system_program = Some(system_program);
         self
     }
 
@@ -143,52 +141,59 @@ impl UpdateConfigBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = UpdateConfig {
+        let accounts = ClosePermissionPda {
             owner: self.owner.unwrap_or(solana_pubkey::pubkey!(
                 "GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ"
             )),
-            global_config: self.global_config.expect("global_config is not set"),
-        };
-        let args = UpdateConfigInstructionArgs {
-            param: self.param.clone().expect("param is not set"),
-            value: self.value.clone().expect("value is not set"),
+            permission_authority: self
+                .permission_authority
+                .expect("permission_authority is not set"),
+            permission: self.permission.expect("permission is not set"),
+            system_program: self
+                .system_program
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
         };
 
-        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
+        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
     }
 }
 
-/// `update_config` CPI accounts.
-pub struct UpdateConfigCpiAccounts<'a, 'b> {
-    /// The global config owner or admin
+/// `close_permission_pda` CPI accounts.
+pub struct ClosePermissionPdaCpiAccounts<'a, 'b> {
     pub owner: &'b solana_account_info::AccountInfo<'a>,
-    /// Global config account to be changed
-    pub global_config: &'b solana_account_info::AccountInfo<'a>,
+
+    pub permission_authority: &'b solana_account_info::AccountInfo<'a>,
+    /// Initialize config state account to store protocol owner address and fee rates.
+    pub permission: &'b solana_account_info::AccountInfo<'a>,
+
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `update_config` CPI instruction.
-pub struct UpdateConfigCpi<'a, 'b> {
+/// `close_permission_pda` CPI instruction.
+pub struct ClosePermissionPdaCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
-    /// The global config owner or admin
+
     pub owner: &'b solana_account_info::AccountInfo<'a>,
-    /// Global config account to be changed
-    pub global_config: &'b solana_account_info::AccountInfo<'a>,
-    /// The arguments for the instruction.
-    pub __args: UpdateConfigInstructionArgs,
+
+    pub permission_authority: &'b solana_account_info::AccountInfo<'a>,
+    /// Initialize config state account to store protocol owner address and fee rates.
+    pub permission: &'b solana_account_info::AccountInfo<'a>,
+
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-impl<'a, 'b> UpdateConfigCpi<'a, 'b> {
+impl<'a, 'b> ClosePermissionPdaCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: UpdateConfigCpiAccounts<'a, 'b>,
-        args: UpdateConfigInstructionArgs,
+        accounts: ClosePermissionPdaCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
             __program: program,
             owner: accounts.owner,
-            global_config: accounts.global_config,
-            __args: args,
+            permission_authority: accounts.permission_authority,
+            permission: accounts.permission,
+            system_program: accounts.system_program,
         }
     }
 
@@ -221,13 +226,18 @@ impl<'a, 'b> UpdateConfigCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(*self.owner.key, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.owner.key,
-            true,
+            *self.permission_authority.key,
+            false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.global_config.key,
+            *self.permission.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.system_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
@@ -237,19 +247,19 @@ impl<'a, 'b> UpdateConfigCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&UpdateConfigInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
-        data.append(&mut args);
+        let data = borsh::to_vec(&ClosePermissionPdaInstructionData::new()).unwrap();
 
         let instruction = solana_instruction::Instruction {
-            program_id: crate::RAYDIUM_LAUNCHPAD_ID,
+            program_id: crate::RAYDIUM_CP_SWAP_ID,
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(3 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(5 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.owner.clone());
-        account_infos.push(self.global_config.clone());
+        account_infos.push(self.permission_authority.clone());
+        account_infos.push(self.permission.clone());
+        account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -262,56 +272,63 @@ impl<'a, 'b> UpdateConfigCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `UpdateConfig` via CPI.
+/// Instruction builder for `ClosePermissionPda` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` owner
-///   1. `[writable]` global_config
+///   0. `[writable, signer]` owner
+///   1. `[]` permission_authority
+///   2. `[writable]` permission
+///   3. `[]` system_program
 #[derive(Clone, Debug)]
-pub struct UpdateConfigCpiBuilder<'a, 'b> {
-    instruction: Box<UpdateConfigCpiBuilderInstruction<'a, 'b>>,
+pub struct ClosePermissionPdaCpiBuilder<'a, 'b> {
+    instruction: Box<ClosePermissionPdaCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
+impl<'a, 'b> ClosePermissionPdaCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(UpdateConfigCpiBuilderInstruction {
+        let instruction = Box::new(ClosePermissionPdaCpiBuilderInstruction {
             __program: program,
             owner: None,
-            global_config: None,
-            param: None,
-            value: None,
+            permission_authority: None,
+            permission: None,
+            system_program: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
 
-    /// The global config owner or admin
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
 
-    /// Global config account to be changed
     #[inline(always)]
-    pub fn global_config(
+    pub fn permission_authority(
         &mut self,
-        global_config: &'b solana_account_info::AccountInfo<'a>,
+        permission_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.global_config = Some(global_config);
+        self.instruction.permission_authority = Some(permission_authority);
+        self
+    }
+
+    /// Initialize config state account to store protocol owner address and fee rates.
+    #[inline(always)]
+    pub fn permission(
+        &mut self,
+        permission: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.permission = Some(permission);
         self
     }
 
     #[inline(always)]
-    pub fn param(&mut self, param: u8) -> &mut Self {
-        self.instruction.param = Some(param);
-        self
-    }
-
-    #[inline(always)]
-    pub fn value(&mut self, value: u64) -> &mut Self {
-        self.instruction.value = Some(value);
+    pub fn system_program(
+        &mut self,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.system_program = Some(system_program);
         self
     }
 
@@ -353,20 +370,22 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program_entrypoint::ProgramResult {
-        let args = UpdateConfigInstructionArgs {
-            param: self.instruction.param.clone().expect("param is not set"),
-            value: self.instruction.value.clone().expect("value is not set"),
-        };
-        let instruction = UpdateConfigCpi {
+        let instruction = ClosePermissionPdaCpi {
             __program: self.instruction.__program,
 
             owner: self.instruction.owner.expect("owner is not set"),
 
-            global_config: self
+            permission_authority: self
                 .instruction
-                .global_config
-                .expect("global_config is not set"),
-            __args: args,
+                .permission_authority
+                .expect("permission_authority is not set"),
+
+            permission: self.instruction.permission.expect("permission is not set"),
+
+            system_program: self
+                .instruction
+                .system_program
+                .expect("system_program is not set"),
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -376,12 +395,12 @@ impl<'a, 'b> UpdateConfigCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct UpdateConfigCpiBuilderInstruction<'a, 'b> {
+struct ClosePermissionPdaCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     owner: Option<&'b solana_account_info::AccountInfo<'a>>,
-    global_config: Option<&'b solana_account_info::AccountInfo<'a>>,
-    param: Option<u8>,
-    value: Option<u64>,
+    permission_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    permission: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

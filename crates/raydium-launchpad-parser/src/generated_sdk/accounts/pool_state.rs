@@ -8,7 +8,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
-use crate::generated::types::VestingSchedule;
+use crate::generated::types::{AmmCreatorFeeOn, VestingSchedule};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -27,7 +27,7 @@ pub struct PoolState {
     pub base_decimals: u8,
     /// Decimals of the pool quote token
     pub quote_decimals: u8,
-    /// Migrate to AMM or CpSwap
+    /// Migrate to AMM or CpSwap, 0: amm， 1: cpswap
     pub migrate_type: u8,
     /// Supply of the pool base token
     pub supply: u64,
@@ -103,9 +103,23 @@ pub struct PoolState {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub creator: Pubkey,
+    /// token program bits
+    /// bit0: base token program flag
+    /// 0: spl_token_program
+    /// 1: token_program_2022
+    ///
+    /// bit1: quote token program flag
+    /// 0: spl_token_program
+    /// 1: token_program_2022
+    pub token_program_flag: u8,
+    /// migrate to cpmm, creator fee on quote token or both token
+    pub amm_creator_fee_on: AmmCreatorFeeOn,
     /// padding for future updates
-    pub padding: [u64; 8],
+    #[cfg_attr(feature = "serde", serde(with = "serde_with::As::<serde_with::Bytes>"))]
+    pub padding: [u8; 62],
 }
+
+pub const POOL_STATE_DISCRIMINATOR: [u8; 8] = [247, 237, 227, 245, 215, 195, 222, 70];
 
 impl PoolState {
     pub const LEN: usize = 429;
