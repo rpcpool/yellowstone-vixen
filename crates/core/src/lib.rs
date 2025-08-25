@@ -264,7 +264,7 @@ impl BlockMetaPrefilter {
 pub struct SlotPrefilter {}
 
 impl SlotPrefilter {
-    /// Merge another block metadata prefilter into this one.
+    /// Merge another slot prefilter into this one.
     /// This function currently does nothing as the struct has no fields.
     pub fn merge(_lhs: &mut Self, _rhs: Self) {}
 }

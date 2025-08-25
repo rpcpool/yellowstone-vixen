@@ -6,7 +6,6 @@ use solana_accounts_db::accounts_file::AccountsFile;
 use tar::Archive;
 use tempfile::{tempdir, TempDir};
 use tokio::task::JoinSet;
-use tracing::info;
 use yellowstone_grpc_proto::{
     geyser::{
         subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateAccount,
@@ -122,8 +121,6 @@ impl SourceTrait for SolanaSnapshotSource {
             .filter_map(|(key, parser_filter)| parser_filter.slot.map(|_| key.to_string()))
             .collect::<Vec<String>>();
 
-        info!("Filters: {:?}", filters.clone());
-
         tx.send(Ok(SubscribeUpdate {
             filters,
             created_at: None,
@@ -147,8 +144,6 @@ impl SourceTrait for SolanaSnapshotSource {
                 match event {
                     Event::AccountUpdate(account) => {
                         let filter_keys = filter_keys.clone();
-
-                        info!("Filters: {:?}", filter_keys);
 
                         if let Err(err) = tx
                             .send(Ok(SubscribeUpdate {
