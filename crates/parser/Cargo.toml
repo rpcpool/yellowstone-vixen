@@ -34,6 +34,7 @@ tokio = "1.39.2"
 [features]
 default = []
 block-meta = []
+slot = []
 proto = [
   "dep:yellowstone-vixen-proto",
   "yellowstone-vixen-core/proto",

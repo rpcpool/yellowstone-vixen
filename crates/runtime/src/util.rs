@@ -1,11 +1,13 @@
 use std::{error::Error, fmt};
 
+/// Handle a fatal error by logging it and exiting the process.
 #[inline]
-pub(crate) fn handle_fatal<T, E: Error>(res: Result<T, E>) -> T {
+pub fn handle_fatal<T, E: Error>(res: Result<T, E>) -> T {
     handle_fatal_msg(res, "Fatal error encountered")
 }
 
-pub(crate) fn handle_fatal_msg<T, E: Error>(res: Result<T, E>, msg: &str) -> T {
+/// Handle a fatal error by logging it and exiting the process.
+pub fn handle_fatal_msg<T, E: Error>(res: Result<T, E>, msg: &str) -> T {
     match res {
         Ok(o) => o,
         Err(e) => {
@@ -16,7 +18,9 @@ pub(crate) fn handle_fatal_msg<T, E: Error>(res: Result<T, E>, msg: &str) -> T {
 }
 
 /// A helper type for preventing sensitive strings from being printed.
-#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
+#[derive(
+    Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize, serde::Serialize,
+)]
 #[repr(transparent)]
 pub struct PrivateString(pub String);
 

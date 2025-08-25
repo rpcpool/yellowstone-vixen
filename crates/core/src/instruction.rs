@@ -200,6 +200,7 @@ impl InstructionUpdate {
             return_data: _,
             return_data_none: _,
             compute_units_consumed,
+            cost_units: _,
         } = meta.ok_or(Missing::TransactionMeta)?;
         let Message {
             header,

@@ -24,10 +24,11 @@ use std::{
     sync::Arc,
 };
 
+use serde::Deserialize;
 use yellowstone_grpc_proto::geyser::{
-    CommitmentLevel, SubscribeRequest, SubscribeRequestFilterAccounts,
-    SubscribeRequestFilterBlocksMeta, SubscribeRequestFilterTransactions, SubscribeUpdateAccount,
-    SubscribeUpdateBlockMeta, SubscribeUpdateTransaction,
+    self, SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterBlocksMeta,
+    SubscribeRequestFilterSlots, SubscribeRequestFilterTransactions, SubscribeUpdateAccount,
+    SubscribeUpdateBlockMeta, SubscribeUpdateSlot, SubscribeUpdateTransaction,
 };
 
 pub extern crate bs58;
@@ -65,6 +66,8 @@ pub type AccountUpdate = SubscribeUpdateAccount;
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 /// A block meta update from Yellowstone.
 pub type BlockMetaUpdate = SubscribeUpdateBlockMeta;
+/// A slot update from Yellowstone.
+pub type SlotUpdate = SubscribeUpdateSlot;
 
 /// Generic output type for instruction parsers that wraps shared data for all instructions
 /// in the given transaction.
@@ -154,7 +157,9 @@ pub struct Prefilter {
     /// Filters for transaction updates.
     pub transaction: Option<TransactionPrefilter>,
     /// Filters for block meta updates.
-    pub(crate) block_meta: Option<BlockMetaPrefilter>,
+    pub block_meta: Option<BlockMetaPrefilter>,
+    /// Filters for slot updates.
+    pub slot: Option<SlotPrefilter>,
 }
 
 fn merge_opt<T, F: FnOnce(&mut T, T)>(lhs: &mut Option<T>, rhs: Option<T>, f: F) {
@@ -177,10 +182,12 @@ impl Prefilter {
             account,
             transaction,
             block_meta,
+            slot,
         } = self;
         merge_opt(account, other.account, AccountPrefilter::merge);
         merge_opt(transaction, other.transaction, TransactionPrefilter::merge);
         merge_opt(block_meta, other.block_meta, BlockMetaPrefilter::merge);
+        merge_opt(slot, other.slot, SlotPrefilter::merge);
     }
 }
 
@@ -242,10 +249,23 @@ impl TransactionPrefilter {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
-pub(crate) struct BlockMetaPrefilter {}
+/// A prefilter for matching block metadata updates.
+#[derive(Debug, Default, Clone, PartialEq, Copy)]
+pub struct BlockMetaPrefilter {}
 
 impl BlockMetaPrefilter {
+    /// Merge another block metadata prefilter into this one.
+    /// This function currently does nothing as the struct has no fields.
+    pub fn merge(_lhs: &mut Self, _rhs: Self) {}
+}
+
+/// A prefilter for matching slot updates updates.
+#[derive(Debug, Default, Clone, PartialEq, Copy)]
+pub struct SlotPrefilter {}
+
+impl SlotPrefilter {
+    /// Merge another slot prefilter into this one.
+    /// This function currently does nothing as the struct has no fields.
     pub fn merge(_lhs: &mut Self, _rhs: Self) {}
 }
 
@@ -445,6 +465,8 @@ pub enum PrefilterError {
 #[must_use = "Consider calling .build() on this builder"]
 pub struct PrefilterBuilder {
     error: Option<PrefilterError>,
+    slots: bool,
+    block_metas: bool,
     accounts: Option<HashSet<Pubkey>>,
     account_owners: Option<HashSet<Pubkey>>,
     /// Matching [`TransactionPrefilter::accounts_include`]
@@ -484,6 +506,8 @@ impl PrefilterBuilder {
             error,
             accounts,
             account_owners,
+            slots,
+            block_metas,
             transaction_accounts_include,
             transaction_accounts_required,
         } = self;
@@ -503,10 +527,13 @@ impl PrefilterBuilder {
 
         let block_meta = BlockMetaPrefilter {};
 
+        let slot = SlotPrefilter {};
+
         Ok(Prefilter {
             account: (account != AccountPrefilter::default()).then_some(account),
             transaction: (transaction != TransactionPrefilter::default()).then_some(transaction),
-            block_meta: (block_meta != BlockMetaPrefilter::default()).then_some(block_meta),
+            block_meta: block_metas.then_some(block_meta),
+            slot: slots.then_some(slot),
         })
     }
 
@@ -516,6 +543,14 @@ impl PrefilterBuilder {
         }
 
         self
+    }
+
+    /// Set prefilter will request slot updates.
+    pub fn slots(self) -> Self {
+        self.mutate(|this| {
+            this.slots = true;
+            Ok(())
+        })
     }
 
     /// Set the accounts that this prefilter will match.
@@ -573,17 +608,6 @@ impl PrefilterBuilder {
 pub struct Filters {
     /// Filters for each parser.
     pub parsers_filters: HashMap<String, Prefilter>,
-    /// Global filters for the subscription.
-    pub global_filters: GlobalFilters,
-}
-
-/// A collection of global filters shared by all parsers for a Vixen subscription.
-#[derive(Debug, Clone, Default, Copy)]
-pub struct GlobalFilters {
-    /// The commitment level for the subscription.
-    pub commitment: Option<CommitmentLevel>,
-    /// The from slot filter for the subscription.
-    pub from_slot: Option<u64>,
 }
 
 impl Filters {
@@ -593,26 +617,30 @@ impl Filters {
     pub fn new(filters: HashMap<String, Prefilter>) -> Self {
         Self {
             parsers_filters: filters,
-            global_filters: GlobalFilters::default(),
         }
     }
+}
 
-    /// Set the commitment level filter.
-    #[inline]
-    #[must_use]
-    pub fn commitment(mut self, commitment: Option<CommitmentLevel>) -> Self {
-        self.global_filters.commitment = commitment;
+/// Type mirroring the `CommitmentLevel` enum in the `geyser` crate but serializable.
+/// Used to avoid need for custom deserialization logic.
+#[derive(Debug, Clone, Copy, Deserialize, clap::ValueEnum)]
+#[serde(rename_all = "lowercase")]
+pub enum CommitmentLevel {
+    /// Processed
+    Processed,
+    /// Confirmed
+    Confirmed,
+    /// Finalized
+    Finalized,
+}
 
-        self
-    }
-
-    /// Set the from slot filter.
-    #[inline]
-    #[must_use]
-    pub fn from_slot(mut self, from_slot: Option<u64>) -> Self {
-        self.global_filters.from_slot = from_slot;
-
-        self
+impl From<geyser::CommitmentLevel> for CommitmentLevel {
+    fn from(value: geyser::CommitmentLevel) -> Self {
+        match value {
+            geyser::CommitmentLevel::Processed => Self::Processed,
+            geyser::CommitmentLevel::Confirmed => Self::Confirmed,
+            geyser::CommitmentLevel::Finalized => Self::Finalized,
+        }
     }
 }
 
@@ -635,7 +663,16 @@ impl From<Filters> for SubscribeRequest {
                     }))
                 })
                 .collect(),
-            slots: [].into_iter().collect(),
+            slots: value
+                .parsers_filters
+                .keys()
+                .map(|k| {
+                    (k.clone(), SubscribeRequestFilterSlots {
+                        filter_by_commitment: Some(true),
+                        interslot_updates: None,
+                    })
+                })
+                .collect(),
             transactions: value
                 .parsers_filters
                 .iter()
@@ -669,13 +706,10 @@ impl From<Filters> for SubscribeRequest {
                 .map(|k| (k.clone(), SubscribeRequestFilterBlocksMeta {}))
                 .collect(),
             entry: [].into_iter().collect(),
-            commitment: value
-                .global_filters
-                .commitment
-                .map(|commitment| commitment as i32),
+            commitment: None,
             accounts_data_slice: vec![],
             ping: None,
-            from_slot: value.global_filters.from_slot,
+            from_slot: None,
         }
     }
 }

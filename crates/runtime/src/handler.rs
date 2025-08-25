@@ -6,7 +6,9 @@ use std::{borrow::Cow, collections::HashMap, pin::Pin};
 use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
 use tracing::{warn, Instrument, Span};
-use vixen_core::{AccountUpdate, BlockMetaUpdate, GetPrefilter, ParserId, TransactionUpdate};
+use vixen_core::{
+    AccountUpdate, BlockMetaUpdate, GetPrefilter, ParserId, SlotUpdate, TransactionUpdate,
+};
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
 use crate::metrics::{Counters, Instrumenter, JobResult, Update};
@@ -134,7 +136,8 @@ impl<P: GetPrefilter, H> GetPrefilter for Pipeline<P, H> {
     fn prefilter(&self) -> Prefilter { self.0.prefilter() }
 }
 
-pub(crate) type BoxPipeline<'h, T> = Box<dyn DynPipeline<T> + Send + Sync + 'h>;
+/// A boxed pipeline.
+pub type BoxPipeline<'h, T> = Box<dyn DynPipeline<T> + Send + Sync + 'h>;
 
 impl<P, I> Pipeline<P, I>
 where
@@ -230,6 +233,7 @@ pub(crate) struct PipelineSets {
     pub transaction: PipelineSet<BoxPipeline<'static, TransactionUpdate>>,
     pub instruction: PipelineSet<BoxPipeline<'static, TransactionUpdate>>,
     pub block_meta: PipelineSet<BoxPipeline<'static, BlockMetaUpdate>>,
+    pub slot: PipelineSet<BoxPipeline<'static, SlotUpdate>>,
 }
 
 impl PipelineSets {
@@ -241,6 +245,7 @@ impl PipelineSets {
                 .chain(self.transaction.filters())
                 .chain(self.instruction.filters())
                 .chain(self.block_meta.filters())
+                .chain(self.slot.filters())
                 .collect(),
         )
     }

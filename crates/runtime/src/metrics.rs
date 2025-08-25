@@ -346,6 +346,10 @@ impl Update for vixen_core::BlockMetaUpdate {
     const TYPE: UpdateType = UpdateType::BlockMeta;
 }
 
+impl Update for vixen_core::SlotUpdate {
+    const TYPE: UpdateType = UpdateType::Slot;
+}
+
 /// Tuple of `(singular, plural)`
 #[derive(Clone, Copy)]
 struct Noun(&'static str, &'static str);
@@ -364,6 +368,7 @@ pub(crate) enum UpdateType {
     Account,
     Transaction,
     BlockMeta,
+    Slot,
 }
 
 impl UpdateType {
@@ -376,6 +381,7 @@ impl UpdateType {
             Some(UpdateOneof::BlockMeta(vixen_core::BlockMetaUpdate { .. })) => {
                 Some(Self::BlockMeta)
             },
+            Some(UpdateOneof::Slot(vixen_core::SlotUpdate { .. })) => Some(Self::Slot),
             _ => None,
         }
     }
@@ -385,6 +391,7 @@ impl UpdateType {
             UpdateType::Account => Noun("account", "accounts"),
             UpdateType::Transaction => Noun("transaction", "transactions"),
             UpdateType::BlockMeta => Noun("block_meta", "block_metas"),
+            UpdateType::Slot => Noun("slot", "slots"),
         }
     }
 }
@@ -393,6 +400,7 @@ struct UpdateCounters<B: Instrumenter> {
     account: B::Counter,
     transaction: B::Counter,
     block_meta: B::Counter,
+    slot: B::Counter,
 }
 
 impl<B: Instrumenter> UpdateCounters<B> {
@@ -402,6 +410,7 @@ impl<B: Instrumenter> UpdateCounters<B> {
             account: f(UpdateType::Account),
             transaction: f(UpdateType::Transaction),
             block_meta: f(UpdateType::BlockMeta),
+            slot: f(UpdateType::Slot),
         }
     }
 
@@ -410,6 +419,7 @@ impl<B: Instrumenter> UpdateCounters<B> {
             UpdateType::Account => &self.account,
             UpdateType::Transaction => &self.transaction,
             UpdateType::BlockMeta => &self.block_meta,
+            UpdateType::Slot => &self.slot,
         }
     }
 }

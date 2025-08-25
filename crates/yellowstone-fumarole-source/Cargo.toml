@@ -1,11 +1,10 @@
 [package]
-name = "yellowstone-vixen-yellowstone-grpc-source"
+name = "yellowstone-vixen-yellowstone-fumarole-source"
 version = "0.2.0"
 edition = "2024"
-description = "Yellowstone gRPC source for the Yellowstone Vixen"
+description = "Yellowstone Fumarole source for the Yellowstone Vixen"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
-readme = "./README.md"
 
 [dependencies]
 async-trait = "0.1.88"
@@ -15,6 +14,15 @@ futures-util = { version = "0.3.30", features = ["sink"] }
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
-yellowstone-grpc-client = { workspace = true }
+yellowstone-fumarole-client = { version = "0.2.0-rc8", features = [
+  "prometheus",
+] }
+bytesize = "2"
 serde = { version = "1.0.198", features = ["derive"] }
+tonic = { version = "0.14.0", features = ["gzip", "zstd"] }
 clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+
+prometheus = { version = "0.14.0" }
+
+[features]
+prometheus = []

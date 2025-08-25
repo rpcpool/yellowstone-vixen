@@ -12,9 +12,9 @@ use std::fmt;
 use config::GrpcConfig;
 use grpc::Channels;
 use tracing::info;
-
-use crate::{
+use yellowstone_vixen::{
     metrics::{MetricsFactory, NullMetrics},
+    sources::SourceTrait,
     util, Runtime,
 };
 
@@ -32,7 +32,7 @@ pub enum Error {
     Grpc(#[from] grpc::Error),
     /// An error thrown by the Vixen runtime.
     #[error("Vixen client runtime error")]
-    Runtime(#[from] crate::Error),
+    Runtime(#[from] yellowstone_vixen::Error),
 }
 
 impl From<std::io::Error> for Error {
@@ -41,17 +41,18 @@ impl From<std::io::Error> for Error {
 }
 
 /// A Vixen program stream server.
-pub struct Server<'a, M: MetricsFactory> {
+pub struct Server<'a, M: MetricsFactory, S: SourceTrait> {
     grpc_cfg: GrpcConfig,
     desc_sets: Vec<&'a [u8]>,
     channels: Channels,
-    runtime: Runtime<M>,
+    runtime: Runtime<M, S>,
 }
 
-impl<M: MetricsFactory + fmt::Debug> fmt::Debug for Server<'_, M>
+impl<M: MetricsFactory, S: SourceTrait> fmt::Debug for Server<'_, M, S>
 where
     M::Instrumenter: fmt::Debug,
     M::Exporter: fmt::Debug,
+    M: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let Self {
@@ -69,12 +70,12 @@ where
     }
 }
 
-impl Server<'_, NullMetrics> {
+impl<S: SourceTrait> Server<'_, NullMetrics, S> {
     /// Create a new stream server builder.
-    pub fn builder() -> StreamBuilder<'static> { StreamBuilder::default() }
+    pub fn builder() -> StreamBuilder<'static, S, NullMetrics> { StreamBuilder::default() }
 }
 
-impl<M: MetricsFactory> Server<'_, M> {
+impl<M: MetricsFactory, S: SourceTrait> Server<'_, M, S> {
     /// Create a new Tokio runtime and run the Vixen stream server within it,
     /// terminating the current process if the runtime or gRPC server crash.
     ///

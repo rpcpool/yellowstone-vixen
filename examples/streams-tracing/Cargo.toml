@@ -11,13 +11,13 @@ clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 toml = "0.8.12"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-yellowstone-vixen = { workspace = true, features = ["stream", "prometheus"] }
+yellowstone-vixen-stream = { workspace = true }
+yellowstone-vixen = { workspace = true, features = ["prometheus"] }
 yellowstone-vixen-parser = { workspace = true, features = [
   "proto",
   "token-extensions",
   "token-program",
 ] }
-yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
 
 yellowstone-vixen-boop-parser = { workspace = true, features = ["tracing"] }
 yellowstone-vixen-jupiter-swap-parser = { workspace = true, features = [
@@ -61,6 +61,7 @@ yellowstone-vixen-raydium-launchpad-parser = { workspace = true, features = [
 ] }
 yellowstone-vixen-virtuals-parser = { workspace = true, features = ["tracing"] }
 
+# OTEL
 opentelemetry = "0.29.1"
 opentelemetry_sdk = { version = "0.29.0", features = [
   "metrics",
@@ -79,6 +80,12 @@ opentelemetry-stdout = "0.29.0"
 tracing-opentelemetry = "0.30.0"
 opentelemetry-appender-tracing = "0.29.0"
 tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
+
+# Sources
+yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
+yellowstone-vixen-yellowstone-fumarole-source = { workspace = true, features = [
+  "prometheus",
+] }
 
 [build-dependencies]
 prost-build = "0.13.1"

@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use clap::Parser as _;
 use opentelemetry::trace::TracerProvider;
 use tracing_subscriber::layer::SubscriberExt;
-use yellowstone_vixen::{self as vixen, vixen_core::proto::Proto};
+use yellowstone_vixen::vixen_core::proto::Proto;
 use yellowstone_vixen_parser::{
     token_extension_program::{
         AccountParser as TokenExtensionProgramAccParser,
@@ -22,6 +22,7 @@ use yellowstone_vixen_parser::{
         AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
     },
 };
+// use yellowstone_vixen_yellowstone_fumarole_source::YellowstoneFumaroleSource;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -82,8 +83,7 @@ async fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::stream::Server::builder()
-        .source(YellowstoneGrpcSource::new())
+    let result = yellowstone_vixen_stream::Server::<_, YellowstoneGrpcSource>::builder()
         .account(Proto::new(yellowstone_vixen_boop_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_jupiter_swap_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_kamino_limit_orders_parser::accounts_parser::AccountParser))
@@ -120,8 +120,15 @@ async fn main() {
         .instruction(Proto::new(yellowstone_vixen_raydium_launchpad_parser::instructions_parser::InstructionParser))
         .instruction(Proto::new(TokenProgramIxParser))
         .instruction(Proto::new(TokenExtensionProgramIxParser))
-        .metrics(vixen::metrics::Prometheus)
         .build(config)
-        .run_async()
+        .try_run_async()
         .await;
+
+    match result {
+        Ok(()) => (),
+        Err(e) => {
+            tracing::error!("Error running Vixen: {e:?}");
+            std::process::exit(1);
+        }
+    }
 }

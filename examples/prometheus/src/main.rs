@@ -22,7 +22,6 @@ use yellowstone_vixen_raydium_amm_v4_parser::{
     accounts_parser::AccountParser as RaydiumAmmV4AccParser,
     instructions_parser::{InstructionParser as RaydiumAmmV4IxParser, RaydiumAmmV4ProgramIx},
 };
-use yellowstone_vixen_solana_rpc_source::SolanaAccountsRpcSource;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -89,12 +88,16 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::Runtime::builder()
-        .source(YellowstoneGrpcSource::new())
-        .source(SolanaAccountsRpcSource::new())
+    vixen::Runtime::<_, YellowstoneGrpcSource>::builder()
         .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
-        .instruction(Pipeline::new(yellowstone_vixen_meteora_amm_parser::instructions_parser::InstructionParser, [Logger]))
-        .instruction(FilterPipeline::new(RaydiumAmmV4IxParser, [RaydiumAmmV4IxLogger], Prefilter::builder()
+        .instruction(Pipeline::new(
+            yellowstone_vixen_meteora_amm_parser::instructions_parser::InstructionParser,
+            [Logger],
+        ))
+        .instruction(FilterPipeline::new(
+            RaydiumAmmV4IxParser,
+            [RaydiumAmmV4IxLogger],
+            Prefilter::builder()
             .transaction_accounts_include([
                 Pubkey::from_str("GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6").unwrap(),
                 Pubkey::from_str("4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar").unwrap()
@@ -103,8 +106,6 @@ fn main() {
         ))
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
         .metrics(vixen::metrics::Prometheus)
-        .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
-        // .from_slot(slot_number)
         .build(config)
         .run();
 }
