@@ -1,0 +1,63 @@
+// **************************************************************************
+// https://grafana.com/docs/alloy/latest/collect/opentelemetry-to-lgtm-stack/
+// **************************************************************************
+
+otelcol.receiver.otlp "otlp_receiver" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+// If we want batch exporting, there is the below midle component we can use here (we
+//  send to that, and that sends to these endpoints/components below)
+  output {
+    traces = [otelcol.exporter.otlp.grafanacloud.input,]
+    logs    = [otelcol.exporter.loki.logs1.input]
+    // logs    = [otelcol.processor.batch.default.input]
+    // metrics = [otelcol.exporter.prometheus.default.input]
+  }
+}
+
+
+// otelcol.processor.batch "default" {
+//   output {
+//     metrics = [otelcol.exporter.otlp.default.input]
+//     logs    = [otelcol.exporter.otlp.logs1.input]
+//     traces  = [otelcol.exporter.otlp.metrics1.input]
+//   }
+// }
+
+otelcol.exporter.loki "logs1" {
+  forward_to = [loki.write.default.receiver]
+}
+
+otelcol.exporter.otlp "grafanacloud" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+			insecure = true
+		}
+  }
+}
+
+loki.write "default" {
+  endpoint {
+    url  = "http://loki:3100/loki/api/v1/push"  // I think this "loki" is the name of the docker-compose service, could be anything we set that service to
+    // external_labels = {}
+  }
+}
+
+// otelcol.exporter.prometheus "default" {
+//   forward_to = [prometheus.remote_write.default.receiver]
+// }
+
+// prometheus.remote_write "default" {
+//   endpoint {
+//     url = "http://prometheus:9090/api/v1/write"
+//   }
+// }
+
+// This endpoint can be called on Alloy to reload changes in this file without restarting the service:
+//  - curl -X POST http://localhost:12345/-/reload
