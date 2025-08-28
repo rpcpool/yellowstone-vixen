@@ -31,7 +31,7 @@ impl<P: Parser, H> GetPrefilter for FilterPipeline<P, H> {
 
 impl<P: Parser, H> ParserId for FilterPipeline<P, H> {
     #[inline]
-    fn id(&self) -> Cow<str> { self.parser.id() }
+    fn id(&'_ self) -> Cow<'_, str> { self.parser.id() }
 }
 
 impl<P: Parser, H> FilterPipeline<P, H> {

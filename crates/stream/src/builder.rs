@@ -182,6 +182,7 @@ impl<'a, S: SourceTrait> StreamBuilder<'a, S> {
             transaction,
             instruction,
             block_meta,
+            #[cfg(feature = "prometheus")]
             metrics_registry,
             extra: StreamKind(desc_sets, channels),
             slot,
@@ -205,6 +206,7 @@ impl<'a, S: SourceTrait> StreamBuilder<'a, S> {
             transaction,
             instruction,
             block_meta,
+            #[cfg(feature = "prometheus")]
             metrics_registry,
             extra: RuntimeKind,
             slot,

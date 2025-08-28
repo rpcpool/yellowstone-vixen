@@ -261,7 +261,7 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             source: source_cfg,
             pipelines,
             #[cfg(feature = "prometheus")]
-            metrics_registry: metrics_registry.unwrap_or_else(|| prometheus::Registry::new()),
+            metrics_registry: metrics_registry.unwrap_or_else(prometheus::Registry::new),
             _source: std::marker::PhantomData,
         })
     }
