@@ -1,0 +1,2022 @@
+{
+  "address": "J2D61pmDrE8YVJvtTwtugL7KRJAw52TppoxeaPbVK2Zq",
+  "metadata": {
+    "name": "flip",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "activate_game_internal",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement_authority",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The original transaction signer who will pay for account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_bet_internal",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        243
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement_authority",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The original transaction signer who will pay for account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "CancelBetInternalData"
+            }
+          }
+        }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "cancel_game_internal",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        245
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement_authority",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The original transaction signer who will pay for account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [],
+      "returns": {
+        "defined": {
+          "name": "FlipCancellationResult"
+        }
+      }
+    },
+    {
+      "name": "close_betting_internal",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        246
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement_authority",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The original transaction signer who will pay for account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_game_internal",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        240
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "data.game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement_authority",
+          "docs": [
+            "Settlement authority (must be the authorized settlement program)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The original transaction signer who will pay for account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "CreateGameInternalData"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "get_bet_info",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "bet_id",
+          "type": "u64"
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "FlipBetInfo"
+        }
+      }
+    },
+    {
+      "name": "get_bet_odds",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        250
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "GetBetOddsData"
+            }
+          }
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "FlipBetOdds"
+        }
+      }
+    },
+    {
+      "name": "get_payout_distribution",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        249
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "final_randomness",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "FlipPayoutDistribution"
+        }
+      }
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "settlement_program",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "place_bet_internal",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        242
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement_authority",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The original transaction signer who will pay for account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "game_interface::BetData"
+            }
+          }
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "FlipBetPlacementResult"
+        }
+      }
+    },
+    {
+      "name": "settle_game_internal",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        244
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement_authority",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The original transaction signer who will pay for account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "SettleGameInternalData"
+            }
+          }
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "FlipPayoutDistribution"
+        }
+      }
+    },
+    {
+      "name": "validate_bet",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        247
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "game_interface::BetData"
+            }
+          }
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "FlipBetValidation"
+        }
+      }
+    },
+    {
+      "name": "validate_cancellation",
+      "discriminator": [
+        18,
+        52,
+        86,
+        120,
+        154,
+        188,
+        222,
+        248
+      ],
+      "accounts": [
+        {
+          "name": "game",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game.game_id",
+                "account": "Game"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": {
+              "name": "ValidateCancellationData"
+            }
+          }
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "FlipCancellationValidation"
+        }
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Game",
+      "discriminator": [
+        27,
+        90,
+        166,
+        125,
+        74,
+        100,
+        121,
+        18
+      ]
+    },
+    {
+      "name": "GlobalConfig",
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "BetCancelled",
+      "discriminator": [
+        32,
+        179,
+        128,
+        184,
+        125,
+        193,
+        106,
+        104
+      ]
+    },
+    {
+      "name": "BetPlaced",
+      "discriminator": [
+        88,
+        88,
+        145,
+        226,
+        126,
+        206,
+        32,
+        0
+      ]
+    },
+    {
+      "name": "GameActivated",
+      "discriminator": [
+        2,
+        58,
+        123,
+        68,
+        114,
+        217,
+        80,
+        13
+      ]
+    },
+    {
+      "name": "GameBettingClosed",
+      "discriminator": [
+        251,
+        74,
+        179,
+        34,
+        190,
+        36,
+        20,
+        192
+      ]
+    },
+    {
+      "name": "GameCancelled",
+      "discriminator": [
+        113,
+        20,
+        200,
+        104,
+        76,
+        35,
+        9,
+        241
+      ]
+    },
+    {
+      "name": "GameSettled",
+      "discriminator": [
+        63,
+        109,
+        128,
+        85,
+        229,
+        63,
+        167,
+        176
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidPlayerCount",
+      "msg": "Invalid player count configuration"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidGameConfig",
+      "msg": "Invalid game configuration"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidBetAmount",
+      "msg": "Invalid bet amount"
+    },
+    {
+      "code": 6003,
+      "name": "EmptyAuthorizedList",
+      "msg": "Authorized players list cannot be empty for invite-only games"
+    },
+    {
+      "code": 6004,
+      "name": "TooManyAuthorizedPlayers",
+      "msg": "Too many authorized players for max player limit"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidGameState",
+      "msg": "Game is not in the correct state for this operation"
+    },
+    {
+      "code": 6006,
+      "name": "PlayerNotAuthorized",
+      "msg": "Player is not authorized to join this game"
+    },
+    {
+      "code": 6007,
+      "name": "GameFull",
+      "msg": "Game is full"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidBetData",
+      "msg": "Invalid bet data"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidStateTransition",
+      "msg": "Game state transition not allowed"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidJoinWindow",
+      "msg": "Invalid join window configuration"
+    },
+    {
+      "code": 6011,
+      "name": "CpiOnlyInstruction",
+      "msg": "CPI-only instruction cannot be called directly"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidSettlementAuthority",
+      "msg": "Invalid settlement authority"
+    },
+    {
+      "code": 6013,
+      "name": "CannotSettle",
+      "msg": "Game cannot be settled"
+    },
+    {
+      "code": 6014,
+      "name": "CannotCancel",
+      "msg": "Game cannot be cancelled"
+    },
+    {
+      "code": 6015,
+      "name": "PlayerNotFound",
+      "msg": "Player not found in game"
+    },
+    {
+      "code": 6016,
+      "name": "BetIndexMismatch",
+      "msg": "Bet index mismatch"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidSettlementSigner",
+      "msg": "Settlement authority must be a signer"
+    },
+    {
+      "code": 6018,
+      "name": "SettleTooEarly",
+      "msg": "Must wait at least 1 slot after closing betting before settling"
+    },
+    {
+      "code": 6019,
+      "name": "BetNotFound",
+      "msg": "Bet not found"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidBetStatus",
+      "msg": "Invalid bet status"
+    },
+    {
+      "code": 6021,
+      "name": "BetIdAlreadyExists",
+      "msg": "Bet ID already exists"
+    },
+    {
+      "code": 6022,
+      "name": "GameCannotBeReset",
+      "msg": "Game cannot be reset - must be in Settled or Cancelled state"
+    }
+  ],
+  "types": [
+    {
+      "name": "AuthorizationType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Capped"
+          },
+          {
+            "name": "InviteOnly"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BetCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "refund_amount",
+            "type": "u64"
+          },
+          {
+            "name": "remaining_players",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BetPlaced",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "choice",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "GameChoice"
+                }
+              }
+            }
+          },
+          {
+            "name": "bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_players",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BetStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Cancelled"
+          },
+          {
+            "name": "Settled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CancelBetInternalData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "player",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateGameInternalData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "game_config_data",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FlipBetInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "choice",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "GameChoice"
+                }
+              }
+            }
+          },
+          {
+            "name": "placed_at",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "BetStatus"
+              }
+            }
+          },
+          {
+            "name": "odds",
+            "type": {
+              "defined": {
+                "name": "FlipBetOdds"
+              }
+            }
+          },
+          {
+            "name": "is_winner",
+            "type": {
+              "option": "bool"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FlipBetOdds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "odds_factor",
+            "type": "f64"
+          },
+          {
+            "name": "bet_type",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FlipBetPlacementResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "success",
+            "type": "bool"
+          },
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "odds",
+            "type": {
+              "defined": {
+                "name": "FlipBetOdds"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FlipBetValidation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "allowed",
+            "type": "bool"
+          },
+          {
+            "name": "rejection_reason",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "odds",
+            "type": {
+              "defined": {
+                "name": "FlipBetOdds"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FlipCancellationResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "cancelled_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FlipCancellationValidation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "allowed",
+            "type": "bool"
+          },
+          {
+            "name": "reason",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "refund_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FlipPayoutDistribution",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "payouts",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "FlipPayoutEntry"
+                }
+              }
+            }
+          },
+          {
+            "name": "house_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FlipPayoutEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Game",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "docs": [
+              "Unique game identifier"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "Current game state"
+            ],
+            "type": {
+              "defined": {
+                "name": "GameState"
+              }
+            }
+          },
+          {
+            "name": "config",
+            "docs": [
+              "Game configuration"
+            ],
+            "type": {
+              "defined": {
+                "name": "GameConfig"
+              }
+            }
+          },
+          {
+            "name": "players",
+            "docs": [
+              "List of players who joined (keep for compatibility)"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "bets",
+            "docs": [
+              "Map of bet ID to bet data"
+            ],
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "flip::state::game::BetData"
+                }
+              }
+            }
+          },
+          {
+            "name": "player_choice",
+            "docs": [
+              "For PvH games only: the single player's choice"
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "GameChoice"
+                }
+              }
+            }
+          },
+          {
+            "name": "total_bets_placed",
+            "docs": [
+              "Total number of bets placed"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Game creation timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "activated_at",
+            "docs": [
+              "Game activation timestamp (when it becomes active)"
+            ],
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "settled_at",
+            "docs": [
+              "Settlement timestamp"
+            ],
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "settling_started_at",
+            "docs": [
+              "Settling start timestamp (when game moved to Settling state)"
+            ],
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "settling_started_slot",
+            "docs": [
+              "Settling start slot (when game moved to Settling state)"
+            ],
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "final_randomness",
+            "docs": [
+              "Final randomness used for settlement (only available after settlement)"
+            ],
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "creator",
+            "docs": [
+              "The creator of this game (address that called settlement layer)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for PDA"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameActivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "activated_at",
+            "type": "i64"
+          },
+          {
+            "name": "settlement_program",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameBettingClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "settling_started_at",
+            "type": "i64"
+          },
+          {
+            "name": "settling_started_slot",
+            "type": "u64"
+          },
+          {
+            "name": "settlement_program",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "cancelled_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameChoice",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Heads"
+          },
+          {
+            "name": "Tails"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_type",
+            "docs": [
+              "Type of game (PvP or PvH)"
+            ],
+            "type": {
+              "defined": {
+                "name": "GameType"
+              }
+            }
+          },
+          {
+            "name": "authorization",
+            "docs": [
+              "Authorization type for joining"
+            ],
+            "type": {
+              "defined": {
+                "name": "AuthorizationType"
+              }
+            }
+          },
+          {
+            "name": "min_players",
+            "docs": [
+              "Minimum number of players required"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "max_players",
+            "docs": [
+              "Maximum number of players allowed"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "bet_amount",
+            "docs": [
+              "Required bet amount per player"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "trigger_type",
+            "docs": [
+              "How the game gets triggered"
+            ],
+            "type": {
+              "defined": {
+                "name": "TriggerType"
+              }
+            }
+          },
+          {
+            "name": "join_window_seconds",
+            "docs": [
+              "Time window for joining (in seconds from creation)"
+            ],
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "authorized_players",
+            "docs": [
+              "List of authorized players (for invite-only games)"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameSettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "final_randomness",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "payout_distribution",
+            "type": {
+              "defined": {
+                "name": "FlipPayoutDistribution"
+              }
+            }
+          },
+          {
+            "name": "settled_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Created"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Settling"
+          },
+          {
+            "name": "Settled"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "PvP"
+          },
+          {
+            "name": "PvH"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GetBetOddsData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "bet_data",
+            "type": "bytes"
+          },
+          {
+            "name": "bet_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "settlement_authority",
+            "docs": [
+              "The single authorized settlement program"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin authority (for potential future updates)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SettleGameInternalData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "final_randomness",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TriggerType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Manual"
+          },
+          {
+            "name": "PlayerCount"
+          },
+          {
+            "name": "TimeWindow"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ValidateCancellationData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "player",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "flip::state::game::BetData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "choice",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "GameChoice"
+                }
+              }
+            }
+          },
+          {
+            "name": "placed_at",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "BetStatus"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "game_interface::BetData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "bet_data",
+            "type": "bytes"
+          },
+          {
+            "name": "bet_id",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}
