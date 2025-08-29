@@ -94,8 +94,16 @@ async fn main() {
             yellowstone_vixen_flip_parser::accounts_parser::AccountParser,
             [Logger],
         ))
+        .account(Pipeline::new(
+            yellowstone_vixen_settlement_parser::accounts_parser::AccountParser,
+            [Logger],
+        ))
         .instruction(Pipeline::new(
             yellowstone_vixen_flip_parser::instructions_parser::InstructionParser,
+            [Logger],
+        ))
+        .instruction(Pipeline::new(
+            yellowstone_vixen_settlement_parser::instructions_parser::InstructionParser,
             [Logger],
         ))
         .metrics(vixen::metrics::Prometheus)

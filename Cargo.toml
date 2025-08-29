@@ -31,6 +31,7 @@ yellowstone-vixen-kamino-limit-orders-parser = { path = "crates/kamino-limit-ord
 yellowstone-vixen-raydium-launchpad-parser = { path = "crates/raydium-launchpad-parser", version = "0.4.0" }
 yellowstone-vixen-virtuals-parser = { path = "crates/virtuals-parser", version = "0.4.0" }
 yellowstone-vixen-flip-parser = { path = "crates/flip-parser", version = "0.1.0" }
+yellowstone-vixen-settlement-parser = { path = "crates/settlement-parser", version = "0.1.0" }
 
 
 # Sources

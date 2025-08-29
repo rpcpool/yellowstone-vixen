@@ -17,6 +17,7 @@ yellowstone-vixen-parser = { workspace = true}
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
 
 yellowstone-vixen-flip-parser = { workspace = true, features = ["tracing"] }
+yellowstone-vixen-settlement-parser = { workspace = true, features = ["tracing"] }
 
 rustls = { version = "0.23", features = ["aws-lc-rs"] }
 

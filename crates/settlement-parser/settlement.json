@@ -1,0 +1,4908 @@
+{
+  "address": "BMuCN34VLWuL31caQzeeZ2jmNf2BooQtfwzs2n4gcjgR",
+  "metadata": {
+    "name": "settlement",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Settlement layer for MemePools games"
+  },
+  "instructions": [
+    {
+      "name": "activate_game",
+      "docs": [
+        "Activate a created game (settlement program only)"
+      ],
+      "discriminator": [
+        166,
+        184,
+        159,
+        118,
+        22,
+        67,
+        88,
+        37
+      ],
+      "accounts": [
+        {
+          "name": "game_registry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_program",
+          "docs": [
+            "Generic game program for activation"
+          ]
+        },
+        {
+          "name": "game_account",
+          "docs": [
+            "Generic game account for activation"
+          ],
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "docs": [
+            "Generic global config account"
+          ]
+        },
+        {
+          "name": "settlement_authority",
+          "docs": [
+            "Settlement authority PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_keeper_signer",
+          "docs": [
+            "Game keeper's signing PDA for CPI calls to rando program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "operator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Authorized programs account for validation"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_keeper_program",
+          "docs": [
+            "Game keeper program"
+          ]
+        },
+        {
+          "name": "game_randomness",
+          "writable": true
+        },
+        {
+          "name": "rando_program",
+          "docs": [
+            "Rando program for entropy"
+          ]
+        },
+        {
+          "name": "gk_global_config",
+          "docs": [
+            "Global config to validate settlement program authorization"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                6,
+                243,
+                120,
+                216,
+                50,
+                241,
+                62,
+                92,
+                129,
+                234,
+                108,
+                160,
+                165,
+                233,
+                77,
+                98,
+                122,
+                1,
+                140,
+                72,
+                32,
+                202,
+                214,
+                113,
+                159,
+                213,
+                61,
+                44,
+                185,
+                38,
+                205,
+                207
+              ]
+            }
+          }
+        },
+        {
+          "name": "gk_global_config_program"
+        },
+        {
+          "name": "settlement_program",
+          "address": "BMuCN34VLWuL31caQzeeZ2jmNf2BooQtfwzs2n4gcjgR"
+        },
+        {
+          "name": "randomness_state",
+          "docs": [
+            "RandomnessState account from rando program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "instruction_sysvar",
+          "docs": [
+            "Instructions sysvar"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "slot_hashes",
+          "docs": [
+            "SlotHashes sysvar for rando tick"
+          ],
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        },
+        {
+          "name": "house_commitment",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "add_authorized_program",
+      "docs": [
+        "Add an authorized game program (admin only)"
+      ],
+      "discriminator": [
+        80,
+        106,
+        127,
+        205,
+        217,
+        53,
+        202,
+        202
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "program_id",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "add_operator",
+      "docs": [
+        "Add an authorized operator (admin only)"
+      ],
+      "discriminator": [
+        149,
+        142,
+        187,
+        68,
+        33,
+        250,
+        87,
+        105
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "operator",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "cancel_bet",
+      "docs": [
+        "Cancel a bet with validation from game contract"
+      ],
+      "discriminator": [
+        17,
+        248,
+        130,
+        128,
+        153,
+        227,
+        231,
+        9
+      ],
+      "accounts": [
+        {
+          "name": "game_registry",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.token_mint",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "player_token_account",
+          "writable": true
+        },
+        {
+          "name": "game_program",
+          "docs": [
+            "Generic game program for validation"
+          ]
+        },
+        {
+          "name": "game_account",
+          "docs": [
+            "Generic game account for validation"
+          ],
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "docs": [
+            "Generic global config account"
+          ]
+        },
+        {
+          "name": "token_pool",
+          "docs": [
+            "Liquidity pool account (optional, for exposure updates)"
+          ],
+          "optional": true
+        },
+        {
+          "name": "pool_exposure",
+          "docs": [
+            "Pool exposure account (optional, for exposure updates)"
+          ],
+          "optional": true
+        },
+        {
+          "name": "liquidity_pool_program",
+          "docs": [
+            "Liquidity pool program (optional, for exposure updates)"
+          ]
+        },
+        {
+          "name": "settlement_authority",
+          "docs": [
+            "Settlement authority PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Authorized programs account for accessing liquidity pool program"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet_tracker",
+          "docs": [
+            "Game bet tracker for updating volume and EV tracking"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116,
+                  95,
+                  116,
+                  114,
+                  97,
+                  99,
+                  107,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rando_program",
+          "docs": [
+            "Rando program for entropy"
+          ]
+        },
+        {
+          "name": "randomness_state",
+          "docs": [
+            "RandomnessState account from rando program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "instruction_sysvar",
+          "docs": [
+            "Instructions sysvar"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "slot_hashes",
+          "docs": [
+            "SlotHashes sysvar for rando tick"
+          ],
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        },
+        {
+          "name": "bet_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cancel_game",
+      "docs": [
+        "Cancel a game with refunds (settlement program only)"
+      ],
+      "discriminator": [
+        121,
+        194,
+        154,
+        118,
+        103,
+        235,
+        149,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "game_registry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_program",
+          "docs": [
+            "Generic game program for cancellation"
+          ]
+        },
+        {
+          "name": "game_account",
+          "docs": [
+            "Generic game account for cancellation"
+          ],
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "docs": [
+            "Generic global config account"
+          ]
+        },
+        {
+          "name": "settlement_authority",
+          "docs": [
+            "Settlement authority PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "operator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "game_keeper_program",
+          "docs": [
+            "Game keeper program (optional, for cleanup)"
+          ],
+          "optional": true
+        },
+        {
+          "name": "game_randomness",
+          "docs": [
+            "Game randomness account (optional, for cleanup)"
+          ],
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Authorized programs account for validation"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "rando_program",
+          "docs": [
+            "Rando program for entropy"
+          ]
+        },
+        {
+          "name": "randomness_state",
+          "docs": [
+            "RandomnessState account from rando program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "instruction_sysvar",
+          "docs": [
+            "Instructions sysvar"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "slot_hashes",
+          "docs": [
+            "SlotHashes sysvar for rando tick"
+          ],
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "claim_payout",
+      "docs": [
+        "Claim a payout from a settled game (anyone can trigger)"
+      ],
+      "discriminator": [
+        127,
+        240,
+        132,
+        62,
+        227,
+        198,
+        146,
+        133
+      ],
+      "accounts": [
+        {
+          "name": "game_settlement",
+          "docs": [
+            "Game settlement account containing payout data"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_vault",
+          "docs": [
+            "Escrow vault holding the funds to be claimed"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              },
+              {
+                "kind": "account",
+                "path": "escrow_vault.mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement_authority",
+          "docs": [
+            "Settlement authority PDA"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "winner_token_account",
+          "docs": [
+            "Winner's token account to receive the payout"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Authorized programs account for validation"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "rando_program",
+          "docs": [
+            "Rando program for entropy"
+          ]
+        },
+        {
+          "name": "global_entropy",
+          "docs": [
+            "Global entropy account"
+          ]
+        },
+        {
+          "name": "instruction_sysvar",
+          "docs": [
+            "Instructions sysvar"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "claimer",
+          "docs": [
+            "Anyone can trigger claims (no authority check needed)"
+          ],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        },
+        {
+          "name": "payout_index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "close_betting",
+      "docs": [
+        "Close betting for a game (publicly callable)"
+      ],
+      "discriminator": [
+        183,
+        243,
+        76,
+        1,
+        242,
+        130,
+        138,
+        58
+      ],
+      "accounts": [
+        {
+          "name": "game_registry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Authorized programs account for accessing liquidity pool program"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet_tracker",
+          "docs": [
+            "Game bet tracker for updating final exposure"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116,
+                  95,
+                  116,
+                  114,
+                  97,
+                  99,
+                  107,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_program",
+          "docs": [
+            "Generic game program for closing betting"
+          ]
+        },
+        {
+          "name": "game_account",
+          "docs": [
+            "Generic game account for closing betting"
+          ],
+          "writable": true
+        },
+        {
+          "name": "lp_program_config",
+          "docs": [
+            "Program config account for liquidity pool"
+          ]
+        },
+        {
+          "name": "global_config",
+          "docs": [
+            "Generic global config account"
+          ]
+        },
+        {
+          "name": "token_pool",
+          "docs": [
+            "Liquidity pool account for exposure updates"
+          ],
+          "writable": true
+        },
+        {
+          "name": "pool_exposure",
+          "docs": [
+            "Pool exposure account for exposure updates"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault account for liquidity pool"
+          ],
+          "writable": true
+        },
+        {
+          "name": "lp_global_config",
+          "docs": [
+            "Global config account for liquidity pool"
+          ]
+        },
+        {
+          "name": "liquidity_pool_program",
+          "docs": [
+            "Liquidity pool program for exposure updates"
+          ]
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "settlement_authority",
+          "docs": [
+            "Settlement authority PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "operator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "rando_program",
+          "docs": [
+            "Rando program for entropy"
+          ]
+        },
+        {
+          "name": "global_entropy",
+          "docs": [
+            "Global entropy account"
+          ]
+        },
+        {
+          "name": "game_keeper_program",
+          "docs": [
+            "Game keeper program for cleanup"
+          ]
+        },
+        {
+          "name": "game_randomness",
+          "docs": [
+            "Game randomness account for cleanup"
+          ],
+          "writable": true
+        },
+        {
+          "name": "randomness_state",
+          "docs": [
+            "RandomnessState account from rando program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "instruction_sysvar",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "slot_hashes",
+          "docs": [
+            "SlotHashes sysvar for rando tick"
+          ],
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "create_game",
+      "docs": [
+        "Create a new game (external interface)"
+      ],
+      "discriminator": [
+        124,
+        69,
+        75,
+        66,
+        184,
+        220,
+        72,
+        206
+      ],
+      "accounts": [
+        {
+          "name": "game_registry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Authorized programs account for validation"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_program_account",
+          "docs": [
+            "Game program to create the game in"
+          ]
+        },
+        {
+          "name": "game_account",
+          "docs": [
+            "Game account to be created by the game program",
+            "The address is derived from creator and game counter seeds and validated by the game program."
+          ],
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "docs": [
+            "Global config for the game program",
+            "The address is derived from standard seeds and validated by the game program during the create_game_internal CPI call."
+          ]
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "Token mint that will be used for this game"
+          ]
+        },
+        {
+          "name": "escrow_vault",
+          "docs": [
+            "Escrow vault for the game"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "settlement_authority",
+          "docs": [
+            "Settlement authority PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "rando_program",
+          "docs": [
+            "Rando program for entropy"
+          ],
+          "address": "HN8Zj6wcvhJ27ML2b1Wq3eukRAacjpVXB9vTERetj5PT"
+        },
+        {
+          "name": "randomness_state",
+          "docs": [
+            "RandomnessState account from rando program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "slot_hashes",
+          "docs": [
+            "SlotHashes sysvar for rando tick"
+          ],
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "game_settlement",
+          "docs": [
+            "Game settlement account (must be resetable for reuse if it exists)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "operator",
+          "type": "pubkey"
+        },
+        {
+          "name": "game_config_data",
+          "type": "bytes"
+        },
+        {
+          "name": "game_id",
+          "type": "u64"
+        },
+        {
+          "name": "affiliate",
+          "type": {
+            "option": "pubkey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get_payouts",
+      "docs": [
+        "Get payouts for a game (off-chain queryable)"
+      ],
+      "discriminator": [
+        19,
+        115,
+        125,
+        97,
+        44,
+        130,
+        166,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "game_registry",
+          "docs": [
+            "Game registry to check game state"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_settlement",
+          "docs": [
+            "Game settlement account (optional - only exists if game is settled)"
+          ],
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "PayoutResponse"
+        }
+      }
+    },
+    {
+      "name": "initialize_authorized_programs",
+      "docs": [
+        "Initialize the authorized programs list (admin only, one-time)"
+      ],
+      "discriminator": [
+        169,
+        252,
+        192,
+        189,
+        35,
+        61,
+        191,
+        45
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "rando_program",
+          "docs": [
+            "Rando program for entropy"
+          ],
+          "address": "HN8Zj6wcvhJ27ML2b1Wq3eukRAacjpVXB9vTERetj5PT"
+        },
+        {
+          "name": "randomness_state",
+          "docs": [
+            "RandomnessState account from rando program"
+          ]
+        },
+        {
+          "name": "instruction_sysvar",
+          "docs": [
+            "Instructions sysvar"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "slot_hashes",
+          "docs": [
+            "SlotHashes sysvar for rando tick"
+          ],
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "initial_programs",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "liquidity_pool_program_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "game_keeper_program_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "protocol_fee_account",
+          "type": "pubkey"
+        },
+        {
+          "name": "max_operators",
+          "type": {
+            "option": "u32"
+          }
+        }
+      ]
+    },
+    {
+      "name": "place_bet",
+      "docs": [
+        "Place a bet by escrowing funds and validating with game contract"
+      ],
+      "discriminator": [
+        222,
+        62,
+        67,
+        220,
+        63,
+        166,
+        126,
+        33
+      ],
+      "accounts": [
+        {
+          "name": "game_registry",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.token_mint",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "player_token_account",
+          "writable": true
+        },
+        {
+          "name": "game_program"
+        },
+        {
+          "name": "game_account",
+          "writable": true
+        },
+        {
+          "name": "global_config"
+        },
+        {
+          "name": "settlement_authority",
+          "docs": [
+            "Settlement authority PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Authorized programs account for accessing EV fee config"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet_tracker",
+          "docs": [
+            "Game bet tracker for cumulative volume and EV tracking"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116,
+                  95,
+                  116,
+                  114,
+                  97,
+                  99,
+                  107,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_keeper_program"
+        },
+        {
+          "name": "game_randomness",
+          "writable": true
+        },
+        {
+          "name": "rando_program",
+          "docs": [
+            "Rando program for entropy"
+          ]
+        },
+        {
+          "name": "randomness_state",
+          "docs": [
+            "RandomnessState account from rando program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "instruction_sysvar",
+          "docs": [
+            "Instructions sysvar"
+          ],
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "slot_hashes",
+          "docs": [
+            "SlotHashes sysvar for rando tick"
+          ],
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        },
+        {
+          "name": "bet_amount",
+          "type": "u64"
+        },
+        {
+          "name": "bet_data",
+          "type": "bytes"
+        },
+        {
+          "name": "bet_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "remove_authorized_program",
+      "docs": [
+        "Remove an authorized game program (admin only)"
+      ],
+      "discriminator": [
+        70,
+        182,
+        172,
+        234,
+        229,
+        156,
+        205,
+        245
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "program_id",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "remove_operator",
+      "docs": [
+        "Remove an authorized operator (admin only)"
+      ],
+      "discriminator": [
+        84,
+        183,
+        126,
+        251,
+        137,
+        150,
+        214,
+        134
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "operator",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "settle_game",
+      "docs": [
+        "Settle a completed game by distributing payouts"
+      ],
+      "discriminator": [
+        96,
+        54,
+        24,
+        189,
+        239,
+        198,
+        86,
+        29
+      ],
+      "accounts": [
+        {
+          "name": "operator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "game_registry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.token_mint",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_settlement",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet_tracker",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116,
+                  95,
+                  116,
+                  114,
+                  97,
+                  99,
+                  107,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "game_registry.game_id",
+                "account": "GameRegistry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_randomness",
+          "writable": true
+        },
+        {
+          "name": "game_keeper_signer",
+          "docs": [
+            "Game keeper's signing PDA for CPI calls to rando program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorized_programs",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "game_program"
+        },
+        {
+          "name": "game_account",
+          "writable": true
+        },
+        {
+          "name": "global_config"
+        },
+        {
+          "name": "game_keeper_program",
+          "address": "GmV2MM9nwV1tPLLGQD53YLSPvt1BtkbVLy3svWU1WUMw"
+        },
+        {
+          "name": "rando_program"
+        },
+        {
+          "name": "randomness_state",
+          "writable": true
+        },
+        {
+          "name": "slot_hashes"
+        },
+        {
+          "name": "settlement_authority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  116,
+                  116,
+                  108,
+                  101,
+                  109,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "instruction_sysvar",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        },
+        {
+          "name": "_num_payouts",
+          "type": "u64"
+        },
+        {
+          "name": "house_nonce",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_admin",
+      "docs": [
+        "Update the admin authority (current admin only)"
+      ],
+      "discriminator": [
+        161,
+        176,
+        40,
+        213,
+        60,
+        184,
+        179,
+        228
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "current_admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_fee_config",
+      "docs": [
+        "Update fee configuration (admin only)"
+      ],
+      "discriminator": [
+        104,
+        184,
+        103,
+        242,
+        88,
+        151,
+        107,
+        20
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_fee_config",
+          "type": {
+            "defined": {
+              "name": "EvFeeConfig"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_liquidity_pool_program",
+      "docs": [
+        "Update liquidity pool program ID (admin only)"
+      ],
+      "discriminator": [
+        48,
+        62,
+        102,
+        41,
+        238,
+        208,
+        42,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_liquidity_pool_program_id",
+          "type": "pubkey"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AuthorizedPrograms",
+      "discriminator": [
+        151,
+        56,
+        130,
+        104,
+        13,
+        168,
+        62,
+        228
+      ]
+    },
+    {
+      "name": "GameBetTracker",
+      "discriminator": [
+        130,
+        5,
+        46,
+        118,
+        107,
+        4,
+        250,
+        89
+      ]
+    },
+    {
+      "name": "GameRandomness",
+      "discriminator": [
+        94,
+        25,
+        168,
+        174,
+        218,
+        83,
+        202,
+        138
+      ]
+    },
+    {
+      "name": "GameRegistry",
+      "discriminator": [
+        24,
+        88,
+        182,
+        125,
+        149,
+        163,
+        9,
+        71
+      ]
+    },
+    {
+      "name": "GameSettlement",
+      "discriminator": [
+        140,
+        70,
+        219,
+        65,
+        138,
+        137,
+        33,
+        234
+      ]
+    },
+    {
+      "name": "GlobalConfig",
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
+      ]
+    },
+    {
+      "name": "LiquidityPool",
+      "discriminator": [
+        66,
+        38,
+        17,
+        64,
+        188,
+        80,
+        68,
+        129
+      ]
+    },
+    {
+      "name": "PoolExposure",
+      "discriminator": [
+        118,
+        21,
+        235,
+        231,
+        216,
+        225,
+        225,
+        107
+      ]
+    },
+    {
+      "name": "RandomnessState",
+      "discriminator": [
+        162,
+        226,
+        24,
+        69,
+        173,
+        182,
+        21,
+        48
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AdminUpdated",
+      "discriminator": [
+        69,
+        82,
+        49,
+        171,
+        43,
+        3,
+        80,
+        161
+      ]
+    },
+    {
+      "name": "AuthorizedProgramsInitialized",
+      "discriminator": [
+        172,
+        81,
+        22,
+        17,
+        169,
+        103,
+        206,
+        143
+      ]
+    },
+    {
+      "name": "BetCancelled",
+      "discriminator": [
+        32,
+        179,
+        128,
+        184,
+        125,
+        193,
+        106,
+        104
+      ]
+    },
+    {
+      "name": "BetPlaced",
+      "discriminator": [
+        88,
+        88,
+        145,
+        226,
+        126,
+        206,
+        32,
+        0
+      ]
+    },
+    {
+      "name": "BettingClosed",
+      "discriminator": [
+        23,
+        184,
+        157,
+        244,
+        65,
+        44,
+        152,
+        70
+      ]
+    },
+    {
+      "name": "FeeConfigUpdated",
+      "discriminator": [
+        45,
+        50,
+        42,
+        173,
+        193,
+        67,
+        52,
+        244
+      ]
+    },
+    {
+      "name": "GameActivated",
+      "discriminator": [
+        2,
+        58,
+        123,
+        68,
+        114,
+        217,
+        80,
+        13
+      ]
+    },
+    {
+      "name": "GameCancelled",
+      "discriminator": [
+        113,
+        20,
+        200,
+        104,
+        76,
+        35,
+        9,
+        241
+      ]
+    },
+    {
+      "name": "GameCancelledDueToExposure",
+      "discriminator": [
+        86,
+        59,
+        126,
+        207,
+        157,
+        166,
+        229,
+        163
+      ]
+    },
+    {
+      "name": "GameCreated",
+      "discriminator": [
+        218,
+        25,
+        150,
+        94,
+        177,
+        112,
+        96,
+        2
+      ]
+    },
+    {
+      "name": "GameSettled",
+      "discriminator": [
+        63,
+        109,
+        128,
+        85,
+        229,
+        63,
+        167,
+        176
+      ]
+    },
+    {
+      "name": "LiquidityPoolProgramUpdated",
+      "discriminator": [
+        135,
+        241,
+        235,
+        241,
+        146,
+        254,
+        110,
+        72
+      ]
+    },
+    {
+      "name": "OperatorAdded",
+      "discriminator": [
+        216,
+        247,
+        101,
+        54,
+        51,
+        70,
+        215,
+        192
+      ]
+    },
+    {
+      "name": "OperatorRemoved",
+      "discriminator": [
+        223,
+        10,
+        131,
+        23,
+        165,
+        154,
+        14,
+        191
+      ]
+    },
+    {
+      "name": "PayoutClaimed",
+      "discriminator": [
+        200,
+        39,
+        105,
+        112,
+        116,
+        63,
+        58,
+        149
+      ]
+    },
+    {
+      "name": "ProgramAuthorized",
+      "discriminator": [
+        59,
+        38,
+        123,
+        101,
+        35,
+        35,
+        172,
+        29
+      ]
+    },
+    {
+      "name": "ProgramDeauthorized",
+      "discriminator": [
+        74,
+        90,
+        215,
+        239,
+        111,
+        125,
+        91,
+        102
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidBetAmount",
+      "msg": "Invalid bet amount"
+    },
+    {
+      "code": 6001,
+      "name": "GameValidationFailed",
+      "msg": "Game contract validation failed"
+    },
+    {
+      "code": 6002,
+      "name": "BetNotFound",
+      "msg": "Bet not found"
+    },
+    {
+      "code": 6003,
+      "name": "BetAlreadySettled",
+      "msg": "Bet already settled"
+    },
+    {
+      "code": 6004,
+      "name": "UnauthorizedSettlement",
+      "msg": "Unauthorized settlement attempt"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidPayoutDistribution",
+      "msg": "Invalid payout distribution"
+    },
+    {
+      "code": 6006,
+      "name": "InsufficientEscrowBalance",
+      "msg": "Insufficient escrow balance"
+    },
+    {
+      "code": 6007,
+      "name": "MathOverflow",
+      "msg": "Mathematical overflow in calculation"
+    },
+    {
+      "code": 6008,
+      "name": "BetRejected",
+      "msg": "Game contract rejected bet"
+    },
+    {
+      "code": 6009,
+      "name": "CancellationNotAllowed",
+      "msg": "Cancellation not allowed"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidGameProgram",
+      "msg": "Invalid game program"
+    },
+    {
+      "code": 6011,
+      "name": "ExposureUpdateFailed",
+      "msg": "Exposure update failed"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidTokenMint",
+      "msg": "Invalid token mint"
+    },
+    {
+      "code": 6013,
+      "name": "SettlementAuthorityMismatch",
+      "msg": "Settlement authority mismatch"
+    },
+    {
+      "code": 6014,
+      "name": "SettlementNotAuthorized",
+      "msg": "Settlement program not authorized"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidAuthority",
+      "msg": "Invalid authority for operation"
+    },
+    {
+      "code": 6016,
+      "name": "CpiCallFailed",
+      "msg": "CPI call failed"
+    },
+    {
+      "code": 6017,
+      "name": "AuthorizationFailed",
+      "msg": "Authorization check failed"
+    },
+    {
+      "code": 6018,
+      "name": "CrossProgramAuthorizationFailed",
+      "msg": "Cross-program authorization failed"
+    },
+    {
+      "code": 6019,
+      "name": "SettlementAuthorityPermissionDenied",
+      "msg": "Settlement authority permission denied"
+    },
+    {
+      "code": 6020,
+      "name": "UnauthorizedProgramSettlement",
+      "msg": "Unauthorized program attempted settlement"
+    },
+    {
+      "code": 6021,
+      "name": "LiquidityPoolCpiFailed",
+      "msg": "Liquidity pool CPI call failed"
+    },
+    {
+      "code": 6022,
+      "name": "GameProgramCpiFailed",
+      "msg": "Game program CPI call failed"
+    },
+    {
+      "code": 6023,
+      "name": "BetValidationCpiFailed",
+      "msg": "Bet validation CPI failed"
+    },
+    {
+      "code": 6024,
+      "name": "CancellationValidationCpiFailed",
+      "msg": "Cancellation validation CPI failed"
+    },
+    {
+      "code": 6025,
+      "name": "ExposureAdditionCpiFailed",
+      "msg": "Exposure addition CPI failed"
+    },
+    {
+      "code": 6026,
+      "name": "ExposureRemovalCpiFailed",
+      "msg": "Exposure removal CPI failed"
+    },
+    {
+      "code": 6027,
+      "name": "OperationInProgress",
+      "msg": "Operation already in progress"
+    },
+    {
+      "code": 6028,
+      "name": "BetTimingViolation",
+      "msg": "Bet timing constraints violated"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidBetDataFormat",
+      "msg": "Invalid bet data format"
+    },
+    {
+      "code": 6030,
+      "name": "GamePlaceBetCpiFailed",
+      "msg": "Game program place bet CPI failed"
+    },
+    {
+      "code": 6031,
+      "name": "GameCancelBetCpiFailed",
+      "msg": "Game program cancel bet CPI failed"
+    },
+    {
+      "code": 6032,
+      "name": "GameSettleGameCpiFailed",
+      "msg": "Game program settle game CPI failed"
+    },
+    {
+      "code": 6033,
+      "name": "GameActivateGameCpiFailed",
+      "msg": "Game program activate game CPI failed"
+    },
+    {
+      "code": 6034,
+      "name": "GameValidationCpiFailed",
+      "msg": "Game program validation CPI failed"
+    },
+    {
+      "code": 6035,
+      "name": "InvalidGameState",
+      "msg": "Invalid game state for operation"
+    },
+    {
+      "code": 6036,
+      "name": "GameNotActive",
+      "msg": "Game not active"
+    },
+    {
+      "code": 6037,
+      "name": "GameProgramNotAuthorized",
+      "msg": "Game program not authorized for settlement"
+    },
+    {
+      "code": 6038,
+      "name": "PlayerNotAuthorized",
+      "msg": "Player not authorized for game"
+    },
+    {
+      "code": 6039,
+      "name": "GameFull",
+      "msg": "Game is full"
+    },
+    {
+      "code": 6040,
+      "name": "CannotSettle",
+      "msg": "Cannot settle game in current state"
+    },
+    {
+      "code": 6041,
+      "name": "SettlementAuthorityNotRecognized",
+      "msg": "Settlement authority not recognized by flip program"
+    },
+    {
+      "code": 6042,
+      "name": "PayoutExceedsAvailable",
+      "msg": "Payout amount exceeds available funds"
+    },
+    {
+      "code": 6043,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds for operation"
+    },
+    {
+      "code": 6044,
+      "name": "InvalidOddsData",
+      "msg": "Invalid odds data from game program"
+    },
+    {
+      "code": 6045,
+      "name": "EvCalculationFailed",
+      "msg": "Expected value calculation failed"
+    },
+    {
+      "code": 6046,
+      "name": "InvalidEvFeeConfig",
+      "msg": "Invalid EV fee configuration"
+    },
+    {
+      "code": 6047,
+      "name": "InvalidLiquidityPoolProgram",
+      "msg": "Invalid liquidity pool program"
+    },
+    {
+      "code": 6048,
+      "name": "InvalidGameKeeperProgram",
+      "msg": "Invalid game keeper program"
+    },
+    {
+      "code": 6049,
+      "name": "InvalidRandoProgram",
+      "msg": "Invalid rando program"
+    },
+    {
+      "code": 6050,
+      "name": "InvalidGlobalConfigProgram",
+      "msg": "Invalid global config program"
+    },
+    {
+      "code": 6051,
+      "name": "MissingProtocolFeeAccount",
+      "msg": "Missing protocol fee account"
+    },
+    {
+      "code": 6052,
+      "name": "InvalidGameId",
+      "msg": "Invalid game ID"
+    },
+    {
+      "code": 6053,
+      "name": "InvalidPayoutIndex",
+      "msg": "Invalid payout index"
+    },
+    {
+      "code": 6054,
+      "name": "PayoutAlreadyClaimed",
+      "msg": "Payout has already been claimed"
+    },
+    {
+      "code": 6055,
+      "name": "InvalidRecipient",
+      "msg": "Invalid recipient for payout"
+    },
+    {
+      "code": 6056,
+      "name": "ZeroPayoutAmount",
+      "msg": "Zero payout amount not allowed"
+    },
+    {
+      "code": 6057,
+      "name": "InvalidCreatorNonce",
+      "msg": "Invalid creator nonce"
+    },
+    {
+      "code": 6058,
+      "name": "NotEnoughOptionalAccounts",
+      "msg": "Not enough optional accounts provided for settlement."
+    },
+    {
+      "code": 6059,
+      "name": "TooManyPayouts",
+      "msg": "Too many payouts for settlement"
+    },
+    {
+      "code": 6060,
+      "name": "InvalidTokenPool",
+      "msg": "Invalid token pool account"
+    },
+    {
+      "code": 6061,
+      "name": "InvalidPoolExposure",
+      "msg": "Invalid pool exposure account"
+    },
+    {
+      "code": 6062,
+      "name": "InvalidVault",
+      "msg": "Invalid vault account"
+    },
+    {
+      "code": 6063,
+      "name": "InvalidLpGlobalConfig",
+      "msg": "Invalid liquidity pool global config account"
+    },
+    {
+      "code": 6064,
+      "name": "InvalidLpProgramConfig",
+      "msg": "Invalid liquidity pool program config account"
+    },
+    {
+      "code": 6065,
+      "name": "InvalidProtocolFeeAccount",
+      "msg": "Invalid protocol fee account"
+    },
+    {
+      "code": 6066,
+      "name": "InvalidOperatorFeeAccount",
+      "msg": "Invalid operator fee account"
+    },
+    {
+      "code": 6067,
+      "name": "InvalidAffiliateFeeAccount",
+      "msg": "Invalid affiliate fee account"
+    },
+    {
+      "code": 6068,
+      "name": "NoAffiliateForFeeAccount",
+      "msg": "No affiliate specified for fee account"
+    },
+    {
+      "code": 6069,
+      "name": "GameKeeperCpiFailed",
+      "msg": "Game keeper CPI call failed"
+    },
+    {
+      "code": 6070,
+      "name": "GameAlreadyExists",
+      "msg": "Game already exists with this ID"
+    },
+    {
+      "code": 6071,
+      "name": "CannotResetSettlement",
+      "msg": "Settlement account cannot be reset in current state"
+    },
+    {
+      "code": 6072,
+      "name": "InsufficientAccountSpace",
+      "msg": "Insufficient account space for settlement data"
+    },
+    {
+      "code": 6073,
+      "name": "GameSettlementNotResetable",
+      "msg": "Game settlement must have all payouts claimed before reuse"
+    }
+  ],
+  "types": [
+    {
+      "name": "AdminUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "old_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuthorizedPrograms",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "programs",
+            "docs": [
+              "List of authorized game program IDs"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "operators",
+            "docs": [
+              "List of authorized operators"
+            ],
+            "type": {
+              "option": {
+                "vec": "pubkey"
+              }
+            }
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin authority who can modify the list"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "game_counter",
+            "docs": [
+              "Global counter for games"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "ev_fee_config",
+            "docs": [
+              "EV-based fee configuration for new system"
+            ],
+            "type": {
+              "defined": {
+                "name": "EvFeeConfig"
+              }
+            }
+          },
+          {
+            "name": "liquidity_pool_program_id",
+            "docs": [
+              "Authorized liquidity pool program ID"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "game_keeper_program_id",
+            "docs": [
+              "Authorized game keeper program ID"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "rando_program_id",
+            "docs": [
+              "Authorized rando program ID"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "protocol_fee_account",
+            "docs": [
+              "Protocol fee recipient account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for PDA derivation"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuthorizedProgramsInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "initial_programs",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "liquidity_pool_program_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "initialized_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BetCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "refund_amount",
+            "type": "u64"
+          },
+          {
+            "name": "expected_value_removed",
+            "type": "u64"
+          },
+          {
+            "name": "bet_odds",
+            "type": {
+              "defined": {
+                "name": "BetOdds"
+              }
+            }
+          },
+          {
+            "name": "game_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "escrow_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "cancelled_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BetOdds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "odds_factor",
+            "docs": [
+              "The divisor for EV calculation (e.g., 2.0 for coin flip. 0.0 implies PvP game where house",
+              "is not at risk)"
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "bet_type",
+            "docs": [
+              "Description of bet type for logging"
+            ],
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BetPlaced",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "expected_value",
+            "type": "u64"
+          },
+          {
+            "name": "ev_fee_breakdown",
+            "type": {
+              "defined": {
+                "name": "EvFeeBreakdownEvent"
+              }
+            }
+          },
+          {
+            "name": "game_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "escrow_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BettingClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "total_exposure",
+            "type": "i64"
+          },
+          {
+            "name": "closed_at",
+            "type": "i64"
+          },
+          {
+            "name": "settlement_program",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EvFeeBreakdownEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "expected_value",
+            "type": "u64"
+          },
+          {
+            "name": "protocol_fee",
+            "type": "u64"
+          },
+          {
+            "name": "operator_fee",
+            "type": "u64"
+          },
+          {
+            "name": "affiliate_fee",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EvFeeConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "ev_fee_bps",
+            "docs": [
+              "Total fee taken from a given game payout as percentage of user bet size"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "protocol_fee_ev_bps",
+            "docs": [
+              "Protocol fee as percentage of EV (basis points, e.g., 500 = 5% of EV)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "operator_fee_ev_bps",
+            "docs": [
+              "Operator fee as percentage of EV (basis points, e.g., 2500 = 25% of EV)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "affiliate_fee_ev_bps",
+            "docs": [
+              "Affiliate fee as percentage of EV (basis points, e.g., 2000 = 20% of EV)"
+            ],
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_config",
+            "type": {
+              "defined": {
+                "name": "EvFeeConfig"
+              }
+            }
+          },
+          {
+            "name": "new_config",
+            "type": {
+              "defined": {
+                "name": "EvFeeConfig"
+              }
+            }
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameActivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "operator",
+            "type": "pubkey"
+          },
+          {
+            "name": "activated_at",
+            "type": "i64"
+          },
+          {
+            "name": "settlement_program",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameBetTracker",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "docs": [
+              "Game ID this tracker belongs to"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "global_count",
+            "docs": [
+              "Global count from game registry (for detecting reused games)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_volume",
+            "docs": [
+              "Total capital currently in escrow for this game"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_ev",
+            "docs": [
+              "Cumulative expected value of all bets placed (for fee calculation)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_fees",
+            "docs": [
+              "Net fee amount to allow the given EV above. Fees = ev * odds_factor"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_exposure",
+            "docs": [
+              "Total exposure for this game (sum of all exposure deltas)"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bet_count",
+            "docs": [
+              "Number of active bets (for analytics)"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for PDA derivation"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "cancelled_at",
+            "type": "i64"
+          },
+          {
+            "name": "settlement_program",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameCancelledDueToExposure",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "total_exposure",
+            "type": "i64"
+          },
+          {
+            "name": "cancelled_at",
+            "type": "i64"
+          },
+          {
+            "name": "settlement_program",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "global_count",
+            "type": "u64"
+          },
+          {
+            "name": "game_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "operator",
+            "type": "pubkey"
+          },
+          {
+            "name": "affiliate",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "config_data_len",
+            "type": "u32"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "registry_reused",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameRandomness",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "docs": [
+              "Unique game identifier"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "settlement_program",
+            "docs": [
+              "The settlement program that created this game"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "game_creator",
+            "docs": [
+              "Game creator (from settlement program)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "house_nonce_commitment",
+            "docs": [
+              "House nonce commitment (hash of actual nonce)"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "house_nonce_revealed",
+            "docs": [
+              "Whether house nonce has been revealed"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "final_randomness",
+            "docs": [
+              "Final randomness result (copied from global entropy after reveal)"
+            ],
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Game creation timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "Current game state"
+            ],
+            "type": {
+              "defined": {
+                "name": "GameState"
+              }
+            }
+          },
+          {
+            "name": "entropy_nonce",
+            "docs": [
+              "Anti-replay nonce (increments with each entropy addition)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "sealed_randomness_height",
+            "docs": [
+              "Randomness chain height when game was sealed (locked)"
+            ],
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for PDA"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameRegistry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "docs": [
+              "Game ID"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "global_count",
+            "docs": [
+              "Creator Game ID"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "game_program",
+            "docs": [
+              "Game program that handles this game"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "docs": [
+              "Creator who created the game (pays for account creation)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "operator",
+            "docs": [
+              "Operator who can activate the game"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "docs": [
+              "Token mint for this game"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "game_config_data",
+            "docs": [
+              "Opaque game configuration data (interpreted by game program)"
+            ],
+            "type": "bytes"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "When the game was created"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "Current state"
+            ],
+            "type": {
+              "defined": {
+                "name": "GameRegistryState"
+              }
+            }
+          },
+          {
+            "name": "affiliate",
+            "docs": [
+              "Affiliate for fee sharing (optional)"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameRegistryState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "Created"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Settled"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameSettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "house_amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_claimable",
+            "type": "u64"
+          },
+          {
+            "name": "total_exposure",
+            "type": "i64"
+          },
+          {
+            "name": "total_ev",
+            "type": "u64"
+          },
+          {
+            "name": "fees",
+            "type": {
+              "defined": {
+                "name": "SettlementFees"
+              }
+            }
+          },
+          {
+            "name": "final_randomness",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "settled_at",
+            "type": "i64"
+          },
+          {
+            "name": "game_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "escrow_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "game_settlement",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameSettlement",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "docs": [
+              "Game ID this settlement belongs to"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "payouts",
+            "docs": [
+              "All payout entries from the game settlement"
+            ],
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "PayoutEntry"
+                }
+              }
+            }
+          },
+          {
+            "name": "total_claimable",
+            "docs": [
+              "Total amount available for claims"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_claimed",
+            "docs": [
+              "Total amount already claimed"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "claimed_bitmap",
+            "docs": [
+              "Bitmap tracking which payouts have been claimed (payout index -> claimed)"
+            ],
+            "type": "bytes"
+          },
+          {
+            "name": "settled_at",
+            "docs": [
+              "Timestamp when settlement occurred"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Sealed"
+          },
+          {
+            "name": "Completed"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "Global admin authority"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "authorized_settlements",
+            "docs": [
+              "List of authorized settlement program IDs"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "When this config was created"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "docs": [
+              "Last update timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for PDA derivation"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LiquidityPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "docs": [
+              "The token mint for this pool"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "docs": [
+              "The vault token account holding pool funds"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "lp_token_mint",
+            "docs": [
+              "The LP token mint for this pool"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_lp_tokens",
+            "docs": [
+              "Total supply of LP tokens"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "current_exposure",
+            "docs": [
+              "Current total exposure across all active games"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_exposure_settled",
+            "docs": [
+              "Total exposure that has been settled (for withdrawal queue)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_queued_deposits",
+            "docs": [
+              "Total amount of queued deposits (not yet converted to LP tokens)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Pool creation timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "is_active",
+            "docs": [
+              "Whether the pool is active"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for PDA derivation"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LiquidityPoolProgramUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_program_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_program_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OperatorAdded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "operator",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "added_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OperatorRemoved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "operator",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "removed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayoutClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "payout_index",
+            "type": "u64"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "claimer",
+            "type": "pubkey"
+          },
+          {
+            "name": "claimed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayoutEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayoutInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_bps",
+            "type": "u64"
+          },
+          {
+            "name": "is_claimed",
+            "type": "bool"
+          },
+          {
+            "name": "payout_index",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayoutResponse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "game_state",
+            "type": {
+              "defined": {
+                "name": "GameRegistryState"
+              }
+            }
+          },
+          {
+            "name": "payouts",
+            "type": {
+              "option": {
+                "vec": {
+                  "defined": {
+                    "name": "PayoutInfo"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "name": "total_claimable",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "total_claimed",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "settled_at",
+            "type": {
+              "option": "i64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PoolExposure",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pool",
+            "docs": [
+              "The liquidity pool this exposure tracking belongs to"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_exposure",
+            "docs": [
+              "Total current exposure across all games"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_exposure_reached",
+            "docs": [
+              "Maximum exposure ever reached (for analytics)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "updated_at",
+            "docs": [
+              "Timestamp of last update"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for PDA derivation"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramAuthorized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "program_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "authorized_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramDeauthorized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "program_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "deauthorized_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RandomnessState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "chain_heads",
+            "docs": [
+              "Hash chain heads (default: 3 chains)"
+            ],
+            "type": {
+              "array": [
+                {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                },
+                3
+              ]
+            }
+          },
+          {
+            "name": "active_queue",
+            "docs": [
+              "Active entropy queue (processed in current block)"
+            ],
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "pending_queue",
+            "docs": [
+              "Pending entropy queue (will become active in next block)"
+            ],
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "steps_in_current_block",
+            "docs": [
+              "Steps executed in current block"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "max_steps_per_block",
+            "docs": [
+              "Maximum steps allowed per block"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "total_steps",
+            "docs": [
+              "Total steps executed across all blocks"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_tick_slot",
+            "docs": [
+              "Last slot when tick was called (for block transition detection)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Global admin authority (migrated from GlobalEntropy)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "trusted_providers",
+            "docs": [
+              "List of trusted entropy providers (migrated from GlobalEntropy)"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "authorized_readers",
+            "docs": [
+              "List of authorized readers (migrated from GlobalEntropy)"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "last_updated",
+            "docs": [
+              "Last update timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "update_count",
+            "docs": [
+              "Total number of entropy updates"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for PDA"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "mining_difficulty",
+            "docs": [
+              "Mining difficulty parameter for randomness chain"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "randomness_chain_height",
+            "docs": [
+              "Current height of the randomness chain (publicly readable)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "randomness_chain_buffer",
+            "docs": [
+              "Circular buffer storing recent mined randomness values"
+            ],
+            "type": {
+              "array": [
+                {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                },
+                20
+              ]
+            }
+          },
+          {
+            "name": "randomness_chain_head",
+            "docs": [
+              "Current tip/head of the randomness chain"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "docs": [
+              "Incrementing nonce included in all head updates"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SettlementFees",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocol_fee",
+            "type": "u64"
+          },
+          {
+            "name": "operator_fee",
+            "type": "u64"
+          },
+          {
+            "name": "affiliate_fee",
+            "type": "u64"
+          },
+          {
+            "name": "total_fees_removed",
+            "type": "u64"
+          },
+          {
+            "name": "fees_retained",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}
