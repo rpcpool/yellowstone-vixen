@@ -13,7 +13,7 @@ Thank you for your interest in contributing to Yellowstone Vixen! This guide wil
 
 ## Getting Started
 
-To contribute to this project, you'll need to have Rust installed on your machine. The project uses the nightly toolchain for Rust, specifically `nightly-2024-02-01`. We also use a workspace structure with multiple crates.
+To contribute to this project, you'll need to have Rust installed on your machine. This project builds successfully with the latest **stable** Rust, and also with the latest **nightly**. We also use a workspace structure with multiple crates.
 
 ## Setting Up Your Environment
 
@@ -26,12 +26,7 @@ To contribute to this project, you'll need to have Rust installed on your machin
 
 2. **Install Rust and Set the Toolchain**
 
-   If you haven't installed Rust yet, you can do so by following the instructions on the [Rust website](https://www.rust-lang.org/). Once Rust is installed, set the toolchain to `nightly-2024-02-01`.
-
-   ```sh
-   rustup toolchain install nightly-2024-02-01
-   rustup override set nightly-2024-02-01
-   ```
+   If you haven't installed Rust yet, you can do so by following the instructions on the [Rust website](https://www.rust-lang.org/).
 
 3. **Build the Project**
 
