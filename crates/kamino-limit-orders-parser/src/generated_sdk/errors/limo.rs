@@ -150,12 +150,14 @@ pub enum LimoError {
     InvalidTokenAuthority = 0x179c,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for LimoError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for LimoError {
     fn type_of() -> &'static str { "LimoError" }
 }

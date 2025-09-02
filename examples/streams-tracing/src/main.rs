@@ -33,6 +33,7 @@ pub struct Opts {
 
 #[tokio::main]
 #[rustfmt::skip]
+#[allow(clippy::too_many_lines)]
 async fn main() {
     let span_exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()

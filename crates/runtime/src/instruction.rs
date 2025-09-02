@@ -62,7 +62,7 @@ impl InstructionPipeline {
 }
 
 impl ParserId for InstructionPipeline {
-    fn id(&self) -> std::borrow::Cow<str> { "InstructionPipeline".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "InstructionPipeline".into() }
 }
 
 impl GetPrefilter for InstructionPipeline {
@@ -120,7 +120,7 @@ impl SingleInstructionPipeline {
 }
 
 impl ParserId for SingleInstructionPipeline {
-    fn id(&self) -> std::borrow::Cow<str> { self.0.id() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { self.0.id() }
 }
 
 impl GetPrefilter for SingleInstructionPipeline {

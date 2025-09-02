@@ -120,12 +120,14 @@ pub enum TokenLaunchpadError {
     General = 0x1793,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for TokenLaunchpadError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for TokenLaunchpadError {
     fn type_of() -> &'static str { "TokenLaunchpadError" }
 }

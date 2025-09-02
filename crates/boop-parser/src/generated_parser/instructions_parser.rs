@@ -102,7 +102,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<BoopProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<str> { "Boop::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "Boop::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()

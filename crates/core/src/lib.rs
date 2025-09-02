@@ -100,7 +100,7 @@ pub trait Parser {
     /// name of the parser.  However, for parsers that produce a different
     /// prefilter depending on some internal configuration, instances that
     /// output differing prefilters _must_ output different IDs.
-    fn id(&self) -> Cow<str>;
+    fn id(&self) -> Cow<'static, str>;
 
     /// Filter data passed to Yellowstone to coarsely narrow down updates
     /// to values parseable by this parser.
@@ -119,17 +119,17 @@ pub trait ProgramParser: Parser {
 /// Helper trait for getting the ID of a parser.
 pub trait ParserId {
     /// Get the ID of this parser, see [`Parser::id`].
-    fn id(&self) -> Cow<str>;
+    fn id(&self) -> Cow<'static, str>;
 }
 
 impl ParserId for std::convert::Infallible {
     #[inline]
-    fn id(&self) -> Cow<str> { match *self {} }
+    fn id(&self) -> Cow<'static, str> { match *self {} }
 }
 
 impl<T: Parser> ParserId for T {
     #[inline]
-    fn id(&self) -> Cow<str> { Parser::id(self) }
+    fn id(&self) -> Cow<'static, str> { Parser::id(self) }
 }
 
 /// Helper trait for getting the prefilter of a parser.

@@ -39,7 +39,7 @@ impl Parser for BlockMetaParser {
     type Input = BlockMetaUpdate;
     type Output = BlockUpdate;
 
-    fn id(&self) -> Cow<str> { "yellowstone::BlockMetaParser".into() }
+    fn id(&self) -> Cow<'static, str> { "yellowstone::BlockMetaParser".into() }
 
     fn prefilter(&self) -> Prefilter { Prefilter::builder().build().unwrap() }
 

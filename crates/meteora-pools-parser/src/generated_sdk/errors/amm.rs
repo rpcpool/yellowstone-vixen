@@ -171,12 +171,14 @@ pub enum AmmError {
     InvalidQuoteMint = 0x17a4,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for AmmError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for AmmError {
     fn type_of() -> &'static str { "AmmError" }
 }

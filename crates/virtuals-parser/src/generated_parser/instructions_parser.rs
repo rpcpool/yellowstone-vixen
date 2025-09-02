@@ -47,7 +47,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<VirtualsProgramProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<str> { "VirtualsProgram::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "VirtualsProgram::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()

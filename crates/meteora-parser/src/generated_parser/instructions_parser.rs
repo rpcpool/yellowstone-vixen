@@ -260,7 +260,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<LbClmmProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<str> { "LbClmm::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "LbClmm::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()

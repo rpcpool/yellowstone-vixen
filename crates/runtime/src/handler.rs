@@ -129,7 +129,7 @@ impl<P, H> Pipeline<P, H> {
 
 impl<P: ParserId, H> ParserId for Pipeline<P, H> {
     #[inline]
-    fn id(&self) -> Cow<str> { self.0.id() }
+    fn id(&self) -> Cow<'static, str> { self.0.id() }
 }
 
 impl<P: GetPrefilter, H> GetPrefilter for Pipeline<P, H> {
@@ -210,7 +210,7 @@ where
 }
 
 impl<T> ParserId for BoxPipeline<'_, T> {
-    fn id(&self) -> Cow<str> { <dyn DynPipeline<T>>::id(&**self) }
+    fn id(&self) -> Cow<'static, str> { <dyn DynPipeline<T>>::id(&**self) }
 }
 
 impl<T> GetPrefilter for BoxPipeline<'_, T> {
@@ -281,7 +281,7 @@ impl<P: GetPrefilter> PipelineSet<P> {
 }
 
 impl<P> PipelineSet<P> {
-    pub(crate) fn get_handlers<I>(&self, it: I) -> Pipelines<P, I> { Pipelines(self, it) }
+    pub(crate) fn get_handlers<I>(&'_ self, it: I) -> Pipelines<'_, P, I> { Pipelines(self, it) }
 }
 
 impl<P: ParserId> FromIterator<P> for PipelineSet<P> {

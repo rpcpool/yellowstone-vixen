@@ -32,7 +32,7 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = TokenExtensionProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> { "token_extensions::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "token_extensions::InstructionParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

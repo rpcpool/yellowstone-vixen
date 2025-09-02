@@ -105,12 +105,14 @@ pub enum PumpError {
     CreatorShouldNotBeZero = 0x178e,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for PumpError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for PumpError {
     fn type_of() -> &'static str { "PumpError" }
 }

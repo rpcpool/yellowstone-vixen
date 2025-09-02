@@ -69,12 +69,14 @@ pub enum JupiterError {
     SourceAndDestinationMintCannotBeTheSame = 0x1782,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for JupiterError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for JupiterError {
     fn type_of() -> &'static str { "JupiterError" }
 }

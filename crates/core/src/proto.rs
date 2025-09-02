@@ -84,7 +84,7 @@ where T::Input: Sync
     type Output = T::Message;
 
     #[inline]
-    fn id(&self) -> std::borrow::Cow<str> { self.0.id() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { self.0.id() }
 
     #[inline]
     fn prefilter(&self) -> crate::Prefilter { self.0.prefilter() }

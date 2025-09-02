@@ -98,7 +98,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = AmmV3ProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> { "amm_v3::AccountParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "amm_v3::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()

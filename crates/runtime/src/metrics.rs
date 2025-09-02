@@ -179,7 +179,7 @@ pub(crate) fn increment_processed_updates(
             UpdateType::Instruction => VIXEN_INSTRUCTIONS_SUCCESSFUL.inc(),
             UpdateType::BlockMeta => VIXEN_BLOCK_METAS_SUCCESSFUL.inc(),
             UpdateType::Slot => VIXEN_SLOTS_SUCCESSFUL.inc(),
-            _ => (),
+            UpdateType::Unknown => (),
         },
         Err(PipelineErrors::Parse(_)) => match update_type {
             UpdateType::Account => VIXEN_ACCOUNTS_PARSING_ERRORS.inc(),
@@ -187,7 +187,7 @@ pub(crate) fn increment_processed_updates(
             UpdateType::Instruction => VIXEN_INSTRUCTIONS_PARSING_ERRORS.inc(),
             UpdateType::BlockMeta => VIXEN_BLOCK_METAS_PARSING_ERRORS.inc(),
             UpdateType::Slot => VIXEN_SLOTS_PARSING_ERRORS.inc(),
-            _ => (),
+            UpdateType::Unknown => (),
         },
         Err(PipelineErrors::Handlers(_)) => match update_type {
             UpdateType::Account => VIXEN_ACCOUNTS_HANDLER_ERRORS.inc(),
@@ -195,7 +195,7 @@ pub(crate) fn increment_processed_updates(
             UpdateType::Instruction => VIXEN_INSTRUCTIONS_HANDLER_ERRORS.inc(),
             UpdateType::BlockMeta => VIXEN_BLOCK_METAS_HANDLER_ERRORS.inc(),
             UpdateType::Slot => VIXEN_SLOTS_HANDLER_ERRORS.inc(),
-            _ => (),
+            UpdateType::Unknown => (),
         },
         _ => (),
     }

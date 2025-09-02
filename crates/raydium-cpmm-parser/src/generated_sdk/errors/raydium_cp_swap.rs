@@ -57,12 +57,14 @@ pub enum RaydiumCpSwapError {
     NoFeeCollect = 0x177e,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for RaydiumCpSwapError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for RaydiumCpSwapError {
     fn type_of() -> &'static str { "RaydiumCpSwapError" }
 }

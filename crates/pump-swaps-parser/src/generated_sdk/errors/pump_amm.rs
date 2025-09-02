@@ -99,12 +99,14 @@ pub enum PumpAmmError {
     OnlyCanonicalPumpPoolsCanHaveCoinCreator = 0x178c,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for PumpAmmError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for PumpAmmError {
     fn type_of() -> &'static str { "PumpAmmError" }
 }
