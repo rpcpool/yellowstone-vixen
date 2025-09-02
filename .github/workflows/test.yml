@@ -77,4 +77,4 @@ jobs:
 
       # clippy
       - name: Check clippy
-        run: cargo +nightly clippy --all-targets --tests -- -Dwarnings
+        run: cargo clippy --all-targets --tests -- -Dwarnings
