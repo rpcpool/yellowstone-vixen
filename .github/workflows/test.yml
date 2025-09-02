@@ -30,7 +30,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             yellowstone-vixen/target/
-          key: cargo-${{ hashFiles('**/Cargo.lock') }}-0001
+          key: cargo-${{ hashFiles('**/Cargo.lock') }}-0002
 
       # Cache Rust Nightly Toolchain
       - name: Cache Rust Nightly
@@ -38,14 +38,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.rustup
-          key: rust-nightly-${{ runner.os }}-${{ hashFiles('rust-toolchain') }}
+          key: rust-nightly-0001-${{ runner.os }}-${{ hashFiles('rust-toolchain') }}
 
       - name: Install Rust Nightly if Not Cached
         if: steps.cache-rust-nightly.outputs.cache-hit != 'true'
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-          components: rustfmt
+          components: rustfmt, clippy
 
       - name: Check Rust Toolchain Version
         run: |

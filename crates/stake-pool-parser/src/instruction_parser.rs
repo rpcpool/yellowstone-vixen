@@ -28,7 +28,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = StakePoolProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> { "StakePool::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "StakePool::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()

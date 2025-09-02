@@ -140,7 +140,7 @@ impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = TokenExtensionState;
 
-    fn id(&self) -> Cow<str> { "token_extensions::AccountParser".into() }
+    fn id(&self) -> Cow<'static, str> { "token_extensions::AccountParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

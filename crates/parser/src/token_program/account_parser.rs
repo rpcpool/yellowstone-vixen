@@ -62,7 +62,7 @@ impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = TokenProgramState;
 
-    fn id(&self) -> Cow<str> { "token_program::AccountParser".into() }
+    fn id(&self) -> Cow<'static, str> { "token_program::AccountParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

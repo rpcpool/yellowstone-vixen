@@ -11,7 +11,8 @@ use vixen_core::{
 };
 use yellowstone_vixen_core::{Filters, ParseError, Parser, Prefilter};
 
-use crate::metrics::{Counters, Instrumenter, JobResult, Update};
+#[cfg(feature = "prometheus")]
+use crate::metrics;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 /// The result returned by a handler.
@@ -128,7 +129,7 @@ impl<P, H> Pipeline<P, H> {
 
 impl<P: ParserId, H> ParserId for Pipeline<P, H> {
     #[inline]
-    fn id(&self) -> Cow<str> { self.0.id() }
+    fn id(&self) -> Cow<'static, str> { self.0.id() }
 }
 
 impl<P: GetPrefilter, H> GetPrefilter for Pipeline<P, H> {
@@ -209,7 +210,7 @@ where
 }
 
 impl<T> ParserId for BoxPipeline<'_, T> {
-    fn id(&self) -> Cow<str> { <dyn DynPipeline<T>>::id(&**self) }
+    fn id(&self) -> Cow<'static, str> { <dyn DynPipeline<T>>::id(&**self) }
 }
 
 impl<T> GetPrefilter for BoxPipeline<'_, T> {
@@ -280,7 +281,7 @@ impl<P: GetPrefilter> PipelineSet<P> {
 }
 
 impl<P> PipelineSet<P> {
-    pub(crate) fn get_handlers<I>(&self, it: I) -> Pipelines<P, I> { Pipelines(self, it) }
+    pub(crate) fn get_handlers<I>(&'_ self, it: I) -> Pipelines<'_, P, I> { Pipelines(self, it) }
 }
 
 impl<P: ParserId> FromIterator<P> for PipelineSet<P> {
@@ -309,11 +310,11 @@ where I::Item: AsRef<str> + Send + 'm
         })
     }
 
-    pub fn run<'h, T: Update, M: Instrumenter>(
+    pub fn run<'h, T>(
         self,
         span: Span,
         value: &'h T,
-        metrics: &'h Counters<M>,
+        #[cfg(feature = "prometheus")] update_type: metrics::UpdateType,
     ) -> impl Future<Output = ()> + Send + 'h
     where
         H: DynPipeline<T>,
@@ -323,9 +324,9 @@ where I::Item: AsRef<str> + Send + 'm
         futures_util::future::join_all(self.get_pipelines().map(move |(f, h)| {
             h.handle(value)
                 .map(move |r| {
-                    if let Some(r) = JobResult::from_pipeline(&r) {
-                        metrics.inc_processed(T::TYPE, r);
-                    }
+                    #[cfg(feature = "prometheus")]
+                    metrics::increment_processed_updates(&r, update_type);
+
                     match r {
                         Ok(()) => (),
                         Err(v) => v.handle::<T>(f.as_ref()).as_unit(),

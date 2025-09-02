@@ -12,11 +12,7 @@ use std::fmt;
 use config::GrpcConfig;
 use grpc::Channels;
 use tracing::info;
-use yellowstone_vixen::{
-    metrics::{MetricsFactory, NullMetrics},
-    sources::SourceTrait,
-    util, Runtime,
-};
+use yellowstone_vixen::{sources::SourceTrait, util, Runtime};
 
 mod builder;
 pub mod config;
@@ -41,19 +37,14 @@ impl From<std::io::Error> for Error {
 }
 
 /// A Vixen program stream server.
-pub struct Server<'a, M: MetricsFactory, S: SourceTrait> {
+pub struct Server<'a, S: SourceTrait> {
     grpc_cfg: GrpcConfig,
     desc_sets: Vec<&'a [u8]>,
     channels: Channels,
-    runtime: Runtime<M, S>,
+    runtime: Runtime<S>,
 }
 
-impl<M: MetricsFactory, S: SourceTrait> fmt::Debug for Server<'_, M, S>
-where
-    M::Instrumenter: fmt::Debug,
-    M::Exporter: fmt::Debug,
-    M: fmt::Debug,
-{
+impl<S: SourceTrait> fmt::Debug for Server<'_, S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let Self {
             grpc_cfg,
@@ -70,12 +61,12 @@ where
     }
 }
 
-impl<S: SourceTrait> Server<'_, NullMetrics, S> {
+impl<S: SourceTrait> Server<'_, S> {
     /// Create a new stream server builder.
-    pub fn builder() -> StreamBuilder<'static, S, NullMetrics> { StreamBuilder::default() }
+    pub fn builder() -> StreamBuilder<'static, S> { StreamBuilder::default() }
 }
 
-impl<M: MetricsFactory, S: SourceTrait> Server<'_, M, S> {
+impl<S: SourceTrait> Server<'_, S> {
     /// Create a new Tokio runtime and run the Vixen stream server within it,
     /// terminating the current process if the runtime or gRPC server crash.
     ///
@@ -89,6 +80,7 @@ impl<M: MetricsFactory, S: SourceTrait> Server<'_, M, S> {
     ///
     /// ```ignore
     /// use yellowstone_vixen::stream;
+    /// use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
     /// use yellowstone_vixen_meteora_parser::{
     ///     accounts_parser::AccountParser as MeteoraAccParser,
     ///     instructions_parser::InstructionParser as MeteoraIxParser,
@@ -102,7 +94,7 @@ impl<M: MetricsFactory, S: SourceTrait> Server<'_, M, S> {
     ///
     /// // NOTE: The main function is not async
     /// fn main() {
-    ///     stream::Server::builder()
+    ///     stream::Server::<YellowstoneGrpcSource>::builder()
     ///         .descriptor_set(METEORA_DESCRIPTOR_SET)
     ///         .descriptor_set(PUMP_DESCRIPTOR_SET)
     ///         .account(Proto::new(MeteoraAccParser))
@@ -139,6 +131,7 @@ impl<M: MetricsFactory, S: SourceTrait> Server<'_, M, S> {
     ///
     /// ```ignore
     /// use yellowstone_vixen::stream;
+    /// use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
     /// use yellowstone_vixen_meteora_parser::{
     ///     accounts_parser::AccountParser as MeteoraAccParser,
     ///     instructions_parser::InstructionParser as MeteoraIxParser,
@@ -153,7 +146,7 @@ impl<M: MetricsFactory, S: SourceTrait> Server<'_, M, S> {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     stream::Server::builder()
+    ///     stream::Server::<YellowstoneGrpcSource>::builder()
     ///         .descriptor_set(METEORA_DESCRIPTOR_SET)
     ///         .descriptor_set(PUMP_DESCRIPTOR_SET)
     ///         .account(Proto::new(MeteoraAccParser))

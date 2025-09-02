@@ -44,6 +44,7 @@ use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::Pipeline;
 use yellowstone_vixen_parser::token_program::{AccountParser, InstructionParser};
+use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -72,11 +73,9 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    yellowstone_vixen::Runtime::builder()
+    yellowstone_vixen::Runtime<YellowstoneGrpcSourc>::builder()
         .account(Pipeline::new(AccountParser, [Logger]))
         .instruction(Pipeline::new(InstructionParser, [Logger]))
-        .metrics(yellowstone_vixen::metrics::Prometheus)
-        .commitment_level(yellowstone_vixen::CommitmentLevel::Confirmed)
         .build(config)
         .run();
 }

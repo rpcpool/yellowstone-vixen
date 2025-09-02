@@ -7,7 +7,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 
 use clap::Parser as _;
 use opentelemetry::trace::TracerProvider;
@@ -22,7 +22,6 @@ use yellowstone_vixen_parser::{
         AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
     },
 };
-// use yellowstone_vixen_yellowstone_fumarole_source::YellowstoneFumaroleSource;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -34,6 +33,7 @@ pub struct Opts {
 
 #[tokio::main]
 #[rustfmt::skip]
+#[allow(clippy::too_many_lines)]
 async fn main() {
     let span_exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()
@@ -83,7 +83,30 @@ async fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    let result = yellowstone_vixen_stream::Server::<_, YellowstoneGrpcSource>::builder()
+    let prometheus_registry = prometheus::Registry::new();
+    let registry_clone = prometheus_registry.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(30));
+        loop {
+            interval.tick().await;
+
+            let metrics = registry_clone.gather();
+            let _ = tokio::task::spawn_blocking(move || {
+                if let Err(e) = prometheus::push_metrics(
+                    "vixen",
+                    prometheus::labels! {},
+                    "http://localhost:9091",
+                    metrics,
+                    None,
+                ) {
+                    tracing::error!("Failed to push metrics: {e:?}");
+                }
+            })
+            .await;
+        }
+    });
+
+    let result = yellowstone_vixen_stream::Server::<YellowstoneGrpcSource>::builder()
         .account(Proto::new(yellowstone_vixen_boop_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_jupiter_swap_parser::accounts_parser::AccountParser))
         .account(Proto::new(yellowstone_vixen_kamino_limit_orders_parser::accounts_parser::AccountParser))
@@ -120,6 +143,7 @@ async fn main() {
         .instruction(Proto::new(yellowstone_vixen_raydium_launchpad_parser::instructions_parser::InstructionParser))
         .instruction(Proto::new(TokenProgramIxParser))
         .instruction(Proto::new(TokenExtensionProgramIxParser))
+        .metrics(prometheus_registry)
         .build(config)
         .try_run_async()
         .await;

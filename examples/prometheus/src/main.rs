@@ -7,7 +7,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -78,7 +78,8 @@ impl vixen::Handler<InstructionUpdateOutput<RaydiumAmmV4ProgramIx>> for RaydiumA
     }
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
@@ -88,7 +89,30 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    vixen::Runtime::<_, YellowstoneGrpcSource>::builder()
+    let prometheus_registry = prometheus::Registry::new();
+    let registry_clone = prometheus_registry.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(30));
+        loop {
+            interval.tick().await;
+
+            let metrics = registry_clone.gather();
+            let _ = tokio::task::spawn_blocking(move || {
+                if let Err(e) = prometheus::push_metrics(
+                    "vixen",
+                    prometheus::labels! {},
+                    "http://localhost:9091",
+                    metrics,
+                    None,
+                ) {
+                    tracing::error!("Failed to push metrics: {e:?}");
+                }
+            })
+            .await;
+        }
+    });
+
+    vixen::Runtime::<YellowstoneGrpcSource>::builder()
         .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
         .instruction(Pipeline::new(
             yellowstone_vixen_meteora_amm_parser::instructions_parser::InstructionParser,
@@ -105,7 +129,8 @@ fn main() {
             .transaction_accounts([Pubkey::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA").unwrap()]), // All of these accounts must be in the transaction plus the Parser programId
         ))
         .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
-        .metrics(vixen::metrics::Prometheus)
+        .metrics(prometheus_registry)
         .build(config)
-        .run();
+        .run_async()
+        .await;
 }

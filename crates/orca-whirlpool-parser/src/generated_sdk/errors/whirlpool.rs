@@ -210,12 +210,14 @@ pub enum WhirlpoolError {
     RentCalculationError = 0x17b1,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for WhirlpoolError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for WhirlpoolError {
     fn type_of() -> &'static str { "WhirlpoolError" }
 }

@@ -72,12 +72,14 @@ pub enum VaultError {
     HaveMoneyInLending = 0x1783,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for VaultError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for VaultError {
     fn type_of() -> &'static str { "VaultError" }
 }

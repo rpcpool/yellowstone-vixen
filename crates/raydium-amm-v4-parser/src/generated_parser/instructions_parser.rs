@@ -68,7 +68,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<RaydiumAmmV4ProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<str> { "RaydiumAmmV4::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "RaydiumAmmV4::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()

@@ -261,12 +261,14 @@ pub enum LbClmmError {
     NotSupportAtTheMoment = 0x17c2,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for LbClmmError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for LbClmmError {
     fn type_of() -> &'static str { "LbClmmError" }
 }

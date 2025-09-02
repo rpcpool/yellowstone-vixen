@@ -183,12 +183,14 @@ pub enum RaydiumAmmV4Error {
     UnknownAmmError = 0x38,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for RaydiumAmmV4Error {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for RaydiumAmmV4Error {
     fn type_of() -> &'static str { "RaydiumAmmV4Error" }
 }

@@ -17,7 +17,7 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = TokenProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> { "token_program::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "token_program::InstructionParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()

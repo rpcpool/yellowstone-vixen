@@ -78,7 +78,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = RaydiumAmmV4ProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> { "raydium_amm_v4::AccountParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "raydium_amm_v4::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()

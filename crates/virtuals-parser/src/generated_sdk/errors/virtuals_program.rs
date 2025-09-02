@@ -51,12 +51,14 @@ pub enum VirtualsProgramError {
     InvalidURI = 0x177c,
 }
 
+#[allow(deprecated)]
 impl solana_program_error::PrintProgramError for VirtualsProgramError {
     fn print<E>(&self) {
         solana_msg::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for VirtualsProgramError {
     fn type_of() -> &'static str { "VirtualsProgramError" }
 }

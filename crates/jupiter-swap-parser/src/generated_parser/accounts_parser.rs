@@ -60,7 +60,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = JupiterProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> { "jupiter::AccountParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "jupiter::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
