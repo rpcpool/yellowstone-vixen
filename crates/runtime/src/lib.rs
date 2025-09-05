@@ -180,12 +180,19 @@ impl<S: SourceTrait> Runtime<S> {
     ///
     /// # Errors
     /// This function returns an error if the runtime crashes.
+    ///
+    /// # Panics
+    /// Only panics if the rustls crypto provider fails to install.
     #[tracing::instrument("Runtime::run", skip(self))]
     pub async fn try_run_async(self) -> Result<(), Box<Error>> {
         enum StopType<S> {
             Signal(S),
             Buffer(Result<(), Error>),
         }
+
+        rustls::crypto::aws_lc_rs::default_provider()
+            .install_default()
+            .expect("Failed to install rustls crypto provider");
 
         let (tx, updates_rx) =
             mpsc::channel::<Result<SubscribeUpdate, Status>>(self.buffer.sources_channel_size);
