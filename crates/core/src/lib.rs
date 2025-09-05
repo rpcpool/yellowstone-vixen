@@ -515,10 +515,10 @@ impl PrefilterBuilder {
             return Err(err);
         }
 
-        let account = AccountPrefilter {
+        let account = account_owners.map(|owners| AccountPrefilter {
             accounts: accounts.unwrap_or_default(),
-            owners: account_owners.unwrap_or_default(),
-        };
+            owners,
+        });
 
         let transaction = TransactionPrefilter {
             accounts_include: transaction_accounts_include.unwrap_or_default(),
@@ -530,7 +530,7 @@ impl PrefilterBuilder {
         let slot = SlotPrefilter {};
 
         Ok(Prefilter {
-            account: (account != AccountPrefilter::default()).then_some(account),
+            account,
             transaction: (transaction != TransactionPrefilter::default()).then_some(transaction),
             block_meta: block_metas.then_some(block_meta),
             slot: slots.then_some(slot),
