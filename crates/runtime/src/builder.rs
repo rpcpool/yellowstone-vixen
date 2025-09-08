@@ -107,31 +107,8 @@ impl<K: BuilderKind, S: SourceTrait> Builder<K, S> {
 
     #[cfg(feature = "prometheus")]
     /// Sets the metrics registry for the runtime.
-    #[cfg(feature = "prometheus")]
     pub fn metrics(self, metrics_registry: prometheus::Registry) -> Builder<K, S> {
-        let Self {
-            err,
-            account,
-            transaction,
-            instruction,
-            block_meta,
-            slot,
-            metrics_registry: _,
-            extra,
-            _source: source,
-        } = self;
-
-        Builder {
-            err,
-            account,
-            transaction,
-            instruction,
-            block_meta,
-            slot,
-            metrics_registry: Some(metrics_registry),
-            extra,
-            _source: source,
-        }
+        self.mutate(|s| s.metrics_registry = Some(metrics_registry))
     }
 }
 
@@ -261,7 +238,7 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             source: source_cfg,
             pipelines,
             #[cfg(feature = "prometheus")]
-            metrics_registry: metrics_registry.unwrap_or_else(prometheus::Registry::new),
+            metrics_registry: metrics_registry.expect("Prometheus metrics registry"),
             _source: std::marker::PhantomData,
         })
     }

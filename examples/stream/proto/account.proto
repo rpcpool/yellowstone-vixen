@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package account;
-
-message Account {
-  bytes data = 1;
-}

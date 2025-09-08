@@ -28,8 +28,9 @@ tracing = "0.1.40"
 yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
-rustls = { version = "0.23", features = ["aws-lc-rs"] } 
+rustls = { version = "0.23", features = ["aws-lc-rs"] }
 
 [features]
+default = []
 opentelemetry = ["dep:opentelemetry"]
 prometheus = ["dep:prometheus"]

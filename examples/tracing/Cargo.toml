@@ -1,0 +1,41 @@
+[package]
+name = "yellowstone-vixen-example-tracing"
+description = "Demostration of integrating Vixen with tracing subscriber and OTEL"
+publish = false
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+
+[dependencies]
+clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+toml = "0.8.12"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+yellowstone-vixen = { workspace = true }
+yellowstone-vixen-parser = { workspace = true, features = ["token-program"] }
+
+# OTEL
+opentelemetry = "0.29.1"
+opentelemetry_sdk = { version = "0.29.0", features = [
+  "metrics",
+  "rt-tokio",
+  "trace",
+  # "rt-tokio-current-thread" # Spawn telemetry tasks on a separate runtime so that the main runtime won’t be blocked.
+] }
+opentelemetry-otlp = { version = "0.29.0", features = [
+  "trace",
+  "grpc-tonic",
+  "gzip-tonic",
+  "zstd-tonic",
+] }
+opentelemetry-stdout = "0.29.0"
+
+tracing-opentelemetry = "0.30.0"
+opentelemetry-appender-tracing = "0.29.0"
+tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
+
+# Sources
+yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
+
+[build-dependencies]
+prost-build = "0.13.1"

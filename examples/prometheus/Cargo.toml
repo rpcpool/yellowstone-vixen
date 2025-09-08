@@ -1,6 +1,6 @@
 [package]
-name = "example-vixen-prometheus"
-description = "Test bed for basic Prometheus metrics with Vixen"
+name = "yellowstone-vixen-example-prometheus"
+description = "Example of configuring prometheus metrics"
 publish = false
 edition = "2021"
 license = "MIT"
@@ -10,19 +10,8 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 toml = "0.8.12"
 tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 yellowstone-vixen = { workspace = true, features = ["prometheus"] }
-
 prometheus = { version = "0.14.0", features = ["push"] }
 tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
-
-yellowstone-vixen-parser = { workspace = true, features = [
-  "token-extensions",
-  "token-program",
-  "block-meta",
-] }
-yellowstone-vixen-raydium-amm-v4-parser = { workspace = true, features = ["shared-data"] }
-yellowstone-vixen-meteora-amm-parser = { workspace = true }
-
+yellowstone-vixen-parser = { workspace = true, features = ["token-program"] }
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
-yellowstone-vixen-solana-rpc-source = { workspace = true }
