@@ -187,7 +187,6 @@ impl<'a, S: SourceTrait> StreamBuilder<'a, S> {
             extra: StreamKind(desc_sets, channels),
             slot,
             _source,
-            ..
         } = self.0;
         let () = err?;
 
