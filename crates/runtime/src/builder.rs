@@ -169,6 +169,8 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
+    /// # Panics
+    /// Only panics if the prometheus metrics registry is not set.
     pub fn try_build(self, config: VixenConfig<S::Config>) -> Result<Runtime<S>, BuilderError> {
         let Self {
             err,
