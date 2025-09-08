@@ -190,10 +190,6 @@ impl<S: SourceTrait> Runtime<S> {
             Buffer(Result<(), Error>),
         }
 
-        rustls::crypto::aws_lc_rs::default_provider()
-            .install_default()
-            .expect("Failed to install rustls crypto provider");
-
         let (tx, updates_rx) =
             mpsc::channel::<Result<SubscribeUpdate, Status>>(self.buffer.sources_channel_size);
 
