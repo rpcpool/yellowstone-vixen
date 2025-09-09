@@ -182,11 +182,12 @@ impl<'a, S: SourceTrait> StreamBuilder<'a, S> {
             transaction,
             instruction,
             block_meta,
-            #[cfg(feature = "prometheus")]
-            metrics_registry,
             extra: StreamKind(desc_sets, channels),
             slot,
             _source,
+            #[cfg(feature = "prometheus")]
+            metrics_registry,
+            ..
         } = self.0;
         let () = err?;
 
@@ -200,19 +201,21 @@ impl<'a, S: SourceTrait> StreamBuilder<'a, S> {
             .map(|(k, v)| (k, v.into_values().collect()))
             .collect();
 
-        let runtime = RuntimeBuilder {
+        let runtime_builder = RuntimeBuilder {
             err: Ok(()),
             account,
             transaction,
             instruction,
             block_meta,
-            #[cfg(feature = "prometheus")]
-            metrics_registry,
             extra: RuntimeKind,
             slot,
             _source,
-        }
-        .try_build(runtime_cfg)?;
+            #[cfg(feature = "prometheus")]
+            metrics_registry,
+            ..Default::default()
+        };
+
+        let runtime = runtime_builder.try_build(runtime_cfg)?;
 
         Ok(Server {
             grpc_cfg,

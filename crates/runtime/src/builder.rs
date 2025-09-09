@@ -62,7 +62,7 @@ pub struct Builder<K: BuilderKind, S: SourceTrait> {
     pub slot: Vec<BoxPipeline<'static, SlotUpdate>>,
     /// The metrics.
     #[cfg(feature = "prometheus")]
-    pub metrics_registry: Option<prometheus::Registry>,
+    pub metrics_registry: prometheus::Registry,
     /// The extra builder kind.
     pub extra: K,
     /// The source trait.
@@ -78,10 +78,10 @@ impl<K: BuilderKind, S: SourceTrait> Default for Builder<K, S> {
             instruction: vec![],
             block_meta: vec![],
             slot: vec![],
-            #[cfg(feature = "prometheus")]
-            metrics_registry: None,
             extra: K::default(),
             _source: std::marker::PhantomData,
+            #[cfg(feature = "prometheus")]
+            metrics_registry: prometheus::Registry::new(),
         }
     }
 }
@@ -108,7 +108,7 @@ impl<K: BuilderKind, S: SourceTrait> Builder<K, S> {
     #[cfg(feature = "prometheus")]
     /// Sets the metrics registry for the runtime.
     pub fn metrics(self, metrics_registry: prometheus::Registry) -> Builder<K, S> {
-        self.mutate(|s| s.metrics_registry = Some(metrics_registry))
+        self.mutate(|s| s.metrics_registry = metrics_registry)
     }
 }
 
@@ -179,10 +179,10 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             instruction,
             block_meta,
             slot,
-            #[cfg(feature = "prometheus")]
-            metrics_registry,
             extra: RuntimeKind,
             _source,
+            #[cfg(feature = "prometheus")]
+            metrics_registry,
         } = self;
         let () = err?;
 
@@ -239,9 +239,9 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             buffer: buffer_cfg,
             source: source_cfg,
             pipelines,
-            #[cfg(feature = "prometheus")]
-            metrics_registry: metrics_registry.expect("Prometheus metrics registry"),
             _source: std::marker::PhantomData,
+            #[cfg(feature = "prometheus")]
+            metrics_registry,
         })
     }
 
