@@ -2,6 +2,7 @@ use std::{collections::BTreeMap, num::NonZero};
 
 use async_trait::async_trait;
 use bytesize::ByteSize;
+use clap::ValueEnum;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use yellowstone_fumarole_client::{
     proto::{CreateConsumerGroupRequest, InitialOffsetPolicy},
@@ -22,6 +23,23 @@ pub struct YellowstoneFumaroleSource {
     config: FumaroleConfig,
 }
 
+#[derive(Default, Copy, Debug, serde::Deserialize, Clone, ValueEnum)]
+#[serde(rename_all = "kebab-case")]
+pub enum VixenCompressionEncoding {
+    Gzip,
+    #[default]
+    Zstd,
+}
+
+impl From<VixenCompressionEncoding> for CompressionEncoding {
+    fn from(val: VixenCompressionEncoding) -> Self {
+        match val {
+            VixenCompressionEncoding::Gzip => CompressionEncoding::Gzip,
+            VixenCompressionEncoding::Zstd => CompressionEncoding::Zstd,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, serde::Deserialize, clap::Args)]
 #[serde(rename_all = "kebab-case")]
 pub struct FumaroleConfig {
@@ -40,6 +58,10 @@ pub struct FumaroleConfig {
     pub metrics_interval: u64,
     pub commitment_level: Option<CommitmentLevel>,
     pub from_slot: Option<u64>,
+    /// max incoming decoded message size in bytes
+    pub max_decoding_message_size: Option<usize>,
+    /// accepted compression encoding
+    pub accept_compression: Option<VixenCompressionEncoding>,
 }
 
 impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfig {
@@ -47,10 +69,10 @@ impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfi
         yellowstone_fumarole_client::config::FumaroleConfig {
             endpoint: config.endpoint,
             x_token: config.x_token,
-            max_decoding_message_size_bytes: 512_000_000,
+            max_decoding_message_size_bytes: config.max_decoding_message_size.unwrap_or(usize::MAX),
             x_metadata: BTreeMap::new(),
-            response_compression: Some(CompressionEncoding::Zstd),
-            request_compression: Some(CompressionEncoding::Zstd),
+            response_compression: config.accept_compression.map(Into::into),
+            request_compression: config.accept_compression.map(Into::into),
             initial_connection_window_size: ByteSize::mb(100),
             initial_stream_window_size: ByteSize::mib(9),
             enable_http2_adaptive_window: true,

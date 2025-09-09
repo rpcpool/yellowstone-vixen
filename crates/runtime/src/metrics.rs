@@ -97,6 +97,32 @@ pub(crate) static VIXEN_BLOCK_METAS_HANDLER_ERRORS: LazyLock<IntCounter> = LazyL
     .unwrap()
 });
 
+// BLOCK COUNTERS
+pub(crate) static VIXEN_BLOCK_RECEIVED: LazyLock<IntCounter> = LazyLock::new(|| {
+    IntCounter::with_opts(Opts::new("vixen_block_received", "Total block received")).unwrap()
+});
+pub(crate) static VIXEN_BLOCK_SUCCESSFUL: LazyLock<IntCounter> = LazyLock::new(|| {
+    IntCounter::with_opts(Opts::new(
+        "vixen_block_successful",
+        "Total successfully processed block",
+    ))
+    .unwrap()
+});
+pub(crate) static VIXEN_BLOCK_PARSING_ERRORS: LazyLock<IntCounter> = LazyLock::new(|| {
+    IntCounter::with_opts(Opts::new(
+        "vixen_block_parsing_errors",
+        "Total block parsing errors",
+    ))
+    .unwrap()
+});
+pub(crate) static VIXEN_BLOCK_HANDLER_ERRORS: LazyLock<IntCounter> = LazyLock::new(|| {
+    IntCounter::with_opts(Opts::new(
+        "vixen_block_handler_errors",
+        "Total block handler errors",
+    ))
+    .unwrap()
+});
+
 // INSTRUCTIONS COUNTERS
 pub(crate) static VIXEN_INSTRUCTIONS_SUCCESSFUL: LazyLock<IntCounter> = LazyLock::new(|| {
     IntCounter::with_opts(Opts::new(
@@ -146,11 +172,12 @@ pub(crate) static VIXEN_SLOTS_HANDLER_ERRORS: LazyLock<IntCounter> = LazyLock::n
     .unwrap()
 });
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) enum UpdateType {
     Account,
     Transaction,
     BlockMeta,
+    Block,
     Instruction,
     Unknown,
     Slot,
@@ -162,6 +189,7 @@ impl From<&UpdateOneof> for UpdateType {
             UpdateOneof::Account(_) => UpdateType::Account,
             UpdateOneof::Transaction(_) => UpdateType::Transaction,
             UpdateOneof::BlockMeta(_) => UpdateType::BlockMeta,
+            UpdateOneof::Block(_) => UpdateType::Block,
             UpdateOneof::Slot(_) => UpdateType::Slot,
             _ => UpdateType::Unknown,
         }
@@ -178,6 +206,7 @@ pub(crate) fn increment_processed_updates(
             UpdateType::Transaction => VIXEN_TRANSACTIONS_SUCCESSFUL.inc(),
             UpdateType::Instruction => VIXEN_INSTRUCTIONS_SUCCESSFUL.inc(),
             UpdateType::BlockMeta => VIXEN_BLOCK_METAS_SUCCESSFUL.inc(),
+            UpdateType::Block => VIXEN_BLOCK_SUCCESSFUL.inc(),
             UpdateType::Slot => VIXEN_SLOTS_SUCCESSFUL.inc(),
             UpdateType::Unknown => (),
         },
@@ -186,6 +215,7 @@ pub(crate) fn increment_processed_updates(
             UpdateType::Transaction => VIXEN_TRANSACTIONS_PARSING_ERRORS.inc(),
             UpdateType::Instruction => VIXEN_INSTRUCTIONS_PARSING_ERRORS.inc(),
             UpdateType::BlockMeta => VIXEN_BLOCK_METAS_PARSING_ERRORS.inc(),
+            UpdateType::Block => VIXEN_BLOCK_PARSING_ERRORS.inc(),
             UpdateType::Slot => VIXEN_SLOTS_PARSING_ERRORS.inc(),
             UpdateType::Unknown => (),
         },
@@ -194,6 +224,7 @@ pub(crate) fn increment_processed_updates(
             UpdateType::Transaction => VIXEN_TRANSACTIONS_HANDLER_ERRORS.inc(),
             UpdateType::Instruction => VIXEN_INSTRUCTIONS_HANDLER_ERRORS.inc(),
             UpdateType::BlockMeta => VIXEN_BLOCK_METAS_HANDLER_ERRORS.inc(),
+            UpdateType::Block => VIXEN_BLOCK_HANDLER_ERRORS.inc(),
             UpdateType::Slot => VIXEN_SLOTS_HANDLER_ERRORS.inc(),
             UpdateType::Unknown => (),
         },
@@ -208,6 +239,7 @@ pub(crate) fn increment_received_updates(update_type: UpdateType) {
         UpdateType::Account => VIXEN_ACCOUNTS_RECEIVED.inc(),
         UpdateType::Transaction => VIXEN_TRANSACTIONS_RECEIVED.inc(),
         UpdateType::BlockMeta => VIXEN_BLOCK_METAS_RECEIVED.inc(),
+        UpdateType::Block => VIXEN_BLOCK_RECEIVED.inc(),
         UpdateType::Slot => VIXEN_SLOTS_RECEIVED.inc(),
         _ => (),
     }
@@ -231,6 +263,11 @@ pub fn register_metrics(registry: &Registry) {
     let _ = registry.register(Box::new(VIXEN_BLOCK_METAS_SUCCESSFUL.clone()));
     let _ = registry.register(Box::new(VIXEN_BLOCK_METAS_PARSING_ERRORS.clone()));
     let _ = registry.register(Box::new(VIXEN_BLOCK_METAS_HANDLER_ERRORS.clone()));
+
+    let _ = registry.register(Box::new(VIXEN_BLOCK_RECEIVED.clone()));
+    let _ = registry.register(Box::new(VIXEN_BLOCK_SUCCESSFUL.clone()));
+    let _ = registry.register(Box::new(VIXEN_BLOCK_PARSING_ERRORS.clone()));
+    let _ = registry.register(Box::new(VIXEN_BLOCK_HANDLER_ERRORS.clone()));
 
     let _ = registry.register(Box::new(VIXEN_INSTRUCTIONS_SUCCESSFUL.clone()));
     let _ = registry.register(Box::new(VIXEN_INSTRUCTIONS_PARSING_ERRORS.clone()));

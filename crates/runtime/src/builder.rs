@@ -1,6 +1,7 @@
 //! Builder types for the Vixen runtime and stream server.
 use vixen_core::{
-    instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, SlotUpdate, TransactionUpdate,
+    instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, BlockUpdate, SlotUpdate,
+    TransactionUpdate,
 };
 
 use crate::{
@@ -32,6 +33,9 @@ pub enum BuilderError {
     /// Two block meta pipelines were registered with the same parser ID.
     #[error("ID collision detected among block meta pipelines")]
     BlockMetaCollision,
+    /// Two block pipelines were registered with the same parser ID.
+    #[error("ID collision detected among block pipelines")]
+    BlockCollision,
     /// A required field was missing from the builder.
     #[error("Missing field {0:?}")]
     MissingField(&'static str),
@@ -58,6 +62,8 @@ pub struct Builder<K: BuilderKind, S: SourceTrait> {
     pub instruction: Vec<BoxPipeline<'static, InstructionUpdate>>,
     /// The block meta pipelines.
     pub block_meta: Vec<BoxPipeline<'static, BlockMetaUpdate>>,
+    /// The block meta pipelines.
+    pub block: Vec<BoxPipeline<'static, BlockUpdate>>,
     /// The slot pipelines.
     pub slot: Vec<BoxPipeline<'static, SlotUpdate>>,
     /// The metrics.
@@ -77,6 +83,7 @@ impl<K: BuilderKind, S: SourceTrait> Default for Builder<K, S> {
             transaction: vec![],
             instruction: vec![],
             block_meta: vec![],
+            block: vec![],
             slot: vec![],
             extra: K::default(),
             _source: std::marker::PhantomData,
@@ -158,6 +165,11 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
         self.mutate(|s| s.block_meta.push(Box::new(block_meta)))
     }
 
+    /// Add a new block pipeline to the builder.
+    pub fn block<T: DynPipeline<BlockUpdate> + Send + Sync + 'static>(self, block: T) -> Self {
+        self.mutate(|s| s.block.push(Box::new(block)))
+    }
+
     /// Add a new slot pipeline to the builder.
     pub fn slot<T: DynPipeline<SlotUpdate> + Send + Sync + 'static>(self, slot: T) -> Self {
         self.mutate(|s| s.slot.push(Box::new(slot)))
@@ -178,6 +190,7 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             transaction,
             instruction,
             block_meta,
+            block,
             slot,
             extra: RuntimeKind,
             _source,
@@ -209,6 +222,7 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
         let account_len = account.len();
         let transaction_len = transaction.len();
         let block_meta_len = block_meta.len();
+        let block_len = block.len();
         let slot_len = slot.len();
 
         let pipelines = PipelineSets {
@@ -216,6 +230,7 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             transaction: transaction.into_iter().collect(),
             instruction: ixs,
             block_meta: block_meta.into_iter().collect(),
+            block: block.into_iter().collect(),
             slot: slot.into_iter().collect(),
         };
 
@@ -229,6 +244,10 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
 
         if pipelines.block_meta.len() != block_meta_len {
             return Err(BuilderError::BlockMetaCollision);
+        }
+
+        if pipelines.block.len() != block_len {
+            return Err(BuilderError::BlockCollision);
         }
 
         if pipelines.slot.len() != slot_len {

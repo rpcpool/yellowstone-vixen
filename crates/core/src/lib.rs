@@ -26,9 +26,11 @@ use std::{
 
 use serde::Deserialize;
 use yellowstone_grpc_proto::geyser::{
-    self, SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterBlocksMeta,
-    SubscribeRequestFilterSlots, SubscribeRequestFilterTransactions, SubscribeUpdateAccount,
-    SubscribeUpdateBlockMeta, SubscribeUpdateSlot, SubscribeUpdateTransaction,
+    self, SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterBlocks,
+    SubscribeRequestFilterBlocksMeta, SubscribeRequestFilterSlots,
+    SubscribeRequestFilterTransactions, SubscribeUpdateAccount, SubscribeUpdateAccountInfo,
+    SubscribeUpdateBlock, SubscribeUpdateBlockMeta, SubscribeUpdateSlot,
+    SubscribeUpdateTransaction,
 };
 
 pub extern crate bs58;
@@ -62,10 +64,14 @@ pub type ParseResult<T> = Result<T, ParseError>;
 
 /// An account update from Yellowstone.
 pub type AccountUpdate = SubscribeUpdateAccount;
+/// An account update from Yellowstone.
+pub type AccountUpdateInfo = SubscribeUpdateAccountInfo;
 /// A transaction update from Yellowstone.
 pub type TransactionUpdate = SubscribeUpdateTransaction;
 /// A block meta update from Yellowstone.
 pub type BlockMetaUpdate = SubscribeUpdateBlockMeta;
+/// A block update from Yellowstone.
+pub type BlockUpdate = SubscribeUpdateBlock;
 /// A slot update from Yellowstone.
 pub type SlotUpdate = SubscribeUpdateSlot;
 
@@ -158,6 +164,8 @@ pub struct Prefilter {
     pub transaction: Option<TransactionPrefilter>,
     /// Filters for block meta updates.
     pub block_meta: Option<BlockMetaPrefilter>,
+    /// Filters for block updates.
+    pub block: Option<BlockPrefilter>,
     /// Filters for slot updates.
     pub slot: Option<SlotPrefilter>,
 }
@@ -182,11 +190,13 @@ impl Prefilter {
             account,
             transaction,
             block_meta,
+            block,
             slot,
         } = self;
         merge_opt(account, other.account, AccountPrefilter::merge);
         merge_opt(transaction, other.transaction, TransactionPrefilter::merge);
         merge_opt(block_meta, other.block_meta, BlockMetaPrefilter::merge);
+        merge_opt(block, other.block, BlockPrefilter::merge);
         merge_opt(slot, other.slot, SlotPrefilter::merge);
     }
 }
@@ -257,6 +267,36 @@ impl BlockMetaPrefilter {
     /// Merge another block metadata prefilter into this one.
     /// This function currently does nothing as the struct has no fields.
     pub fn merge(_lhs: &mut Self, _rhs: Self) {}
+}
+
+/// A prefilter for matching block updates.
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct BlockPrefilter {
+    /// filter transactions and accounts that use any account from the list
+    pub accounts_include: HashSet<Pubkey>,
+    /// include all transactions
+    pub include_transactions: bool,
+    /// include all account updates
+    pub include_accounts: bool,
+    /// include all entries
+    pub include_entries: bool,
+}
+
+impl BlockPrefilter {
+    /// Merge another block prefilter into this one.
+    pub fn merge(&mut self, other: BlockPrefilter) {
+        let Self {
+            accounts_include,
+            include_transactions,
+            include_accounts,
+            include_entries,
+        } = self;
+
+        accounts_include.extend(other.accounts_include);
+        *include_accounts = other.include_accounts;
+        *include_transactions = other.include_transactions;
+        *include_entries = other.include_entries;
+    }
 }
 
 /// A prefilter for matching slot updates updates.
@@ -463,11 +503,24 @@ pub enum PrefilterError {
 /// A builder for constructing a prefilter.
 #[derive(Debug, Default)]
 #[must_use = "Consider calling .build() on this builder"]
+#[allow(clippy::struct_excessive_bools)]
 pub struct PrefilterBuilder {
     error: Option<PrefilterError>,
     slots: bool,
     block_metas: bool,
+    /// Matching [`BlockPrefilter::accounts`]
+    block_accounts_include: Option<HashSet<Pubkey>>,
+    /// Matching [`BlockPrefilter::include_accounts`]
+    block_include_accounts: bool,
+    /// Matching [`BlockPrefilter::include_transactions`]
+    block_include_transactions: bool,
+    /// Matching [`BlockPrefilter::include_entries`]
+    block_include_entries: bool,
+    /// Including all accounts  
+    accounts_include_all: bool,
+    /// Matching [`AccountPrefilter::accounts`]
     accounts: Option<HashSet<Pubkey>>,
+    /// Matching [`AccountPrefilter::account_owners`]
     account_owners: Option<HashSet<Pubkey>>,
     /// Matching [`TransactionPrefilter::accounts_include`]
     transaction_accounts_include: Option<HashSet<Pubkey>>,
@@ -504,10 +557,15 @@ impl PrefilterBuilder {
     pub fn build(self) -> Result<Prefilter, PrefilterError> {
         let PrefilterBuilder {
             error,
+            accounts_include_all,
             accounts,
             account_owners,
             slots,
             block_metas,
+            block_accounts_include,
+            block_include_accounts,
+            block_include_entries,
+            block_include_transactions,
             transaction_accounts_include,
             transaction_accounts_required,
         } = self;
@@ -515,10 +573,10 @@ impl PrefilterBuilder {
             return Err(err);
         }
 
-        let account = account_owners.map(|owners| AccountPrefilter {
+        let account = AccountPrefilter {
             accounts: accounts.unwrap_or_default(),
-            owners,
-        });
+            owners: account_owners.unwrap_or_default(),
+        };
 
         let transaction = TransactionPrefilter {
             accounts_include: transaction_accounts_include.unwrap_or_default(),
@@ -527,12 +585,26 @@ impl PrefilterBuilder {
 
         let block_meta = BlockMetaPrefilter {};
 
+        let block = BlockPrefilter {
+            accounts_include: block_accounts_include.unwrap_or_default(),
+            include_accounts: block_include_accounts,
+            include_transactions: block_include_transactions,
+            include_entries: block_include_entries,
+        };
+
         let slot = SlotPrefilter {};
+
+        let account = if accounts_include_all {
+            Some(AccountPrefilter::default())
+        } else {
+            (account != AccountPrefilter::default()).then_some(account)
+        };
 
         Ok(Prefilter {
             account,
             transaction: (transaction != TransactionPrefilter::default()).then_some(transaction),
             block_meta: block_metas.then_some(block_meta),
+            block: (block != BlockPrefilter::default()).then_some(block),
             slot: slots.then_some(slot),
         })
     }
@@ -549,6 +621,22 @@ impl PrefilterBuilder {
     pub fn slots(self) -> Self {
         self.mutate(|this| {
             this.slots = true;
+            Ok(())
+        })
+    }
+
+    /// Set prefilter will request `block_metas` updates.
+    pub fn block_metas(self) -> Self {
+        self.mutate(|this| {
+            this.block_metas = true;
+            Ok(())
+        })
+    }
+
+    /// Set `accounts_include_all` filter
+    pub fn accounts_include_all(self) -> Self {
+        self.mutate(|this| {
+            this.accounts_include_all = true;
             Ok(())
         })
     }
@@ -599,6 +687,42 @@ impl PrefilterBuilder {
                 "transaction_accounts_include",
                 collect_pubkeys(it)?,
             )
+        })
+    }
+
+    /// Set the included accounts for this block prefilter.
+    pub fn block_accounts_include<I: IntoIterator>(self, it: I) -> Self
+    where I::Item: AsRef<[u8]> {
+        self.mutate(|this| {
+            set_opt(
+                &mut this.block_accounts_include,
+                "block_accounts_include",
+                collect_pubkeys(it)?,
+            )
+        })
+    }
+
+    /// Set the `include_accounts` flag for this block prefilter.
+    pub fn block_include_accounts(self) -> Self {
+        self.mutate(|this| {
+            this.block_include_accounts = true;
+            Ok(())
+        })
+    }
+
+    /// Set the `include_transactions` flag for this block prefilter.
+    pub fn block_include_transactions(self) -> Self {
+        self.mutate(|this| {
+            this.block_include_transactions = true;
+            Ok(())
+        })
+    }
+
+    /// Set the `include_entries` flag for this block prefilter.
+    pub fn block_include_entries(self) -> Self {
+        self.mutate(|this| {
+            this.block_include_entries = true;
+            Ok(())
         })
     }
 }
@@ -665,12 +789,13 @@ impl From<Filters> for SubscribeRequest {
                 .collect(),
             slots: value
                 .parsers_filters
-                .keys()
-                .map(|k| {
-                    (k.clone(), SubscribeRequestFilterSlots {
+                .iter()
+                .filter_map(|(k, v)| {
+                    v.slot?;
+                    Some((k.clone(), SubscribeRequestFilterSlots {
                         filter_by_commitment: Some(true),
                         interslot_updates: None,
-                    })
+                    }))
                 })
                 .collect(),
             transactions: value
@@ -699,11 +824,31 @@ impl From<Filters> for SubscribeRequest {
                 })
                 .collect(),
             transactions_status: [].into_iter().collect(),
-            blocks: [].into_iter().collect(),
+            blocks: value
+                .parsers_filters
+                .iter()
+                .filter_map(|(k, v)| {
+                    let v = v.block.as_ref()?;
+
+                    Some((k.clone(), SubscribeRequestFilterBlocks {
+                        account_include: v
+                            .accounts_include
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect(),
+                        include_transactions: Some(v.include_transactions),
+                        include_accounts: Some(v.include_accounts),
+                        include_entries: Some(v.include_entries),
+                    }))
+                })
+                .collect(),
             blocks_meta: value
                 .parsers_filters
-                .keys()
-                .map(|k| (k.clone(), SubscribeRequestFilterBlocksMeta {}))
+                .iter()
+                .filter_map(|(k, v)| {
+                    v.block_meta?;
+                    Some((k.clone(), SubscribeRequestFilterBlocksMeta {}))
+                })
                 .collect(),
             entry: [].into_iter().collect(),
             commitment: None,
