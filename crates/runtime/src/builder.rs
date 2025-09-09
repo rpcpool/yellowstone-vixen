@@ -62,7 +62,7 @@ pub struct Builder<K: BuilderKind, S: SourceTrait> {
     pub slot: Vec<BoxPipeline<'static, SlotUpdate>>,
     /// The metrics.
     #[cfg(feature = "prometheus")]
-    pub metrics_registry: Option<prometheus::Registry>,
+    pub metrics_registry: prometheus::Registry,
     /// The extra builder kind.
     pub extra: K,
     /// The source trait.
@@ -78,10 +78,10 @@ impl<K: BuilderKind, S: SourceTrait> Default for Builder<K, S> {
             instruction: vec![],
             block_meta: vec![],
             slot: vec![],
-            #[cfg(feature = "prometheus")]
-            metrics_registry: None,
             extra: K::default(),
             _source: std::marker::PhantomData,
+            #[cfg(feature = "prometheus")]
+            metrics_registry: prometheus::Registry::new(),
         }
     }
 }
@@ -107,31 +107,8 @@ impl<K: BuilderKind, S: SourceTrait> Builder<K, S> {
 
     #[cfg(feature = "prometheus")]
     /// Sets the metrics registry for the runtime.
-    #[cfg(feature = "prometheus")]
     pub fn metrics(self, metrics_registry: prometheus::Registry) -> Builder<K, S> {
-        let Self {
-            err,
-            account,
-            transaction,
-            instruction,
-            block_meta,
-            slot,
-            metrics_registry: _,
-            extra,
-            _source: source,
-        } = self;
-
-        Builder {
-            err,
-            account,
-            transaction,
-            instruction,
-            block_meta,
-            slot,
-            metrics_registry: Some(metrics_registry),
-            extra,
-            _source: source,
-        }
+        self.mutate(|s| s.metrics_registry = metrics_registry)
     }
 }
 
@@ -192,6 +169,8 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
     /// # Errors
     /// This function returns an error if the builder or configuration are
     /// invalid.
+    /// # Panics
+    /// Only panics if the prometheus metrics registry is not set.
     pub fn try_build(self, config: VixenConfig<S::Config>) -> Result<Runtime<S>, BuilderError> {
         let Self {
             err,
@@ -200,10 +179,10 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             instruction,
             block_meta,
             slot,
-            #[cfg(feature = "prometheus")]
-            metrics_registry,
             extra: RuntimeKind,
             _source,
+            #[cfg(feature = "prometheus")]
+            metrics_registry,
         } = self;
         let () = err?;
 
@@ -260,9 +239,9 @@ impl<S: SourceTrait> RuntimeBuilder<S> {
             buffer: buffer_cfg,
             source: source_cfg,
             pipelines,
-            #[cfg(feature = "prometheus")]
-            metrics_registry: metrics_registry.unwrap_or_else(prometheus::Registry::new),
             _source: std::marker::PhantomData,
+            #[cfg(feature = "prometheus")]
+            metrics_registry,
         })
     }
 

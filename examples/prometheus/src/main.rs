@@ -7,21 +7,11 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
-use std::{path::PathBuf, str::FromStr, time::Duration};
+use std::{path::PathBuf, time::Duration};
 
 use clap::Parser;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use yellowstone_vixen::{
-    self as vixen,
-    filter_pipeline::FilterPipeline,
-    vixen_core::{InstructionUpdateOutput, Prefilter, Pubkey},
-    Pipeline,
-};
-use yellowstone_vixen_parser::block_meta::BlockMetaParser;
-use yellowstone_vixen_raydium_amm_v4_parser::{
-    accounts_parser::AccountParser as RaydiumAmmV4AccParser,
-    instructions_parser::{InstructionParser as RaydiumAmmV4IxParser, RaydiumAmmV4ProgramIx},
-};
+use yellowstone_vixen::Pipeline;
+use yellowstone_vixen_parser::token_program::{AccountParser, InstructionParser};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -34,69 +24,27 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-#[derive(Debug)]
-pub struct RaydiumAmmV4IxLogger;
-
-impl<V: std::fmt::Debug + Sync> vixen::Handler<V> for Logger {
-    async fn handle(&self, _value: &V) -> vixen::HandlerResult<()> { Ok(()) }
-}
-
-impl vixen::Handler<InstructionUpdateOutput<RaydiumAmmV4ProgramIx>> for RaydiumAmmV4IxLogger {
-    async fn handle(
-        &self,
-        value: &InstructionUpdateOutput<RaydiumAmmV4ProgramIx>,
-    ) -> vixen::HandlerResult<()> {
-        match &value.parsed_ix {
-            RaydiumAmmV4ProgramIx::SwapBaseIn(accounts, _data) => {
-                let accounts_expected = [
-                    "GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6",
-                    "4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar",
-                ];
-                if !accounts_expected.contains(&accounts.amm.to_string().as_str()) {
-                    tracing::info!(
-                        "Not expected tx sig: {}",
-                        vixen::bs58::encode(&value.shared_data.signature).into_string()
-                    );
-                }
-            },
-            RaydiumAmmV4ProgramIx::SwapBaseOut(accounts, _data) => {
-                let accounts_expected = [
-                    "GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6",
-                    "4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar",
-                ];
-                if !accounts_expected.contains(&accounts.amm.to_string().as_str()) {
-                    tracing::info!(
-                        "Not expected tx sig: {}",
-                        vixen::bs58::encode(&value.shared_data.signature).into_string()
-                    );
-                }
-            },
-            _ => {},
-        }
-
-        Ok(())
-    }
+impl<V: std::fmt::Debug + Sync> yellowstone_vixen::Handler<V> for Logger {
+    async fn handle(&self, _value: &V) -> yellowstone_vixen::HandlerResult<()> { Ok(()) }
 }
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::from_default_env())
-        .with(tracing_subscriber::fmt::layer())
-        .init();
-
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
     let prometheus_registry = prometheus::Registry::new();
-    let registry_clone = prometheus_registry.clone();
+    let prometheus_registry_pushgateway = prometheus_registry.clone();
+
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(Duration::from_secs(30));
+
         loop {
             interval.tick().await;
 
-            let metrics = registry_clone.gather();
+            let metrics = prometheus_registry_pushgateway.gather();
+
             let _ = tokio::task::spawn_blocking(move || {
                 if let Err(e) = prometheus::push_metrics(
                     "vixen",
@@ -112,23 +60,9 @@ async fn main() {
         }
     });
 
-    vixen::Runtime::<YellowstoneGrpcSource>::builder()
-        .account(Pipeline::new(RaydiumAmmV4AccParser, [Logger]))
-        .instruction(Pipeline::new(
-            yellowstone_vixen_meteora_amm_parser::instructions_parser::InstructionParser,
-            [Logger],
-        ))
-        .instruction(FilterPipeline::new(
-            RaydiumAmmV4IxParser,
-            [RaydiumAmmV4IxLogger],
-            Prefilter::builder()
-            .transaction_accounts_include([
-                Pubkey::from_str("GH8Ers4yzKR3UKDvgVu8cqJfGzU4cU62mTeg9bcJ7ug6").unwrap(),
-                Pubkey::from_str("4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar").unwrap()
-                ]) // At least one of these accounts must be in the transaction
-            .transaction_accounts([Pubkey::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA").unwrap()]), // All of these accounts must be in the transaction plus the Parser programId
-        ))
-        .block_meta(Pipeline::new(BlockMetaParser, [Logger]))
+    yellowstone_vixen::Runtime::<YellowstoneGrpcSource>::builder()
+        .instruction(Pipeline::new(InstructionParser, [Logger]))
+        .account(Pipeline::new(AccountParser, [Logger]))
         .metrics(prometheus_registry)
         .build(config)
         .run_async()

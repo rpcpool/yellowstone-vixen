@@ -1250,8 +1250,9 @@ dependencies = [
 
 [[package]]
 name = "curve25519-dalek"
-version = "3.2.1"
-source = "git+https://github.com/anza-xyz/curve25519-dalek.git?rev=b500cdc2a920cd5bff9e2dd974d7b97349d61464#b500cdc2a920cd5bff9e2dd974d7b97349d61464"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b9fdf9972b2bd6af2d913799d9ebc165ea4d2e65878e329d9c6b372c4491b61"
 dependencies = [
  "byteorder",
  "digest 0.9.0",
@@ -1486,7 +1487,7 @@ version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c762bae6dcaf24c4c84667b8579785430908723d5c889f469d76a41d59cc7a9d"
 dependencies = [
- "curve25519-dalek 3.2.1",
+ "curve25519-dalek 3.2.0",
  "ed25519",
  "rand 0.7.3",
  "serde",
@@ -1581,108 +1582,6 @@ checksum = "8be9f3dfaaffdae2972880079a491a1a8bb7cbed0b8dd7a347f668b4150a3b93"
 dependencies = [
  "event-listener 5.4.1",
  "pin-project-lite",
-]
-
-[[package]]
-name = "example-vixen-prometheus"
-version = "0.0.0"
-dependencies = [
- "clap",
- "prometheus",
- "tokio",
- "toml 0.8.23",
- "tracing",
- "tracing-subscriber",
- "yellowstone-vixen",
- "yellowstone-vixen-meteora-amm-parser",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-raydium-amm-v4-parser",
- "yellowstone-vixen-solana-rpc-source",
- "yellowstone-vixen-yellowstone-grpc-source",
-]
-
-[[package]]
-name = "example-vixen-stream"
-version = "0.0.0"
-dependencies = [
- "clap",
- "prost 0.13.5",
- "prost-build 0.13.5",
- "toml 0.8.23",
- "tracing",
- "tracing-subscriber",
- "yellowstone-vixen",
- "yellowstone-vixen-proto",
- "yellowstone-vixen-stream",
- "yellowstone-vixen-yellowstone-grpc-source",
-]
-
-[[package]]
-name = "example-vixen-stream-parser"
-version = "0.0.0"
-dependencies = [
- "clap",
- "prost-build 0.13.5",
- "toml 0.8.23",
- "tracing",
- "tracing-subscriber",
- "yellowstone-vixen",
- "yellowstone-vixen-jupiter-swap-parser",
- "yellowstone-vixen-kamino-limit-orders-parser",
- "yellowstone-vixen-meteora-amm-parser",
- "yellowstone-vixen-meteora-parser",
- "yellowstone-vixen-moonshot-parser",
- "yellowstone-vixen-orca-whirlpool-parser",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-proto",
- "yellowstone-vixen-pump-swaps-parser",
- "yellowstone-vixen-pumpfun-parser",
- "yellowstone-vixen-raydium-amm-v4-parser",
- "yellowstone-vixen-raydium-clmm-parser",
- "yellowstone-vixen-raydium-cpmm-parser",
- "yellowstone-vixen-stream",
- "yellowstone-vixen-yellowstone-grpc-source",
-]
-
-[[package]]
-name = "example-vixen-streams-tracing"
-version = "0.0.0"
-dependencies = [
- "clap",
- "opentelemetry 0.29.1",
- "opentelemetry-appender-tracing",
- "opentelemetry-otlp",
- "opentelemetry-stdout",
- "opentelemetry_sdk",
- "prometheus",
- "prost-build 0.13.5",
- "tokio",
- "toml 0.8.23",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
- "yellowstone-vixen",
- "yellowstone-vixen-boop-parser",
- "yellowstone-vixen-jupiter-swap-parser",
- "yellowstone-vixen-kamino-limit-orders-parser",
- "yellowstone-vixen-meteora-amm-parser",
- "yellowstone-vixen-meteora-dbc-parser",
- "yellowstone-vixen-meteora-parser",
- "yellowstone-vixen-meteora-pools-parser",
- "yellowstone-vixen-meteora-vault-parser",
- "yellowstone-vixen-moonshot-parser",
- "yellowstone-vixen-orca-whirlpool-parser",
- "yellowstone-vixen-parser",
- "yellowstone-vixen-pump-swaps-parser",
- "yellowstone-vixen-pumpfun-parser",
- "yellowstone-vixen-raydium-amm-v4-parser",
- "yellowstone-vixen-raydium-clmm-parser",
- "yellowstone-vixen-raydium-cpmm-parser",
- "yellowstone-vixen-raydium-launchpad-parser",
- "yellowstone-vixen-stream",
- "yellowstone-vixen-virtuals-parser",
- "yellowstone-vixen-yellowstone-fumarole-source",
- "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
 [[package]]
@@ -9247,6 +9146,82 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-example-filtered-pipeline"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "toml 0.8.23",
+ "tracing",
+ "yellowstone-vixen",
+ "yellowstone-vixen-meteora-amm-parser",
+ "yellowstone-vixen-raydium-amm-v4-parser",
+ "yellowstone-vixen-solana-rpc-source",
+ "yellowstone-vixen-yellowstone-grpc-source",
+]
+
+[[package]]
+name = "yellowstone-vixen-example-prometheus"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "prometheus",
+ "tokio",
+ "toml 0.8.23",
+ "tracing",
+ "yellowstone-vixen",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-yellowstone-grpc-source",
+]
+
+[[package]]
+name = "yellowstone-vixen-example-stream"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "prost-build 0.13.5",
+ "toml 0.8.23",
+ "tracing",
+ "tracing-subscriber",
+ "yellowstone-vixen",
+ "yellowstone-vixen-jupiter-swap-parser",
+ "yellowstone-vixen-kamino-limit-orders-parser",
+ "yellowstone-vixen-meteora-amm-parser",
+ "yellowstone-vixen-meteora-parser",
+ "yellowstone-vixen-moonshot-parser",
+ "yellowstone-vixen-orca-whirlpool-parser",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-proto",
+ "yellowstone-vixen-pump-swaps-parser",
+ "yellowstone-vixen-pumpfun-parser",
+ "yellowstone-vixen-raydium-amm-v4-parser",
+ "yellowstone-vixen-raydium-clmm-parser",
+ "yellowstone-vixen-raydium-cpmm-parser",
+ "yellowstone-vixen-stream",
+ "yellowstone-vixen-yellowstone-grpc-source",
+]
+
+[[package]]
+name = "yellowstone-vixen-example-tracing"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "opentelemetry 0.29.1",
+ "opentelemetry-appender-tracing",
+ "opentelemetry-otlp",
+ "opentelemetry-stdout",
+ "opentelemetry_sdk",
+ "prost-build 0.13.5",
+ "tokio",
+ "toml 0.8.23",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+ "yellowstone-vixen",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-yellowstone-grpc-source",
+]
+
+[[package]]
 name = "yellowstone-vixen-jupiter-swap-parser"
 version = "0.4.0"
 dependencies = [
@@ -9742,7 +9717,6 @@ dependencies = [
  "clap",
  "futures-channel",
  "futures-util",
- "opentelemetry 0.24.0",
  "pin-project-lite",
  "prometheus",
  "serde",

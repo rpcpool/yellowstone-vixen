@@ -1,8 +1,8 @@
 # Yellowstone Vixen
 
-Yellowstone Vixen is a framework for building program-aware, real-time Solana data pipelines. It provides the core components—runtime, parser definitions, and handler interfaces—needed to transform raw on-chain events into structured, actionable data.
+Yellowstone Vixen is a comprehensive framework for building program-aware, real-time Solana data pipelines. It provides the core components—runtime, parser definitions, and handler interfaces—needed to transform raw on-chain events into structured, actionable data. Vixen supports the registration of custom data sources, allowing developers to integrate various data streams seamlessly.
 
-Vixen consumes Dragon’s Mouth gRPC streams and routes program-specific change events through pluggable parsers, enabling developers to log, store, or stream enriched data for indexing, analytics, and downstream consumption.
+Solana change events, following the Yellowstone gRPC specification, are received from the source and routed through pluggable parsers. This enables developers to log, store, or stream enriched data for indexing, analytics, and downstream consumption.
 
 ## Table of Contents
 
@@ -11,8 +11,8 @@ Vixen consumes Dragon’s Mouth gRPC streams and routes program-specific change 
   - [Problem Solving](#problem-solving)
   - [Features](#features)
   - [Quick Start](#quick-start)
-  - [Supported Programs](#supported-programs)
-  - [Dragon's Mouth](#dragons-mouth)
+  - [Official Parsers](#official-parsers)
+  - [Official Sources](#official-sources)
   - [Developer Resources](#developer-resources)
   - [Maintainers](#maintainers)
 
@@ -20,7 +20,7 @@ Vixen consumes Dragon’s Mouth gRPC streams and routes program-specific change 
 
 Yellowstone Vixen solves core challenges for Solana dApp developers:
 
-- **Cost Efficiency**: Share Dragon’s Mouth subscriptions and filter only the data you care about.
+- **Cost Efficiency**: Share Dragon's Mouth subscriptions and filter only the data you care about.
 - **Operational Simplicity**: Lightweight setup, minimal external dependencies.
 - **Observability**: Built-in Prometheus metrics for lag, throughput, and error tracking.
 - **Composability**: Independent, reusable parser crates that can deserialize complex cross-program interactions (CPI).
@@ -28,7 +28,7 @@ Yellowstone Vixen solves core challenges for Solana dApp developers:
 ## Features
 
 - **🛠 Parser + Handler Architecture**: Build pipelines that transform raw Solana events into structured models and trigger custom logic.
-- **🔥 Dragon’s Mouth Integration**: Subscribe to Solana Geyser streams via gRPC with minimal configuration.
+- **🔥 Flexible Source Integration**: Register custom data sources or use existing ones like Dragon's Mouth for Solana Geyser streams.
 - **📈 Metrics Support**: Prometheus /metrics endpoint available out-of-the-box.
 - **🧪 Offline Testing with Fixtures**: Test parsers without connecting to live Solana nodes using devnet fixtures.
 - **🔄 gRPC Streaming API**: Serve parsed program events directly to external systems or clients.
@@ -115,15 +115,25 @@ sudo docker-compose up
 | `LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj`  | **Raydium Launchpad**              | [yellowstone-vixen-raydium-launchpad-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/raydium-launchpad-parser)     |
 | `5U3EU2ubXtK84QcRjWVmYt9RaDyA8gKxdUrPFXmZyaki` | **Virtuals**                       | [yellowstone-vixen-virtuals-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/virtuals-parser)                       |
 
-## Dragon's Mouth
+## Official Sources
 
-Dragon's Mouth can be self-hosted as a Geyser plugin or used via a commercial vendor. For more details, refer to the [Yellowstone Dragon's Mouth documentation](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions) and [Yellowstone repository](https://github.com/rpcpool/yellowstone-grpc).
+Yellowstone Vixen supports several official data sources for ingesting Solana account and transaction data. Each source is provided as a Rust crate and can be configured in your Vixen pipeline. Below is a summary of the available sources:
+
+| Source Crate                                                          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`yellowstone-grpc-source`](./crates/yellowstone-grpc-source)         | **Dragon's Mouth (gRPC Source)**: Scalable and reliable streaming of account and transaction data from Solana nodes via the Dragon's Mouth Geyser plugin. Can be self-hosted or accessed via commercial vendors. See the [Dragon's Mouth documentation](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions) and [Yellowstone repository](https://github.com/rpcpool/yellowstone-grpc) for more details.                                                                              |
+| [`yellowstone-fumarole-source`](./crates/yellowstone-fumarole-source) | **Fumarole Reliable Streams**: Scalable, reliable, and persistent streaming of Solana accounts and transactions. Fumarole merges data from multiple nodes for high availability, supports consumer groups for horizontal scalability, and allows clients to resume streams after interruptions. Currently in limited beta—contact Triton support for access. [Learn more](https://blog.triton.one/introducing-yellowstone-fumarole) or see the [GitHub repo](https://github.com/rpcpool/yellowstone-fumarole). |
+| [`solana-rpc-source`](./crates/solana-rpc-source)                     | **Solana RPC Source**: Pulls account data directly from a Solana node's JSON-RPC API using `getProgramAccounts`.                                                                                                                                                                                                                                                                                                                                                                                               |
+| [`solana-snapshot-source`](./crates/solana-snapshot-source)           | **Solana Snapshot Source**: Loads and processes Solana ledger snapshots for offline or historical analysis.                                                                                                                                                                                                                                                                                                                                                                                                    |
+
+Refer to the crate documentation for setup instructions and configuration options.
 
 ## Developer Resources
 
 - [**Mock Testing for Parsers**](./crates/mock/README.md): Load and replay devnet accounts or transactions offline.
 - [**Usage Examples**](./examples/): A variety of example projects that demonstrate how to use the features.
 - [**Example Vixen Configuration**](./Vixen.example.toml): Starter TOML file for pipeline configuration.
+- [**Generate Parsers from IDL**](./docs/codama-parser-generation.md): Use Codama to automatically generate Vixen parsers from Anchor or custom IDL files.
 
 ## Maintainers
 

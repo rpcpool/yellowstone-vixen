@@ -1,9 +1,6 @@
-# Stream Parser Example
+# Vixen Stream Example
 
-This example demonstrates how vixen-streams works,
-It spins up a gRPC server which serves a stream of parsed accounts and transaction updates
-
-## Running the example
+This example shows how vixen-streams operates. It starts a gRPC server that provides a continuous stream of parsed account and transaction updates.
 
 To run the example, navigate to [`examples/stream-parser`](/examples/stream-parser/) and execute the following command:
 
