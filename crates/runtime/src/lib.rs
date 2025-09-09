@@ -180,6 +180,9 @@ impl<S: SourceTrait> Runtime<S> {
     ///
     /// # Errors
     /// This function returns an error if the runtime crashes.
+    ///
+    /// # Panics
+    /// Only panics if the rustls crypto provider fails to install.
     #[tracing::instrument("Runtime::run", skip(self))]
     pub async fn try_run_async(self) -> Result<(), Box<Error>> {
         enum StopType<S> {
