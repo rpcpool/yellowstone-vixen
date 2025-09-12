@@ -1,15 +1,33 @@
 use std::{collections::HashMap, time::Duration};
 
 use async_trait::async_trait;
+use clap::ValueEnum;
 use futures_util::StreamExt;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
-    tonic::{transport::ClientTlsConfig, Status},
+    tonic::{codec::CompressionEncoding, transport::ClientTlsConfig, Status},
 };
 use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
 use yellowstone_vixen_core::Filters;
+
+#[derive(Default, Copy, Debug, serde::Deserialize, Clone, ValueEnum)]
+#[serde(rename_all = "kebab-case")]
+pub enum VixenCompressionEncoding {
+    Gzip,
+    #[default]
+    Zstd,
+}
+
+impl From<VixenCompressionEncoding> for CompressionEncoding {
+    fn from(val: VixenCompressionEncoding) -> Self {
+        match val {
+            VixenCompressionEncoding::Gzip => CompressionEncoding::Gzip,
+            VixenCompressionEncoding::Zstd => CompressionEncoding::Zstd,
+        }
+    }
+}
 
 /// Yellowstone connection configuration.
 #[derive(Debug, clap::Args, serde::Deserialize, Clone)]
@@ -30,6 +48,12 @@ pub struct YellowstoneGrpcConfig {
 
     #[arg(long, env)]
     pub from_slot: Option<u64>,
+
+    #[arg(long, env)]
+    pub max_decoding_message_size: Option<usize>,
+
+    #[arg(long, env)]
+    pub accept_compression: Option<VixenCompressionEncoding>,
 }
 
 /// A `Source` implementation for the Yellowstone gRPC API.
@@ -60,6 +84,8 @@ impl SourceTrait for YellowstoneGrpcSource {
 
             let mut client = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
                 .x_token(config.x_token.clone())?
+                .max_decoding_message_size(config.max_decoding_message_size.unwrap_or(usize::MAX))
+                .accept_compressed(config.accept_compression.unwrap_or_default().into())
                 .connect_timeout(timeout)
                 .timeout(timeout)
                 .tls_config(ClientTlsConfig::new().with_native_roots())?

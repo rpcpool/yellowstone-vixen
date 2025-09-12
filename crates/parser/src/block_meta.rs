@@ -1,10 +1,9 @@
 use std::borrow::Cow;
 
-use yellowstone_vixen_core::{
-    BlockMetaUpdate, ParseResult, Parser, Prefilter, ProgramParser, Pubkey,
-};
+use yellowstone_grpc_proto::geyser::SubscribeUpdateBlockMeta;
+use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, ProgramParser, Pubkey};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Reward {
     pub pubkey: String,
     pub lamports: i64,
@@ -20,7 +19,7 @@ pub struct Rewards {
 }
 
 #[derive(Debug, Clone)]
-pub struct BlockUpdate {
+pub struct BlockMetaUpdate {
     pub slot: u64,
     pub blockhash: String,
     pub rewards: Option<Rewards>,
@@ -36,14 +35,14 @@ pub struct BlockUpdate {
 pub struct BlockMetaParser;
 
 impl Parser for BlockMetaParser {
-    type Input = BlockMetaUpdate;
-    type Output = BlockUpdate;
+    type Input = SubscribeUpdateBlockMeta;
+    type Output = BlockMetaUpdate;
 
     fn id(&self) -> Cow<'static, str> { "yellowstone::BlockMetaParser".into() }
 
-    fn prefilter(&self) -> Prefilter { Prefilter::builder().build().unwrap() }
+    fn prefilter(&self) -> Prefilter { Prefilter::builder().block_metas().build().unwrap() }
 
-    async fn parse(&self, block_meta: &BlockMetaUpdate) -> ParseResult<Self::Output> {
+    async fn parse(&self, block_meta: &SubscribeUpdateBlockMeta) -> ParseResult<Self::Output> {
         let rewards = block_meta.rewards.as_ref().map(|reward| Rewards {
             rewards: reward
                 .rewards
@@ -59,7 +58,7 @@ impl Parser for BlockMetaParser {
             num_partitions: reward.num_partitions.map(|num| num.num_partitions),
         });
 
-        Ok(BlockUpdate {
+        Ok(BlockMetaUpdate {
             slot: block_meta.slot,
             blockhash: block_meta.blockhash.clone(),
             rewards,

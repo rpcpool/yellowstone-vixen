@@ -118,6 +118,18 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
                     )
                     .await;
             },
+            UpdateOneof::Block(b) => {
+                pipelines
+                    .block
+                    .get_handlers(&filters)
+                    .run(
+                        span,
+                        &b,
+                        #[cfg(feature = "prometheus")]
+                        update_type,
+                    )
+                    .await;
+            },
             UpdateOneof::Slot(s) => {
                 pipelines
                     .slot

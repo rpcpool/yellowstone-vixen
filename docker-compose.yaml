@@ -3,7 +3,7 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
-      - ./prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml
+      - ./prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml:Z
     command: ["--config.file=/etc/prometheus/prometheus-config.yaml"]
     ports:
       - "9090:9090"
