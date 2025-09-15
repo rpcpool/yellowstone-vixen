@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2025-09-15
+
+### Added
+
+- Exposed transaction included and required accounts using `FilterPipeline` ([#104](https://github.com/rpcpool/yellowstone-vixen/pull/104) by @fernandodeluret)
+- Added Stake Pool Program parser ([#87](https://github.com/rpcpool/yellowstone-vixen/pull/87) by @aoikurokawa)
+- Exposed transaction message header to shared data ([#121](https://github.com/rpcpool/yellowstone-vixen/pull/121) by @fernandodeluret)
+- Added fumarole `Source` ([#111](https://github.com/rpcpool/yellowstone-vixen/pull/111) by @fernandodeluret)
+- Added support for all accounts fetching with empty filter ([#124](https://github.com/rpcpool/yellowstone-vixen/pull/124) by @fernandodeluret)
+- Added block subscriber to Vixen ([#126](https://github.com/rpcpool/yellowstone-vixen/pull/126) by @Nagaprasadvr)
+- Updated Vixen metrics to receive prometheus register ([#118](https://github.com/rpcpool/yellowstone-vixen/pull/118) by @fernandodeluret)
+- Documentation and example updates for 0.5 release ([#125](https://github.com/rpcpool/yellowstone-vixen/pull/125) by @kespinola)
+
+### Changed
+
+- Updated Raydium CPMM and Launchpad to latest program version ([#122](https://github.com/rpcpool/yellowstone-vixen/pull/122) by @fernandodeluret)
+- Updated the discriminator tracing log to debug formatting ([#113](https://github.com/rpcpool/yellowstone-vixen/pull/113) by @fernandodeluret)
+- Updated contribution guide ([#123](https://github.com/rpcpool/yellowstone-vixen/pull/123) by @moses7054)
+
+### Fixed
+
+- Return runtime error on stream error ([#112](https://github.com/rpcpool/yellowstone-vixen/pull/112) by @fernandodeluret)
+- Fixed import typo in README.md ([#117](https://github.com/rpcpool/yellowstone-vixen/pull/117) by @riprsa)
+- Fixed various bugs in block subscriber and related features ([#126](https://github.com/rpcpool/yellowstone-vixen/pull/126) by @Nagaprasadvr)
+
 ## [0.4.0] - 2025-07-23
 
 ### Added
