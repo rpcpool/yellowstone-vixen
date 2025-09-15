@@ -9088,7 +9088,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -9110,7 +9110,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-boop-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9135,7 +9135,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-core"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bs58",
  "clap",
@@ -9223,7 +9223,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-jupiter-swap-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9248,7 +9248,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-kamino-limit-orders-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9273,7 +9273,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-amm-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9298,7 +9298,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-dbc-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9323,7 +9323,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9348,7 +9348,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-pools-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9373,7 +9373,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-vault-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9398,7 +9398,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-mock"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "futures",
  "regex",
@@ -9414,7 +9414,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-moonshot-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9439,7 +9439,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-orca-whirlpool-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9464,7 +9464,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 1.5.7",
  "bs58",
@@ -9487,7 +9487,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proto"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "prost 0.13.5",
  "prost-build 0.13.5",
@@ -9499,7 +9499,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-pump-swaps-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9524,7 +9524,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-pumpfun-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9549,7 +9549,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-raydium-amm-v4-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9574,7 +9574,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-raydium-clmm-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9599,7 +9599,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-raydium-cpmm-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9624,7 +9624,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-raydium-launchpad-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9649,7 +9649,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-rpc-source"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -9667,7 +9667,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-snapshot-source"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -9690,7 +9690,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stake-pool-parser"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "borsh 1.5.7",
  "bs58",
@@ -9711,7 +9711,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stream"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -9736,7 +9736,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-virtuals-parser"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "borsh 0.10.4",
  "num-derive",
@@ -9761,7 +9761,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-fumarole-source"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "bytesize",
@@ -9780,7 +9780,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-grpc-source"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "clap",

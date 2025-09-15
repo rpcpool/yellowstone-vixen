@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-stake-pool-parser"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Vixen program parser for SPL Stake Pool"
 license = "MIT"

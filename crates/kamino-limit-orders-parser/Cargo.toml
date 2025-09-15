@@ -2,7 +2,7 @@
 
 [package]
 name = "yellowstone-vixen-kamino-limit-orders-parser"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 description = "Vixen program parser for Kamino Limit Orders program"
 license = "MIT"
