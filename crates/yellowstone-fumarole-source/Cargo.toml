@@ -5,6 +5,7 @@ edition = "2024"
 description = "Yellowstone Fumarole source for the Yellowstone Vixen"
 license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
+readme = "./../../README.md"
 
 [dependencies]
 async-trait = "0.1.88"
