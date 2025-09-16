@@ -1,9 +1,6 @@
 //! Helpers for parsing transaction updates into instructions.
 
-use std::{
-    collections::{HashMap, VecDeque},
-    sync::Arc,
-};
+use std::{collections::VecDeque, sync::Arc};
 
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
@@ -15,7 +12,6 @@ use yellowstone_grpc_proto::{
 };
 
 use crate::{Pubkey, TransactionUpdate};
-use std::collections::hash_map::Entry;
 
 /// Errors that can occur when parsing a transaction update into instructions.
 #[derive(Debug, Clone, Copy, thiserror::Error)]
@@ -101,8 +97,6 @@ pub struct InstructionShared {
     pub accounts: AccountKeys,
     /// The header of the transaction.
     pub message_header: MessageHeader,
-    /// Owner map of the WSOL token accounts
-    pub wsol_owner_map: HashMap<Pubkey, Pubkey>,
 }
 
 /// A parsed instruction from a transaction update.
@@ -175,56 +169,6 @@ impl AccountKeys {
     }
 }
 
-const SPL_TOKEN_PROGRAM_ID: [u8; 32] = [
-    0x06, 0xdd, 0xf6, 0xe1, 0xd7, 0x65, 0xa1, 0x93, 0xd9, 0xcb, 0xe1, 0x46, 0xce, 0xeb, 0x79, 0xac,
-    0x1c, 0xb4, 0x85, 0xed, 0x5f, 0x5b, 0x37, 0x91, 0x3a, 0x8c, 0xf5, 0x85, 0x7e, 0xff, 0x00, 0xa9,
-];
-
-// Helper to check if a Pubkey is the SPL Token program
-fn is_spl_token_program(pubkey: &Pubkey) -> bool {
-    pubkey.to_vec() == SPL_TOKEN_PROGRAM_ID.to_vec()
-}
-
-/// Extract WSOL owner map from a list of instructions (outer and all inner)
-pub fn extract_wsol_owner_map<'a>(
-    ixs: impl Iterator<Item = &'a InstructionUpdate>,
-) -> HashMap<Pubkey, Pubkey> {
-    let mut map = HashMap::new();
-    for ix in ixs {
-        if !is_spl_token_program(&ix.program) {
-            continue;
-        }
-        // InitializeAccount3: data.len() == 33, data[0] == 0x12, accounts.len() == 2
-        if ix.data.len() == 33 && ix.data[0] == 0x12 && ix.accounts.len() == 2 {
-            let token_account = ix.accounts[0];
-            let owner = match <[u8; 32]>::try_from(&ix.data[1..33]) {
-                Ok(bytes) => Pubkey::from(bytes),
-                Err(_) => continue,
-            };
-            map.insert(token_account, owner);
-        }
-        // InitializeAccount: data.len() == 1, data[0] == 0x01, accounts.len() == 4
-        else if ix.data.len() == 1 && ix.data[0] == 0x01 && ix.accounts.len() == 4 {
-            let token_account = ix.accounts[0];
-            let owner = ix.accounts[2];
-            map.insert(token_account, owner);
-        }
-        // Recurse into inner instructions
-        for inner in &ix.inner {
-            for (k, v) in extract_wsol_owner_map(std::iter::once(inner)) {
-                // Only insert if not already present (outer wins over inner)
-                match map.entry(k) {
-                    Entry::Vacant(e) => {
-                        e.insert(v);
-                    },
-                    Entry::Occupied(_) => {},
-                }
-            }
-        }
-    }
-    map
-}
-
 impl InstructionUpdate {
     /// Parse a transaction update into a list of instructions.
     ///
@@ -273,7 +217,6 @@ impl InstructionUpdate {
             address_table_lookups: _,
         } = message.ok_or(Missing::TransactionMessage)?;
 
-        // Calculate WSOL owner map
         let shared = Arc::new(InstructionShared {
             slot,
             signature,
@@ -295,7 +238,6 @@ impl InstructionUpdate {
                 dynamic_ro: loaded_readonly_addresses,
             },
             message_header: header.ok_or(Missing::TransactionMessageHeader)?,
-            wsol_owner_map: HashMap::new(),
         });
 
         let mut outer = instructions
@@ -306,10 +248,6 @@ impl InstructionUpdate {
 
         let mut next_idx = outer.len() as u16;
         Self::parse_inner(&shared, inner_instructions, &mut outer, &mut next_idx)?;
-
-        Arc::get_mut(&mut Arc::clone(&shared))
-            .unwrap()
-            .wsol_owner_map = extract_wsol_owner_map(outer.iter());
 
         Ok(outer)
     }
