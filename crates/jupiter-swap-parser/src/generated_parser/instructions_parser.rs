@@ -77,7 +77,9 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<JupiterProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "Jupiter::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> {
+        "Jupiter::InstructionParser".into()
+    }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -116,7 +118,9 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        ID.to_bytes().into()
+    }
 }
 
 impl InstructionParser {
@@ -128,6 +132,12 @@ impl InstructionParser {
 
         #[cfg(feature = "shared-data")]
         let shared_data = Arc::clone(&ix.shared);
+
+        if ix.data.len() < 8 {
+            return Err(yellowstone_vixen_core::ParseError::from(
+                "Instruction data too short".to_owned(),
+            ));
+        }
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let ix_data = &ix.data[8..];
