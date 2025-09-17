@@ -91,6 +91,11 @@ impl InstructionParser {
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<RaydiumAmmProgramIx> {
         let accounts_len = ix.accounts.len();
+        if ix.data.len() < 8 {
+            return Err(yellowstone_vixen_core::ParseError::from(
+                "Instruction data too short".to_owned(),
+            ));
+        }
 
         let ix_discriminator: [u8; 1] = ix.data[0..1].try_into()?;
         let mut ix_data = &ix.data[1..];
