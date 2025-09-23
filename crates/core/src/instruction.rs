@@ -115,6 +115,8 @@ pub struct InstructionUpdate {
     pub inner: Vec<InstructionUpdate>,
     /// The unique index of this instruction within the transaction
     pub ix_index: u16,
+    /// The program pubkey of the parent instruction (None for top-level instructions)
+    pub parent_program: Option<Pubkey>,
     /// Program logs generated during execution of this instruction.
     pub parsed_logs: Vec<String>,
 }
@@ -274,12 +276,13 @@ impl InstructionUpdate {
                 return Err(ParseError::InvalidInnerInstructionIndex(index));
             };
 
+            let parent_program = outer.program;
             let mut inner = instructions
                 .into_iter()
                 .map(|i| {
                     let idx = *next_idx;
                     *next_idx += 1;
-                    Self::parse_one_inner(Arc::clone(shared), i, idx)
+                    Self::parse_one_inner(Arc::clone(shared), i, idx, parent_program)
                 })
                 .collect::<Result<Vec<_>, _>>()?;
 
@@ -294,7 +297,8 @@ impl InstructionUpdate {
                         .and_then(|&(_, h)| h)
                         .is_some_and(|h| h > height)
                     {
-                        let (child, _) = inner.remove(i);
+                        let (mut child, _) = inner.remove(i);
+                        child.parent_program = Some(inner[parent_idx].0.program);
                         inner[parent_idx].0.inner.push(child);
                     }
                     i -= 1;
@@ -450,13 +454,14 @@ impl InstructionUpdate {
             ref accounts,
             data,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index)
+        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index, None)
     }
 
     fn parse_one_inner(
         shared: Arc<InstructionShared>,
         ins: InnerInstruction,
         ix_index: u16,
+        parent_program: Pubkey,
     ) -> Result<(Self, Option<u32>), ParseError> {
         let InnerInstruction {
             program_id_index,
@@ -464,8 +469,15 @@ impl InstructionUpdate {
             data,
             stack_height,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index)
-            .map(|i| (i, stack_height))
+        Self::parse_from_parts(
+            shared,
+            program_id_index,
+            accounts,
+            data,
+            ix_index,
+            Some(parent_program),
+        )
+        .map(|i| (i, stack_height))
     }
 
     fn parse_from_parts(
@@ -474,6 +486,7 @@ impl InstructionUpdate {
         accounts: &[u8],
         data: Vec<u8>,
         ix_index: u16,
+        parent_program: Option<Pubkey>,
     ) -> Result<Self, ParseError> {
         Ok(Self {
             program: shared.accounts.get(program_id_index)?,
@@ -485,6 +498,7 @@ impl InstructionUpdate {
             shared,
             inner: vec![],
             ix_index,
+            parent_program,
             parsed_logs: vec![],
         })
     }
@@ -618,5 +632,136 @@ mod tests {
             instructions_with_logs,
             instruction_updates.len()
         );
+    }
+
+    #[tokio::test]
+    async fn test_inner_instruction_parent_relationships() {
+        use yellowstone_vixen_mock::create_mock_transaction_update;
+
+        let fixture_signature = "3VChbqC1CpbiN6seqo7aGvRaPPkvxh5c4W1y7NNRt23mk8cfX4fac6FPB9Z47APLnTtgZJ3eWEnnhfa2kJdnSbUr";
+
+        // Create a mock transaction update using the utility
+        let transaction_update = create_mock_transaction_update(fixture_signature)
+            .await
+            .expect("Failed to create mock transaction update");
+
+        // Parse instructions using the core parse_from_txn logic directly
+        let instruction_updates = super::InstructionUpdate::parse_from_txn(&transaction_update)
+            .expect("Failed to parse instructions from transaction update");
+
+        println!(
+            "Testing parent-child relationships on {} instructions",
+            instruction_updates.len()
+        );
+
+        // Helper function to recursively print instruction hierarchy
+        fn print_instruction_hierarchy(
+            ix: &super::InstructionUpdate,
+            depth: usize,
+            instruction_path: &str,
+        ) {
+            let indent = "  ".repeat(depth);
+            let parent_info = if let Some(parent_program) = ix.parent_program {
+                format!("parent: {}", parent_program.to_string())
+            } else {
+                "TOP-LEVEL".to_string()
+            };
+
+            println!(
+                "{}{}Instruction {}: ix_index={}, {}, program={}",
+                indent,
+                instruction_path,
+                "",
+                ix.ix_index,
+                parent_info,
+                ix.program.to_string()
+            );
+
+            // Recursively print inner instructions
+            for (inner_i, inner_ix) in ix.inner.iter().enumerate() {
+                let inner_path = format!("{}[inner-{}] ", instruction_path, inner_i);
+                print_instruction_hierarchy(inner_ix, depth + 1, &inner_path);
+            }
+        }
+
+        // Print hierarchy for all top-level instructions
+        for (i, ix) in instruction_updates.iter().enumerate() {
+            println!("\n=== Top-level Instruction {} ===", i);
+            print_instruction_hierarchy(ix, 0, "");
+        }
+
+        // Verify parent-child relationships
+        let mut total_instructions = 0;
+        let mut top_level_count = 0;
+        let mut inner_instructions_count = 0;
+
+        // Helper function to recursively count and verify instructions
+        fn verify_instruction_hierarchy(
+            ix: &super::InstructionUpdate,
+            expected_parent: Option<super::Pubkey>,
+        ) -> (usize, usize, usize) {
+            let mut total = 1;
+            let mut top_level = 0;
+            let mut inner = 0;
+
+            // Verify parent relationship
+            if ix.parent_program.is_none() {
+                top_level = 1;
+                assert!(
+                    expected_parent.is_none(),
+                    "Top-level instruction should not have a parent, but parent_program is {:?}",
+                    ix.parent_program
+                );
+            } else {
+                inner = 1;
+                if let Some(expected) = expected_parent {
+                    assert_eq!(
+                        ix.parent_program, Some(expected),
+                        "Inner instruction parent_program {:?} doesn't match expected parent {}",
+                        ix.parent_program, expected
+                    );
+                }
+            }
+
+            // Recursively verify inner instructions
+            for inner_ix in &ix.inner {
+                let (inner_total, inner_top_level, inner_inner) =
+                    verify_instruction_hierarchy(inner_ix, Some(ix.program));
+                total += inner_total;
+                top_level += inner_top_level;
+                inner += inner_inner;
+            }
+
+            (total, top_level, inner)
+        }
+
+        // Count and verify all instructions
+        for ix in &instruction_updates {
+            let (count, top, inner_count) = verify_instruction_hierarchy(ix, None);
+            total_instructions += count;
+            top_level_count += top;
+            inner_instructions_count += inner_count;
+        }
+
+        println!("\n=== Parent-Child Relationship Summary ===");
+        println!("Total instructions: {}", total_instructions);
+        println!("Top-level instructions: {}", top_level_count);
+        println!("Inner instructions: {}", inner_instructions_count);
+
+        // Verify that we have some instructions
+        assert!(
+            !instruction_updates.is_empty(),
+            "Should have parsed some instructions"
+        );
+
+        // Verify counts make sense
+        assert_eq!(
+            top_level_count,
+            instruction_updates.len(),
+            "Top-level count should match outer instruction count"
+        );
+
+        println!("✓ Parent-child relationship test completed successfully");
+        println!("✓ All parent relationships verified correctly");
     }
 }

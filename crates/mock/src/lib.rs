@@ -145,6 +145,7 @@ pub type IxIndex = [usize; 2]; // [outer_ix_index, inner_ix_index]
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SerializableInstructionUpdate {
     pub ix_index: u16,
+    pub parent_program: Option<SerializablePubkey>,
     pub program: SerializablePubkey,
     pub accounts: Vec<SerializablePubkey>,
     pub data: Vec<u8>,
@@ -155,6 +156,7 @@ impl From<&InstructionUpdate> for SerializableInstructionUpdate {
     fn from(value: &InstructionUpdate) -> Self {
         Self {
             ix_index: value.ix_index,
+            parent_program: value.parent_program.map(|p| SerializablePubkey(p.into_bytes())),
             program: SerializablePubkey(value.program.0),
             accounts: value
                 .accounts
@@ -176,6 +178,7 @@ impl From<&SerializableInstructionUpdate> for InstructionUpdate {
             shared: Arc::new(InstructionShared::default()),
             inner: value.inner.iter().map(Into::into).collect(),
             ix_index: value.ix_index,
+            parent_program: value.parent_program.map(Into::into),
             parsed_logs: vec![],
         }
     }
@@ -219,6 +222,7 @@ fn try_from_ui_instructions(
 
         let ix = SerializableInstructionUpdate {
             ix_index: idx as u16,
+            parent_program: None,
             data: decode_bs58_to_bytes(&ix.data)?,
             accounts: accounts_out,
             program,
@@ -249,6 +253,7 @@ fn try_from_ui_inner_ixs(
 
             let ix = SerializableInstructionUpdate {
                 ix_index: *next_idx,
+                parent_program: None, // TODO: This should be set to the actual parent program when parsing inner instructions
                 data: decode_bs58_to_bytes(&compiled_ix.data)?,
                 accounts: accounts_out,
                 program,
@@ -343,7 +348,7 @@ fn convert_to_transaction_update(
                             program_id_index: compiled_ix.program_id_index as u32,
                             accounts: compiled_ix.accounts.iter().map(|&i| i as u8).collect(),
                             data: decode_bs58_to_bytes(&compiled_ix.data)?,
-                            stack_height: Some(1), // Default stack height for mock
+                            stack_height: compiled_ix.stack_height,
                         });
                     }
                 }
