@@ -2,6 +2,7 @@
 
 use std::{collections::VecDeque, sync::Arc};
 
+use regex::Regex;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     prelude::MessageHeader,
@@ -114,6 +115,8 @@ pub struct InstructionUpdate {
     pub inner: Vec<InstructionUpdate>,
     /// The unique index of this instruction within the transaction
     pub ix_index: u16,
+    /// Program logs generated during execution of this instruction.
+    pub parsed_logs: Vec<String>,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -249,6 +252,9 @@ impl InstructionUpdate {
         let mut next_idx = outer.len() as u16;
         Self::parse_inner(&shared, inner_instructions, &mut outer, &mut next_idx)?;
 
+        // Assign logs to instructions based on invoke/success patterns
+        Self::assign_logs_to_instructions(&mut outer, &shared.log_messages)?;
+
         Ok(outer)
     }
 
@@ -306,6 +312,133 @@ impl InstructionUpdate {
         Ok(())
     }
 
+    fn assign_logs_to_instructions(
+        outer: &mut [Self],
+        log_messages: &[String],
+    ) -> Result<(), ParseError> {
+        let invoke_regex =
+            Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) invoke \[(\d+)\]").unwrap();
+        let success_regex = Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) success").unwrap();
+        let failed_regex = Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) failed:").unwrap();
+        let consumed_regex =
+            Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) consumed \d+ of \d+ compute units")
+                .unwrap();
+
+        // create list of instruction paths in depth-first order for existing instructions data structure
+        let mut instruction_paths = Vec::new();
+        Self::collect_instruction_paths(&mut instruction_paths, outer, Vec::new());
+
+        // maintain current execution stack (store paths)
+        let mut execution_stack: Vec<Vec<usize>> = Vec::new();
+        let mut path_iter = instruction_paths.iter();
+
+        for log in log_messages {
+            // NOTE: invoke 給要開始的 program, 其餘的給 stack top
+            if let Some(captures) = invoke_regex.captures(log) {
+                let program_id = captures.get(1).unwrap().as_str();
+                let depth: usize = captures.get(2).unwrap().as_str().parse().unwrap();
+
+                execution_stack.truncate(depth - 1);
+
+                // find next matching instruction
+                // NOTE: 這假設指令樹順序跟 Log 樹順序一致
+                while let Some(path) = path_iter.next() {
+                    let instruction = Self::get_instruction_at_path_mut(outer, path)?;
+                    if instruction.program.to_string() == program_id {
+                        instruction.parsed_logs.push(log.clone());
+                        execution_stack.push(path.clone());
+                        break;
+                    }
+                }
+            } else if success_regex.is_match(log) {
+                if let Some(current_path) = execution_stack.last() {
+                    let current = Self::get_instruction_at_path_mut(outer, current_path)?;
+                    current.parsed_logs.push(log.clone());
+                    execution_stack.pop();
+                }
+            } else if failed_regex.is_match(log) {
+                // Handle failed instructions - same as success but indicates failure
+                if let Some(current_path) = execution_stack.last() {
+                    let current = Self::get_instruction_at_path_mut(outer, current_path)?;
+                    current.parsed_logs.push(log.clone());
+                    execution_stack.pop();
+                }
+            } else if let Some(captures) = consumed_regex.captures(log) {
+                let program_id = captures.get(1).unwrap().as_str();
+
+                // find matching program in execution stack
+                if let Some(matching_path) = execution_stack.iter().rev().find(|path| {
+                    Self::get_instruction_at_path(outer, path)
+                        .map(|instr| instr.program.to_string() == program_id)
+                        .unwrap_or(false)
+                }) {
+                    let instruction = Self::get_instruction_at_path_mut(outer, matching_path)?;
+                    instruction.parsed_logs.push(log.clone());
+                }
+            } else if let Some(current_path) = execution_stack.last() {
+                // other logs assigned to current instruction
+                let current = Self::get_instruction_at_path_mut(outer, current_path)?;
+                current.parsed_logs.push(log.clone());
+            }
+        }
+
+        Ok(())
+    }
+
+    // auxiliary function: collect instruction paths in depth-first order
+    fn collect_instruction_paths(
+        paths: &mut Vec<Vec<usize>>,
+        instructions: &[Self],
+        current_path: Vec<usize>,
+    ) {
+        for (i, instruction) in instructions.iter().enumerate() {
+            let mut path = current_path.clone();
+            path.push(i);
+            paths.push(path.clone());
+
+            // recursively process inner instructions
+            Self::collect_instruction_paths(paths, &instruction.inner, path);
+        }
+    }
+
+    // auxiliary function: get mutable reference to instruction at path
+    fn get_instruction_at_path_mut<'a>(
+        outer: &'a mut [Self],
+        path: &[usize],
+    ) -> Result<&'a mut Self, ParseError> {
+        if path.is_empty() {
+            return Err(ParseError::InvalidInnerInstructionIndex(0));
+        }
+
+        let mut current = outer
+            .get_mut(path[0])
+            .ok_or(ParseError::InvalidInnerInstructionIndex(path[0] as u32))?;
+
+        for &index in &path[1..] {
+            current = current
+                .inner
+                .get_mut(index)
+                .ok_or(ParseError::InvalidInnerInstructionIndex(index as u32))?;
+        }
+
+        Ok(current)
+    }
+
+    // auxiliary function: get immutable reference to instruction at path
+    fn get_instruction_at_path<'a>(outer: &'a [Self], path: &[usize]) -> Option<&'a Self> {
+        if path.is_empty() {
+            return None;
+        }
+
+        let mut current = outer.get(path[0])?;
+
+        for &index in &path[1..] {
+            current = current.inner.get(index)?;
+        }
+
+        Some(current)
+    }
+
     #[inline]
     fn parse_one(
         shared: Arc<InstructionShared>,
@@ -352,6 +485,7 @@ impl InstructionUpdate {
             shared,
             inner: vec![],
             ix_index,
+            parsed_logs: vec![],
         })
     }
 
@@ -400,5 +534,89 @@ impl<'a> Iterator for VisitAll<'a> {
                 break Some(ix);
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    #[tokio::test]
+    async fn test_instruction_logs_assignment() {
+        use yellowstone_vixen_mock::{
+            create_mock_transaction_update, parse_instructions_from_txn_update,
+        };
+
+        let fixture_signature = "3VChbqC1CpbiN6seqo7aGvRaPPkvxh5c4W1y7NNRt23mk8cfX4fac6FPB9Z47APLnTtgZJ3eWEnnhfa2kJdnSbUr";
+
+        // Create a mock transaction update using the utility
+        let transaction_update = create_mock_transaction_update(fixture_signature)
+            .await
+            .expect("Failed to create mock transaction update");
+
+        // Parse instructions using the core parse_from_txn logic
+        let instruction_updates = parse_instructions_from_txn_update(&transaction_update)
+            .expect("Failed to parse instructions from transaction update");
+
+        println!(
+            "Testing log assignment on {} instructions",
+            instruction_updates.len()
+        );
+
+        for (i, ix) in instruction_updates.iter().enumerate() {
+            println!("\n=== Instruction {} ===", i);
+            println!(
+                "Program: {}, Parsed logs count: {}, Raw logs count: {}",
+                ix.program.to_string(),
+                ix.parsed_logs.len(),
+                ix.shared.log_messages.len()
+            );
+
+            // Print all parsed logs for this instruction
+            println!("Parsed logs:");
+            for (j, parsed_log) in ix.parsed_logs.iter().enumerate() {
+                println!("  Parsed log {}: {}", j, parsed_log);
+            }
+
+            // Test inner instructions
+            for (inner_i, inner_ix) in ix.inner.iter().enumerate() {
+                println!("\n  === Inner Instruction {} ===", inner_i);
+                println!(
+                    "  Program: {}, Parsed logs count: {}",
+                    inner_ix.program.to_string(),
+                    inner_ix.parsed_logs.len()
+                );
+
+                // Print all parsed logs for inner instructions
+                println!("  Inner parsed logs:");
+                for (j, log) in inner_ix.parsed_logs.iter().enumerate() {
+                    println!("    Inner parsed log {}: {}", j, log);
+                }
+            }
+        }
+
+        // Verify that we have some instructions
+        assert!(
+            !instruction_updates.is_empty(),
+            "Should have parsed some instructions"
+        );
+
+        // Verify that logs are properly assigned to instructions
+        let instructions_with_logs = instruction_updates
+            .iter()
+            .filter(|ix| !ix.parsed_logs.is_empty())
+            .count();
+
+        // At least some instructions should have logs assigned
+        assert!(
+            instructions_with_logs > 0,
+            "At least some instructions should have logs assigned"
+        );
+
+        println!("✓ Instruction log assignment test completed successfully");
+        println!(
+            "✓ {} out of {} instructions have assigned logs",
+            instructions_with_logs,
+            instruction_updates.len()
+        );
     }
 }

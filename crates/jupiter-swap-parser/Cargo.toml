@@ -39,5 +39,9 @@ tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]
 # Exposes shared transaction data like tx signature, slot and more, to be available in Vixen Handlers
 shared-data = []
 
+[dev-dependencies]
+yellowstone-vixen-mock = { workspace = true }
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+
 [build-dependencies]
 prost-build = "0.13.1"

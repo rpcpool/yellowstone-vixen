@@ -9139,9 +9139,12 @@ version = "0.5.0"
 dependencies = [
  "bs58",
  "clap",
+ "regex",
  "serde",
  "thiserror 1.0.69",
+ "tokio",
  "yellowstone-grpc-proto",
+ "yellowstone-vixen-mock",
  "yellowstone-vixen-proto",
 ]
 
@@ -9241,9 +9244,11 @@ dependencies = [
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
+ "tokio",
  "tonic 0.12.3",
  "tracing",
  "yellowstone-vixen-core",
+ "yellowstone-vixen-mock",
 ]
 
 [[package]]
