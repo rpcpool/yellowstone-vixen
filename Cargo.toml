@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/*", "examples/*"]
+members = ["crates/*", "examples/*", "tests"]
 exclude = []
 resolver = "2"
 
@@ -30,6 +30,7 @@ yellowstone-vixen-raydium-amm-v4-parser = { path = "crates/raydium-amm-v4-parser
 yellowstone-vixen-kamino-limit-orders-parser = { path = "crates/kamino-limit-orders-parser", version = "0.5.0" }
 yellowstone-vixen-raydium-launchpad-parser = { path = "crates/raydium-launchpad-parser", version = "0.5.0" }
 yellowstone-vixen-virtuals-parser = { path = "crates/virtuals-parser", version = "0.5.0" }
+kryptogo-vixen-okx-dex-parser = { path = "crates/kryptogo-vixen-okx-dex-parser", version = "0.1.0" }
 
 # Sources
 yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.3.0" }

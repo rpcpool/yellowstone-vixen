@@ -1,0 +1,7 @@
+{
+    "debug.node.autoAttach": "on",
+    "debug.javascript.usePreview": true,
+    "debug.allowBreakpointsEverywhere": true,
+    "debug.node.enableTurboSourcemaps": true,
+    "debug.javascript.breakOnConditionalError": true
+}

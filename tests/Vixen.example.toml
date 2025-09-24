@@ -1,0 +1,23 @@
+# Test configuration for Yellowstone Vixen Integration Tests
+# Copy and modify this file with your actual test credentials
+
+[yellowstone]
+# The endpoint of the dragon's mouth stream for testing
+# Replace with your actual test endpoint
+endpoint = "https://your-test-endpoint.rpcpool.com"
+
+# The x-token for the dragon's mouth stream
+# Replace <TEST-TOKEN> with your actual test token
+x-token = "<TEST-TOKEN>"
+
+# The connection timeout for the dragon's mouth stream in seconds
+# Shorter timeout for integration tests
+timeout = 30
+
+# Optional: Metrics configuration for testing
+# Uncomment if you want to test with metrics enabled
+
+#[metrics] 
+#endpoint = "http://localhost:3030"
+#job = "integration-test"
+#export-interval = 10

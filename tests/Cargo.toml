@@ -1,0 +1,20 @@
+[package]
+name = "yellowstone-vixen-integration-tests"
+version = "0.1.0"
+edition = "2021"
+
+[[test]]
+name = "integration_test"
+path = "integration_test.rs"
+
+[dependencies]
+yellowstone-vixen = { workspace = true }
+yellowstone-vixen-jupiter-swap-parser = { workspace = true }
+kryptogo-vixen-okx-dex-parser = { workspace = true }
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+parking_lot = "0.12"
+clap = { version = "4.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"

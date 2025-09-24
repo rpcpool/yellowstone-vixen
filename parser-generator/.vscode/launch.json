@@ -1,0 +1,95 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug OKX DEX Parser Generation",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/okx-dex/script.cjs",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "stopOnEntry": false,
+            "trace": "verbose"
+        },
+        {
+            "name": "Debug OKX DEX Parser (Step Into All)",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/okx-dex/script.cjs",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": [],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "stopOnEntry": true,
+            "trace": "verbose",
+            "smartStep": false
+        },
+        {
+            "name": "Debug with Breakpoints in Codama",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/okx-dex/script.cjs",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": [
+                "<node_internals>/**",
+                "**/node_modules/**",
+                "!**/node_modules/@codama/**"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "stopOnEntry": false,
+            "trace": "verbose"
+        },
+        {
+            "name": "Debug with Enhanced Logging",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/okx-dex/script_debug.cjs",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "env": {
+                "NODE_ENV": "development",
+                "DEBUG": "*"
+            },
+            "stopOnEntry": false,
+            "trace": "verbose"
+        },
+        {
+            "name": "Step Through Vixen Renderer",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/okx-dex/script_debug.cjs",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": [
+                "<node_internals>/**",
+                "**/node_modules/**",
+                "!**/node_modules/@codama/renderers-vixen-parser/**"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "stopOnEntry": true,
+            "trace": "verbose",
+            "smartStep": false
+        }
+    ]
+}

@@ -13,6 +13,7 @@ use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     deserialize_checked,
+    generated::types::SwapEvent,
     instructions::{
         Claim as ClaimIxAccounts, ClaimInstructionArgs as ClaimIxData,
         ClaimToken as ClaimTokenIxAccounts, ClaimTokenInstructionArgs as ClaimTokenIxData,
@@ -53,14 +54,18 @@ pub enum JupiterProgramIx {
     CreateTokenLedger(CreateTokenLedgerIxAccounts),
     CreateTokenAccount(CreateTokenAccountIxAccounts, CreateTokenAccountIxData),
     ExactOutRoute(ExactOutRouteIxAccounts, ExactOutRouteIxData),
-    Route(RouteIxAccounts, RouteIxData),
+    Route(RouteIxAccounts, RouteIxData, Vec<SwapEvent>),
     RouteWithTokenLedger(RouteWithTokenLedgerIxAccounts, RouteWithTokenLedgerIxData),
     SetTokenLedger(SetTokenLedgerIxAccounts),
     SharedAccountsExactOutRoute(
         SharedAccountsExactOutRouteIxAccounts,
         SharedAccountsExactOutRouteIxData,
     ),
-    SharedAccountsRoute(SharedAccountsRouteIxAccounts, SharedAccountsRouteIxData),
+    SharedAccountsRoute(
+        SharedAccountsRouteIxAccounts,
+        SharedAccountsRouteIxData,
+        Vec<SwapEvent>,
+    ),
     SharedAccountsRouteWithTokenLedger(
         SharedAccountsRouteWithTokenLedgerIxAccounts,
         SharedAccountsRouteWithTokenLedgerIxData,
@@ -278,7 +283,18 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: RouteIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(JupiterProgramIx::Route(ix_accounts, de_ix_data))
+                // Search for all SwapEvents in inner instructions
+                let swap_events: Vec<SwapEvent> = ix
+                    .inner
+                    .iter()
+                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .collect();
+
+                Ok(JupiterProgramIx::Route(
+                    ix_accounts,
+                    de_ix_data,
+                    swap_events,
+                ))
             },
             [150, 86, 71, 116, 167, 93, 14, 104] => {
                 let expected_accounts_len = 10;
@@ -356,9 +372,17 @@ impl InstructionParser {
                 };
                 let de_ix_data: SharedAccountsRouteIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
+                // Search for all SwapEvents in inner instructions
+                let swap_events: Vec<SwapEvent> = ix
+                    .inner
+                    .iter()
+                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .collect();
+
                 Ok(JupiterProgramIx::SharedAccountsRoute(
                     ix_accounts,
                     de_ix_data,
+                    swap_events,
                 ))
             },
             [230, 121, 143, 80, 119, 159, 106, 170] => {
@@ -903,7 +927,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                JupiterProgramIx::Route(acc, data) => proto_def::ProgramIxs {
+                JupiterProgramIx::Route(acc, data, _swap_events) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Route(proto_def::RouteIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
@@ -934,13 +958,15 @@ mod proto_parser {
                         ),
                     ),
                 },
-                JupiterProgramIx::SharedAccountsRoute(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SharedAccountsRoute(
-                        proto_def::SharedAccountsRouteIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
+                JupiterProgramIx::SharedAccountsRoute(acc, data, _swap_events) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::SharedAccountsRoute(
+                            proto_def::SharedAccountsRouteIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
                 },
                 JupiterProgramIx::SharedAccountsRouteWithTokenLedger(acc, data) => {
                     proto_def::ProgramIxs {
