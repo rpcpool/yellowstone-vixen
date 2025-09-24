@@ -19,9 +19,20 @@ yellowstone-grpc-client = { workspace = true }
 toml = "0.8.12"
 serde = { version = "1.0.198", features = ["derive"] }
 solana-pubkey = { version = "2.2.1", features = ["curve25519", "borsh"] }
-solana-accounts-db = "2"
+solana-accounts-db = "2.2.1"
 tempfile = "3"
 zstd = "0.13"
 tar = "0.4"
 solana-account = "3.0.0"
 clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+solana-runtime = "2.2.1"
+solana-hash = "2.2.1"
+solana-hard-forks = "2.2.1"
+solana-fee-calculator = "2.2.1"
+solana-rent-collector = "2.2.1"
+solana-epoch-schedule = "2.2.1"
+solana-inflation = "2.2.1"
+solana-program = "2.2.1"
+solana-stake-interface = "1.2.1"
+solana-serde = "2.2.1"
+bincode = "1.3"
