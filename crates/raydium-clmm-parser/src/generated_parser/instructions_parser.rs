@@ -11,8 +11,11 @@ use std::sync::Arc;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
+use yellowstone_vixen_core::constants::is_known_aggregator;
+
 use crate::{
     deserialize_checked,
+    generated::types::SwapEvent,
     instructions::{
         ClosePosition as ClosePositionIxAccounts, CollectFundFee as CollectFundFeeIxAccounts,
         CollectFundFeeInstructionArgs as CollectFundFeeIxData,
@@ -91,8 +94,8 @@ pub enum AmmV3ProgramIx {
     IncreaseLiquidityV2(IncreaseLiquidityV2IxAccounts, IncreaseLiquidityV2IxData),
     DecreaseLiquidity(DecreaseLiquidityIxAccounts, DecreaseLiquidityIxData),
     DecreaseLiquidityV2(DecreaseLiquidityV2IxAccounts, DecreaseLiquidityV2IxData),
-    Swap(SwapIxAccounts, SwapIxData),
-    SwapV2(SwapV2IxAccounts, SwapV2IxData),
+    Swap(SwapIxAccounts, SwapIxData, Option<SwapEvent>),
+    SwapV2(SwapV2IxAccounts, SwapV2IxData, Option<SwapEvent>),
     SwapRouterBaseIn(SwapRouterBaseInIxAccounts, SwapRouterBaseInIxData),
 }
 
@@ -574,7 +577,16 @@ impl InstructionParser {
                     tick_array: next_account(accounts)?,
                 };
                 let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(AmmV3ProgramIx::Swap(ix_accounts, de_ix_data))
+
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Parse SwapEvent from logs
+                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
+
+                Ok(AmmV3ProgramIx::Swap(ix_accounts, de_ix_data, swap_event))
             },
             [43, 4, 237, 11, 26, 201, 30, 98] => {
                 let expected_accounts_len = 13;
@@ -594,8 +606,17 @@ impl InstructionParser {
                     input_vault_mint: next_account(accounts)?,
                     output_vault_mint: next_account(accounts)?,
                 };
+
                 let de_ix_data: SwapV2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(AmmV3ProgramIx::SwapV2(ix_accounts, de_ix_data))
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Parse SwapEvent from logs
+                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
+
+                Ok(AmmV3ProgramIx::SwapV2(ix_accounts, de_ix_data, swap_event))
             },
             [69, 125, 115, 218, 245, 186, 242, 196] => {
                 let expected_accounts_len = 6;
@@ -1496,13 +1517,13 @@ mod proto_parser {
                         },
                     )),
                 },
-                AmmV3ProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
+                AmmV3ProgramIx::Swap(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
                     })),
                 },
-                AmmV3ProgramIx::SwapV2(acc, data) => proto_def::ProgramIxs {
+                AmmV3ProgramIx::SwapV2(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapV2(
                         proto_def::SwapV2Ix {
                             accounts: Some(acc.into_proto()),

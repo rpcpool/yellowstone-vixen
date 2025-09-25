@@ -11,8 +11,11 @@ use std::sync::Arc;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
+use yellowstone_vixen_core::constants::is_known_aggregator;
+
 use crate::{
     deserialize_checked,
+    generated::types::SwapEvent,
     instructions::{
         ClosePermissionPda as ClosePermissionPdaIxAccounts,
         CollectCreatorFee as CollectCreatorFeeIxAccounts,
@@ -56,8 +59,16 @@ pub enum RaydiumCpSwapProgramIx {
         InitializeWithPermissionIxAccounts,
         InitializeWithPermissionIxData,
     ),
-    SwapBaseInput(SwapBaseInputIxAccounts, SwapBaseInputIxData),
-    SwapBaseOutput(SwapBaseOutputIxAccounts, SwapBaseOutputIxData),
+    SwapBaseInput(
+        SwapBaseInputIxAccounts,
+        SwapBaseInputIxData,
+        Option<SwapEvent>,
+    ),
+    SwapBaseOutput(
+        SwapBaseOutputIxAccounts,
+        SwapBaseOutputIxData,
+        Option<SwapEvent>,
+    ),
     UpdateAmmConfig(UpdateAmmConfigIxAccounts, UpdateAmmConfigIxData),
     UpdatePoolStatus(UpdatePoolStatusIxAccounts, UpdatePoolStatusIxData),
     Withdraw(WithdrawIxAccounts, WithdrawIxData),
@@ -345,9 +356,15 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapBaseInputIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
                 Ok(RaydiumCpSwapProgramIx::SwapBaseInput(
                     ix_accounts,
                     de_ix_data,
+                    swap_event,
                 ))
             },
             [55, 217, 98, 86, 163, 74, 180, 173] => {
@@ -370,9 +387,15 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapBaseOutputIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
                 Ok(RaydiumCpSwapProgramIx::SwapBaseOutput(
                     ix_accounts,
                     de_ix_data,
+                    swap_event,
                 ))
             },
             [49, 60, 174, 136, 154, 28, 116, 200] => {
@@ -953,7 +976,7 @@ mod proto_parser {
                         )),
                     }
                 },
-                RaydiumCpSwapProgramIx::SwapBaseInput(acc, data) => proto_def::ProgramIxs {
+                RaydiumCpSwapProgramIx::SwapBaseInput(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseInput(
                         proto_def::SwapBaseInputIx {
                             accounts: Some(acc.into_proto()),
@@ -961,7 +984,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumCpSwapProgramIx::SwapBaseOutput(acc, data) => proto_def::ProgramIxs {
+                RaydiumCpSwapProgramIx::SwapBaseOutput(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseOutput(
                         proto_def::SwapBaseOutputIx {
                             accounts: Some(acc.into_proto()),

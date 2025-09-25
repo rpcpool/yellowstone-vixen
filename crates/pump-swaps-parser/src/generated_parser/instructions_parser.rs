@@ -8,6 +8,7 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
+use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
@@ -26,6 +27,7 @@ use crate::{
         UpdateFeeConfigInstructionArgs as UpdateFeeConfigIxData, Withdraw as WithdrawIxAccounts,
         WithdrawInstructionArgs as WithdrawIxData,
     },
+    types::{BuyEvent, SellEvent},
     ID,
 };
 
@@ -33,14 +35,14 @@ use crate::{
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum PumpAmmProgramIx {
-    Buy(BuyIxAccounts, BuyIxData),
+    Buy(BuyIxAccounts, BuyIxData, Option<BuyEvent>),
     CollectCoinCreatorFee(CollectCoinCreatorFeeIxAccounts),
     CreateConfig(CreateConfigIxAccounts, CreateConfigIxData),
     CreatePool(CreatePoolIxAccounts, CreatePoolIxData),
     Deposit(DepositIxAccounts, DepositIxData),
     Disable(DisableIxAccounts, DisableIxData),
     ExtendAccount(ExtendAccountIxAccounts),
-    Sell(SellIxAccounts, SellIxData),
+    Sell(SellIxAccounts, SellIxData, Option<SellEvent>),
     SetCoinCreator(SetCoinCreatorIxAccounts),
     UpdateAdmin(UpdateAdminIxAccounts),
     UpdateFeeConfig(UpdateFeeConfigIxAccounts, UpdateFeeConfigIxData),
@@ -146,7 +148,19 @@ impl InstructionParser {
                     coin_creator_vault_authority: next_account(accounts)?,
                 };
                 let de_ix_data: BuyIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(PumpAmmProgramIx::Buy(ix_accounts, de_ix_data))
+
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Parse BuyEvent from inner instructions
+                let buy_event = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| BuyEvent::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(PumpAmmProgramIx::Buy(ix_accounts, de_ix_data, buy_event))
             },
             [160, 57, 89, 42, 181, 139, 43, 66] => {
                 let expected_accounts_len = 8;
@@ -275,7 +289,18 @@ impl InstructionParser {
                     coin_creator_vault_authority: next_account(accounts)?,
                 };
                 let de_ix_data: SellIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(PumpAmmProgramIx::Sell(ix_accounts, de_ix_data))
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Parse SellEvent from inner instructions
+                let sell_event = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| SellEvent::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(PumpAmmProgramIx::Sell(ix_accounts, de_ix_data, sell_event))
             },
             [210, 149, 128, 45, 188, 58, 78, 175] => {
                 let expected_accounts_len = 5;
@@ -741,7 +766,7 @@ mod proto_parser {
     impl IntoProto<proto_def::ProgramIxs> for PumpAmmProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                PumpAmmProgramIx::Buy(acc, data) => proto_def::ProgramIxs {
+                PumpAmmProgramIx::Buy(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Buy(proto_def::BuyIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
@@ -793,7 +818,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                PumpAmmProgramIx::Sell(acc, data) => proto_def::ProgramIxs {
+                PumpAmmProgramIx::Sell(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Sell(proto_def::SellIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),

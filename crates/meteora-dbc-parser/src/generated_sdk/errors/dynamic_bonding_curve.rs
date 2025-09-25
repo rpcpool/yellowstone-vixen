@@ -42,22 +42,22 @@ pub enum DynamicBondingCurveError {
     InvalidCollectFeeMode = 0x1779,
     /// 6010 - Invalid migration fee option
     #[error("Invalid migration fee option")]
-    InvalidMigrationFeeOption = 0x177a,
+    InvalidMigrationFeeOption = 0x177A,
     /// 6011 - Invalid input
     #[error("Invalid input")]
-    InvalidInput = 0x177b,
+    InvalidInput = 0x177B,
     /// 6012 - Not enough liquidity
     #[error("Not enough liquidity")]
-    NotEnoughLiquidity = 0x177c,
+    NotEnoughLiquidity = 0x177C,
     /// 6013 - Pool is completed
     #[error("Pool is completed")]
-    PoolIsCompleted = 0x177d,
+    PoolIsCompleted = 0x177D,
     /// 6014 - Pool is incompleted
     #[error("Pool is incompleted")]
-    PoolIsIncompleted = 0x177e,
+    PoolIsIncompleted = 0x177E,
     /// 6015 - Invalid migration option
     #[error("Invalid migration option")]
-    InvalidMigrationOption = 0x177f,
+    InvalidMigrationOption = 0x177F,
     /// 6016 - Invalid activation type
     #[error("Invalid activation type")]
     InvalidTokenDecimals = 0x1780,
@@ -90,22 +90,22 @@ pub enum DynamicBondingCurveError {
     SurplusHasBeenWithdraw = 0x1789,
     /// 6026 - Leftover has been withdraw
     #[error("Leftover has been withdraw")]
-    LeftoverHasBeenWithdraw = 0x178a,
+    LeftoverHasBeenWithdraw = 0x178A,
     /// 6027 - Total base token is exceeded max supply
     #[error("Total base token is exceeded max supply")]
-    TotalBaseTokenExceedMaxSupply = 0x178b,
+    TotalBaseTokenExceedMaxSupply = 0x178B,
     /// 6028 - Unsupport native mint token 2022
     #[error("Unsupport native mint token 2022")]
-    UnsupportNativeMintToken2022 = 0x178c,
+    UnsupportNativeMintToken2022 = 0x178C,
     /// 6029 - Insufficient liquidity for migration
     #[error("Insufficient liquidity for migration")]
-    InsufficientLiquidityForMigration = 0x178d,
+    InsufficientLiquidityForMigration = 0x178D,
     /// 6030 - Missing pool config in remaining account
     #[error("Missing pool config in remaining account")]
-    MissingPoolConfigInRemainingAccount = 0x178e,
+    MissingPoolConfigInRemainingAccount = 0x178E,
     /// 6031 - Invalid vesting parameters
     #[error("Invalid vesting parameters")]
-    InvalidVestingParameters = 0x178f,
+    InvalidVestingParameters = 0x178F,
     /// 6032 - Invalid leftover address
     #[error("Invalid leftover address")]
     InvalidLeftoverAddress = 0x1790,
@@ -118,6 +118,45 @@ pub enum DynamicBondingCurveError {
     /// 6035 - Invalid creator trading fee percentage
     #[error("Invalid creator trading fee percentage")]
     InvalidCreatorTradingFeePercentage = 0x1793,
+    /// 6036 - Invalid new creator
+    #[error("Invalid new creator")]
+    InvalidNewCreator = 0x1794,
+    /// 6037 - Invalid token authority option
+    #[error("Invalid token authority option")]
+    InvalidTokenAuthorityOption = 0x1795,
+    /// 6038 - Invalid account for the instruction
+    #[error("Invalid account for the instruction")]
+    InvalidAccount = 0x1796,
+    /// 6039 - Invalid migrator fee percentage
+    #[error("Invalid migrator fee percentage")]
+    InvalidMigratorFeePercentage = 0x1797,
+    /// 6040 - Migration fee has been withdraw
+    #[error("Migration fee has been withdraw")]
+    MigrationFeeHasBeenWithdraw = 0x1798,
+    /// 6041 - Invalid base fee mode
+    #[error("Invalid base fee mode")]
+    InvalidBaseFeeMode = 0x1799,
+    /// 6042 - Invalid fee rate limiter
+    #[error("Invalid fee rate limiter")]
+    InvalidFeeRateLimiter = 0x179A,
+    /// 6043 - Fail to validate single swap instruction in rate limiter
+    #[error("Fail to validate single swap instruction in rate limiter")]
+    FailToValidateSingleSwapInstruction = 0x179B,
+    /// 6044 - Invalid migrated pool fee params
+    #[error("Invalid migrated pool fee params")]
+    InvalidMigratedPoolFee = 0x179C,
+    /// 6045 - Undertermined error
+    #[error("Undertermined error")]
+    UndeterminedError = 0x179D,
+    /// 6046 - Rate limiter not supported
+    #[error("Rate limiter not supported")]
+    RateLimiterNotSupported = 0x179E,
+    /// 6047 - Amount left is not zero
+    #[error("Amount left is not zero")]
+    AmountLeftIsNotZero = 0x179F,
+    /// 6048 - Next sqrt price is smaller than start sqrt price
+    #[error("Next sqrt price is smaller than start sqrt price")]
+    NextSqrtPriceIsSmallerThanStartSqrtPrice = 0x17A0,
 }
 
 #[allow(deprecated)]
@@ -129,5 +168,13 @@ impl solana_program_error::PrintProgramError for DynamicBondingCurveError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for DynamicBondingCurveError {
-    fn type_of() -> &'static str { "DynamicBondingCurveError" }
+    fn type_of() -> &'static str {
+        "DynamicBondingCurveError"
+    }
+}
+
+impl From<DynamicBondingCurveError> for solana_program_error::ProgramError {
+    fn from(e: DynamicBondingCurveError) -> Self {
+        solana_program_error::ProgramError::Custom(e as u32)
+    }
 }

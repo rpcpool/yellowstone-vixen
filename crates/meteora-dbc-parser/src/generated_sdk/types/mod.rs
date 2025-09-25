@@ -7,6 +7,7 @@
 
 pub(crate) mod r#base_fee_config;
 pub(crate) mod r#base_fee_parameters;
+pub(crate) mod r#config_parameters;
 pub(crate) mod r#dynamic_fee_config;
 pub(crate) mod r#dynamic_fee_parameters;
 pub(crate) mod r#evt_claim_creator_trading_fee;
@@ -15,43 +16,81 @@ pub(crate) mod r#evt_claim_trading_fee;
 pub(crate) mod r#evt_close_claim_fee_operator;
 pub(crate) mod r#evt_create_claim_fee_operator;
 pub(crate) mod r#evt_create_config;
+pub(crate) mod r#evt_create_config_v2;
 pub(crate) mod r#evt_create_damm_v2_migration_metadata;
 pub(crate) mod r#evt_create_meteora_migration_metadata;
 pub(crate) mod r#evt_creator_withdraw_surplus;
 pub(crate) mod r#evt_curve_complete;
 pub(crate) mod r#evt_initialize_pool;
 pub(crate) mod r#evt_partner_metadata;
+pub(crate) mod r#evt_partner_withdraw_migration_fee;
 pub(crate) mod r#evt_partner_withdraw_surplus;
 pub(crate) mod r#evt_protocol_withdraw_surplus;
 pub(crate) mod r#evt_swap;
+pub(crate) mod r#evt_swap2;
+pub(crate) mod r#evt_update_pool_creator;
 pub(crate) mod r#evt_virtual_pool_metadata;
 pub(crate) mod r#evt_withdraw_leftover;
+pub(crate) mod r#evt_withdraw_migration_fee;
 pub(crate) mod r#initialize_pool_parameters;
 pub(crate) mod r#liquidity_distribution_config;
 pub(crate) mod r#liquidity_distribution_parameters;
 pub(crate) mod r#locked_vesting_config;
 pub(crate) mod r#locked_vesting_params;
+pub(crate) mod r#migrated_pool_fee;
+pub(crate) mod r#migration_fee;
 pub(crate) mod r#pool_fee_parameters;
 pub(crate) mod r#pool_fees;
 pub(crate) mod r#pool_fees_config;
 pub(crate) mod r#pool_metrics;
 pub(crate) mod r#swap_parameters;
+pub(crate) mod r#swap_parameters2;
 pub(crate) mod r#swap_result;
+pub(crate) mod r#swap_result2;
 pub(crate) mod r#token_supply_params;
 pub(crate) mod r#volatility_tracker;
 
-pub use self::{
-    r#base_fee_config::*, r#base_fee_parameters::*, r#dynamic_fee_config::*,
-    r#dynamic_fee_parameters::*, r#evt_claim_creator_trading_fee::*, r#evt_claim_protocol_fee::*,
-    r#evt_claim_trading_fee::*, r#evt_close_claim_fee_operator::*,
-    r#evt_create_claim_fee_operator::*, r#evt_create_config::*,
-    r#evt_create_damm_v2_migration_metadata::*, r#evt_create_meteora_migration_metadata::*,
-    r#evt_creator_withdraw_surplus::*, r#evt_curve_complete::*, r#evt_initialize_pool::*,
-    r#evt_partner_metadata::*, r#evt_partner_withdraw_surplus::*,
-    r#evt_protocol_withdraw_surplus::*, r#evt_swap::*, r#evt_virtual_pool_metadata::*,
-    r#evt_withdraw_leftover::*, r#initialize_pool_parameters::*,
-    r#liquidity_distribution_config::*, r#liquidity_distribution_parameters::*,
-    r#locked_vesting_config::*, r#locked_vesting_params::*, r#pool_fee_parameters::*,
-    r#pool_fees::*, r#pool_fees_config::*, r#pool_metrics::*, r#swap_parameters::*,
-    r#swap_result::*, r#token_supply_params::*, r#volatility_tracker::*,
-};
+pub use self::r#base_fee_config::*;
+pub use self::r#base_fee_parameters::*;
+pub use self::r#config_parameters::*;
+pub use self::r#dynamic_fee_config::*;
+pub use self::r#dynamic_fee_parameters::*;
+pub use self::r#evt_claim_creator_trading_fee::*;
+pub use self::r#evt_claim_protocol_fee::*;
+pub use self::r#evt_claim_trading_fee::*;
+pub use self::r#evt_close_claim_fee_operator::*;
+pub use self::r#evt_create_claim_fee_operator::*;
+pub use self::r#evt_create_config::*;
+pub use self::r#evt_create_config_v2::*;
+pub use self::r#evt_create_damm_v2_migration_metadata::*;
+pub use self::r#evt_create_meteora_migration_metadata::*;
+pub use self::r#evt_creator_withdraw_surplus::*;
+pub use self::r#evt_curve_complete::*;
+pub use self::r#evt_initialize_pool::*;
+pub use self::r#evt_partner_metadata::*;
+pub use self::r#evt_partner_withdraw_migration_fee::*;
+pub use self::r#evt_partner_withdraw_surplus::*;
+pub use self::r#evt_protocol_withdraw_surplus::*;
+pub use self::r#evt_swap::*;
+pub use self::r#evt_swap2::*;
+pub use self::r#evt_update_pool_creator::*;
+pub use self::r#evt_virtual_pool_metadata::*;
+pub use self::r#evt_withdraw_leftover::*;
+pub use self::r#evt_withdraw_migration_fee::*;
+pub use self::r#initialize_pool_parameters::*;
+pub use self::r#liquidity_distribution_config::*;
+pub use self::r#liquidity_distribution_parameters::*;
+pub use self::r#locked_vesting_config::*;
+pub use self::r#locked_vesting_params::*;
+pub use self::r#migrated_pool_fee::*;
+pub use self::r#migration_fee::*;
+pub use self::r#pool_fee_parameters::*;
+pub use self::r#pool_fees::*;
+pub use self::r#pool_fees_config::*;
+pub use self::r#pool_metrics::*;
+pub use self::r#swap_parameters::*;
+pub use self::r#swap_parameters2::*;
+pub use self::r#swap_result::*;
+pub use self::r#swap_result2::*;
+pub use self::r#token_supply_params::*;
+pub use self::r#volatility_tracker::*;

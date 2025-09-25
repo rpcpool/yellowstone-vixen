@@ -9,15 +9,17 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::{proto_def, types::BaseFeeConfig};
+    use crate::proto_def;
+
+    use crate::types::BaseFeeConfig;
     impl IntoProto<proto_def::BaseFeeConfig> for BaseFeeConfig {
         fn into_proto(self) -> proto_def::BaseFeeConfig {
             proto_def::BaseFeeConfig {
                 cliff_fee_numerator: self.cliff_fee_numerator,
-                period_frequency: self.period_frequency,
-                reduction_factor: self.reduction_factor,
-                number_of_period: self.number_of_period.into(),
-                fee_scheduler_mode: self.fee_scheduler_mode.into(),
+                second_factor: self.second_factor,
+                third_factor: self.third_factor,
+                first_factor: self.first_factor.into(),
+                base_fee_mode: self.base_fee_mode.into(),
                 padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
             }
         }
@@ -27,10 +29,38 @@ pub mod proto_types_parsers {
         fn into_proto(self) -> proto_def::BaseFeeParameters {
             proto_def::BaseFeeParameters {
                 cliff_fee_numerator: self.cliff_fee_numerator,
-                number_of_period: self.number_of_period.into(),
-                period_frequency: self.period_frequency,
-                reduction_factor: self.reduction_factor,
-                fee_scheduler_mode: self.fee_scheduler_mode.into(),
+                first_factor: self.first_factor.into(),
+                second_factor: self.second_factor,
+                third_factor: self.third_factor,
+                base_fee_mode: self.base_fee_mode.into(),
+            }
+        }
+    }
+    use crate::types::ConfigParameters;
+    impl IntoProto<proto_def::ConfigParameters> for ConfigParameters {
+        fn into_proto(self) -> proto_def::ConfigParameters {
+            proto_def::ConfigParameters {
+                pool_fees: Some(self.pool_fees.into_proto()),
+                collect_fee_mode: self.collect_fee_mode.into(),
+                migration_option: self.migration_option.into(),
+                activation_type: self.activation_type.into(),
+                token_type: self.token_type.into(),
+                token_decimal: self.token_decimal.into(),
+                partner_lp_percentage: self.partner_lp_percentage.into(),
+                partner_locked_lp_percentage: self.partner_locked_lp_percentage.into(),
+                creator_lp_percentage: self.creator_lp_percentage.into(),
+                creator_locked_lp_percentage: self.creator_locked_lp_percentage.into(),
+                migration_quote_threshold: self.migration_quote_threshold,
+                sqrt_start_price: self.sqrt_start_price.to_string(),
+                locked_vesting: Some(self.locked_vesting.into_proto()),
+                migration_fee_option: self.migration_fee_option.into(),
+                token_supply: self.token_supply.map(|x| x.into_proto()),
+                creator_trading_fee_percentage: self.creator_trading_fee_percentage.into(),
+                token_update_authority: self.token_update_authority.into(),
+                migration_fee: Some(self.migration_fee.into_proto()),
+                migrated_pool_fee: Some(self.migrated_pool_fee.into_proto()),
+                padding: self.padding.to_vec(),
+                curve: self.curve.into_iter().map(|x| x.into_proto()).collect(),
             }
         }
     }
@@ -143,6 +173,18 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::EvtCreateConfigV2;
+    impl IntoProto<proto_def::EvtCreateConfigV2> for EvtCreateConfigV2 {
+        fn into_proto(self) -> proto_def::EvtCreateConfigV2 {
+            proto_def::EvtCreateConfigV2 {
+                config: self.config.to_string(),
+                quote_mint: self.quote_mint.to_string(),
+                fee_claimer: self.fee_claimer.to_string(),
+                leftover_receiver: self.leftover_receiver.to_string(),
+                config_parameters: Some(self.config_parameters.into_proto()),
+            }
+        }
+    }
     use crate::types::EvtCreateDammV2MigrationMetadata;
     impl IntoProto<proto_def::EvtCreateDammV2MigrationMetadata> for EvtCreateDammV2MigrationMetadata {
         fn into_proto(self) -> proto_def::EvtCreateDammV2MigrationMetadata {
@@ -201,6 +243,15 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::EvtPartnerWithdrawMigrationFee;
+    impl IntoProto<proto_def::EvtPartnerWithdrawMigrationFee> for EvtPartnerWithdrawMigrationFee {
+        fn into_proto(self) -> proto_def::EvtPartnerWithdrawMigrationFee {
+            proto_def::EvtPartnerWithdrawMigrationFee {
+                pool: self.pool.to_string(),
+                fee: self.fee,
+            }
+        }
+    }
     use crate::types::EvtPartnerWithdrawSurplus;
     impl IntoProto<proto_def::EvtPartnerWithdrawSurplus> for EvtPartnerWithdrawSurplus {
         fn into_proto(self) -> proto_def::EvtPartnerWithdrawSurplus {
@@ -234,6 +285,32 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::EvtSwap2;
+    impl IntoProto<proto_def::EvtSwap2> for EvtSwap2 {
+        fn into_proto(self) -> proto_def::EvtSwap2 {
+            proto_def::EvtSwap2 {
+                pool: self.pool.to_string(),
+                config: self.config.to_string(),
+                trade_direction: self.trade_direction.into(),
+                has_referral: self.has_referral,
+                swap_parameters: Some(self.swap_parameters.into_proto()),
+                swap_result: Some(self.swap_result.into_proto()),
+                quote_reserve_amount: self.quote_reserve_amount,
+                migration_threshold: self.migration_threshold,
+                current_timestamp: self.current_timestamp,
+            }
+        }
+    }
+    use crate::types::EvtUpdatePoolCreator;
+    impl IntoProto<proto_def::EvtUpdatePoolCreator> for EvtUpdatePoolCreator {
+        fn into_proto(self) -> proto_def::EvtUpdatePoolCreator {
+            proto_def::EvtUpdatePoolCreator {
+                pool: self.pool.to_string(),
+                creator: self.creator.to_string(),
+                new_creator: self.new_creator.to_string(),
+            }
+        }
+    }
     use crate::types::EvtVirtualPoolMetadata;
     impl IntoProto<proto_def::EvtVirtualPoolMetadata> for EvtVirtualPoolMetadata {
         fn into_proto(self) -> proto_def::EvtVirtualPoolMetadata {
@@ -250,6 +327,16 @@ pub mod proto_types_parsers {
                 pool: self.pool.to_string(),
                 leftover_receiver: self.leftover_receiver.to_string(),
                 leftover_amount: self.leftover_amount,
+            }
+        }
+    }
+    use crate::types::EvtWithdrawMigrationFee;
+    impl IntoProto<proto_def::EvtWithdrawMigrationFee> for EvtWithdrawMigrationFee {
+        fn into_proto(self) -> proto_def::EvtWithdrawMigrationFee {
+            proto_def::EvtWithdrawMigrationFee {
+                pool: self.pool.to_string(),
+                fee: self.fee,
+                flag: self.flag.into(),
             }
         }
     }
@@ -306,6 +393,25 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::MigratedPoolFee;
+    impl IntoProto<proto_def::MigratedPoolFee> for MigratedPoolFee {
+        fn into_proto(self) -> proto_def::MigratedPoolFee {
+            proto_def::MigratedPoolFee {
+                collect_fee_mode: self.collect_fee_mode.into(),
+                dynamic_fee: self.dynamic_fee.into(),
+                pool_fee_bps: self.pool_fee_bps.into(),
+            }
+        }
+    }
+    use crate::types::MigrationFee;
+    impl IntoProto<proto_def::MigrationFee> for MigrationFee {
+        fn into_proto(self) -> proto_def::MigrationFee {
+            proto_def::MigrationFee {
+                fee_percentage: self.fee_percentage.into(),
+                creator_fee_percentage: self.creator_fee_percentage.into(),
+            }
+        }
+    }
     use crate::types::PoolFeeParameters;
     impl IntoProto<proto_def::PoolFeeParameters> for PoolFeeParameters {
         fn into_proto(self) -> proto_def::PoolFeeParameters {
@@ -359,11 +465,36 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::SwapParameters2;
+    impl IntoProto<proto_def::SwapParameters2> for SwapParameters2 {
+        fn into_proto(self) -> proto_def::SwapParameters2 {
+            proto_def::SwapParameters2 {
+                amount0: self.amount0,
+                amount1: self.amount1,
+                swap_mode: self.swap_mode.into(),
+            }
+        }
+    }
     use crate::types::SwapResult;
     impl IntoProto<proto_def::SwapResult> for SwapResult {
         fn into_proto(self) -> proto_def::SwapResult {
             proto_def::SwapResult {
                 actual_input_amount: self.actual_input_amount,
+                output_amount: self.output_amount,
+                next_sqrt_price: self.next_sqrt_price.to_string(),
+                trading_fee: self.trading_fee,
+                protocol_fee: self.protocol_fee,
+                referral_fee: self.referral_fee,
+            }
+        }
+    }
+    use crate::types::SwapResult2;
+    impl IntoProto<proto_def::SwapResult2> for SwapResult2 {
+        fn into_proto(self) -> proto_def::SwapResult2 {
+            proto_def::SwapResult2 {
+                included_fee_input_amount: self.included_fee_input_amount,
+                excluded_fee_input_amount: self.excluded_fee_input_amount,
+                amount_left: self.amount_left,
                 output_amount: self.output_amount,
                 next_sqrt_price: self.next_sqrt_price.to_string(),
                 trading_fee: self.trading_fee,

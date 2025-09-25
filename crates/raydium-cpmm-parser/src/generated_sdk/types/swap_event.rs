@@ -11,7 +11,24 @@ use solana_pubkey::Pubkey;
 /// Emitted when swap
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SwapEvent {
+pub struct SwapEventV1 {
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub pool_id: Pubkey,
+    pub input_vault_before: u64,
+    pub output_vault_before: u64,
+    pub input_amount: u64,
+    pub output_amount: u64,
+    pub input_transfer_fee: u64,
+    pub output_transfer_fee: u64,
+    pub base_input: bool,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct SwapEventV2 {
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
@@ -42,4 +59,106 @@ pub struct SwapEvent {
     /// Amount of fee tokens going to creator
     pub creator_fee: u64,
     pub creator_fee_on_input: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum SwapEvent {
+    V1(SwapEventV1),
+    V2(SwapEventV2),
+}
+
+impl SwapEvent {
+    /// SwapEvent discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0x40, 0xc6, 0xcd, 0xe8, 0x26, 0x08, 0x71, 0xe2];
+
+    /// Parse SwapEvent from program logs
+    pub fn from_logs(logs: &[String]) -> Option<Self> {
+        for log in logs {
+            if let Some(swap_event) = Self::from_log(log) {
+                return Some(swap_event);
+            }
+        }
+        None
+    }
+
+    /// Parse SwapEvent from a single log message
+    pub fn from_log(log: &str) -> Option<Self> {
+        use base64::{engine::general_purpose, Engine as _};
+
+        // Log format: "Program data: <base64_encoded_data>"
+        if let Some(data_part) = log.strip_prefix("Program data: ") {
+            if let Ok(decoded) = general_purpose::STANDARD.decode(data_part) {
+                // Check if the decoded data starts with SwapEvent discriminator
+                if decoded.starts_with(&Self::DISCRIMINATOR) {
+                    let event_data = &decoded[8..]; // Skip the discriminator (8 bytes)
+
+                    // Try to parse as V2 first (longer structure)
+                    if let Ok(v2_event) = SwapEventV2::try_from_slice(event_data) {
+                        return Some(SwapEvent::V2(v2_event));
+                    }
+
+                    // If V2 fails, try V1
+                    if let Ok(v1_event) = SwapEventV1::try_from_slice(event_data) {
+                        return Some(SwapEvent::V1(v1_event));
+                    }
+                }
+            }
+        }
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_discriminator_constant() {
+        assert_eq!(
+            SwapEvent::DISCRIMINATOR,
+            [0x40, 0xc6, 0xcd, 0xe8, 0x26, 0x08, 0x71, 0xe2]
+        );
+    }
+
+    #[test]
+    fn test_parse_real_log_data_v2() {
+        // Real program log data from a raydium CPMM swap transaction
+        let log = "Program data: QMbN6CYIceIwfymhPMkIzrtF0MH786waSZ74wc8viX3LOudYUSlI8ojYSCA2vgAAQ1Yb4QIAAADyuxc4AQAAAMK1BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGat4S4L4PcHXAk9UhxpwnFZM+vyjWpkuZ3BtPDXKBvtQcHLwVKtI2YfaTllp5jLN3zjdZBQTSdpBsLaVuR0Vw6Rr3HAAAAAACbAAAAAAAAAAA=";
+
+        let result = SwapEvent::from_log(log);
+        assert!(result.is_some(), "Should successfully parse real log data");
+
+        let swap_event = result.unwrap();
+
+        // This should be parsed as V1
+        match swap_event {
+            SwapEvent::V2(v1_event) => {
+                assert_eq!(v1_event.input_amount, 5236046834);
+                assert_eq!(v1_event.output_amount, 308674);
+                assert_eq!(v1_event.input_transfer_fee, 0);
+                assert_eq!(v1_event.output_transfer_fee, 0);
+                assert_eq!(v1_event.base_input, true);
+            },
+            SwapEvent::V1(_) => panic!("Expected V2 event, got V1"),
+        }
+    }
+
+    #[test]
+    fn test_invalid_log_format() {
+        let invalid_log = "Invalid log format";
+        let result = SwapEvent::from_log(invalid_log);
+        assert!(result.is_none(), "Should not parse invalid log format");
+    }
+
+    #[test]
+    fn test_invalid_discriminator() {
+        let log_with_invalid_discriminator =
+            "Program data: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+        let result = SwapEvent::from_log(log_with_invalid_discriminator);
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid discriminator"
+        );
+    }
 }

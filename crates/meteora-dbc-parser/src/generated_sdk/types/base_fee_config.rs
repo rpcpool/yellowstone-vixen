@@ -5,15 +5,16 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BaseFeeConfig {
     pub cliff_fee_numerator: u64,
-    pub period_frequency: u64,
-    pub reduction_factor: u64,
-    pub number_of_period: u16,
-    pub fee_scheduler_mode: u8,
+    pub second_factor: u64,
+    pub third_factor: u64,
+    pub first_factor: u16,
+    pub base_fee_mode: u8,
     pub padding0: [u8; 5],
 }

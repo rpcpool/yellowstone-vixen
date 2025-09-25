@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 
 /// Information regarding fee charges
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

@@ -9,6 +9,7 @@ pub(crate) mod r#fees;
 pub(crate) mod r#last_order_distance;
 pub(crate) mod r#need_take;
 pub(crate) mod r#out_put_data;
+pub(crate) mod r#swap_event;
 pub(crate) mod r#swap_instruction_base_in;
 pub(crate) mod r#swap_instruction_base_out;
 pub(crate) mod r#target_order;

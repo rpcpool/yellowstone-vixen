@@ -8,6 +8,7 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
+use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
@@ -24,6 +25,7 @@ use crate::{
         SetParamsInstructionArgs as SetParamsIxData,
         UpdateGlobalAuthority as UpdateGlobalAuthorityIxAccounts,
     },
+    types::TradeEvent,
     ID,
 };
 
@@ -32,13 +34,13 @@ use crate::{
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 #[allow(clippy::large_enum_variant)]
 pub enum PumpProgramIx {
-    Buy(BuyIxAccounts, BuyIxData),
+    Buy(BuyIxAccounts, BuyIxData, Option<TradeEvent>),
     CollectCreatorFee(CollectCreatorFeeIxAccounts),
     Create(CreateIxAccounts, CreateIxData),
     ExtendAccount(ExtendAccountIxAccounts),
     Initialize(InitializeIxAccounts),
     Migrate(MigrateIxAccounts),
-    Sell(SellIxAccounts, SellIxData),
+    Sell(SellIxAccounts, SellIxData, Option<TradeEvent>),
     SetCreator(SetCreatorIxAccounts, SetCreatorIxData),
     SetMetaplexCreator(SetMetaplexCreatorIxAccounts),
     SetParams(SetParamsIxAccounts, SetParamsIxData),
@@ -137,7 +139,17 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: BuyIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(PumpProgramIx::Buy(ix_accounts, de_ix_data))
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Parse TradeEvent from inner instructions
+                let trade_event = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| TradeEvent::from_inner_instruction_data(&inner_ix.data));
+                Ok(PumpProgramIx::Buy(ix_accounts, de_ix_data, trade_event))
             },
             [20, 22, 86, 123, 198, 28, 219, 132] => {
                 let expected_accounts_len = 5;
@@ -244,7 +256,19 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SellIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(PumpProgramIx::Sell(ix_accounts, de_ix_data))
+
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Parse TradeEvent from inner instructions
+                let trade_event = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| TradeEvent::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(PumpProgramIx::Sell(ix_accounts, de_ix_data, trade_event))
             },
             [254, 148, 255, 112, 207, 142, 170, 165] => {
                 let expected_accounts_len = 7;
@@ -627,7 +651,7 @@ mod proto_parser {
     impl IntoProto<proto_def::ProgramIxs> for PumpProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                PumpProgramIx::Buy(acc, data) => proto_def::ProgramIxs {
+                PumpProgramIx::Buy(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Buy(proto_def::BuyIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
@@ -669,7 +693,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                PumpProgramIx::Sell(acc, data) => proto_def::ProgramIxs {
+                PumpProgramIx::Sell(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Sell(proto_def::SellIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),

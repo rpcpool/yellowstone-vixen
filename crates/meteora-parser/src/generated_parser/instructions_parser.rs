@@ -10,6 +10,8 @@ use std::sync::Arc;
 
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
+use borsh::BorshDeserialize;
+use yellowstone_vixen_core::constants::is_known_aggregator;
 
 use crate::{
     deserialize_checked,
@@ -117,6 +119,7 @@ use crate::{
         WithdrawProtocolFee as WithdrawProtocolFeeIxAccounts,
         WithdrawProtocolFeeInstructionArgs as WithdrawProtocolFeeIxData,
     },
+    types::SwapEvent,
     ID,
 };
 
@@ -157,9 +160,9 @@ pub enum LbClmmProgramIx {
         UpdatePositionOperatorIxAccounts,
         UpdatePositionOperatorIxData,
     ),
-    Swap(SwapIxAccounts, SwapIxData),
-    SwapExactOut(SwapExactOutIxAccounts, SwapExactOutIxData),
-    SwapWithPriceImpact(SwapWithPriceImpactIxAccounts, SwapWithPriceImpactIxData),
+    Swap(SwapIxAccounts, SwapIxData, Option<SwapEvent>),
+    SwapExactOut(SwapExactOutIxAccounts, SwapExactOutIxData, Option<SwapEvent>),
+    SwapWithPriceImpact(SwapWithPriceImpactIxAccounts, SwapWithPriceImpactIxData, Option<SwapEvent>),
     WithdrawProtocolFee(WithdrawProtocolFeeIxAccounts, WithdrawProtocolFeeIxData),
     InitializeReward(InitializeRewardIxAccounts, InitializeRewardIxData),
     FundReward(FundRewardIxAccounts, FundRewardIxData),
@@ -242,9 +245,9 @@ pub enum LbClmmProgramIx {
         RemoveLiquidityByRange2IxAccounts,
         RemoveLiquidityByRange2IxData,
     ),
-    Swap2(Swap2IxAccounts, Swap2IxData),
-    SwapExactOut2(SwapExactOut2IxAccounts, SwapExactOut2IxData),
-    SwapWithPriceImpact2(SwapWithPriceImpact2IxAccounts, SwapWithPriceImpact2IxData),
+    Swap2(Swap2IxAccounts, Swap2IxData, Option<SwapEvent>),
+    SwapExactOut2(SwapExactOut2IxAccounts, SwapExactOut2IxData, Option<SwapEvent>),
+    SwapWithPriceImpact2(SwapWithPriceImpact2IxAccounts, SwapWithPriceImpact2IxData, Option<SwapEvent>),
     ClosePosition2(ClosePosition2IxAccounts),
     UpdateFeesAndReward2(UpdateFeesAndReward2IxAccounts, UpdateFeesAndReward2IxData),
     ClosePositionIfEmpty(ClosePositionIfEmptyIxAccounts),
@@ -681,7 +684,18 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::Swap(ix_accounts, de_ix_data))
+   
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Search for SwapEvent in inner instructions
+                let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                });
+
+                Ok(ProgramIxs::Swap(ix_accounts, de_ix_data, swap_event))
             },
             [250, 73, 101, 33, 38, 207, 75, 184] => {
                 let expected_accounts_len = 15;
@@ -705,7 +719,18 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapExactOutIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::SwapExactOut(ix_accounts, de_ix_data))
+ 
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Search for SwapEvent in inner instructions
+                let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                });
+
+                Ok(ProgramIxs::SwapExactOut(ix_accounts, de_ix_data, swap_event))
             },
             [56, 173, 230, 208, 173, 228, 156, 205] => {
                 let expected_accounts_len = 15;
@@ -729,10 +754,18 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapWithPriceImpactIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::SwapWithPriceImpact(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Search for SwapEvent in inner instructions
+                let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                });
+
+                Ok(ProgramIxs::SwapWithPriceImpact(ix_accounts, de_ix_data, swap_event))
             },
             [158, 201, 158, 189, 33, 93, 162, 103] => {
                 let expected_accounts_len = 12;
@@ -1465,7 +1498,18 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: Swap2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::Swap2(ix_accounts, de_ix_data))
+
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Search for SwapEvent in inner instructions
+                let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                });
+
+                Ok(ProgramIxs::Swap2(ix_accounts, de_ix_data, swap_event))
             },
             [43, 215, 247, 132, 137, 60, 243, 81] => {
                 let expected_accounts_len = 16;
@@ -1490,7 +1534,17 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapExactOut2IxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::SwapExactOut2(ix_accounts, de_ix_data))
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Search for SwapEvent in inner instructions
+                let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                });
+
+                Ok(ProgramIxs::SwapExactOut2(ix_accounts, de_ix_data, swap_event))
             },
             [74, 98, 192, 214, 177, 51, 75, 51] => {
                 let expected_accounts_len = 16;
@@ -1515,10 +1569,17 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapWithPriceImpact2IxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::SwapWithPriceImpact2(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Search for SwapEvent in inner instructions
+                let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                });
+
+                Ok(ProgramIxs::SwapWithPriceImpact2(ix_accounts, de_ix_data, swap_event))
             },
             [174, 90, 35, 115, 186, 40, 147, 226] => {
                 let expected_accounts_len = 5;
@@ -3339,19 +3400,19 @@ mod proto_parser {
                                 data: Some(data.into_proto()),
                             })),
                         },
-                                                                                LbClmmProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
+                                                                                LbClmmProgramIx::Swap(acc, data, _) => proto_def::ProgramIxs {
                             ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
                             })),
                         },
-                                                                                LbClmmProgramIx::SwapExactOut(acc, data) => proto_def::ProgramIxs {
+                                                                                LbClmmProgramIx::SwapExactOut(acc, data, _) => proto_def::ProgramIxs {
                             ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut(proto_def::SwapExactOutIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
                             })),
                         },
-                                                                                LbClmmProgramIx::SwapWithPriceImpact(acc, data) => proto_def::ProgramIxs {
+                                                                                LbClmmProgramIx::SwapWithPriceImpact(acc, data, _) => proto_def::ProgramIxs {
                             ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact(proto_def::SwapWithPriceImpactIx {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
@@ -3586,19 +3647,19 @@ mod proto_parser {
                                 data: Some(data.into_proto()),
                             })),
                         },
-                                                                                LbClmmProgramIx::Swap2(acc, data) => proto_def::ProgramIxs {
+                                                                                LbClmmProgramIx::Swap2(acc, data, _) => proto_def::ProgramIxs {
                             ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap2(proto_def::Swap2Ix {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
                             })),
                         },
-                                                                                LbClmmProgramIx::SwapExactOut2(acc, data) => proto_def::ProgramIxs {
+                                                                                LbClmmProgramIx::SwapExactOut2(acc, data, _) => proto_def::ProgramIxs {
                             ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapExactOut2(proto_def::SwapExactOut2Ix {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),
                             })),
                         },
-                                                                                LbClmmProgramIx::SwapWithPriceImpact2(acc, data) => proto_def::ProgramIxs {
+                                                                                LbClmmProgramIx::SwapWithPriceImpact2(acc, data, _) => proto_def::ProgramIxs {
                             ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapWithPriceImpact2(proto_def::SwapWithPriceImpact2Ix {
                                 accounts: Some(acc.into_proto()),
                                 data: Some(data.into_proto()),

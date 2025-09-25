@@ -62,10 +62,14 @@ pub struct PoolConfig {
     pub fixed_token_supply_flag: u8,
     /// creator trading fee percentage
     pub creator_trading_fee_percentage: u8,
+    /// token update authority
+    pub token_update_authority: u8,
+    /// migration fee percentage
+    pub migration_fee_percentage: u8,
+    /// creator migration fee percentage
+    pub creator_migration_fee_percentage: u8,
     /// padding 0
-    pub padding0: [u8; 2],
-    /// padding 1
-    pub padding1: [u8; 8],
+    pub padding0: [u8; 7],
     /// swap base amount
     pub swap_base_amount: u64,
     /// migration quote threshold (in quote token)
@@ -80,13 +84,23 @@ pub struct PoolConfig {
     pub pre_migration_token_supply: u64,
     /// post migration token supply
     pub post_migration_token_supply: u64,
+    /// migrated pool collect fee mode
+    pub migrated_collect_fee_mode: u8,
+    /// migrated dynamic fee option.
+    pub migrated_dynamic_fee: u8,
+    /// migrated pool fee in bps
+    pub migrated_pool_fee_bps: u16,
+    /// padding 1
+    pub padding1: [u8; 12],
     /// padding 2
-    pub padding2: [u128; 2],
+    pub padding2: u128,
     /// minimum price
     pub sqrt_start_price: u128,
     /// curve, only use 20 point firstly, we can extend that latter
     pub curve: [LiquidityDistributionConfig; 20],
 }
+
+pub const POOL_CONFIG_DISCRIMINATOR: [u8; 8] = [26, 108, 14, 123, 116, 230, 129, 43];
 
 impl PoolConfig {
     pub const LEN: usize = 1048;
@@ -189,7 +203,9 @@ impl anchor_lang::AccountSerialize for PoolConfig {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for PoolConfig {
-    fn owner() -> Pubkey { crate::DYNAMIC_BONDING_CURVE_ID }
+    fn owner() -> Pubkey {
+        crate::DYNAMIC_BONDING_CURVE_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -197,5 +213,5 @@ impl anchor_lang::IdlBuild for PoolConfig {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for PoolConfig {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

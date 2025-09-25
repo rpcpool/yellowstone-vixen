@@ -11,9 +11,10 @@ pub(crate) mod r#pool_status_bit_index;
 pub(crate) mod r#position_reward_info;
 pub(crate) mod r#reward_info;
 pub(crate) mod r#reward_state;
+pub(crate) mod r#swap_event;
 pub(crate) mod r#tick_state;
 
 pub use self::{
     r#observation::*, r#pool_status_bit_flag::*, r#pool_status_bit_index::*,
-    r#position_reward_info::*, r#reward_info::*, r#reward_state::*, r#tick_state::*,
+    r#position_reward_info::*, r#reward_info::*, r#reward_state::*, r#swap_event::*, r#tick_state::*,
 };

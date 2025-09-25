@@ -28,6 +28,7 @@ num-traits = "^0.2"
 tracing = { version = "0.1.40", optional = true }
 strum = { version = "0.24", optional = true }
 strum_macros = { version = "0.24", optional = true }
+base64 = "0.22"
 
 [features]
 anchor = []

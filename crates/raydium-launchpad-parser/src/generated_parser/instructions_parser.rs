@@ -10,9 +10,11 @@ use std::sync::Arc;
 
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
+use yellowstone_vixen_core::constants::is_known_aggregator;
 
 use crate::{
     deserialize_checked,
+    generated_sdk::types::TradeEvent,
     instructions::{
         BuyExactIn as BuyExactInIxAccounts, BuyExactInInstructionArgs as BuyExactInIxData,
         BuyExactOut as BuyExactOutIxAccounts, BuyExactOutInstructionArgs as BuyExactOutIxData,
@@ -49,8 +51,8 @@ use crate::{
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum RaydiumLaunchpadProgramIx {
-    BuyExactIn(BuyExactInIxAccounts, BuyExactInIxData),
-    BuyExactOut(BuyExactOutIxAccounts, BuyExactOutIxData),
+    BuyExactIn(BuyExactInIxAccounts, BuyExactInIxData, Option<TradeEvent>),
+    BuyExactOut(BuyExactOutIxAccounts, BuyExactOutIxData, Option<TradeEvent>),
     ClaimCreatorFee(ClaimCreatorFeeIxAccounts),
     ClaimPlatformFee(ClaimPlatformFeeIxAccounts),
     ClaimPlatformFeeFromVault(ClaimPlatformFeeFromVaultIxAccounts),
@@ -72,8 +74,12 @@ pub enum RaydiumLaunchpadProgramIx {
         RemovePlatformCurveParamIxAccounts,
         RemovePlatformCurveParamIxData,
     ),
-    SellExactIn(SellExactInIxAccounts, SellExactInIxData),
-    SellExactOut(SellExactOutIxAccounts, SellExactOutIxData),
+    SellExactIn(SellExactInIxAccounts, SellExactInIxData, Option<TradeEvent>),
+    SellExactOut(
+        SellExactOutIxAccounts,
+        SellExactOutIxData,
+        Option<TradeEvent>,
+    ),
     UpdateConfig(UpdateConfigIxAccounts, UpdateConfigIxData),
     UpdatePlatformConfig(UpdatePlatformConfigIxAccounts, UpdatePlatformConfigIxData),
     UpdatePlatformCurveParam(
@@ -177,9 +183,18 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: BuyExactInIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let trade_event = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner| TradeEvent::from_inner_instruction_data(&inner.data));
                 Ok(RaydiumLaunchpadProgramIx::BuyExactIn(
                     ix_accounts,
                     de_ix_data,
+                    trade_event,
                 ))
             },
             [24, 211, 116, 40, 105, 3, 153, 56] => {
@@ -204,9 +219,18 @@ impl InstructionParser {
                 };
                 let de_ix_data: BuyExactOutIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let trade_event = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner| TradeEvent::from_inner_instruction_data(&inner.data));
                 Ok(RaydiumLaunchpadProgramIx::BuyExactOut(
                     ix_accounts,
                     de_ix_data,
+                    trade_event,
                 ))
             },
             [26, 97, 138, 203, 132, 171, 141, 252] => {
@@ -563,9 +587,18 @@ impl InstructionParser {
                 };
                 let de_ix_data: SellExactInIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let trade_event = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner| TradeEvent::from_inner_instruction_data(&inner.data));
                 Ok(RaydiumLaunchpadProgramIx::SellExactIn(
                     ix_accounts,
                     de_ix_data,
+                    trade_event,
                 ))
             },
             [95, 200, 71, 34, 8, 9, 11, 166] => {
@@ -590,9 +623,18 @@ impl InstructionParser {
                 };
                 let de_ix_data: SellExactOutIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let trade_event = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner| TradeEvent::from_inner_instruction_data(&inner.data));
                 Ok(RaydiumLaunchpadProgramIx::SellExactOut(
                     ix_accounts,
                     de_ix_data,
+                    trade_event,
                 ))
             },
             [29, 158, 252, 191, 10, 83, 219, 99] => {
@@ -1307,7 +1349,7 @@ mod proto_parser {
     impl IntoProto<proto_def::ProgramIxs> for RaydiumLaunchpadProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                RaydiumLaunchpadProgramIx::BuyExactIn(acc, data) => proto_def::ProgramIxs {
+                RaydiumLaunchpadProgramIx::BuyExactIn(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::BuyExactIn(
                         proto_def::BuyExactInIx {
                             accounts: Some(acc.into_proto()),
@@ -1315,7 +1357,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumLaunchpadProgramIx::BuyExactOut(acc, data) => proto_def::ProgramIxs {
+                RaydiumLaunchpadProgramIx::BuyExactOut(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::BuyExactOut(
                         proto_def::BuyExactOutIx {
                             accounts: Some(acc.into_proto()),
@@ -1446,7 +1488,7 @@ mod proto_parser {
                         )),
                     }
                 },
-                RaydiumLaunchpadProgramIx::SellExactIn(acc, data) => proto_def::ProgramIxs {
+                RaydiumLaunchpadProgramIx::SellExactIn(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SellExactIn(
                         proto_def::SellExactInIx {
                             accounts: Some(acc.into_proto()),
@@ -1454,7 +1496,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumLaunchpadProgramIx::SellExactOut(acc, data) => proto_def::ProgramIxs {
+                RaydiumLaunchpadProgramIx::SellExactOut(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SellExactOut(
                         proto_def::SellExactOutIx {
                             accounts: Some(acc.into_proto()),

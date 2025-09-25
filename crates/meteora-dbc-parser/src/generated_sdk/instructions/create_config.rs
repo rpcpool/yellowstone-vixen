@@ -5,11 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use crate::generated::types::ConfigParameters;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 
-use crate::generated::types::{
-    LiquidityDistributionParameters, LockedVestingParams, PoolFeeParameters, TokenSupplyParams,
-};
+pub const CREATE_CONFIG_DISCRIMINATOR: [u8; 8] = [201, 207, 243, 114, 75, 111, 47, 189];
 
 /// Accounts.
 #[derive(Debug)]
@@ -38,7 +38,6 @@ impl CreateConfig {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -101,31 +100,15 @@ impl CreateConfigInstructionData {
 }
 
 impl Default for CreateConfigInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateConfigInstructionArgs {
-    pub pool_fees: PoolFeeParameters,
-    pub collect_fee_mode: u8,
-    pub migration_option: u8,
-    pub activation_type: u8,
-    pub token_type: u8,
-    pub token_decimal: u8,
-    pub partner_lp_percentage: u8,
-    pub partner_locked_lp_percentage: u8,
-    pub creator_lp_percentage: u8,
-    pub creator_locked_lp_percentage: u8,
-    pub migration_quote_threshold: u64,
-    pub sqrt_start_price: u128,
-    pub locked_vesting: LockedVestingParams,
-    pub migration_fee_option: u8,
-    pub token_supply: Option<TokenSupplyParams>,
-    pub creator_trading_fee_percentage: u8,
-    pub padding0: [u8; 7],
-    pub padding1: [u64; 7],
-    pub curve: Vec<LiquidityDistributionParameters>,
+    pub config_parameters: ConfigParameters,
 }
 
 /// Instruction builder for `CreateConfig`.
@@ -150,206 +133,67 @@ pub struct CreateConfigBuilder {
     system_program: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
-    pool_fees: Option<PoolFeeParameters>,
-    collect_fee_mode: Option<u8>,
-    migration_option: Option<u8>,
-    activation_type: Option<u8>,
-    token_type: Option<u8>,
-    token_decimal: Option<u8>,
-    partner_lp_percentage: Option<u8>,
-    partner_locked_lp_percentage: Option<u8>,
-    creator_lp_percentage: Option<u8>,
-    creator_locked_lp_percentage: Option<u8>,
-    migration_quote_threshold: Option<u64>,
-    sqrt_start_price: Option<u128>,
-    locked_vesting: Option<LockedVestingParams>,
-    migration_fee_option: Option<u8>,
-    token_supply: Option<TokenSupplyParams>,
-    creator_trading_fee_percentage: Option<u8>,
-    padding0: Option<[u8; 7]>,
-    padding1: Option<[u64; 7]>,
-    curve: Option<Vec<LiquidityDistributionParameters>>,
+    config_parameters: Option<ConfigParameters>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateConfigBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
     pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
-
     #[inline(always)]
     pub fn fee_claimer(&mut self, fee_claimer: solana_pubkey::Pubkey) -> &mut Self {
         self.fee_claimer = Some(fee_claimer);
         self
     }
-
     #[inline(always)]
     pub fn leftover_receiver(&mut self, leftover_receiver: solana_pubkey::Pubkey) -> &mut Self {
         self.leftover_receiver = Some(leftover_receiver);
         self
     }
-
     /// quote mint
     #[inline(always)]
     pub fn quote_mint(&mut self, quote_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
-
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     #[inline(always)]
-    pub fn pool_fees(&mut self, pool_fees: PoolFeeParameters) -> &mut Self {
-        self.pool_fees = Some(pool_fees);
+    pub fn config_parameters(&mut self, config_parameters: ConfigParameters) -> &mut Self {
+        self.config_parameters = Some(config_parameters);
         self
     }
-
-    #[inline(always)]
-    pub fn collect_fee_mode(&mut self, collect_fee_mode: u8) -> &mut Self {
-        self.collect_fee_mode = Some(collect_fee_mode);
-        self
-    }
-
-    #[inline(always)]
-    pub fn migration_option(&mut self, migration_option: u8) -> &mut Self {
-        self.migration_option = Some(migration_option);
-        self
-    }
-
-    #[inline(always)]
-    pub fn activation_type(&mut self, activation_type: u8) -> &mut Self {
-        self.activation_type = Some(activation_type);
-        self
-    }
-
-    #[inline(always)]
-    pub fn token_type(&mut self, token_type: u8) -> &mut Self {
-        self.token_type = Some(token_type);
-        self
-    }
-
-    #[inline(always)]
-    pub fn token_decimal(&mut self, token_decimal: u8) -> &mut Self {
-        self.token_decimal = Some(token_decimal);
-        self
-    }
-
-    #[inline(always)]
-    pub fn partner_lp_percentage(&mut self, partner_lp_percentage: u8) -> &mut Self {
-        self.partner_lp_percentage = Some(partner_lp_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn partner_locked_lp_percentage(&mut self, partner_locked_lp_percentage: u8) -> &mut Self {
-        self.partner_locked_lp_percentage = Some(partner_locked_lp_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn creator_lp_percentage(&mut self, creator_lp_percentage: u8) -> &mut Self {
-        self.creator_lp_percentage = Some(creator_lp_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn creator_locked_lp_percentage(&mut self, creator_locked_lp_percentage: u8) -> &mut Self {
-        self.creator_locked_lp_percentage = Some(creator_locked_lp_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn migration_quote_threshold(&mut self, migration_quote_threshold: u64) -> &mut Self {
-        self.migration_quote_threshold = Some(migration_quote_threshold);
-        self
-    }
-
-    #[inline(always)]
-    pub fn sqrt_start_price(&mut self, sqrt_start_price: u128) -> &mut Self {
-        self.sqrt_start_price = Some(sqrt_start_price);
-        self
-    }
-
-    #[inline(always)]
-    pub fn locked_vesting(&mut self, locked_vesting: LockedVestingParams) -> &mut Self {
-        self.locked_vesting = Some(locked_vesting);
-        self
-    }
-
-    #[inline(always)]
-    pub fn migration_fee_option(&mut self, migration_fee_option: u8) -> &mut Self {
-        self.migration_fee_option = Some(migration_fee_option);
-        self
-    }
-
-    /// `[optional argument]`
-    #[inline(always)]
-    pub fn token_supply(&mut self, token_supply: TokenSupplyParams) -> &mut Self {
-        self.token_supply = Some(token_supply);
-        self
-    }
-
-    #[inline(always)]
-    pub fn creator_trading_fee_percentage(
-        &mut self,
-        creator_trading_fee_percentage: u8,
-    ) -> &mut Self {
-        self.creator_trading_fee_percentage = Some(creator_trading_fee_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn padding0(&mut self, padding0: [u8; 7]) -> &mut Self {
-        self.padding0 = Some(padding0);
-        self
-    }
-
-    #[inline(always)]
-    pub fn padding1(&mut self, padding1: [u64; 7]) -> &mut Self {
-        self.padding1 = Some(padding1);
-        self
-    }
-
-    #[inline(always)]
-    pub fn curve(&mut self, curve: Vec<LiquidityDistributionParameters>) -> &mut Self {
-        self.curve = Some(curve);
-        self
-    }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -359,7 +203,6 @@ impl CreateConfigBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateConfig {
@@ -377,64 +220,10 @@ impl CreateConfigBuilder {
             program: self.program.expect("program is not set"),
         };
         let args = CreateConfigInstructionArgs {
-            pool_fees: self.pool_fees.clone().expect("pool_fees is not set"),
-            collect_fee_mode: self
-                .collect_fee_mode
+            config_parameters: self
+                .config_parameters
                 .clone()
-                .expect("collect_fee_mode is not set"),
-            migration_option: self
-                .migration_option
-                .clone()
-                .expect("migration_option is not set"),
-            activation_type: self
-                .activation_type
-                .clone()
-                .expect("activation_type is not set"),
-            token_type: self.token_type.clone().expect("token_type is not set"),
-            token_decimal: self
-                .token_decimal
-                .clone()
-                .expect("token_decimal is not set"),
-            partner_lp_percentage: self
-                .partner_lp_percentage
-                .clone()
-                .expect("partner_lp_percentage is not set"),
-            partner_locked_lp_percentage: self
-                .partner_locked_lp_percentage
-                .clone()
-                .expect("partner_locked_lp_percentage is not set"),
-            creator_lp_percentage: self
-                .creator_lp_percentage
-                .clone()
-                .expect("creator_lp_percentage is not set"),
-            creator_locked_lp_percentage: self
-                .creator_locked_lp_percentage
-                .clone()
-                .expect("creator_locked_lp_percentage is not set"),
-            migration_quote_threshold: self
-                .migration_quote_threshold
-                .clone()
-                .expect("migration_quote_threshold is not set"),
-            sqrt_start_price: self
-                .sqrt_start_price
-                .clone()
-                .expect("sqrt_start_price is not set"),
-            locked_vesting: self
-                .locked_vesting
-                .clone()
-                .expect("locked_vesting is not set"),
-            migration_fee_option: self
-                .migration_fee_option
-                .clone()
-                .expect("migration_fee_option is not set"),
-            token_supply: self.token_supply.clone(),
-            creator_trading_fee_percentage: self
-                .creator_trading_fee_percentage
-                .clone()
-                .expect("creator_trading_fee_percentage is not set"),
-            padding0: self.padding0.clone().expect("padding0 is not set"),
-            padding1: self.padding1.clone().expect("padding1 is not set"),
-            curve: self.curve.clone().expect("curve is not set"),
+                .expect("config_parameters is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -503,28 +292,21 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -532,7 +314,7 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(*self.config.key, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -627,36 +409,16 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             system_program: None,
             event_authority: None,
             program: None,
-            pool_fees: None,
-            collect_fee_mode: None,
-            migration_option: None,
-            activation_type: None,
-            token_type: None,
-            token_decimal: None,
-            partner_lp_percentage: None,
-            partner_locked_lp_percentage: None,
-            creator_lp_percentage: None,
-            creator_locked_lp_percentage: None,
-            migration_quote_threshold: None,
-            sqrt_start_price: None,
-            locked_vesting: None,
-            migration_fee_option: None,
-            token_supply: None,
-            creator_trading_fee_percentage: None,
-            padding0: None,
-            padding1: None,
-            curve: None,
+            config_parameters: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
-
     #[inline(always)]
     pub fn fee_claimer(
         &mut self,
@@ -665,7 +427,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.fee_claimer = Some(fee_claimer);
         self
     }
-
     #[inline(always)]
     pub fn leftover_receiver(
         &mut self,
@@ -674,7 +435,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.leftover_receiver = Some(leftover_receiver);
         self
     }
-
     /// quote mint
     #[inline(always)]
     pub fn quote_mint(
@@ -684,13 +444,11 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.quote_mint = Some(quote_mint);
         self
     }
-
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -699,7 +457,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -708,131 +465,16 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     #[inline(always)]
-    pub fn pool_fees(&mut self, pool_fees: PoolFeeParameters) -> &mut Self {
-        self.instruction.pool_fees = Some(pool_fees);
+    pub fn config_parameters(&mut self, config_parameters: ConfigParameters) -> &mut Self {
+        self.instruction.config_parameters = Some(config_parameters);
         self
     }
-
-    #[inline(always)]
-    pub fn collect_fee_mode(&mut self, collect_fee_mode: u8) -> &mut Self {
-        self.instruction.collect_fee_mode = Some(collect_fee_mode);
-        self
-    }
-
-    #[inline(always)]
-    pub fn migration_option(&mut self, migration_option: u8) -> &mut Self {
-        self.instruction.migration_option = Some(migration_option);
-        self
-    }
-
-    #[inline(always)]
-    pub fn activation_type(&mut self, activation_type: u8) -> &mut Self {
-        self.instruction.activation_type = Some(activation_type);
-        self
-    }
-
-    #[inline(always)]
-    pub fn token_type(&mut self, token_type: u8) -> &mut Self {
-        self.instruction.token_type = Some(token_type);
-        self
-    }
-
-    #[inline(always)]
-    pub fn token_decimal(&mut self, token_decimal: u8) -> &mut Self {
-        self.instruction.token_decimal = Some(token_decimal);
-        self
-    }
-
-    #[inline(always)]
-    pub fn partner_lp_percentage(&mut self, partner_lp_percentage: u8) -> &mut Self {
-        self.instruction.partner_lp_percentage = Some(partner_lp_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn partner_locked_lp_percentage(&mut self, partner_locked_lp_percentage: u8) -> &mut Self {
-        self.instruction.partner_locked_lp_percentage = Some(partner_locked_lp_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn creator_lp_percentage(&mut self, creator_lp_percentage: u8) -> &mut Self {
-        self.instruction.creator_lp_percentage = Some(creator_lp_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn creator_locked_lp_percentage(&mut self, creator_locked_lp_percentage: u8) -> &mut Self {
-        self.instruction.creator_locked_lp_percentage = Some(creator_locked_lp_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn migration_quote_threshold(&mut self, migration_quote_threshold: u64) -> &mut Self {
-        self.instruction.migration_quote_threshold = Some(migration_quote_threshold);
-        self
-    }
-
-    #[inline(always)]
-    pub fn sqrt_start_price(&mut self, sqrt_start_price: u128) -> &mut Self {
-        self.instruction.sqrt_start_price = Some(sqrt_start_price);
-        self
-    }
-
-    #[inline(always)]
-    pub fn locked_vesting(&mut self, locked_vesting: LockedVestingParams) -> &mut Self {
-        self.instruction.locked_vesting = Some(locked_vesting);
-        self
-    }
-
-    #[inline(always)]
-    pub fn migration_fee_option(&mut self, migration_fee_option: u8) -> &mut Self {
-        self.instruction.migration_fee_option = Some(migration_fee_option);
-        self
-    }
-
-    /// `[optional argument]`
-    #[inline(always)]
-    pub fn token_supply(&mut self, token_supply: TokenSupplyParams) -> &mut Self {
-        self.instruction.token_supply = Some(token_supply);
-        self
-    }
-
-    #[inline(always)]
-    pub fn creator_trading_fee_percentage(
-        &mut self,
-        creator_trading_fee_percentage: u8,
-    ) -> &mut Self {
-        self.instruction.creator_trading_fee_percentage = Some(creator_trading_fee_percentage);
-        self
-    }
-
-    #[inline(always)]
-    pub fn padding0(&mut self, padding0: [u8; 7]) -> &mut Self {
-        self.instruction.padding0 = Some(padding0);
-        self
-    }
-
-    #[inline(always)]
-    pub fn padding1(&mut self, padding1: [u64; 7]) -> &mut Self {
-        self.instruction.padding1 = Some(padding1);
-        self
-    }
-
-    #[inline(always)]
-    pub fn curve(&mut self, curve: Vec<LiquidityDistributionParameters>) -> &mut Self {
-        self.instruction.curve = Some(curve);
-        self
-    }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -846,7 +488,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -861,104 +502,19 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = CreateConfigInstructionArgs {
-            pool_fees: self
+            config_parameters: self
                 .instruction
-                .pool_fees
+                .config_parameters
                 .clone()
-                .expect("pool_fees is not set"),
-            collect_fee_mode: self
-                .instruction
-                .collect_fee_mode
-                .clone()
-                .expect("collect_fee_mode is not set"),
-            migration_option: self
-                .instruction
-                .migration_option
-                .clone()
-                .expect("migration_option is not set"),
-            activation_type: self
-                .instruction
-                .activation_type
-                .clone()
-                .expect("activation_type is not set"),
-            token_type: self
-                .instruction
-                .token_type
-                .clone()
-                .expect("token_type is not set"),
-            token_decimal: self
-                .instruction
-                .token_decimal
-                .clone()
-                .expect("token_decimal is not set"),
-            partner_lp_percentage: self
-                .instruction
-                .partner_lp_percentage
-                .clone()
-                .expect("partner_lp_percentage is not set"),
-            partner_locked_lp_percentage: self
-                .instruction
-                .partner_locked_lp_percentage
-                .clone()
-                .expect("partner_locked_lp_percentage is not set"),
-            creator_lp_percentage: self
-                .instruction
-                .creator_lp_percentage
-                .clone()
-                .expect("creator_lp_percentage is not set"),
-            creator_locked_lp_percentage: self
-                .instruction
-                .creator_locked_lp_percentage
-                .clone()
-                .expect("creator_locked_lp_percentage is not set"),
-            migration_quote_threshold: self
-                .instruction
-                .migration_quote_threshold
-                .clone()
-                .expect("migration_quote_threshold is not set"),
-            sqrt_start_price: self
-                .instruction
-                .sqrt_start_price
-                .clone()
-                .expect("sqrt_start_price is not set"),
-            locked_vesting: self
-                .instruction
-                .locked_vesting
-                .clone()
-                .expect("locked_vesting is not set"),
-            migration_fee_option: self
-                .instruction
-                .migration_fee_option
-                .clone()
-                .expect("migration_fee_option is not set"),
-            token_supply: self.instruction.token_supply.clone(),
-            creator_trading_fee_percentage: self
-                .instruction
-                .creator_trading_fee_percentage
-                .clone()
-                .expect("creator_trading_fee_percentage is not set"),
-            padding0: self
-                .instruction
-                .padding0
-                .clone()
-                .expect("padding0 is not set"),
-            padding1: self
-                .instruction
-                .padding1
-                .clone()
-                .expect("padding1 is not set"),
-            curve: self.instruction.curve.clone().expect("curve is not set"),
+                .expect("config_parameters is not set"),
         };
         let instruction = CreateConfigCpi {
             __program: self.instruction.__program,
@@ -1010,25 +566,7 @@ struct CreateConfigCpiBuilderInstruction<'a, 'b> {
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    pool_fees: Option<PoolFeeParameters>,
-    collect_fee_mode: Option<u8>,
-    migration_option: Option<u8>,
-    activation_type: Option<u8>,
-    token_type: Option<u8>,
-    token_decimal: Option<u8>,
-    partner_lp_percentage: Option<u8>,
-    partner_locked_lp_percentage: Option<u8>,
-    creator_lp_percentage: Option<u8>,
-    creator_locked_lp_percentage: Option<u8>,
-    migration_quote_threshold: Option<u64>,
-    sqrt_start_price: Option<u128>,
-    locked_vesting: Option<LockedVestingParams>,
-    migration_fee_option: Option<u8>,
-    token_supply: Option<TokenSupplyParams>,
-    creator_trading_fee_percentage: Option<u8>,
-    padding0: Option<[u8; 7]>,
-    padding1: Option<[u64; 7]>,
-    curve: Option<Vec<LiquidityDistributionParameters>>,
+    config_parameters: Option<ConfigParameters>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

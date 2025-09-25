@@ -8,6 +8,7 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
+use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
@@ -33,6 +34,7 @@ use crate::{
         WithdrawPnl as WithdrawPnlIxAccounts, WithdrawSrm as WithdrawSrmIxAccounts,
         WithdrawSrmInstructionArgs as WithdrawSrmIxData,
     },
+    types::SwapEvent,
     ID,
 };
 
@@ -49,9 +51,9 @@ pub enum RaydiumAmmV4ProgramIx {
     SetParams(SetParamsIxAccounts, SetParamsIxData),
     WithdrawPnl(WithdrawPnlIxAccounts),
     WithdrawSrm(WithdrawSrmIxAccounts, WithdrawSrmIxData),
-    SwapBaseIn(SwapBaseInIxAccounts, SwapBaseInIxData),
+    SwapBaseIn(SwapBaseInIxAccounts, SwapBaseInIxData, Option<SwapEvent>),
     PreInitialize(PreInitializeIxAccounts, PreInitializeIxData),
-    SwapBaseOut(SwapBaseOutIxAccounts, SwapBaseOutIxData),
+    SwapBaseOut(SwapBaseOutIxAccounts, SwapBaseOutIxData, Option<SwapEvent>),
     SimulateInfo(SimulateInfoIxAccounts, SimulateInfoIxData),
     AdminCancelOrders(AdminCancelOrdersIxAccounts, AdminCancelOrdersIxData),
     CreateConfigAccount(CreateConfigAccountIxAccounts),
@@ -387,7 +389,16 @@ impl InstructionParser {
                     user_source_owner: next_account(accounts)?,
                 };
                 let de_ix_data: SwapBaseInIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(RaydiumAmmV4ProgramIx::SwapBaseIn(ix_accounts, de_ix_data))
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
+                Ok(RaydiumAmmProgramIx::SwapBaseIn(
+                    ix_accounts,
+                    de_ix_data,
+                    swap_event,
+                ))
             },
             [10] => {
                 let expected_accounts_len = 14;
@@ -444,7 +455,16 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapBaseOutIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(RaydiumAmmV4ProgramIx::SwapBaseOut(ix_accounts, de_ix_data))
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
+                Ok(RaydiumAmmProgramIx::SwapBaseOut(
+                    ix_accounts,
+                    de_ix_data,
+                    swap_event,
+                ))
             },
             [12] => {
                 let expected_accounts_len = 8;
@@ -1161,7 +1181,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmV4ProgramIx::SwapBaseIn(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmProgramIx::SwapBaseIn(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseIn(
                         proto_def::SwapBaseInIx {
                             accounts: Some(acc.into_proto()),
@@ -1177,7 +1197,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmV4ProgramIx::SwapBaseOut(acc, data) => proto_def::ProgramIxs {
+                RaydiumAmmProgramIx::SwapBaseOut(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseOut(
                         proto_def::SwapBaseOutIx {
                             accounts: Some(acc.into_proto()),

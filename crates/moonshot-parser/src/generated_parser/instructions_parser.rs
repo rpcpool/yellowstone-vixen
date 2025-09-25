@@ -8,11 +8,13 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
+use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     deserialize_checked,
+    generated_sdk::types::TradeEvent,
     instructions::{
         Buy as BuyIxAccounts, BuyInstructionArgs as BuyIxData, ConfigInit as ConfigInitIxAccounts,
         ConfigInitInstructionArgs as ConfigInitIxData, ConfigUpdate as ConfigUpdateIxAccounts,
@@ -28,8 +30,8 @@ use crate::{
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum TokenLaunchpadProgramIx {
     TokenMint(TokenMintIxAccounts, TokenMintIxData),
-    Buy(BuyIxAccounts, BuyIxData),
-    Sell(SellIxAccounts, SellIxData),
+    Buy(BuyIxAccounts, BuyIxData, Option<TradeEvent>),
+    Sell(SellIxAccounts, SellIxData, Option<TradeEvent>),
     MigrateFunds(MigrateFundsIxAccounts),
     ConfigInit(ConfigInitIxAccounts, ConfigInitIxData),
     ConfigUpdate(ConfigUpdateIxAccounts, ConfigUpdateIxData),
@@ -145,7 +147,16 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                 };
                 let de_ix_data: BuyIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(TokenLaunchpadProgramIx::Buy(ix_accounts, de_ix_data))
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let trade_event = TradeEvent::from_logs(&ix.parsed_logs);
+                Ok(TokenLaunchpadProgramIx::Buy(
+                    ix_accounts,
+                    de_ix_data,
+                    trade_event,
+                ))
             },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
                 let expected_accounts_len = 11;
@@ -164,7 +175,17 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                 };
                 let de_ix_data: SellIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(TokenLaunchpadProgramIx::Sell(ix_accounts, de_ix_data))
+
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+                let trade_event = TradeEvent::from_logs(&ix.parsed_logs);
+                Ok(TokenLaunchpadProgramIx::Sell(
+                    ix_accounts,
+                    de_ix_data,
+                    trade_event,
+                ))
             },
             [42, 229, 10, 231, 189, 62, 193, 174] => {
                 let expected_accounts_len = 12;
@@ -462,13 +483,13 @@ mod proto_parser {
                         },
                     )),
                 },
-                TokenLaunchpadProgramIx::Buy(acc, data) => proto_def::ProgramIxs {
+                TokenLaunchpadProgramIx::Buy(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Buy(proto_def::BuyIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
                     })),
                 },
-                TokenLaunchpadProgramIx::Sell(acc, data) => proto_def::ProgramIxs {
+                TokenLaunchpadProgramIx::Sell(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Sell(proto_def::SellIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),

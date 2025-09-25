@@ -5,12 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use crate::generated::types::LiquidityDistributionParameters;
+use crate::generated::types::LockedVestingParams;
+use crate::generated::types::PoolFeeParameters;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
-
-use crate::generated::types::{
-    LiquidityDistributionParameters, LockedVestingParams, PoolFeeParameters,
-};
 
 /// Create config
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

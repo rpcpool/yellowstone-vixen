@@ -10,10 +10,11 @@ pub(crate) mod r#currency;
 pub(crate) mod r#curve_type;
 pub(crate) mod r#fixed_side;
 pub(crate) mod r#migration_target;
+pub(crate) mod r#trade_event;
 pub(crate) mod r#trade_params;
 pub(crate) mod r#trade_type;
 
 pub use self::{
     r#config_params::*, r#currency::*, r#curve_type::*, r#fixed_side::*, r#migration_target::*,
-    r#trade_params::*, r#trade_type::*,
+    r#trade_event::*, r#trade_params::*, r#trade_type::*,
 };

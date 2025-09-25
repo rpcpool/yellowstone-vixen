@@ -17,11 +17,12 @@ pub(crate) mod r#pool_fees;
 pub(crate) mod r#pool_type;
 pub(crate) mod r#round_direction;
 pub(crate) mod r#rounding;
+pub(crate) mod r#swap_event;
 pub(crate) mod r#token_multiplier;
 pub(crate) mod r#trade_direction;
 
 pub use self::{
     r#activation_type::*, r#bootstrapping::*, r#curve_type::*, r#depeg::*, r#depeg_type::*,
     r#new_curve_type::*, r#padding::*, r#partner_info::*, r#pool_fees::*, r#pool_type::*,
-    r#round_direction::*, r#rounding::*, r#token_multiplier::*, r#trade_direction::*,
+    r#round_direction::*, r#rounding::*, r#swap_event::*, r#token_multiplier::*, r#trade_direction::*,
 };

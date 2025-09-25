@@ -100,26 +100,64 @@ message SwapIx {
 	SwapIxData data = 2;
 }
 
+message Swap2Ix {
+	Swap2IxAccounts accounts = 1;
+	Swap2IxData data = 2;
+}
+
+message TransferPoolCreatorIx {
+	TransferPoolCreatorIxAccounts accounts = 1;
+}
+
 message WithdrawLeftoverIx {
 	WithdrawLeftoverIxAccounts accounts = 1;
+}
+
+message WithdrawMigrationFeeIx {
+	WithdrawMigrationFeeIxAccounts accounts = 1;
+	WithdrawMigrationFeeIxData data = 2;
 }
 
 
 message BaseFeeConfig {
 	uint64 cliff_fee_numerator = 1;
-	uint64 period_frequency = 2;
-	uint64 reduction_factor = 3;
-	uint32 number_of_period = 4;
-	uint32 fee_scheduler_mode = 5;
+	uint64 second_factor = 2;
+	uint64 third_factor = 3;
+	uint32 first_factor = 4;
+	uint32 base_fee_mode = 5;
 	repeated uint32 padding0 = 6;
 }
 
 message BaseFeeParameters {
 	uint64 cliff_fee_numerator = 1;
-	uint32 number_of_period = 2;
-	uint64 period_frequency = 3;
-	uint64 reduction_factor = 4;
-	uint32 fee_scheduler_mode = 5;
+	uint32 first_factor = 2;
+	uint64 second_factor = 3;
+	uint64 third_factor = 4;
+	uint32 base_fee_mode = 5;
+}
+
+message ConfigParameters {
+	PoolFeeParameters pool_fees = 1;
+	uint32 collect_fee_mode = 2;
+	uint32 migration_option = 3;
+	uint32 activation_type = 4;
+	uint32 token_type = 5;
+	uint32 token_decimal = 6;
+	uint32 partner_lp_percentage = 7;
+	uint32 partner_locked_lp_percentage = 8;
+	uint32 creator_lp_percentage = 9;
+	uint32 creator_locked_lp_percentage = 10;
+	uint64 migration_quote_threshold = 11;
+	string sqrt_start_price = 12;
+	LockedVestingParams locked_vesting = 13;
+	uint32 migration_fee_option = 14;
+	optional TokenSupplyParams token_supply = 15;
+	uint32 creator_trading_fee_percentage = 16;
+	uint32 token_update_authority = 17;
+	MigrationFee migration_fee = 18;
+	MigratedPoolFee migrated_pool_fee = 19;
+	repeated uint64 padding = 20;
+	repeated LiquidityDistributionParameters curve = 21;
 }
 
 message DynamicFeeConfig {
@@ -199,6 +237,14 @@ message EvtCreateConfig {
 	repeated LiquidityDistributionParameters curve = 24;
 }
 
+message EvtCreateConfigV2 {
+	string config = 1;
+	string quote_mint = 2;
+	string fee_claimer = 3;
+	string leftover_receiver = 4;
+	ConfigParameters config_parameters = 5;
+}
+
 message EvtCreateDammV2MigrationMetadata {
 	string virtual_pool = 1;
 }
@@ -233,6 +279,11 @@ message EvtPartnerMetadata {
 	string fee_claimer = 2;
 }
 
+message EvtPartnerWithdrawMigrationFee {
+	string pool = 1;
+	uint64 fee = 2;
+}
+
 message EvtPartnerWithdrawSurplus {
 	string pool = 1;
 	uint64 surplus_amount = 2;
@@ -254,6 +305,24 @@ message EvtSwap {
 	uint64 current_timestamp = 8;
 }
 
+message EvtSwap2 {
+	string pool = 1;
+	string config = 2;
+	uint32 trade_direction = 3;
+	bool has_referral = 4;
+	SwapParameters2 swap_parameters = 5;
+	SwapResult2 swap_result = 6;
+	uint64 quote_reserve_amount = 7;
+	uint64 migration_threshold = 8;
+	uint64 current_timestamp = 9;
+}
+
+message EvtUpdatePoolCreator {
+	string pool = 1;
+	string creator = 2;
+	string new_creator = 3;
+}
+
 message EvtVirtualPoolMetadata {
 	string virtual_pool_metadata = 1;
 	string virtual_pool = 2;
@@ -263,6 +332,12 @@ message EvtWithdrawLeftover {
 	string pool = 1;
 	string leftover_receiver = 2;
 	uint64 leftover_amount = 3;
+}
+
+message EvtWithdrawMigrationFee {
+	string pool = 1;
+	uint64 fee = 2;
+	uint32 flag = 3;
 }
 
 message InitializePoolParameters {
@@ -298,6 +373,17 @@ message LockedVestingParams {
 	uint64 cliff_unlock_amount = 5;
 }
 
+message MigratedPoolFee {
+	uint32 collect_fee_mode = 1;
+	uint32 dynamic_fee = 2;
+	uint32 pool_fee_bps = 3;
+}
+
+message MigrationFee {
+	uint32 fee_percentage = 1;
+	uint32 creator_fee_percentage = 2;
+}
+
 message PoolFeeParameters {
 	BaseFeeParameters base_fee = 1;
 	optional DynamicFeeParameters dynamic_fee = 2;
@@ -331,6 +417,12 @@ message SwapParameters {
 	uint64 minimum_amount_out = 2;
 }
 
+message SwapParameters2 {
+	uint64 amount0 = 1;
+	uint64 amount1 = 2;
+	uint32 swap_mode = 3;
+}
+
 message SwapResult {
 	uint64 actual_input_amount = 1;
 	uint64 output_amount = 2;
@@ -338,6 +430,17 @@ message SwapResult {
 	uint64 trading_fee = 4;
 	uint64 protocol_fee = 5;
 	uint64 referral_fee = 6;
+}
+
+message SwapResult2 {
+	uint64 included_fee_input_amount = 1;
+	uint64 excluded_fee_input_amount = 2;
+	uint64 amount_left = 3;
+	uint64 output_amount = 4;
+	string next_sqrt_price = 5;
+	uint64 trading_fee = 6;
+	uint64 protocol_fee = 7;
+	uint64 referral_fee = 8;
 }
 
 message TokenSupplyParams {
@@ -383,14 +486,14 @@ message LockEscrow {
 
 message MeteoraDammMigrationMetadata {
 	string virtual_pool = 1;
-	string pool_creator = 2;
+	repeated uint32 padding0 = 2;
 	string partner = 3;
 	string lp_mint = 4;
 	uint64 partner_locked_lp = 5;
 	uint64 partner_lp = 6;
 	uint64 creator_locked_lp = 7;
 	uint64 creator_lp = 8;
-	uint32 padding0 = 9;
+	uint32 padding0_hidden = 9;
 	uint32 creator_locked_status = 10;
 	uint32 partner_locked_status = 11;
 	uint32 creator_claim_status = 12;
@@ -400,7 +503,7 @@ message MeteoraDammMigrationMetadata {
 
 message MeteoraDammV2Metadata {
 	string virtual_pool = 1;
-	string pool_creator = 2;
+	repeated uint32 padding0 = 2;
 	string partner = 3;
 	repeated uint32 padding = 4;
 }
@@ -432,18 +535,24 @@ message PoolConfig {
 	uint32 migration_fee_option = 16;
 	uint32 fixed_token_supply_flag = 17;
 	uint32 creator_trading_fee_percentage = 18;
-	repeated uint32 padding0 = 19;
-	repeated uint32 padding1 = 20;
-	uint64 swap_base_amount = 21;
-	uint64 migration_quote_threshold = 22;
-	uint64 migration_base_threshold = 23;
-	string migration_sqrt_price = 24;
-	LockedVestingConfig locked_vesting_config = 25;
-	uint64 pre_migration_token_supply = 26;
-	uint64 post_migration_token_supply = 27;
-	repeated string padding2 = 28;
-	string sqrt_start_price = 29;
-	repeated LiquidityDistributionConfig curve = 30;
+	uint32 token_update_authority = 19;
+	uint32 migration_fee_percentage = 20;
+	uint32 creator_migration_fee_percentage = 21;
+	repeated uint32 padding0 = 22;
+	uint64 swap_base_amount = 23;
+	uint64 migration_quote_threshold = 24;
+	uint64 migration_base_threshold = 25;
+	string migration_sqrt_price = 26;
+	LockedVestingConfig locked_vesting_config = 27;
+	uint64 pre_migration_token_supply = 28;
+	uint64 post_migration_token_supply = 29;
+	uint32 migrated_collect_fee_mode = 30;
+	uint32 migrated_dynamic_fee = 31;
+	uint32 migrated_pool_fee_bps = 32;
+	repeated uint32 padding1 = 33;
+	string padding2 = 34;
+	string sqrt_start_price = 35;
+	repeated LiquidityDistributionConfig curve = 36;
 }
 
 message VirtualPool {
@@ -468,7 +577,7 @@ message VirtualPool {
 	uint32 migration_progress = 19;
 	uint32 is_withdraw_leftover = 20;
 	uint32 is_creator_withdraw_surplus = 21;
-	repeated uint32 padding0 = 22;
+	uint32 migration_fee_withdraw_status = 22;
 	PoolMetrics metrics = 23;
 	uint64 finish_curve_timestamp = 24;
 	uint64 creator_base_fee = 25;
@@ -578,25 +687,7 @@ message CreateConfigIxAccounts {
 }
 
 message CreateConfigIxData {
-	PoolFeeParameters pool_fees = 1;
-	uint32 collect_fee_mode = 2;
-	uint32 migration_option = 3;
-	uint32 activation_type = 4;
-	uint32 token_type = 5;
-	uint32 token_decimal = 6;
-	uint32 partner_lp_percentage = 7;
-	uint32 partner_locked_lp_percentage = 8;
-	uint32 creator_lp_percentage = 9;
-	uint32 creator_locked_lp_percentage = 10;
-	uint64 migration_quote_threshold = 11;
-	string sqrt_start_price = 12;
-	LockedVestingParams locked_vesting = 13;
-	uint32 migration_fee_option = 14;
-	optional TokenSupplyParams token_supply = 15;
-	uint32 creator_trading_fee_percentage = 16;
-	repeated uint32 padding0 = 17;
-	repeated uint64 padding1 = 18;
-	repeated LiquidityDistributionParameters curve = 19;
+	ConfigParameters config_parameters = 1;
 }
 
 message CreateLockerIxAccounts {
@@ -877,6 +968,38 @@ message SwapIxData {
 	SwapParameters params = 1;
 }
 
+message Swap2IxAccounts {
+	string pool_authority = 1;
+	string config = 2;
+	string pool = 3;
+	string input_token_account = 4;
+	string output_token_account = 5;
+	string base_vault = 6;
+	string quote_vault = 7;
+	string base_mint = 8;
+	string quote_mint = 9;
+	string payer = 10;
+	string token_base_program = 11;
+	string token_quote_program = 12;
+	optional string referral_token_account = 13;
+	string event_authority = 14;
+	string program = 15;
+}
+
+message Swap2IxData {
+	SwapParameters2 params = 1;
+}
+
+message TransferPoolCreatorIxAccounts {
+	string virtual_pool = 1;
+	string config = 2;
+	string creator = 3;
+	string new_creator = 4;
+	string event_authority = 5;
+	string program = 6;
+}
+
+
 message WithdrawLeftoverIxAccounts {
 	string pool_authority = 1;
 	string config = 2;
@@ -890,6 +1013,23 @@ message WithdrawLeftoverIxAccounts {
 	string program = 10;
 }
 
+
+message WithdrawMigrationFeeIxAccounts {
+	string pool_authority = 1;
+	string config = 2;
+	string virtual_pool = 3;
+	string token_quote_account = 4;
+	string quote_vault = 5;
+	string quote_mint = 6;
+	string sender = 7;
+	string token_quote_program = 8;
+	string event_authority = 9;
+	string program = 10;
+}
+
+message WithdrawMigrationFeeIxData {
+	uint32 flag = 1;
+}
 
 
 message ProgramState {
@@ -929,7 +1069,10 @@ message ProgramIxs {
         	PartnerWithdrawSurplusIx partner_withdraw_surplus = 19;
         	ProtocolWithdrawSurplusIx protocol_withdraw_surplus = 20;
         	SwapIx swap = 21;
-        	WithdrawLeftoverIx withdraw_leftover = 22;
+        	Swap2Ix swap2 = 22;
+        	TransferPoolCreatorIx transfer_pool_creator = 23;
+        	WithdrawLeftoverIx withdraw_leftover = 24;
+        	WithdrawMigrationFeeIx withdraw_migration_fee = 25;
         }
 }
 

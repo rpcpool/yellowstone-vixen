@@ -5,10 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use crate::generated::types::SwapParameters;
+use crate::generated::types::SwapResult;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
-
-use crate::generated::types::{SwapParameters, SwapResult};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -29,4 +30,102 @@ pub struct EvtSwap {
     pub swap_result: SwapResult,
     pub amount_in: u64,
     pub current_timestamp: u64,
+}
+
+impl EvtSwap {
+    /// EvtSwap discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0x1b, 0x3c, 0x15, 0xd5, 0x8a, 0xaa, 0xbb, 0x93];
+
+    /// Parse EvtSwap from inner instruction data that starts with self CPI log prefix
+    pub fn from_inner_instruction_data(data: &[u8]) -> Option<Self> {
+        // Check if data starts with self CPI log prefix: 0xe445a52e51cb9a1d
+        let cpi_log_prefix = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
+        if !data.starts_with(&cpi_log_prefix) {
+            return None;
+        }
+
+        // Skip the CPI log prefix (8 bytes)
+        let remaining_data = &data[8..];
+
+        // Check if the remaining data starts with EvtSwap discriminator
+        if !remaining_data.starts_with(&Self::DISCRIMINATOR) {
+            return None;
+        }
+
+        // Skip the discriminator (8 bytes) and deserialize the EvtSwap
+        Self::try_from_slice(&remaining_data[8..]).ok()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_discriminator_constant() {
+        assert_eq!(
+            EvtSwap::DISCRIMINATOR,
+            [0x1b, 0x3c, 0x15, 0xd5, 0x8a, 0xaa, 0xbb, 0x93]
+        );
+    }
+
+    #[test]
+    fn test_parse_real_inner_instruction_data() {
+        // Real inner instruction data from a meteora DBC swap transaction
+        let hex_data = "e445a52e51cb9a1d1b3c15d58aaabb93224338c8f208774fccd95a5596125d634edb9362895ab9d6e4cd17da113662fb662e3f740961282e312f984b49ad6617d820483f206b52b3d52ae0e90fa322b20100bcc2452200000000c10909220a00000020e24422000000006ed4cf2e0a000000e38a8379d979621d0000000000000000b0b3000000000000ec2c0000000000000000000000000000bcc2452200000000385bd26800000000";
+
+        // Convert hex string to bytes
+        let data: Vec<u8> = (0..hex_data.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&hex_data[i..i + 2], 16).unwrap())
+            .collect();
+
+        let result = EvtSwap::from_inner_instruction_data(&data);
+        assert!(
+            result.is_some(),
+            "Should successfully parse real inner instruction data"
+        );
+
+        let evt_swap = result.unwrap();
+
+        // Verify the parsing worked by checking some fields
+        assert_eq!(evt_swap.trade_direction, 1);
+        assert_eq!(evt_swap.has_referral, false);
+        assert_eq!(evt_swap.amount_in, 574919356);
+    }
+
+    #[test]
+    fn test_invalid_cpi_log_prefix() {
+        let invalid_prefix = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+        let evt_swap_discriminator = [0x1b, 0x3c, 0x15, 0xd5, 0x8a, 0xaa, 0xbb, 0x93];
+
+        let mut test_data = Vec::new();
+        test_data.extend_from_slice(&invalid_prefix);
+        test_data.extend_from_slice(&evt_swap_discriminator);
+        test_data.extend_from_slice(&[0u8; 64]);
+
+        let result = EvtSwap::from_inner_instruction_data(&test_data);
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid CPI log prefix"
+        );
+    }
+
+    #[test]
+    fn test_cpi_log_prefix_detection() {
+        let cpi_log_prefix = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
+        let evt_swap_discriminator = [0x1b, 0x3c, 0x15, 0xd5, 0x8a, 0xaa, 0xbb, 0x93];
+
+        // Create test data with CPI log prefix + EvtSwap discriminator + mock data
+        let mut test_data = Vec::new();
+        test_data.extend_from_slice(&cpi_log_prefix);
+        test_data.extend_from_slice(&evt_swap_discriminator);
+        test_data.extend_from_slice(&[0u8; 128]); // Mock EvtSwap data (larger than SwapEvent)
+
+        // Should detect the CPI log prefix
+        assert!(test_data.starts_with(&cpi_log_prefix));
+
+        // Should detect the EvtSwap discriminator after CPI prefix
+        assert!(test_data[8..].starts_with(&evt_swap_discriminator));
+    }
 }

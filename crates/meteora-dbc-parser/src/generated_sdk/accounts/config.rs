@@ -9,6 +9,9 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
 use crate::generated::types::PoolFees;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -31,6 +34,8 @@ pub struct Config {
     #[cfg_attr(feature = "serde", serde(with = "serde_with::As::<serde_with::Bytes>"))]
     pub padding: [u8; 219],
 }
+
+pub const CONFIG_DISCRIMINATOR: [u8; 8] = [155, 12, 170, 224, 30, 250, 204, 130];
 
 impl Config {
     pub const LEN: usize = 340;
@@ -133,7 +138,9 @@ impl anchor_lang::AccountSerialize for Config {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Config {
-    fn owner() -> Pubkey { crate::DYNAMIC_BONDING_CURVE_ID }
+    fn owner() -> Pubkey {
+        crate::DYNAMIC_BONDING_CURVE_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -141,5 +148,5 @@ impl anchor_lang::IdlBuild for Config {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Config {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

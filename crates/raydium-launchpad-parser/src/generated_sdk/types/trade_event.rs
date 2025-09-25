@@ -10,10 +10,10 @@ use solana_pubkey::Pubkey;
 
 use crate::generated::types::{PoolStatus, TradeDirection};
 
-/// Emitted when trade process
+/// Emitted when trade process (V1)
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct TradeEvent {
+pub struct TradeEventV1 {
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
@@ -35,4 +35,137 @@ pub struct TradeEvent {
     pub trade_direction: TradeDirection,
     pub pool_status: PoolStatus,
     pub exact_in: bool,
+}
+
+/// Emitted when trade process (V2)
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct TradeEventV2 {
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub pool_state: Pubkey,
+    pub total_base_sell: u64,
+    pub virtual_base: u64,
+    pub virtual_quote: u64,
+    pub real_base_before: u64,
+    pub real_quote_before: u64,
+    pub real_base_after: u64,
+    pub real_quote_after: u64,
+    pub amount_in: u64,
+    pub amount_out: u64,
+    pub protocol_fee: u64,
+    pub platform_fee: u64,
+    pub creator_fee: u64,
+    pub share_fee: u64,
+    pub trade_direction: TradeDirection,
+    pub pool_status: PoolStatus,
+    pub exact_in: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum TradeEvent {
+    V1(TradeEventV1),
+    V2(TradeEventV2),
+}
+
+impl TradeEvent {
+    /// TradeEvent discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee];
+
+    /// CPI log prefix for self CPI events
+    pub const CPI_LOG_PREFIX: [u8; 8] = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
+
+    /// Parse TradeEvent from inner instruction data
+    pub fn from_inner_instruction_data(data: &[u8]) -> Option<Self> {
+        if data.len() >= 16 && data.starts_with(&Self::CPI_LOG_PREFIX) {
+            let event_data = &data[8..];
+
+            if event_data.starts_with(&Self::DISCRIMINATOR) {
+                let trade_event_data = &event_data[8..];
+
+                if let Ok(v2_event) = TradeEventV2::try_from_slice(trade_event_data) {
+                    return Some(TradeEvent::V2(v2_event));
+                }
+
+                if let Ok(v1_event) = TradeEventV1::try_from_slice(trade_event_data) {
+                    return Some(TradeEvent::V1(v1_event));
+                }
+            }
+        }
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_discriminator_constant() {
+        assert_eq!(
+            TradeEvent::DISCRIMINATOR,
+            [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee]
+        );
+    }
+
+    #[test]
+    fn test_cpi_log_prefix() {
+        assert_eq!(
+            TradeEvent::CPI_LOG_PREFIX,
+            [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d]
+        );
+    }
+
+    #[test]
+    fn test_invalid_cpi_prefix() {
+        let invalid_data = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
+        let result = TradeEvent::from_inner_instruction_data(&invalid_data);
+        assert!(result.is_none(), "Should not parse with invalid CPI prefix");
+    }
+
+    #[test]
+    fn test_invalid_discriminator() {
+        let mut data = TradeEvent::CPI_LOG_PREFIX.to_vec();
+        data.extend_from_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]);
+
+        let result = TradeEvent::from_inner_instruction_data(&data);
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid discriminator"
+        );
+    }
+
+    #[test]
+    fn test_parse_trade_event_v2_from_inner_data() {
+        let hex_data = "e445a52e51cb9a1dbddb7fd34ee661ee16a7af4706860d31addd53443e72ee9a501a808e7eee13d27bebf216ef1be7940078c5fb51d10200de740e3ee9cf0300d7af30fc060000004231cc39c08e0000a5ec613201000000ee2c01cc569c00008d131c5501000000063f2f2300000000acfb3492960d0000a4841600000000008d125a0000000000ed800400000000000000000000000000000000";
+
+        let data = hex::decode(hex_data).expect("Failed to decode hex");
+
+        let result = TradeEvent::from_inner_instruction_data(&data);
+        assert!(
+            result.is_some(),
+            "Should successfully parse TradeEvent from inner instruction data"
+        );
+
+        let trade_event = result.unwrap();
+
+        match trade_event {
+            TradeEvent::V1(_) => {
+                panic!("Expected TradeEventV2, got TradeEventV1");
+            },
+            TradeEvent::V2(v2_event) => {
+                assert_eq!(v2_event.amount_in, 590298886, "amount_in should match");
+                assert_eq!(
+                    v2_event.amount_out, 14940349201324,
+                    "amount_out should match"
+                );
+                assert_eq!(v2_event.exact_in, false, "exact_in should be false");
+                assert_eq!(v2_event.creator_fee, 295149, "exact_in should be false");
+                println!("Parsed as TradeEventV2: {:?}", v2_event);
+            },
+        }
+    }
 }

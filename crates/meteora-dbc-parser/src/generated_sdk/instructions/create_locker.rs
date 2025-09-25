@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const CREATE_LOCKER_DISCRIMINATOR: [u8; 8] = [167, 90, 137, 154, 75, 47, 17, 84];
 
 /// Accounts.
 #[derive(Debug)]
@@ -44,7 +47,6 @@ impl CreateLocker {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -119,7 +121,9 @@ impl CreateLockerInstructionData {
 }
 
 impl Default for CreateLockerInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `CreateLocker`.
@@ -160,85 +164,74 @@ pub struct CreateLockerBuilder {
 }
 
 impl CreateLockerBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     /// Virtual pool
     #[inline(always)]
     pub fn virtual_pool(&mut self, virtual_pool: solana_pubkey::Pubkey) -> &mut Self {
         self.virtual_pool = Some(virtual_pool);
         self
     }
-
     /// Config
     #[inline(always)]
     pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
-
     /// `[optional account, default to 'FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn base_vault(&mut self, base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.base_vault = Some(base_vault);
         self
     }
-
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
-
     #[inline(always)]
     pub fn base(&mut self, base: solana_pubkey::Pubkey) -> &mut Self {
         self.base = Some(base);
         self
     }
-
     #[inline(always)]
     pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
-
     #[inline(always)]
     pub fn escrow(&mut self, escrow: solana_pubkey::Pubkey) -> &mut Self {
         self.escrow = Some(escrow);
         self
     }
-
     #[inline(always)]
     pub fn escrow_token(&mut self, escrow_token: solana_pubkey::Pubkey) -> &mut Self {
         self.escrow_token = Some(escrow_token);
         self
     }
-
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
-
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
-
     /// `[optional account, default to 'LocpQgucEQHbqNABEYvBvwoxCPsSbG91A1QaQhQQqjn']`
     #[inline(always)]
     pub fn locker_program(&mut self, locker_program: solana_pubkey::Pubkey) -> &mut Self {
         self.locker_program = Some(locker_program);
         self
     }
-
     #[inline(always)]
     pub fn locker_event_authority(
         &mut self,
@@ -247,7 +240,6 @@ impl CreateLockerBuilder {
         self.locker_event_authority = Some(locker_event_authority);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
@@ -255,14 +247,12 @@ impl CreateLockerBuilder {
         self.system_program = Some(system_program);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -272,7 +262,6 @@ impl CreateLockerBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateLocker {
@@ -395,28 +384,21 @@ impl<'a, 'b> CreateLockerCpi<'a, 'b> {
             system_program: accounts.system_program,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -424,7 +406,7 @@ impl<'a, 'b> CreateLockerCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
             *self.virtual_pool.key,
@@ -563,7 +545,6 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
-
     /// Virtual pool
     #[inline(always)]
     pub fn virtual_pool(
@@ -573,14 +554,12 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
         self.instruction.virtual_pool = Some(virtual_pool);
         self
     }
-
     /// Config
     #[inline(always)]
     pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
-
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -589,7 +568,6 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn base_vault(
         &mut self,
@@ -598,31 +576,26 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
-
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base_mint = Some(base_mint);
         self
     }
-
     #[inline(always)]
     pub fn base(&mut self, base: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base = Some(base);
         self
     }
-
     #[inline(always)]
     pub fn creator(&mut self, creator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.creator = Some(creator);
         self
     }
-
     #[inline(always)]
     pub fn escrow(&mut self, escrow: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.escrow = Some(escrow);
         self
     }
-
     #[inline(always)]
     pub fn escrow_token(
         &mut self,
@@ -631,13 +604,11 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
         self.instruction.escrow_token = Some(escrow_token);
         self
     }
-
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
-
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -646,7 +617,6 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
-
     #[inline(always)]
     pub fn locker_program(
         &mut self,
@@ -655,7 +625,6 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
         self.instruction.locker_program = Some(locker_program);
         self
     }
-
     #[inline(always)]
     pub fn locker_event_authority(
         &mut self,
@@ -664,7 +633,6 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
         self.instruction.locker_event_authority = Some(locker_event_authority);
         self
     }
-
     /// System program.
     #[inline(always)]
     pub fn system_program(
@@ -674,7 +642,6 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -688,7 +655,6 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -703,16 +669,13 @@ impl<'a, 'b> CreateLockerCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let instruction = CreateLockerCpi {
             __program: self.instruction.__program,
 

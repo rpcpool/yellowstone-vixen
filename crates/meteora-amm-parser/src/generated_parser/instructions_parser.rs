@@ -13,6 +13,7 @@ use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     deserialize_checked,
+    generated::types::EvtSwap,
     instructions::{
         AddLiquidity as AddLiquidityIxAccounts, AddLiquidityInstructionArgs as AddLiquidityIxData,
         ClaimPartnerFee as ClaimPartnerFeeIxAccounts,
@@ -55,6 +56,7 @@ use crate::{
     },
     ID,
 };
+use yellowstone_vixen_core::constants::is_known_aggregator;
 
 /// CpAmm Instructions
 #[derive(Debug)]
@@ -90,7 +92,7 @@ pub enum CpAmmProgramIx {
     RemoveAllLiquidity(RemoveAllLiquidityIxAccounts, RemoveAllLiquidityIxData),
     RemoveLiquidity(RemoveLiquidityIxAccounts, RemoveLiquidityIxData),
     SetPoolStatus(SetPoolStatusIxAccounts, SetPoolStatusIxData),
-    Swap(SwapIxAccounts, SwapIxData),
+    Swap(SwapIxAccounts, SwapIxData, Option<EvtSwap>),
     UpdateRewardDuration(UpdateRewardDurationIxAccounts, UpdateRewardDurationIxData),
     UpdateRewardFunder(UpdateRewardFunderIxAccounts, UpdateRewardFunderIxData),
     WithdrawIneligibleReward(
@@ -649,7 +651,19 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(CpAmmProgramIx::Swap(ix_accounts, de_ix_data))
+
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Search for EvtSwap in inner instructions
+                let evt_swap = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| EvtSwap::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(CpAmmProgramIx::Swap(ix_accounts, de_ix_data, evt_swap))
             },
             [138, 174, 196, 169, 213, 235, 254, 107] => {
                 let expected_accounts_len = 4;
@@ -1650,7 +1664,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                CpAmmProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
+                CpAmmProgramIx::Swap(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),

@@ -138,8 +138,8 @@ pub mod proto_types_parsers {
             }
         }
     }
-    use crate::types::TradeEvent;
-    impl IntoProto<proto_def::TradeEvent> for TradeEvent {
+    use crate::types::{TradeEvent, TradeEventV1, TradeEventV2};
+    impl IntoProto<proto_def::TradeEvent> for TradeEventV1 {
         fn into_proto(self) -> proto_def::TradeEvent {
             proto_def::TradeEvent {
                 pool_state: self.pool_state.to_string(),
@@ -168,6 +168,35 @@ pub mod proto_types_parsers {
             proto_def::TransferFeeExtensionParams {
                 transfer_fee_basis_points: self.transfer_fee_basis_points.into(),
                 maximum_fee: self.maximum_fee,
+            }
+        }
+    }
+    impl IntoProto<proto_def::TradeEvent> for TradeEventV2 {
+        fn into_proto(self) -> proto_def::TradeEvent {
+            proto_def::TradeEvent {
+                pool_state: self.pool_state.to_string(),
+                total_base_sell: self.total_base_sell,
+                virtual_base: self.virtual_base,
+                virtual_quote: self.virtual_quote,
+                real_base_before: self.real_base_before,
+                real_quote_before: self.real_quote_before,
+                real_base_after: self.real_base_after,
+                real_quote_after: self.real_quote_after,
+                amount_in: self.amount_in,
+                amount_out: self.amount_out,
+                protocol_fee: self.protocol_fee,
+                platform_fee: self.platform_fee,
+                share_fee: self.share_fee,
+                trade_direction: self.trade_direction as i32,
+                pool_status: self.pool_status as i32,
+            }
+        }
+    }
+    impl IntoProto<proto_def::TradeEvent> for TradeEvent {
+        fn into_proto(self) -> proto_def::TradeEvent {
+            match self {
+                TradeEvent::V1(v1_event) => v1_event.into_proto(),
+                TradeEvent::V2(v2_event) => v2_event.into_proto(),
             }
         }
     }

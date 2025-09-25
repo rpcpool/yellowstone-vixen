@@ -28,6 +28,8 @@ pub struct VirtualPoolMetadata {
     pub logo: String,
 }
 
+pub const VIRTUAL_POOL_METADATA_DISCRIMINATOR: [u8; 8] = [217, 37, 82, 250, 43, 47, 228, 254];
+
 impl VirtualPoolMetadata {
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -127,7 +129,9 @@ impl anchor_lang::AccountSerialize for VirtualPoolMetadata {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for VirtualPoolMetadata {
-    fn owner() -> Pubkey { crate::DYNAMIC_BONDING_CURVE_ID }
+    fn owner() -> Pubkey {
+        crate::DYNAMIC_BONDING_CURVE_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -135,5 +139,5 @@ impl anchor_lang::IdlBuild for VirtualPoolMetadata {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for VirtualPoolMetadata {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

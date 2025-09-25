@@ -8,8 +8,12 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
+use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
+
+use crate::deserialize_checked;
+use crate::generated::types::{EvtSwap, EvtSwap2};
 
 use crate::{
     deserialize_checked,
@@ -81,8 +85,11 @@ pub enum DynamicBondingCurveProgramIx {
     MigrationMeteoraDammCreateMetadata(MigrationMeteoraDammCreateMetadataIxAccounts),
     PartnerWithdrawSurplus(PartnerWithdrawSurplusIxAccounts),
     ProtocolWithdrawSurplus(ProtocolWithdrawSurplusIxAccounts),
-    Swap(SwapIxAccounts, SwapIxData),
+    Swap(SwapIxAccounts, SwapIxData, Option<EvtSwap>),
+    Swap2(Swap2IxAccounts, Swap2IxData, Option<EvtSwap2>),
+    TransferPoolCreator(TransferPoolCreatorIxAccounts),
     WithdrawLeftover(WithdrawLeftoverIxAccounts),
+    WithdrawMigrationFee(WithdrawMigrationFeeIxAccounts, WithdrawMigrationFeeIxData),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -618,7 +625,76 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(DynamicBondingCurveProgramIx::Swap(ix_accounts, de_ix_data))
+
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                let evt_swap = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| EvtSwap::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(DynamicBondingCurveProgramIx::Swap(
+                    ix_accounts,
+                    de_ix_data,
+                    evt_swap,
+                ))
+            },
+            [65, 75, 63, 76, 235, 91, 91, 136] => {
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = Swap2IxAccounts {
+                    pool_authority: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    input_token_account: next_account(accounts)?,
+                    output_token_account: next_account(accounts)?,
+                    base_vault: next_account(accounts)?,
+                    quote_vault: next_account(accounts)?,
+                    base_mint: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    token_base_program: next_account(accounts)?,
+                    token_quote_program: next_account(accounts)?,
+                    referral_token_account: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: Swap2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
+
+                // Filter out trades handled by Jupiter or OKX aggregators
+                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                    return Err(yellowstone_vixen_core::ParseError::Filtered);
+                }
+
+                // Search for EvtSwap2 in inner instructions
+                let evt_swap2 = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| EvtSwap2::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(DynamicBondingCurveProgramIx::Swap2(
+                    ix_accounts,
+                    de_ix_data,
+                    evt_swap2,
+                ))
+            },
+            [20, 7, 169, 33, 58, 147, 166, 33] => {
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = TransferPoolCreatorIxAccounts {
+                    virtual_pool: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    creator: next_account(accounts)?,
+                    new_creator: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                Ok(DynamicBondingCurveProgramIx::TransferPoolCreator(
+                    ix_accounts,
+                ))
             },
             [20, 198, 202, 237, 235, 243, 183, 66] => {
                 let expected_accounts_len = 10;
@@ -636,6 +712,28 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 Ok(DynamicBondingCurveProgramIx::WithdrawLeftover(ix_accounts))
+            },
+            [237, 142, 45, 23, 129, 6, 222, 162] => {
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = WithdrawMigrationFeeIxAccounts {
+                    pool_authority: next_account(accounts)?,
+                    config: next_account(accounts)?,
+                    virtual_pool: next_account(accounts)?,
+                    token_quote_account: next_account(accounts)?,
+                    quote_vault: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    sender: next_account(accounts)?,
+                    token_quote_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: WithdrawMigrationFeeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(DynamicBondingCurveProgramIx::WithdrawMigrationFee(
+                    ix_accounts,
+                    de_ix_data,
+                ))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
@@ -733,12 +831,11 @@ pub fn next_program_id_optional_account<
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
+    use super::{DynamicBondingCurveProgramIx, InstructionParser};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{
-        ClaimCreatorTradingFeeIxAccounts, DynamicBondingCurveProgramIx, InstructionParser,
-    };
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
+    use super::ClaimCreatorTradingFeeIxAccounts;
     impl IntoProto<proto_def::ClaimCreatorTradingFeeIxAccounts> for ClaimCreatorTradingFeeIxAccounts {
         fn into_proto(self) -> proto_def::ClaimCreatorTradingFeeIxAccounts {
             proto_def::ClaimCreatorTradingFeeIxAccounts {
@@ -863,25 +960,7 @@ mod proto_parser {
     impl IntoProto<proto_def::CreateConfigIxData> for CreateConfigIxData {
         fn into_proto(self) -> proto_def::CreateConfigIxData {
             proto_def::CreateConfigIxData {
-                pool_fees: Some(self.pool_fees.into_proto()),
-                collect_fee_mode: self.collect_fee_mode.into(),
-                migration_option: self.migration_option.into(),
-                activation_type: self.activation_type.into(),
-                token_type: self.token_type.into(),
-                token_decimal: self.token_decimal.into(),
-                partner_lp_percentage: self.partner_lp_percentage.into(),
-                partner_locked_lp_percentage: self.partner_locked_lp_percentage.into(),
-                creator_lp_percentage: self.creator_lp_percentage.into(),
-                creator_locked_lp_percentage: self.creator_locked_lp_percentage.into(),
-                migration_quote_threshold: self.migration_quote_threshold,
-                sqrt_start_price: self.sqrt_start_price.to_string(),
-                locked_vesting: Some(self.locked_vesting.into_proto()),
-                migration_fee_option: self.migration_fee_option.into(),
-                token_supply: self.token_supply.map(|x| x.into_proto()),
-                creator_trading_fee_percentage: self.creator_trading_fee_percentage.into(),
-                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
-                padding1: self.padding1.to_vec(),
-                curve: self.curve.into_iter().map(|x| x.into_proto()).collect(),
+                config_parameters: Some(self.config_parameters.into_proto()),
             }
         }
     }
@@ -1253,6 +1332,49 @@ mod proto_parser {
             }
         }
     }
+    use super::Swap2IxAccounts;
+    impl IntoProto<proto_def::Swap2IxAccounts> for Swap2IxAccounts {
+        fn into_proto(self) -> proto_def::Swap2IxAccounts {
+            proto_def::Swap2IxAccounts {
+                pool_authority: self.pool_authority.to_string(),
+                config: self.config.to_string(),
+                pool: self.pool.to_string(),
+                input_token_account: self.input_token_account.to_string(),
+                output_token_account: self.output_token_account.to_string(),
+                base_vault: self.base_vault.to_string(),
+                quote_vault: self.quote_vault.to_string(),
+                base_mint: self.base_mint.to_string(),
+                quote_mint: self.quote_mint.to_string(),
+                payer: self.payer.to_string(),
+                token_base_program: self.token_base_program.to_string(),
+                token_quote_program: self.token_quote_program.to_string(),
+                referral_token_account: self.referral_token_account.map(|p| p.to_string()),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::Swap2IxData;
+    impl IntoProto<proto_def::Swap2IxData> for Swap2IxData {
+        fn into_proto(self) -> proto_def::Swap2IxData {
+            proto_def::Swap2IxData {
+                params: Some(self.params.into_proto()),
+            }
+        }
+    }
+    use super::TransferPoolCreatorIxAccounts;
+    impl IntoProto<proto_def::TransferPoolCreatorIxAccounts> for TransferPoolCreatorIxAccounts {
+        fn into_proto(self) -> proto_def::TransferPoolCreatorIxAccounts {
+            proto_def::TransferPoolCreatorIxAccounts {
+                virtual_pool: self.virtual_pool.to_string(),
+                config: self.config.to_string(),
+                creator: self.creator.to_string(),
+                new_creator: self.new_creator.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
     use super::WithdrawLeftoverIxAccounts;
     impl IntoProto<proto_def::WithdrawLeftoverIxAccounts> for WithdrawLeftoverIxAccounts {
         fn into_proto(self) -> proto_def::WithdrawLeftoverIxAccounts {
@@ -1267,6 +1389,31 @@ mod proto_parser {
                 token_base_program: self.token_base_program.to_string(),
                 event_authority: self.event_authority.to_string(),
                 program: self.program.to_string(),
+            }
+        }
+    }
+    use super::WithdrawMigrationFeeIxAccounts;
+    impl IntoProto<proto_def::WithdrawMigrationFeeIxAccounts> for WithdrawMigrationFeeIxAccounts {
+        fn into_proto(self) -> proto_def::WithdrawMigrationFeeIxAccounts {
+            proto_def::WithdrawMigrationFeeIxAccounts {
+                pool_authority: self.pool_authority.to_string(),
+                config: self.config.to_string(),
+                virtual_pool: self.virtual_pool.to_string(),
+                token_quote_account: self.token_quote_account.to_string(),
+                quote_vault: self.quote_vault.to_string(),
+                quote_mint: self.quote_mint.to_string(),
+                sender: self.sender.to_string(),
+                token_quote_program: self.token_quote_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::WithdrawMigrationFeeIxData;
+    impl IntoProto<proto_def::WithdrawMigrationFeeIxData> for WithdrawMigrationFeeIxData {
+        fn into_proto(self) -> proto_def::WithdrawMigrationFeeIxData {
+            proto_def::WithdrawMigrationFeeIxData {
+                flag: self.flag.into(),
             }
         }
     }
@@ -1459,11 +1606,24 @@ mod proto_parser {
                         )),
                     }
                 },
-                DynamicBondingCurveProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
+                DynamicBondingCurveProgramIx::Swap(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
                     })),
+                },
+                DynamicBondingCurveProgramIx::Swap2(acc, data, _) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap2(proto_def::Swap2Ix {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                DynamicBondingCurveProgramIx::TransferPoolCreator(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::TransferPoolCreator(
+                        proto_def::TransferPoolCreatorIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
                 },
                 DynamicBondingCurveProgramIx::WithdrawLeftover(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawLeftover(
@@ -1471,6 +1631,16 @@ mod proto_parser {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
+                },
+                DynamicBondingCurveProgramIx::WithdrawMigrationFee(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::WithdrawMigrationFee(
+                            proto_def::WithdrawMigrationFeeIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
                 },
             }
         }

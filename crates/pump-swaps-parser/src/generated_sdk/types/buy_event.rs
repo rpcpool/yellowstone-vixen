@@ -10,7 +10,7 @@ use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct BuyEvent {
+pub struct BuyEventV1 {
     pub timestamp: i64,
     pub base_amount_out: u64,
     pub max_quote_amount_in: u64,
@@ -62,4 +62,152 @@ pub struct BuyEvent {
     pub coin_creator: Pubkey,
     pub coin_creator_fee_basis_points: u64,
     pub coin_creator_fee: u64,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct BuyEventV2 {
+    pub timestamp: i64,
+    pub base_amount_out: u64,
+    pub max_quote_amount_in: u64,
+    pub user_base_token_reserves: u64,
+    pub user_quote_token_reserves: u64,
+    pub pool_base_token_reserves: u64,
+    pub pool_quote_token_reserves: u64,
+    pub quote_amount_in: u64,
+    pub lp_fee_basis_points: u64,
+    pub lp_fee: u64,
+    pub protocol_fee_basis_points: u64,
+    pub protocol_fee: u64,
+    pub quote_amount_in_with_lp_fee: u64,
+    pub user_quote_amount_in: u64,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub pool: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub user: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub user_base_token_account: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub user_quote_token_account: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub protocol_fee_recipient: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub protocol_fee_recipient_token_account: Pubkey,
+    // Additional V2 fields
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub coin_creator: Pubkey,
+    pub coin_creator_fee_basis_points: u64,
+    pub coin_creator_fee: u64,
+    pub track_volume: bool,
+    pub total_unclaimed_tokens: u64,
+    pub total_claimed_tokens: u64,
+    pub current_sol_volume: u64,
+    pub last_update_timestamp: i64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum BuyEvent {
+    V1(BuyEventV1),
+    V2(BuyEventV2),
+}
+
+impl BuyEvent {
+    /// BuyEvent discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0x67, 0xf4, 0x52, 0x1f, 0x2c, 0xf5, 0x77, 0x77];
+
+    /// CPI log prefix for self CPI events
+    pub const CPI_LOG_PREFIX: [u8; 8] = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
+
+    /// Parse BuyEvent from inner instruction data
+    pub fn from_inner_instruction_data(data: &[u8]) -> Option<Self> {
+        // Check if data starts with CPI log prefix
+        if data.len() >= 16 && data.starts_with(&Self::CPI_LOG_PREFIX) {
+            let event_data = &data[8..]; // Skip CPI log prefix (8 bytes)
+
+            // Check if the remaining data starts with BuyEvent discriminator
+            if event_data.starts_with(&Self::DISCRIMINATOR) {
+                let buy_event_data = &event_data[8..]; // Skip the discriminator (8 bytes)
+
+                // Try to parse as V2 first (longer structure)
+                if let Ok(v2_event) = BuyEventV2::try_from_slice(buy_event_data) {
+                    return Some(BuyEvent::V2(v2_event));
+                }
+
+                // If V2 fails, try V1
+                if let Ok(v1_event) = BuyEventV1::try_from_slice(buy_event_data) {
+                    return Some(BuyEvent::V1(v1_event));
+                }
+            }
+        }
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_buy_event_from_inner_data() {
+        // Test data from provided hex string
+        let hex_data = "e445a52e51cb9a1d67f4521f2cf57777c37ed268000000008d6c1764000000006978dbb6450400000000000000000000039c2449e203000073393441480000004ed77669dcc302009176eae7d9030000190000000000000080d3fa760200000005000000000000004d2a327e00000000114ae55edc0300005e7417dddc030000804c224ff20b532ec72181ec27d5f7b014f7454867c6e525ac73ba1c83b0b268e3983b10957008489fe76a09b72601c7ab21573e077e19d2cc72563b25b046ec48300d36156a14db0355e5015933dd06eee58dc6a417bfb809c9406f25a4d4ad010acc8029eaba9540f16f146065e324c96cf358b8fad81d5df4f4da9aeb56524ac2f8d0dd5cbc97e3289c197cb5062a54f3d956b9ce6e5115f96567aa5cb3e6308dcd4a6268f1014872fee0e9d782c5fe98e23b375b2ed9bb6d37e48171574b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000";
+
+        let data = hex::decode(hex_data).expect("Failed to decode hex");
+
+        let result = BuyEvent::from_inner_instruction_data(&data);
+        assert!(result.is_some(), "Should successfully parse BuyEvent from inner instruction data");
+
+        let buy_event = result.unwrap();
+
+        // This should be parsed as V2 based on the data length
+        match buy_event {
+            BuyEvent::V1(v1_event) => {
+                panic!("Expected BuyEventV2, got BuyEventV1: {:?}", v1_event);
+            }
+            BuyEvent::V2(v2_event) => {
+                assert_eq!(v2_event.timestamp, 1758625475);
+                assert_eq!(v2_event.base_amount_out, 1679256717);
+                assert_eq!(v2_event.quote_amount_in, 4234433689233);
+                println!("Parsed as BuyEventV2: {:?}", v2_event);
+            }
+        }
+    }
+
+    #[test]
+    fn test_invalid_cpi_prefix() {
+        let invalid_data = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
+        let result = BuyEvent::from_inner_instruction_data(&invalid_data);
+        assert!(result.is_none(), "Should not parse with invalid CPI prefix");
+    }
+
+    #[test]
+    fn test_invalid_discriminator() {
+        let mut data = BuyEvent::CPI_LOG_PREFIX.to_vec();
+        data.extend_from_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]); // Invalid discriminator
+
+        let result = BuyEvent::from_inner_instruction_data(&data);
+        assert!(result.is_none(), "Should not parse with invalid discriminator");
+    }
 }

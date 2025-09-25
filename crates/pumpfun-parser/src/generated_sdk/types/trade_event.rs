@@ -10,7 +10,7 @@ use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct TradeEvent {
+pub struct TradeEventV1 {
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
@@ -43,4 +43,149 @@ pub struct TradeEvent {
     pub creator: Pubkey,
     pub creator_fee_basis_points: u64,
     pub creator_fee: u64,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct TradeEventV2 {
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub mint: Pubkey,
+    pub sol_amount: u64,
+    pub token_amount: u64,
+    pub is_buy: bool,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub user: Pubkey,
+    pub timestamp: i64,
+    pub virtual_sol_reserves: u64,
+    pub virtual_token_reserves: u64,
+    pub real_sol_reserves: u64,
+    pub real_token_reserves: u64,
+    // Additional V2 fields
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub fee_recipient: Pubkey,
+    pub fee_basis_points: u64,
+    pub fee: u64,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub creator: Pubkey,
+    pub creator_fee_basis_points: u64,
+    pub creator_fee: u64,
+    pub track_volume: bool,
+    pub total_unclaimed_tokens: u64,
+    pub total_claimed_tokens: u64,
+    pub current_sol_volume: u64,
+    pub last_update_timestamp: i64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum TradeEvent {
+    V1(TradeEventV1),
+    V2(TradeEventV2),
+}
+
+impl TradeEvent {
+    /// TradeEvent discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee];
+
+    /// CPI log prefix for self CPI events
+    pub const CPI_LOG_PREFIX: [u8; 8] = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
+
+    /// Parse TradeEvent from inner instruction data
+    pub fn from_inner_instruction_data(data: &[u8]) -> Option<Self> {
+        // Check if data starts with CPI log prefix
+        if data.len() >= 16 && data.starts_with(&Self::CPI_LOG_PREFIX) {
+            let event_data = &data[8..]; // Skip CPI log prefix (8 bytes)
+
+            // Check if the remaining data starts with TradeEvent discriminator
+            if event_data.starts_with(&Self::DISCRIMINATOR) {
+                let trade_event_data = &event_data[8..]; // Skip the discriminator (8 bytes)
+
+                // Try to parse as V2 first (longer structure)
+                if let Ok(v2_event) = TradeEventV2::try_from_slice(trade_event_data) {
+                    return Some(TradeEvent::V2(v2_event));
+                }
+
+                // If V2 fails, try V1
+                if let Ok(v1_event) = TradeEventV1::try_from_slice(trade_event_data) {
+                    return Some(TradeEvent::V1(v1_event));
+                }
+            }
+        }
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_discriminator_constant() {
+        assert_eq!(
+            TradeEvent::DISCRIMINATOR,
+            [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee]
+        );
+    }
+
+    #[test]
+    fn test_cpi_log_prefix() {
+        assert_eq!(
+            TradeEvent::CPI_LOG_PREFIX,
+            [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d]
+        );
+    }
+
+    #[test]
+    fn test_invalid_cpi_prefix() {
+        let invalid_data = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
+        let result = TradeEvent::from_inner_instruction_data(&invalid_data);
+        assert!(result.is_none(), "Should not parse with invalid CPI prefix");
+    }
+
+    #[test]
+    fn test_invalid_discriminator() {
+        let mut data = TradeEvent::CPI_LOG_PREFIX.to_vec();
+        data.extend_from_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]); // Invalid discriminator
+
+        let result = TradeEvent::from_inner_instruction_data(&data);
+        assert!(result.is_none(), "Should not parse with invalid discriminator");
+    }
+
+    #[test]
+    fn test_parse_trade_event_from_inner_data() {
+        // Test data from provided hex string
+        let hex_data = "e445a52e51cb9a1dbddb7fd34ee661eed792df809300dfe8e68ba7ebaa24ea1045545a8863ed8073895e87ca1a5da8cffe41802c000000000567831bd102000000cfdf75c19d2f2c26881edce2f023f5900fcb0503816d681d433cdffa53fe5e70b456d3680000000048025b6c140000004df2fdecc24d0100485637700d0000004d5aeba0314f0000e004c87ceb98fa5ce47f803806fd2c7945d29524959aec00ded97814f38f78465f00000000000000f9396c0000000000c467db24dbb6f094913ff23062e035d38a0096afa3debca7c5c8e350a75702e11e00000000000000422d220000000000000000000000000000000000000000000000000000000000000000000000000000";
+
+        let data = hex::decode(hex_data).expect("Failed to decode hex");
+
+        let result = TradeEvent::from_inner_instruction_data(&data);
+        assert!(result.is_some(), "Should successfully parse TradeEvent from inner instruction data");
+
+        let trade_event = result.unwrap();
+
+        // This should be parsed as V2 based on the data length
+        match trade_event {
+            TradeEvent::V1(v1_event) => {
+                panic!("Expected TradeEventV2, got TradeEventV1: {:?}", v1_event);
+            }
+            TradeEvent::V2(v2_event) => {
+                assert_eq!(v2_event.is_buy, false);
+                assert_eq!(v2_event.sol_amount, 746603006);
+                assert_eq!(v2_event.token_amount, 3097133016837);
+                println!("Parsed as TradeEventV2: {:?}", v2_event);
+            }
+        }
+    }
 }

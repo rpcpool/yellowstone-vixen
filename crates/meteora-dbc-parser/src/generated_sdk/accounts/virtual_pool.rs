@@ -76,8 +76,8 @@ pub struct VirtualPool {
     pub is_withdraw_leftover: u8,
     /// is creator withdraw surplus
     pub is_creator_withdraw_surplus: u8,
-    /// padding
-    pub padding0: [u8; 1],
+    /// migration fee withdraw status, first bit is for partner, second bit is for creator
+    pub migration_fee_withdraw_status: u8,
     /// pool metrics
     pub metrics: PoolMetrics,
     /// The time curve is finished
@@ -89,6 +89,8 @@ pub struct VirtualPool {
     /// Padding for further use
     pub padding1: [u64; 7],
 }
+
+pub const VIRTUAL_POOL_DISCRIMINATOR: [u8; 8] = [213, 224, 5, 209, 98, 69, 119, 92];
 
 impl VirtualPool {
     pub const LEN: usize = 424;
@@ -191,7 +193,9 @@ impl anchor_lang::AccountSerialize for VirtualPool {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for VirtualPool {
-    fn owner() -> Pubkey { crate::DYNAMIC_BONDING_CURVE_ID }
+    fn owner() -> Pubkey {
+        crate::DYNAMIC_BONDING_CURVE_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -199,5 +203,5 @@ impl anchor_lang::IdlBuild for VirtualPool {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for VirtualPool {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

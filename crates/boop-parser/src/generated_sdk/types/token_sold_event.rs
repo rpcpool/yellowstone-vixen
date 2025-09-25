@@ -30,3 +30,72 @@ pub struct TokenSoldEvent {
     )]
     pub recipient: Pubkey,
 }
+
+impl TokenSoldEvent {
+    /// TokenSoldEvent discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0xcc, 0xef, 0xb6, 0x4d, 0xf1, 0x33, 0x4d, 0x42];
+
+    /// Parse TokenSoldEvent from program logs
+    pub fn from_logs(logs: &[String]) -> Option<Self> {
+        for log in logs {
+            if let Some(event) = Self::from_log(log) {
+                return Some(event);
+            }
+        }
+        None
+    }
+
+    /// Parse TokenSoldEvent from a single log message
+    pub fn from_log(log: &str) -> Option<Self> {
+        use base64::{engine::general_purpose, Engine as _};
+
+        if let Some(data_part) = log.strip_prefix("Program data: ") {
+            if let Ok(decoded) = general_purpose::STANDARD.decode(data_part) {
+                if decoded.starts_with(&Self::DISCRIMINATOR) {
+                    return Self::try_from_slice(&decoded[8..]).ok();
+                }
+            }
+        }
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_discriminator_constant() {
+        assert_eq!(
+            TokenSoldEvent::DISCRIMINATOR,
+            [0xcc, 0xef, 0xb6, 0x4d, 0xf1, 0x33, 0x4d, 0x42]
+        );
+    }
+
+    #[test]
+    fn test_parse_token_sold_event_from_log() {
+        let log = "Program data: zO+2TfEzTUIC63jXhMfA3EVJ0yfacmO4e8b2a84CgvcSak7ASyPEYzzSbm5YSZQAaRGlSwAAAACZNIsBAAAAABlkN8fTAVVLmfcvrYqnXlJbfQ6EZTwFkq7TbWoi77pqGWQ3x9MBVUuZ9y+tiqdeUlt9DoRlPAWSrtNtaiLvumo=";
+
+        let result = TokenSoldEvent::from_log(log);
+        assert!(result.is_some(), "Should successfully parse TokenSoldEvent from log");
+
+        let event = result.unwrap();
+        assert_eq!(event.amount_in, 41738940711883324, "amount_in should match");
+        assert_eq!(event.amount_out, 1269109097, "amount_out should match");
+        println!("Parsed TokenSoldEvent: {:?}", event);
+    }
+
+    #[test]
+    fn test_invalid_log_format() {
+        let invalid_log = "Invalid log format";
+        let result = TokenSoldEvent::from_log(invalid_log);
+        assert!(result.is_none(), "Should not parse invalid log format");
+    }
+
+    #[test]
+    fn test_invalid_discriminator() {
+        let log_with_invalid_discriminator = "Program data: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+        let result = TokenSoldEvent::from_log(log_with_invalid_discriminator);
+        assert!(result.is_none(), "Should not parse with invalid discriminator");
+    }
+}

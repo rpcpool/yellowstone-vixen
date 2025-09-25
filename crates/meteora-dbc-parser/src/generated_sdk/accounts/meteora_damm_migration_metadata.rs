@@ -18,12 +18,8 @@ pub struct MeteoraDammMigrationMetadata {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub virtual_pool: Pubkey,
-    /// pool creator
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub pool_creator: Pubkey,
+    /// !!! BE CAREFUL to use tomestone field, previous is pool creator
+    pub padding0: [u8; 32],
     /// partner
     #[cfg_attr(
         feature = "serde",
@@ -45,7 +41,7 @@ pub struct MeteoraDammMigrationMetadata {
     /// creator lp
     pub creator_lp: u64,
     /// padding
-    pub padding0: u8,
+    pub padding0_hidden: u8,
     /// flag to check whether lp is locked for creator
     pub creator_locked_status: u8,
     /// flag to check whether lp is locked for partner
@@ -58,6 +54,9 @@ pub struct MeteoraDammMigrationMetadata {
     #[cfg_attr(feature = "serde", serde(with = "serde_with::As::<serde_with::Bytes>"))]
     pub padding: [u8; 107],
 }
+
+pub const METEORA_DAMM_MIGRATION_METADATA_DISCRIMINATOR: [u8; 8] =
+    [17, 155, 141, 215, 207, 4, 133, 156];
 
 impl MeteoraDammMigrationMetadata {
     pub const LEN: usize = 280;
@@ -162,7 +161,9 @@ impl anchor_lang::AccountSerialize for MeteoraDammMigrationMetadata {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for MeteoraDammMigrationMetadata {
-    fn owner() -> Pubkey { crate::DYNAMIC_BONDING_CURVE_ID }
+    fn owner() -> Pubkey {
+        crate::DYNAMIC_BONDING_CURVE_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -170,5 +171,5 @@ impl anchor_lang::IdlBuild for MeteoraDammMigrationMetadata {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for MeteoraDammMigrationMetadata {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

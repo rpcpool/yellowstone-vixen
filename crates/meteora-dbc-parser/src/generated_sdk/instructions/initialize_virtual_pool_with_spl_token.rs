@@ -5,9 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
-
 use crate::generated::types::InitializePoolParameters;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const INITIALIZE_VIRTUAL_POOL_WITH_SPL_TOKEN_DISCRIMINATOR: [u8; 8] =
+    [140, 85, 215, 176, 102, 54, 104, 79];
 
 /// Accounts.
 #[derive(Debug)]
@@ -53,7 +56,6 @@ impl InitializeVirtualPoolWithSplToken {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -143,7 +145,9 @@ impl InitializeVirtualPoolWithSplTokenInstructionData {
 }
 
 impl Default for InitializeVirtualPoolWithSplTokenInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -195,127 +199,110 @@ pub struct InitializeVirtualPoolWithSplTokenBuilder {
 }
 
 impl InitializeVirtualPoolWithSplTokenBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     /// Which config the pool belongs to.
     #[inline(always)]
     pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
-
     /// `[optional account, default to 'FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
-
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
-
     #[inline(always)]
     pub fn quote_mint(&mut self, quote_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
-
     /// Initialize an account to store the pool state
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
-
     /// Token a vault for the pool
     #[inline(always)]
     pub fn base_vault(&mut self, base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.base_vault = Some(base_vault);
         self
     }
-
     /// Token b vault for the pool
     #[inline(always)]
     pub fn quote_vault(&mut self, quote_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_vault = Some(quote_vault);
         self
     }
-
     #[inline(always)]
     pub fn mint_metadata(&mut self, mint_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.mint_metadata = Some(mint_metadata);
         self
     }
-
     /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
     #[inline(always)]
     pub fn metadata_program(&mut self, metadata_program: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata_program = Some(metadata_program);
         self
     }
-
     /// Address paying to create the pool. Can be anyone
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
-
     /// Program to create mint account and mint tokens
     #[inline(always)]
     pub fn token_quote_program(&mut self, token_quote_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_quote_program = Some(token_quote_program);
         self
     }
-
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn params(&mut self, params: InitializePoolParameters) -> &mut Self {
         self.params = Some(params);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -325,7 +312,6 @@ impl InitializeVirtualPoolWithSplTokenBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializeVirtualPoolWithSplToken {
@@ -467,28 +453,21 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -496,7 +475,7 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.config.key,
@@ -653,14 +632,12 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
-
     /// Which config the pool belongs to.
     #[inline(always)]
     pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
-
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -669,19 +646,16 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn creator(&mut self, creator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.creator = Some(creator);
         self
     }
-
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base_mint = Some(base_mint);
         self
     }
-
     #[inline(always)]
     pub fn quote_mint(
         &mut self,
@@ -690,14 +664,12 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.quote_mint = Some(quote_mint);
         self
     }
-
     /// Initialize an account to store the pool state
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
-
     /// Token a vault for the pool
     #[inline(always)]
     pub fn base_vault(
@@ -707,7 +679,6 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
-
     /// Token b vault for the pool
     #[inline(always)]
     pub fn quote_vault(
@@ -717,7 +688,6 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.quote_vault = Some(quote_vault);
         self
     }
-
     #[inline(always)]
     pub fn mint_metadata(
         &mut self,
@@ -726,7 +696,6 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.mint_metadata = Some(mint_metadata);
         self
     }
-
     #[inline(always)]
     pub fn metadata_program(
         &mut self,
@@ -735,14 +704,12 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.metadata_program = Some(metadata_program);
         self
     }
-
     /// Address paying to create the pool. Can be anyone
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
-
     /// Program to create mint account and mint tokens
     #[inline(always)]
     pub fn token_quote_program(
@@ -752,7 +719,6 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.token_quote_program = Some(token_quote_program);
         self
     }
-
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -761,7 +727,6 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -770,7 +735,6 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -779,19 +743,16 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn params(&mut self, params: InitializePoolParameters) -> &mut Self {
         self.instruction.params = Some(params);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -805,7 +766,6 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -820,16 +780,13 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = InitializeVirtualPoolWithSplTokenInstructionArgs {
             params: self.instruction.params.clone().expect("params is not set"),
         };
