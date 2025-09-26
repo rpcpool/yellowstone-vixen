@@ -9,12 +9,12 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 readme = "./../../README.md"
 
 [dependencies]
-bs58 = "0.5.1"
-thiserror = "1.0.64"
+bs58.workspace = true
+thiserror.workspace = true
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, optional = true }
-serde = { version = "1.0.198", features = ["derive"] }
-clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+serde = { workspace = true, features = ["derive"] }
+clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
 
 [features]
 proto = ["dep:yellowstone-vixen-proto"]

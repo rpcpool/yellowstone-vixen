@@ -19,10 +19,10 @@ yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, features = [
   "parser",
 ], optional = true }
-thiserror = "1.0.64"
-borsh = "1.5.1"
-bs58 = "0.5.1"
+thiserror.workspace = true
+borsh.workspace = true
+bs58.workspace = true
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
-tokio = "1.39.2"
+tokio.workspace = true

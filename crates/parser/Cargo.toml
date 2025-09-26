@@ -29,7 +29,7 @@ strum_macros = { version = "0.24", optional = true }
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
-tokio = "1.39.2"
+tokio.workspace = true
 
 [features]
 default = []

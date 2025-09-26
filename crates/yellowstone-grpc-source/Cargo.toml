@@ -8,13 +8,13 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 readme = "./README.md"
 
 [dependencies]
-async-trait = "0.1.88"
-tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
-tracing = "0.1.40"
-futures-util = { version = "0.3.30", features = ["sink"] }
+async-trait = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
+tracing = { workspace = true }
+futures-util = { workspace = true, features = ["sink"] }
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
-serde = { version = "1.0.198", features = ["derive"] }
-clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+serde = { workspace = true, features = ["derive"] }
+clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
