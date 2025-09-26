@@ -117,9 +117,7 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 pub struct SerializablePubkey(pub [u8; 32]);
 
 impl Debug for SerializablePubkey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Display::fmt(self, f)
-    }
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { Display::fmt(self, f) }
 }
 
 impl Display for SerializablePubkey {
@@ -129,15 +127,11 @@ impl Display for SerializablePubkey {
 }
 
 impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self {
-        Self(value.into_bytes())
-    }
+    fn from(value: VixenPubkey) -> Self { Self(value.into_bytes()) }
 }
 
 impl From<SerializablePubkey> for VixenPubkey {
-    fn from(value: SerializablePubkey) -> Self {
-        Self::new(value.0)
-    }
+    fn from(value: SerializablePubkey) -> Self { Self::new(value.0) }
 }
 
 pub type IxIndex = [usize; 2]; // [outer_ix_index, inner_ix_index]
@@ -243,7 +237,7 @@ fn try_from_ui_inner_ixs(
     next_idx: &mut u16,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
-    for ix in ui_inner_ixs.instructions.iter() {
+    for ix in &ui_inner_ixs.instructions {
         if let UiInstruction::Compiled(compiled_ix) = ix {
             let accounts_out = compiled_ix
                 .accounts
@@ -305,11 +299,13 @@ fn convert_to_transaction_update(
         if let UiMessage::Raw(raw_message) = tx_data.message {
             // Extract and convert message header
             message_header = Some(yellowstone_grpc_proto::prelude::MessageHeader {
-                num_required_signatures: raw_message.header.num_required_signatures as u32,
-                num_readonly_signed_accounts: raw_message.header.num_readonly_signed_accounts
-                    as u32,
-                num_readonly_unsigned_accounts: raw_message.header.num_readonly_unsigned_accounts
-                    as u32,
+                num_required_signatures: u32::from(raw_message.header.num_required_signatures),
+                num_readonly_signed_accounts: u32::from(
+                    raw_message.header.num_readonly_signed_accounts,
+                ),
+                num_readonly_unsigned_accounts: u32::from(
+                    raw_message.header.num_readonly_unsigned_accounts,
+                ),
             });
 
             // Extract recent blockhash
@@ -328,12 +324,8 @@ fn convert_to_transaction_update(
             // Convert instructions
             for ui_instruction in raw_message.instructions {
                 instructions.push(CompiledInstruction {
-                    program_id_index: ui_instruction.program_id_index as u32,
-                    accounts: ui_instruction
-                        .accounts
-                        .into_iter()
-                        .map(|i| i as u8)
-                        .collect(),
+                    program_id_index: u32::from(ui_instruction.program_id_index),
+                    accounts: ui_instruction.accounts.into_iter().map(|i| i).collect(),
                     data: decode_bs58_to_bytes(&ui_instruction.data)?,
                 });
             }
@@ -363,15 +355,15 @@ fn convert_to_transaction_update(
                 for ui_instruction in &inner_ix.instructions {
                     if let UiInstruction::Compiled(compiled_ix) = ui_instruction {
                         converted_instructions.push(InnerInstruction {
-                            program_id_index: compiled_ix.program_id_index as u32,
-                            accounts: compiled_ix.accounts.iter().map(|&i| i as u8).collect(),
+                            program_id_index: u32::from(compiled_ix.program_id_index),
+                            accounts: compiled_ix.accounts.iter().map(|&i| i).collect(),
                             data: decode_bs58_to_bytes(&compiled_ix.data)?,
                             stack_height: compiled_ix.stack_height,
                         });
                     }
                 }
                 inner_instructions.push(InnerInstructions {
-                    index: inner_ix.index as u32,
+                    index: u32::from(inner_ix.index),
                     instructions: converted_instructions,
                 });
             }
@@ -395,7 +387,7 @@ fn convert_to_transaction_update(
     }
 
     let transaction_info = SubscribeUpdateTransactionInfo {
-        signature: signatures.get(0).cloned().unwrap_or_default(),
+        signature: signatures.first().cloned().unwrap_or_default(),
         is_vote: false, // Default for mock
         transaction: Some(Transaction {
             signatures,
@@ -560,7 +552,7 @@ macro_rules! run_ix_parse {
     };
 }
 
-/// Create a mock TransactionUpdate from a transaction signature for testing
+/// Create a mock `TransactionUpdate` from a transaction signature for testing
 pub async fn create_mock_transaction_update(
     signature: &str,
 ) -> Result<TransactionUpdate, Box<dyn std::error::Error>> {
@@ -580,7 +572,7 @@ pub async fn create_mock_transaction_update(
     convert_to_transaction_update(tx).map_err(Into::into)
 }
 
-/// Parse instructions from a TransactionUpdate using the core parse_from_txn logic
+/// Parse instructions from a `TransactionUpdate` using the core `parse_from_txn` logic
 pub fn parse_instructions_from_txn_update(
     txn_update: &TransactionUpdate,
 ) -> Result<Vec<InstructionUpdate>, Box<dyn std::error::Error>> {
@@ -617,9 +609,7 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
 }
 
 #[must_use]
-pub fn get_rpc_client() -> RpcClient {
-    RpcClient::new(RPC_ENDPOINT.to_string())
-}
+pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) }
 
 #[derive(Debug, Clone)]
 pub enum FixtureData {

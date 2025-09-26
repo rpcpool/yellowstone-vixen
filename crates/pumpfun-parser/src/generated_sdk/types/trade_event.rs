@@ -96,11 +96,10 @@ pub enum TradeEvent {
 }
 
 impl TradeEvent {
-    /// TradeEvent discriminator bytes
-    pub const DISCRIMINATOR: [u8; 8] = [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee];
-
     /// CPI log prefix for self CPI events
     pub const CPI_LOG_PREFIX: [u8; 8] = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
+    /// TradeEvent discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee];
 
     /// Parse TradeEvent from inner instruction data
     pub fn from_inner_instruction_data(data: &[u8]) -> Option<Self> {
@@ -133,18 +132,16 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            TradeEvent::DISCRIMINATOR,
-            [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee]
-        );
+        assert_eq!(TradeEvent::DISCRIMINATOR, [
+            0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee
+        ]);
     }
 
     #[test]
     fn test_cpi_log_prefix() {
-        assert_eq!(
-            TradeEvent::CPI_LOG_PREFIX,
-            [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d]
-        );
+        assert_eq!(TradeEvent::CPI_LOG_PREFIX, [
+            0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d
+        ]);
     }
 
     #[test]
@@ -160,7 +157,10 @@ mod tests {
         data.extend_from_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]); // Invalid discriminator
 
         let result = TradeEvent::from_inner_instruction_data(&data);
-        assert!(result.is_none(), "Should not parse with invalid discriminator");
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid discriminator"
+        );
     }
 
     #[test]
@@ -171,7 +171,10 @@ mod tests {
         let data = hex::decode(hex_data).expect("Failed to decode hex");
 
         let result = TradeEvent::from_inner_instruction_data(&data);
-        assert!(result.is_some(), "Should successfully parse TradeEvent from inner instruction data");
+        assert!(
+            result.is_some(),
+            "Should successfully parse TradeEvent from inner instruction data"
+        );
 
         let trade_event = result.unwrap();
 
@@ -179,13 +182,13 @@ mod tests {
         match trade_event {
             TradeEvent::V1(v1_event) => {
                 panic!("Expected TradeEventV2, got TradeEventV1: {:?}", v1_event);
-            }
+            },
             TradeEvent::V2(v2_event) => {
                 assert_eq!(v2_event.is_buy, false);
                 assert_eq!(v2_event.sol_amount, 746603006);
                 assert_eq!(v2_event.token_amount, 3097133016837);
                 println!("Parsed as TradeEventV2: {:?}", v2_event);
-            }
+            },
         }
     }
 }

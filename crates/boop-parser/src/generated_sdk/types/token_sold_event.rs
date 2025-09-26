@@ -66,10 +66,9 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            TokenSoldEvent::DISCRIMINATOR,
-            [0xcc, 0xef, 0xb6, 0x4d, 0xf1, 0x33, 0x4d, 0x42]
-        );
+        assert_eq!(TokenSoldEvent::DISCRIMINATOR, [
+            0xcc, 0xef, 0xb6, 0x4d, 0xf1, 0x33, 0x4d, 0x42
+        ]);
     }
 
     #[test]
@@ -77,7 +76,10 @@ mod tests {
         let log = "Program data: zO+2TfEzTUIC63jXhMfA3EVJ0yfacmO4e8b2a84CgvcSak7ASyPEYzzSbm5YSZQAaRGlSwAAAACZNIsBAAAAABlkN8fTAVVLmfcvrYqnXlJbfQ6EZTwFkq7TbWoi77pqGWQ3x9MBVUuZ9y+tiqdeUlt9DoRlPAWSrtNtaiLvumo=";
 
         let result = TokenSoldEvent::from_log(log);
-        assert!(result.is_some(), "Should successfully parse TokenSoldEvent from log");
+        assert!(
+            result.is_some(),
+            "Should successfully parse TokenSoldEvent from log"
+        );
 
         let event = result.unwrap();
         assert_eq!(event.amount_in, 41738940711883324, "amount_in should match");
@@ -94,8 +96,12 @@ mod tests {
 
     #[test]
     fn test_invalid_discriminator() {
-        let log_with_invalid_discriminator = "Program data: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+        let log_with_invalid_discriminator =
+            "Program data: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
         let result = TokenSoldEvent::from_log(log_with_invalid_discriminator);
-        assert!(result.is_none(), "Should not parse with invalid discriminator");
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid discriminator"
+        );
     }
 }

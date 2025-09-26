@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::SwapParameters2;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 pub const SWAP2_DISCRIMINATOR: [u8; 8] = [65, 75, 63, 76, 235, 91, 91, 136];
 
@@ -49,6 +49,7 @@ impl Swap2 {
     pub fn instruction(&self, args: Swap2InstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -145,9 +146,7 @@ impl Swap2InstructionData {
 }
 
 impl Default for Swap2InstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -197,33 +196,36 @@ pub struct Swap2Builder {
 }
 
 impl Swap2Builder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// `[optional account, default to 'FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
+
     /// config key
     #[inline(always)]
     pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     /// Pool account
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     /// The user token account for input token
     #[inline(always)]
     pub fn input_token_account(&mut self, input_token_account: solana_pubkey::Pubkey) -> &mut Self {
         self.input_token_account = Some(input_token_account);
         self
     }
+
     /// The user token account for output token
     #[inline(always)]
     pub fn output_token_account(
@@ -233,48 +235,56 @@ impl Swap2Builder {
         self.output_token_account = Some(output_token_account);
         self
     }
+
     /// The vault token account for base token
     #[inline(always)]
     pub fn base_vault(&mut self, base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.base_vault = Some(base_vault);
         self
     }
+
     /// The vault token account for quote token
     #[inline(always)]
     pub fn quote_vault(&mut self, quote_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_vault = Some(quote_vault);
         self
     }
+
     /// The mint of base token
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
+
     /// The mint of quote token
     #[inline(always)]
     pub fn quote_mint(&mut self, quote_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
+
     /// The user performing the swap
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     /// Token base program
     #[inline(always)]
     pub fn token_base_program(&mut self, token_base_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_base_program = Some(token_base_program);
         self
     }
+
     /// Token quote program
     #[inline(always)]
     pub fn token_quote_program(&mut self, token_quote_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_quote_program = Some(token_quote_program);
         self
     }
+
     /// `[optional account]`
     /// referral token account
     #[inline(always)]
@@ -285,27 +295,32 @@ impl Swap2Builder {
         self.referral_token_account = referral_token_account;
         self
     }
+
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn params(&mut self, params: SwapParameters2) -> &mut Self {
         self.params = Some(params);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -315,6 +330,7 @@ impl Swap2Builder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = Swap2 {
@@ -449,10 +465,12 @@ impl<'a, 'b> Swap2Cpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -460,10 +478,12 @@ impl<'a, 'b> Swap2Cpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -632,6 +652,7 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -640,18 +661,21 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
+
     /// config key
     #[inline(always)]
     pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
+
     /// Pool account
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     /// The user token account for input token
     #[inline(always)]
     pub fn input_token_account(
@@ -661,6 +685,7 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.input_token_account = Some(input_token_account);
         self
     }
+
     /// The user token account for output token
     #[inline(always)]
     pub fn output_token_account(
@@ -670,6 +695,7 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.output_token_account = Some(output_token_account);
         self
     }
+
     /// The vault token account for base token
     #[inline(always)]
     pub fn base_vault(
@@ -679,6 +705,7 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
+
     /// The vault token account for quote token
     #[inline(always)]
     pub fn quote_vault(
@@ -688,12 +715,14 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.quote_vault = Some(quote_vault);
         self
     }
+
     /// The mint of base token
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base_mint = Some(base_mint);
         self
     }
+
     /// The mint of quote token
     #[inline(always)]
     pub fn quote_mint(
@@ -703,12 +732,14 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.quote_mint = Some(quote_mint);
         self
     }
+
     /// The user performing the swap
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     /// Token base program
     #[inline(always)]
     pub fn token_base_program(
@@ -718,6 +749,7 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.token_base_program = Some(token_base_program);
         self
     }
+
     /// Token quote program
     #[inline(always)]
     pub fn token_quote_program(
@@ -727,6 +759,7 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.token_quote_program = Some(token_quote_program);
         self
     }
+
     /// `[optional account]`
     /// referral token account
     #[inline(always)]
@@ -737,6 +770,7 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.referral_token_account = referral_token_account;
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -745,16 +779,19 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn params(&mut self, params: SwapParameters2) -> &mut Self {
         self.instruction.params = Some(params);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -768,6 +805,7 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -782,10 +820,10 @@ impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

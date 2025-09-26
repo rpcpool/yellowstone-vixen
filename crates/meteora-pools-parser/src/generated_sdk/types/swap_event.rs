@@ -48,10 +48,9 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            SwapEvent::DISCRIMINATOR,
-            [0x51, 0x6c, 0xe3, 0xbe, 0xcd, 0xd0, 0x0a, 0xc4]
-        );
+        assert_eq!(SwapEvent::DISCRIMINATOR, [
+            0x51, 0x6c, 0xe3, 0xbe, 0xcd, 0xd0, 0x0a, 0xc4
+        ]);
     }
 
     #[test]
@@ -60,10 +59,7 @@ mod tests {
         let log = "Program data: UWzjvs3QCsSPHnQAAAAAAHs/lNQBAAAAdDsAAAAAAADdDgAAAAAAAAAAAAAAAAAA";
 
         let result = SwapEvent::from_log(log);
-        assert!(
-            result.is_some(),
-            "Should successfully parse real log data"
-        );
+        assert!(result.is_some(), "Should successfully parse real log data");
 
         let swap_event = result.unwrap();
 
@@ -81,8 +77,12 @@ mod tests {
 
     #[test]
     fn test_invalid_discriminator() {
-        let log_with_invalid_discriminator = "Program data: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+        let log_with_invalid_discriminator =
+            "Program data: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
         let result = SwapEvent::from_log(log_with_invalid_discriminator);
-        assert!(result.is_none(), "Should not parse with invalid discriminator");
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid discriminator"
+        );
     }
 }

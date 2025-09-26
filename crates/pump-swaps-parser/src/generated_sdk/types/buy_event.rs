@@ -134,11 +134,10 @@ pub enum BuyEvent {
 }
 
 impl BuyEvent {
-    /// BuyEvent discriminator bytes
-    pub const DISCRIMINATOR: [u8; 8] = [0x67, 0xf4, 0x52, 0x1f, 0x2c, 0xf5, 0x77, 0x77];
-
     /// CPI log prefix for self CPI events
     pub const CPI_LOG_PREFIX: [u8; 8] = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
+    /// BuyEvent discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0x67, 0xf4, 0x52, 0x1f, 0x2c, 0xf5, 0x77, 0x77];
 
     /// Parse BuyEvent from inner instruction data
     pub fn from_inner_instruction_data(data: &[u8]) -> Option<Self> {
@@ -177,7 +176,10 @@ mod tests {
         let data = hex::decode(hex_data).expect("Failed to decode hex");
 
         let result = BuyEvent::from_inner_instruction_data(&data);
-        assert!(result.is_some(), "Should successfully parse BuyEvent from inner instruction data");
+        assert!(
+            result.is_some(),
+            "Should successfully parse BuyEvent from inner instruction data"
+        );
 
         let buy_event = result.unwrap();
 
@@ -185,13 +187,13 @@ mod tests {
         match buy_event {
             BuyEvent::V1(v1_event) => {
                 panic!("Expected BuyEventV2, got BuyEventV1: {:?}", v1_event);
-            }
+            },
             BuyEvent::V2(v2_event) => {
                 assert_eq!(v2_event.timestamp, 1758625475);
                 assert_eq!(v2_event.base_amount_out, 1679256717);
                 assert_eq!(v2_event.quote_amount_in, 4234433689233);
                 println!("Parsed as BuyEventV2: {:?}", v2_event);
-            }
+            },
         }
     }
 
@@ -208,6 +210,9 @@ mod tests {
         data.extend_from_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]); // Invalid discriminator
 
         let result = BuyEvent::from_inner_instruction_data(&data);
-        assert!(result.is_none(), "Should not parse with invalid discriminator");
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid discriminator"
+        );
     }
 }

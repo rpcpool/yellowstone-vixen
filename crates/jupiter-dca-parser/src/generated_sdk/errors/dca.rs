@@ -42,22 +42,22 @@ pub enum DcaError {
     NoUserInATA = 0x1779,
     /// 6010 - outAta not passed in
     #[error("outAta not passed in")]
-    NoOutATA = 0x177A,
+    NoOutATA = 0x177a,
     /// 6011 - userOutAta not passed in
     #[error("userOutAta not passed in")]
-    NoUserOutATA = 0x177B,
+    NoUserOutATA = 0x177b,
     /// 6012 - Trying to withdraw more than available
     #[error("Trying to withdraw more than available")]
-    InsufficientBalanceInProgram = 0x177C,
+    InsufficientBalanceInProgram = 0x177c,
     /// 6013 - Deposit should be more than 0
     #[error("Deposit should be more than 0")]
-    InvalidDepositAmount = 0x177D,
+    InvalidDepositAmount = 0x177d,
     /// 6014 - User has insufficient balance
     #[error("User has insufficient balance")]
-    UserInsufficientBalance = 0x177E,
+    UserInsufficientBalance = 0x177e,
     /// 6015 - Unauthorized Keeper
     #[error("Unauthorized Keeper")]
-    UnauthorizedKeeper = 0x177F,
+    UnauthorizedKeeper = 0x177f,
     /// 6016 - Unrecognized Program
     #[error("Unrecognized Program")]
     UnrecognizedProgram = 0x1780,
@@ -90,22 +90,22 @@ pub enum DcaError {
     IncorrectRepaymentAmount = 0x1789,
     /// 6026 - Cannot Borrow Before Repay
     #[error("Cannot Borrow Before Repay")]
-    CannotBorrowBeforeRepay = 0x178A,
+    CannotBorrowBeforeRepay = 0x178a,
     /// 6027 - No Repayment Found
     #[error("No Repayment Found")]
-    NoRepaymentInstructionFound = 0x178B,
+    NoRepaymentInstructionFound = 0x178b,
     /// 6028 - Missing Swap Instruction
     #[error("Missing Swap Instruction")]
-    MissingSwapInstructions = 0x178C,
+    MissingSwapInstructions = 0x178c,
     /// 6029 - Expected Instruction to use Jupiter Swap Program
     #[error("Expected Instruction to use Jupiter Swap Program")]
-    UnexpectedSwapProgram = 0x178D,
+    UnexpectedSwapProgram = 0x178d,
     /// 6030 - Invalid Swap Mint
     #[error("Invalid Swap Mint")]
-    InvalidSwapMint = 0x178E,
+    InvalidSwapMint = 0x178e,
     /// 6031 - Unknown Instruction
     #[error("Unknown Instruction")]
-    UnknownInstruction = 0x178F,
+    UnknownInstruction = 0x178f,
     /// 6032 - Missing Repay Instruction
     #[error("Missing Repay Instruction")]
     MissingRepayInstructions = 0x1790,
@@ -138,19 +138,19 @@ pub enum DcaError {
     BalanceNotZero = 0x1799,
     /// 6042 - Should not have WSOL leftover in DCA out-token account
     #[error("Should not have WSOL leftover in DCA out-token account")]
-    UnexpectedWSOLLeftover = 0x179A,
+    UnexpectedWSOLLeftover = 0x179a,
     /// 6043 - Should pass in a WSOL intermediate account when transferring SOL
     #[error("Should pass in a WSOL intermediate account when transferring SOL")]
-    IntermediateAccountNotSet = 0x179B,
+    IntermediateAccountNotSet = 0x179b,
     /// 6044 - Did not call jup swap
     #[error("Did not call jup swap")]
-    UnexpectedSwapInstruction = 0x179C,
+    UnexpectedSwapInstruction = 0x179c,
     /// 6045 - Expect more from swap
     #[error("Expect more from swap")]
-    SwapOutLessThanUserMinimum = 0x179D,
+    SwapOutLessThanUserMinimum = 0x179d,
     /// 6046 - Expect less from swap
     #[error("Expect less from swap")]
-    SwapOutMoreThanUserMaximum = 0x179E,
+    SwapOutMoreThanUserMaximum = 0x179e,
 }
 
 impl solana_program::program_error::PrintProgramError for DcaError {
@@ -160,7 +160,5 @@ impl solana_program::program_error::PrintProgramError for DcaError {
 }
 
 impl<T> solana_program::decode_error::DecodeError<T> for DcaError {
-    fn type_of() -> &'static str {
-        "DcaError"
-    }
+    fn type_of() -> &'static str { "DcaError" }
 }

@@ -5,11 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::SwapParameters2;
-use crate::generated::types::SwapResult2;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
+
+use crate::generated::types::{SwapParameters2, SwapResult2};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -64,10 +63,9 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            EvtSwap2::DISCRIMINATOR,
-            [0xbd, 0x42, 0x33, 0xa8, 0x26, 0x50, 0x75, 0x99]
-        );
+        assert_eq!(EvtSwap2::DISCRIMINATOR, [
+            0xbd, 0x42, 0x33, 0xa8, 0x26, 0x50, 0x75, 0x99
+        ]);
     }
 
     #[test]

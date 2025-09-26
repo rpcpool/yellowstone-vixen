@@ -1,6 +1,5 @@
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -170,9 +169,8 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            TradedEvent::DISCRIMINATOR,
-            [0xe1, 0xca, 0x49, 0xaf, 0x93, 0x2b, 0xa0, 0x96]
-        );
+        assert_eq!(TradedEvent::DISCRIMINATOR, [
+            0xe1, 0xca, 0x49, 0xaf, 0x93, 0x2b, 0xa0, 0x96
+        ]);
     }
 }

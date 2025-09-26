@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
 /// Emitted when tokens are collected for a position

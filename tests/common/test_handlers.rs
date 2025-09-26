@@ -1,5 +1,6 @@
-use parking_lot::Mutex;
 use std::sync::Arc;
+
+use parking_lot::Mutex;
 use tokio::sync::broadcast;
 use tracing::info;
 use yellowstone_vixen::{Handler, HandlerResult};
@@ -39,9 +40,7 @@ impl JupiterTestHandler {
         (handler, shutdown_rx)
     }
 
-    pub fn get_stats(&self) -> JupiterStats {
-        self.stats.lock().clone()
-    }
+    pub fn get_stats(&self) -> JupiterStats { self.stats.lock().clone() }
 }
 
 // Generic handler for Jupiter parser output - we'll use Debug trait for logging
@@ -76,9 +75,7 @@ impl OkxTestHandler {
         (handler, shutdown_rx)
     }
 
-    pub fn get_stats(&self) -> OkxStats {
-        self.stats.lock().clone()
-    }
+    pub fn get_stats(&self) -> OkxStats { self.stats.lock().clone() }
 }
 
 // Generic handler for OKX parser output - we'll use Debug trait for logging

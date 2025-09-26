@@ -24,21 +24,10 @@ pub(crate) mod r#swap_args;
 pub(crate) mod r#swap_event;
 pub(crate) mod r#update_order_event;
 
-pub use self::r#add_resolver_event::*;
-pub use self::r#aggregation_event::*;
-pub use self::r#cancel_order_event::*;
-pub use self::r#commission_swap_args::*;
-pub use self::r#dex::*;
-pub use self::r#fill_order_event::*;
-pub use self::r#init_global_config_event::*;
-pub use self::r#pause_trading_event::*;
-pub use self::r#place_order_event::*;
-pub use self::r#refund_event::*;
-pub use self::r#remove_resolver_event::*;
-pub use self::r#route::*;
-pub use self::r#set_admin_event::*;
-pub use self::r#set_fee_multiplier_event::*;
-pub use self::r#set_trade_fee_event::*;
-pub use self::r#swap_args::*;
-pub use self::r#swap_event::*;
-pub use self::r#update_order_event::*;
+pub use self::{
+    r#add_resolver_event::*, r#aggregation_event::*, r#cancel_order_event::*,
+    r#commission_swap_args::*, r#dex::*, r#fill_order_event::*, r#init_global_config_event::*,
+    r#pause_trading_event::*, r#place_order_event::*, r#refund_event::*,
+    r#remove_resolver_event::*, r#route::*, r#set_admin_event::*, r#set_fee_multiplier_event::*,
+    r#set_trade_fee_event::*, r#swap_args::*, r#swap_event::*, r#update_order_event::*,
+};

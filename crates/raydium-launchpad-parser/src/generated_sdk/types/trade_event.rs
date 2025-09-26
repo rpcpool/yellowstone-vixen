@@ -72,11 +72,10 @@ pub enum TradeEvent {
 }
 
 impl TradeEvent {
-    /// TradeEvent discriminator bytes
-    pub const DISCRIMINATOR: [u8; 8] = [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee];
-
     /// CPI log prefix for self CPI events
     pub const CPI_LOG_PREFIX: [u8; 8] = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
+    /// TradeEvent discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee];
 
     /// Parse TradeEvent from inner instruction data
     pub fn from_inner_instruction_data(data: &[u8]) -> Option<Self> {
@@ -105,18 +104,16 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            TradeEvent::DISCRIMINATOR,
-            [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee]
-        );
+        assert_eq!(TradeEvent::DISCRIMINATOR, [
+            0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee
+        ]);
     }
 
     #[test]
     fn test_cpi_log_prefix() {
-        assert_eq!(
-            TradeEvent::CPI_LOG_PREFIX,
-            [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d]
-        );
+        assert_eq!(TradeEvent::CPI_LOG_PREFIX, [
+            0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d
+        ]);
     }
 
     #[test]

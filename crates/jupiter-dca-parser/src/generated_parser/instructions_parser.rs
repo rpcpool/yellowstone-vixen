@@ -5,22 +5,26 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::instructions::{
-    CloseDca as CloseDcaIxAccounts, Deposit as DepositIxAccounts,
-    DepositInstructionArgs as DepositIxData, EndAndClose as EndAndCloseIxAccounts,
-    FulfillDlmmFill as FulfillDlmmFillIxAccounts,
-    FulfillDlmmFillInstructionArgs as FulfillDlmmFillIxData,
-    FulfillFlashFill as FulfillFlashFillIxAccounts,
-    FulfillFlashFillInstructionArgs as FulfillFlashFillIxData,
-    InitiateDlmmFill as InitiateDlmmFillIxAccounts,
-    InitiateFlashFill as InitiateFlashFillIxAccounts, OpenDca as OpenDcaIxAccounts,
-    OpenDcaInstructionArgs as OpenDcaIxData, OpenDcaV2 as OpenDcaV2IxAccounts,
-    OpenDcaV2InstructionArgs as OpenDcaV2IxData, Transfer as TransferIxAccounts,
-    Withdraw as WithdrawIxAccounts, WithdrawFees as WithdrawFeesIxAccounts,
-    WithdrawFeesInstructionArgs as WithdrawFeesIxData, WithdrawInstructionArgs as WithdrawIxData,
-};
-use crate::ID;
 use borsh::BorshDeserialize;
+
+use crate::{
+    instructions::{
+        CloseDca as CloseDcaIxAccounts, Deposit as DepositIxAccounts,
+        DepositInstructionArgs as DepositIxData, EndAndClose as EndAndCloseIxAccounts,
+        FulfillDlmmFill as FulfillDlmmFillIxAccounts,
+        FulfillDlmmFillInstructionArgs as FulfillDlmmFillIxData,
+        FulfillFlashFill as FulfillFlashFillIxAccounts,
+        FulfillFlashFillInstructionArgs as FulfillFlashFillIxData,
+        InitiateDlmmFill as InitiateDlmmFillIxAccounts,
+        InitiateFlashFill as InitiateFlashFillIxAccounts, OpenDca as OpenDcaIxAccounts,
+        OpenDcaInstructionArgs as OpenDcaIxData, OpenDcaV2 as OpenDcaV2IxAccounts,
+        OpenDcaV2InstructionArgs as OpenDcaV2IxData, Transfer as TransferIxAccounts,
+        Withdraw as WithdrawIxAccounts, WithdrawFees as WithdrawFeesIxAccounts,
+        WithdrawFeesInstructionArgs as WithdrawFeesIxData,
+        WithdrawInstructionArgs as WithdrawIxData,
+    },
+    ID,
+};
 
 /// Dca Instructions
 #[derive(Debug)]
@@ -47,9 +51,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = DcaProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "Dca::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "Dca::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -72,9 +74,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -397,11 +397,10 @@ pub fn check_min_accounts_req(
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{DcaProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::OpenDcaIxAccounts;
+    use super::{DcaProgramIx, InstructionParser, OpenDcaIxAccounts};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::OpenDcaIxAccounts> for OpenDcaIxAccounts {
         fn into_proto(self) -> proto_def::OpenDcaIxAccounts {
             proto_def::OpenDcaIxAccounts {
@@ -799,8 +798,6 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

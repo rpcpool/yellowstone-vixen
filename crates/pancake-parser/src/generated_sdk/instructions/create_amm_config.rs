@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const CREATE_AMM_CONFIG_DISCRIMINATOR: [u8; 8] = [137, 52, 237, 212, 215, 117, 108, 104];
 
@@ -28,6 +27,7 @@ impl CreateAmmConfig {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -70,9 +70,7 @@ impl CreateAmmConfigInstructionData {
 }
 
 impl Default for CreateAmmConfigInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -106,9 +104,8 @@ pub struct CreateAmmConfigBuilder {
 }
 
 impl CreateAmmConfigBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// `[optional account, default to 'DmwXqqK5Zuj619au6q2Jx3TMr9ZV1837uxJcEwyvXVtV']`
     /// Address to be set as protocol owner.
     #[inline(always)]
@@ -116,49 +113,58 @@ impl CreateAmmConfigBuilder {
         self.owner = Some(owner);
         self
     }
+
     /// Initialize config state account to store protocol owner address and fee rates.
     #[inline(always)]
     pub fn amm_config(&mut self, amm_config: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_config = Some(amm_config);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn index(&mut self, index: u16) -> &mut Self {
         self.index = Some(index);
         self
     }
+
     #[inline(always)]
     pub fn tick_spacing(&mut self, tick_spacing: u16) -> &mut Self {
         self.tick_spacing = Some(tick_spacing);
         self
     }
+
     #[inline(always)]
     pub fn trade_fee_rate(&mut self, trade_fee_rate: u32) -> &mut Self {
         self.trade_fee_rate = Some(trade_fee_rate);
         self
     }
+
     #[inline(always)]
     pub fn protocol_fee_rate(&mut self, protocol_fee_rate: u32) -> &mut Self {
         self.protocol_fee_rate = Some(protocol_fee_rate);
         self
     }
+
     #[inline(always)]
     pub fn fund_fee_rate(&mut self, fund_fee_rate: u32) -> &mut Self {
         self.fund_fee_rate = Some(fund_fee_rate);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -168,6 +174,7 @@ impl CreateAmmConfigBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateAmmConfig {
@@ -238,10 +245,12 @@ impl<'a, 'b> CreateAmmConfigCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -249,10 +258,12 @@ impl<'a, 'b> CreateAmmConfigCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -332,12 +343,14 @@ impl<'a, 'b> CreateAmmConfigCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Address to be set as protocol owner.
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
+
     /// Initialize config state account to store protocol owner address and fee rates.
     #[inline(always)]
     pub fn amm_config(
@@ -347,6 +360,7 @@ impl<'a, 'b> CreateAmmConfigCpiBuilder<'a, 'b> {
         self.instruction.amm_config = Some(amm_config);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -355,31 +369,37 @@ impl<'a, 'b> CreateAmmConfigCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn index(&mut self, index: u16) -> &mut Self {
         self.instruction.index = Some(index);
         self
     }
+
     #[inline(always)]
     pub fn tick_spacing(&mut self, tick_spacing: u16) -> &mut Self {
         self.instruction.tick_spacing = Some(tick_spacing);
         self
     }
+
     #[inline(always)]
     pub fn trade_fee_rate(&mut self, trade_fee_rate: u32) -> &mut Self {
         self.instruction.trade_fee_rate = Some(trade_fee_rate);
         self
     }
+
     #[inline(always)]
     pub fn protocol_fee_rate(&mut self, protocol_fee_rate: u32) -> &mut Self {
         self.instruction.protocol_fee_rate = Some(protocol_fee_rate);
         self
     }
+
     #[inline(always)]
     pub fn fund_fee_rate(&mut self, fund_fee_rate: u32) -> &mut Self {
         self.instruction.fund_fee_rate = Some(fund_fee_rate);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -393,6 +413,7 @@ impl<'a, 'b> CreateAmmConfigCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -407,10 +428,10 @@ impl<'a, 'b> CreateAmmConfigCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

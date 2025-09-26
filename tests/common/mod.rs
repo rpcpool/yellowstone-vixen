@@ -1,6 +1,7 @@
 pub mod test_handlers;
 
 use std::{path::PathBuf, time::Duration};
+
 use tokio::sync::broadcast;
 use yellowstone_vixen::config::{BufferConfig, VixenConfig};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
@@ -32,7 +33,11 @@ pub fn create_test_config(
     }
 
     // If both fail, return error
-    Err("No valid configuration found. Please provide either a config file via --config or set environment variables GRPC_URL".into())
+    Err(
+        "No valid configuration found. Please provide either a config file via --config or set \
+         environment variables GRPC_URL"
+            .into(),
+    )
 }
 
 /// Try to load configuration from TOML file

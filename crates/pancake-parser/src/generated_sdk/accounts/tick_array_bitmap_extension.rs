@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -130,9 +129,7 @@ impl anchor_lang::AccountSerialize for TickArrayBitmapExtension {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for TickArrayBitmapExtension {
-    fn owner() -> Pubkey {
-        crate::AMM_V3_ID
-    }
+    fn owner() -> Pubkey { crate::AMM_V3_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

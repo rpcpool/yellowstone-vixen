@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const MIGRATION_DAMM_V2_DISCRIMINATOR: [u8; 8] = [156, 169, 230, 103, 53, 228, 80, 64];
 
@@ -69,6 +68,7 @@ impl MigrationDammV2 {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -205,9 +205,7 @@ impl MigrationDammV2InstructionData {
 }
 
 impl Default for MigrationDammV2InstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `MigrationDammV2`.
@@ -270,38 +268,42 @@ pub struct MigrationDammV2Builder {
 }
 
 impl MigrationDammV2Builder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// virtual pool
     #[inline(always)]
     pub fn virtual_pool(&mut self, virtual_pool: solana_pubkey::Pubkey) -> &mut Self {
         self.virtual_pool = Some(virtual_pool);
         self
     }
+
     /// migration metadata
     #[inline(always)]
     pub fn migration_metadata(&mut self, migration_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.migration_metadata = Some(migration_metadata);
         self
     }
+
     /// virtual pool config key
     #[inline(always)]
     pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     /// `[optional account, default to 'FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn first_position_nft_mint(
         &mut self,
@@ -310,6 +312,7 @@ impl MigrationDammV2Builder {
         self.first_position_nft_mint = Some(first_position_nft_mint);
         self
     }
+
     #[inline(always)]
     pub fn first_position_nft_account(
         &mut self,
@@ -318,11 +321,13 @@ impl MigrationDammV2Builder {
         self.first_position_nft_account = Some(first_position_nft_account);
         self
     }
+
     #[inline(always)]
     pub fn first_position(&mut self, first_position: solana_pubkey::Pubkey) -> &mut Self {
         self.first_position = Some(first_position);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn second_position_nft_mint(
@@ -332,6 +337,7 @@ impl MigrationDammV2Builder {
         self.second_position_nft_mint = second_position_nft_mint;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn second_position_nft_account(
@@ -341,73 +347,87 @@ impl MigrationDammV2Builder {
         self.second_position_nft_account = second_position_nft_account;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn second_position(&mut self, second_position: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.second_position = second_position;
         self
     }
+
     #[inline(always)]
     pub fn damm_pool_authority(&mut self, damm_pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.damm_pool_authority = Some(damm_pool_authority);
         self
     }
+
     /// `[optional account, default to 'cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG']`
     #[inline(always)]
     pub fn amm_program(&mut self, amm_program: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_program = Some(amm_program);
         self
     }
+
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
+
     #[inline(always)]
     pub fn quote_mint(&mut self, quote_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
+
     #[inline(always)]
     pub fn token_a_vault(&mut self, token_a_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_vault = Some(token_a_vault);
         self
     }
+
     #[inline(always)]
     pub fn token_b_vault(&mut self, token_b_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_vault = Some(token_b_vault);
         self
     }
+
     #[inline(always)]
     pub fn base_vault(&mut self, base_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.base_vault = Some(base_vault);
         self
     }
+
     #[inline(always)]
     pub fn quote_vault(&mut self, quote_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_vault = Some(quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn token_base_program(&mut self, token_base_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_base_program = Some(token_base_program);
         self
     }
+
     #[inline(always)]
     pub fn token_quote_program(&mut self, token_quote_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_quote_program = Some(token_quote_program);
         self
     }
+
     #[inline(always)]
     pub fn token2022_program(&mut self, token2022_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token2022_program = Some(token2022_program);
         self
     }
+
     #[inline(always)]
     pub fn damm_event_authority(
         &mut self,
@@ -416,6 +436,7 @@ impl MigrationDammV2Builder {
         self.damm_event_authority = Some(damm_event_authority);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program.
     #[inline(always)]
@@ -423,12 +444,14 @@ impl MigrationDammV2Builder {
         self.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -438,6 +461,7 @@ impl MigrationDammV2Builder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = MigrationDammV2 {
@@ -638,10 +662,12 @@ impl<'a, 'b> MigrationDammV2Cpi<'a, 'b> {
             system_program: accounts.system_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -649,10 +675,12 @@ impl<'a, 'b> MigrationDammV2Cpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -903,6 +931,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// virtual pool
     #[inline(always)]
     pub fn virtual_pool(
@@ -912,6 +941,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.virtual_pool = Some(virtual_pool);
         self
     }
+
     /// migration metadata
     #[inline(always)]
     pub fn migration_metadata(
@@ -921,12 +951,14 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.migration_metadata = Some(migration_metadata);
         self
     }
+
     /// virtual pool config key
     #[inline(always)]
     pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -935,11 +967,13 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn first_position_nft_mint(
         &mut self,
@@ -948,6 +982,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.first_position_nft_mint = Some(first_position_nft_mint);
         self
     }
+
     #[inline(always)]
     pub fn first_position_nft_account(
         &mut self,
@@ -956,6 +991,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.first_position_nft_account = Some(first_position_nft_account);
         self
     }
+
     #[inline(always)]
     pub fn first_position(
         &mut self,
@@ -964,6 +1000,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.first_position = Some(first_position);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn second_position_nft_mint(
@@ -973,6 +1010,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.second_position_nft_mint = second_position_nft_mint;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn second_position_nft_account(
@@ -982,6 +1020,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.second_position_nft_account = second_position_nft_account;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn second_position(
@@ -991,6 +1030,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.second_position = second_position;
         self
     }
+
     #[inline(always)]
     pub fn damm_pool_authority(
         &mut self,
@@ -999,6 +1039,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.damm_pool_authority = Some(damm_pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn amm_program(
         &mut self,
@@ -1007,11 +1048,13 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.amm_program = Some(amm_program);
         self
     }
+
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base_mint = Some(base_mint);
         self
     }
+
     #[inline(always)]
     pub fn quote_mint(
         &mut self,
@@ -1020,6 +1063,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.quote_mint = Some(quote_mint);
         self
     }
+
     #[inline(always)]
     pub fn token_a_vault(
         &mut self,
@@ -1028,6 +1072,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.token_a_vault = Some(token_a_vault);
         self
     }
+
     #[inline(always)]
     pub fn token_b_vault(
         &mut self,
@@ -1036,6 +1081,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.token_b_vault = Some(token_b_vault);
         self
     }
+
     #[inline(always)]
     pub fn base_vault(
         &mut self,
@@ -1044,6 +1090,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.base_vault = Some(base_vault);
         self
     }
+
     #[inline(always)]
     pub fn quote_vault(
         &mut self,
@@ -1052,11 +1099,13 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.quote_vault = Some(quote_vault);
         self
     }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn token_base_program(
         &mut self,
@@ -1065,6 +1114,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.token_base_program = Some(token_base_program);
         self
     }
+
     #[inline(always)]
     pub fn token_quote_program(
         &mut self,
@@ -1073,6 +1123,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.token_quote_program = Some(token_quote_program);
         self
     }
+
     #[inline(always)]
     pub fn token2022_program(
         &mut self,
@@ -1081,6 +1132,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.token2022_program = Some(token2022_program);
         self
     }
+
     #[inline(always)]
     pub fn damm_event_authority(
         &mut self,
@@ -1089,6 +1141,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.damm_event_authority = Some(damm_event_authority);
         self
     }
+
     /// System program.
     #[inline(always)]
     pub fn system_program(
@@ -1098,6 +1151,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1111,6 +1165,7 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1125,10 +1180,10 @@ impl<'a, 'b> MigrationDammV2CpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

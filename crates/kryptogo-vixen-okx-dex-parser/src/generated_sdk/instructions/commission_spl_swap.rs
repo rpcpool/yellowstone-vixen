@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::CommissionSwapArgs;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 pub const COMMISSION_SPL_SWAP_DISCRIMINATOR: [u8; 8] = [235, 71, 211, 196, 114, 199, 143, 92];
 
@@ -36,6 +36,7 @@ impl CommissionSplSwap {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -99,9 +100,7 @@ impl CommissionSplSwapInstructionData {
 }
 
 impl Default for CommissionSplSwapInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -137,14 +136,14 @@ pub struct CommissionSplSwapBuilder {
 }
 
 impl CommissionSplSwapBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn source_token_account(
         &mut self,
@@ -153,6 +152,7 @@ impl CommissionSplSwapBuilder {
         self.source_token_account = Some(source_token_account);
         self
     }
+
     #[inline(always)]
     pub fn destination_token_account(
         &mut self,
@@ -161,16 +161,19 @@ impl CommissionSplSwapBuilder {
         self.destination_token_account = Some(destination_token_account);
         self
     }
+
     #[inline(always)]
     pub fn source_mint(&mut self, source_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.source_mint = Some(source_mint);
         self
     }
+
     #[inline(always)]
     pub fn destination_mint(&mut self, destination_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.destination_mint = Some(destination_mint);
         self
     }
+
     #[inline(always)]
     pub fn commission_token_account(
         &mut self,
@@ -179,28 +182,33 @@ impl CommissionSplSwapBuilder {
         self.commission_token_account = Some(commission_token_account);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn data(&mut self, data: CommissionSwapArgs) -> &mut Self {
         self.data = Some(data);
         self
     }
+
     #[inline(always)]
     pub fn order_id(&mut self, order_id: u64) -> &mut Self {
         self.order_id = Some(order_id);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -210,6 +218,7 @@ impl CommissionSplSwapBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CommissionSplSwap {
@@ -295,10 +304,12 @@ impl<'a, 'b> CommissionSplSwapCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -306,10 +317,12 @@ impl<'a, 'b> CommissionSplSwapCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -417,11 +430,13 @@ impl<'a, 'b> CommissionSplSwapCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn source_token_account(
         &mut self,
@@ -430,6 +445,7 @@ impl<'a, 'b> CommissionSplSwapCpiBuilder<'a, 'b> {
         self.instruction.source_token_account = Some(source_token_account);
         self
     }
+
     #[inline(always)]
     pub fn destination_token_account(
         &mut self,
@@ -438,6 +454,7 @@ impl<'a, 'b> CommissionSplSwapCpiBuilder<'a, 'b> {
         self.instruction.destination_token_account = Some(destination_token_account);
         self
     }
+
     #[inline(always)]
     pub fn source_mint(
         &mut self,
@@ -446,6 +463,7 @@ impl<'a, 'b> CommissionSplSwapCpiBuilder<'a, 'b> {
         self.instruction.source_mint = Some(source_mint);
         self
     }
+
     #[inline(always)]
     pub fn destination_mint(
         &mut self,
@@ -454,6 +472,7 @@ impl<'a, 'b> CommissionSplSwapCpiBuilder<'a, 'b> {
         self.instruction.destination_mint = Some(destination_mint);
         self
     }
+
     #[inline(always)]
     pub fn commission_token_account(
         &mut self,
@@ -462,6 +481,7 @@ impl<'a, 'b> CommissionSplSwapCpiBuilder<'a, 'b> {
         self.instruction.commission_token_account = Some(commission_token_account);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -470,16 +490,19 @@ impl<'a, 'b> CommissionSplSwapCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn data(&mut self, data: CommissionSwapArgs) -> &mut Self {
         self.instruction.data = Some(data);
         self
     }
+
     #[inline(always)]
     pub fn order_id(&mut self, order_id: u64) -> &mut Self {
         self.instruction.order_id = Some(order_id);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -493,6 +516,7 @@ impl<'a, 'b> CommissionSplSwapCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -507,10 +531,10 @@ impl<'a, 'b> CommissionSplSwapCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

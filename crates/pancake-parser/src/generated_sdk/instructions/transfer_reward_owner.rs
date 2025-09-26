@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
 pub const TRANSFER_REWARD_OWNER_DISCRIMINATOR: [u8; 8] = [7, 22, 12, 83, 242, 43, 48, 121];
@@ -27,6 +26,7 @@ impl TransferRewardOwner {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -68,9 +68,7 @@ impl TransferRewardOwnerInstructionData {
 }
 
 impl Default for TransferRewardOwnerInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -94,9 +92,8 @@ pub struct TransferRewardOwnerBuilder {
 }
 
 impl TransferRewardOwnerBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// `[optional account, default to 'DmwXqqK5Zuj619au6q2Jx3TMr9ZV1837uxJcEwyvXVtV']`
     /// Address to be set as operation account owner.
     #[inline(always)]
@@ -104,22 +101,26 @@ impl TransferRewardOwnerBuilder {
         self.authority = Some(authority);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
+
     #[inline(always)]
     pub fn new_owner(&mut self, new_owner: Pubkey) -> &mut Self {
         self.new_owner = Some(new_owner);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -129,6 +130,7 @@ impl TransferRewardOwnerBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = TransferRewardOwner {
@@ -178,10 +180,12 @@ impl<'a, 'b> TransferRewardOwnerCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -189,10 +193,12 @@ impl<'a, 'b> TransferRewardOwnerCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -264,12 +270,14 @@ impl<'a, 'b> TransferRewardOwnerCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Address to be set as operation account owner.
     #[inline(always)]
     pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.authority = Some(authority);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(
         &mut self,
@@ -278,11 +286,13 @@ impl<'a, 'b> TransferRewardOwnerCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     #[inline(always)]
     pub fn new_owner(&mut self, new_owner: Pubkey) -> &mut Self {
         self.instruction.new_owner = Some(new_owner);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -296,6 +306,7 @@ impl<'a, 'b> TransferRewardOwnerCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -310,10 +321,10 @@ impl<'a, 'b> TransferRewardOwnerCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

@@ -12,10 +12,9 @@ use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
-use crate::generated::types::{EvtSwap, EvtSwap2};
-
 use crate::{
     deserialize_checked,
+    generated::types::{EvtSwap, EvtSwap2},
     instructions::{
         ClaimCreatorTradingFee as ClaimCreatorTradingFeeIxAccounts,
         ClaimCreatorTradingFeeInstructionArgs as ClaimCreatorTradingFeeIxData,
@@ -146,9 +145,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -834,11 +831,12 @@ pub fn next_program_id_optional_account<
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{DynamicBondingCurveProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::ClaimCreatorTradingFeeIxAccounts;
+    use super::{
+        ClaimCreatorTradingFeeIxAccounts, DynamicBondingCurveProgramIx, InstructionParser,
+    };
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::ClaimCreatorTradingFeeIxAccounts> for ClaimCreatorTradingFeeIxAccounts {
         fn into_proto(self) -> proto_def::ClaimCreatorTradingFeeIxAccounts {
             proto_def::ClaimCreatorTradingFeeIxAccounts {

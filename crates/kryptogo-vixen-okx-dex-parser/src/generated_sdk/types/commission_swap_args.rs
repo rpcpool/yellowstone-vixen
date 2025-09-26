@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::Route;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

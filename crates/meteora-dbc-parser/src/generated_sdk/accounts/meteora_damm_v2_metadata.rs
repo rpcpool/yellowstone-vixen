@@ -135,9 +135,7 @@ impl anchor_lang::AccountSerialize for MeteoraDammV2Metadata {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for MeteoraDammV2Metadata {
-    fn owner() -> Pubkey {
-        crate::DYNAMIC_BONDING_CURVE_ID
-    }
+    fn owner() -> Pubkey { crate::DYNAMIC_BONDING_CURVE_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const CLOSE_POSITION_DISCRIMINATOR: [u8; 8] = [123, 134, 81, 0, 49, 68, 98, 98];
 
@@ -31,6 +30,7 @@ impl ClosePosition {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -85,9 +85,7 @@ impl ClosePositionInstructionData {
 }
 
 impl Default for ClosePositionInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `ClosePosition`.
@@ -112,21 +110,22 @@ pub struct ClosePositionBuilder {
 }
 
 impl ClosePositionBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// The position nft owner
     #[inline(always)]
     pub fn nft_owner(&mut self, nft_owner: solana_pubkey::Pubkey) -> &mut Self {
         self.nft_owner = Some(nft_owner);
         self
     }
+
     /// Mint address bound to the personal position.
     #[inline(always)]
     pub fn position_nft_mint(&mut self, position_nft_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.position_nft_mint = Some(position_nft_mint);
         self
     }
+
     /// User token account where position NFT be minted to
     #[inline(always)]
     pub fn position_nft_account(
@@ -136,11 +135,13 @@ impl ClosePositionBuilder {
         self.position_nft_account = Some(position_nft_account);
         self
     }
+
     #[inline(always)]
     pub fn personal_position(&mut self, personal_position: solana_pubkey::Pubkey) -> &mut Self {
         self.personal_position = Some(personal_position);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program to close the position state account
     #[inline(always)]
@@ -148,6 +149,7 @@ impl ClosePositionBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token/Token2022 program to close token/mint account
     #[inline(always)]
@@ -155,12 +157,14 @@ impl ClosePositionBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -170,6 +174,7 @@ impl ClosePositionBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = ClosePosition {
@@ -244,10 +249,12 @@ impl<'a, 'b> ClosePositionCpi<'a, 'b> {
             token_program: accounts.token_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -255,10 +262,12 @@ impl<'a, 'b> ClosePositionCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -355,12 +364,14 @@ impl<'a, 'b> ClosePositionCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// The position nft owner
     #[inline(always)]
     pub fn nft_owner(&mut self, nft_owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.nft_owner = Some(nft_owner);
         self
     }
+
     /// Mint address bound to the personal position.
     #[inline(always)]
     pub fn position_nft_mint(
@@ -370,6 +381,7 @@ impl<'a, 'b> ClosePositionCpiBuilder<'a, 'b> {
         self.instruction.position_nft_mint = Some(position_nft_mint);
         self
     }
+
     /// User token account where position NFT be minted to
     #[inline(always)]
     pub fn position_nft_account(
@@ -379,6 +391,7 @@ impl<'a, 'b> ClosePositionCpiBuilder<'a, 'b> {
         self.instruction.position_nft_account = Some(position_nft_account);
         self
     }
+
     #[inline(always)]
     pub fn personal_position(
         &mut self,
@@ -387,6 +400,7 @@ impl<'a, 'b> ClosePositionCpiBuilder<'a, 'b> {
         self.instruction.personal_position = Some(personal_position);
         self
     }
+
     /// System program to close the position state account
     #[inline(always)]
     pub fn system_program(
@@ -396,6 +410,7 @@ impl<'a, 'b> ClosePositionCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Token/Token2022 program to close token/mint account
     #[inline(always)]
     pub fn token_program(
@@ -405,6 +420,7 @@ impl<'a, 'b> ClosePositionCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -418,6 +434,7 @@ impl<'a, 'b> ClosePositionCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -432,10 +449,10 @@ impl<'a, 'b> ClosePositionCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

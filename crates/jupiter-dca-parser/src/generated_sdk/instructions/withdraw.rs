@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::Withdrawal;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 /// Accounts.
 #[derive(Debug)]
@@ -44,6 +44,7 @@ impl Withdraw {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -140,9 +141,7 @@ impl WithdrawInstructionData {
 }
 
 impl Default for WithdrawInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -188,34 +187,38 @@ pub struct WithdrawBuilder {
 }
 
 impl WithdrawBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
+
     #[inline(always)]
     pub fn dca(&mut self, dca: solana_program::pubkey::Pubkey) -> &mut Self {
         self.dca = Some(dca);
         self
     }
+
     #[inline(always)]
     pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
+
     #[inline(always)]
     pub fn output_mint(&mut self, output_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.output_mint = Some(output_mint);
         self
     }
+
     #[inline(always)]
     pub fn dca_ata(&mut self, dca_ata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.dca_ata = Some(dca_ata);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn user_in_ata(
@@ -225,6 +228,7 @@ impl WithdrawBuilder {
         self.user_in_ata = user_in_ata;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn user_out_ata(
@@ -234,18 +238,21 @@ impl WithdrawBuilder {
         self.user_out_ata = user_out_ata;
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -254,6 +261,7 @@ impl WithdrawBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -262,21 +270,25 @@ impl WithdrawBuilder {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn withdraw_amount(&mut self, withdraw_amount: u64) -> &mut Self {
         self.withdraw_amount = Some(withdraw_amount);
         self
     }
+
     #[inline(always)]
     pub fn withdrawal(&mut self, withdrawal: Withdrawal) -> &mut Self {
         self.withdrawal = Some(withdrawal);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -286,6 +298,7 @@ impl WithdrawBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -295,6 +308,7 @@ impl WithdrawBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = Withdraw {
@@ -411,10 +425,12 @@ impl<'a, 'b> WithdrawCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -426,6 +442,7 @@ impl<'a, 'b> WithdrawCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -433,6 +450,7 @@ impl<'a, 'b> WithdrawCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -597,16 +615,19 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
+
     #[inline(always)]
     pub fn dca(&mut self, dca: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.dca = Some(dca);
         self
     }
+
     #[inline(always)]
     pub fn input_mint(
         &mut self,
@@ -615,6 +636,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.input_mint = Some(input_mint);
         self
     }
+
     #[inline(always)]
     pub fn output_mint(
         &mut self,
@@ -623,6 +645,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.output_mint = Some(output_mint);
         self
     }
+
     #[inline(always)]
     pub fn dca_ata(
         &mut self,
@@ -631,6 +654,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.dca_ata = Some(dca_ata);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn user_in_ata(
@@ -640,6 +664,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.user_in_ata = user_in_ata;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn user_out_ata(
@@ -649,6 +674,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.user_out_ata = user_out_ata;
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -657,6 +683,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -665,6 +692,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -673,6 +701,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -681,6 +710,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(
         &mut self,
@@ -689,16 +719,19 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn withdraw_amount(&mut self, withdraw_amount: u64) -> &mut Self {
         self.instruction.withdraw_amount = Some(withdraw_amount);
         self
     }
+
     #[inline(always)]
     pub fn withdrawal(&mut self, withdrawal: Withdrawal) -> &mut Self {
         self.instruction.withdrawal = Some(withdrawal);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -712,6 +745,7 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -730,10 +764,10 @@ impl<'a, 'b> WithdrawCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

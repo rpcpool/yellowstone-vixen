@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -28,6 +27,7 @@ impl WithdrawFee {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -83,9 +83,7 @@ impl WithdrawFeeInstructionData {
 }
 
 impl Default for WithdrawFeeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `WithdrawFee`.
@@ -110,20 +108,21 @@ pub struct WithdrawFeeBuilder {
 }
 
 impl WithdrawFeeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_program::pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
+
     /// CHECK
     #[inline(always)]
     pub fn fee_authority(&mut self, fee_authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.fee_authority = Some(fee_authority);
         self
     }
+
     #[inline(always)]
     pub fn program_fee_account(
         &mut self,
@@ -132,6 +131,7 @@ impl WithdrawFeeBuilder {
         self.program_fee_account = Some(program_fee_account);
         self
     }
+
     #[inline(always)]
     pub fn destination_token_account(
         &mut self,
@@ -140,17 +140,20 @@ impl WithdrawFeeBuilder {
         self.destination_token_account = Some(destination_token_account);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn mint(&mut self, mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.mint = Some(mint);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -160,6 +163,7 @@ impl WithdrawFeeBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -169,6 +173,7 @@ impl WithdrawFeeBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = WithdrawFee {
@@ -238,10 +243,12 @@ impl<'a, 'b> WithdrawFeeCpi<'a, 'b> {
             mint: accounts.mint,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -253,6 +260,7 @@ impl<'a, 'b> WithdrawFeeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -260,6 +268,7 @@ impl<'a, 'b> WithdrawFeeCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -360,11 +369,13 @@ impl<'a, 'b> WithdrawFeeCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn admin(&mut self, admin: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
+
     /// CHECK
     #[inline(always)]
     pub fn fee_authority(
@@ -374,6 +385,7 @@ impl<'a, 'b> WithdrawFeeCpiBuilder<'a, 'b> {
         self.instruction.fee_authority = Some(fee_authority);
         self
     }
+
     #[inline(always)]
     pub fn program_fee_account(
         &mut self,
@@ -382,6 +394,7 @@ impl<'a, 'b> WithdrawFeeCpiBuilder<'a, 'b> {
         self.instruction.program_fee_account = Some(program_fee_account);
         self
     }
+
     #[inline(always)]
     pub fn destination_token_account(
         &mut self,
@@ -390,6 +403,7 @@ impl<'a, 'b> WithdrawFeeCpiBuilder<'a, 'b> {
         self.instruction.destination_token_account = Some(destination_token_account);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -398,11 +412,13 @@ impl<'a, 'b> WithdrawFeeCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn mint(&mut self, mint: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.mint = Some(mint);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -416,6 +432,7 @@ impl<'a, 'b> WithdrawFeeCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -434,10 +451,10 @@ impl<'a, 'b> WithdrawFeeCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

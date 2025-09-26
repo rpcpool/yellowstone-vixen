@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -33,6 +32,7 @@ impl Deposit {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -95,9 +95,7 @@ impl DepositInstructionData {
 }
 
 impl Default for DepositInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -131,35 +129,39 @@ pub struct DepositBuilder {
 }
 
 impl DepositBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
+
     #[inline(always)]
     pub fn dca(&mut self, dca: solana_program::pubkey::Pubkey) -> &mut Self {
         self.dca = Some(dca);
         self
     }
+
     #[inline(always)]
     pub fn in_ata(&mut self, in_ata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.in_ata = Some(in_ata);
         self
     }
+
     #[inline(always)]
     pub fn user_in_ata(&mut self, user_in_ata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.user_in_ata = Some(user_in_ata);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -168,16 +170,19 @@ impl DepositBuilder {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn deposit_in(&mut self, deposit_in: u64) -> &mut Self {
         self.deposit_in = Some(deposit_in);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -187,6 +192,7 @@ impl DepositBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -196,6 +202,7 @@ impl DepositBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = Deposit {
@@ -274,10 +281,12 @@ impl<'a, 'b> DepositCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -289,6 +298,7 @@ impl<'a, 'b> DepositCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -296,6 +306,7 @@ impl<'a, 'b> DepositCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -406,16 +417,19 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
+
     #[inline(always)]
     pub fn dca(&mut self, dca: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.dca = Some(dca);
         self
     }
+
     #[inline(always)]
     pub fn in_ata(
         &mut self,
@@ -424,6 +438,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
         self.instruction.in_ata = Some(in_ata);
         self
     }
+
     #[inline(always)]
     pub fn user_in_ata(
         &mut self,
@@ -432,6 +447,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
         self.instruction.user_in_ata = Some(user_in_ata);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -440,6 +456,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -448,6 +465,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(
         &mut self,
@@ -456,11 +474,13 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn deposit_in(&mut self, deposit_in: u64) -> &mut Self {
         self.instruction.deposit_in = Some(deposit_in);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -474,6 +494,7 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -492,10 +513,10 @@ impl<'a, 'b> DepositCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

@@ -58,9 +58,7 @@ impl Missing {
 
 impl From<Missing> for ParseError {
     #[inline]
-    fn from(value: Missing) -> Self {
-        Self::Missing(value)
-    }
+    fn from(value: Missing) -> Self { Self::Missing(value) }
 }
 
 /// Shared data between all instructions in a transaction.
@@ -152,9 +150,7 @@ impl AccountKeys {
     /// # Errors
     /// Returns an error if the index is invalid.
     pub fn get<I: TryInto<usize>>(&self, idx: I) -> Result<Pubkey, AccountKeyError>
-    where
-        I::Error: Into<std::num::TryFromIntError>,
-    {
+    where I::Error: Into<std::num::TryFromIntError> {
         let idx = idx
             .try_into()
             .map_err(|e| AccountKeyError::IndexConvert(e.into()))?;
@@ -346,7 +342,7 @@ impl InstructionUpdate {
 
                 // find next matching instruction
                 // NOTE: 這假設指令樹順序跟 Log 樹順序一致
-                while let Some(path) = path_iter.next() {
+                for path in path_iter.by_ref() {
                     let instruction = Self::get_instruction_at_path_mut(outer, path)?;
                     if instruction.program.to_string() == program_id {
                         instruction.parsed_logs.push(log.clone());
@@ -505,9 +501,7 @@ impl InstructionUpdate {
 
     /// Iterate over all inner instructions stored in this instruction.
     #[inline]
-    pub fn visit_all(&self) -> VisitAll<'_> {
-        VisitAll::new(self)
-    }
+    pub fn visit_all(&self) -> VisitAll<'_> { VisitAll::new(self) }
 }
 
 /// An iterator over all inner instructions stored in an instruction update.
@@ -523,9 +517,7 @@ enum VisitAllState<'a> {
 
 impl<'a> VisitAll<'a> {
     #[inline]
-    fn new(ixs: &'a InstructionUpdate) -> Self {
-        Self(VisitAllState::Init(ixs))
-    }
+    fn new(ixs: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(ixs)) }
 }
 
 impl<'a> Iterator for VisitAll<'a> {
@@ -716,9 +708,11 @@ mod tests {
                 inner = 1;
                 if let Some(expected) = expected_parent {
                     assert_eq!(
-                        ix.parent_program, Some(expected),
+                        ix.parent_program,
+                        Some(expected),
                         "Inner instruction parent_program {:?} doesn't match expected parent {}",
-                        ix.parent_program, expected
+                        ix.parent_program,
+                        expected
                     );
                 }
             }

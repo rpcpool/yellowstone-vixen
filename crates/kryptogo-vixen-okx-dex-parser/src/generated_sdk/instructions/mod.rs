@@ -23,20 +23,11 @@ pub(crate) mod r#swap_tob_v3_with_receiver;
 pub(crate) mod r#swap_v3;
 pub(crate) mod r#wrap_unwrap_v3;
 
-pub use self::r#claim::*;
-pub use self::r#commission_sol_proxy_swap::*;
-pub use self::r#commission_sol_swap::*;
-pub use self::r#commission_spl_proxy_swap::*;
-pub use self::r#commission_spl_swap::*;
-pub use self::r#commission_wrap_unwrap::*;
-pub use self::r#create_token_account::*;
-pub use self::r#create_token_account_with_seed::*;
-pub use self::r#platform_fee_sol_proxy_swap_v2::*;
-pub use self::r#platform_fee_sol_wrap_unwrap_v2::*;
-pub use self::r#platform_fee_spl_proxy_swap_v2::*;
-pub use self::r#proxy_swap::*;
-pub use self::r#swap::*;
-pub use self::r#swap_tob_v3::*;
-pub use self::r#swap_tob_v3_with_receiver::*;
-pub use self::r#swap_v3::*;
-pub use self::r#wrap_unwrap_v3::*;
+pub use self::{
+    r#claim::*, r#commission_sol_proxy_swap::*, r#commission_sol_swap::*,
+    r#commission_spl_proxy_swap::*, r#commission_spl_swap::*, r#commission_wrap_unwrap::*,
+    r#create_token_account::*, r#create_token_account_with_seed::*,
+    r#platform_fee_sol_proxy_swap_v2::*, r#platform_fee_sol_wrap_unwrap_v2::*,
+    r#platform_fee_spl_proxy_swap_v2::*, r#proxy_swap::*, r#swap::*, r#swap_tob_v3::*,
+    r#swap_tob_v3_with_receiver::*, r#swap_v3::*, r#wrap_unwrap_v3::*,
+};

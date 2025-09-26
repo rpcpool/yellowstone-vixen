@@ -1,12 +1,14 @@
 use std::time::Duration;
+
 use tracing::{error, info};
-use yellowstone_vixen::vixen_core::Parser;
-use yellowstone_vixen::{Pipeline, Runtime};
+use yellowstone_vixen::{vixen_core::Parser, Pipeline, Runtime};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 mod common;
-use common::test_handlers::{JupiterTestHandler, OkxTestHandler};
-use common::{create_test_config, run_integration_test_with_event_completion};
+use common::{
+    create_test_config, run_integration_test_with_event_completion,
+    test_handlers::{JupiterTestHandler, OkxTestHandler},
+};
 
 // Initialize tracing once for all tests
 fn init_tracing() {

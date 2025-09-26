@@ -16,13 +16,8 @@ pub(crate) mod r#support_mint_associated;
 pub(crate) mod r#tick_array_bitmap_extension;
 pub(crate) mod r#tick_array_state;
 
-pub use self::r#amm_config::*;
-pub use self::r#observation_state::*;
-pub use self::r#operation_state::*;
-pub use self::r#permissionless_farm_switch::*;
-pub use self::r#personal_position_state::*;
-pub use self::r#pool_state::*;
-pub use self::r#protocol_position_state::*;
-pub use self::r#support_mint_associated::*;
-pub use self::r#tick_array_bitmap_extension::*;
-pub use self::r#tick_array_state::*;
+pub use self::{
+    r#amm_config::*, r#observation_state::*, r#operation_state::*, r#permissionless_farm_switch::*,
+    r#personal_position_state::*, r#pool_state::*, r#protocol_position_state::*,
+    r#support_mint_associated::*, r#tick_array_bitmap_extension::*, r#tick_array_state::*,
+};

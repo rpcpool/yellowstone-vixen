@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const OPEN_POSITION_DISCRIMINATOR: [u8; 8] = [135, 128, 47, 77, 15, 152, 240, 49];
 
@@ -61,6 +60,7 @@ impl OpenPosition {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -166,9 +166,7 @@ impl OpenPositionInstructionData {
 }
 
 impl Default for OpenPositionInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -238,26 +236,28 @@ pub struct OpenPositionBuilder {
 }
 
 impl OpenPositionBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Pays to mint the position
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn position_nft_owner(&mut self, position_nft_owner: solana_pubkey::Pubkey) -> &mut Self {
         self.position_nft_owner = Some(position_nft_owner);
         self
     }
+
     /// Unique token mint address
     #[inline(always)]
     pub fn position_nft_mint(&mut self, position_nft_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.position_nft_mint = Some(position_nft_mint);
         self
     }
+
     /// Token account where position NFT will be minted
     /// This account created in the contract by cpi to avoid large stack variables
     #[inline(always)]
@@ -268,64 +268,75 @@ impl OpenPositionBuilder {
         self.position_nft_account = Some(position_nft_account);
         self
     }
+
     /// To store metaplex metadata
     #[inline(always)]
     pub fn metadata_account(&mut self, metadata_account: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata_account = Some(metadata_account);
         self
     }
+
     /// Add liquidity for this pool
     #[inline(always)]
     pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// Store the information of market marking in range
     #[inline(always)]
     pub fn protocol_position(&mut self, protocol_position: solana_pubkey::Pubkey) -> &mut Self {
         self.protocol_position = Some(protocol_position);
         self
     }
+
     #[inline(always)]
     pub fn tick_array_lower(&mut self, tick_array_lower: solana_pubkey::Pubkey) -> &mut Self {
         self.tick_array_lower = Some(tick_array_lower);
         self
     }
+
     #[inline(always)]
     pub fn tick_array_upper(&mut self, tick_array_upper: solana_pubkey::Pubkey) -> &mut Self {
         self.tick_array_upper = Some(tick_array_upper);
         self
     }
+
     /// personal position state
     #[inline(always)]
     pub fn personal_position(&mut self, personal_position: solana_pubkey::Pubkey) -> &mut Self {
         self.personal_position = Some(personal_position);
         self
     }
+
     /// The token_0 account deposit token to the pool
     #[inline(always)]
     pub fn token_account0(&mut self, token_account0: solana_pubkey::Pubkey) -> &mut Self {
         self.token_account0 = Some(token_account0);
         self
     }
+
     /// The token_1 account deposit token to the pool
     #[inline(always)]
     pub fn token_account1(&mut self, token_account1: solana_pubkey::Pubkey) -> &mut Self {
         self.token_account1 = Some(token_account1);
         self
     }
+
     /// The address that holds pool tokens for token_0
     #[inline(always)]
     pub fn token_vault0(&mut self, token_vault0: solana_pubkey::Pubkey) -> &mut Self {
         self.token_vault0 = Some(token_vault0);
         self
     }
+
     /// The address that holds pool tokens for token_1
     #[inline(always)]
     pub fn token_vault1(&mut self, token_vault1: solana_pubkey::Pubkey) -> &mut Self {
         self.token_vault1 = Some(token_vault1);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     /// Sysvar for token mint and ATA creation
     #[inline(always)]
@@ -333,6 +344,7 @@ impl OpenPositionBuilder {
         self.rent = Some(rent);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// Program to create the position manager state account
     #[inline(always)]
@@ -340,6 +352,7 @@ impl OpenPositionBuilder {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Program to create mint account and mint tokens
     #[inline(always)]
@@ -347,6 +360,7 @@ impl OpenPositionBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     /// Program to create an ATA for receiving position NFT
     #[inline(always)]
@@ -357,6 +371,7 @@ impl OpenPositionBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
     /// Program to create NFT metadata
     #[inline(always)]
@@ -364,47 +379,56 @@ impl OpenPositionBuilder {
         self.metadata_program = Some(metadata_program);
         self
     }
+
     #[inline(always)]
     pub fn tick_lower_index(&mut self, tick_lower_index: i32) -> &mut Self {
         self.tick_lower_index = Some(tick_lower_index);
         self
     }
+
     #[inline(always)]
     pub fn tick_upper_index(&mut self, tick_upper_index: i32) -> &mut Self {
         self.tick_upper_index = Some(tick_upper_index);
         self
     }
+
     #[inline(always)]
     pub fn tick_array_lower_start_index(&mut self, tick_array_lower_start_index: i32) -> &mut Self {
         self.tick_array_lower_start_index = Some(tick_array_lower_start_index);
         self
     }
+
     #[inline(always)]
     pub fn tick_array_upper_start_index(&mut self, tick_array_upper_start_index: i32) -> &mut Self {
         self.tick_array_upper_start_index = Some(tick_array_upper_start_index);
         self
     }
+
     #[inline(always)]
     pub fn liquidity(&mut self, liquidity: u128) -> &mut Self {
         self.liquidity = Some(liquidity);
         self
     }
+
     #[inline(always)]
     pub fn amount0_max(&mut self, amount0_max: u64) -> &mut Self {
         self.amount0_max = Some(amount0_max);
         self
     }
+
     #[inline(always)]
     pub fn amount1_max(&mut self, amount1_max: u64) -> &mut Self {
         self.amount1_max = Some(amount1_max);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -414,6 +438,7 @@ impl OpenPositionBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = OpenPosition {
@@ -603,10 +628,12 @@ impl<'a, 'b> OpenPositionCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -614,10 +641,12 @@ impl<'a, 'b> OpenPositionCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -811,12 +840,14 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Pays to mint the position
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn position_nft_owner(
         &mut self,
@@ -825,6 +856,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.position_nft_owner = Some(position_nft_owner);
         self
     }
+
     /// Unique token mint address
     #[inline(always)]
     pub fn position_nft_mint(
@@ -834,6 +866,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.position_nft_mint = Some(position_nft_mint);
         self
     }
+
     /// Token account where position NFT will be minted
     /// This account created in the contract by cpi to avoid large stack variables
     #[inline(always)]
@@ -844,6 +877,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.position_nft_account = Some(position_nft_account);
         self
     }
+
     /// To store metaplex metadata
     #[inline(always)]
     pub fn metadata_account(
@@ -853,6 +887,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.metadata_account = Some(metadata_account);
         self
     }
+
     /// Add liquidity for this pool
     #[inline(always)]
     pub fn pool_state(
@@ -862,6 +897,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// Store the information of market marking in range
     #[inline(always)]
     pub fn protocol_position(
@@ -871,6 +907,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.protocol_position = Some(protocol_position);
         self
     }
+
     #[inline(always)]
     pub fn tick_array_lower(
         &mut self,
@@ -879,6 +916,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.tick_array_lower = Some(tick_array_lower);
         self
     }
+
     #[inline(always)]
     pub fn tick_array_upper(
         &mut self,
@@ -887,6 +925,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.tick_array_upper = Some(tick_array_upper);
         self
     }
+
     /// personal position state
     #[inline(always)]
     pub fn personal_position(
@@ -896,6 +935,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.personal_position = Some(personal_position);
         self
     }
+
     /// The token_0 account deposit token to the pool
     #[inline(always)]
     pub fn token_account0(
@@ -905,6 +945,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.token_account0 = Some(token_account0);
         self
     }
+
     /// The token_1 account deposit token to the pool
     #[inline(always)]
     pub fn token_account1(
@@ -914,6 +955,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.token_account1 = Some(token_account1);
         self
     }
+
     /// The address that holds pool tokens for token_0
     #[inline(always)]
     pub fn token_vault0(
@@ -923,6 +965,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.token_vault0 = Some(token_vault0);
         self
     }
+
     /// The address that holds pool tokens for token_1
     #[inline(always)]
     pub fn token_vault1(
@@ -932,12 +975,14 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.token_vault1 = Some(token_vault1);
         self
     }
+
     /// Sysvar for token mint and ATA creation
     #[inline(always)]
     pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
+
     /// Program to create the position manager state account
     #[inline(always)]
     pub fn system_program(
@@ -947,6 +992,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Program to create mint account and mint tokens
     #[inline(always)]
     pub fn token_program(
@@ -956,6 +1002,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Program to create an ATA for receiving position NFT
     #[inline(always)]
     pub fn associated_token_program(
@@ -965,6 +1012,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     /// Program to create NFT metadata
     #[inline(always)]
     pub fn metadata_program(
@@ -974,41 +1022,49 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
         self.instruction.metadata_program = Some(metadata_program);
         self
     }
+
     #[inline(always)]
     pub fn tick_lower_index(&mut self, tick_lower_index: i32) -> &mut Self {
         self.instruction.tick_lower_index = Some(tick_lower_index);
         self
     }
+
     #[inline(always)]
     pub fn tick_upper_index(&mut self, tick_upper_index: i32) -> &mut Self {
         self.instruction.tick_upper_index = Some(tick_upper_index);
         self
     }
+
     #[inline(always)]
     pub fn tick_array_lower_start_index(&mut self, tick_array_lower_start_index: i32) -> &mut Self {
         self.instruction.tick_array_lower_start_index = Some(tick_array_lower_start_index);
         self
     }
+
     #[inline(always)]
     pub fn tick_array_upper_start_index(&mut self, tick_array_upper_start_index: i32) -> &mut Self {
         self.instruction.tick_array_upper_start_index = Some(tick_array_upper_start_index);
         self
     }
+
     #[inline(always)]
     pub fn liquidity(&mut self, liquidity: u128) -> &mut Self {
         self.instruction.liquidity = Some(liquidity);
         self
     }
+
     #[inline(always)]
     pub fn amount0_max(&mut self, amount0_max: u64) -> &mut Self {
         self.instruction.amount0_max = Some(amount0_max);
         self
     }
+
     #[inline(always)]
     pub fn amount1_max(&mut self, amount1_max: u64) -> &mut Self {
         self.instruction.amount1_max = Some(amount1_max);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1022,6 +1078,7 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1036,10 +1093,10 @@ impl<'a, 'b> OpenPositionCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

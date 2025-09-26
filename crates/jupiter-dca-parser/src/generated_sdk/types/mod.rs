@@ -13,10 +13,7 @@ pub(crate) mod r#opened;
 pub(crate) mod r#withdraw;
 pub(crate) mod r#withdrawal;
 
-pub use self::r#closed::*;
-pub use self::r#collected_fee::*;
-pub use self::r#deposit::*;
-pub use self::r#filled::*;
-pub use self::r#opened::*;
-pub use self::r#withdraw::*;
-pub use self::r#withdrawal::*;
+pub use self::{
+    r#closed::*, r#collected_fee::*, r#deposit::*, r#filled::*, r#opened::*, r#withdraw::*,
+    r#withdrawal::*,
+};

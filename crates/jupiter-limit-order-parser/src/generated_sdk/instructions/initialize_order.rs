@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -49,6 +48,7 @@ impl InitializeOrder {
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -147,9 +147,7 @@ impl InitializeOrderInstructionData {
 }
 
 impl Default for InitializeOrderInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -209,24 +207,26 @@ pub struct InitializeOrderBuilder {
 }
 
 impl InitializeOrderBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn maker(&mut self, maker: solana_program::pubkey::Pubkey) -> &mut Self {
         self.maker = Some(maker);
         self
     }
+
     #[inline(always)]
     pub fn order(&mut self, order: solana_program::pubkey::Pubkey) -> &mut Self {
         self.order = Some(order);
         self
     }
+
     #[inline(always)]
     pub fn input_mint_reserve(
         &mut self,
@@ -235,6 +235,7 @@ impl InitializeOrderBuilder {
         self.input_mint_reserve = Some(input_mint_reserve);
         self
     }
+
     #[inline(always)]
     pub fn maker_input_mint_account(
         &mut self,
@@ -243,27 +244,32 @@ impl InitializeOrderBuilder {
         self.maker_input_mint_account = Some(maker_input_mint_account);
         self
     }
+
     #[inline(always)]
     pub fn fee(&mut self, fee: solana_program::pubkey::Pubkey) -> &mut Self {
         self.fee = Some(fee);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn referral(&mut self, referral: Option<solana_program::pubkey::Pubkey>) -> &mut Self {
         self.referral = referral;
         self
     }
+
     #[inline(always)]
     pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
+
     #[inline(always)]
     pub fn output_mint(&mut self, output_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.output_mint = Some(output_mint);
         self
     }
+
     #[inline(always)]
     pub fn input_token_program(
         &mut self,
@@ -272,6 +278,7 @@ impl InitializeOrderBuilder {
         self.input_token_program = Some(input_token_program);
         self
     }
+
     #[inline(always)]
     pub fn output_token_program(
         &mut self,
@@ -280,12 +287,14 @@ impl InitializeOrderBuilder {
         self.output_token_program = Some(output_token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     #[inline(always)]
     pub fn associated_token_program(
@@ -295,6 +304,7 @@ impl InitializeOrderBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -303,44 +313,52 @@ impl InitializeOrderBuilder {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn unique_id(&mut self, unique_id: u64) -> &mut Self {
         self.unique_id = Some(unique_id);
         self
     }
+
     #[inline(always)]
     pub fn making_amount(&mut self, making_amount: u64) -> &mut Self {
         self.making_amount = Some(making_amount);
         self
     }
+
     #[inline(always)]
     pub fn taking_amount(&mut self, taking_amount: u64) -> &mut Self {
         self.taking_amount = Some(taking_amount);
         self
     }
+
     /// `[optional argument]`
     #[inline(always)]
     pub fn expired_at(&mut self, expired_at: i64) -> &mut Self {
         self.expired_at = Some(expired_at);
         self
     }
+
     /// `[optional argument]`
     #[inline(always)]
     pub fn fee_bps(&mut self, fee_bps: u16) -> &mut Self {
         self.fee_bps = Some(fee_bps);
         self
     }
+
     /// `[optional argument]`
     #[inline(always)]
     pub fn slippage_bps(&mut self, slippage_bps: u16) -> &mut Self {
         self.slippage_bps = Some(slippage_bps);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -350,6 +368,7 @@ impl InitializeOrderBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -359,6 +378,7 @@ impl InitializeOrderBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = InitializeOrder {
@@ -506,10 +526,12 @@ impl<'a, 'b> InitializeOrderCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -521,6 +543,7 @@ impl<'a, 'b> InitializeOrderCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -528,6 +551,7 @@ impl<'a, 'b> InitializeOrderCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -708,21 +732,25 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn maker(&mut self, maker: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.maker = Some(maker);
         self
     }
+
     #[inline(always)]
     pub fn order(&mut self, order: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.order = Some(order);
         self
     }
+
     #[inline(always)]
     pub fn input_mint_reserve(
         &mut self,
@@ -731,6 +759,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.input_mint_reserve = Some(input_mint_reserve);
         self
     }
+
     #[inline(always)]
     pub fn maker_input_mint_account(
         &mut self,
@@ -739,11 +768,13 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.maker_input_mint_account = Some(maker_input_mint_account);
         self
     }
+
     #[inline(always)]
     pub fn fee(&mut self, fee: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.fee = Some(fee);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn referral(
@@ -753,6 +784,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.referral = referral;
         self
     }
+
     #[inline(always)]
     pub fn input_mint(
         &mut self,
@@ -761,6 +793,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.input_mint = Some(input_mint);
         self
     }
+
     #[inline(always)]
     pub fn output_mint(
         &mut self,
@@ -769,6 +802,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.output_mint = Some(output_mint);
         self
     }
+
     #[inline(always)]
     pub fn input_token_program(
         &mut self,
@@ -777,6 +811,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.input_token_program = Some(input_token_program);
         self
     }
+
     #[inline(always)]
     pub fn output_token_program(
         &mut self,
@@ -785,6 +820,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.output_token_program = Some(output_token_program);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -793,6 +829,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -801,6 +838,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -809,6 +847,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(
         &mut self,
@@ -817,39 +856,46 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn unique_id(&mut self, unique_id: u64) -> &mut Self {
         self.instruction.unique_id = Some(unique_id);
         self
     }
+
     #[inline(always)]
     pub fn making_amount(&mut self, making_amount: u64) -> &mut Self {
         self.instruction.making_amount = Some(making_amount);
         self
     }
+
     #[inline(always)]
     pub fn taking_amount(&mut self, taking_amount: u64) -> &mut Self {
         self.instruction.taking_amount = Some(taking_amount);
         self
     }
+
     /// `[optional argument]`
     #[inline(always)]
     pub fn expired_at(&mut self, expired_at: i64) -> &mut Self {
         self.instruction.expired_at = Some(expired_at);
         self
     }
+
     /// `[optional argument]`
     #[inline(always)]
     pub fn fee_bps(&mut self, fee_bps: u16) -> &mut Self {
         self.instruction.fee_bps = Some(fee_bps);
         self
     }
+
     /// `[optional argument]`
     #[inline(always)]
     pub fn slippage_bps(&mut self, slippage_bps: u16) -> &mut Self {
         self.instruction.slippage_bps = Some(slippage_bps);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -863,6 +909,7 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -881,10 +928,10 @@ impl<'a, 'b> InitializeOrderCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

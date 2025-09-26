@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Emitted when liquidity decreased or increase.
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

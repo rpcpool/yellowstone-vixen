@@ -129,11 +129,10 @@ pub enum SellEvent {
 }
 
 impl SellEvent {
-    /// SellEvent discriminator bytes
-    pub const DISCRIMINATOR: [u8; 8] = [0x3e, 0x2f, 0x37, 0x0a, 0xa5, 0x03, 0xdc, 0x2a];
-
     /// CPI log prefix for self CPI events
     pub const CPI_LOG_PREFIX: [u8; 8] = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
+    /// SellEvent discriminator bytes
+    pub const DISCRIMINATOR: [u8; 8] = [0x3e, 0x2f, 0x37, 0x0a, 0xa5, 0x03, 0xdc, 0x2a];
 
     /// Parse SellEvent from inner instruction data
     pub fn from_inner_instruction_data(data: &[u8]) -> Option<Self> {
@@ -172,7 +171,10 @@ mod tests {
         let data = hex::decode(hex_data).expect("Failed to decode hex");
 
         let result = SellEvent::from_inner_instruction_data(&data);
-        assert!(result.is_some(), "Should successfully parse SellEvent from inner instruction data");
+        assert!(
+            result.is_some(),
+            "Should successfully parse SellEvent from inner instruction data"
+        );
 
         let sell_event = result.unwrap();
 
@@ -180,13 +182,13 @@ mod tests {
         match sell_event {
             SellEvent::V1(v1_event) => {
                 panic!("Expected SellEventV2, got SellEventV1: {:?}", v1_event);
-            }
+            },
             SellEvent::V2(v2_event) => {
                 assert_eq!(v2_event.timestamp, 1758625475);
                 assert_eq!(v2_event.base_amount_in, 431756657);
                 assert_eq!(v2_event.user_quote_amount_out, 769863703166);
                 println!("Parsed as SellEventV2: {:?}", v2_event);
-            }
+            },
         }
     }
 
@@ -203,6 +205,9 @@ mod tests {
         data.extend_from_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]); // Invalid discriminator
 
         let result = SellEvent::from_inner_instruction_data(&data);
-        assert!(result.is_none(), "Should not parse with invalid discriminator");
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid discriminator"
+        );
     }
 }

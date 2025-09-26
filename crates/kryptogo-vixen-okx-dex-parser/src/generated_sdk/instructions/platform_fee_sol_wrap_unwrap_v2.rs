@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const PLATFORM_FEE_SOL_WRAP_UNWRAP_V2_DISCRIMINATOR: [u8; 8] =
     [196, 172, 152, 92, 60, 186, 64, 227];
@@ -42,6 +41,7 @@ impl PlatformFeeSolWrapUnwrapV2 {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -133,9 +133,7 @@ impl PlatformFeeSolWrapUnwrapV2InstructionData {
 }
 
 impl Default for PlatformFeeSolWrapUnwrapV2InstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -181,25 +179,27 @@ pub struct PlatformFeeSolWrapUnwrapV2Builder {
 }
 
 impl PlatformFeeSolWrapUnwrapV2Builder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn payer_wsol_account(&mut self, payer_wsol_account: solana_pubkey::Pubkey) -> &mut Self {
         self.payer_wsol_account = Some(payer_wsol_account);
         self
     }
+
     /// `[optional account, default to 'So11111111111111111111111111111111111111112']`
     #[inline(always)]
     pub fn wsol_mint(&mut self, wsol_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.wsol_mint = Some(wsol_mint);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn temp_wsol_account(
@@ -209,6 +209,7 @@ impl PlatformFeeSolWrapUnwrapV2Builder {
         self.temp_wsol_account = temp_wsol_account;
         self
     }
+
     #[inline(always)]
     pub fn commission_sol_account(
         &mut self,
@@ -217,6 +218,7 @@ impl PlatformFeeSolWrapUnwrapV2Builder {
         self.commission_sol_account = Some(commission_sol_account);
         self
     }
+
     #[inline(always)]
     pub fn commission_wsol_account(
         &mut self,
@@ -225,12 +227,14 @@ impl PlatformFeeSolWrapUnwrapV2Builder {
         self.commission_wsol_account = Some(commission_wsol_account);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn source_token_sa(&mut self, source_token_sa: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.source_token_sa = source_token_sa;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn destination_token_sa(
@@ -240,44 +244,52 @@ impl PlatformFeeSolWrapUnwrapV2Builder {
         self.destination_token_sa = destination_token_sa;
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn amount_in(&mut self, amount_in: u64) -> &mut Self {
         self.amount_in = Some(amount_in);
         self
     }
+
     #[inline(always)]
     pub fn commission_info(&mut self, commission_info: u32) -> &mut Self {
         self.commission_info = Some(commission_info);
         self
     }
+
     #[inline(always)]
     pub fn platform_fee_rate(&mut self, platform_fee_rate: u32) -> &mut Self {
         self.platform_fee_rate = Some(platform_fee_rate);
         self
     }
+
     #[inline(always)]
     pub fn order_id(&mut self, order_id: u64) -> &mut Self {
         self.order_id = Some(order_id);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -287,6 +299,7 @@ impl PlatformFeeSolWrapUnwrapV2Builder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = PlatformFeeSolWrapUnwrapV2 {
@@ -402,10 +415,12 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2Cpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -413,10 +428,12 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2Cpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -571,11 +588,13 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
+
     #[inline(always)]
     pub fn payer_wsol_account(
         &mut self,
@@ -584,11 +603,13 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
         self.instruction.payer_wsol_account = Some(payer_wsol_account);
         self
     }
+
     #[inline(always)]
     pub fn wsol_mint(&mut self, wsol_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.wsol_mint = Some(wsol_mint);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn temp_wsol_account(
@@ -598,6 +619,7 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
         self.instruction.temp_wsol_account = temp_wsol_account;
         self
     }
+
     #[inline(always)]
     pub fn commission_sol_account(
         &mut self,
@@ -606,6 +628,7 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
         self.instruction.commission_sol_account = Some(commission_sol_account);
         self
     }
+
     #[inline(always)]
     pub fn commission_wsol_account(
         &mut self,
@@ -614,6 +637,7 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
         self.instruction.commission_wsol_account = Some(commission_wsol_account);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn source_token_sa(
@@ -623,6 +647,7 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
         self.instruction.source_token_sa = source_token_sa;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn destination_token_sa(
@@ -632,6 +657,7 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
         self.instruction.destination_token_sa = destination_token_sa;
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -640,6 +666,7 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -648,26 +675,31 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn amount_in(&mut self, amount_in: u64) -> &mut Self {
         self.instruction.amount_in = Some(amount_in);
         self
     }
+
     #[inline(always)]
     pub fn commission_info(&mut self, commission_info: u32) -> &mut Self {
         self.instruction.commission_info = Some(commission_info);
         self
     }
+
     #[inline(always)]
     pub fn platform_fee_rate(&mut self, platform_fee_rate: u32) -> &mut Self {
         self.instruction.platform_fee_rate = Some(platform_fee_rate);
         self
     }
+
     #[inline(always)]
     pub fn order_id(&mut self, order_id: u64) -> &mut Self {
         self.instruction.order_id = Some(order_id);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -681,6 +713,7 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -695,10 +728,10 @@ impl<'a, 'b> PlatformFeeSolWrapUnwrapV2CpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

@@ -56,10 +56,9 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            SwapEvent::DISCRIMINATOR,
-            [0x51, 0x6c, 0xe3, 0xbe, 0xcd, 0xd0, 0x0a, 0xc4]
-        );
+        assert_eq!(SwapEvent::DISCRIMINATOR, [
+            0x51, 0x6c, 0xe3, 0xbe, 0xcd, 0xd0, 0x0a, 0xc4
+        ]);
     }
 
     #[test]

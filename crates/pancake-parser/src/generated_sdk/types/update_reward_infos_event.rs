@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Emitted when Reward are updated for a pool
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

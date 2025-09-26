@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const SET_REWARD_PARAMS_DISCRIMINATOR: [u8; 8] = [112, 52, 167, 75, 32, 201, 211, 137];
 
@@ -34,6 +33,7 @@ impl SetRewardParams {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -91,9 +91,7 @@ impl SetRewardParamsInstructionData {
 }
 
 impl Default for SetRewardParamsInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -131,31 +129,34 @@ pub struct SetRewardParamsBuilder {
 }
 
 impl SetRewardParamsBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// Address to be set as protocol owner. It pays to create factory state account.
     #[inline(always)]
     pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
+
     #[inline(always)]
     pub fn amm_config(&mut self, amm_config: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_config = Some(amm_config);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// load info from the account to judge reward permission
     #[inline(always)]
     pub fn operation_state(&mut self, operation_state: solana_pubkey::Pubkey) -> &mut Self {
         self.operation_state = Some(operation_state);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// Token program
     #[inline(always)]
@@ -163,6 +164,7 @@ impl SetRewardParamsBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// Token program 2022
     #[inline(always)]
@@ -170,32 +172,38 @@ impl SetRewardParamsBuilder {
         self.token_program2022 = Some(token_program2022);
         self
     }
+
     #[inline(always)]
     pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
         self.reward_index = Some(reward_index);
         self
     }
+
     #[inline(always)]
     pub fn emissions_per_second_x64(&mut self, emissions_per_second_x64: u128) -> &mut Self {
         self.emissions_per_second_x64 = Some(emissions_per_second_x64);
         self
     }
+
     #[inline(always)]
     pub fn open_time(&mut self, open_time: u64) -> &mut Self {
         self.open_time = Some(open_time);
         self
     }
+
     #[inline(always)]
     pub fn end_time(&mut self, end_time: u64) -> &mut Self {
         self.end_time = Some(end_time);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -205,6 +213,7 @@ impl SetRewardParamsBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = SetRewardParams {
@@ -286,10 +295,12 @@ impl<'a, 'b> SetRewardParamsCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -297,10 +308,12 @@ impl<'a, 'b> SetRewardParamsCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -403,12 +416,14 @@ impl<'a, 'b> SetRewardParamsCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Address to be set as protocol owner. It pays to create factory state account.
     #[inline(always)]
     pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.authority = Some(authority);
         self
     }
+
     #[inline(always)]
     pub fn amm_config(
         &mut self,
@@ -417,6 +432,7 @@ impl<'a, 'b> SetRewardParamsCpiBuilder<'a, 'b> {
         self.instruction.amm_config = Some(amm_config);
         self
     }
+
     #[inline(always)]
     pub fn pool_state(
         &mut self,
@@ -425,6 +441,7 @@ impl<'a, 'b> SetRewardParamsCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// load info from the account to judge reward permission
     #[inline(always)]
     pub fn operation_state(
@@ -434,6 +451,7 @@ impl<'a, 'b> SetRewardParamsCpiBuilder<'a, 'b> {
         self.instruction.operation_state = Some(operation_state);
         self
     }
+
     /// Token program
     #[inline(always)]
     pub fn token_program(
@@ -443,6 +461,7 @@ impl<'a, 'b> SetRewardParamsCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Token program 2022
     #[inline(always)]
     pub fn token_program2022(
@@ -452,26 +471,31 @@ impl<'a, 'b> SetRewardParamsCpiBuilder<'a, 'b> {
         self.instruction.token_program2022 = Some(token_program2022);
         self
     }
+
     #[inline(always)]
     pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
         self.instruction.reward_index = Some(reward_index);
         self
     }
+
     #[inline(always)]
     pub fn emissions_per_second_x64(&mut self, emissions_per_second_x64: u128) -> &mut Self {
         self.instruction.emissions_per_second_x64 = Some(emissions_per_second_x64);
         self
     }
+
     #[inline(always)]
     pub fn open_time(&mut self, open_time: u64) -> &mut Self {
         self.instruction.open_time = Some(open_time);
         self
     }
+
     #[inline(always)]
     pub fn end_time(&mut self, end_time: u64) -> &mut Self {
         self.instruction.end_time = Some(end_time);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -485,6 +509,7 @@ impl<'a, 'b> SetRewardParamsCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -499,10 +524,10 @@ impl<'a, 'b> SetRewardParamsCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

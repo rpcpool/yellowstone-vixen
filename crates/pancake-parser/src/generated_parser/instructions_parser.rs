@@ -12,54 +12,56 @@ use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
-use crate::deserialize_checked;
-
-use crate::instructions::{
-    ClosePosition as ClosePositionIxAccounts, CollectFundFee as CollectFundFeeIxAccounts,
-    CollectFundFeeInstructionArgs as CollectFundFeeIxData,
-    CollectProtocolFee as CollectProtocolFeeIxAccounts,
-    CollectProtocolFeeInstructionArgs as CollectProtocolFeeIxData,
-    CollectRemainingRewards as CollectRemainingRewardsIxAccounts,
-    CollectRemainingRewardsInstructionArgs as CollectRemainingRewardsIxData,
-    CreateAmmConfig as CreateAmmConfigIxAccounts,
-    CreateAmmConfigInstructionArgs as CreateAmmConfigIxData,
-    CreateOperationAccount as CreateOperationAccountIxAccounts,
-    CreatePermissionlessFarmSwitch as CreatePermissionlessFarmSwitchIxAccounts,
-    CreatePool as CreatePoolIxAccounts, CreatePoolInstructionArgs as CreatePoolIxData,
-    CreateSupportMintAssociated as CreateSupportMintAssociatedIxAccounts,
-    DecreaseLiquidity as DecreaseLiquidityIxAccounts,
-    DecreaseLiquidityInstructionArgs as DecreaseLiquidityIxData,
-    DecreaseLiquidityV2 as DecreaseLiquidityV2IxAccounts,
-    DecreaseLiquidityV2InstructionArgs as DecreaseLiquidityV2IxData,
-    IncreaseLiquidity as IncreaseLiquidityIxAccounts,
-    IncreaseLiquidityInstructionArgs as IncreaseLiquidityIxData,
-    IncreaseLiquidityV2 as IncreaseLiquidityV2IxAccounts,
-    IncreaseLiquidityV2InstructionArgs as IncreaseLiquidityV2IxData,
-    InitializeReward as InitializeRewardIxAccounts,
-    InitializeRewardInstructionArgs as InitializeRewardIxData,
-    OpenPosition as OpenPositionIxAccounts, OpenPositionInstructionArgs as OpenPositionIxData,
-    OpenPositionV2 as OpenPositionV2IxAccounts,
-    OpenPositionV2InstructionArgs as OpenPositionV2IxData,
-    OpenPositionWithToken22Nft as OpenPositionWithToken22NftIxAccounts,
-    OpenPositionWithToken22NftInstructionArgs as OpenPositionWithToken22NftIxData,
-    SetRewardParams as SetRewardParamsIxAccounts,
-    SetRewardParamsInstructionArgs as SetRewardParamsIxData, Swap as SwapIxAccounts,
-    SwapInstructionArgs as SwapIxData, SwapRouterBaseIn as SwapRouterBaseInIxAccounts,
-    SwapRouterBaseInInstructionArgs as SwapRouterBaseInIxData, SwapV2 as SwapV2IxAccounts,
-    SwapV2InstructionArgs as SwapV2IxData,
-    TogglePermissionlessFarmSwitch as TogglePermissionlessFarmSwitchIxAccounts,
-    TogglePermissionlessFarmSwitchInstructionArgs as TogglePermissionlessFarmSwitchIxData,
-    TransferRewardOwner as TransferRewardOwnerIxAccounts,
-    TransferRewardOwnerInstructionArgs as TransferRewardOwnerIxData,
-    UpdateAmmConfig as UpdateAmmConfigIxAccounts,
-    UpdateAmmConfigInstructionArgs as UpdateAmmConfigIxData,
-    UpdateOperationAccount as UpdateOperationAccountIxAccounts,
-    UpdateOperationAccountInstructionArgs as UpdateOperationAccountIxData,
-    UpdatePoolStatus as UpdatePoolStatusIxAccounts,
-    UpdatePoolStatusInstructionArgs as UpdatePoolStatusIxData,
-    UpdateRewardInfos as UpdateRewardInfosIxAccounts,
+use crate::{
+    deserialize_checked,
+    instructions::{
+        ClosePosition as ClosePositionIxAccounts, CollectFundFee as CollectFundFeeIxAccounts,
+        CollectFundFeeInstructionArgs as CollectFundFeeIxData,
+        CollectProtocolFee as CollectProtocolFeeIxAccounts,
+        CollectProtocolFeeInstructionArgs as CollectProtocolFeeIxData,
+        CollectRemainingRewards as CollectRemainingRewardsIxAccounts,
+        CollectRemainingRewardsInstructionArgs as CollectRemainingRewardsIxData,
+        CreateAmmConfig as CreateAmmConfigIxAccounts,
+        CreateAmmConfigInstructionArgs as CreateAmmConfigIxData,
+        CreateOperationAccount as CreateOperationAccountIxAccounts,
+        CreatePermissionlessFarmSwitch as CreatePermissionlessFarmSwitchIxAccounts,
+        CreatePool as CreatePoolIxAccounts, CreatePoolInstructionArgs as CreatePoolIxData,
+        CreateSupportMintAssociated as CreateSupportMintAssociatedIxAccounts,
+        DecreaseLiquidity as DecreaseLiquidityIxAccounts,
+        DecreaseLiquidityInstructionArgs as DecreaseLiquidityIxData,
+        DecreaseLiquidityV2 as DecreaseLiquidityV2IxAccounts,
+        DecreaseLiquidityV2InstructionArgs as DecreaseLiquidityV2IxData,
+        IncreaseLiquidity as IncreaseLiquidityIxAccounts,
+        IncreaseLiquidityInstructionArgs as IncreaseLiquidityIxData,
+        IncreaseLiquidityV2 as IncreaseLiquidityV2IxAccounts,
+        IncreaseLiquidityV2InstructionArgs as IncreaseLiquidityV2IxData,
+        InitializeReward as InitializeRewardIxAccounts,
+        InitializeRewardInstructionArgs as InitializeRewardIxData,
+        OpenPosition as OpenPositionIxAccounts, OpenPositionInstructionArgs as OpenPositionIxData,
+        OpenPositionV2 as OpenPositionV2IxAccounts,
+        OpenPositionV2InstructionArgs as OpenPositionV2IxData,
+        OpenPositionWithToken22Nft as OpenPositionWithToken22NftIxAccounts,
+        OpenPositionWithToken22NftInstructionArgs as OpenPositionWithToken22NftIxData,
+        SetRewardParams as SetRewardParamsIxAccounts,
+        SetRewardParamsInstructionArgs as SetRewardParamsIxData, Swap as SwapIxAccounts,
+        SwapInstructionArgs as SwapIxData, SwapRouterBaseIn as SwapRouterBaseInIxAccounts,
+        SwapRouterBaseInInstructionArgs as SwapRouterBaseInIxData, SwapV2 as SwapV2IxAccounts,
+        SwapV2InstructionArgs as SwapV2IxData,
+        TogglePermissionlessFarmSwitch as TogglePermissionlessFarmSwitchIxAccounts,
+        TogglePermissionlessFarmSwitchInstructionArgs as TogglePermissionlessFarmSwitchIxData,
+        TransferRewardOwner as TransferRewardOwnerIxAccounts,
+        TransferRewardOwnerInstructionArgs as TransferRewardOwnerIxData,
+        UpdateAmmConfig as UpdateAmmConfigIxAccounts,
+        UpdateAmmConfigInstructionArgs as UpdateAmmConfigIxData,
+        UpdateOperationAccount as UpdateOperationAccountIxAccounts,
+        UpdateOperationAccountInstructionArgs as UpdateOperationAccountIxData,
+        UpdatePoolStatus as UpdatePoolStatusIxAccounts,
+        UpdatePoolStatusInstructionArgs as UpdatePoolStatusIxData,
+        UpdateRewardInfos as UpdateRewardInfosIxAccounts,
+    },
+    types::SwapEvent,
+    ID,
 };
-use crate::{types::SwapEvent, ID};
 
 /// AmmV3 Instructions
 #[derive(Debug)]
@@ -111,16 +113,12 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-
     #[cfg(not(feature = "shared-data"))]
     type Output = AmmV3ProgramIx;
-
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<AmmV3ProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "AmmV3::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "AmmV3::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -159,9 +157,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -762,11 +758,10 @@ pub fn next_program_id_optional_account<
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{AmmV3ProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::ClosePositionIxAccounts;
+    use super::{AmmV3ProgramIx, ClosePositionIxAccounts, InstructionParser};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::ClosePositionIxAccounts> for ClosePositionIxAccounts {
         fn into_proto(self) -> proto_def::ClosePositionIxAccounts {
             proto_def::ClosePositionIxAccounts {

@@ -11,39 +11,40 @@ use std::sync::Arc;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
-use crate::deserialize_checked;
-
-use crate::generated::types::AggregationEvent;
-use crate::instructions::{
-    Claim as ClaimIxAccounts, CommissionSolProxySwap as CommissionSolProxySwapIxAccounts,
-    CommissionSolProxySwapInstructionArgs as CommissionSolProxySwapIxData,
-    CommissionSolSwap as CommissionSolSwapIxAccounts,
-    CommissionSolSwapInstructionArgs as CommissionSolSwapIxData,
-    CommissionSplProxySwap as CommissionSplProxySwapIxAccounts,
-    CommissionSplProxySwapInstructionArgs as CommissionSplProxySwapIxData,
-    CommissionSplSwap as CommissionSplSwapIxAccounts,
-    CommissionSplSwapInstructionArgs as CommissionSplSwapIxData,
-    CommissionWrapUnwrap as CommissionWrapUnwrapIxAccounts,
-    CommissionWrapUnwrapInstructionArgs as CommissionWrapUnwrapIxData,
-    CreateTokenAccount as CreateTokenAccountIxAccounts,
-    CreateTokenAccountInstructionArgs as CreateTokenAccountIxData,
-    CreateTokenAccountWithSeed as CreateTokenAccountWithSeedIxAccounts,
-    CreateTokenAccountWithSeedInstructionArgs as CreateTokenAccountWithSeedIxData,
-    PlatformFeeSolProxySwapV2 as PlatformFeeSolProxySwapV2IxAccounts,
-    PlatformFeeSolProxySwapV2InstructionArgs as PlatformFeeSolProxySwapV2IxData,
-    PlatformFeeSolWrapUnwrapV2 as PlatformFeeSolWrapUnwrapV2IxAccounts,
-    PlatformFeeSolWrapUnwrapV2InstructionArgs as PlatformFeeSolWrapUnwrapV2IxData,
-    PlatformFeeSplProxySwapV2 as PlatformFeeSplProxySwapV2IxAccounts,
-    PlatformFeeSplProxySwapV2InstructionArgs as PlatformFeeSplProxySwapV2IxData,
-    ProxySwap as ProxySwapIxAccounts, ProxySwapInstructionArgs as ProxySwapIxData,
-    Swap as SwapIxAccounts, SwapInstructionArgs as SwapIxData, SwapTobV3 as SwapTobV3IxAccounts,
-    SwapTobV3InstructionArgs as SwapTobV3IxData,
-    SwapTobV3WithReceiver as SwapTobV3WithReceiverIxAccounts,
-    SwapTobV3WithReceiverInstructionArgs as SwapTobV3WithReceiverIxData,
-    SwapV3 as SwapV3IxAccounts, SwapV3InstructionArgs as SwapV3IxData,
-    WrapUnwrapV3 as WrapUnwrapV3IxAccounts, WrapUnwrapV3InstructionArgs as WrapUnwrapV3IxData,
+use crate::{
+    deserialize_checked,
+    generated::types::AggregationEvent,
+    instructions::{
+        Claim as ClaimIxAccounts, CommissionSolProxySwap as CommissionSolProxySwapIxAccounts,
+        CommissionSolProxySwapInstructionArgs as CommissionSolProxySwapIxData,
+        CommissionSolSwap as CommissionSolSwapIxAccounts,
+        CommissionSolSwapInstructionArgs as CommissionSolSwapIxData,
+        CommissionSplProxySwap as CommissionSplProxySwapIxAccounts,
+        CommissionSplProxySwapInstructionArgs as CommissionSplProxySwapIxData,
+        CommissionSplSwap as CommissionSplSwapIxAccounts,
+        CommissionSplSwapInstructionArgs as CommissionSplSwapIxData,
+        CommissionWrapUnwrap as CommissionWrapUnwrapIxAccounts,
+        CommissionWrapUnwrapInstructionArgs as CommissionWrapUnwrapIxData,
+        CreateTokenAccount as CreateTokenAccountIxAccounts,
+        CreateTokenAccountInstructionArgs as CreateTokenAccountIxData,
+        CreateTokenAccountWithSeed as CreateTokenAccountWithSeedIxAccounts,
+        CreateTokenAccountWithSeedInstructionArgs as CreateTokenAccountWithSeedIxData,
+        PlatformFeeSolProxySwapV2 as PlatformFeeSolProxySwapV2IxAccounts,
+        PlatformFeeSolProxySwapV2InstructionArgs as PlatformFeeSolProxySwapV2IxData,
+        PlatformFeeSolWrapUnwrapV2 as PlatformFeeSolWrapUnwrapV2IxAccounts,
+        PlatformFeeSolWrapUnwrapV2InstructionArgs as PlatformFeeSolWrapUnwrapV2IxData,
+        PlatformFeeSplProxySwapV2 as PlatformFeeSplProxySwapV2IxAccounts,
+        PlatformFeeSplProxySwapV2InstructionArgs as PlatformFeeSplProxySwapV2IxData,
+        ProxySwap as ProxySwapIxAccounts, ProxySwapInstructionArgs as ProxySwapIxData,
+        Swap as SwapIxAccounts, SwapInstructionArgs as SwapIxData,
+        SwapTobV3 as SwapTobV3IxAccounts, SwapTobV3InstructionArgs as SwapTobV3IxData,
+        SwapTobV3WithReceiver as SwapTobV3WithReceiverIxAccounts,
+        SwapTobV3WithReceiverInstructionArgs as SwapTobV3WithReceiverIxData,
+        SwapV3 as SwapV3IxAccounts, SwapV3InstructionArgs as SwapV3IxData,
+        WrapUnwrapV3 as WrapUnwrapV3IxAccounts, WrapUnwrapV3InstructionArgs as WrapUnwrapV3IxData,
+    },
+    ID,
 };
-use crate::ID;
 
 /// DexSolana Instructions
 #[derive(Debug)]
@@ -105,11 +106,7 @@ pub enum DexSolanaProgramIx {
         SwapTobV3WithReceiverIxData,
         Option<AggregationEvent>,
     ),
-    SwapV3(
-        SwapV3IxAccounts,
-        SwapV3IxData,
-        Option<AggregationEvent>,
-    ),
+    SwapV3(SwapV3IxAccounts, SwapV3IxData, Option<AggregationEvent>),
     WrapUnwrapV3(WrapUnwrapV3IxAccounts, WrapUnwrapV3IxData),
 }
 
@@ -118,10 +115,8 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-
     #[cfg(not(feature = "shared-data"))]
     type Output = DexSolanaProgramIx;
-
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<DexSolanaProgramIx>;
 
@@ -166,9 +161,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -662,11 +655,10 @@ pub fn next_program_id_optional_account<
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{DexSolanaProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::ClaimIxAccounts;
+    use super::{ClaimIxAccounts, DexSolanaProgramIx, InstructionParser};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::ClaimIxAccounts> for ClaimIxAccounts {
         fn into_proto(self) -> proto_def::ClaimIxAccounts {
             proto_def::ClaimIxAccounts {
@@ -1206,13 +1198,15 @@ mod proto_parser {
                         ),
                     }
                 },
-                DexSolanaProgramIx::PlatformFeeSolProxySwapV2(acc, data, _) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::PlatformFeeSolProxySwapV2(
-                        proto_def::PlatformFeeSolProxySwapV2Ix {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
+                DexSolanaProgramIx::PlatformFeeSolProxySwapV2(acc, data, _) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::PlatformFeeSolProxySwapV2(
+                            proto_def::PlatformFeeSolProxySwapV2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
                 },
                 DexSolanaProgramIx::PlatformFeeSolWrapUnwrapV2(acc, data) => {
                     proto_def::ProgramIxs {

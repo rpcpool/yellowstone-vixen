@@ -72,10 +72,9 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            TradeEvent::DISCRIMINATOR,
-            [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee]
-        );
+        assert_eq!(TradeEvent::DISCRIMINATOR, [
+            0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee
+        ]);
     }
 
     #[test]

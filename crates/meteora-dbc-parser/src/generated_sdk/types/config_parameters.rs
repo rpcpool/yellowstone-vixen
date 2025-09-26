@@ -5,14 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::LiquidityDistributionParameters;
-use crate::generated::types::LockedVestingParams;
-use crate::generated::types::MigratedPoolFee;
-use crate::generated::types::MigrationFee;
-use crate::generated::types::PoolFeeParameters;
-use crate::generated::types::TokenSupplyParams;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
+
+use crate::generated::types::{
+    LiquidityDistributionParameters, LockedVestingParams, MigratedPoolFee, MigrationFee,
+    PoolFeeParameters, TokenSupplyParams,
+};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

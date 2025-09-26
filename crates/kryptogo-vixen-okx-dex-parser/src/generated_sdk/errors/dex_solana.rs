@@ -42,22 +42,22 @@ pub enum DexSolanaError {
     InvalidSourceTokenAccount = 0x1779,
     /// 6010 - Invalid destination token account
     #[error("Invalid destination token account")]
-    InvalidDestinationTokenAccount = 0x177A,
+    InvalidDestinationTokenAccount = 0x177a,
     /// 6011 - Invalid token account
     #[error("Invalid token account")]
-    InvalidTokenAccount = 0x177B,
+    InvalidTokenAccount = 0x177b,
     /// 6012 - Invalid commission rate
     #[error("Invalid commission rate")]
-    InvalidCommissionRate = 0x177C,
+    InvalidCommissionRate = 0x177c,
     /// 6013 - Invalid trim rate
     #[error("Invalid trim rate")]
-    InvalidTrimRate = 0x177D,
+    InvalidTrimRate = 0x177d,
     /// 6014 - Invalid commission token account
     #[error("Invalid commission token account")]
-    InvalidCommissionTokenAccount = 0x177E,
+    InvalidCommissionTokenAccount = 0x177e,
     /// 6015 - Invalid commission temporary token account
     #[error("Invalid commission temporary token account")]
-    InvalidCommissionTemporaryTokenAccount = 0x177F,
+    InvalidCommissionTemporaryTokenAccount = 0x177f,
     /// 6016 - Invalid accounts length
     #[error("Invalid accounts length")]
     InvalidAccountsLength = 0x1780,
@@ -90,22 +90,22 @@ pub enum DexSolanaError {
     CalculationError = 0x1789,
     /// 6026 - Invalid sanctum lst state list data
     #[error("Invalid sanctum lst state list data")]
-    InvalidSanctumLstStateListData = 0x178A,
+    InvalidSanctumLstStateListData = 0x178a,
     /// 6027 - Invalid sanctum lst state list index
     #[error("Invalid sanctum lst state list index")]
-    InvalidSanctumLstStateListIndex = 0x178B,
+    InvalidSanctumLstStateListIndex = 0x178b,
     /// 6028 - Invalid sanctum swap accounts
     #[error("Invalid sanctum swap accounts")]
-    InvalidSanctumSwapAccounts = 0x178C,
+    InvalidSanctumSwapAccounts = 0x178c,
     /// 6029 - Invalid swap authority account
     #[error("Invalid swap authority account")]
-    InvalidSwapAuthorityAccounts = 0x178D,
+    InvalidSwapAuthorityAccounts = 0x178d,
     /// 6030 - Bridge Seed Error
     #[error("Bridge Seed Error")]
-    InvalidBridgeSeed = 0x178E,
+    InvalidBridgeSeed = 0x178e,
     /// 6031 - Invalid accounts and instruction length
     #[error("Invalid accounts and instruction length")]
-    InvalidBundleInput = 0x178F,
+    InvalidBundleInput = 0x178f,
     /// 6032 - SA is required
     #[error("SA is required")]
     MissingSaAccount = 0x1790,
@@ -138,104 +138,102 @@ pub enum DexSolanaError {
     PlatformFeeAccountIsNone = 0x1799,
     /// 6042 - Trim account is none
     #[error("Trim account is none")]
-    TrimAccountIsNone = 0x179A,
+    TrimAccountIsNone = 0x179a,
     /// 6043 - Invalid fee account
     #[error("Invalid fee account")]
-    InvalidFeeAccount = 0x179B,
+    InvalidFeeAccount = 0x179b,
     /// 6044 - Invalid source token sa
     #[error("Invalid source token sa")]
-    InvalidSourceTokenSa = 0x179C,
+    InvalidSourceTokenSa = 0x179c,
     /// 6045 - Sa authority is none
     #[error("Sa authority is none")]
-    SaAuthorityIsNone = 0x179D,
+    SaAuthorityIsNone = 0x179d,
     /// 6046 - Source token sa is none
     #[error("Source token sa is none")]
-    SourceTokenSaIsNone = 0x179E,
+    SourceTokenSaIsNone = 0x179e,
     /// 6047 - Source token program is none
     #[error("Source token program is none")]
-    SourceTokenProgramIsNone = 0x179F,
+    SourceTokenProgramIsNone = 0x179f,
     /// 6048 - Destination token sa is none
     #[error("Destination token sa is none")]
-    DestinationTokenSaIsNone = 0x17A0,
+    DestinationTokenSaIsNone = 0x17a0,
     /// 6049 - Destination token program is none
     #[error("Destination token program is none")]
-    DestinationTokenProgramIsNone = 0x17A1,
+    DestinationTokenProgramIsNone = 0x17a1,
     /// 6050 - Calculation result must be greater than zero
     #[error("Calculation result must be greater than zero")]
-    ResultMustBeGreaterThanZero = 0x17A2,
+    ResultMustBeGreaterThanZero = 0x17a2,
     /// 6051 - Invalid account data
     #[error("Invalid account data")]
-    InvalidAccountData = 0x17A3,
+    InvalidAccountData = 0x17a3,
     /// 6052 - Invalid RFQ parameters
     #[error("Invalid RFQ parameters")]
-    InvalidRfqParameters = 0x17A4,
+    InvalidRfqParameters = 0x17a4,
     /// 6053 - TOB mode requires authority PDA
     #[error("TOB mode requires authority PDA")]
-    TobAuthorityPdaRequired = 0x17A5,
+    TobAuthorityPdaRequired = 0x17a5,
     /// 6054 - TOB mode with WSOL fees requires wsol_sa account
     #[error("TOB mode with WSOL fees requires wsol_sa account")]
-    TobWsolSaRequired = 0x17A6,
+    TobWsolSaRequired = 0x17a6,
     /// 6055 - Invalid WSOL SA account
     #[error("Invalid WSOL SA account")]
-    InvalidWsolSa = 0x17A7,
+    InvalidWsolSa = 0x17a7,
     /// 6056 - Invalid trim account
     #[error("Invalid trim account")]
-    InvalidTrimAccount = 0x17A8,
+    InvalidTrimAccount = 0x17a8,
     /// 6057 - Invalid commission account
     #[error("Invalid commission account")]
-    InvalidCommissionAccount = 0x17A9,
+    InvalidCommissionAccount = 0x17a9,
     /// 6058 - Invalid platform fee account
     #[error("Invalid platform fee account")]
-    InvalidPlatformFeeAccount = 0x17AA,
+    InvalidPlatformFeeAccount = 0x17aa,
     /// 6059 - Invalid actual amount in
     #[error("Invalid actual amount in")]
-    InvalidActualAmountIn = 0x17AB,
+    InvalidActualAmountIn = 0x17ab,
     /// 6060 - Unexpected SA token account in CPI
     #[error("Unexpected SA token account in CPI")]
-    UnexpectedSaTokenAccount = 0x17AC,
+    UnexpectedSaTokenAccount = 0x17ac,
     /// 6061 - Invalid source token sa mint
     #[error("Invalid source token sa mint")]
-    InvalidSourceTokenSaMint = 0x17AD,
+    InvalidSourceTokenSaMint = 0x17ad,
     /// 6062 - Invalid destination token sa mint
     #[error("Invalid destination token sa mint")]
-    InvalidDestinationTokenSaMint = 0x17AE,
+    InvalidDestinationTokenSaMint = 0x17ae,
     /// 6063 - Adapter abort
     #[error("Adapter abort")]
-    AdapterAbort = 0x17AF,
+    AdapterAbort = 0x17af,
     /// 6064 - Insufficient funds
     #[error("Insufficient funds")]
-    InsufficientFunds = 0x17B0,
+    InsufficientFunds = 0x17b0,
     /// 6065 - Invalid diff lamports
     #[error("Invalid diff lamports")]
-    InvalidDiffLamports = 0x17B1,
+    InvalidDiffLamports = 0x17b1,
     /// 6066 - Invalid token program
     #[error("Invalid token program")]
-    InvalidTokenProgram = 0x17B2,
+    InvalidTokenProgram = 0x17b2,
     /// 6067 - Invalid signer
     #[error("Invalid signer")]
-    InvalidSigner = 0x17B3,
+    InvalidSigner = 0x17b3,
     /// 6068 - Invalid associated token program
     #[error("Invalid associated token program")]
-    InvalidAssociatedTokenProgram = 0x17B4,
+    InvalidAssociatedTokenProgram = 0x17b4,
     /// 6069 - SOL receiver must be a system account
     #[error("SOL receiver must be a system account")]
-    SolReceiverMustBeSystemAccount = 0x17B5,
+    SolReceiverMustBeSystemAccount = 0x17b5,
     /// 6070 - Insufficient balance for transfer
     #[error("Insufficient balance for transfer")]
-    InsufficientBalance = 0x17B6,
+    InsufficientBalance = 0x17b6,
     /// 6071 - SOL receiver requires acc_close_flag to be true
     #[error("SOL receiver requires acc_close_flag to be true")]
-    SolReceiverRequiresAccCloseFlag = 0x17B7,
+    SolReceiverRequiresAccCloseFlag = 0x17b7,
     /// 6072 - Destination must be wSOL when sol_receiver is specified
     #[error("Destination must be wSOL when sol_receiver is specified")]
-    DestinationMustBeWsolForSolReceiver = 0x17B8,
+    DestinationMustBeWsolForSolReceiver = 0x17b8,
     /// 6073 - Invalid Goonfi parameters
     #[error("Invalid Goonfi parameters")]
-    InvalidGoonfiParameters = 0x17B9,
+    InvalidGoonfiParameters = 0x17b9,
 }
 
 impl From<DexSolanaError> for solana_program_error::ProgramError {
-    fn from(e: DexSolanaError) -> Self {
-        solana_program_error::ProgramError::Custom(e as u32)
-    }
+    fn from(e: DexSolanaError) -> Self { solana_program_error::ProgramError::Custom(e as u32) }
 }

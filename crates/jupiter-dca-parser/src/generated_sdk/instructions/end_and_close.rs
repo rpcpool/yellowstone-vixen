@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
 #[derive(Debug)]
@@ -46,6 +45,7 @@ impl EndAndClose {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -158,9 +158,7 @@ impl EndAndCloseInstructionData {
 }
 
 impl Default for EndAndCloseInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `EndAndClose`.
@@ -203,44 +201,50 @@ pub struct EndAndCloseBuilder {
 }
 
 impl EndAndCloseBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn keeper(&mut self, keeper: solana_program::pubkey::Pubkey) -> &mut Self {
         self.keeper = Some(keeper);
         self
     }
+
     #[inline(always)]
     pub fn dca(&mut self, dca: solana_program::pubkey::Pubkey) -> &mut Self {
         self.dca = Some(dca);
         self
     }
+
     #[inline(always)]
     pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
+
     #[inline(always)]
     pub fn output_mint(&mut self, output_mint: solana_program::pubkey::Pubkey) -> &mut Self {
         self.output_mint = Some(output_mint);
         self
     }
+
     #[inline(always)]
     pub fn in_ata(&mut self, in_ata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.in_ata = Some(in_ata);
         self
     }
+
     #[inline(always)]
     pub fn out_ata(&mut self, out_ata: solana_program::pubkey::Pubkey) -> &mut Self {
         self.out_ata = Some(out_ata);
         self
     }
+
     #[inline(always)]
     pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn user_out_ata(
@@ -250,6 +254,7 @@ impl EndAndCloseBuilder {
         self.user_out_ata = user_out_ata;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn init_user_out_ata(
@@ -259,6 +264,7 @@ impl EndAndCloseBuilder {
         self.init_user_out_ata = init_user_out_ata;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn intermediate_account(
@@ -268,18 +274,21 @@ impl EndAndCloseBuilder {
         self.intermediate_account = intermediate_account;
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -288,6 +297,7 @@ impl EndAndCloseBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -296,11 +306,13 @@ impl EndAndCloseBuilder {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -310,6 +322,7 @@ impl EndAndCloseBuilder {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -319,6 +332,7 @@ impl EndAndCloseBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = EndAndClose {
@@ -442,10 +456,12 @@ impl<'a, 'b> EndAndCloseCpi<'a, 'b> {
             program: accounts.program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -457,6 +473,7 @@ impl<'a, 'b> EndAndCloseCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(
         &self,
@@ -464,6 +481,7 @@ impl<'a, 'b> EndAndCloseCpi<'a, 'b> {
     ) -> solana_program::entrypoint::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -654,6 +672,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn keeper(
         &mut self,
@@ -662,11 +681,13 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.keeper = Some(keeper);
         self
     }
+
     #[inline(always)]
     pub fn dca(&mut self, dca: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.dca = Some(dca);
         self
     }
+
     #[inline(always)]
     pub fn input_mint(
         &mut self,
@@ -675,6 +696,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.input_mint = Some(input_mint);
         self
     }
+
     #[inline(always)]
     pub fn output_mint(
         &mut self,
@@ -683,6 +705,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.output_mint = Some(output_mint);
         self
     }
+
     #[inline(always)]
     pub fn in_ata(
         &mut self,
@@ -691,6 +714,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.in_ata = Some(in_ata);
         self
     }
+
     #[inline(always)]
     pub fn out_ata(
         &mut self,
@@ -699,11 +723,13 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.out_ata = Some(out_ata);
         self
     }
+
     #[inline(always)]
     pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn user_out_ata(
@@ -713,6 +739,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.user_out_ata = user_out_ata;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn init_user_out_ata(
@@ -722,6 +749,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.init_user_out_ata = init_user_out_ata;
         self
     }
+
     /// `[optional account]`
     #[inline(always)]
     pub fn intermediate_account(
@@ -731,6 +759,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.intermediate_account = intermediate_account;
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -739,6 +768,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -747,6 +777,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -755,6 +786,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -763,6 +795,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(
         &mut self,
@@ -771,6 +804,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
         self.instruction.program = Some(program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -784,6 +818,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -802,10 +837,10 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(

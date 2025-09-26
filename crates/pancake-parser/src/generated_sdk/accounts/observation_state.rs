@@ -5,10 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::Observation;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
+
+use crate::generated::types::Observation;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -136,9 +136,7 @@ impl anchor_lang::AccountSerialize for ObservationState {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for ObservationState {
-    fn owner() -> Pubkey {
-        crate::AMM_V3_ID
-    }
+    fn owner() -> Pubkey { crate::AMM_V3_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

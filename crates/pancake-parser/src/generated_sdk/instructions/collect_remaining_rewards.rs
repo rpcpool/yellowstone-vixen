@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const COLLECT_REMAINING_REWARDS_DISCRIMINATOR: [u8; 8] = [18, 237, 166, 197, 34, 16, 213, 144];
 
@@ -38,6 +37,7 @@ impl CollectRemainingRewards {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -103,9 +103,7 @@ impl CollectRemainingRewardsInstructionData {
 }
 
 impl Default for CollectRemainingRewardsInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -141,15 +139,15 @@ pub struct CollectRemainingRewardsBuilder {
 }
 
 impl CollectRemainingRewardsBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// The founder who init reward info previously
     #[inline(always)]
     pub fn reward_funder(&mut self, reward_funder: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_funder = Some(reward_funder);
         self
     }
+
     /// The funder's reward token account
     #[inline(always)]
     pub fn funder_token_account(
@@ -159,30 +157,35 @@ impl CollectRemainingRewardsBuilder {
         self.funder_token_account = Some(funder_token_account);
         self
     }
+
     /// Set reward for this pool
     #[inline(always)]
     pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// Reward vault transfer remaining token to founder token account
     #[inline(always)]
     pub fn reward_token_vault(&mut self, reward_token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_token_vault = Some(reward_token_vault);
         self
     }
+
     /// The mint of reward token vault
     #[inline(always)]
     pub fn reward_vault_mint(&mut self, reward_vault_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_vault_mint = Some(reward_vault_mint);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// Token program 2022
     #[inline(always)]
@@ -190,6 +193,7 @@ impl CollectRemainingRewardsBuilder {
         self.token_program2022 = Some(token_program2022);
         self
     }
+
     /// `[optional account, default to 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr']`
     /// memo program
     #[inline(always)]
@@ -197,17 +201,20 @@ impl CollectRemainingRewardsBuilder {
         self.memo_program = Some(memo_program);
         self
     }
+
     #[inline(always)]
     pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
         self.reward_index = Some(reward_index);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -217,6 +224,7 @@ impl CollectRemainingRewardsBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CollectRemainingRewards {
@@ -312,10 +320,12 @@ impl<'a, 'b> CollectRemainingRewardsCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -323,10 +333,12 @@ impl<'a, 'b> CollectRemainingRewardsCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -440,6 +452,7 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// The founder who init reward info previously
     #[inline(always)]
     pub fn reward_funder(
@@ -449,6 +462,7 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
         self.instruction.reward_funder = Some(reward_funder);
         self
     }
+
     /// The funder's reward token account
     #[inline(always)]
     pub fn funder_token_account(
@@ -458,6 +472,7 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
         self.instruction.funder_token_account = Some(funder_token_account);
         self
     }
+
     /// Set reward for this pool
     #[inline(always)]
     pub fn pool_state(
@@ -467,6 +482,7 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// Reward vault transfer remaining token to founder token account
     #[inline(always)]
     pub fn reward_token_vault(
@@ -476,6 +492,7 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
         self.instruction.reward_token_vault = Some(reward_token_vault);
         self
     }
+
     /// The mint of reward token vault
     #[inline(always)]
     pub fn reward_vault_mint(
@@ -485,6 +502,7 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
         self.instruction.reward_vault_mint = Some(reward_vault_mint);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -493,6 +511,7 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Token program 2022
     #[inline(always)]
     pub fn token_program2022(
@@ -502,6 +521,7 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
         self.instruction.token_program2022 = Some(token_program2022);
         self
     }
+
     /// memo program
     #[inline(always)]
     pub fn memo_program(
@@ -511,11 +531,13 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
         self.instruction.memo_program = Some(memo_program);
         self
     }
+
     #[inline(always)]
     pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
         self.instruction.reward_index = Some(reward_index);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -529,6 +551,7 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -543,10 +566,10 @@ impl<'a, 'b> CollectRemainingRewardsCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

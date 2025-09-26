@@ -5,10 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::BaseFeeConfig;
-use crate::generated::types::DynamicFeeConfig;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
+
+use crate::generated::types::{BaseFeeConfig, DynamicFeeConfig};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

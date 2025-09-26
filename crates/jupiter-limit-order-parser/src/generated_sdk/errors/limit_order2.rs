@@ -42,22 +42,22 @@ pub enum LimitOrder2Error {
     InvalidAdmin = 0x1779,
     /// 6010 -
     #[error("")]
-    InvalidKeeper = 0x177A,
+    InvalidKeeper = 0x177a,
     /// 6011 -
     #[error("")]
-    MathOverflow = 0x177B,
+    MathOverflow = 0x177b,
     /// 6012 -
     #[error("")]
-    ProgramMismatch = 0x177C,
+    ProgramMismatch = 0x177c,
     /// 6013 -
     #[error("")]
-    UnknownInstruction = 0x177D,
+    UnknownInstruction = 0x177d,
     /// 6014 -
     #[error("")]
-    MissingRepayInstructions = 0x177E,
+    MissingRepayInstructions = 0x177e,
     /// 6015 -
     #[error("")]
-    InvalidOrder = 0x177F,
+    InvalidOrder = 0x177f,
     /// 6016 -
     #[error("")]
     InvalidBorrowMakingAmount = 0x1780,
@@ -90,10 +90,10 @@ pub enum LimitOrder2Error {
     InvalidSwappedAmount = 0x1789,
     /// 6026 -
     #[error("")]
-    InvalidDustOrder = 0x178A,
+    InvalidDustOrder = 0x178a,
     /// 6027 -
     #[error("")]
-    UnsupportedMint = 0x178B,
+    UnsupportedMint = 0x178b,
 }
 
 impl solana_program::program_error::PrintProgramError for LimitOrder2Error {
@@ -103,7 +103,5 @@ impl solana_program::program_error::PrintProgramError for LimitOrder2Error {
 }
 
 impl<T> solana_program::decode_error::DecodeError<T> for LimitOrder2Error {
-    fn type_of() -> &'static str {
-        "LimitOrder2Error"
-    }
+    fn type_of() -> &'static str { "LimitOrder2Error" }
 }

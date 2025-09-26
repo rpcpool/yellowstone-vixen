@@ -9,9 +9,7 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::proto_def;
-
-    use crate::types::AddResolverEvent;
+    use crate::{proto_def, types::AddResolverEvent};
     impl IntoProto<proto_def::AddResolverEvent> for AddResolverEvent {
         fn into_proto(self) -> proto_def::AddResolverEvent {
             proto_def::AddResolverEvent {
@@ -42,8 +40,14 @@ pub mod proto_types_parsers {
                     .routes
                     .into_iter()
                     .map(|route_vec| proto_def::Route {
-                        dexes: route_vec.iter().flat_map(|route| route.dexes.iter().map(|&dex| dex as i32)).collect(),
-                        weights: route_vec.iter().flat_map(|route| route.weights.iter().cloned()).collect(),
+                        dexes: route_vec
+                            .iter()
+                            .flat_map(|route| route.dexes.iter().map(|&dex| dex as i32))
+                            .collect(),
+                        weights: route_vec
+                            .iter()
+                            .flat_map(|route| route.weights.iter().cloned())
+                            .collect(),
                     })
                     .collect(),
                 commission_rate: self.commission_rate.into(),
@@ -164,8 +168,14 @@ pub mod proto_types_parsers {
                     .routes
                     .into_iter()
                     .map(|route_vec| proto_def::Route {
-                        dexes: route_vec.iter().flat_map(|route| route.dexes.iter().map(|&dex| dex as i32)).collect(),
-                        weights: route_vec.iter().flat_map(|route| route.weights.iter().cloned()).collect(),
+                        dexes: route_vec
+                            .iter()
+                            .flat_map(|route| route.dexes.iter().map(|&dex| dex as i32))
+                            .collect(),
+                        weights: route_vec
+                            .iter()
+                            .flat_map(|route| route.weights.iter().cloned())
+                            .collect(),
                     })
                     .collect(),
             }

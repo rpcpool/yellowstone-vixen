@@ -21,18 +21,10 @@ pub(crate) mod r#swap_event;
 pub(crate) mod r#tick_state;
 pub(crate) mod r#update_reward_infos_event;
 
-pub use self::r#collect_personal_fee_event::*;
-pub use self::r#collect_protocol_fee_event::*;
-pub use self::r#config_change_event::*;
-pub use self::r#create_personal_position_event::*;
-pub use self::r#decrease_liquidity_event::*;
-pub use self::r#increase_liquidity_event::*;
-pub use self::r#liquidity_calculate_event::*;
-pub use self::r#liquidity_change_event::*;
-pub use self::r#observation::*;
-pub use self::r#pool_created_event::*;
-pub use self::r#position_reward_info::*;
-pub use self::r#reward_info::*;
-pub use self::r#swap_event::*;
-pub use self::r#tick_state::*;
-pub use self::r#update_reward_infos_event::*;
+pub use self::{
+    r#collect_personal_fee_event::*, r#collect_protocol_fee_event::*, r#config_change_event::*,
+    r#create_personal_position_event::*, r#decrease_liquidity_event::*,
+    r#increase_liquidity_event::*, r#liquidity_calculate_event::*, r#liquidity_change_event::*,
+    r#observation::*, r#pool_created_event::*, r#position_reward_info::*, r#reward_info::*,
+    r#swap_event::*, r#tick_state::*, r#update_reward_infos_event::*,
+};

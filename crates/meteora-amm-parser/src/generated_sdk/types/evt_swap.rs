@@ -57,10 +57,9 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            EvtSwap::DISCRIMINATOR,
-            [0x1b, 0x3c, 0x15, 0xd5, 0x8a, 0xaa, 0xbb, 0x93]
-        );
+        assert_eq!(EvtSwap::DISCRIMINATOR, [
+            0x1b, 0x3c, 0x15, 0xd5, 0x8a, 0xaa, 0xbb, 0x93
+        ]);
     }
 
     #[test]

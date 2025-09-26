@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const CREATE_SUPPORT_MINT_ASSOCIATED_DISCRIMINATOR: [u8; 8] =
     [17, 251, 65, 92, 136, 242, 14, 169];
@@ -28,6 +27,7 @@ impl CreateSupportMintAssociated {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -74,9 +74,7 @@ impl CreateSupportMintAssociatedInstructionData {
 }
 
 impl Default for CreateSupportMintAssociatedInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `CreateSupportMintAssociated`.
@@ -97,9 +95,8 @@ pub struct CreateSupportMintAssociatedBuilder {
 }
 
 impl CreateSupportMintAssociatedBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// `[optional account, default to 'DmwXqqK5Zuj619au6q2Jx3TMr9ZV1837uxJcEwyvXVtV']`
     /// Address to be set as protocol owner.
     #[inline(always)]
@@ -107,12 +104,14 @@ impl CreateSupportMintAssociatedBuilder {
         self.owner = Some(owner);
         self
     }
+
     /// Support token mint
     #[inline(always)]
     pub fn token_mint(&mut self, token_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_mint = Some(token_mint);
         self
     }
+
     /// Initialize support mint state account to store support mint address and bump.
     #[inline(always)]
     pub fn support_mint_associated(
@@ -122,18 +121,21 @@ impl CreateSupportMintAssociatedBuilder {
         self.support_mint_associated = Some(support_mint_associated);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -143,6 +145,7 @@ impl CreateSupportMintAssociatedBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateSupportMintAssociated {
@@ -201,10 +204,12 @@ impl<'a, 'b> CreateSupportMintAssociatedCpi<'a, 'b> {
             system_program: accounts.system_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -212,10 +217,12 @@ impl<'a, 'b> CreateSupportMintAssociatedCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -295,12 +302,14 @@ impl<'a, 'b> CreateSupportMintAssociatedCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// Address to be set as protocol owner.
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
+
     /// Support token mint
     #[inline(always)]
     pub fn token_mint(
@@ -310,6 +319,7 @@ impl<'a, 'b> CreateSupportMintAssociatedCpiBuilder<'a, 'b> {
         self.instruction.token_mint = Some(token_mint);
         self
     }
+
     /// Initialize support mint state account to store support mint address and bump.
     #[inline(always)]
     pub fn support_mint_associated(
@@ -319,6 +329,7 @@ impl<'a, 'b> CreateSupportMintAssociatedCpiBuilder<'a, 'b> {
         self.instruction.support_mint_associated = Some(support_mint_associated);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -327,6 +338,7 @@ impl<'a, 'b> CreateSupportMintAssociatedCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -340,6 +352,7 @@ impl<'a, 'b> CreateSupportMintAssociatedCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -354,10 +367,10 @@ impl<'a, 'b> CreateSupportMintAssociatedCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

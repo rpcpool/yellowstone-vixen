@@ -18,15 +18,8 @@ pub(crate) mod r#transfer;
 pub(crate) mod r#withdraw;
 pub(crate) mod r#withdraw_fees;
 
-pub use self::r#close_dca::*;
-pub use self::r#deposit::*;
-pub use self::r#end_and_close::*;
-pub use self::r#fulfill_dlmm_fill::*;
-pub use self::r#fulfill_flash_fill::*;
-pub use self::r#initiate_dlmm_fill::*;
-pub use self::r#initiate_flash_fill::*;
-pub use self::r#open_dca::*;
-pub use self::r#open_dca_v2::*;
-pub use self::r#transfer::*;
-pub use self::r#withdraw::*;
-pub use self::r#withdraw_fees::*;
+pub use self::{
+    r#close_dca::*, r#deposit::*, r#end_and_close::*, r#fulfill_dlmm_fill::*,
+    r#fulfill_flash_fill::*, r#initiate_dlmm_fill::*, r#initiate_flash_fill::*, r#open_dca::*,
+    r#open_dca_v2::*, r#transfer::*, r#withdraw::*, r#withdraw_fees::*,
+};

@@ -15,12 +15,8 @@ pub(crate) mod r#pool_config;
 pub(crate) mod r#virtual_pool;
 pub(crate) mod r#virtual_pool_metadata;
 
-pub use self::r#claim_fee_operator::*;
-pub use self::r#config::*;
-pub use self::r#lock_escrow::*;
-pub use self::r#meteora_damm_migration_metadata::*;
-pub use self::r#meteora_damm_v2_metadata::*;
-pub use self::r#partner_metadata::*;
-pub use self::r#pool_config::*;
-pub use self::r#virtual_pool::*;
-pub use self::r#virtual_pool_metadata::*;
+pub use self::{
+    r#claim_fee_operator::*, r#config::*, r#lock_escrow::*, r#meteora_damm_migration_metadata::*,
+    r#meteora_damm_v2_metadata::*, r#partner_metadata::*, r#pool_config::*, r#virtual_pool::*,
+    r#virtual_pool_metadata::*,
+};

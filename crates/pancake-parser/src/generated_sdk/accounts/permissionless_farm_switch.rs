@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -123,9 +122,7 @@ impl anchor_lang::AccountSerialize for PermissionlessFarmSwitch {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for PermissionlessFarmSwitch {
-    fn owner() -> Pubkey {
-        crate::AMM_V3_ID
-    }
+    fn owner() -> Pubkey { crate::AMM_V3_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

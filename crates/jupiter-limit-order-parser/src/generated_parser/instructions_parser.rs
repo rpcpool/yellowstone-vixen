@@ -5,20 +5,24 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::instructions::{
-    CancelDustOrder as CancelDustOrderIxAccounts,
-    CancelDustOrderInstructionArgs as CancelDustOrderIxData, CancelOrder as CancelOrderIxAccounts,
-    FillOrder as FillOrderIxAccounts, FillOrderInstructionArgs as FillOrderIxData,
-    FlashFillOrder as FlashFillOrderIxAccounts,
-    FlashFillOrderInstructionArgs as FlashFillOrderIxData,
-    InitializeOrder as InitializeOrderIxAccounts,
-    InitializeOrderInstructionArgs as InitializeOrderIxData,
-    PreFlashFillOrder as PreFlashFillOrderIxAccounts,
-    PreFlashFillOrderInstructionArgs as PreFlashFillOrderIxData, UpdateFee as UpdateFeeIxAccounts,
-    UpdateFeeInstructionArgs as UpdateFeeIxData, WithdrawFee as WithdrawFeeIxAccounts,
-};
-use crate::ID;
 use borsh::BorshDeserialize;
+
+use crate::{
+    instructions::{
+        CancelDustOrder as CancelDustOrderIxAccounts,
+        CancelDustOrderInstructionArgs as CancelDustOrderIxData,
+        CancelOrder as CancelOrderIxAccounts, FillOrder as FillOrderIxAccounts,
+        FillOrderInstructionArgs as FillOrderIxData, FlashFillOrder as FlashFillOrderIxAccounts,
+        FlashFillOrderInstructionArgs as FlashFillOrderIxData,
+        InitializeOrder as InitializeOrderIxAccounts,
+        InitializeOrderInstructionArgs as InitializeOrderIxData,
+        PreFlashFillOrder as PreFlashFillOrderIxAccounts,
+        PreFlashFillOrderInstructionArgs as PreFlashFillOrderIxData,
+        UpdateFee as UpdateFeeIxAccounts, UpdateFeeInstructionArgs as UpdateFeeIxData,
+        WithdrawFee as WithdrawFeeIxAccounts,
+    },
+    ID,
+};
 
 /// LimitOrder2 Instructions
 #[derive(Debug)]
@@ -41,9 +45,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = LimitOrder2ProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "LimitOrder2::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "LimitOrder2::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -66,9 +68,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -305,11 +305,10 @@ pub fn check_min_accounts_req(
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{InstructionParser, LimitOrder2ProgramIx};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::CancelDustOrderIxAccounts;
+    use super::{CancelDustOrderIxAccounts, InstructionParser, LimitOrder2ProgramIx};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::CancelDustOrderIxAccounts> for CancelDustOrderIxAccounts {
         fn into_proto(self) -> proto_def::CancelDustOrderIxAccounts {
             proto_def::CancelDustOrderIxAccounts {
@@ -584,8 +583,6 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

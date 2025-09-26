@@ -42,5 +42,6 @@ pub use self::{
     r#liquidity_parameter_by_strategy::*, r#observation::*, r#pair_status::*, r#pair_type::*,
     r#protocol_fee::*, r#remaining_accounts_info::*, r#remaining_accounts_slice::*,
     r#reward_info::*, r#rounding::*, r#static_parameters::*, r#strategy_parameters::*,
-    r#strategy_type::*, r#swap_event::*, r#token_program_flags::*, r#user_reward_info::*, r#variable_parameters::*,
+    r#strategy_type::*, r#swap_event::*, r#token_program_flags::*, r#user_reward_info::*,
+    r#variable_parameters::*,
 };

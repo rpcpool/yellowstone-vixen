@@ -9,9 +9,7 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::proto_def;
-
-    use crate::types::BaseFeeConfig;
+    use crate::{proto_def, types::BaseFeeConfig};
     impl IntoProto<proto_def::BaseFeeConfig> for BaseFeeConfig {
         fn into_proto(self) -> proto_def::BaseFeeConfig {
             proto_def::BaseFeeConfig {

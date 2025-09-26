@@ -33,30 +33,14 @@ pub(crate) mod r#update_operation_account;
 pub(crate) mod r#update_pool_status;
 pub(crate) mod r#update_reward_infos;
 
-pub use self::r#close_position::*;
-pub use self::r#collect_fund_fee::*;
-pub use self::r#collect_protocol_fee::*;
-pub use self::r#collect_remaining_rewards::*;
-pub use self::r#create_amm_config::*;
-pub use self::r#create_operation_account::*;
-pub use self::r#create_permissionless_farm_switch::*;
-pub use self::r#create_pool::*;
-pub use self::r#create_support_mint_associated::*;
-pub use self::r#decrease_liquidity::*;
-pub use self::r#decrease_liquidity_v2::*;
-pub use self::r#increase_liquidity::*;
-pub use self::r#increase_liquidity_v2::*;
-pub use self::r#initialize_reward::*;
-pub use self::r#open_position::*;
-pub use self::r#open_position_v2::*;
-pub use self::r#open_position_with_token22_nft::*;
-pub use self::r#set_reward_params::*;
-pub use self::r#swap::*;
-pub use self::r#swap_router_base_in::*;
-pub use self::r#swap_v2::*;
-pub use self::r#toggle_permissionless_farm_switch::*;
-pub use self::r#transfer_reward_owner::*;
-pub use self::r#update_amm_config::*;
-pub use self::r#update_operation_account::*;
-pub use self::r#update_pool_status::*;
-pub use self::r#update_reward_infos::*;
+pub use self::{
+    r#close_position::*, r#collect_fund_fee::*, r#collect_protocol_fee::*,
+    r#collect_remaining_rewards::*, r#create_amm_config::*, r#create_operation_account::*,
+    r#create_permissionless_farm_switch::*, r#create_pool::*, r#create_support_mint_associated::*,
+    r#decrease_liquidity::*, r#decrease_liquidity_v2::*, r#increase_liquidity::*,
+    r#increase_liquidity_v2::*, r#initialize_reward::*, r#open_position::*, r#open_position_v2::*,
+    r#open_position_with_token22_nft::*, r#set_reward_params::*, r#swap::*,
+    r#swap_router_base_in::*, r#swap_v2::*, r#toggle_permissionless_farm_switch::*,
+    r#transfer_reward_owner::*, r#update_amm_config::*, r#update_operation_account::*,
+    r#update_pool_status::*, r#update_reward_infos::*,
+};

@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 /// The element of observations in ObservationState
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

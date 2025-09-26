@@ -59,16 +59,17 @@ impl SwapEvent {
                             if let Ok(base_in_event) = SwapBaseInEvent::try_from_slice(event_data) {
                                 return Some(SwapEvent::BaseIn(base_in_event));
                             }
-                        }
+                        },
                         4 => {
                             // SwapBaseOut event
-                            if let Ok(base_out_event) = SwapBaseOutEvent::try_from_slice(event_data) {
+                            if let Ok(base_out_event) = SwapBaseOutEvent::try_from_slice(event_data)
+                            {
                                 return Some(SwapEvent::BaseOut(base_out_event));
                             }
-                        }
+                        },
                         _ => {
                             // Unknown discriminator, skip
-                        }
+                        },
                     }
                 }
             }
@@ -84,13 +85,11 @@ mod tests {
     #[test]
     fn test_parse_ray_log_data() {
         // Test data from ray_log
-        let log = "Program log: ray_log: AzAbDwAAAAAAEvwdAAAAAAABAAAAAAAAADAbDwAAAAAAMaooRkgSAADAOkxwAQkAACeXHgAAAAAA";
+        let log = "Program log: ray_log: \
+                   AzAbDwAAAAAAEvwdAAAAAAABAAAAAAAAADAbDwAAAAAAMaooRkgSAADAOkxwAQkAACeXHgAAAAAA";
 
         let result = SwapEvent::from_log(log);
-        assert!(
-            result.is_some(),
-            "Should successfully parse ray_log data"
-        );
+        assert!(result.is_some(), "Should successfully parse ray_log data");
 
         let swap_event = result.unwrap();
 
@@ -101,10 +100,10 @@ mod tests {
                 assert_eq!(base_in_event.amount_in, 990000);
                 assert_eq!(base_in_event.out_amount, 2004775);
                 println!("Parsed as BaseIn: {:?}", base_in_event);
-            }
+            },
             SwapEvent::BaseOut(base_out_event) => {
                 panic!("Expected BaseIn event, got BaseOut: {:?}", base_out_event);
-            }
+            },
         }
     }
 
@@ -117,8 +116,12 @@ mod tests {
 
     #[test]
     fn test_invalid_ray_log_discriminator() {
-        let log_with_invalid_discriminator = "Program log: ray_log: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+        let log_with_invalid_discriminator =
+            "Program log: ray_log: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
         let result = SwapEvent::from_log(log_with_invalid_discriminator);
-        assert!(result.is_none(), "Should not parse with invalid discriminator");
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid discriminator"
+        );
     }
 }

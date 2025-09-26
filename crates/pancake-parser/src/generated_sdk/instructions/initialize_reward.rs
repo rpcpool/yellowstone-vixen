@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const INITIALIZE_REWARD_DISCRIMINATOR: [u8; 8] = [95, 135, 192, 196, 242, 129, 230, 68];
 
@@ -44,6 +43,7 @@ impl InitializeReward {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -120,9 +120,7 @@ impl InitializeRewardInstructionData {
 }
 
 impl Default for InitializeRewardInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -168,15 +166,15 @@ pub struct InitializeRewardBuilder {
 }
 
 impl InitializeRewardBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// The founder deposit reward token to vault
     #[inline(always)]
     pub fn reward_funder(&mut self, reward_funder: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_funder = Some(reward_funder);
         self
     }
+
     #[inline(always)]
     pub fn funder_token_account(
         &mut self,
@@ -185,24 +183,28 @@ impl InitializeRewardBuilder {
         self.funder_token_account = Some(funder_token_account);
         self
     }
+
     /// For check the reward_funder authority
     #[inline(always)]
     pub fn amm_config(&mut self, amm_config: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_config = Some(amm_config);
         self
     }
+
     /// Set reward for this pool
     #[inline(always)]
     pub fn pool_state(&mut self, pool_state: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_state = Some(pool_state);
         self
     }
+
     /// load info from the account to judge reward permission
     #[inline(always)]
     pub fn operation_state(&mut self, operation_state: solana_pubkey::Pubkey) -> &mut Self {
         self.operation_state = Some(operation_state);
         self
     }
+
     #[inline(always)]
     pub fn permissionless_farm_switch(
         &mut self,
@@ -211,18 +213,21 @@ impl InitializeRewardBuilder {
         self.permissionless_farm_switch = Some(permissionless_farm_switch);
         self
     }
+
     /// Reward mint
     #[inline(always)]
     pub fn reward_token_mint(&mut self, reward_token_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_token_mint = Some(reward_token_mint);
         self
     }
+
     /// A pda, reward vault
     #[inline(always)]
     pub fn reward_token_vault(&mut self, reward_token_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_token_vault = Some(reward_token_vault);
         self
     }
+
     #[inline(always)]
     pub fn reward_token_program(
         &mut self,
@@ -231,39 +236,46 @@ impl InitializeRewardBuilder {
         self.reward_token_program = Some(reward_token_program);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
     pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
+
     #[inline(always)]
     pub fn open_time(&mut self, open_time: u64) -> &mut Self {
         self.open_time = Some(open_time);
         self
     }
+
     #[inline(always)]
     pub fn end_time(&mut self, end_time: u64) -> &mut Self {
         self.end_time = Some(end_time);
         self
     }
+
     #[inline(always)]
     pub fn emissions_per_second_x64(&mut self, emissions_per_second_x64: u128) -> &mut Self {
         self.emissions_per_second_x64 = Some(emissions_per_second_x64);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -273,6 +285,7 @@ impl InitializeRewardBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializeReward {
@@ -393,10 +406,12 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -404,10 +419,12 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -544,6 +561,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     /// The founder deposit reward token to vault
     #[inline(always)]
     pub fn reward_funder(
@@ -553,6 +571,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.reward_funder = Some(reward_funder);
         self
     }
+
     #[inline(always)]
     pub fn funder_token_account(
         &mut self,
@@ -561,6 +580,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.funder_token_account = Some(funder_token_account);
         self
     }
+
     /// For check the reward_funder authority
     #[inline(always)]
     pub fn amm_config(
@@ -570,6 +590,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.amm_config = Some(amm_config);
         self
     }
+
     /// Set reward for this pool
     #[inline(always)]
     pub fn pool_state(
@@ -579,6 +600,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.pool_state = Some(pool_state);
         self
     }
+
     /// load info from the account to judge reward permission
     #[inline(always)]
     pub fn operation_state(
@@ -588,6 +610,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.operation_state = Some(operation_state);
         self
     }
+
     #[inline(always)]
     pub fn permissionless_farm_switch(
         &mut self,
@@ -596,6 +619,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.permissionless_farm_switch = Some(permissionless_farm_switch);
         self
     }
+
     /// Reward mint
     #[inline(always)]
     pub fn reward_token_mint(
@@ -605,6 +629,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.reward_token_mint = Some(reward_token_mint);
         self
     }
+
     /// A pda, reward vault
     #[inline(always)]
     pub fn reward_token_vault(
@@ -614,6 +639,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.reward_token_vault = Some(reward_token_vault);
         self
     }
+
     #[inline(always)]
     pub fn reward_token_program(
         &mut self,
@@ -622,6 +648,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.reward_token_program = Some(reward_token_program);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -630,26 +657,31 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
+
     #[inline(always)]
     pub fn open_time(&mut self, open_time: u64) -> &mut Self {
         self.instruction.open_time = Some(open_time);
         self
     }
+
     #[inline(always)]
     pub fn end_time(&mut self, end_time: u64) -> &mut Self {
         self.instruction.end_time = Some(end_time);
         self
     }
+
     #[inline(always)]
     pub fn emissions_per_second_x64(&mut self, emissions_per_second_x64: u128) -> &mut Self {
         self.instruction.emissions_per_second_x64 = Some(emissions_per_second_x64);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -663,6 +695,7 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -677,10 +710,10 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

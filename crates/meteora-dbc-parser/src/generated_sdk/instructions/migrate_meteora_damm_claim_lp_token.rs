@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const MIGRATE_METEORA_DAMM_CLAIM_LP_TOKEN_DISCRIMINATOR: [u8; 8] =
     [139, 133, 2, 30, 91, 145, 127, 154];
@@ -37,6 +36,7 @@ impl MigrateMeteoraDammClaimLpToken {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -105,9 +105,7 @@ impl MigrateMeteoraDammClaimLpTokenInstructionData {
 }
 
 impl Default for MigrateMeteoraDammClaimLpTokenInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `MigrateMeteoraDammClaimLpToken`.
@@ -138,51 +136,58 @@ pub struct MigrateMeteoraDammClaimLpTokenBuilder {
 }
 
 impl MigrateMeteoraDammClaimLpTokenBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn virtual_pool(&mut self, virtual_pool: solana_pubkey::Pubkey) -> &mut Self {
         self.virtual_pool = Some(virtual_pool);
         self
     }
+
     /// migration metadata
     #[inline(always)]
     pub fn migration_metadata(&mut self, migration_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.migration_metadata = Some(migration_metadata);
         self
     }
+
     /// `[optional account, default to 'FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn source_token(&mut self, source_token: solana_pubkey::Pubkey) -> &mut Self {
         self.source_token = Some(source_token);
         self
     }
+
     #[inline(always)]
     pub fn destination_token(&mut self, destination_token: solana_pubkey::Pubkey) -> &mut Self {
         self.destination_token = Some(destination_token);
         self
     }
+
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
+
     #[inline(always)]
     pub fn sender(&mut self, sender: solana_pubkey::Pubkey) -> &mut Self {
         self.sender = Some(sender);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     /// token_program
     #[inline(always)]
@@ -190,12 +195,14 @@ impl MigrateMeteoraDammClaimLpTokenBuilder {
         self.token_program = Some(token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -205,6 +212,7 @@ impl MigrateMeteoraDammClaimLpTokenBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = MigrateMeteoraDammClaimLpToken {
@@ -294,10 +302,12 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpi<'a, 'b> {
             token_program: accounts.token_program,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -305,10 +315,12 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -426,6 +438,7 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn virtual_pool(
         &mut self,
@@ -434,6 +447,7 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpiBuilder<'a, 'b> {
         self.instruction.virtual_pool = Some(virtual_pool);
         self
     }
+
     /// migration metadata
     #[inline(always)]
     pub fn migration_metadata(
@@ -443,6 +457,7 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpiBuilder<'a, 'b> {
         self.instruction.migration_metadata = Some(migration_metadata);
         self
     }
+
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -451,11 +466,13 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
+
     #[inline(always)]
     pub fn source_token(
         &mut self,
@@ -464,6 +481,7 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpiBuilder<'a, 'b> {
         self.instruction.source_token = Some(source_token);
         self
     }
+
     #[inline(always)]
     pub fn destination_token(
         &mut self,
@@ -472,16 +490,19 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpiBuilder<'a, 'b> {
         self.instruction.destination_token = Some(destination_token);
         self
     }
+
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
+
     #[inline(always)]
     pub fn sender(&mut self, sender: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.sender = Some(sender);
         self
     }
+
     /// token_program
     #[inline(always)]
     pub fn token_program(
@@ -491,6 +512,7 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -504,6 +526,7 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -518,10 +541,10 @@ impl<'a, 'b> MigrateMeteoraDammClaimLpTokenCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

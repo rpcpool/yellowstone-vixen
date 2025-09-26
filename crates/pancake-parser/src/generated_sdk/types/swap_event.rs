@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
 /// Emitted by when a swap is performed for a pool
@@ -95,10 +94,9 @@ mod tests {
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(
-            SwapEvent::DISCRIMINATOR,
-            [0x40, 0xc6, 0xcd, 0xe8, 0x26, 0x08, 0x71, 0xe2]
-        );
+        assert_eq!(SwapEvent::DISCRIMINATOR, [
+            0x40, 0xc6, 0xcd, 0xe8, 0x26, 0x08, 0x71, 0xe2
+        ]);
     }
 
     #[test]

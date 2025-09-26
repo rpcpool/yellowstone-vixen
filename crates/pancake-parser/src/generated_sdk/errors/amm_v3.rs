@@ -42,22 +42,22 @@ pub enum AmmV3Error {
     TickUpperOverflow = 0x1779,
     /// 6010 - tick % tick_spacing must be zero
     #[error("tick % tick_spacing must be zero")]
-    TickAndSpacingNotMatch = 0x177A,
+    TickAndSpacingNotMatch = 0x177a,
     /// 6011 - Invalid tick array account
     #[error("Invalid tick array account")]
-    InvalidTickArray = 0x177B,
+    InvalidTickArray = 0x177b,
     /// 6012 - Invalid tick array boundary
     #[error("Invalid tick array boundary")]
-    InvalidTickArrayBoundary = 0x177C,
+    InvalidTickArrayBoundary = 0x177c,
     /// 6013 - Square root price limit overflow
     #[error("Square root price limit overflow")]
-    SqrtPriceLimitOverflow = 0x177D,
+    SqrtPriceLimitOverflow = 0x177d,
     /// 6014 - sqrt_price_x64 out of range
     #[error("sqrt_price_x64 out of range")]
-    SqrtPriceX64 = 0x177E,
+    SqrtPriceX64 = 0x177e,
     /// 6015 - Liquidity sub delta L must be smaller than before
     #[error("Liquidity sub delta L must be smaller than before")]
-    LiquiditySubValueErr = 0x177F,
+    LiquiditySubValueErr = 0x177f,
     /// 6016 - Liquidity add delta L must be greater, or equal to before
     #[error("Liquidity add delta L must be greater, or equal to before")]
     LiquidityAddValueErr = 0x1780,
@@ -90,22 +90,22 @@ pub enum AmmV3Error {
     InvalidInputPoolVault = 0x1789,
     /// 6026 - Swap input or output amount is too small
     #[error("Swap input or output amount is too small")]
-    TooSmallInputOrOutputAmount = 0x178A,
+    TooSmallInputOrOutputAmount = 0x178a,
     /// 6027 - Not enought tick array account
     #[error("Not enought tick array account")]
-    NotEnoughTickArrayAccount = 0x178B,
+    NotEnoughTickArrayAccount = 0x178b,
     /// 6028 - Invalid first tick array account
     #[error("Invalid first tick array account")]
-    InvalidFirstTickArrayAccount = 0x178C,
+    InvalidFirstTickArrayAccount = 0x178c,
     /// 6029 - Invalid reward index
     #[error("Invalid reward index")]
-    InvalidRewardIndex = 0x178D,
+    InvalidRewardIndex = 0x178d,
     /// 6030 - The init reward token reach to the max
     #[error("The init reward token reach to the max")]
-    FullRewardInfo = 0x178E,
+    FullRewardInfo = 0x178e,
     /// 6031 - The init reward token already in use
     #[error("The init reward token already in use")]
-    RewardTokenAlreadyInUse = 0x178F,
+    RewardTokenAlreadyInUse = 0x178f,
     /// 6032 - The reward tokens must contain one of pool vault mint except the last reward
     #[error("The reward tokens must contain one of pool vault mint except the last reward")]
     ExceptRewardMint = 0x1790,
@@ -140,17 +140,15 @@ pub enum AmmV3Error {
     InsufficientLiquidityForDirection = 0x1799,
     /// 6042 - Max token overflow
     #[error("Max token overflow")]
-    MaxTokenOverflow = 0x179A,
+    MaxTokenOverflow = 0x179a,
     /// 6043 - Calculate overflow
     #[error("Calculate overflow")]
-    CalculateOverflow = 0x179B,
+    CalculateOverflow = 0x179b,
     /// 6044 - TransferFee calculate not match
     #[error("TransferFee calculate not match")]
-    TransferFeeCalculateNotMatch = 0x179C,
+    TransferFeeCalculateNotMatch = 0x179c,
 }
 
 impl From<AmmV3Error> for solana_program_error::ProgramError {
-    fn from(e: AmmV3Error) -> Self {
-        solana_program_error::ProgramError::Custom(e as u32)
-    }
+    fn from(e: AmmV3Error) -> Self { solana_program_error::ProgramError::Custom(e as u32) }
 }

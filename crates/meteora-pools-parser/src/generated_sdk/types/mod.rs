@@ -24,5 +24,6 @@ pub(crate) mod r#trade_direction;
 pub use self::{
     r#activation_type::*, r#bootstrapping::*, r#curve_type::*, r#depeg::*, r#depeg_type::*,
     r#new_curve_type::*, r#padding::*, r#partner_info::*, r#pool_fees::*, r#pool_type::*,
-    r#round_direction::*, r#rounding::*, r#swap_event::*, r#token_multiplier::*, r#trade_direction::*,
+    r#round_direction::*, r#rounding::*, r#swap_event::*, r#token_multiplier::*,
+    r#trade_direction::*,
 };
