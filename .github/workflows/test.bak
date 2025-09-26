@@ -1,0 +1,80 @@
+name: Check lock file, fmt, clippy
+# This workflow uses github runners.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# This may be adjusted to whatever suits best your runners config.
+# Current config will build on manual trigger or pull-request (each push)
+on:
+  # pull_request can be removed, to save minutes on github runners
+  pull_request:
+  push:
+    branches:
+      - "main"
+  workflow_dispatch:
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+      - name: set build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            yellowstone-vixen/target/
+          key: cargo-${{ hashFiles('**/Cargo.lock') }}-0002
+
+      # Cache Rust Nightly Toolchain
+      - name: Cache Rust Nightly
+        id: cache-rust-nightly
+        uses: actions/cache@v4
+        with:
+          path: ~/.rustup
+          key: rust-nightly-0001-${{ runner.os }}-${{ hashFiles('rust-toolchain') }}
+
+      - name: Install Rust Nightly if Not Cached
+        if: steps.cache-rust-nightly.outputs.cache-hit != 'true'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          components: rustfmt, clippy
+
+      - name: Check Rust Toolchain Version
+        run: |
+          rustc +nightly --version
+          rustc --version
+          cargo --version
+
+      - name: Install Latest Protoc
+        run: |
+          PROTOC_VERSION=26.1
+          ARCH=x86_64
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-${ARCH}.zip
+          sudo apt-get update
+          sudo apt-get install -y unzip protobuf-compiler libprotobuf-dev
+          unzip protoc-${PROTOC_VERSION}-linux-${ARCH}.zip -d $HOME/.local
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          protoc --version
+
+      # Cargo.lock
+      - name: Check lock file
+        run: |
+          cargo tree
+          git checkout Cargo.lock
+          cargo tree
+
+      # fmt
+      - name: Check fmt
+        run: cargo +nightly fmt --all -- --check
+
+      # clippy
+      - name: Check clippy
+        run: cargo clippy --all-targets --tests -- -Dwarnings
