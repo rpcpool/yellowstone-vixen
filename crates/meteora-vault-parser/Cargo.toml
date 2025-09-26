@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-meteora-vault-parser"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 description = "Vixen program parser for Meteora Vault program"
 license.workspace = true

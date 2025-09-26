@@ -2,7 +2,7 @@
 
 [package]
 name = "yellowstone-vixen-raydium-clmm-parser"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 description = "Vixen program parser for Raydium CLMM program"
 license.workspace = true
