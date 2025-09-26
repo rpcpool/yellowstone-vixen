@@ -8,12 +8,12 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
-spl-pod = { version = "0.3.0" }
-spl-stake-pool = { version = "2.0.1", features = ["no-entrypoint"] }
-spl-token = { version = "6.0.0", optional = true }
-spl-token-2022 = { version = "4.0.0", optional = true }
-spl-type-length-value = { version = "0.5.0", optional = true }
-spl-token-group-interface = { version = "0.3.0", optional = true }
+spl-pod = { workspace = true }
+spl-stake-pool = { workspace = true, features = ["no-entrypoint"] }
+spl-token = { workspace = true, optional = true }
+spl-token-2022 = { workspace = true, optional = true }
+spl-type-length-value = { workspace = true, optional = true }
+spl-token-group-interface = { workspace = true, optional = true }
 spl-token-metadata-interface = { version = "0.4.0", optional = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
