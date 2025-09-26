@@ -23,5 +23,5 @@ pub use self::{
     r#accounts_type::*, r#adaptive_fee_constants::*, r#adaptive_fee_variables::*,
     r#dynamic_tick::*, r#dynamic_tick_data::*, r#lock_type::*, r#lock_type_label::*,
     r#position_reward_info::*, r#remaining_accounts_info::*, r#remaining_accounts_slice::*,
-    r#tick::*, r#whirlpool_reward_info::*,
+    r#tick::*, r#traded_event::*, r#whirlpool_reward_info::*,
 };

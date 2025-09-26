@@ -2,10 +2,8 @@ pub mod test_handlers;
 
 use std::{path::PathBuf, time::Duration};
 use tokio::sync::broadcast;
-use yellowstone_vixen::{
-    config::{BufferConfig, NullConfig, OptConfig, VixenConfig, YellowstoneConfig},
-    CommitmentLevel, Runtime,
-};
+use yellowstone_vixen::config::{BufferConfig, VixenConfig};
+use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
 
 /// Command line options for integration tests
 #[derive(clap::Parser, Debug)]
@@ -18,7 +16,7 @@ pub struct TestOpts {
 
 /// Create test configuration with priority: CLI config > environment variables > default
 pub fn create_test_config(
-) -> Result<VixenConfig<NullConfig>, Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<VixenConfig<YellowstoneGrpcConfig>, Box<dyn std::error::Error + Send + Sync>> {
     // Try to parse command line arguments for config file path
     let config_from_file = try_load_config_from_file();
 
@@ -39,7 +37,7 @@ pub fn create_test_config(
 
 /// Try to load configuration from TOML file
 fn try_load_config_from_file(
-) -> Result<VixenConfig<NullConfig>, Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<VixenConfig<YellowstoneGrpcConfig>, Box<dyn std::error::Error + Send + Sync>> {
     // Debug: print current working directory
     if let Ok(cwd) = std::env::current_dir() {
         tracing::debug!("Current working directory: {}", cwd.display());
@@ -78,14 +76,14 @@ fn try_load_config_from_file(
     let config_content = std::fs::read_to_string(&config_path)
         .map_err(|e| format!("Error reading config file {}: {}", config_path.display(), e))?;
 
-    let config: VixenConfig<NullConfig> = toml::from_str(&config_content)
+    let config: VixenConfig<YellowstoneGrpcConfig> = toml::from_str(&config_content)
         .map_err(|e| format!("Error parsing config file {}: {}", config_path.display(), e))?;
 
     tracing::info!("Loaded configuration from: {}", config_path.display());
-    tracing::info!("Using endpoint: {}", config.yellowstone.endpoint);
+    tracing::info!("Using endpoint: {}", config.source.endpoint);
     tracing::info!(
         "Auth token: {}",
-        if config.yellowstone.x_token.is_some() {
+        if config.source.x_token.is_some() {
             "Set"
         } else {
             "Not set"
@@ -97,7 +95,7 @@ fn try_load_config_from_file(
 
 /// Try to load configuration from environment variables (backward compatibility)
 fn try_load_config_from_env(
-) -> Result<VixenConfig<NullConfig>, Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<VixenConfig<YellowstoneGrpcConfig>, Box<dyn std::error::Error + Send + Sync>> {
     let grpc_url =
         std::env::var("GRPC_URL").map_err(|_| "GRPC_URL environment variable not set")?;
     let grpc_auth_token = std::env::var("GRPC_AUTH_TOKEN").ok();
@@ -125,13 +123,19 @@ fn try_load_config_from_env(
     );
 
     Ok(VixenConfig {
-        yellowstone: YellowstoneConfig {
+        source: YellowstoneGrpcConfig {
             endpoint: processed_url,
             x_token: grpc_auth_token,
             timeout: grpc_timeout,
+            commitment_level: None,
+            from_slot: None,
+            max_decoding_message_size: None,
+            accept_compression: None,
         },
-        buffer: BufferConfig { jobs: None },
-        metrics: OptConfig::default(),
+        buffer: BufferConfig {
+            jobs: None,
+            sources_channel_size: 100,
+        },
     })
 }
 

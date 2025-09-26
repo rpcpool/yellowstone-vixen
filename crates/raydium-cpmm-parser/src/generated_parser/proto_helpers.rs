@@ -38,20 +38,37 @@ pub mod proto_types_parsers {
     use crate::types::SwapEvent;
     impl IntoProto<proto_def::SwapEvent> for SwapEvent {
         fn into_proto(self) -> proto_def::SwapEvent {
-            proto_def::SwapEvent {
-                pool_id: self.pool_id.to_string(),
-                input_vault_before: self.input_vault_before,
-                output_vault_before: self.output_vault_before,
-                input_amount: self.input_amount,
-                output_amount: self.output_amount,
-                input_transfer_fee: self.input_transfer_fee,
-                output_transfer_fee: self.output_transfer_fee,
-                base_input: self.base_input,
-                input_mint: self.input_mint.to_string(),
-                output_mint: self.output_mint.to_string(),
-                trade_fee: self.trade_fee,
-                creator_fee: self.creator_fee,
-                creator_fee_on_input: self.creator_fee_on_input,
+            match self {
+                SwapEvent::V1(v1) => proto_def::SwapEvent {
+                    pool_id: v1.pool_id.to_string(),
+                    input_vault_before: v1.input_vault_before,
+                    output_vault_before: v1.output_vault_before,
+                    input_amount: v1.input_amount,
+                    output_amount: v1.output_amount,
+                    input_transfer_fee: v1.input_transfer_fee,
+                    output_transfer_fee: v1.output_transfer_fee,
+                    base_input: v1.base_input,
+                    input_mint: String::new(),
+                    output_mint: String::new(),
+                    trade_fee: 0,
+                    creator_fee: 0,
+                    creator_fee_on_input: false,
+                },
+                SwapEvent::V2(v2) => proto_def::SwapEvent {
+                    pool_id: v2.pool_id.to_string(),
+                    input_vault_before: v2.input_vault_before,
+                    output_vault_before: v2.output_vault_before,
+                    input_amount: v2.input_amount,
+                    output_amount: v2.output_amount,
+                    input_transfer_fee: v2.input_transfer_fee,
+                    output_transfer_fee: v2.output_transfer_fee,
+                    base_input: v2.base_input,
+                    input_mint: v2.input_mint.to_string(),
+                    output_mint: v2.output_mint.to_string(),
+                    trade_fee: v2.trade_fee,
+                    creator_fee: v2.creator_fee,
+                    creator_fee_on_input: v2.creator_fee_on_input,
+                },
             }
         }
     }

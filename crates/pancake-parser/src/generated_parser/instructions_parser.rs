@@ -8,9 +8,9 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
+use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
-use yellowstone_vixen_core::constants::is_known_aggregator;
 
 use crate::deserialize_checked;
 
@@ -118,7 +118,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<AmmV3ProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<str> {
+    fn id(&self) -> std::borrow::Cow<'static, str> {
         "AmmV3::InstructionParser".into()
     }
 

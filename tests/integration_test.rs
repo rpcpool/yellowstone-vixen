@@ -1,10 +1,11 @@
 use std::time::Duration;
-use tracing::{error, info, warn};
-use yellowstone_vixen::vixen_core::{GetPrefilter, Parser};
-use yellowstone_vixen::{CommitmentLevel, Pipeline, Runtime};
+use tracing::{error, info};
+use yellowstone_vixen::vixen_core::Parser;
+use yellowstone_vixen::{Pipeline, Runtime};
+use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 mod common;
-use common::test_handlers::{DualParserStats, JupiterTestHandler, OkxTestHandler};
+use common::test_handlers::{JupiterTestHandler, OkxTestHandler};
 use common::{create_test_config, run_integration_test_with_event_completion};
 
 // Initialize tracing once for all tests
@@ -47,8 +48,7 @@ async fn test_jupiter_parser() -> Result<(), Box<dyn std::error::Error + Send + 
 
     info!("Jupiter Parser ID: {}", Parser::id(&jupiter_parser));
 
-    let vixen_runtime = Runtime::builder()
-        .commitment_level(CommitmentLevel::Confirmed)
+    let vixen_runtime = Runtime::<YellowstoneGrpcSource>::builder()
         .instruction(Pipeline::new(jupiter_parser, [jupiter_handler.clone()]))
         .build(config);
 
@@ -88,8 +88,7 @@ async fn test_okx_parser() -> Result<(), Box<dyn std::error::Error + Send + Sync
 
     info!("OKX Parser ID: {}", Parser::id(&okx_parser));
 
-    let vixen_runtime = Runtime::builder()
-        .commitment_level(CommitmentLevel::Confirmed)
+    let vixen_runtime = Runtime::<YellowstoneGrpcSource>::builder()
         .instruction(Pipeline::new(okx_parser, [okx_handler.clone()]))
         .build(config);
 

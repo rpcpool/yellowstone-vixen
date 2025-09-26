@@ -22,7 +22,7 @@ impl DcaProgramState {
         let acc = match acc_discriminator {
             [82, 93, 90, 127, 40, 101, 145, 154] => {
                 Ok(DcaProgramState::Dca(Dca::from_bytes(data_bytes)?))
-            }
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
@@ -37,7 +37,7 @@ impl DcaProgramState {
                     program = ID.to_string(),
                     account = acc.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_account",
@@ -47,7 +47,7 @@ impl DcaProgramState {
                     discriminator = ?acc_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         acc
@@ -61,7 +61,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = DcaProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> {
+    fn id(&self) -> std::borrow::Cow<'static, str> {
         "dca::AccountParser".into()
     }
 
@@ -131,7 +131,7 @@ mod proto_parser {
             let state_oneof = match self {
                 DcaProgramState::Dca(data) => {
                     proto_def::program_state::StateOneof::Dca(data.into_proto())
-                }
+                },
             };
 
             proto_def::ProgramState {

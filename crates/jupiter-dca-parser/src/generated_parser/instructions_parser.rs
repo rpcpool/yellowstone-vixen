@@ -47,7 +47,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = DcaProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> {
+    fn id(&self) -> std::borrow::Cow<'static, str> {
         "Dca::InstructionParser".into()
     }
 
@@ -104,7 +104,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: OpenDcaIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(DcaProgramIx::OpenDca(ix_accounts, de_ix_data))
-            }
+            },
             [142, 119, 43, 109, 162, 52, 11, 177] => {
                 check_min_accounts_req(accounts_len, 13)?;
                 let ix_accounts = OpenDcaV2IxAccounts {
@@ -124,7 +124,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: OpenDcaV2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(DcaProgramIx::OpenDcaV2(ix_accounts, de_ix_data))
-            }
+            },
             [22, 7, 33, 98, 168, 183, 34, 243] => {
                 check_min_accounts_req(accounts_len, 13)?;
                 let ix_accounts = CloseDcaIxAccounts {
@@ -143,7 +143,7 @@ impl InstructionParser {
                     program: ix.accounts[12].0.into(),
                 };
                 Ok(DcaProgramIx::CloseDca(ix_accounts))
-            }
+            },
             [183, 18, 70, 156, 148, 109, 161, 34] => {
                 check_min_accounts_req(accounts_len, 12)?;
                 let ix_accounts = WithdrawIxAccounts {
@@ -174,7 +174,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: WithdrawIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(DcaProgramIx::Withdraw(ix_accounts, de_ix_data))
-            }
+            },
             [242, 35, 198, 137, 82, 225, 242, 182] => {
                 check_min_accounts_req(accounts_len, 7)?;
                 let ix_accounts = DepositIxAccounts {
@@ -188,7 +188,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: DepositIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(DcaProgramIx::Deposit(ix_accounts, de_ix_data))
-            }
+            },
             [198, 212, 171, 109, 144, 215, 174, 89] => {
                 check_min_accounts_req(accounts_len, 8)?;
                 let ix_accounts = WithdrawFeesIxAccounts {
@@ -203,7 +203,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: WithdrawFeesIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(DcaProgramIx::WithdrawFees(ix_accounts, de_ix_data))
-            }
+            },
             [143, 205, 3, 191, 162, 215, 245, 49] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = InitiateFlashFillIxAccounts {
@@ -219,7 +219,7 @@ impl InstructionParser {
                     associated_token_program: ix.accounts[9].0.into(),
                 };
                 Ok(DcaProgramIx::InitiateFlashFill(ix_accounts))
-            }
+            },
             [115, 64, 226, 78, 33, 211, 105, 162] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = FulfillFlashFillIxAccounts {
@@ -242,7 +242,7 @@ impl InstructionParser {
                 let de_ix_data: FulfillFlashFillIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(DcaProgramIx::FulfillFlashFill(ix_accounts, de_ix_data))
-            }
+            },
             [155, 193, 80, 121, 91, 147, 254, 187] => {
                 check_min_accounts_req(accounts_len, 10)?;
                 let ix_accounts = InitiateDlmmFillIxAccounts {
@@ -258,7 +258,7 @@ impl InstructionParser {
                     associated_token_program: ix.accounts[9].0.into(),
                 };
                 Ok(DcaProgramIx::InitiateDlmmFill(ix_accounts))
-            }
+            },
             [1, 230, 118, 251, 45, 177, 101, 187] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = FulfillDlmmFillIxAccounts {
@@ -281,7 +281,7 @@ impl InstructionParser {
                 let de_ix_data: FulfillDlmmFillIxData =
                     BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(DcaProgramIx::FulfillDlmmFill(ix_accounts, de_ix_data))
-            }
+            },
             [163, 52, 200, 231, 140, 3, 69, 186] => {
                 check_min_accounts_req(accounts_len, 12)?;
                 let ix_accounts = TransferIxAccounts {
@@ -311,7 +311,7 @@ impl InstructionParser {
                     program: ix.accounts[11].0.into(),
                 };
                 Ok(DcaProgramIx::Transfer(ix_accounts))
-            }
+            },
             [83, 125, 166, 69, 247, 252, 103, 133] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = EndAndCloseIxAccounts {
@@ -350,7 +350,7 @@ impl InstructionParser {
                     program: ix.accounts[14].0.into(),
                 };
                 Ok(DcaProgramIx::EndAndClose(ix_accounts))
-            }
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
@@ -365,7 +365,7 @@ impl InstructionParser {
                     program = ID.to_string(),
                     ix = ix.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_instruction",
@@ -375,7 +375,7 @@ impl InstructionParser {
                     discriminator = ?ix_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         ix

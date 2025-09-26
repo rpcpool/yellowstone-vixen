@@ -6,7 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 use crate::generated_sdk::types::TradeType;
 
@@ -83,7 +83,10 @@ mod tests {
         let log = "Program data: vdt/007mYe7P3j5C9BqmAABnBHYAAAAAgJaYAAAAAACAlpgAAAAAAFwtP2FzlRwDoIA5U/8DsLdd9ZDFRK6zmmzLJi25xjcGGTdigKfOUCkGm4hX/quBhPtof2NGGMA12sQ53BrrO1WYoPAAAAAAAd5pTwtBGedhI4tMx+9Oml+OBfCkr5GRxIpnIy69FVymAAUAAAB0cmFkZQ==";
 
         let result = TradeEvent::from_log(log);
-        assert!(result.is_some(), "Should successfully parse TradeEvent from log");
+        assert!(
+            result.is_some(),
+            "Should successfully parse TradeEvent from log"
+        );
 
         let event = result.unwrap();
         assert_eq!(event.label, "trade", "label should match");
@@ -94,7 +97,10 @@ mod tests {
         let log = "Program data: vdt/007mYe5+69agxinjABiqV3EAAAAADBSRAAAAAAANFJEAAAAAAJwPyfWwjQAA4kLzMV02E8Dgs/GkWroE9891010Lx+5VXjb/28NKAFQGm4hX/quBhPtof2NGGMA12sQ53BrrO1WYoPAAAAAAARKfzf+PsZPUrYkbeJQ2an32j3NtMKAL6fNoqhIH5jWKAQUAAAB0cmFkZQ==";
 
         let result = TradeEvent::from_log(log);
-        assert!(result.is_some(), "Should successfully parse TradeEvent from log");
+        assert!(
+            result.is_some(),
+            "Should successfully parse TradeEvent from log"
+        );
 
         let event = result.unwrap();
         assert_eq!(event.label, "trade", "label should match");
@@ -112,8 +118,12 @@ mod tests {
 
     #[test]
     fn test_invalid_discriminator() {
-        let log_with_invalid_discriminator = "Program data: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+        let log_with_invalid_discriminator =
+            "Program data: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
         let result = TradeEvent::from_log(log_with_invalid_discriminator);
-        assert!(result.is_none(), "Should not parse with invalid discriminator");
+        assert!(
+            result.is_none(),
+            "Should not parse with invalid discriminator"
+        );
     }
 }

@@ -9253,6 +9253,7 @@ dependencies = [
  "tracing-subscriber",
  "yellowstone-vixen",
  "yellowstone-vixen-jupiter-swap-parser",
+ "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
 [[package]]

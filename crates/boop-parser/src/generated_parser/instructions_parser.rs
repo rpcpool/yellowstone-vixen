@@ -8,15 +8,12 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
+use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     deserialize_checked,
-
-use yellowstone_vixen_core::constants::is_known_aggregator;
-
-use crate::{
     generated_sdk::types::{TokenBoughtEvent, TokenSoldEvent},
     instructions::{
         AddOperators as AddOperatorsIxAccounts, AddOperatorsInstructionArgs as AddOperatorsIxData,
@@ -209,7 +206,11 @@ impl InstructionParser {
                 }
 
                 let token_bought_event = TokenBoughtEvent::from_logs(&ix.parsed_logs);
-                Ok(BoopProgramIx::BuyToken(ix_accounts, de_ix_data, token_bought_event))
+                Ok(BoopProgramIx::BuyToken(
+                    ix_accounts,
+                    de_ix_data,
+                    token_bought_event,
+                ))
             },
             [94, 131, 125, 184, 183, 24, 125, 229] => {
                 let expected_accounts_len = 3;
@@ -558,7 +559,11 @@ impl InstructionParser {
                 }
 
                 let token_sold_event = TokenSoldEvent::from_logs(&ix.parsed_logs);
-                Ok(BoopProgramIx::SellToken(ix_accounts, de_ix_data, token_sold_event))
+                Ok(BoopProgramIx::SellToken(
+                    ix_accounts,
+                    de_ix_data,
+                    token_sold_event,
+                ))
             },
             [96, 126, 225, 47, 185, 213, 50, 58] => {
                 let expected_accounts_len = 24;

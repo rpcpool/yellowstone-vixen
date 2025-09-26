@@ -12,7 +12,6 @@ use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
-use crate::deserialize_checked;
 use crate::generated::types::{EvtSwap, EvtSwap2};
 
 use crate::{
@@ -44,7 +43,11 @@ use crate::{
         MigrationMeteoraDammCreateMetadata as MigrationMeteoraDammCreateMetadataIxAccounts,
         PartnerWithdrawSurplus as PartnerWithdrawSurplusIxAccounts,
         ProtocolWithdrawSurplus as ProtocolWithdrawSurplusIxAccounts, Swap as SwapIxAccounts,
-        SwapInstructionArgs as SwapIxData, WithdrawLeftover as WithdrawLeftoverIxAccounts,
+        Swap2 as Swap2IxAccounts, Swap2InstructionArgs as Swap2IxData,
+        SwapInstructionArgs as SwapIxData, TransferPoolCreator as TransferPoolCreatorIxAccounts,
+        WithdrawLeftover as WithdrawLeftoverIxAccounts,
+        WithdrawMigrationFee as WithdrawMigrationFeeIxAccounts,
+        WithdrawMigrationFeeInstructionArgs as WithdrawMigrationFeeIxData,
     },
     ID,
 };

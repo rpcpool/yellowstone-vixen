@@ -8,10 +8,11 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-#[cfg(feature = "shared-data")]
-use yellowstone_vixen_core::InstructionUpdateOutput;
+use crate::proto_def::ProgramIxs;
 use borsh::BorshDeserialize;
 use yellowstone_vixen_core::constants::is_known_aggregator;
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     deserialize_checked,
@@ -161,8 +162,16 @@ pub enum LbClmmProgramIx {
         UpdatePositionOperatorIxData,
     ),
     Swap(SwapIxAccounts, SwapIxData, Option<SwapEvent>),
-    SwapExactOut(SwapExactOutIxAccounts, SwapExactOutIxData, Option<SwapEvent>),
-    SwapWithPriceImpact(SwapWithPriceImpactIxAccounts, SwapWithPriceImpactIxData, Option<SwapEvent>),
+    SwapExactOut(
+        SwapExactOutIxAccounts,
+        SwapExactOutIxData,
+        Option<SwapEvent>,
+    ),
+    SwapWithPriceImpact(
+        SwapWithPriceImpactIxAccounts,
+        SwapWithPriceImpactIxData,
+        Option<SwapEvent>,
+    ),
     WithdrawProtocolFee(WithdrawProtocolFeeIxAccounts, WithdrawProtocolFeeIxData),
     InitializeReward(InitializeRewardIxAccounts, InitializeRewardIxData),
     FundReward(FundRewardIxAccounts, FundRewardIxData),
@@ -246,8 +255,16 @@ pub enum LbClmmProgramIx {
         RemoveLiquidityByRange2IxData,
     ),
     Swap2(Swap2IxAccounts, Swap2IxData, Option<SwapEvent>),
-    SwapExactOut2(SwapExactOut2IxAccounts, SwapExactOut2IxData, Option<SwapEvent>),
-    SwapWithPriceImpact2(SwapWithPriceImpact2IxAccounts, SwapWithPriceImpact2IxData, Option<SwapEvent>),
+    SwapExactOut2(
+        SwapExactOut2IxAccounts,
+        SwapExactOut2IxData,
+        Option<SwapEvent>,
+    ),
+    SwapWithPriceImpact2(
+        SwapWithPriceImpact2IxAccounts,
+        SwapWithPriceImpact2IxData,
+        Option<SwapEvent>,
+    ),
     ClosePosition2(ClosePosition2IxAccounts),
     UpdateFeesAndReward2(UpdateFeesAndReward2IxAccounts, UpdateFeesAndReward2IxData),
     ClosePositionIfEmpty(ClosePositionIfEmptyIxAccounts),
@@ -326,1304 +343,1324 @@ impl InstructionParser {
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let ix_data = &ix.data[8..];
-        let ix = match ix_discriminator {
-            [45, 154, 237, 210, 221, 15, 166, 92] => {
-                let expected_accounts_len = 14;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializeLbPairIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    token_mint_x: next_account(accounts)?,
-                    token_mint_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    preset_parameter: next_account(accounts)?,
-                    funder: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializeLbPairIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializeLbPair(ix_accounts, de_ix_data))
-            },
-            [108, 102, 213, 85, 251, 3, 53, 21] => {
-                let expected_accounts_len = 17;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializePermissionLbPairIxAccounts {
-                    base: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    token_mint_x: next_account(accounts)?,
-                    token_mint_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    token_badge_x: next_program_id_optional_account(accounts)?,
-                    token_badge_y: next_program_id_optional_account(accounts)?,
-                    token_program_x: next_account(accounts)?,
-                    token_program_y: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializePermissionLbPairIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializePermissionLbPair(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [46, 39, 41, 135, 111, 183, 200, 64] => {
-                let expected_accounts_len = 14;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializeCustomizablePermissionlessLbPairIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    token_mint_x: next_account(accounts)?,
-                    token_mint_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    funder: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializeCustomizablePermissionlessLbPairIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [47, 157, 226, 180, 12, 240, 33, 71] => {
-                let expected_accounts_len = 5;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializeBinArrayBitmapExtensionIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_account(accounts)?,
-                    funder: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::InitializeBinArrayBitmapExtension(
-                    ix_accounts,
-                ))
-            },
-            [35, 86, 19, 185, 78, 212, 75, 211] => {
-                let expected_accounts_len = 4;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializeBinArrayIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array: next_account(accounts)?,
-                    funder: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializeBinArrayIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializeBinArray(ix_accounts, de_ix_data))
-            },
-            [181, 157, 89, 67, 143, 182, 52, 72] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = AddLiquidityIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: AddLiquidityIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::AddLiquidity(ix_accounts, de_ix_data))
-            },
-            [28, 140, 238, 99, 231, 162, 21, 149] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = AddLiquidityByWeightIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: AddLiquidityByWeightIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::AddLiquidityByWeight(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [7, 3, 150, 127, 148, 40, 61, 200] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = AddLiquidityByStrategyIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: AddLiquidityByStrategyIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::AddLiquidityByStrategy(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [41, 5, 238, 175, 100, 225, 6, 205] => {
-                let expected_accounts_len = 12;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = AddLiquidityByStrategyOneSideIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token: next_account(accounts)?,
-                    reserve: next_account(accounts)?,
-                    token_mint: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: AddLiquidityByStrategyOneSideIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::AddLiquidityByStrategyOneSide(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [94, 155, 103, 151, 70, 95, 220, 165] => {
-                let expected_accounts_len = 12;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = AddLiquidityOneSideIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token: next_account(accounts)?,
-                    reserve: next_account(accounts)?,
-                    token_mint: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: AddLiquidityOneSideIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::AddLiquidityOneSide(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [80, 85, 209, 72, 24, 206, 177, 108] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = RemoveLiquidityIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: RemoveLiquidityIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::RemoveLiquidity(ix_accounts, de_ix_data))
-            },
-            [219, 192, 234, 71, 190, 191, 102, 80] => {
-                let expected_accounts_len = 8;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializePositionIxAccounts {
-                    payer: next_account(accounts)?,
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    owner: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializePositionIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializePosition(ix_accounts, de_ix_data))
-            },
-            [46, 82, 125, 146, 85, 141, 228, 153] => {
-                let expected_accounts_len = 9;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializePositionPdaIxAccounts {
-                    payer: next_account(accounts)?,
-                    base: next_account(accounts)?,
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    owner: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializePositionPdaIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializePositionPda(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [251, 189, 190, 244, 117, 254, 35, 148] => {
-                let expected_accounts_len = 11;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializePositionByOperatorIxAccounts {
-                    payer: next_account(accounts)?,
-                    base: next_account(accounts)?,
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    owner: next_account(accounts)?,
-                    operator: next_account(accounts)?,
-                    operator_token_x: next_account(accounts)?,
-                    owner_token_x: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializePositionByOperatorIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializePositionByOperator(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [202, 184, 103, 143, 180, 191, 116, 217] => {
-                let expected_accounts_len = 4;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = UpdatePositionOperatorIxAccounts {
-                    position: next_account(accounts)?,
-                    owner: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: UpdatePositionOperatorIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::UpdatePositionOperator(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [248, 198, 158, 145, 225, 117, 135, 200] => {
-                let expected_accounts_len = 15;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SwapIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    user_token_in: next_account(accounts)?,
-                    user_token_out: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    host_fee_in: next_program_id_optional_account(accounts)?,
-                    user: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-   
-                // Filter out trades handled by Jupiter or OKX aggregators
-                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
-                    return Err(yellowstone_vixen_core::ParseError::Filtered);
-                }
-
-                // Search for SwapEvent in inner instructions
-                let swap_event = ix.inner.iter().find_map(|inner_ix| {
-                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
-                });
-
-                Ok(ProgramIxs::Swap(ix_accounts, de_ix_data, swap_event))
-            },
-            [250, 73, 101, 33, 38, 207, 75, 184] => {
-                let expected_accounts_len = 15;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SwapExactOutIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    user_token_in: next_account(accounts)?,
-                    user_token_out: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    host_fee_in: next_program_id_optional_account(accounts)?,
-                    user: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: SwapExactOutIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
- 
-                // Filter out trades handled by Jupiter or OKX aggregators
-                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
-                    return Err(yellowstone_vixen_core::ParseError::Filtered);
-                }
-
-                // Search for SwapEvent in inner instructions
-                let swap_event = ix.inner.iter().find_map(|inner_ix| {
-                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
-                });
-
-                Ok(ProgramIxs::SwapExactOut(ix_accounts, de_ix_data, swap_event))
-            },
-            [56, 173, 230, 208, 173, 228, 156, 205] => {
-                let expected_accounts_len = 15;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SwapWithPriceImpactIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    user_token_in: next_account(accounts)?,
-                    user_token_out: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    host_fee_in: next_program_id_optional_account(accounts)?,
-                    user: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: SwapWithPriceImpactIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-
-                // Filter out trades handled by Jupiter or OKX aggregators
-                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
-                    return Err(yellowstone_vixen_core::ParseError::Filtered);
-                }
-
-                // Search for SwapEvent in inner instructions
-                let swap_event = ix.inner.iter().find_map(|inner_ix| {
-                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
-                });
-
-                Ok(ProgramIxs::SwapWithPriceImpact(ix_accounts, de_ix_data, swap_event))
-            },
-            [158, 201, 158, 189, 33, 93, 162, 103] => {
-                let expected_accounts_len = 12;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = WithdrawProtocolFeeIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    receiver_token_x: next_account(accounts)?,
-                    receiver_token_y: next_account(accounts)?,
-                    claim_fee_operator: next_account(accounts)?,
-                    operator: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                };
-                let de_ix_data: WithdrawProtocolFeeIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::WithdrawProtocolFee(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [95, 135, 192, 196, 242, 129, 230, 68] => {
-                let expected_accounts_len = 10;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializeRewardIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    reward_vault: next_account(accounts)?,
-                    reward_mint: next_account(accounts)?,
-                    token_badge: next_program_id_optional_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializeRewardIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializeReward(ix_accounts, de_ix_data))
-            },
-            [188, 50, 249, 165, 93, 151, 38, 63] => {
-                let expected_accounts_len = 9;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = FundRewardIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    reward_vault: next_account(accounts)?,
-                    reward_mint: next_account(accounts)?,
-                    funder_token_account: next_account(accounts)?,
-                    funder: next_account(accounts)?,
-                    bin_array: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: FundRewardIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::FundReward(ix_accounts, de_ix_data))
-            },
-            [211, 28, 48, 32, 215, 160, 35, 23] => {
-                let expected_accounts_len = 4;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = UpdateRewardFunderIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: UpdateRewardFunderIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::UpdateRewardFunder(ix_accounts, de_ix_data))
-            },
-            [138, 174, 196, 169, 213, 235, 254, 107] => {
-                let expected_accounts_len = 5;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = UpdateRewardDurationIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    bin_array: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: UpdateRewardDurationIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::UpdateRewardDuration(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [149, 95, 181, 242, 94, 90, 158, 162] => {
-                let expected_accounts_len = 11;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = ClaimRewardIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    position: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    reward_vault: next_account(accounts)?,
-                    reward_mint: next_account(accounts)?,
-                    user_token_account: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: ClaimRewardIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::ClaimReward(ix_accounts, de_ix_data))
-            },
-            [169, 32, 79, 137, 136, 232, 70, 137] => {
-                let expected_accounts_len = 14;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = ClaimFeeIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    position: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::ClaimFee(ix_accounts))
-            },
-            [123, 134, 81, 0, 49, 68, 98, 98] => {
-                let expected_accounts_len = 8;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = ClosePositionIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    rent_receiver: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::ClosePosition(ix_accounts))
-            },
-            [75, 168, 223, 161, 16, 195, 3, 47] => {
-                let expected_accounts_len = 4;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = UpdateBaseFeeParametersIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: UpdateBaseFeeParametersIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::UpdateBaseFeeParameters(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [92, 161, 46, 246, 255, 189, 22, 22] => {
-                let expected_accounts_len = 4;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = UpdateDynamicFeeParametersIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: UpdateDynamicFeeParametersIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::UpdateDynamicFeeParameters(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [190, 61, 125, 87, 103, 79, 158, 173] => {
-                let expected_accounts_len = 5;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = IncreaseOracleLengthIxAccounts {
-                    oracle: next_account(accounts)?,
-                    funder: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: IncreaseOracleLengthIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::IncreaseOracleLength(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [66, 188, 71, 211, 98, 109, 14, 186] => {
-                let expected_accounts_len = 4;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializePresetParameterIxAccounts {
-                    preset_parameter: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent: next_account(accounts)?,
-                };
-                let de_ix_data: InitializePresetParameterIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializePresetParameter(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [4, 148, 145, 100, 134, 26, 181, 61] => {
-                let expected_accounts_len = 3;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = ClosePresetParameterIxAccounts {
-                    preset_parameter: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    rent_receiver: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::ClosePresetParameter(ix_accounts))
-            },
-            [39, 25, 95, 107, 116, 17, 115, 28] => {
-                let expected_accounts_len = 3;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = ClosePresetParameter2IxAccounts {
-                    preset_parameter: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    rent_receiver: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::ClosePresetParameter2(ix_accounts))
-            },
-            [10, 51, 61, 35, 112, 105, 24, 85] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = RemoveAllLiquidityIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::RemoveAllLiquidity(ix_accounts))
-            },
-            [67, 248, 231, 137, 154, 149, 217, 174] => {
-                let expected_accounts_len = 2;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SetPairStatusIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                };
-                let de_ix_data: SetPairStatusIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::SetPairStatus(ix_accounts, de_ix_data))
-            },
-            [15, 132, 59, 50, 199, 6, 251, 46] => {
-                let expected_accounts_len = 10;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = MigratePositionIxAccounts {
-                    position_v2: next_account(accounts)?,
-                    position_v1: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    owner: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent_receiver: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::MigratePosition(ix_accounts))
-            },
-            [17, 23, 159, 211, 101, 184, 41, 241] => {
-                let expected_accounts_len = 1;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = MigrateBinArrayIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::MigrateBinArray(ix_accounts))
-            },
-            [154, 230, 250, 13, 236, 209, 75, 223] => {
-                let expected_accounts_len = 5;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = UpdateFeesAndRewardsIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    owner: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::UpdateFeesAndRewards(ix_accounts))
-            },
-            [148, 206, 42, 195, 247, 49, 103, 8] => {
-                let expected_accounts_len = 10;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = WithdrawIneligibleRewardIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    reward_vault: next_account(accounts)?,
-                    reward_mint: next_account(accounts)?,
-                    funder_token_account: next_account(accounts)?,
-                    funder: next_account(accounts)?,
-                    bin_array: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: WithdrawIneligibleRewardIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::WithdrawIneligibleReward(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [91, 249, 15, 165, 26, 129, 254, 125] => {
-                let expected_accounts_len = 2;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SetActivationPointIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                };
-                let de_ix_data: SetActivationPointIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::SetActivationPoint(ix_accounts, de_ix_data))
-            },
-            [26, 82, 102, 152, 240, 74, 105, 26] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = RemoveLiquidityByRangeIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: RemoveLiquidityByRangeIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::RemoveLiquidityByRange(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [161, 194, 103, 84, 171, 71, 250, 154] => {
-                let expected_accounts_len = 12;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = AddLiquidityOneSidePreciseIxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token: next_account(accounts)?,
-                    reserve: next_account(accounts)?,
-                    token_mint: next_account(accounts)?,
-                    bin_array_lower: next_account(accounts)?,
-                    bin_array_upper: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: AddLiquidityOneSidePreciseIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::AddLiquidityOneSidePrecise(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [146, 72, 174, 224, 40, 253, 84, 174] => {
-                let expected_accounts_len = 6;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = GoToABinIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    from_bin_array: next_program_id_optional_account(accounts)?,
-                    to_bin_array: next_program_id_optional_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: GoToABinIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::GoToABin(ix_accounts, de_ix_data))
-            },
-            [165, 61, 201, 244, 130, 159, 22, 100] => {
-                let expected_accounts_len = 2;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SetPreActivationDurationIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    creator: next_account(accounts)?,
-                };
-                let de_ix_data: SetPreActivationDurationIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::SetPreActivationDuration(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [57, 139, 47, 123, 216, 80, 223, 10] => {
-                let expected_accounts_len = 2;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SetPreActivationSwapAddressIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    creator: next_account(accounts)?,
-                };
-                let de_ix_data: SetPreActivationSwapAddressIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::SetPreActivationSwapAddress(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [78, 59, 152, 211, 70, 183, 46, 208] => {
-                let expected_accounts_len = 2;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SetPairStatusPermissionlessIxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    creator: next_account(accounts)?,
-                };
-                let de_ix_data: SetPairStatusPermissionlessIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::SetPairStatusPermissionless(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [253, 77, 205, 95, 27, 224, 89, 223] => {
-                let expected_accounts_len = 4;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializeTokenBadgeIxAccounts {
-                    token_mint: next_account(accounts)?,
-                    token_badge: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::InitializeTokenBadge(ix_accounts))
-            },
-            [51, 19, 150, 252, 105, 157, 48, 91] => {
-                let expected_accounts_len = 4;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = CreateClaimProtocolFeeOperatorIxAccounts {
-                    claim_fee_operator: next_account(accounts)?,
-                    operator: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::CreateClaimProtocolFeeOperator(ix_accounts))
-            },
-            [8, 41, 87, 35, 80, 48, 121, 26] => {
-                let expected_accounts_len = 3;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = CloseClaimProtocolFeeOperatorIxAccounts {
-                    claim_fee_operator: next_account(accounts)?,
-                    rent_receiver: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::CloseClaimProtocolFeeOperator(ix_accounts))
-            },
-            [184, 7, 240, 171, 103, 47, 183, 121] => {
-                let expected_accounts_len = 3;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializePresetParameter2IxAccounts {
-                    preset_parameter: next_account(accounts)?,
-                    admin: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializePresetParameter2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializePresetParameter2(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [73, 59, 36, 120, 237, 83, 108, 198] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializeLbPair2IxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    token_mint_x: next_account(accounts)?,
-                    token_mint_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    preset_parameter: next_account(accounts)?,
-                    funder: next_account(accounts)?,
-                    token_badge_x: next_program_id_optional_account(accounts)?,
-                    token_badge_y: next_program_id_optional_account(accounts)?,
-                    token_program_x: next_account(accounts)?,
-                    token_program_y: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializeLbPair2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::InitializeLbPair2(ix_accounts, de_ix_data))
-            },
-            [243, 73, 129, 126, 51, 19, 241, 107] => {
-                let expected_accounts_len = 17;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = InitializeCustomizablePermissionlessLbPair2IxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    token_mint_x: next_account(accounts)?,
-                    token_mint_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    funder: next_account(accounts)?,
-                    token_badge_x: next_program_id_optional_account(accounts)?,
-                    token_badge_y: next_program_id_optional_account(accounts)?,
-                    token_program_x: next_account(accounts)?,
-                    token_program_y: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: InitializeCustomizablePermissionlessLbPair2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(
-                    LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair2(
+        let ix =
+            match ix_discriminator {
+                [45, 154, 237, 210, 221, 15, 166, 92] => {
+                    let expected_accounts_len = 14;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializeLbPairIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        token_mint_x: next_account(accounts)?,
+                        token_mint_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        preset_parameter: next_account(accounts)?,
+                        funder: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        rent: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializeLbPairIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializeLbPair(ix_accounts, de_ix_data))
+                },
+                [108, 102, 213, 85, 251, 3, 53, 21] => {
+                    let expected_accounts_len = 17;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializePermissionLbPairIxAccounts {
+                        base: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        token_mint_x: next_account(accounts)?,
+                        token_mint_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        token_badge_x: next_program_id_optional_account(accounts)?,
+                        token_badge_y: next_program_id_optional_account(accounts)?,
+                        token_program_x: next_account(accounts)?,
+                        token_program_y: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        rent: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializePermissionLbPairIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializePermissionLbPair(
                         ix_accounts,
                         de_ix_data,
-                    ),
-                )
-            },
-            [112, 191, 101, 171, 28, 144, 127, 187] => {
-                let expected_accounts_len = 14;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = ClaimFee2IxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    position: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    token_program_x: next_account(accounts)?,
-                    token_program_y: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: ClaimFee2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::ClaimFee2(ix_accounts, de_ix_data))
-            },
-            [190, 3, 127, 119, 178, 87, 157, 183] => {
-                let expected_accounts_len = 10;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = ClaimReward2IxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    position: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    reward_vault: next_account(accounts)?,
-                    reward_mint: next_account(accounts)?,
-                    user_token_account: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: ClaimReward2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::ClaimReward2(ix_accounts, de_ix_data))
-            },
-            [228, 162, 78, 28, 70, 219, 116, 115] => {
-                let expected_accounts_len = 14;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = AddLiquidity2IxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: AddLiquidity2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::AddLiquidity2(ix_accounts, de_ix_data))
-            },
-            [3, 221, 149, 218, 111, 141, 118, 213] => {
-                let expected_accounts_len = 14;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = AddLiquidityByStrategy2IxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: AddLiquidityByStrategy2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::AddLiquidityByStrategy2(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [33, 51, 163, 201, 117, 98, 125, 231] => {
-                let expected_accounts_len = 10;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = AddLiquidityOneSidePrecise2IxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token: next_account(accounts)?,
-                    reserve: next_account(accounts)?,
-                    token_mint: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: AddLiquidityOneSidePrecise2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::AddLiquidityOneSidePrecise2(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [230, 215, 82, 127, 241, 101, 227, 146] => {
-                let expected_accounts_len = 15;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = RemoveLiquidity2IxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: RemoveLiquidity2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::RemoveLiquidity2(ix_accounts, de_ix_data))
-            },
-            [204, 2, 195, 145, 53, 145, 145, 205] => {
-                let expected_accounts_len = 15;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = RemoveLiquidityByRange2IxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    user_token_x: next_account(accounts)?,
-                    user_token_y: next_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: RemoveLiquidityByRange2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::RemoveLiquidityByRange2(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [65, 75, 63, 76, 235, 91, 91, 136] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = Swap2IxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    user_token_in: next_account(accounts)?,
-                    user_token_out: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    host_fee_in: next_program_id_optional_account(accounts)?,
-                    user: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: Swap2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                    ))
+                },
+                [46, 39, 41, 135, 111, 183, 200, 64] => {
+                    let expected_accounts_len = 14;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializeCustomizablePermissionlessLbPairIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        token_mint_x: next_account(accounts)?,
+                        token_mint_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        funder: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializeCustomizablePermissionlessLbPairIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [47, 157, 226, 180, 12, 240, 33, 71] => {
+                    let expected_accounts_len = 5;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializeBinArrayBitmapExtensionIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_account(accounts)?,
+                        funder: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        rent: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::InitializeBinArrayBitmapExtension(
+                        ix_accounts,
+                    ))
+                },
+                [35, 86, 19, 185, 78, 212, 75, 211] => {
+                    let expected_accounts_len = 4;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializeBinArrayIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array: next_account(accounts)?,
+                        funder: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializeBinArrayIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializeBinArray(ix_accounts, de_ix_data))
+                },
+                [181, 157, 89, 67, 143, 182, 52, 72] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = AddLiquidityIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: AddLiquidityIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::AddLiquidity(ix_accounts, de_ix_data))
+                },
+                [28, 140, 238, 99, 231, 162, 21, 149] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = AddLiquidityByWeightIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: AddLiquidityByWeightIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::AddLiquidityByWeight(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [7, 3, 150, 127, 148, 40, 61, 200] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = AddLiquidityByStrategyIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: AddLiquidityByStrategyIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::AddLiquidityByStrategy(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [41, 5, 238, 175, 100, 225, 6, 205] => {
+                    let expected_accounts_len = 12;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = AddLiquidityByStrategyOneSideIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token: next_account(accounts)?,
+                        reserve: next_account(accounts)?,
+                        token_mint: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: AddLiquidityByStrategyOneSideIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::AddLiquidityByStrategyOneSide(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [94, 155, 103, 151, 70, 95, 220, 165] => {
+                    let expected_accounts_len = 12;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = AddLiquidityOneSideIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token: next_account(accounts)?,
+                        reserve: next_account(accounts)?,
+                        token_mint: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: AddLiquidityOneSideIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::AddLiquidityOneSide(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [80, 85, 209, 72, 24, 206, 177, 108] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = RemoveLiquidityIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: RemoveLiquidityIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::RemoveLiquidity(ix_accounts, de_ix_data))
+                },
+                [219, 192, 234, 71, 190, 191, 102, 80] => {
+                    let expected_accounts_len = 8;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializePositionIxAccounts {
+                        payer: next_account(accounts)?,
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        owner: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        rent: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializePositionIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializePosition(ix_accounts, de_ix_data))
+                },
+                [46, 82, 125, 146, 85, 141, 228, 153] => {
+                    let expected_accounts_len = 9;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializePositionPdaIxAccounts {
+                        payer: next_account(accounts)?,
+                        base: next_account(accounts)?,
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        owner: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        rent: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializePositionPdaIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializePositionPda(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [251, 189, 190, 244, 117, 254, 35, 148] => {
+                    let expected_accounts_len = 11;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializePositionByOperatorIxAccounts {
+                        payer: next_account(accounts)?,
+                        base: next_account(accounts)?,
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        owner: next_account(accounts)?,
+                        operator: next_account(accounts)?,
+                        operator_token_x: next_account(accounts)?,
+                        owner_token_x: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializePositionByOperatorIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializePositionByOperator(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [202, 184, 103, 143, 180, 191, 116, 217] => {
+                    let expected_accounts_len = 4;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = UpdatePositionOperatorIxAccounts {
+                        position: next_account(accounts)?,
+                        owner: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: UpdatePositionOperatorIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::UpdatePositionOperator(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [248, 198, 158, 145, 225, 117, 135, 200] => {
+                    let expected_accounts_len = 15;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SwapIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        user_token_in: next_account(accounts)?,
+                        user_token_out: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        host_fee_in: next_program_id_optional_account(accounts)?,
+                        user: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
 
-                // Filter out trades handled by Jupiter or OKX aggregators
-                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
-                    return Err(yellowstone_vixen_core::ParseError::Filtered);
-                }
+                    // Filter out trades handled by Jupiter or OKX aggregators
+                    if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                        return Err(yellowstone_vixen_core::ParseError::Filtered);
+                    }
 
-                // Search for SwapEvent in inner instructions
-                let swap_event = ix.inner.iter().find_map(|inner_ix| {
-                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
-                });
+                    // Search for SwapEvent in inner instructions
+                    let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                    });
 
-                Ok(ProgramIxs::Swap2(ix_accounts, de_ix_data, swap_event))
-            },
-            [43, 215, 247, 132, 137, 60, 243, 81] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SwapExactOut2IxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    user_token_in: next_account(accounts)?,
-                    user_token_out: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    host_fee_in: next_program_id_optional_account(accounts)?,
-                    user: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: SwapExactOut2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                // Filter out trades handled by Jupiter or OKX aggregators
-                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
-                    return Err(yellowstone_vixen_core::ParseError::Filtered);
-                }
+                    Ok(LbClmmProgramIx::Swap(ix_accounts, de_ix_data, swap_event))
+                },
+                [250, 73, 101, 33, 38, 207, 75, 184] => {
+                    let expected_accounts_len = 15;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SwapExactOutIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        user_token_in: next_account(accounts)?,
+                        user_token_out: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        host_fee_in: next_program_id_optional_account(accounts)?,
+                        user: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: SwapExactOutIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
 
-                // Search for SwapEvent in inner instructions
-                let swap_event = ix.inner.iter().find_map(|inner_ix| {
-                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
-                });
+                    // Filter out trades handled by Jupiter or OKX aggregators
+                    if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                        return Err(yellowstone_vixen_core::ParseError::Filtered);
+                    }
 
-                Ok(ProgramIxs::SwapExactOut2(ix_accounts, de_ix_data, swap_event))
-            },
-            [74, 98, 192, 214, 177, 51, 75, 51] => {
-                let expected_accounts_len = 16;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = SwapWithPriceImpact2IxAccounts {
-                    lb_pair: next_account(accounts)?,
-                    bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
-                    reserve_x: next_account(accounts)?,
-                    reserve_y: next_account(accounts)?,
-                    user_token_in: next_account(accounts)?,
-                    user_token_out: next_account(accounts)?,
-                    token_x_mint: next_account(accounts)?,
-                    token_y_mint: next_account(accounts)?,
-                    oracle: next_account(accounts)?,
-                    host_fee_in: next_program_id_optional_account(accounts)?,
-                    user: next_account(accounts)?,
-                    token_x_program: next_account(accounts)?,
-                    token_y_program: next_account(accounts)?,
-                    memo_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                let de_ix_data: SwapWithPriceImpact2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                // Filter out trades handled by Jupiter or OKX aggregators
-                if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
-                    return Err(yellowstone_vixen_core::ParseError::Filtered);
-                }
+                    // Search for SwapEvent in inner instructions
+                    let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                    });
 
-                // Search for SwapEvent in inner instructions
-                let swap_event = ix.inner.iter().find_map(|inner_ix| {
-                    SwapEvent::from_inner_instruction_data(&inner_ix.data)
-                });
+                    Ok(LbClmmProgramIx::SwapExactOut(
+                        ix_accounts,
+                        de_ix_data,
+                        swap_event,
+                    ))
+                },
+                [56, 173, 230, 208, 173, 228, 156, 205] => {
+                    let expected_accounts_len = 15;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SwapWithPriceImpactIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        user_token_in: next_account(accounts)?,
+                        user_token_out: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        host_fee_in: next_program_id_optional_account(accounts)?,
+                        user: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: SwapWithPriceImpactIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
 
-                Ok(ProgramIxs::SwapWithPriceImpact2(ix_accounts, de_ix_data, swap_event))
-            },
-            [174, 90, 35, 115, 186, 40, 147, 226] => {
-                let expected_accounts_len = 5;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = ClosePosition2IxAccounts {
-                    position: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    rent_receiver: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::ClosePosition2(ix_accounts))
-            },
-            [32, 142, 184, 154, 103, 65, 184, 88] => {
-                let expected_accounts_len = 3;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = UpdateFeesAndReward2IxAccounts {
-                    position: next_account(accounts)?,
-                    lb_pair: next_account(accounts)?,
-                    owner: next_account(accounts)?,
-                };
-                let de_ix_data: UpdateFeesAndReward2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(LbClmmProgramIx::UpdateFeesAndReward2(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
-            [59, 124, 212, 118, 91, 152, 110, 157] => {
-                let expected_accounts_len = 5;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = ClosePositionIfEmptyIxAccounts {
-                    position: next_account(accounts)?,
-                    sender: next_account(accounts)?,
-                    rent_receiver: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                };
-                Ok(LbClmmProgramIx::ClosePositionIfEmpty(ix_accounts))
-            },
-            _ => Err(yellowstone_vixen_core::ParseError::from(
-                "Invalid Instruction discriminator".to_owned(),
-            )),
-        };
+                    // Filter out trades handled by Jupiter or OKX aggregators
+                    if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                        return Err(yellowstone_vixen_core::ParseError::Filtered);
+                    }
+
+                    // Search for SwapEvent in inner instructions
+                    let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                    });
+
+                    Ok(LbClmmProgramIx::SwapWithPriceImpact(
+                        ix_accounts,
+                        de_ix_data,
+                        swap_event,
+                    ))
+                },
+                [158, 201, 158, 189, 33, 93, 162, 103] => {
+                    let expected_accounts_len = 12;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = WithdrawProtocolFeeIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        receiver_token_x: next_account(accounts)?,
+                        receiver_token_y: next_account(accounts)?,
+                        claim_fee_operator: next_account(accounts)?,
+                        operator: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        memo_program: next_account(accounts)?,
+                    };
+                    let de_ix_data: WithdrawProtocolFeeIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::WithdrawProtocolFee(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [95, 135, 192, 196, 242, 129, 230, 68] => {
+                    let expected_accounts_len = 10;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializeRewardIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        reward_vault: next_account(accounts)?,
+                        reward_mint: next_account(accounts)?,
+                        token_badge: next_program_id_optional_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        rent: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializeRewardIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializeReward(ix_accounts, de_ix_data))
+                },
+                [188, 50, 249, 165, 93, 151, 38, 63] => {
+                    let expected_accounts_len = 9;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = FundRewardIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        reward_vault: next_account(accounts)?,
+                        reward_mint: next_account(accounts)?,
+                        funder_token_account: next_account(accounts)?,
+                        funder: next_account(accounts)?,
+                        bin_array: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: FundRewardIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::FundReward(ix_accounts, de_ix_data))
+                },
+                [211, 28, 48, 32, 215, 160, 35, 23] => {
+                    let expected_accounts_len = 4;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = UpdateRewardFunderIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: UpdateRewardFunderIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::UpdateRewardFunder(ix_accounts, de_ix_data))
+                },
+                [138, 174, 196, 169, 213, 235, 254, 107] => {
+                    let expected_accounts_len = 5;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = UpdateRewardDurationIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        bin_array: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: UpdateRewardDurationIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::UpdateRewardDuration(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [149, 95, 181, 242, 94, 90, 158, 162] => {
+                    let expected_accounts_len = 11;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = ClaimRewardIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        position: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        reward_vault: next_account(accounts)?,
+                        reward_mint: next_account(accounts)?,
+                        user_token_account: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: ClaimRewardIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::ClaimReward(ix_accounts, de_ix_data))
+                },
+                [169, 32, 79, 137, 136, 232, 70, 137] => {
+                    let expected_accounts_len = 14;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = ClaimFeeIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        position: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::ClaimFee(ix_accounts))
+                },
+                [123, 134, 81, 0, 49, 68, 98, 98] => {
+                    let expected_accounts_len = 8;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = ClosePositionIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        rent_receiver: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::ClosePosition(ix_accounts))
+                },
+                [75, 168, 223, 161, 16, 195, 3, 47] => {
+                    let expected_accounts_len = 4;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = UpdateBaseFeeParametersIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: UpdateBaseFeeParametersIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::UpdateBaseFeeParameters(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [92, 161, 46, 246, 255, 189, 22, 22] => {
+                    let expected_accounts_len = 4;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = UpdateDynamicFeeParametersIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: UpdateDynamicFeeParametersIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::UpdateDynamicFeeParameters(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [190, 61, 125, 87, 103, 79, 158, 173] => {
+                    let expected_accounts_len = 5;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = IncreaseOracleLengthIxAccounts {
+                        oracle: next_account(accounts)?,
+                        funder: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: IncreaseOracleLengthIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::IncreaseOracleLength(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [66, 188, 71, 211, 98, 109, 14, 186] => {
+                    let expected_accounts_len = 4;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializePresetParameterIxAccounts {
+                        preset_parameter: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        rent: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializePresetParameterIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializePresetParameter(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [4, 148, 145, 100, 134, 26, 181, 61] => {
+                    let expected_accounts_len = 3;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = ClosePresetParameterIxAccounts {
+                        preset_parameter: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        rent_receiver: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::ClosePresetParameter(ix_accounts))
+                },
+                [39, 25, 95, 107, 116, 17, 115, 28] => {
+                    let expected_accounts_len = 3;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = ClosePresetParameter2IxAccounts {
+                        preset_parameter: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        rent_receiver: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::ClosePresetParameter2(ix_accounts))
+                },
+                [10, 51, 61, 35, 112, 105, 24, 85] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = RemoveAllLiquidityIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::RemoveAllLiquidity(ix_accounts))
+                },
+                [67, 248, 231, 137, 154, 149, 217, 174] => {
+                    let expected_accounts_len = 2;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SetPairStatusIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                    };
+                    let de_ix_data: SetPairStatusIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::SetPairStatus(ix_accounts, de_ix_data))
+                },
+                [15, 132, 59, 50, 199, 6, 251, 46] => {
+                    let expected_accounts_len = 10;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = MigratePositionIxAccounts {
+                        position_v2: next_account(accounts)?,
+                        position_v1: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        owner: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        rent_receiver: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::MigratePosition(ix_accounts))
+                },
+                [17, 23, 159, 211, 101, 184, 41, 241] => {
+                    let expected_accounts_len = 1;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = MigrateBinArrayIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::MigrateBinArray(ix_accounts))
+                },
+                [154, 230, 250, 13, 236, 209, 75, 223] => {
+                    let expected_accounts_len = 5;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = UpdateFeesAndRewardsIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        owner: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::UpdateFeesAndRewards(ix_accounts))
+                },
+                [148, 206, 42, 195, 247, 49, 103, 8] => {
+                    let expected_accounts_len = 10;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = WithdrawIneligibleRewardIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        reward_vault: next_account(accounts)?,
+                        reward_mint: next_account(accounts)?,
+                        funder_token_account: next_account(accounts)?,
+                        funder: next_account(accounts)?,
+                        bin_array: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        memo_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: WithdrawIneligibleRewardIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::WithdrawIneligibleReward(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [91, 249, 15, 165, 26, 129, 254, 125] => {
+                    let expected_accounts_len = 2;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SetActivationPointIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                    };
+                    let de_ix_data: SetActivationPointIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::SetActivationPoint(ix_accounts, de_ix_data))
+                },
+                [26, 82, 102, 152, 240, 74, 105, 26] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = RemoveLiquidityByRangeIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: RemoveLiquidityByRangeIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::RemoveLiquidityByRange(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [161, 194, 103, 84, 171, 71, 250, 154] => {
+                    let expected_accounts_len = 12;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = AddLiquidityOneSidePreciseIxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token: next_account(accounts)?,
+                        reserve: next_account(accounts)?,
+                        token_mint: next_account(accounts)?,
+                        bin_array_lower: next_account(accounts)?,
+                        bin_array_upper: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: AddLiquidityOneSidePreciseIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::AddLiquidityOneSidePrecise(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [146, 72, 174, 224, 40, 253, 84, 174] => {
+                    let expected_accounts_len = 6;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = GoToABinIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        from_bin_array: next_program_id_optional_account(accounts)?,
+                        to_bin_array: next_program_id_optional_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: GoToABinIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::GoToABin(ix_accounts, de_ix_data))
+                },
+                [165, 61, 201, 244, 130, 159, 22, 100] => {
+                    let expected_accounts_len = 2;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SetPreActivationDurationIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        creator: next_account(accounts)?,
+                    };
+                    let de_ix_data: SetPreActivationDurationIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::SetPreActivationDuration(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [57, 139, 47, 123, 216, 80, 223, 10] => {
+                    let expected_accounts_len = 2;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SetPreActivationSwapAddressIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        creator: next_account(accounts)?,
+                    };
+                    let de_ix_data: SetPreActivationSwapAddressIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::SetPreActivationSwapAddress(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [78, 59, 152, 211, 70, 183, 46, 208] => {
+                    let expected_accounts_len = 2;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SetPairStatusPermissionlessIxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        creator: next_account(accounts)?,
+                    };
+                    let de_ix_data: SetPairStatusPermissionlessIxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::SetPairStatusPermissionless(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [253, 77, 205, 95, 27, 224, 89, 223] => {
+                    let expected_accounts_len = 4;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializeTokenBadgeIxAccounts {
+                        token_mint: next_account(accounts)?,
+                        token_badge: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::InitializeTokenBadge(ix_accounts))
+                },
+                [51, 19, 150, 252, 105, 157, 48, 91] => {
+                    let expected_accounts_len = 4;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = CreateClaimProtocolFeeOperatorIxAccounts {
+                        claim_fee_operator: next_account(accounts)?,
+                        operator: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::CreateClaimProtocolFeeOperator(ix_accounts))
+                },
+                [8, 41, 87, 35, 80, 48, 121, 26] => {
+                    let expected_accounts_len = 3;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = CloseClaimProtocolFeeOperatorIxAccounts {
+                        claim_fee_operator: next_account(accounts)?,
+                        rent_receiver: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::CloseClaimProtocolFeeOperator(ix_accounts))
+                },
+                [184, 7, 240, 171, 103, 47, 183, 121] => {
+                    let expected_accounts_len = 3;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializePresetParameter2IxAccounts {
+                        preset_parameter: next_account(accounts)?,
+                        admin: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializePresetParameter2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializePresetParameter2(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [73, 59, 36, 120, 237, 83, 108, 198] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializeLbPair2IxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        token_mint_x: next_account(accounts)?,
+                        token_mint_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        preset_parameter: next_account(accounts)?,
+                        funder: next_account(accounts)?,
+                        token_badge_x: next_program_id_optional_account(accounts)?,
+                        token_badge_y: next_program_id_optional_account(accounts)?,
+                        token_program_x: next_account(accounts)?,
+                        token_program_y: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializeLbPair2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::InitializeLbPair2(ix_accounts, de_ix_data))
+                },
+                [243, 73, 129, 126, 51, 19, 241, 107] => {
+                    let expected_accounts_len = 17;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = InitializeCustomizablePermissionlessLbPair2IxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        token_mint_x: next_account(accounts)?,
+                        token_mint_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        funder: next_account(accounts)?,
+                        token_badge_x: next_program_id_optional_account(accounts)?,
+                        token_badge_y: next_program_id_optional_account(accounts)?,
+                        token_program_x: next_account(accounts)?,
+                        token_program_y: next_account(accounts)?,
+                        system_program: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: InitializeCustomizablePermissionlessLbPair2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(
+                        LbClmmProgramIx::InitializeCustomizablePermissionlessLbPair2(
+                            ix_accounts,
+                            de_ix_data,
+                        ),
+                    )
+                },
+                [112, 191, 101, 171, 28, 144, 127, 187] => {
+                    let expected_accounts_len = 14;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = ClaimFee2IxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        position: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        token_program_x: next_account(accounts)?,
+                        token_program_y: next_account(accounts)?,
+                        memo_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: ClaimFee2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::ClaimFee2(ix_accounts, de_ix_data))
+                },
+                [190, 3, 127, 119, 178, 87, 157, 183] => {
+                    let expected_accounts_len = 10;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = ClaimReward2IxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        position: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        reward_vault: next_account(accounts)?,
+                        reward_mint: next_account(accounts)?,
+                        user_token_account: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        memo_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: ClaimReward2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::ClaimReward2(ix_accounts, de_ix_data))
+                },
+                [228, 162, 78, 28, 70, 219, 116, 115] => {
+                    let expected_accounts_len = 14;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = AddLiquidity2IxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: AddLiquidity2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::AddLiquidity2(ix_accounts, de_ix_data))
+                },
+                [3, 221, 149, 218, 111, 141, 118, 213] => {
+                    let expected_accounts_len = 14;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = AddLiquidityByStrategy2IxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: AddLiquidityByStrategy2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::AddLiquidityByStrategy2(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [33, 51, 163, 201, 117, 98, 125, 231] => {
+                    let expected_accounts_len = 10;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = AddLiquidityOneSidePrecise2IxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token: next_account(accounts)?,
+                        reserve: next_account(accounts)?,
+                        token_mint: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: AddLiquidityOneSidePrecise2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::AddLiquidityOneSidePrecise2(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [230, 215, 82, 127, 241, 101, 227, 146] => {
+                    let expected_accounts_len = 15;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = RemoveLiquidity2IxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        memo_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: RemoveLiquidity2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::RemoveLiquidity2(ix_accounts, de_ix_data))
+                },
+                [204, 2, 195, 145, 53, 145, 145, 205] => {
+                    let expected_accounts_len = 15;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = RemoveLiquidityByRange2IxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        user_token_x: next_account(accounts)?,
+                        user_token_y: next_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        memo_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: RemoveLiquidityByRange2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::RemoveLiquidityByRange2(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [65, 75, 63, 76, 235, 91, 91, 136] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = Swap2IxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        user_token_in: next_account(accounts)?,
+                        user_token_out: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        host_fee_in: next_program_id_optional_account(accounts)?,
+                        user: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        memo_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: Swap2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
+
+                    // Filter out trades handled by Jupiter or OKX aggregators
+                    if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                        return Err(yellowstone_vixen_core::ParseError::Filtered);
+                    }
+
+                    // Search for SwapEvent in inner instructions
+                    let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                    });
+
+                    Ok(LbClmmProgramIx::Swap2(ix_accounts, de_ix_data, swap_event))
+                },
+                [43, 215, 247, 132, 137, 60, 243, 81] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SwapExactOut2IxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        user_token_in: next_account(accounts)?,
+                        user_token_out: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        host_fee_in: next_program_id_optional_account(accounts)?,
+                        user: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        memo_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: SwapExactOut2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    // Filter out trades handled by Jupiter or OKX aggregators
+                    if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                        return Err(yellowstone_vixen_core::ParseError::Filtered);
+                    }
+
+                    // Search for SwapEvent in inner instructions
+                    let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                    });
+
+                    Ok(LbClmmProgramIx::SwapExactOut2(
+                        ix_accounts,
+                        de_ix_data,
+                        swap_event,
+                    ))
+                },
+                [74, 98, 192, 214, 177, 51, 75, 51] => {
+                    let expected_accounts_len = 16;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = SwapWithPriceImpact2IxAccounts {
+                        lb_pair: next_account(accounts)?,
+                        bin_array_bitmap_extension: next_program_id_optional_account(accounts)?,
+                        reserve_x: next_account(accounts)?,
+                        reserve_y: next_account(accounts)?,
+                        user_token_in: next_account(accounts)?,
+                        user_token_out: next_account(accounts)?,
+                        token_x_mint: next_account(accounts)?,
+                        token_y_mint: next_account(accounts)?,
+                        oracle: next_account(accounts)?,
+                        host_fee_in: next_program_id_optional_account(accounts)?,
+                        user: next_account(accounts)?,
+                        token_x_program: next_account(accounts)?,
+                        token_y_program: next_account(accounts)?,
+                        memo_program: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    let de_ix_data: SwapWithPriceImpact2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    // Filter out trades handled by Jupiter or OKX aggregators
+                    if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
+                        return Err(yellowstone_vixen_core::ParseError::Filtered);
+                    }
+
+                    // Search for SwapEvent in inner instructions
+                    let swap_event = ix.inner.iter().find_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                    });
+
+                    Ok(LbClmmProgramIx::SwapWithPriceImpact2(
+                        ix_accounts,
+                        de_ix_data,
+                        swap_event,
+                    ))
+                },
+                [174, 90, 35, 115, 186, 40, 147, 226] => {
+                    let expected_accounts_len = 5;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = ClosePosition2IxAccounts {
+                        position: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        rent_receiver: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::ClosePosition2(ix_accounts))
+                },
+                [32, 142, 184, 154, 103, 65, 184, 88] => {
+                    let expected_accounts_len = 3;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = UpdateFeesAndReward2IxAccounts {
+                        position: next_account(accounts)?,
+                        lb_pair: next_account(accounts)?,
+                        owner: next_account(accounts)?,
+                    };
+                    let de_ix_data: UpdateFeesAndReward2IxData =
+                        deserialize_checked(ix_data, &ix_discriminator)?;
+                    Ok(LbClmmProgramIx::UpdateFeesAndReward2(
+                        ix_accounts,
+                        de_ix_data,
+                    ))
+                },
+                [59, 124, 212, 118, 91, 152, 110, 157] => {
+                    let expected_accounts_len = 5;
+                    check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                    let ix_accounts = ClosePositionIfEmptyIxAccounts {
+                        position: next_account(accounts)?,
+                        sender: next_account(accounts)?,
+                        rent_receiver: next_account(accounts)?,
+                        event_authority: next_account(accounts)?,
+                        program: next_account(accounts)?,
+                    };
+                    Ok(LbClmmProgramIx::ClosePositionIfEmpty(ix_accounts))
+                },
+                _ => Err(yellowstone_vixen_core::ParseError::from(
+                    "Invalid Instruction discriminator".to_owned(),
+                )),
+            };
 
         #[cfg(feature = "tracing")]
         match &ix {

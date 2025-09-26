@@ -36,9 +36,9 @@ pub mod proto_types_parsers {
                     protocol_fee_recipient_token_account: v1_event
                         .protocol_fee_recipient_token_account
                         .to_string(),
-                    coin_creator: self.coin_creator.to_string(),
-                    coin_creator_fee_basis_points: self.coin_creator_fee_basis_points,
-                    coin_creator_fee: self.coin_creator_fee,
+                    coin_creator: v1_event.coin_creator.to_string(),
+                    coin_creator_fee_basis_points: v1_event.coin_creator_fee_basis_points,
+                    coin_creator_fee: v1_event.coin_creator_fee,
                 },
                 BuyEvent::V2(v2_event) => proto_def::BuyEvent {
                     timestamp: v2_event.timestamp,

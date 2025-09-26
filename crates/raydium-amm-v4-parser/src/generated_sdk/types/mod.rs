@@ -17,7 +17,7 @@ pub(crate) mod r#withdraw_dest_token;
 pub(crate) mod r#withdraw_queue;
 
 pub use self::{
-    r#fees::*, r#last_order_distance::*, r#need_take::*, r#out_put_data::*,
+    r#fees::*, r#last_order_distance::*, r#need_take::*, r#out_put_data::*, r#swap_event::*,
     r#swap_instruction_base_in::*, r#swap_instruction_base_out::*, r#target_order::*,
     r#withdraw_dest_token::*, r#withdraw_queue::*,
 };

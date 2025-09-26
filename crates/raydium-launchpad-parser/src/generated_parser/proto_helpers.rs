@@ -186,9 +186,11 @@ pub mod proto_types_parsers {
                 amount_out: self.amount_out,
                 protocol_fee: self.protocol_fee,
                 platform_fee: self.platform_fee,
+                creator_fee: self.creator_fee,
                 share_fee: self.share_fee,
                 trade_direction: self.trade_direction as i32,
                 pool_status: self.pool_status as i32,
+                exact_in: self.exact_in,
             }
         }
     }

@@ -156,7 +156,9 @@ impl From<&InstructionUpdate> for SerializableInstructionUpdate {
     fn from(value: &InstructionUpdate) -> Self {
         Self {
             ix_index: value.ix_index,
-            parent_program: value.parent_program.map(|p| SerializablePubkey(p.into_bytes())),
+            parent_program: value
+                .parent_program
+                .map(|p| SerializablePubkey(p.into_bytes())),
             program: SerializablePubkey(value.program.0),
             accounts: value
                 .accounts
@@ -422,6 +424,7 @@ fn convert_to_transaction_update(
                 OptionSerializer::Some(units) => Some(units),
                 OptionSerializer::None | OptionSerializer::Skip => None,
             },
+            cost_units: None,
         }),
         index: 0, // Default for mock
     };

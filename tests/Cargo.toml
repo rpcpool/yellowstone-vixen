@@ -9,6 +9,7 @@ path = "integration_test.rs"
 
 [dependencies]
 yellowstone-vixen = { workspace = true }
+yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
 yellowstone-vixen-jupiter-swap-parser = { workspace = true }
 kryptogo-vixen-okx-dex-parser = { workspace = true }
 tokio = { version = "1.0", features = ["full"] }

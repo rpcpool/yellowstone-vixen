@@ -22,52 +22,6 @@ pub struct OkxStats {
     pub has_events: bool,
 }
 
-/// Combined statistics for both parsers
-#[derive(Debug, Clone)]
-pub struct DualParserStats {
-    pub jupiter_stats: JupiterStats,
-    pub okx_stats: OkxStats,
-    pub start_time: std::time::Instant,
-}
-
-impl DualParserStats {
-    pub fn new() -> Self {
-        Self {
-            jupiter_stats: JupiterStats::default(),
-            okx_stats: OkxStats::default(),
-            start_time: std::time::Instant::now(),
-        }
-    }
-
-    pub fn print_summary(&self) {
-        let elapsed = self.start_time.elapsed();
-        info!("=== Dual Parser Integration Test Summary ===");
-        info!("Test duration: {:.2}s", elapsed.as_secs_f64());
-        info!("");
-        info!("Jupiter Parser:");
-        info!("  - Swaps processed: {}", self.jupiter_stats.swap_count);
-        info!("  - Routes processed: {}", self.jupiter_stats.route_count);
-        info!("  - Total volume: {}", self.jupiter_stats.total_volume);
-        info!("");
-        info!("OKX DEX Parser:");
-        info!("  - Swaps processed: {}", self.okx_stats.swap_count);
-        info!(
-            "  - Aggregations processed: {}",
-            self.okx_stats.aggregation_count
-        );
-        info!("  - Total volume: {}", self.okx_stats.total_volume);
-        info!("");
-        info!("Combined totals:");
-        info!(
-            "  - Total events: {}",
-            self.jupiter_stats.swap_count
-                + self.jupiter_stats.route_count
-                + self.okx_stats.swap_count
-                + self.okx_stats.aggregation_count
-        );
-    }
-}
-
 /// Test handler for Jupiter swap events
 #[derive(Debug, Clone)]
 pub struct JupiterTestHandler {

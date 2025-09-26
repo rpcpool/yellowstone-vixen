@@ -1,7 +1,7 @@
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
-use solana_program::pubkey::Pubkey;
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -55,7 +55,10 @@ mod tests {
 
         let traded_event = TradedEvent::from_log(log);
 
-        assert!(traded_event.is_some(), "TradedEvent should be parsed successfully");
+        assert!(
+            traded_event.is_some(),
+            "TradedEvent should be parsed successfully"
+        );
 
         let event = traded_event.unwrap();
 
@@ -86,7 +89,10 @@ mod tests {
 
         let traded_event = TradedEvent::from_logs(&logs);
 
-        assert!(traded_event.is_some(), "TradedEvent should be found in logs collection");
+        assert!(
+            traded_event.is_some(),
+            "TradedEvent should be found in logs collection"
+        );
     }
 
     #[test]
@@ -104,7 +110,10 @@ mod tests {
 
         let traded_event = TradedEvent::from_log(log_without_prefix);
 
-        assert!(traded_event.is_none(), "Log without 'Program data: ' prefix should not parse");
+        assert!(
+            traded_event.is_none(),
+            "Log without 'Program data: ' prefix should not parse"
+        );
     }
 
     #[test]
@@ -144,8 +153,11 @@ mod tests {
         for i in 0..traded_events.len() {
             for j in (i + 1)..traded_events.len() {
                 assert_ne!(
-                    traded_events[i], traded_events[j],
-                    "TradedEvent {} and {} should be different", i + 1, j + 1
+                    traded_events[i],
+                    traded_events[j],
+                    "TradedEvent {} and {} should be different",
+                    i + 1,
+                    j + 1
                 );
             }
         }

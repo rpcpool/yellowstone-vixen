@@ -24,7 +24,7 @@ impl LimitOrder2ProgramState {
         let acc = match acc_discriminator {
             [24, 55, 150, 250, 168, 27, 101, 178] => {
                 Ok(LimitOrder2ProgramState::Fee(Fee::from_bytes(data_bytes)?))
-            }
+            },
             [134, 173, 223, 185, 77, 86, 28, 51] => Ok(LimitOrder2ProgramState::Order(
                 Order::from_bytes(data_bytes)?,
             )),
@@ -42,7 +42,7 @@ impl LimitOrder2ProgramState {
                     program = ID.to_string(),
                     account = acc.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_account",
@@ -52,7 +52,7 @@ impl LimitOrder2ProgramState {
                     discriminator = ?acc_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         acc
@@ -66,7 +66,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = LimitOrder2ProgramState;
 
-    fn id(&self) -> std::borrow::Cow<str> {
+    fn id(&self) -> std::borrow::Cow<'static, str> {
         "limit_order2::AccountParser".into()
     }
 
@@ -143,10 +143,10 @@ mod proto_parser {
             let state_oneof = match self {
                 LimitOrder2ProgramState::Fee(data) => {
                     proto_def::program_state::StateOneof::Fee(data.into_proto())
-                }
+                },
                 LimitOrder2ProgramState::Order(data) => {
                     proto_def::program_state::StateOneof::Order(data.into_proto())
-                }
+                },
             };
 
             proto_def::ProgramState {

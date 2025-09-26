@@ -394,7 +394,7 @@ impl InstructionParser {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
                 let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
-                Ok(RaydiumAmmProgramIx::SwapBaseIn(
+                Ok(RaydiumAmmV4ProgramIx::SwapBaseIn(
                     ix_accounts,
                     de_ix_data,
                     swap_event,
@@ -460,7 +460,7 @@ impl InstructionParser {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
                 let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
-                Ok(RaydiumAmmProgramIx::SwapBaseOut(
+                Ok(RaydiumAmmV4ProgramIx::SwapBaseOut(
                     ix_accounts,
                     de_ix_data,
                     swap_event,
@@ -1181,7 +1181,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::SwapBaseIn(acc, data, _) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::SwapBaseIn(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseIn(
                         proto_def::SwapBaseInIx {
                             accounts: Some(acc.into_proto()),
@@ -1197,7 +1197,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                RaydiumAmmProgramIx::SwapBaseOut(acc, data, _) => proto_def::ProgramIxs {
+                RaydiumAmmV4ProgramIx::SwapBaseOut(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapBaseOut(
                         proto_def::SwapBaseOutIx {
                             accounts: Some(acc.into_proto()),

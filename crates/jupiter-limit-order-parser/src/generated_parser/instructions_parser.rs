@@ -41,7 +41,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
     type Output = LimitOrder2ProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<str> {
+    fn id(&self) -> std::borrow::Cow<'static, str> {
         "LimitOrder2::InstructionParser".into()
     }
 
@@ -101,7 +101,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [95, 129, 237, 240, 8, 49, 223, 132] => {
                 check_min_accounts_req(accounts_len, 9)?;
                 let ix_accounts = CancelOrderIxAccounts {
@@ -122,7 +122,7 @@ impl InstructionParser {
                     program: ix.accounts[8].0.into(),
                 };
                 Ok(LimitOrder2ProgramIx::CancelOrder(ix_accounts))
-            }
+            },
             [232, 122, 115, 25, 199, 143, 136, 162] => {
                 check_min_accounts_req(accounts_len, 16)?;
                 let ix_accounts = FillOrderIxAccounts {
@@ -151,7 +151,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: FillOrderIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(LimitOrder2ProgramIx::FillOrder(ix_accounts, de_ix_data))
-            }
+            },
             [252, 104, 18, 134, 164, 78, 18, 140] => {
                 check_min_accounts_req(accounts_len, 13)?;
                 let ix_accounts = FlashFillOrderIxAccounts {
@@ -186,7 +186,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [133, 110, 74, 175, 112, 159, 245, 159] => {
                 check_min_accounts_req(accounts_len, 15)?;
                 let ix_accounts = InitializeOrderIxAccounts {
@@ -218,7 +218,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [240, 47, 153, 68, 13, 190, 225, 42] => {
                 check_min_accounts_req(accounts_len, 7)?;
                 let ix_accounts = PreFlashFillOrderIxAccounts {
@@ -236,7 +236,7 @@ impl InstructionParser {
                     ix_accounts,
                     de_ix_data,
                 ))
-            }
+            },
             [232, 253, 195, 247, 148, 212, 73, 222] => {
                 check_min_accounts_req(accounts_len, 3)?;
                 let ix_accounts = UpdateFeeIxAccounts {
@@ -246,7 +246,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: UpdateFeeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
                 Ok(LimitOrder2ProgramIx::UpdateFee(ix_accounts, de_ix_data))
-            }
+            },
             [14, 122, 231, 218, 31, 238, 223, 150] => {
                 check_min_accounts_req(accounts_len, 6)?;
                 let ix_accounts = WithdrawFeeIxAccounts {
@@ -258,7 +258,7 @@ impl InstructionParser {
                     mint: ix.accounts[5].0.into(),
                 };
                 Ok(LimitOrder2ProgramIx::WithdrawFee(ix_accounts))
-            }
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
@@ -273,7 +273,7 @@ impl InstructionParser {
                     program = ID.to_string(),
                     ix = ix.to_string()
                 );
-            }
+            },
             Err(e) => {
                 tracing::info!(
                     name: "incorrectly_parsed_instruction",
@@ -283,7 +283,7 @@ impl InstructionParser {
                     discriminator = ?ix_discriminator,
                     error = ?e
                 );
-            }
+            },
         }
 
         ix
