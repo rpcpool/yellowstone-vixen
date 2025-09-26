@@ -84,7 +84,7 @@ mod tests {
         let event = result.unwrap();
         assert_eq!(event.amount_in, 41738940711883324, "amount_in should match");
         assert_eq!(event.amount_out, 1269109097, "amount_out should match");
-        println!("Parsed TokenSoldEvent: {:?}", event);
+        println!("Parsed TokenSoldEvent: {event:?}");
     }
 
     #[test]

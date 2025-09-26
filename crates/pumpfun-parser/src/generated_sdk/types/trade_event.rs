@@ -181,13 +181,13 @@ mod tests {
         // This should be parsed as V2 based on the data length
         match trade_event {
             TradeEvent::V1(v1_event) => {
-                panic!("Expected TradeEventV2, got TradeEventV1: {:?}", v1_event);
+                panic!("Expected TradeEventV2, got TradeEventV1: {v1_event:?}");
             },
             TradeEvent::V2(v2_event) => {
-                assert_eq!(v2_event.is_buy, false);
+                assert!(!v2_event.is_buy);
                 assert_eq!(v2_event.sol_amount, 746603006);
                 assert_eq!(v2_event.token_amount, 3097133016837);
-                println!("Parsed as TradeEventV2: {:?}", v2_event);
+                println!("Parsed as TradeEventV2: {v2_event:?}");
             },
         }
     }

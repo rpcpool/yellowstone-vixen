@@ -92,7 +92,7 @@ mod tests {
         assert_eq!(swap_event.transfer_fee_0, 0);
         assert_eq!(swap_event.amount_1, 39413798205);
         assert_eq!(swap_event.transfer_fee_1, 0);
-        assert_eq!(swap_event.zero_for_one, false);
+        assert!(!swap_event.zero_for_one);
     }
 
     #[test]

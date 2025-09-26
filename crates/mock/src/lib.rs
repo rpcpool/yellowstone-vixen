@@ -217,7 +217,7 @@ fn try_from_ui_instructions(
         let program = get_account_pubkey_from_index(ix.program_id_index as usize, accounts)?;
 
         let ix = SerializableInstructionUpdate {
-            ix_index: idx as u16,
+            ix_index: u16::try_from(idx).unwrap_or(u16::MAX),
             parent_program: None,
             data: decode_bs58_to_bytes(&ix.data)?,
             accounts: accounts_out,
@@ -274,6 +274,7 @@ fn filter_ixs(
         .collect::<Vec<SerializableInstructionUpdate>>()
 }
 
+#[allow(clippy::too_many_lines)]
 fn convert_to_transaction_update(
     value: EncodedConfirmedTransactionWithStatusMeta,
 ) -> Result<TransactionUpdate, String> {
@@ -292,8 +293,8 @@ fn convert_to_transaction_update(
     let mut instructions: Vec<CompiledInstruction> = Vec::new();
     let mut inner_instructions: Vec<InnerInstructions> = Vec::new();
     let mut signatures: Vec<Vec<u8>> = Vec::new();
-    let mut message_header: Option<yellowstone_grpc_proto::prelude::MessageHeader> = None;
-    let mut recent_blockhash: Vec<u8> = Vec::new();
+    let message_header: Option<yellowstone_grpc_proto::prelude::MessageHeader>;
+    let recent_blockhash: Vec<u8>;
 
     if let EncodedTransaction::Json(tx_data) = transaction {
         if let UiMessage::Raw(raw_message) = tx_data.message {
@@ -325,7 +326,7 @@ fn convert_to_transaction_update(
             for ui_instruction in raw_message.instructions {
                 instructions.push(CompiledInstruction {
                     program_id_index: u32::from(ui_instruction.program_id_index),
-                    accounts: ui_instruction.accounts.into_iter().map(|i| i).collect(),
+                    accounts: ui_instruction.accounts,
                     data: decode_bs58_to_bytes(&ui_instruction.data)?,
                 });
             }
@@ -356,7 +357,7 @@ fn convert_to_transaction_update(
                     if let UiInstruction::Compiled(compiled_ix) = ui_instruction {
                         converted_instructions.push(InnerInstruction {
                             program_id_index: u32::from(compiled_ix.program_id_index),
-                            accounts: compiled_ix.accounts.iter().map(|&i| i).collect(),
+                            accounts: compiled_ix.accounts.clone(),
                             data: decode_bs58_to_bytes(&compiled_ix.data)?,
                             stack_height: compiled_ix.stack_height,
                         });
@@ -413,16 +414,19 @@ fn convert_to_transaction_update(
             },
             log_messages_none: false,
             pre_token_balances: match m.pre_token_balances {
-                OptionSerializer::Some(_) => vec![], // Token balance conversion is complex, skip for mock
-                OptionSerializer::None | OptionSerializer::Skip => vec![],
+                OptionSerializer::Some(_) | OptionSerializer::None | OptionSerializer::Skip => {
+                    vec![]
+                }, // Token balance conversion is complex, skip for mock
             },
             post_token_balances: match m.post_token_balances {
-                OptionSerializer::Some(_) => vec![], // Token balance conversion is complex, skip for mock
-                OptionSerializer::None | OptionSerializer::Skip => vec![],
+                OptionSerializer::Some(_) | OptionSerializer::None | OptionSerializer::Skip => {
+                    vec![]
+                }, // Token balance conversion is complex, skip for mock
             },
             rewards: match m.rewards {
-                OptionSerializer::Some(_) => vec![], // Reward conversion is complex, skip for mock
-                OptionSerializer::None | OptionSerializer::Skip => vec![],
+                OptionSerializer::Some(_) | OptionSerializer::None | OptionSerializer::Skip => {
+                    vec![]
+                }, // Reward conversion is complex, skip for mock
             },
             loaded_writable_addresses,
             loaded_readonly_addresses,
@@ -490,7 +494,7 @@ fn try_from_tx_meta<P: ProgramParser>(
                     return Ok(program_filtered_ixs);
                 }
 
-                let mut next_idx = program_filtered_ixs.len() as u16;
+                let mut next_idx = u16::try_from(program_filtered_ixs.len()).unwrap_or(u16::MAX);
                 for ixs in inner_ixs {
                     let inner_ixs =
                         try_from_ui_inner_ixs(&ixs, &account_keys, &program_id, &mut next_idx)?;

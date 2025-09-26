@@ -87,7 +87,7 @@ mod tests {
             event.amount_out, 37230613312615633,
             "amount_out should match"
         );
-        println!("Parsed TokenBoughtEvent: {:?}", event);
+        println!("Parsed TokenBoughtEvent: {event:?}");
     }
 
     #[test]

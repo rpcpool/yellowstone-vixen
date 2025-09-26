@@ -111,7 +111,7 @@ fn try_load_config_from_env(
 
     // Ensure URL has proper HTTP/HTTPS prefix
     let processed_url = if !grpc_url.starts_with("http://") && !grpc_url.starts_with("https://") {
-        format!("http://{}", grpc_url)
+        format!("http://{grpc_url}")
     } else {
         grpc_url
     };

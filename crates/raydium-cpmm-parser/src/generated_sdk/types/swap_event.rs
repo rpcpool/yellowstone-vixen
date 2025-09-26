@@ -137,7 +137,7 @@ mod tests {
                 assert_eq!(v1_event.output_amount, 308674);
                 assert_eq!(v1_event.input_transfer_fee, 0);
                 assert_eq!(v1_event.output_transfer_fee, 0);
-                assert_eq!(v1_event.base_input, true);
+                assert!(v1_event.base_input);
             },
             SwapEvent::V1(_) => panic!("Expected V2 event, got V1"),
         }

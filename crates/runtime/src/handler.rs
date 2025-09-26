@@ -5,7 +5,7 @@ use std::{borrow::Cow, collections::HashMap, pin::Pin};
 
 use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
-use tracing::{warn, Instrument, Span};
+use tracing::{Instrument, Span};
 use vixen_core::{
     AccountUpdate, BlockMetaUpdate, BlockUpdate, GetPrefilter, ParserId, SlotUpdate,
     TransactionUpdate,
@@ -62,6 +62,8 @@ mod pipeline_error {
             Self::Parse(Box::new(e))
         }
 
+        #[allow(clippy::unused_self)]
+        #[allow(clippy::extra_unused_type_parameters)]
         pub fn handle<T>(self, _handler: &str) -> Handled {
             // TODO: uncomment when we find it useful
             // for e in self {

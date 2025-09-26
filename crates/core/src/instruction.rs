@@ -244,10 +244,16 @@ impl InstructionUpdate {
         let mut outer = instructions
             .into_iter()
             .enumerate()
-            .map(|(idx, i)| Self::parse_one(Arc::clone(&shared), i, idx as u16))
+            .map(|(idx, i)| {
+                Self::parse_one(
+                    Arc::clone(&shared),
+                    i,
+                    u16::try_from(idx).unwrap_or(u16::MAX),
+                )
+            })
             .collect::<Result<Vec<_>, _>>()?;
 
-        let mut next_idx = outer.len() as u16;
+        let mut next_idx = u16::try_from(outer.len()).unwrap_or(u16::MAX);
         Self::parse_inner(&shared, inner_instructions, &mut outer, &mut next_idx)?;
 
         // Assign logs to instructions based on invoke/success patterns
@@ -326,7 +332,7 @@ impl InstructionUpdate {
 
         // create list of instruction paths in depth-first order for existing instructions data structure
         let mut instruction_paths = Vec::new();
-        Self::collect_instruction_paths(&mut instruction_paths, outer, Vec::new());
+        Self::collect_instruction_paths(&mut instruction_paths, outer, &[]);
 
         // maintain current execution stack (store paths)
         let mut execution_stack: Vec<Vec<usize>> = Vec::new();
@@ -369,8 +375,7 @@ impl InstructionUpdate {
                 // find matching program in execution stack
                 if let Some(matching_path) = execution_stack.iter().rev().find(|path| {
                     Self::get_instruction_at_path(outer, path)
-                        .map(|instr| instr.program.to_string() == program_id)
-                        .unwrap_or(false)
+                        .is_some_and(|instr| instr.program.to_string() == program_id)
                 }) {
                     let instruction = Self::get_instruction_at_path_mut(outer, matching_path)?;
                     instruction.parsed_logs.push(log.clone());
@@ -389,15 +394,15 @@ impl InstructionUpdate {
     fn collect_instruction_paths(
         paths: &mut Vec<Vec<usize>>,
         instructions: &[Self],
-        current_path: Vec<usize>,
+        current_path: &[usize],
     ) {
         for (i, instruction) in instructions.iter().enumerate() {
-            let mut path = current_path.clone();
+            let mut path = current_path.to_owned();
             path.push(i);
             paths.push(path.clone());
 
             // recursively process inner instructions
-            Self::collect_instruction_paths(paths, &instruction.inner, path);
+            Self::collect_instruction_paths(paths, &instruction.inner, &path);
         }
     }
 
@@ -410,15 +415,21 @@ impl InstructionUpdate {
             return Err(ParseError::InvalidInnerInstructionIndex(0));
         }
 
-        let mut current = outer
-            .get_mut(path[0])
-            .ok_or(ParseError::InvalidInnerInstructionIndex(path[0] as u32))?;
+        let mut current =
+            outer
+                .get_mut(path[0])
+                .ok_or(ParseError::InvalidInnerInstructionIndex(
+                    u32::try_from(path[0]).unwrap_or(u32::MAX),
+                ))?;
 
         for &index in &path[1..] {
-            current = current
-                .inner
-                .get_mut(index)
-                .ok_or(ParseError::InvalidInnerInstructionIndex(index as u32))?;
+            current =
+                current
+                    .inner
+                    .get_mut(index)
+                    .ok_or(ParseError::InvalidInnerInstructionIndex(
+                        u32::try_from(index).unwrap_or(u32::MAX),
+                    ))?;
         }
 
         Ok(current)
@@ -569,10 +580,10 @@ mod tests {
         );
 
         for (i, ix) in instruction_updates.iter().enumerate() {
-            println!("\n=== Instruction {} ===", i);
+            println!("\n=== Instruction {i} ===");
             println!(
                 "Program: {}, Parsed logs count: {}, Raw logs count: {}",
-                ix.program.to_string(),
+                ix.program,
                 ix.parsed_logs.len(),
                 ix.shared.log_messages.len()
             );
@@ -580,22 +591,22 @@ mod tests {
             // Print all parsed logs for this instruction
             println!("Parsed logs:");
             for (j, parsed_log) in ix.parsed_logs.iter().enumerate() {
-                println!("  Parsed log {}: {}", j, parsed_log);
+                println!("  Parsed log {j}: {parsed_log}");
             }
 
             // Test inner instructions
             for (inner_i, inner_ix) in ix.inner.iter().enumerate() {
-                println!("\n  === Inner Instruction {} ===", inner_i);
+                println!("\n  === Inner Instruction {inner_i} ===");
                 println!(
                     "  Program: {}, Parsed logs count: {}",
-                    inner_ix.program.to_string(),
+                    inner_ix.program,
                     inner_ix.parsed_logs.len()
                 );
 
                 // Print all parsed logs for inner instructions
                 println!("  Inner parsed logs:");
                 for (j, log) in inner_ix.parsed_logs.iter().enumerate() {
-                    println!("    Inner parsed log {}: {}", j, log);
+                    println!("    Inner parsed log {j}: {log}");
                 }
             }
         }
@@ -626,6 +637,73 @@ mod tests {
         );
     }
 
+    // Helper function to recursively print instruction hierarchy
+    fn print_instruction_hierarchy(
+        ix: &super::InstructionUpdate,
+        depth: usize,
+        instruction_path: &str,
+    ) {
+        let indent = "  ".repeat(depth);
+        let parent_info = if let Some(parent_program) = ix.parent_program {
+            format!("parent: {parent_program}")
+        } else {
+            "TOP-LEVEL".to_string()
+        };
+
+        println!(
+            "{indent}{instruction_path}Instruction : ix_index={}, {parent_info}, program={}",
+            ix.ix_index, ix.program
+        );
+
+        // Recursively print inner instructions
+        for (inner_i, inner_ix) in ix.inner.iter().enumerate() {
+            let inner_path = format!("{instruction_path}[inner-{inner_i}] ");
+            print_instruction_hierarchy(inner_ix, depth + 1, &inner_path);
+        }
+    }
+
+    // Helper function to recursively count and verify instructions
+    fn verify_instruction_hierarchy(
+        ix: &super::InstructionUpdate,
+        expected_parent: Option<super::Pubkey>,
+    ) -> (usize, usize, usize) {
+        let mut total = 1;
+        let mut top_level = 0;
+        let mut inner = 0;
+
+        // Verify parent relationship
+        if ix.parent_program.is_none() {
+            top_level = 1;
+            assert!(
+                expected_parent.is_none(),
+                "Top-level instruction should not have a parent, but parent_program is {:?}",
+                ix.parent_program
+            );
+        } else {
+            inner = 1;
+            if let Some(expected) = expected_parent {
+                assert_eq!(
+                    ix.parent_program,
+                    Some(expected),
+                    "Inner instruction parent_program {:?} doesn't match expected parent {}",
+                    ix.parent_program,
+                    expected
+                );
+            }
+        }
+
+        // Recursively verify inner instructions
+        for inner_ix in &ix.inner {
+            let (inner_total, inner_top_level, inner_inner) =
+                verify_instruction_hierarchy(inner_ix, Some(ix.program));
+            total += inner_total;
+            top_level += inner_top_level;
+            inner += inner_inner;
+        }
+
+        (total, top_level, inner)
+    }
+
     #[tokio::test]
     async fn test_inner_instruction_parent_relationships() {
         use yellowstone_vixen_mock::create_mock_transaction_update;
@@ -646,39 +724,9 @@ mod tests {
             instruction_updates.len()
         );
 
-        // Helper function to recursively print instruction hierarchy
-        fn print_instruction_hierarchy(
-            ix: &super::InstructionUpdate,
-            depth: usize,
-            instruction_path: &str,
-        ) {
-            let indent = "  ".repeat(depth);
-            let parent_info = if let Some(parent_program) = ix.parent_program {
-                format!("parent: {}", parent_program.to_string())
-            } else {
-                "TOP-LEVEL".to_string()
-            };
-
-            println!(
-                "{}{}Instruction {}: ix_index={}, {}, program={}",
-                indent,
-                instruction_path,
-                "",
-                ix.ix_index,
-                parent_info,
-                ix.program.to_string()
-            );
-
-            // Recursively print inner instructions
-            for (inner_i, inner_ix) in ix.inner.iter().enumerate() {
-                let inner_path = format!("{}[inner-{}] ", instruction_path, inner_i);
-                print_instruction_hierarchy(inner_ix, depth + 1, &inner_path);
-            }
-        }
-
         // Print hierarchy for all top-level instructions
         for (i, ix) in instruction_updates.iter().enumerate() {
-            println!("\n=== Top-level Instruction {} ===", i);
+            println!("\n=== Top-level Instruction {i} ===");
             print_instruction_hierarchy(ix, 0, "");
         }
 
@@ -686,48 +734,6 @@ mod tests {
         let mut total_instructions = 0;
         let mut top_level_count = 0;
         let mut inner_instructions_count = 0;
-
-        // Helper function to recursively count and verify instructions
-        fn verify_instruction_hierarchy(
-            ix: &super::InstructionUpdate,
-            expected_parent: Option<super::Pubkey>,
-        ) -> (usize, usize, usize) {
-            let mut total = 1;
-            let mut top_level = 0;
-            let mut inner = 0;
-
-            // Verify parent relationship
-            if ix.parent_program.is_none() {
-                top_level = 1;
-                assert!(
-                    expected_parent.is_none(),
-                    "Top-level instruction should not have a parent, but parent_program is {:?}",
-                    ix.parent_program
-                );
-            } else {
-                inner = 1;
-                if let Some(expected) = expected_parent {
-                    assert_eq!(
-                        ix.parent_program,
-                        Some(expected),
-                        "Inner instruction parent_program {:?} doesn't match expected parent {}",
-                        ix.parent_program,
-                        expected
-                    );
-                }
-            }
-
-            // Recursively verify inner instructions
-            for inner_ix in &ix.inner {
-                let (inner_total, inner_top_level, inner_inner) =
-                    verify_instruction_hierarchy(inner_ix, Some(ix.program));
-                total += inner_total;
-                top_level += inner_top_level;
-                inner += inner_inner;
-            }
-
-            (total, top_level, inner)
-        }
 
         // Count and verify all instructions
         for ix in &instruction_updates {
@@ -738,9 +744,9 @@ mod tests {
         }
 
         println!("\n=== Parent-Child Relationship Summary ===");
-        println!("Total instructions: {}", total_instructions);
-        println!("Top-level instructions: {}", top_level_count);
-        println!("Inner instructions: {}", inner_instructions_count);
+        println!("Total instructions: {total_instructions}");
+        println!("Top-level instructions: {top_level_count}");
+        println!("Inner instructions: {inner_instructions_count}");
 
         // Verify that we have some instructions
         assert!(

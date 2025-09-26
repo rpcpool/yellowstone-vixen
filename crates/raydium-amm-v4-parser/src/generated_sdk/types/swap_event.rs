@@ -99,10 +99,10 @@ mod tests {
                 // Verify the specific fields from the test data
                 assert_eq!(base_in_event.amount_in, 990000);
                 assert_eq!(base_in_event.out_amount, 2004775);
-                println!("Parsed as BaseIn: {:?}", base_in_event);
+                println!("Parsed as BaseIn: {base_in_event:?}");
             },
             SwapEvent::BaseOut(base_out_event) => {
-                panic!("Expected BaseIn event, got BaseOut: {:?}", base_out_event);
+                panic!("Expected BaseIn event, got BaseOut: {base_out_event:?}");
             },
         }
     }

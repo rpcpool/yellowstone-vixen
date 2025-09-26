@@ -181,13 +181,13 @@ mod tests {
         // This should be parsed as V2 based on the data length
         match sell_event {
             SellEvent::V1(v1_event) => {
-                panic!("Expected SellEventV2, got SellEventV1: {:?}", v1_event);
+                panic!("Expected SellEventV2, got SellEventV1: {v1_event:?}");
             },
             SellEvent::V2(v2_event) => {
                 assert_eq!(v2_event.timestamp, 1758625475);
                 assert_eq!(v2_event.base_amount_in, 431756657);
                 assert_eq!(v2_event.user_quote_amount_out, 769863703166);
-                println!("Parsed as SellEventV2: {:?}", v2_event);
+                println!("Parsed as SellEventV2: {v2_event:?}");
             },
         }
     }

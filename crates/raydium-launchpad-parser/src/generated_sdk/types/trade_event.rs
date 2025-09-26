@@ -159,9 +159,9 @@ mod tests {
                     v2_event.amount_out, 14940349201324,
                     "amount_out should match"
                 );
-                assert_eq!(v2_event.exact_in, false, "exact_in should be false");
+                assert!(!v2_event.exact_in, "exact_in should be false");
                 assert_eq!(v2_event.creator_fee, 295149, "exact_in should be false");
-                println!("Parsed as TradeEventV2: {:?}", v2_event);
+                println!("Parsed as TradeEventV2: {v2_event:?}");
             },
         }
     }

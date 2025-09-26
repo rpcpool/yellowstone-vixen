@@ -91,7 +91,7 @@ mod tests {
         assert_eq!(event.label, "trade", "label should match");
         assert_eq!(event.amount, 46754482519727823);
         assert_eq!(event.collateral_amount, 1980000000);
-        println!("Parsed TradeEvent: {:?}", event);
+        println!("Parsed TradeEvent: {event:?}");
 
         let log = "Program data: vdt/007mYe5+69agxinjABiqV3EAAAAADBSRAAAAAAANFJEAAAAAAJwPyfWwjQAA4kLzMV02E8Dgs/GkWroE9891010Lx+5VXjb/28NKAFQGm4hX/quBhPtof2NGGMA12sQ53BrrO1WYoPAAAAAAARKfzf+PsZPUrYkbeJQ2an32j3NtMKAL6fNoqhIH5jWKAQUAAAB0cmFkZQ==";
 
@@ -105,7 +105,7 @@ mod tests {
         assert_eq!(event.label, "trade", "label should match");
         assert_eq!(event.amount, 63940752792021886);
         assert_eq!(event.collateral_amount, 1901570584);
-        println!("Parsed TradeEvent: {:?}", event);
+        println!("Parsed TradeEvent: {event:?}");
     }
 
     #[test]

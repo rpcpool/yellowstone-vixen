@@ -96,12 +96,14 @@ pub enum LimitOrder2Error {
     UnsupportedMint = 0x178b,
 }
 
+#[allow(deprecated)]
 impl solana_program::program_error::PrintProgramError for LimitOrder2Error {
     fn print<E>(&self) {
         solana_program::msg!(&self.to_string());
     }
 }
 
+#[allow(deprecated)]
 impl<T> solana_program::decode_error::DecodeError<T> for LimitOrder2Error {
     fn type_of() -> &'static str { "LimitOrder2Error" }
 }

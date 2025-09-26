@@ -108,13 +108,13 @@ mod tests {
         assert!(result.is_some(), "Should successfully parse real log data");
 
         let swap_event = result.unwrap();
-        println!("Parsed SwapEvent: {:?}", swap_event);
+        println!("Parsed SwapEvent: {swap_event:?}");
 
         // Verify some fields
         assert_eq!(swap_event.amount0, 8720000);
         assert_eq!(swap_event.amount1, 440991);
         assert_eq!(swap_event.transfer_fee0, 0);
-        assert_eq!(swap_event.zero_for_one, true);
+        assert!(swap_event.zero_for_one);
     }
 
     #[test]

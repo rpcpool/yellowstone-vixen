@@ -383,7 +383,7 @@ mod proto_parser {
                     .chunks(4)
                     .map(|chunk| {
                         u32::from_le_bytes([
-                            chunk.get(0).copied().unwrap_or(0),
+                            chunk.first().copied().unwrap_or(0),
                             chunk.get(1).copied().unwrap_or(0),
                             chunk.get(2).copied().unwrap_or(0),
                             chunk.get(3).copied().unwrap_or(0),

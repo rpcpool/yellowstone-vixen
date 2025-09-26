@@ -8,7 +8,6 @@
 #[cfg(feature = "shared-data")]
 use std::sync::Arc;
 
-use borsh::BorshDeserialize;
 use yellowstone_vixen_core::constants::is_known_aggregator;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
@@ -119,7 +118,6 @@ use crate::{
         WithdrawProtocolFee as WithdrawProtocolFeeIxAccounts,
         WithdrawProtocolFeeInstructionArgs as WithdrawProtocolFeeIxData,
     },
-    proto_def::ProgramIxs,
     types::SwapEvent,
     ID,
 };

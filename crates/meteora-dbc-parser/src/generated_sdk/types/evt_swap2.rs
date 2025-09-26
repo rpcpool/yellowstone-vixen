@@ -124,7 +124,7 @@ mod tests {
 
         // Verify the parsing worked by checking some fields
         assert_eq!(evt_swap2.trade_direction, 0);
-        assert_eq!(evt_swap2.has_referral, true);
+        assert!(evt_swap2.has_referral);
         assert_eq!(evt_swap2.quote_reserve_amount, 687153690);
         assert_eq!(evt_swap2.migration_threshold, 800000000000);
     }

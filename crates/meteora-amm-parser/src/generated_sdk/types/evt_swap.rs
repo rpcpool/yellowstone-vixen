@@ -83,7 +83,7 @@ mod tests {
 
         // Verify the parsing worked by checking some fields
         assert_eq!(evt_swap.trade_direction, 0);
-        assert_eq!(evt_swap.has_referral, false);
+        assert!(!evt_swap.has_referral);
         assert_eq!(evt_swap.actual_amount_in, 3999500000000);
         assert_eq!(evt_swap.swap_result.output_amount, 77662);
     }

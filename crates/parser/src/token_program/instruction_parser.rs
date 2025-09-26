@@ -73,20 +73,8 @@ impl InstructionParser {
                 decimals,
                 mint_authority,
                 freeze_authority,
-            } => {
-                check_min_accounts_req(accounts_len, 1)?;
-                Ok(TokenProgramIx::InitializeMint(
-                    InitializeMintAccounts {
-                        mint: ix.accounts[0],
-                    },
-                    InitializeMintData {
-                        decimals,
-                        mint_authority: into_vixen_pubkey(mint_authority),
-                        freeze_authority: freeze_authority.map(into_vixen_pubkey).into(),
-                    },
-                ))
-            },
-            TokenInstruction::InitializeMint2 {
+            }
+            | TokenInstruction::InitializeMint2 {
                 decimals,
                 mint_authority,
                 freeze_authority,
