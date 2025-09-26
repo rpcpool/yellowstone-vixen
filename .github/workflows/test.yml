@@ -4,8 +4,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# # This may be adjusted to whatever suits best your runners config.
+# # Current config will build on manual trigger or pull-request (each push)
 on:
+  # pull_request can be removed, to save minutes on github runners
+  pull_request:
   push:
+    branches:
+      - "main"
   workflow_dispatch:
 
 env:

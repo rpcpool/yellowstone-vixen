@@ -1,0 +1,31 @@
+[graph]
+all-features = true
+
+[advisories]
+ignore = [
+    # atty 0.2.14
+    # pointer to uninitialized memory
+    "RUSTSEC-2021-0145",
+    # atty is no longer maintained
+    "RUSTSEC-2024-0375",
+
+    # fxhash 0.2.1 
+    # Advisory: https://rustsec.org/advisories/RUSTSEC-2025-0057
+    # - The fxhash crate is no longer maintained.
+    "RUSTSEC-2025-0057",
+
+    # curve25519-dalek vulnerability
+    "RUSTSEC-2024-0344",
+
+    # web-time not maintained
+    "RUSTSEC-2024-0384",
+
+    # derivative unmaintained warning
+    "RUSTSEC-2024-0388",
+
+    # ed25519-dalek 1.0.1
+    "RUSTSEC-2022-0093",
+
+    # paste
+    "RUSTSEC-2024-0436",
+]
