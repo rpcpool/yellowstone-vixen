@@ -1,7 +1,7 @@
 # Test configuration for Yellowstone Vixen Integration Tests
 # Copy and modify this file with your actual test credentials
 
-[yellowstone]
+[source]
 # The endpoint of the dragon's mouth stream for testing
 # Replace with your actual test endpoint
 endpoint = "https://your-test-endpoint.rpcpool.com"

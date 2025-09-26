@@ -298,9 +298,25 @@ fn convert_to_transaction_update(
     let mut instructions: Vec<CompiledInstruction> = Vec::new();
     let mut inner_instructions: Vec<InnerInstructions> = Vec::new();
     let mut signatures: Vec<Vec<u8>> = Vec::new();
+    let mut message_header: Option<yellowstone_grpc_proto::prelude::MessageHeader> = None;
+    let mut recent_blockhash: Vec<u8> = Vec::new();
 
     if let EncodedTransaction::Json(tx_data) = transaction {
         if let UiMessage::Raw(raw_message) = tx_data.message {
+            // Extract and convert message header
+            message_header = Some(yellowstone_grpc_proto::prelude::MessageHeader {
+                num_required_signatures: raw_message.header.num_required_signatures as u32,
+                num_readonly_signed_accounts: raw_message.header.num_readonly_signed_accounts
+                    as u32,
+                num_readonly_unsigned_accounts: raw_message.header.num_readonly_unsigned_accounts
+                    as u32,
+            });
+
+            // Extract recent blockhash
+            recent_blockhash = bs58::decode(&raw_message.recent_blockhash)
+                .into_vec()
+                .map_err(|e| format!("Error decoding recent blockhash: {e:?}"))?;
+
             // Convert account keys from strings to bytes
             for key_str in raw_message.account_keys {
                 let key_bytes = bs58::decode(key_str)
@@ -384,9 +400,9 @@ fn convert_to_transaction_update(
         transaction: Some(Transaction {
             signatures,
             message: Some(Message {
-                header: None,
+                header: message_header,
                 account_keys,
-                recent_blockhash: Vec::new(), // Would need to be extracted from raw_message if needed
+                recent_blockhash,
                 instructions,
                 versioned: false,
                 address_table_lookups: vec![],
