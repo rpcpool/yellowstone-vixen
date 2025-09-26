@@ -47,6 +47,9 @@ jobs:
           toolchain: nightly
           components: rustfmt, clippy
 
+      - name: Install Rust Stable Components
+        run: rustup component add clippy --toolchain stable-x86_64-unknown-linux-gnu
+
       - name: Check Rust Toolchain Version
         run: |
           rustc +nightly --version
