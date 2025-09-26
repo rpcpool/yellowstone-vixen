@@ -3,6 +3,14 @@ members = ["crates/*", "examples/*"]
 exclude = []
 resolver = "2"
 
+[workspace.package]
+authors = ["Triton One", "ABK-Labs"]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/rpcpool/yellowstone-vixen"
+publish = false
+
+
 [workspace.dependencies]
 async-trait = "^0.1"
 borsh = "^1.0.0"

@@ -3,8 +3,9 @@ name = "yellowstone-vixen-parser"
 description = "Vixen program parsers for the solana program library."
 version = "0.5.0"
 edition = "2021"
-license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -2,11 +2,11 @@
 name = "yellowstone-vixen-mock"
 description = "Mock implementation of the Vixen Parsers for testing."
 version = "0.5.0"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
 edition = "2021"
-license = "MIT"
 readme = "./README.md"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 
 [dependencies]
 yellowstone-grpc-proto = { workspace = true }

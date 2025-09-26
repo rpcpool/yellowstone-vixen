@@ -5,9 +5,9 @@ name = "yellowstone-vixen-raydium-amm-v4-parser"
 version = "0.5.0"
 edition = "2021"
 description = "Vixen program parser for Raydium AMM v4 program"
-license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
-
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 
 [dependencies]
 prost.workspace = true

@@ -3,8 +3,9 @@ name = "yellowstone-vixen-solana-rpc-source"
 version = "0.3.0"
 edition = "2024"
 description = "Solana RPC source for the Yellowstone Vixen"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
-license = "MIT"
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
 readme = "./../../README.md"
 
 [dependencies]

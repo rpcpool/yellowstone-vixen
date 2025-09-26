@@ -2,11 +2,12 @@
 name = "yellowstone-vixen"
 description = "An all-in-one consumer runtime library for Yellowstone"
 version = "0.5.0"
-# authors = ["TODO"]
 edition = "2021"
-license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 readme = "./../../README.md"
+
 
 [dependencies]
 async-trait = { workspace = true }

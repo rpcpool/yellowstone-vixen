@@ -1,12 +1,11 @@
-
-
 [package]
 name = "yellowstone-vixen-pump-swaps-parser"
 version = "0.5.0"
 edition = "2021"
 description = "Vixen program parser for Pump Swaps program"
-license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 
 
 [dependencies]

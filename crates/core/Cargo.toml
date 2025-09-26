@@ -1,11 +1,11 @@
 [package]
 name = "yellowstone-vixen-core"
 description = "Core types for Vixen"
-# authors = ["TODO"]
 version = "0.5.0"
 edition = "2021"
-license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 readme = "./../../README.md"
 
 [dependencies]

@@ -3,8 +3,9 @@ name = "yellowstone-vixen-stake-pool-parser"
 version = "0.2.0"
 edition = "2021"
 description = "Vixen program parser for SPL Stake Pool"
-license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 
 [dependencies]
 spl-pod = { version = "0.3.0" }
