@@ -198,7 +198,7 @@ impl Buffer {
             pipelines,
             std::convert::identity,
             |exec, mut stop_rx| {
-                let handle = tokio::task::spawn(async move {
+                tokio::task::spawn(async move {
                     enum Event {
                         Update(Option<Result<SubscribeUpdate, Status>>),
                         Stop(StopCode),
@@ -230,8 +230,7 @@ impl Buffer {
 
                         Self::dispatch(&exec, update);
                     }
-                });
-                handle
+                })
             },
         )
     }
