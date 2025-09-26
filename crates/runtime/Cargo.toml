@@ -10,7 +10,7 @@ readme = "./../../README.md"
 
 [dependencies]
 async-trait = { workspace = true }
-clap = { workspace = true, default-features = false, features = [
+clap = { workspace = true, features = [
   "env",
   "derive",
   "std",

@@ -40,4 +40,5 @@ tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]
 shared-data = []
 
 [build-dependencies]
-prost-build = "0.13.1"
+prost-build.workspace = true
+protobuf-src.workspace = true

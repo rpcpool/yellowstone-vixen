@@ -14,14 +14,16 @@ tonic = { workspace = true, optional = true, features = ["gzip", "zstd"] }
 tonic-reflection = { workspace = true, optional = true }
 
 [build-dependencies]
+protobuf-src = { workspace = true, optional = true }
 prost-build = { workspace = true, optional = true }
 tonic-build = { workspace = true, optional = true }
 
 [features]
-parser = ["dep:prost-build"]
+parser = ["dep:prost-build", "dep:protobuf-src"]
 stream = [
   "dep:prost-types",
   "dep:tonic",
   "dep:tonic-build",
   "dep:tonic-reflection",
+  "dep:protobuf-src",
 ]

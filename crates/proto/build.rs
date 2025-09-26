@@ -5,6 +5,7 @@ fn main() {
 
     #[cfg(feature = "parser")]
     {
+        std::env::set_var("PROTOC", protobuf_src::protoc());
         // token
         prost_build::Config::new()
             .enable_type_names()
@@ -24,6 +25,7 @@ fn main() {
 
     #[cfg(feature = "stream")]
     {
+        std::env::set_var("PROTOC", protobuf_src::protoc());
         tonic_build::configure()
             .file_descriptor_set_path(out_dir.join("stream_descriptor.bin"))
             .compile_protos(&["proto/stream.proto"], &["proto"])

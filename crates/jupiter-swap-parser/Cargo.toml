@@ -41,3 +41,4 @@ shared-data = []
 
 [build-dependencies]
 prost-build.workspace = true
+protobuf-src.workspace = true
