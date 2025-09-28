@@ -1,22 +1,23 @@
 [package]
 name = "yellowstone-vixen-solana-rpc-source"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 description = "Solana RPC source for the Yellowstone Vixen"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
-license = "MIT"
+repository.workspace = true
+license.workspace = true
+authors.workspace = true
 readme = "./../../README.md"
 
 [dependencies]
-async-trait = "0.1.88"
-tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
-tracing = "0.1.40"
-solana-client = "2.2"
-solana-commitment-config = "2.2"
-solana-pubkey = { version = "2.2", features = ["serde", "borsh", "curve25519"] }
-solana-account-decoder-client-types = "2.2"
-serde = { version = "1.0.198", features = ["derive"] }
-clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+async-trait = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
+tracing = { workspace = true }
+solana-client = { workspace = true }
+solana-commitment-config = { workspace = true }
+solana-pubkey = { workspace = true, features = ["serde", "borsh", "curve25519"] }
+solana-account-decoder-client-types = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }

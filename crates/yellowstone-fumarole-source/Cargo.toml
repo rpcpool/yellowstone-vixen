@@ -1,29 +1,30 @@
 [package]
 name = "yellowstone-vixen-yellowstone-fumarole-source"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 description = "Yellowstone Fumarole source for the Yellowstone Vixen"
-license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
+repository.workspace = true
+authors.workspace = true
+license.workspace = true
+
 readme = "./../../README.md"
 
 [dependencies]
-async-trait = "0.1.88"
-tokio = { version = "1.37.0", features = ["rt-multi-thread", "signal"] }
-tracing = "0.1.40"
-futures-util = { version = "0.3.30", features = ["sink"] }
+async-trait = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
+tracing = { workspace = true }
+futures-util = { workspace = true, features = ["sink"] }
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
-yellowstone-fumarole-client = { version = "0.2.0-rc8", features = [
+yellowstone-fumarole-client = { workspace = true, features = [
   "prometheus",
 ] }
-bytesize = "2"
-serde = { version = "1.0.198", features = ["derive"] }
-tonic = { version = "0.14.0", features = ["gzip", "zstd"] }
-clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
-
-prometheus = { version = "0.14.0" }
+bytesize = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+tonic = { workspace = true, features = ["gzip", "zstd"] }
+clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
+prometheus = { workspace = true }
 
 [features]
 prometheus = []

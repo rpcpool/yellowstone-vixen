@@ -1,20 +1,20 @@
 [package]
 name = "yellowstone-vixen-core"
 description = "Core types for Vixen"
-# authors = ["TODO"]
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
-license = "MIT"
-repository = "https://github.com/rpcpool/yellowstone-vixen"
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
 readme = "./../../README.md"
 
 [dependencies]
-bs58 = "0.5.1"
-thiserror = "1.0.64"
+bs58.workspace = true
+thiserror.workspace = true
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, optional = true }
-serde = { version = "1.0.198", features = ["derive"] }
-clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+serde = { workspace = true, features = ["derive"] }
+clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
 
 [features]
 proto = ["dep:yellowstone-vixen-proto"]
