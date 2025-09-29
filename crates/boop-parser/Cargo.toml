@@ -15,12 +15,12 @@ tonic = { workspace = true, features = ["gzip", "zstd"] }
 solana-account-info.workspace = true
 solana-cpi.workspace = true
 solana-decode-error.workspace = true
-solana-pubkey.workspace = true
+solana-pubkey = { workspace = true, features = ["serde", "borsh"] }
 solana-instruction.workspace = true
 solana-msg.workspace = true
 solana-program-entrypoint.workspace = true
 solana-program-error.workspace = true
-borsh.workspace = true
+borsh = { workspace = true, features = ["derive"] }
 num-derive.workspace = true
 thiserror.workspace = true
 num-traits.workspace = true
