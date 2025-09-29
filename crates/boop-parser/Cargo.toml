@@ -15,7 +15,7 @@ tonic = { workspace = true, features = ["gzip", "zstd"] }
 solana-account-info.workspace = true
 solana-cpi.workspace = true
 solana-decode-error.workspace = true
-solana-pubkey = { workspace = true, features = ["serde", "borsh"] }
+solana-pubkey = { workspace = true, features = ["curve25519", "borsh"] }
 solana-instruction = { workspace = true, features = ["serde", "borsh"] }
 solana-msg.workspace = true
 solana-program-entrypoint.workspace = true
