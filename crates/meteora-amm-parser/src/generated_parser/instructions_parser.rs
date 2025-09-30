@@ -162,6 +162,8 @@ impl InstructionParser {
 
         #[cfg(feature = "shared-data")]
         let shared_data = Arc::clone(&ix.shared);
+        #[cfg(feature = "shared-data")]
+        let ix_index = ix.ix_index;
         if ix.data.len() < 8 {
             return Err(yellowstone_vixen_core::ParseError::from(
                 "Instruction data too short".to_owned(),
@@ -745,6 +747,7 @@ impl InstructionParser {
         ix.map(|ix| InstructionUpdateOutput {
             parsed_ix: ix,
             shared_data,
+            ix_index,
         })
     }
 }

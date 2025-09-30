@@ -87,6 +87,8 @@ pub struct InstructionUpdateOutput<T> {
     pub parsed_ix: T,
     /// Shared data for all instructions in the given transaction.
     pub shared_data: Arc<instruction::InstructionShared>,
+    /// The unique index of this instruction within the transaction.
+    pub ix_index: u16,
 }
 
 /// A core trait that defines the parse logic for producing a parsed value from
