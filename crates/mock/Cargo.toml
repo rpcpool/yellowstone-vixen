@@ -2,7 +2,7 @@
 name = "yellowstone-vixen-mock"
 description = "Mock implementation of the Vixen Parsers for testing."
 version = "0.5.1"
-edition = "2021"
+edition.workspace = true
 readme = "./README.md"
 license.workspace = true
 repository.workspace = true

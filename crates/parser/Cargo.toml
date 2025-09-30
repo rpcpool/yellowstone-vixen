@@ -2,7 +2,7 @@
 name = "yellowstone-vixen-parser"
 description = "Vixen program parsers for the solana program library."
 version = "0.5.1"
-edition = "2021"
+edition.workspace = true
 license.workspace = true
 repository.workspace = true
 authors.workspace = true

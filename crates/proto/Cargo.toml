@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-proto"
-edition = "2021"
+edition.workspace = true
 description = "Protobuf definitions for Vixen"
 version = "0.5.1"
 license.workspace = true
