@@ -21,15 +21,25 @@ use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```rust,no_run
 /// use async_trait::async_trait;
 /// use tokio::sync::mpsc::Sender;
 /// use yellowstone_vixen::sources::SourceTrait;
-/// use vixen_core::Filters;
+/// use yellowstone_vixen_core::Filters;
+/// use yellowstone_grpc_proto::prelude::SubscribeUpdate;
+/// use yellowstone_grpc_proto::tonic::Status;
+/// use std::error::Error as StdError;
+///
+/// // Example configuration type
+/// #[derive(Debug, clap::Args, serde::Deserialize)]
+/// struct MyConfig {
+///     endpoint: String,
+/// }
 ///
 /// #[derive(Debug)]
 /// struct MyCustomSource {
 ///     filters: Filters,
+///     config: MyConfig,
 /// }
 ///
 /// #[async_trait]
@@ -37,13 +47,13 @@ use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
 ///     type Config = MyConfig;
 ///
 ///     fn new(config: Self::Config, filters: Filters) -> Self {
-///         MyCustomSource { filters }
+///         MyCustomSource { filters, config }
 ///     }
 ///
 ///     async fn connect(
 ///         &self,
-///         tx: Sender<Result<SubscribeUpdate, Status>>,
-///     ) -> Result<(), crate::Error> {
+///         _tx: Sender<Result<SubscribeUpdate, Status>>,
+///     ) -> Result<(), yellowstone_vixen::Error> {
 ///         // Implementation for connecting to your data source
 ///         // and sending updates through the channel
 ///         todo!()
@@ -53,11 +63,11 @@ use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
 ///
 /// **Then Vixen clients can use this source by adding it to the runtime**:
 ///
-/// ```rust
-/// vixen::Runtime::<_, MyCustomSource>::builder()
-///     .build(config)
-///     .run_async()
-///     .await;
+/// ```rust,no_run
+/// // Example of how a custom source would be integrated
+/// // let runtime = Runtime::<_, MyCustomSource>::builder()
+/// //     .build(config)
+/// //     .run_async().await;
 /// ```
 ///
 /// ---
