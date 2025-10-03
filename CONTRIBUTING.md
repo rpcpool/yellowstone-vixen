@@ -52,10 +52,10 @@ To contribute to this project, you'll need to have Rust installed on your machin
 
 3. **Format Your Code**
 
-   Ensure that your code is properly formatted. We use `rustfmt` for formatting.
+   Ensure that your code is properly formatted. We use `rustfmt` with nightly toolchain for formatting.
 
    ```sh
-   cargo fmt
+   cargo +nightly fmt --all
    ```
 
 4. **Run Clippy**
@@ -63,7 +63,7 @@ To contribute to this project, you'll need to have Rust installed on your machin
    Run Clippy to catch common mistakes and ensure code quality.
 
    ```sh
-   cargo clippy
+   cargo clippy --all-targets --tests -- -Dwarnings
    ```
 
 ## Running Tests
