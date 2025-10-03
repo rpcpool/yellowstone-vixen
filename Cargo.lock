@@ -9154,6 +9154,7 @@ version = "0.5.0"
 dependencies = [
  "bs58",
  "clap",
+ "once_cell",
  "regex",
  "serde",
  "thiserror 1.0.69",

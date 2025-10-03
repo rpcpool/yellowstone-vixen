@@ -10,6 +10,7 @@ readme = "./../../README.md"
 
 [dependencies]
 bs58 = "0.5.1"
+once_cell = "1.19"
 regex = "1.0"
 thiserror = "1.0.64"
 yellowstone-grpc-proto = { workspace = true }
