@@ -1,7 +1,7 @@
 [package]
 name = "yellowstone-vixen-stake-pool-parser"
 version = "0.2.1"
-edition = "2021"
+edition.workspace = true
 description = "Vixen program parser for SPL Stake Pool"
 license.workspace = true
 repository.workspace = true

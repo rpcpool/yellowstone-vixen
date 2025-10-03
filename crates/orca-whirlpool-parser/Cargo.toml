@@ -1,7 +1,7 @@
 [package]
 name = "yellowstone-vixen-orca-whirlpool-parser"
 version = "0.5.1"
-edition = "2021"
+edition.workspace = true
 description = "Vixen program parser for Orca Whirlpool program"
 license.workspace = true
 repository.workspace = true

@@ -1,7 +1,7 @@
 [package]
 name = "yellowstone-vixen-jupiter-swap-parser"
 version = "0.5.1"
-edition = "2021"
+edition.workspace = true
 description = "Vixen program parser for Jupiter Swap program"
 license.workspace = true
 repository.workspace = true
