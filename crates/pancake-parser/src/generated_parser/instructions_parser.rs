@@ -118,7 +118,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<AmmV3ProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "AmmV3::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "PancakeAmmV3::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
