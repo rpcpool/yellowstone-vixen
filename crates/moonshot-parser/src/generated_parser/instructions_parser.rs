@@ -149,7 +149,12 @@ impl InstructionParser {
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
-                let trade_event = TradeEvent::from_logs(&ix.parsed_logs);
+                let trade_event = TradeEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(TokenLaunchpadProgramIx::Buy(
                     ix_accounts,
                     de_ix_data,
@@ -178,7 +183,12 @@ impl InstructionParser {
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
-                let trade_event = TradeEvent::from_logs(&ix.parsed_logs);
+                let trade_event = TradeEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(TokenLaunchpadProgramIx::Sell(
                     ix_accounts,
                     de_ix_data,

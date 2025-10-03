@@ -215,7 +215,12 @@ impl InstructionParser {
                 };
                 let de_ix_data: CommissionSolProxySwapIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                let aggregation_event = AggregationEvent::from_logs(&ix.parsed_logs);
+                let aggregation_event = AggregationEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(DexSolanaProgramIx::CommissionSolProxySwap(
                     ix_accounts,
                     de_ix_data,
@@ -236,7 +241,12 @@ impl InstructionParser {
                 };
                 let de_ix_data: CommissionSolSwapIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                let aggregation_event = AggregationEvent::from_logs(&ix.parsed_logs);
+                let aggregation_event = AggregationEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(DexSolanaProgramIx::CommissionSolSwap(
                     ix_accounts,
                     de_ix_data,
@@ -263,7 +273,12 @@ impl InstructionParser {
                 };
                 let de_ix_data: CommissionSplProxySwapIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                let aggregation_event = AggregationEvent::from_logs(&ix.parsed_logs);
+                let aggregation_event = AggregationEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(DexSolanaProgramIx::CommissionSplProxySwap(
                     ix_accounts,
                     de_ix_data,
@@ -284,7 +299,12 @@ impl InstructionParser {
                 };
                 let de_ix_data: CommissionSplSwapIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                let aggregation_event = AggregationEvent::from_logs(&ix.parsed_logs);
+                let aggregation_event = AggregationEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(DexSolanaProgramIx::CommissionSplSwap(
                     ix_accounts,
                     de_ix_data,
@@ -367,7 +387,12 @@ impl InstructionParser {
                 };
                 let de_ix_data: PlatformFeeSolProxySwapV2IxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                let aggregation_event = AggregationEvent::from_logs(&ix.parsed_logs);
+                let aggregation_event = AggregationEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(DexSolanaProgramIx::PlatformFeeSolProxySwapV2(
                     ix_accounts,
                     de_ix_data,
@@ -439,7 +464,12 @@ impl InstructionParser {
                     system_program: next_program_id_optional_account(accounts)?,
                 };
                 let de_ix_data: ProxySwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                let aggregation_event = AggregationEvent::from_logs(&ix.parsed_logs);
+                let aggregation_event = AggregationEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(DexSolanaProgramIx::ProxySwap(
                     ix_accounts,
                     de_ix_data,
@@ -479,7 +509,12 @@ impl InstructionParser {
                     system_program: next_program_id_optional_account(accounts)?,
                 };
                 let de_ix_data: SwapTobV3IxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                let aggregation_event = AggregationEvent::from_logs(&ix.parsed_logs);
+                let aggregation_event = AggregationEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(DexSolanaProgramIx::SwapTobV3(
                     ix_accounts,
                     de_ix_data,
@@ -508,7 +543,12 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapTobV3WithReceiverIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                let aggregation_event = AggregationEvent::from_logs(&ix.parsed_logs);
+                let aggregation_event = AggregationEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(DexSolanaProgramIx::SwapTobV3WithReceiver(
                     ix_accounts,
                     de_ix_data,
@@ -535,7 +575,12 @@ impl InstructionParser {
                     system_program: next_program_id_optional_account(accounts)?,
                 };
                 let de_ix_data: SwapV3IxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                let aggregation_event = AggregationEvent::from_logs(&ix.parsed_logs);
+                let aggregation_event = AggregationEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(DexSolanaProgramIx::SwapV3(
                     ix_accounts,
                     de_ix_data,

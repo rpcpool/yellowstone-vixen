@@ -549,7 +549,12 @@ impl InstructionParser {
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
-                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
+                let swap_event = SwapEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(AmmV3ProgramIx::Swap(ix_accounts, de_ix_data, swap_event))
             },
             [69, 125, 115, 218, 245, 186, 242, 196] => {
@@ -590,7 +595,12 @@ impl InstructionParser {
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
-                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
+                let swap_event = SwapEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(AmmV3ProgramIx::SwapV2(ix_accounts, de_ix_data, swap_event))
             },
             [150, 112, 54, 233, 238, 161, 7, 86] => {

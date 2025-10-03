@@ -34,13 +34,13 @@ impl TradedEvent {
     }
 
     /// Parse TradedEvent from a collection of log messages
-    pub fn from_logs(logs: &[String]) -> Option<Self> {
-        logs.iter().find_map(|log| Self::from_log(log))
+    pub fn from_logs(logs: &[&str]) -> Option<Self> {
+        logs.iter().find_map(|&log| Self::from_log(log))
     }
 
     /// Parse all TradedEvents from a collection of log messages
-    pub fn from_logs_all(logs: &[String]) -> Vec<Self> {
-        logs.iter().filter_map(|log| Self::from_log(log)).collect()
+    pub fn from_logs_all(logs: &[&str]) -> Vec<Self> {
+        logs.iter().filter_map(|&log| Self::from_log(log)).collect()
     }
 }
 
@@ -80,13 +80,14 @@ mod tests {
 
     #[test]
     fn test_traded_event_from_logs_collection() {
-        let logs = vec![
+        let logs = [
             "Some other log message".to_string(),
             "Program data: 4cpJr5MroJZgaxfHU++0SJQANeRjkQUgy3JCDwtF3V/SIIs0EW1f1AAL2KOWkOIaBAAAAAAAAAAAvaC4NMeUGwQAAAAAAAAAAKYWAAAAAAAAhsZWAQAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAACAAAAAAAAAA==".to_string(),
             "Another log message".to_string(),
         ];
 
-        let traded_event = TradedEvent::from_logs(&logs);
+        let traded_event =
+            TradedEvent::from_logs(&logs.iter().map(|s| s.as_str()).collect::<Vec<_>>());
 
         assert!(
             traded_event.is_some(),
@@ -117,7 +118,7 @@ mod tests {
 
     #[test]
     fn test_traded_event_from_logs_all() {
-        let logs = vec![
+        let logs = [
             "Some other log message".to_string(),
             "Program data: 4cpJr5MroJbM9foK0cOUJBZ7j5fJjWhQn9t+TirtBg+CxHGz6hWcGABmSF6SQb7MbwEAAAAAAAAAnYV8hHoJAHEBAAAAAAAAAA+i5QEAAAAA9CDqAAAAAAAAAAAAAAAAAAAAAAAAAAAAEK0AAAAAAADbGQAAAAAAAA==".to_string(),
             "Another log message".to_string(),
@@ -128,7 +129,8 @@ mod tests {
             "Final log message".to_string(),
         ];
 
-        let traded_events = TradedEvent::from_logs_all(&logs);
+        let traded_events =
+            TradedEvent::from_logs_all(&logs.iter().map(|s| s.as_str()).collect::<Vec<_>>());
 
         assert_eq!(traded_events.len(), 4, "Should find 4 TradedEvents in logs");
 

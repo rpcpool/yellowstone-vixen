@@ -1,6 +1,9 @@
 //! Helpers for parsing transaction updates into instructions.
 
-use std::{collections::VecDeque, sync::Arc};
+use std::{
+    collections::VecDeque,
+    sync::{Arc, LazyLock},
+};
 
 use regex::Regex;
 use yellowstone_grpc_proto::{
@@ -13,6 +16,47 @@ use yellowstone_grpc_proto::{
 };
 
 use crate::{Pubkey, TransactionUpdate};
+
+// Static regex patterns for log parsing
+static INVOKE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) invoke \[(\d+)\]").unwrap()
+});
+
+static SUCCESS_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) success").unwrap());
+
+static FAILED_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) failed:").unwrap());
+
+static CONSUMED_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) consumed \d+ of \d+ compute units").unwrap()
+});
+
+/// Pre-parsed log message representation
+#[derive(Debug, Clone)]
+enum ParsedLog {
+    Invoke {
+        program_id: Pubkey,
+        depth: usize,
+        original_idx: usize,
+    },
+    Success {
+        program_id: Pubkey,
+        original_idx: usize,
+    },
+    Failed {
+        program_id: Pubkey,
+        original_idx: usize,
+    },
+    Consumed {
+        #[allow(dead_code)]
+        program_id: Pubkey,
+        original_idx: usize,
+    },
+    Other {
+        original_idx: usize,
+    },
+}
 
 /// Errors that can occur when parsing a transaction update into instructions.
 #[derive(Debug, Clone, Copy, thiserror::Error)]
@@ -115,8 +159,8 @@ pub struct InstructionUpdate {
     pub ix_index: u16,
     /// The program pubkey of the parent instruction (None for top-level instructions)
     pub parent_program: Option<Pubkey>,
-    /// Program logs generated during execution of this instruction.
-    pub parsed_logs: Vec<String>,
+    /// Indices into `shared.log_messages` for logs generated during execution of this instruction.
+    pub parsed_logs: Vec<usize>,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -257,7 +301,7 @@ impl InstructionUpdate {
         Self::parse_inner(&shared, inner_instructions, &mut outer, &mut next_idx)?;
 
         // Assign logs to instructions based on invoke/success patterns
-        Self::assign_logs_to_instructions(&mut outer, &shared.log_messages)?;
+        Self::assign_logs_to_instructions(&mut outer, &shared.log_messages);
 
         Ok(outer)
     }
@@ -318,136 +362,158 @@ impl InstructionUpdate {
         Ok(())
     }
 
-    fn assign_logs_to_instructions(
-        outer: &mut [Self],
-        log_messages: &[String],
-    ) -> Result<(), ParseError> {
-        let invoke_regex =
-            Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) invoke \[(\d+)\]").unwrap();
-        let success_regex = Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) success").unwrap();
-        let failed_regex = Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) failed:").unwrap();
-        let consumed_regex =
-            Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) consumed \d+ of \d+ compute units")
-                .unwrap();
+    fn assign_logs_to_instructions(outer: &mut [Self], log_messages: &[String]) {
+        // Pre-parse all logs into structured representation
+        let parsed_logs = Self::pre_parse_logs(log_messages);
 
-        // create list of instruction paths in depth-first order for existing instructions data structure
-        let mut instruction_paths = Vec::new();
-        Self::collect_instruction_paths(&mut instruction_paths, outer, &[]);
+        // Two-pointer algorithm: traverse instruction tree and logs simultaneously
+        let mut log_idx = 0;
+        Self::assign_logs_recursive(outer, &parsed_logs, &mut log_idx, 1);
+    }
 
-        // maintain current execution stack (store paths)
-        let mut execution_stack: Vec<Vec<usize>> = Vec::new();
-        let mut path_iter = instruction_paths.iter();
+    /// Pre-parse log messages into structured representation
+    fn pre_parse_logs(log_messages: &[String]) -> Vec<ParsedLog> {
+        log_messages
+            .iter()
+            .enumerate()
+            .map(|(idx, log)| {
+                if let Some(captures) = INVOKE_REGEX.captures(log) {
+                    let program_id_str = captures.get(1).unwrap().as_str();
+                    let depth: usize = captures.get(2).unwrap().as_str().parse().unwrap();
 
-        for log in log_messages {
-            // NOTE: invoke 給要開始的 program, 其餘的給 stack top
-            if let Some(captures) = invoke_regex.captures(log) {
-                let program_id = captures.get(1).unwrap().as_str();
-                let depth: usize = captures.get(2).unwrap().as_str().parse().unwrap();
+                    // Parse program_id to Pubkey (avoid repeated to_string() later)
+                    if let Ok(program_id) = program_id_str.parse::<Pubkey>() {
+                        return ParsedLog::Invoke {
+                            program_id,
+                            depth,
+                            original_idx: idx,
+                        };
+                    }
+                } else if let Some(captures) = SUCCESS_REGEX.captures(log) {
+                    let program_id_str = captures.get(1).unwrap().as_str();
+                    if let Ok(program_id) = program_id_str.parse::<Pubkey>() {
+                        return ParsedLog::Success {
+                            program_id,
+                            original_idx: idx,
+                        };
+                    }
+                } else if let Some(captures) = FAILED_REGEX.captures(log) {
+                    let program_id_str = captures.get(1).unwrap().as_str();
+                    if let Ok(program_id) = program_id_str.parse::<Pubkey>() {
+                        return ParsedLog::Failed {
+                            program_id,
+                            original_idx: idx,
+                        };
+                    }
+                } else if let Some(captures) = CONSUMED_REGEX.captures(log) {
+                    let program_id_str = captures.get(1).unwrap().as_str();
+                    if let Ok(program_id) = program_id_str.parse::<Pubkey>() {
+                        return ParsedLog::Consumed {
+                            program_id,
+                            original_idx: idx,
+                        };
+                    }
+                }
 
-                execution_stack.truncate(depth - 1);
+                ParsedLog::Other { original_idx: idx }
+            })
+            .collect()
+    }
 
-                // find next matching instruction
-                // NOTE: 這假設指令樹順序跟 Log 樹順序一致
-                for path in path_iter.by_ref() {
-                    let instruction = Self::get_instruction_at_path_mut(outer, path)?;
-                    if instruction.program.to_string() == program_id {
-                        instruction.parsed_logs.push(log.clone());
-                        execution_stack.push(path.clone());
+    /// Recursively assign logs to instructions using two-pointer algorithm
+    fn assign_logs_recursive(
+        instructions: &mut [Self],
+        parsed_logs: &[ParsedLog],
+        log_idx: &mut usize,
+        current_depth: usize,
+    ) {
+        for instruction in instructions {
+            // Find this instruction's invoke log at current_depth
+            let mut found_invoke = false;
+            while *log_idx < parsed_logs.len() {
+                if let ParsedLog::Invoke {
+                    program_id,
+                    depth,
+                    original_idx,
+                } = &parsed_logs[*log_idx]
+                {
+                    if *depth == current_depth && *program_id == instruction.program {
+                        instruction.parsed_logs.push(*original_idx);
+                        *log_idx += 1;
+                        found_invoke = true;
                         break;
                     }
                 }
-            } else if success_regex.is_match(log) {
-                if let Some(current_path) = execution_stack.last() {
-                    let current = Self::get_instruction_at_path_mut(outer, current_path)?;
-                    current.parsed_logs.push(log.clone());
-                    execution_stack.pop();
-                }
-            } else if failed_regex.is_match(log) {
-                // Handle failed instructions - same as success but indicates failure
-                if let Some(current_path) = execution_stack.last() {
-                    let current = Self::get_instruction_at_path_mut(outer, current_path)?;
-                    current.parsed_logs.push(log.clone());
-                    execution_stack.pop();
-                }
-            } else if let Some(captures) = consumed_regex.captures(log) {
-                let program_id = captures.get(1).unwrap().as_str();
+                *log_idx += 1;
+            }
 
-                // find matching program in execution stack
-                if let Some(matching_path) = execution_stack.iter().rev().find(|path| {
-                    Self::get_instruction_at_path(outer, path)
-                        .is_some_and(|instr| instr.program.to_string() == program_id)
-                }) {
-                    let instruction = Self::get_instruction_at_path_mut(outer, matching_path)?;
-                    instruction.parsed_logs.push(log.clone());
+            if !found_invoke {
+                // Log mismatch - skip this instruction
+                continue;
+            }
+
+            // Consume logs until we return to current_depth
+            loop {
+                if *log_idx >= parsed_logs.len() {
+                    break;
                 }
-            } else if let Some(current_path) = execution_stack.last() {
-                // other logs assigned to current instruction
-                let current = Self::get_instruction_at_path_mut(outer, current_path)?;
-                current.parsed_logs.push(log.clone());
+
+                match &parsed_logs[*log_idx] {
+                    // Child invoke at deeper depth → recurse
+                    ParsedLog::Invoke { depth, .. } if *depth == current_depth + 1 => {
+                        if instruction.inner.is_empty() {
+                            // No inner instructions but found deeper invoke - skip
+                            *log_idx += 1;
+                        } else {
+                            Self::assign_logs_recursive(
+                                &mut instruction.inner,
+                                parsed_logs,
+                                log_idx,
+                                current_depth + 1,
+                            );
+                        }
+                    },
+
+                    // Success/failed at current depth for this program → done with this instruction
+                    ParsedLog::Success {
+                        program_id,
+                        original_idx,
+                    }
+                    | ParsedLog::Failed {
+                        program_id,
+                        original_idx,
+                    } if *program_id == instruction.program => {
+                        instruction.parsed_logs.push(*original_idx);
+                        *log_idx += 1;
+                        break;
+                    },
+
+                    // Other logs or consumed → assign to current instruction
+                    ParsedLog::Other { original_idx }
+                    | ParsedLog::Consumed { original_idx, .. } => {
+                        instruction.parsed_logs.push(*original_idx);
+                        *log_idx += 1;
+                    },
+
+                    // Invoke at same or shallower depth → we're done with this instruction
+                    ParsedLog::Invoke { depth, .. } if *depth <= current_depth => {
+                        break;
+                    },
+
+                    // Success/failed for different program → assign and continue
+                    _ => {
+                        if let Some(idx) = match &parsed_logs[*log_idx] {
+                            ParsedLog::Success { original_idx, .. }
+                            | ParsedLog::Failed { original_idx, .. } => Some(*original_idx),
+                            _ => None,
+                        } {
+                            instruction.parsed_logs.push(idx);
+                        }
+                        *log_idx += 1;
+                    },
+                }
             }
         }
-
-        Ok(())
-    }
-
-    // auxiliary function: collect instruction paths in depth-first order
-    fn collect_instruction_paths(
-        paths: &mut Vec<Vec<usize>>,
-        instructions: &[Self],
-        current_path: &[usize],
-    ) {
-        for (i, instruction) in instructions.iter().enumerate() {
-            let mut path = current_path.to_owned();
-            path.push(i);
-            paths.push(path.clone());
-
-            // recursively process inner instructions
-            Self::collect_instruction_paths(paths, &instruction.inner, &path);
-        }
-    }
-
-    // auxiliary function: get mutable reference to instruction at path
-    fn get_instruction_at_path_mut<'a>(
-        outer: &'a mut [Self],
-        path: &[usize],
-    ) -> Result<&'a mut Self, ParseError> {
-        if path.is_empty() {
-            return Err(ParseError::InvalidInnerInstructionIndex(0));
-        }
-
-        let mut current =
-            outer
-                .get_mut(path[0])
-                .ok_or(ParseError::InvalidInnerInstructionIndex(
-                    u32::try_from(path[0]).unwrap_or(u32::MAX),
-                ))?;
-
-        for &index in &path[1..] {
-            current =
-                current
-                    .inner
-                    .get_mut(index)
-                    .ok_or(ParseError::InvalidInnerInstructionIndex(
-                        u32::try_from(index).unwrap_or(u32::MAX),
-                    ))?;
-        }
-
-        Ok(current)
-    }
-
-    // auxiliary function: get immutable reference to instruction at path
-    fn get_instruction_at_path<'a>(outer: &'a [Self], path: &[usize]) -> Option<&'a Self> {
-        if path.is_empty() {
-            return None;
-        }
-
-        let mut current = outer.get(path[0])?;
-
-        for &index in &path[1..] {
-            current = current.inner.get(index)?;
-        }
-
-        Some(current)
     }
 
     #[inline]
@@ -558,6 +624,7 @@ impl<'a> Iterator for VisitAll<'a> {
 mod tests {
 
     #[tokio::test]
+    #[allow(clippy::too_many_lines)]
     async fn test_instruction_logs_assignment() {
         use yellowstone_vixen_mock::{
             create_mock_transaction_update, parse_instructions_from_txn_update,
@@ -590,8 +657,10 @@ mod tests {
 
             // Print all parsed logs for this instruction
             println!("Parsed logs:");
-            for (j, parsed_log) in ix.parsed_logs.iter().enumerate() {
-                println!("  Parsed log {j}: {parsed_log}");
+            for (j, log_idx) in ix.parsed_logs.iter().enumerate() {
+                if let Some(log) = ix.shared.log_messages.get(*log_idx) {
+                    println!("  Parsed log {j} (idx={log_idx}): {log}");
+                }
             }
 
             // Test inner instructions
@@ -605,8 +674,10 @@ mod tests {
 
                 // Print all parsed logs for inner instructions
                 println!("  Inner parsed logs:");
-                for (j, log) in inner_ix.parsed_logs.iter().enumerate() {
-                    println!("    Inner parsed log {j}: {log}");
+                for (j, log_idx) in inner_ix.parsed_logs.iter().enumerate() {
+                    if let Some(log) = inner_ix.shared.log_messages.get(*log_idx) {
+                        println!("    Inner parsed log {j} (idx={log_idx}): {log}");
+                    }
                 }
             }
         }
@@ -629,12 +700,115 @@ mod tests {
             "At least some instructions should have logs assigned"
         );
 
+        // Verify log indices are valid and in ascending order
+        for (i, ix) in instruction_updates.iter().enumerate() {
+            for (j, &log_idx) in ix.parsed_logs.iter().enumerate() {
+                assert!(
+                    log_idx < ix.shared.log_messages.len(),
+                    "Instruction {i}: log index {log_idx} at position {j} is out of bounds (total \
+                     logs: {})",
+                    ix.shared.log_messages.len()
+                );
+
+                // Verify logs are in ascending order (chronological)
+                if j > 0 {
+                    assert!(
+                        log_idx > ix.parsed_logs[j - 1],
+                        "Instruction {i}: logs out of order at position {j}: {} <= {}",
+                        log_idx,
+                        ix.parsed_logs[j - 1]
+                    );
+                }
+            }
+
+            // Recursively check inner instructions
+            for (inner_i, inner_ix) in ix.inner.iter().enumerate() {
+                for (j, &log_idx) in inner_ix.parsed_logs.iter().enumerate() {
+                    assert!(
+                        log_idx < inner_ix.shared.log_messages.len(),
+                        "Instruction {i}.{inner_i}: log index {log_idx} at position {j} is out of \
+                         bounds"
+                    );
+
+                    // Verify logs are in ascending order
+                    if j > 0 {
+                        assert!(
+                            log_idx > inner_ix.parsed_logs[j - 1],
+                            "Instruction {i}.{inner_i}: logs out of order at position {j}"
+                        );
+                    }
+                }
+            }
+        }
+
+        // Verify specific instruction log patterns
+        // Instruction 0: ComputeBudget should have invoke + success
+        assert_eq!(
+            instruction_updates[0].parsed_logs.len(),
+            2,
+            "ComputeBudget instruction should have 2 logs (invoke + success)"
+        );
+        assert!(
+            instruction_updates[0].shared.log_messages[instruction_updates[0].parsed_logs[0]]
+                .contains("invoke [1]"),
+            "First log should be invoke at depth 1"
+        );
+        assert!(
+            instruction_updates[0].shared.log_messages[instruction_updates[0].parsed_logs[1]]
+                .contains("success"),
+            "Last log should be success"
+        );
+
+        // Instruction 2: JUP6 should have inner instructions with logs
+        assert!(
+            !instruction_updates[2].inner.is_empty(),
+            "JUP6 instruction should have inner instructions"
+        );
+        assert!(
+            !instruction_updates[2].inner[0].parsed_logs.is_empty(),
+            "Inner instruction 0 should have logs assigned"
+        );
+
+        // Verify that inner instruction logs are within parent's log range
+        let parent_first_log = instruction_updates[2].parsed_logs[0];
+        let parent_last_log = *instruction_updates[2].parsed_logs.last().unwrap();
+        let inner_first_log = instruction_updates[2].inner[0].parsed_logs[0];
+
+        assert!(
+            inner_first_log > parent_first_log && inner_first_log < parent_last_log,
+            "Inner instruction logs should be within parent's log range: parent \
+             [{parent_first_log}..{parent_last_log}], inner starts at {inner_first_log}"
+        );
+
+        // Verify depth markers in logs
+        for ix in &instruction_updates {
+            if !ix.parsed_logs.is_empty() {
+                let first_log = &ix.shared.log_messages[ix.parsed_logs[0]];
+                assert!(
+                    first_log.contains("invoke [1]"),
+                    "Top-level instruction should start with 'invoke [1]': {first_log}"
+                );
+            }
+
+            for inner_ix in &ix.inner {
+                if !inner_ix.parsed_logs.is_empty() {
+                    let first_log = &inner_ix.shared.log_messages[inner_ix.parsed_logs[0]];
+                    assert!(
+                        first_log.contains("invoke [2]") || first_log.contains("invoke [3]"),
+                        "Inner instruction should start with 'invoke [2]' or deeper: {first_log}"
+                    );
+                }
+            }
+        }
+
         println!("✓ Instruction log assignment test completed successfully");
         println!(
             "✓ {} out of {} instructions have assigned logs",
             instructions_with_logs,
             instruction_updates.len()
         );
+        println!("✓ All log indices are valid and chronologically ordered");
+        println!("✓ Log depth markers match instruction hierarchy");
     }
 
     // Helper function to recursively print instruction hierarchy
@@ -705,6 +879,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(clippy::too_many_lines, clippy::items_after_statements)]
     async fn test_inner_instruction_parent_relationships() {
         use yellowstone_vixen_mock::create_mock_transaction_update;
 
@@ -761,7 +936,155 @@ mod tests {
             "Top-level count should match outer instruction count"
         );
 
+        assert_eq!(
+            total_instructions,
+            top_level_count + inner_instructions_count,
+            "Total instructions should equal top-level + inner instructions"
+        );
+
+        // Verify we have the expected structure from the fixture
+        assert_eq!(
+            instruction_updates.len(),
+            4,
+            "Should have 4 top-level instructions"
+        );
+
+        assert_eq!(
+            total_instructions, 13,
+            "Should have 13 total instructions (4 top-level + 9 inner)"
+        );
+
+        assert_eq!(
+            inner_instructions_count, 9,
+            "Should have 9 inner instructions"
+        );
+
+        // Verify specific instruction has inner instructions
+        let jup_instruction = &instruction_updates[2]; // JUP6 instruction
+        assert!(
+            !jup_instruction.inner.is_empty(),
+            "JUP6 instruction should have inner instructions"
+        );
+        assert_eq!(
+            jup_instruction.inner.len(),
+            2,
+            "JUP6 instruction should have 2 direct inner instructions"
+        );
+
+        // Verify first inner instruction (Eo7WjKq...) has correct parent and nested structure
+        let first_inner = &jup_instruction.inner[0];
+        assert_eq!(
+            first_inner.parent_program,
+            Some(jup_instruction.program),
+            "First inner instruction should have JUP6 as parent"
+        );
+        assert_eq!(
+            first_inner.inner.len(),
+            3,
+            "First inner instruction (Eo7WjKq) should have 3 nested inner instructions"
+        );
+
+        // Verify nested inner instructions have correct parent chain
+        let nested_inner = &first_inner.inner[1]; // 24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi
+        assert_eq!(
+            nested_inner.parent_program,
+            Some(first_inner.program),
+            "Nested inner instruction should have Eo7WjKq as parent"
+        );
+        assert_eq!(
+            nested_inner.inner.len(),
+            2,
+            "Nested inner instruction (24Uqj9) should have 2 children"
+        );
+
+        // Verify second inner instruction (recursive CPI to JUP6)
+        let second_inner = &jup_instruction.inner[1];
+        assert_eq!(
+            second_inner.parent_program,
+            Some(jup_instruction.program),
+            "Second inner instruction should have JUP6 as parent"
+        );
+        assert_eq!(
+            second_inner.program, jup_instruction.program,
+            "Second inner instruction is a recursive call to JUP6"
+        );
+
+        // Verify ix_index uniqueness and sequential ordering
+        let mut seen_indices = std::collections::HashSet::new();
+        let mut max_idx = 0u16;
+
+        fn collect_indices(
+            ix: &super::InstructionUpdate,
+            seen: &mut std::collections::HashSet<u16>,
+            max: &mut u16,
+        ) {
+            assert!(
+                seen.insert(ix.ix_index),
+                "Duplicate ix_index found: {}",
+                ix.ix_index
+            );
+            *max = (*max).max(ix.ix_index);
+
+            for inner_ix in &ix.inner {
+                collect_indices(inner_ix, seen, max);
+            }
+        }
+
+        for ix in &instruction_updates {
+            collect_indices(ix, &mut seen_indices, &mut max_idx);
+        }
+
+        assert_eq!(
+            seen_indices.len(),
+            total_instructions,
+            "All instructions should have unique ix_index"
+        );
+
+        // Verify indices are sequential from 0
+        #[allow(clippy::cast_possible_truncation)]
+        for i in 0..total_instructions {
+            assert!(seen_indices.contains(&(i as u16)), "Missing ix_index: {i}");
+        }
+
+        // Verify parent programs exist in the transaction (recursively collect all programs)
+        fn collect_all_programs(
+            ix: &super::InstructionUpdate,
+            programs: &mut std::collections::HashSet<super::Pubkey>,
+        ) {
+            programs.insert(ix.program);
+            for inner_ix in &ix.inner {
+                collect_all_programs(inner_ix, programs);
+            }
+        }
+
+        fn verify_parent_exists(
+            ix: &super::InstructionUpdate,
+            all_programs: &std::collections::HashSet<super::Pubkey>,
+        ) {
+            if let Some(parent) = ix.parent_program {
+                assert!(
+                    all_programs.contains(&parent),
+                    "Parent program {parent} not found in transaction"
+                );
+            }
+
+            for inner_ix in &ix.inner {
+                verify_parent_exists(inner_ix, all_programs);
+            }
+        }
+
+        let mut all_programs = std::collections::HashSet::new();
+        for ix in &instruction_updates {
+            collect_all_programs(ix, &mut all_programs);
+        }
+
+        for ix in &instruction_updates {
+            verify_parent_exists(ix, &all_programs);
+        }
+
         println!("✓ Parent-child relationship test completed successfully");
         println!("✓ All parent relationships verified correctly");
+        println!("✓ ix_index values are unique and sequential");
+        println!("✓ All parent programs exist in the transaction");
     }
 }

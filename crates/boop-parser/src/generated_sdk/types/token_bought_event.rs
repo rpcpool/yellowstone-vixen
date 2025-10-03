@@ -36,7 +36,7 @@ impl TokenBoughtEvent {
     pub const DISCRIMINATOR: [u8; 8] = [0x47, 0x59, 0xde, 0x7c, 0xd7, 0xc0, 0xe6, 0x8a];
 
     /// Parse TokenBoughtEvent from program logs
-    pub fn from_logs(logs: &[String]) -> Option<Self> {
+    pub fn from_logs(logs: &[&str]) -> Option<Self> {
         for log in logs {
             if let Some(event) = Self::from_log(log) {
                 return Some(event);

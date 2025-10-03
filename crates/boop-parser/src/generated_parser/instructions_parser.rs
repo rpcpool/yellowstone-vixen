@@ -203,7 +203,12 @@ impl InstructionParser {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
 
-                let token_bought_event = TokenBoughtEvent::from_logs(&ix.parsed_logs);
+                let token_bought_event = TokenBoughtEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(BoopProgramIx::BuyToken(
                     ix_accounts,
                     de_ix_data,
@@ -556,7 +561,12 @@ impl InstructionParser {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
 
-                let token_sold_event = TokenSoldEvent::from_logs(&ix.parsed_logs);
+                let token_sold_event = TokenSoldEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(BoopProgramIx::SellToken(
                     ix_accounts,
                     de_ix_data,

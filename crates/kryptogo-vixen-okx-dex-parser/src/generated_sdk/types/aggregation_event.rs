@@ -57,13 +57,13 @@ impl AggregationEvent {
     }
 
     /// Parse AggregationEvent from a collection of log messages
-    pub fn from_logs(logs: &[String]) -> Option<Self> {
-        logs.iter().find_map(|log| Self::from_log(log))
+    pub fn from_logs(logs: &[&str]) -> Option<Self> {
+        logs.iter().find_map(|&log| Self::from_log(log))
     }
 
     /// Parse all AggregationEvents from a collection of log messages
-    pub fn from_logs_all(logs: &[String]) -> Vec<Self> {
-        logs.iter().filter_map(|log| Self::from_log(log)).collect()
+    pub fn from_logs_all(logs: &[&str]) -> Vec<Self> {
+        logs.iter().filter_map(|&log| Self::from_log(log)).collect()
     }
 }
 
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn test_aggregation_event_from_logs_collection() {
-        let logs = vec![
+        let logs = [
             "Some other log message".to_string(),
             "Program log: after_source_balance: 1410699797, after_destination_balance: \
              18851684497, source_token_change: 1410699795, destination_token_change: 7482284974"
@@ -116,7 +116,8 @@ mod tests {
             "Another log message".to_string(),
         ];
 
-        let aggregation_event = AggregationEvent::from_logs(&logs);
+        let aggregation_event =
+            AggregationEvent::from_logs(&logs.iter().map(|s| s.as_str()).collect::<Vec<_>>());
 
         assert!(
             aggregation_event.is_some(),
@@ -168,7 +169,7 @@ mod tests {
 
     #[test]
     fn test_aggregation_event_from_logs_all() {
-        let logs = vec![
+        let logs = [
             "Some other log message".to_string(),
             "Program log: after_source_balance: 1410699797, after_destination_balance: \
              18851684497, source_token_change: 1410699795, destination_token_change: 7482284974"
@@ -184,7 +185,8 @@ mod tests {
             "Final log message".to_string(),
         ];
 
-        let aggregation_events = AggregationEvent::from_logs_all(&logs);
+        let aggregation_events =
+            AggregationEvent::from_logs_all(&logs.iter().map(|s| s.as_str()).collect::<Vec<_>>());
 
         assert_eq!(
             aggregation_events.len(),

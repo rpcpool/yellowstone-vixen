@@ -39,7 +39,7 @@ impl SwapEvent {
     pub const DISCRIMINATOR: [u8; 8] = [0x40, 0xc6, 0xcd, 0xe8, 0x26, 0x08, 0x71, 0xe2];
 
     /// Parse SwapEvent from program logs
-    pub fn from_logs(logs: &[String]) -> Option<Self> {
+    pub fn from_logs(logs: &[&str]) -> Option<Self> {
         for log in logs {
             if let Some(swap_event) = Self::from_log(log) {
                 return Some(swap_event);

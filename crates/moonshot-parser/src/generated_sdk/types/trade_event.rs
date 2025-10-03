@@ -42,7 +42,7 @@ impl TradeEvent {
     pub const DISCRIMINATOR: [u8; 8] = [0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee];
 
     /// Parse TradeEvent from program logs
-    pub fn from_logs(logs: &[String]) -> Option<Self> {
+    pub fn from_logs(logs: &[&str]) -> Option<Self> {
         for log in logs {
             if let Some(event) = Self::from_log(log) {
                 return Some(event);

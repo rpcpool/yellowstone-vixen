@@ -341,7 +341,12 @@ impl InstructionParser {
                 }
 
                 // Parse SwapEvent from logs
-                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
+                let swap_event = SwapEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
 
                 Ok(AmmProgramIx::Swap(ix_accounts, de_ix_data, swap_event))
             },

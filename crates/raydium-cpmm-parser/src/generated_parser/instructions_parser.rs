@@ -357,7 +357,12 @@ impl InstructionParser {
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
-                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
+                let swap_event = SwapEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(RaydiumCpSwapProgramIx::SwapBaseInput(
                     ix_accounts,
                     de_ix_data,
@@ -388,7 +393,12 @@ impl InstructionParser {
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
                 }
-                let swap_event = SwapEvent::from_logs(&ix.parsed_logs);
+                let swap_event = SwapEvent::from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
                 Ok(RaydiumCpSwapProgramIx::SwapBaseOutput(
                     ix_accounts,
                     de_ix_data,

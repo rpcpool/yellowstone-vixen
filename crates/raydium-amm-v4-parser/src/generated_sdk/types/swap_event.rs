@@ -33,7 +33,7 @@ pub enum SwapEvent {
 
 impl SwapEvent {
     /// Parse SwapEvent from program logs
-    pub fn from_logs(logs: &[String]) -> Option<Self> {
+    pub fn from_logs(logs: &[&str]) -> Option<Self> {
         for log in logs {
             if let Some(swap_event) = Self::from_log(log) {
                 return Some(swap_event);
