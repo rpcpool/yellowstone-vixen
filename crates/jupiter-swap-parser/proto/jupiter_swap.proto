@@ -155,9 +155,9 @@ message SwapWhirlpoolSwapV2 {
 
 message SwapOneIntro { }
 
-message SwapPumpdotfunWrappedBuy { }
+message SwapPumpWrappedBuy { }
 
-message SwapPumpdotfunWrappedSell { }
+message SwapPumpWrappedSell { }
 
 message SwapPerpsV2 { }
 
@@ -212,9 +212,9 @@ message SwapPerena {
 	uint32 out_index = 2;
 }
 
-message SwapPumpdotfunAmmBuy { }
+message SwapPumpSwapBuy { }
 
-message SwapPumpdotfunAmmSell { }
+message SwapPumpSwapSell { }
 
 message SwapGamma { }
 
@@ -264,7 +264,46 @@ message SwapTesseraV {
 	Side side = 1;
 }
 
-message SwapRaydiumStable { }
+message SwapPumpWrappedBuyV2 { }
+
+message SwapPumpWrappedSellV2 { }
+
+message SwapPumpSwapBuyV2 { }
+
+message SwapPumpSwapSellV2 { }
+
+message SwapHeaven {
+	bool a_to_b = 1;
+}
+
+message SwapSolFiV2 {
+	bool is_quote_to_base = 1;
+}
+
+message SwapAquifer { }
+
+message SwapPumpWrappedBuyV3 { }
+
+message SwapPumpWrappedSellV3 { }
+
+message SwapPumpSwapBuyV3 { }
+
+message SwapPumpSwapSellV3 { }
+
+message SwapJupiterLendDeposit { }
+
+message SwapJupiterLendRedeem { }
+
+message SwapDefiTuna {
+	bool a_to_b = 1;
+	optional RemainingAccountsInfo remaining_accounts_info = 2;
+}
+
+message SwapAlphaQ {
+	bool a_to_b = 1;
+}
+
+message SwapRaydiumV2 { }
 
 message ClaimIx {
 	ClaimIxAccounts accounts = 1;
@@ -279,15 +318,6 @@ message ClaimTokenIx {
 message CloseTokenIx {
 	CloseTokenIxAccounts accounts = 1;
 	CloseTokenIxData data = 2;
-}
-
-message CreateOpenOrdersIx {
-	CreateOpenOrdersIxAccounts accounts = 1;
-}
-
-message CreateProgramOpenOrdersIx {
-	CreateProgramOpenOrdersIxAccounts accounts = 1;
-	CreateProgramOpenOrdersIxData data = 2;
 }
 
 message CreateTokenLedgerIx {
@@ -333,6 +363,41 @@ message SharedAccountsRouteWithTokenLedgerIx {
 	SharedAccountsRouteWithTokenLedgerIxData data = 2;
 }
 
+message ExactOutRouteV2Ix {
+	ExactOutRouteV2IxAccounts accounts = 1;
+	ExactOutRouteV2IxData data = 2;
+}
+
+message RouteV2Ix {
+	RouteV2IxAccounts accounts = 1;
+	RouteV2IxData data = 2;
+}
+
+message SharedAccountsExactOutRouteV2Ix {
+	SharedAccountsExactOutRouteV2IxAccounts accounts = 1;
+	SharedAccountsExactOutRouteV2IxData data = 2;
+}
+
+message SharedAccountsRouteV2Ix {
+	SharedAccountsRouteV2IxAccounts accounts = 1;
+	SharedAccountsRouteV2IxData data = 2;
+}
+
+
+message FeeEvent {
+	string account = 1;
+	string mint = 2;
+	uint64 amount = 3;
+}
+
+message RemainingAccountsInfo {
+	repeated RemainingAccountsSlice slices = 1;
+}
+
+message RemainingAccountsSlice {
+	uint32 accounts_type = 1;
+	uint32 length = 2;
+}
 
 enum AccountsType {
 	AccountsTypeTransferHookA = 0;
@@ -346,24 +411,27 @@ enum AccountsType {
 	AccountsTypeSupplementalTickArraysTwo = 8;
 }
 
-message FeeEvent {
-	string account = 1;
-	string mint = 2;
-	uint64 amount = 3;
-}
-
-message RemainingAccountsInfo {
-	repeated RemainingAccountsSlice slices = 1;
-}
-
-message RemainingAccountsSlice {
-	AccountsType accounts_type = 1;
-	uint32 length = 2;
+enum DefiTunaAccountsType {
+	DefiTunaAccountsTypeTransferHookA = 0;
+	DefiTunaAccountsTypeTransferHookB = 1;
+	DefiTunaAccountsTypeTransferHookInput = 2;
+	DefiTunaAccountsTypeTransferHookIntermediate = 3;
+	DefiTunaAccountsTypeTransferHookOutput = 4;
+	DefiTunaAccountsTypeSupplementalTickArrays = 5;
+	DefiTunaAccountsTypeSupplementalTickArraysOne = 6;
+	DefiTunaAccountsTypeSupplementalTickArraysTwo = 7;
 }
 
 message RoutePlanStep {
 	Swap swap = 1;
 	uint32 percent = 2;
+	uint32 input_index = 3;
+	uint32 output_index = 4;
+}
+
+message RoutePlanStepV2 {
+	Swap swap = 1;
+	uint32 bps = 2;
 	uint32 input_index = 3;
 	uint32 output_index = 4;
 }
@@ -424,8 +492,8 @@ message Swap {
 		SwapRaydiumCP raydium_c_p = 47;
 		SwapWhirlpoolSwapV2 whirlpool_swap_v2 = 48;
 		SwapOneIntro one_intro = 49;
-		SwapPumpdotfunWrappedBuy pumpdotfun_wrapped_buy = 50;
-		SwapPumpdotfunWrappedSell pumpdotfun_wrapped_sell = 51;
+		SwapPumpWrappedBuy pump_wrapped_buy = 50;
+		SwapPumpWrappedSell pump_wrapped_sell = 51;
 		SwapPerpsV2 perps_v2 = 52;
 		SwapPerpsV2AddLiquidity perps_v2_add_liquidity = 53;
 		SwapPerpsV2RemoveLiquidity perps_v2_remove_liquidity = 54;
@@ -447,8 +515,8 @@ message Swap {
 		SwapVirtualsBuy virtuals_buy = 70;
 		SwapVirtualsSell virtuals_sell = 71;
 		SwapPerena perena = 72;
-		SwapPumpdotfunAmmBuy pumpdotfun_amm_buy = 73;
-		SwapPumpdotfunAmmSell pumpdotfun_amm_sell = 74;
+		SwapPumpSwapBuy pump_swap_buy = 73;
+		SwapPumpSwapSell pump_swap_sell = 74;
 		SwapGamma gamma = 75;
 		SwapMeteoraDlmmSwapV2 meteora_dlmm_swap_v2 = 76;
 		SwapWoofi woofi = 77;
@@ -465,7 +533,22 @@ message Swap {
 		SwapHumidiFi humidi_fi = 88;
 		SwapMeteoraDynamicBondingCurveSwapWithRemainingAccounts meteora_dynamic_bonding_curve_swap_with_remaining_accounts = 89;
 		SwapTesseraV tessera_v = 90;
-		SwapRaydiumStable raydium_stable = 91;
+		SwapPumpWrappedBuyV2 pump_wrapped_buy_v2 = 91;
+		SwapPumpWrappedSellV2 pump_wrapped_sell_v2 = 92;
+		SwapPumpSwapBuyV2 pump_swap_buy_v2 = 93;
+		SwapPumpSwapSellV2 pump_swap_sell_v2 = 94;
+		SwapHeaven heaven = 95;
+		SwapSolFiV2 sol_fi_v2 = 96;
+		SwapAquifer aquifer = 97;
+		SwapPumpWrappedBuyV3 pump_wrapped_buy_v3 = 98;
+		SwapPumpWrappedSellV3 pump_wrapped_sell_v3 = 99;
+		SwapPumpSwapBuyV3 pump_swap_buy_v3 = 100;
+		SwapPumpSwapSellV3 pump_swap_sell_v3 = 101;
+		SwapJupiterLendDeposit jupiter_lend_deposit = 102;
+		SwapJupiterLendRedeem jupiter_lend_redeem = 103;
+		SwapDefiTuna defi_tuna = 104;
+		SwapAlphaQ alpha_q = 105;
+		SwapRaydiumV2 raydium_v2 = 106;
 	}
 }
 
@@ -475,6 +558,17 @@ message SwapEvent {
 	uint64 input_amount = 3;
 	string output_mint = 4;
 	uint64 output_amount = 5;
+}
+
+message SwapEventV2 {
+	string input_mint = 1;
+	uint64 input_amount = 2;
+	string output_mint = 3;
+	uint64 output_amount = 4;
+}
+
+message SwapsEvent {
+	repeated SwapEventV2 swap_events = 1;
 }
 
 
@@ -522,30 +616,6 @@ message CloseTokenIxAccounts {
 message CloseTokenIxData {
 	uint32 id = 1;
 	bool burn_all = 2;
-}
-
-message CreateOpenOrdersIxAccounts {
-	string open_orders = 1;
-	string payer = 2;
-	string dex_program = 3;
-	string system_program = 4;
-	string rent = 5;
-	string market = 6;
-}
-
-
-message CreateProgramOpenOrdersIxAccounts {
-	string open_orders = 1;
-	string payer = 2;
-	string program_authority = 3;
-	string dex_program = 4;
-	string system_program = 5;
-	string rent = 6;
-	string market = 7;
-}
-
-message CreateProgramOpenOrdersIxData {
-	uint32 id = 1;
 }
 
 message CreateTokenLedgerIxAccounts {
@@ -710,6 +780,100 @@ message SharedAccountsRouteWithTokenLedgerIxData {
 	uint32 platform_fee_bps = 5;
 }
 
+message ExactOutRouteV2IxAccounts {
+	string user_transfer_authority = 1;
+	string user_source_token_account = 2;
+	string user_destination_token_account = 3;
+	string source_mint = 4;
+	string destination_mint = 5;
+	string source_token_program = 6;
+	string destination_token_program = 7;
+	optional string destination_token_account = 8;
+	string event_authority = 9;
+	string program = 10;
+}
+
+message ExactOutRouteV2IxData {
+	uint64 out_amount = 1;
+	uint64 quoted_in_amount = 2;
+	uint32 slippage_bps = 3;
+	uint32 platform_fee_bps = 4;
+	uint32 positive_slippage_bps = 5;
+	repeated RoutePlanStepV2 route_plan = 6;
+}
+
+message RouteV2IxAccounts {
+	string user_transfer_authority = 1;
+	string user_source_token_account = 2;
+	string user_destination_token_account = 3;
+	string source_mint = 4;
+	string destination_mint = 5;
+	string source_token_program = 6;
+	string destination_token_program = 7;
+	optional string destination_token_account = 8;
+	string event_authority = 9;
+	string program = 10;
+}
+
+message RouteV2IxData {
+	uint64 in_amount = 1;
+	uint64 quoted_out_amount = 2;
+	uint32 slippage_bps = 3;
+	uint32 platform_fee_bps = 4;
+	uint32 positive_slippage_bps = 5;
+	repeated RoutePlanStepV2 route_plan = 6;
+}
+
+message SharedAccountsExactOutRouteV2IxAccounts {
+	string program_authority = 1;
+	string user_transfer_authority = 2;
+	string source_token_account = 3;
+	string program_source_token_account = 4;
+	string program_destination_token_account = 5;
+	string destination_token_account = 6;
+	string source_mint = 7;
+	string destination_mint = 8;
+	string source_token_program = 9;
+	string destination_token_program = 10;
+	string event_authority = 11;
+	string program = 12;
+}
+
+message SharedAccountsExactOutRouteV2IxData {
+	uint32 id = 1;
+	uint64 out_amount = 2;
+	uint64 quoted_in_amount = 3;
+	uint32 slippage_bps = 4;
+	uint32 platform_fee_bps = 5;
+	uint32 positive_slippage_bps = 6;
+	repeated RoutePlanStepV2 route_plan = 7;
+}
+
+message SharedAccountsRouteV2IxAccounts {
+	string program_authority = 1;
+	string user_transfer_authority = 2;
+	string source_token_account = 3;
+	string program_source_token_account = 4;
+	string program_destination_token_account = 5;
+	string destination_token_account = 6;
+	string source_mint = 7;
+	string destination_mint = 8;
+	string source_token_program = 9;
+	string destination_token_program = 10;
+	string event_authority = 11;
+	string program = 12;
+}
+
+message SharedAccountsRouteV2IxData {
+	uint32 id = 1;
+	uint64 in_amount = 2;
+	uint64 quoted_out_amount = 3;
+	uint32 slippage_bps = 4;
+	uint32 platform_fee_bps = 5;
+	uint32 positive_slippage_bps = 6;
+	repeated RoutePlanStepV2 route_plan = 7;
+}
+
 
 message ProgramState {
     oneof state_oneof {
@@ -722,17 +886,19 @@ message ProgramIxs {
         	ClaimIx claim = 1;
         	ClaimTokenIx claim_token = 2;
         	CloseTokenIx close_token = 3;
-        	CreateOpenOrdersIx create_open_orders = 4;
-        	CreateProgramOpenOrdersIx create_program_open_orders = 5;
-        	CreateTokenLedgerIx create_token_ledger = 6;
-        	CreateTokenAccountIx create_token_account = 7;
-        	ExactOutRouteIx exact_out_route = 8;
-        	RouteIx route = 9;
-        	RouteWithTokenLedgerIx route_with_token_ledger = 10;
-        	SetTokenLedgerIx set_token_ledger = 11;
-        	SharedAccountsExactOutRouteIx shared_accounts_exact_out_route = 12;
-        	SharedAccountsRouteIx shared_accounts_route = 13;
-        	SharedAccountsRouteWithTokenLedgerIx shared_accounts_route_with_token_ledger = 14;
+        	CreateTokenLedgerIx create_token_ledger = 4;
+        	CreateTokenAccountIx create_token_account = 5;
+        	ExactOutRouteIx exact_out_route = 6;
+        	RouteIx route = 7;
+        	RouteWithTokenLedgerIx route_with_token_ledger = 8;
+        	SetTokenLedgerIx set_token_ledger = 9;
+        	SharedAccountsExactOutRouteIx shared_accounts_exact_out_route = 10;
+        	SharedAccountsRouteIx shared_accounts_route = 11;
+        	SharedAccountsRouteWithTokenLedgerIx shared_accounts_route_with_token_ledger = 12;
+        	ExactOutRouteV2Ix exact_out_route_v2 = 13;
+        	RouteV2Ix route_v2 = 14;
+        	SharedAccountsExactOutRouteV2Ix shared_accounts_exact_out_route_v2 = 15;
+        	SharedAccountsRouteV2Ix shared_accounts_route_v2 = 16;
         }
 }
 

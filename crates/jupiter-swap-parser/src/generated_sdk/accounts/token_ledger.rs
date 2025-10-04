@@ -20,6 +20,8 @@ pub struct TokenLedger {
     pub amount: u64,
 }
 
+pub const TOKEN_LEDGER_DISCRIMINATOR: [u8; 8] = [156, 247, 9, 188, 54, 108, 85, 77];
+
 impl TokenLedger {
     pub const LEN: usize = 48;
 
@@ -129,5 +131,5 @@ impl anchor_lang::IdlBuild for TokenLedger {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for TokenLedger {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

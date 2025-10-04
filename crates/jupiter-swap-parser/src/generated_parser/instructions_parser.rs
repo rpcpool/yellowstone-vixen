@@ -13,29 +13,33 @@ use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
     deserialize_checked,
-    generated::types::SwapEvent,
     instructions::{
         Claim as ClaimIxAccounts, ClaimInstructionArgs as ClaimIxData,
         ClaimToken as ClaimTokenIxAccounts, ClaimTokenInstructionArgs as ClaimTokenIxData,
         CloseToken as CloseTokenIxAccounts, CloseTokenInstructionArgs as CloseTokenIxData,
-        CreateOpenOrders as CreateOpenOrdersIxAccounts,
-        CreateProgramOpenOrders as CreateProgramOpenOrdersIxAccounts,
-        CreateProgramOpenOrdersInstructionArgs as CreateProgramOpenOrdersIxData,
         CreateTokenAccount as CreateTokenAccountIxAccounts,
         CreateTokenAccountInstructionArgs as CreateTokenAccountIxData,
         CreateTokenLedger as CreateTokenLedgerIxAccounts, ExactOutRoute as ExactOutRouteIxAccounts,
-        ExactOutRouteInstructionArgs as ExactOutRouteIxData, Route as RouteIxAccounts,
-        RouteInstructionArgs as RouteIxData,
+        ExactOutRouteInstructionArgs as ExactOutRouteIxData,
+        ExactOutRouteV2 as ExactOutRouteV2IxAccounts,
+        ExactOutRouteV2InstructionArgs as ExactOutRouteV2IxData, Route as RouteIxAccounts,
+        RouteInstructionArgs as RouteIxData, RouteV2 as RouteV2IxAccounts,
+        RouteV2InstructionArgs as RouteV2IxData,
         RouteWithTokenLedger as RouteWithTokenLedgerIxAccounts,
         RouteWithTokenLedgerInstructionArgs as RouteWithTokenLedgerIxData,
         SetTokenLedger as SetTokenLedgerIxAccounts,
         SharedAccountsExactOutRoute as SharedAccountsExactOutRouteIxAccounts,
         SharedAccountsExactOutRouteInstructionArgs as SharedAccountsExactOutRouteIxData,
+        SharedAccountsExactOutRouteV2 as SharedAccountsExactOutRouteV2IxAccounts,
+        SharedAccountsExactOutRouteV2InstructionArgs as SharedAccountsExactOutRouteV2IxData,
         SharedAccountsRoute as SharedAccountsRouteIxAccounts,
         SharedAccountsRouteInstructionArgs as SharedAccountsRouteIxData,
+        SharedAccountsRouteV2 as SharedAccountsRouteV2IxAccounts,
+        SharedAccountsRouteV2InstructionArgs as SharedAccountsRouteV2IxData,
         SharedAccountsRouteWithTokenLedger as SharedAccountsRouteWithTokenLedgerIxAccounts,
         SharedAccountsRouteWithTokenLedgerInstructionArgs as SharedAccountsRouteWithTokenLedgerIxData,
     },
+    types::{SwapEvent, SwapsEvent},
     ID,
 };
 
@@ -46,20 +50,20 @@ pub enum JupiterProgramIx {
     Claim(ClaimIxAccounts, ClaimIxData),
     ClaimToken(ClaimTokenIxAccounts, ClaimTokenIxData),
     CloseToken(CloseTokenIxAccounts, CloseTokenIxData),
-    CreateOpenOrders(CreateOpenOrdersIxAccounts),
-    CreateProgramOpenOrders(
-        CreateProgramOpenOrdersIxAccounts,
-        CreateProgramOpenOrdersIxData,
-    ),
     CreateTokenLedger(CreateTokenLedgerIxAccounts),
     CreateTokenAccount(CreateTokenAccountIxAccounts, CreateTokenAccountIxData),
-    ExactOutRoute(ExactOutRouteIxAccounts, ExactOutRouteIxData),
+    ExactOutRoute(ExactOutRouteIxAccounts, ExactOutRouteIxData, Vec<SwapEvent>),
     Route(RouteIxAccounts, RouteIxData, Vec<SwapEvent>),
-    RouteWithTokenLedger(RouteWithTokenLedgerIxAccounts, RouteWithTokenLedgerIxData),
+    RouteWithTokenLedger(
+        RouteWithTokenLedgerIxAccounts,
+        RouteWithTokenLedgerIxData,
+        Vec<SwapEvent>,
+    ),
     SetTokenLedger(SetTokenLedgerIxAccounts),
     SharedAccountsExactOutRoute(
         SharedAccountsExactOutRouteIxAccounts,
         SharedAccountsExactOutRouteIxData,
+        Vec<SwapEvent>,
     ),
     SharedAccountsRoute(
         SharedAccountsRouteIxAccounts,
@@ -69,6 +73,23 @@ pub enum JupiterProgramIx {
     SharedAccountsRouteWithTokenLedger(
         SharedAccountsRouteWithTokenLedgerIxAccounts,
         SharedAccountsRouteWithTokenLedgerIxData,
+        Vec<SwapEvent>,
+    ),
+    ExactOutRouteV2(
+        ExactOutRouteV2IxAccounts,
+        ExactOutRouteV2IxData,
+        Option<SwapsEvent>,
+    ),
+    RouteV2(RouteV2IxAccounts, RouteV2IxData, Option<SwapsEvent>),
+    SharedAccountsExactOutRouteV2(
+        SharedAccountsExactOutRouteV2IxAccounts,
+        SharedAccountsExactOutRouteV2IxData,
+        Option<SwapsEvent>,
+    ),
+    SharedAccountsRouteV2(
+        SharedAccountsRouteV2IxAccounts,
+        SharedAccountsRouteV2IxData,
+        Option<SwapsEvent>,
     ),
 }
 
@@ -187,38 +208,6 @@ impl InstructionParser {
                 let de_ix_data: CloseTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(JupiterProgramIx::CloseToken(ix_accounts, de_ix_data))
             },
-            [229, 194, 212, 172, 8, 10, 134, 147] => {
-                let expected_accounts_len = 6;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = CreateOpenOrdersIxAccounts {
-                    open_orders: next_account(accounts)?,
-                    payer: next_account(accounts)?,
-                    dex_program: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent: next_account(accounts)?,
-                    market: next_account(accounts)?,
-                };
-                Ok(JupiterProgramIx::CreateOpenOrders(ix_accounts))
-            },
-            [28, 226, 32, 148, 188, 136, 113, 171] => {
-                let expected_accounts_len = 7;
-                check_min_accounts_req(accounts_len, expected_accounts_len)?;
-                let ix_accounts = CreateProgramOpenOrdersIxAccounts {
-                    open_orders: next_account(accounts)?,
-                    payer: next_account(accounts)?,
-                    program_authority: next_account(accounts)?,
-                    dex_program: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    rent: next_account(accounts)?,
-                    market: next_account(accounts)?,
-                };
-                let de_ix_data: CreateProgramOpenOrdersIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(JupiterProgramIx::CreateProgramOpenOrders(
-                    ix_accounts,
-                    de_ix_data,
-                ))
-            },
             [232, 242, 197, 253, 240, 143, 129, 52] => {
                 let expected_accounts_len = 3;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
@@ -264,7 +253,18 @@ impl InstructionParser {
                 };
                 let de_ix_data: ExactOutRouteIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(JupiterProgramIx::ExactOutRoute(ix_accounts, de_ix_data))
+                // Search for all SwapEvents in inner instructions
+                let swap_events: Vec<SwapEvent> = ix
+                    .inner
+                    .iter()
+                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .collect();
+
+                Ok(JupiterProgramIx::ExactOutRoute(
+                    ix_accounts,
+                    de_ix_data,
+                    swap_events,
+                ))
             },
             [229, 23, 203, 151, 122, 227, 173, 42] => {
                 let expected_accounts_len = 9;
@@ -311,9 +311,17 @@ impl InstructionParser {
                 };
                 let de_ix_data: RouteWithTokenLedgerIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
+                // Search for all SwapEvents in inner instructions
+                let swap_events: Vec<SwapEvent> = ix
+                    .inner
+                    .iter()
+                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .collect();
+
                 Ok(JupiterProgramIx::RouteWithTokenLedger(
                     ix_accounts,
                     de_ix_data,
+                    swap_events,
                 ))
             },
             [228, 85, 185, 112, 78, 79, 77, 2] => {
@@ -345,9 +353,17 @@ impl InstructionParser {
                 };
                 let de_ix_data: SharedAccountsExactOutRouteIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
+                // Search for all SwapEvents in inner instructions
+                let swap_events: Vec<SwapEvent> = ix
+                    .inner
+                    .iter()
+                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .collect();
+
                 Ok(JupiterProgramIx::SharedAccountsExactOutRoute(
                     ix_accounts,
                     de_ix_data,
+                    swap_events,
                 ))
             },
             [193, 32, 155, 51, 65, 214, 156, 129] => {
@@ -404,9 +420,136 @@ impl InstructionParser {
                 };
                 let de_ix_data: SharedAccountsRouteWithTokenLedgerIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
+                // Search for all SwapEvents in inner instructions
+                let swap_events: Vec<SwapEvent> = ix
+                    .inner
+                    .iter()
+                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .collect();
+
                 Ok(JupiterProgramIx::SharedAccountsRouteWithTokenLedger(
                     ix_accounts,
                     de_ix_data,
+                    swap_events,
+                ))
+            },
+            [157, 138, 184, 82, 21, 244, 243, 36] => {
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = ExactOutRouteV2IxAccounts {
+                    user_transfer_authority: next_account(accounts)?,
+                    user_source_token_account: next_account(accounts)?,
+                    user_destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    source_token_program: next_account(accounts)?,
+                    destination_token_program: next_account(accounts)?,
+                    destination_token_account: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: ExactOutRouteV2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                // Search for SwapsEvent in inner instructions (at most one)
+                let swaps_event: Option<SwapsEvent> = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| SwapsEvent::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(JupiterProgramIx::ExactOutRouteV2(
+                    ix_accounts,
+                    de_ix_data,
+                    swaps_event,
+                ))
+            },
+            [187, 100, 250, 204, 49, 196, 175, 20] => {
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = RouteV2IxAccounts {
+                    user_transfer_authority: next_account(accounts)?,
+                    user_source_token_account: next_account(accounts)?,
+                    user_destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    source_token_program: next_account(accounts)?,
+                    destination_token_program: next_account(accounts)?,
+                    destination_token_account: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: RouteV2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                // Search for SwapsEvent in inner instructions (at most one)
+                let swaps_event: Option<SwapsEvent> = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| SwapsEvent::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(JupiterProgramIx::RouteV2(
+                    ix_accounts,
+                    de_ix_data,
+                    swaps_event,
+                ))
+            },
+            [53, 96, 229, 202, 216, 187, 250, 24] => {
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SharedAccountsExactOutRouteV2IxAccounts {
+                    program_authority: next_account(accounts)?,
+                    user_transfer_authority: next_account(accounts)?,
+                    source_token_account: next_account(accounts)?,
+                    program_source_token_account: next_account(accounts)?,
+                    program_destination_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    source_token_program: next_account(accounts)?,
+                    destination_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: SharedAccountsExactOutRouteV2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                // Search for SwapsEvent in inner instructions (at most one)
+                let swaps_event: Option<SwapsEvent> = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| SwapsEvent::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(JupiterProgramIx::SharedAccountsExactOutRouteV2(
+                    ix_accounts,
+                    de_ix_data,
+                    swaps_event,
+                ))
+            },
+            [209, 152, 83, 147, 124, 254, 216, 233] => {
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SharedAccountsRouteV2IxAccounts {
+                    program_authority: next_account(accounts)?,
+                    user_transfer_authority: next_account(accounts)?,
+                    source_token_account: next_account(accounts)?,
+                    program_source_token_account: next_account(accounts)?,
+                    program_destination_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    source_token_program: next_account(accounts)?,
+                    destination_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: SharedAccountsRouteV2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                // Search for SwapsEvent in inner instructions (at most one)
+                let swaps_event: Option<SwapsEvent> = ix
+                    .inner
+                    .iter()
+                    .find_map(|inner_ix| SwapsEvent::from_inner_instruction_data(&inner_ix.data));
+
+                Ok(JupiterProgramIx::SharedAccountsRouteV2(
+                    ix_accounts,
+                    de_ix_data,
+                    swaps_event,
                 ))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
@@ -567,39 +710,6 @@ mod proto_parser {
                 id: self.id.into(),
                 burn_all: self.burn_all,
             }
-        }
-    }
-    use super::CreateOpenOrdersIxAccounts;
-    impl IntoProto<proto_def::CreateOpenOrdersIxAccounts> for CreateOpenOrdersIxAccounts {
-        fn into_proto(self) -> proto_def::CreateOpenOrdersIxAccounts {
-            proto_def::CreateOpenOrdersIxAccounts {
-                open_orders: self.open_orders.to_string(),
-                payer: self.payer.to_string(),
-                dex_program: self.dex_program.to_string(),
-                system_program: self.system_program.to_string(),
-                rent: self.rent.to_string(),
-                market: self.market.to_string(),
-            }
-        }
-    }
-    use super::CreateProgramOpenOrdersIxAccounts;
-    impl IntoProto<proto_def::CreateProgramOpenOrdersIxAccounts> for CreateProgramOpenOrdersIxAccounts {
-        fn into_proto(self) -> proto_def::CreateProgramOpenOrdersIxAccounts {
-            proto_def::CreateProgramOpenOrdersIxAccounts {
-                open_orders: self.open_orders.to_string(),
-                payer: self.payer.to_string(),
-                program_authority: self.program_authority.to_string(),
-                dex_program: self.dex_program.to_string(),
-                system_program: self.system_program.to_string(),
-                rent: self.rent.to_string(),
-                market: self.market.to_string(),
-            }
-        }
-    }
-    use super::CreateProgramOpenOrdersIxData;
-    impl IntoProto<proto_def::CreateProgramOpenOrdersIxData> for CreateProgramOpenOrdersIxData {
-        fn into_proto(self) -> proto_def::CreateProgramOpenOrdersIxData {
-            proto_def::CreateProgramOpenOrdersIxData { id: self.id.into() }
         }
     }
     use super::CreateTokenLedgerIxAccounts;
@@ -862,6 +972,156 @@ mod proto_parser {
             }
         }
     }
+    use super::ExactOutRouteV2IxAccounts;
+    impl IntoProto<proto_def::ExactOutRouteV2IxAccounts> for ExactOutRouteV2IxAccounts {
+        fn into_proto(self) -> proto_def::ExactOutRouteV2IxAccounts {
+            proto_def::ExactOutRouteV2IxAccounts {
+                user_transfer_authority: self.user_transfer_authority.to_string(),
+                user_source_token_account: self.user_source_token_account.to_string(),
+                user_destination_token_account: self.user_destination_token_account.to_string(),
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_program: self.source_token_program.to_string(),
+                destination_token_program: self.destination_token_program.to_string(),
+                destination_token_account: self.destination_token_account.map(|p| p.to_string()),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::ExactOutRouteV2IxData;
+    impl IntoProto<proto_def::ExactOutRouteV2IxData> for ExactOutRouteV2IxData {
+        fn into_proto(self) -> proto_def::ExactOutRouteV2IxData {
+            proto_def::ExactOutRouteV2IxData {
+                out_amount: self.out_amount,
+                quoted_in_amount: self.quoted_in_amount,
+                slippage_bps: self.slippage_bps.into(),
+                platform_fee_bps: self.platform_fee_bps.into(),
+                positive_slippage_bps: self.positive_slippage_bps.into(),
+                route_plan: self
+                    .route_plan
+                    .into_iter()
+                    .map(|x| x.into_proto())
+                    .collect(),
+            }
+        }
+    }
+    use super::RouteV2IxAccounts;
+    impl IntoProto<proto_def::RouteV2IxAccounts> for RouteV2IxAccounts {
+        fn into_proto(self) -> proto_def::RouteV2IxAccounts {
+            proto_def::RouteV2IxAccounts {
+                user_transfer_authority: self.user_transfer_authority.to_string(),
+                user_source_token_account: self.user_source_token_account.to_string(),
+                user_destination_token_account: self.user_destination_token_account.to_string(),
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_program: self.source_token_program.to_string(),
+                destination_token_program: self.destination_token_program.to_string(),
+                destination_token_account: self.destination_token_account.map(|p| p.to_string()),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::RouteV2IxData;
+    impl IntoProto<proto_def::RouteV2IxData> for RouteV2IxData {
+        fn into_proto(self) -> proto_def::RouteV2IxData {
+            proto_def::RouteV2IxData {
+                in_amount: self.in_amount,
+                quoted_out_amount: self.quoted_out_amount,
+                slippage_bps: self.slippage_bps.into(),
+                platform_fee_bps: self.platform_fee_bps.into(),
+                positive_slippage_bps: self.positive_slippage_bps.into(),
+                route_plan: self
+                    .route_plan
+                    .into_iter()
+                    .map(|x| x.into_proto())
+                    .collect(),
+            }
+        }
+    }
+    use super::SharedAccountsExactOutRouteV2IxAccounts;
+    impl IntoProto<proto_def::SharedAccountsExactOutRouteV2IxAccounts>
+        for SharedAccountsExactOutRouteV2IxAccounts
+    {
+        fn into_proto(self) -> proto_def::SharedAccountsExactOutRouteV2IxAccounts {
+            proto_def::SharedAccountsExactOutRouteV2IxAccounts {
+                program_authority: self.program_authority.to_string(),
+                user_transfer_authority: self.user_transfer_authority.to_string(),
+                source_token_account: self.source_token_account.to_string(),
+                program_source_token_account: self.program_source_token_account.to_string(),
+                program_destination_token_account: self
+                    .program_destination_token_account
+                    .to_string(),
+                destination_token_account: self.destination_token_account.to_string(),
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_program: self.source_token_program.to_string(),
+                destination_token_program: self.destination_token_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SharedAccountsExactOutRouteV2IxData;
+    impl IntoProto<proto_def::SharedAccountsExactOutRouteV2IxData>
+        for SharedAccountsExactOutRouteV2IxData
+    {
+        fn into_proto(self) -> proto_def::SharedAccountsExactOutRouteV2IxData {
+            proto_def::SharedAccountsExactOutRouteV2IxData {
+                id: self.id.into(),
+                out_amount: self.out_amount,
+                quoted_in_amount: self.quoted_in_amount,
+                slippage_bps: self.slippage_bps.into(),
+                platform_fee_bps: self.platform_fee_bps.into(),
+                positive_slippage_bps: self.positive_slippage_bps.into(),
+                route_plan: self
+                    .route_plan
+                    .into_iter()
+                    .map(|x| x.into_proto())
+                    .collect(),
+            }
+        }
+    }
+    use super::SharedAccountsRouteV2IxAccounts;
+    impl IntoProto<proto_def::SharedAccountsRouteV2IxAccounts> for SharedAccountsRouteV2IxAccounts {
+        fn into_proto(self) -> proto_def::SharedAccountsRouteV2IxAccounts {
+            proto_def::SharedAccountsRouteV2IxAccounts {
+                program_authority: self.program_authority.to_string(),
+                user_transfer_authority: self.user_transfer_authority.to_string(),
+                source_token_account: self.source_token_account.to_string(),
+                program_source_token_account: self.program_source_token_account.to_string(),
+                program_destination_token_account: self
+                    .program_destination_token_account
+                    .to_string(),
+                destination_token_account: self.destination_token_account.to_string(),
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_program: self.source_token_program.to_string(),
+                destination_token_program: self.destination_token_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SharedAccountsRouteV2IxData;
+    impl IntoProto<proto_def::SharedAccountsRouteV2IxData> for SharedAccountsRouteV2IxData {
+        fn into_proto(self) -> proto_def::SharedAccountsRouteV2IxData {
+            proto_def::SharedAccountsRouteV2IxData {
+                id: self.id.into(),
+                in_amount: self.in_amount,
+                quoted_out_amount: self.quoted_out_amount,
+                slippage_bps: self.slippage_bps.into(),
+                platform_fee_bps: self.platform_fee_bps.into(),
+                positive_slippage_bps: self.positive_slippage_bps.into(),
+                route_plan: self
+                    .route_plan
+                    .into_iter()
+                    .map(|x| x.into_proto())
+                    .collect(),
+            }
+        }
+    }
 
     impl IntoProto<proto_def::ProgramIxs> for JupiterProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
@@ -888,21 +1148,6 @@ mod proto_parser {
                         },
                     )),
                 },
-                JupiterProgramIx::CreateOpenOrders(acc) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateOpenOrders(
-                        proto_def::CreateOpenOrdersIx {
-                            accounts: Some(acc.into_proto()),
-                        },
-                    )),
-                },
-                JupiterProgramIx::CreateProgramOpenOrders(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateProgramOpenOrders(
-                        proto_def::CreateProgramOpenOrdersIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
-                },
                 JupiterProgramIx::CreateTokenLedger(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateTokenLedger(
                         proto_def::CreateTokenLedgerIx {
@@ -918,7 +1163,7 @@ mod proto_parser {
                         },
                     )),
                 },
-                JupiterProgramIx::ExactOutRoute(acc, data) => proto_def::ProgramIxs {
+                JupiterProgramIx::ExactOutRoute(acc, data, _swap_events) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::ExactOutRoute(
                         proto_def::ExactOutRouteIx {
                             accounts: Some(acc.into_proto()),
@@ -932,13 +1177,15 @@ mod proto_parser {
                         data: Some(data.into_proto()),
                     })),
                 },
-                JupiterProgramIx::RouteWithTokenLedger(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RouteWithTokenLedger(
-                        proto_def::RouteWithTokenLedgerIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
+                JupiterProgramIx::RouteWithTokenLedger(acc, data, _swap_events) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::RouteWithTokenLedger(
+                            proto_def::RouteWithTokenLedgerIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
                 },
                 JupiterProgramIx::SetTokenLedger(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SetTokenLedger(
@@ -947,15 +1194,17 @@ mod proto_parser {
                         },
                     )),
                 },
-                JupiterProgramIx::SharedAccountsExactOutRoute(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(
-                        proto_def::program_ixs::IxOneof::SharedAccountsExactOutRoute(
-                            proto_def::SharedAccountsExactOutRouteIx {
-                                accounts: Some(acc.into_proto()),
-                                data: Some(data.into_proto()),
-                            },
+                JupiterProgramIx::SharedAccountsExactOutRoute(acc, data, _swap_events) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::SharedAccountsExactOutRoute(
+                                proto_def::SharedAccountsExactOutRouteIx {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
                         ),
-                    ),
+                    }
                 },
                 JupiterProgramIx::SharedAccountsRoute(acc, data, _swap_events) => {
                     proto_def::ProgramIxs {
@@ -967,7 +1216,7 @@ mod proto_parser {
                         )),
                     }
                 },
-                JupiterProgramIx::SharedAccountsRouteWithTokenLedger(acc, data) => {
+                JupiterProgramIx::SharedAccountsRouteWithTokenLedger(acc, data, _swap_events) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(
                             proto_def::program_ixs::IxOneof::SharedAccountsRouteWithTokenLedger(
@@ -977,6 +1226,46 @@ mod proto_parser {
                                 },
                             ),
                         ),
+                    }
+                },
+                JupiterProgramIx::ExactOutRouteV2(acc, data, _swaps_events) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::ExactOutRouteV2(
+                            proto_def::ExactOutRouteV2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
+                },
+                JupiterProgramIx::RouteV2(acc, data, _swaps_events) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::RouteV2(
+                        proto_def::RouteV2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                JupiterProgramIx::SharedAccountsExactOutRouteV2(acc, data, _swaps_events) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(
+                            proto_def::program_ixs::IxOneof::SharedAccountsExactOutRouteV2(
+                                proto_def::SharedAccountsExactOutRouteV2Ix {
+                                    accounts: Some(acc.into_proto()),
+                                    data: Some(data.into_proto()),
+                                },
+                            ),
+                        ),
+                    }
+                },
+                JupiterProgramIx::SharedAccountsRouteV2(acc, data, _swaps_events) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::SharedAccountsRouteV2(
+                            proto_def::SharedAccountsRouteV2Ix {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
                     }
                 },
             }

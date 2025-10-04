@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const CLAIM_DISCRIMINATOR: [u8; 8] = [62, 198, 214, 193, 213, 159, 108, 210];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct Claim {
@@ -80,7 +82,7 @@ pub struct ClaimInstructionArgs {
 ///
 /// ### Accounts:
 ///
-///   0. `[writable, optional]` wallet (default to `J434EKW6KDmnJHxVty1axHT6kjszKKFEyesKqxdQ7y64`)
+///   0. `[writable, optional]` wallet (default to `7JQeyNK55fkUPUmEotupBFpiBGpgEQYLe8Ht1VdSfxcP`)
 ///   1. `[writable]` program_authority
 ///   2. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
@@ -95,7 +97,7 @@ pub struct ClaimBuilder {
 impl ClaimBuilder {
     pub fn new() -> Self { Self::default() }
 
-    /// `[optional account, default to 'J434EKW6KDmnJHxVty1axHT6kjszKKFEyesKqxdQ7y64']`
+    /// `[optional account, default to '7JQeyNK55fkUPUmEotupBFpiBGpgEQYLe8Ht1VdSfxcP']`
     #[inline(always)]
     pub fn wallet(&mut self, wallet: solana_pubkey::Pubkey) -> &mut Self {
         self.wallet = Some(wallet);
@@ -142,7 +144,7 @@ impl ClaimBuilder {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = Claim {
             wallet: self.wallet.unwrap_or(solana_pubkey::pubkey!(
-                "J434EKW6KDmnJHxVty1axHT6kjszKKFEyesKqxdQ7y64"
+                "7JQeyNK55fkUPUmEotupBFpiBGpgEQYLe8Ht1VdSfxcP"
             )),
             program_authority: self
                 .program_authority
@@ -198,7 +200,7 @@ impl<'a, 'b> ClaimCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
@@ -206,15 +208,12 @@ impl<'a, 'b> ClaimCpi<'a, 'b> {
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -225,7 +224,7 @@ impl<'a, 'b> ClaimCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
             *self.wallet.key,
@@ -357,14 +356,11 @@ impl<'a, 'b> ClaimCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = ClaimInstructionArgs {
             id: self.instruction.id.clone().expect("id is not set"),
         };

@@ -8,22 +8,25 @@
 pub(crate) mod r#claim;
 pub(crate) mod r#claim_token;
 pub(crate) mod r#close_token;
-pub(crate) mod r#create_open_orders;
-pub(crate) mod r#create_program_open_orders;
 pub(crate) mod r#create_token_account;
 pub(crate) mod r#create_token_ledger;
 pub(crate) mod r#exact_out_route;
+pub(crate) mod r#exact_out_route_v2;
 pub(crate) mod r#route;
+pub(crate) mod r#route_v2;
 pub(crate) mod r#route_with_token_ledger;
 pub(crate) mod r#set_token_ledger;
 pub(crate) mod r#shared_accounts_exact_out_route;
+pub(crate) mod r#shared_accounts_exact_out_route_v2;
 pub(crate) mod r#shared_accounts_route;
+pub(crate) mod r#shared_accounts_route_v2;
 pub(crate) mod r#shared_accounts_route_with_token_ledger;
 
 pub use self::{
-    r#claim::*, r#claim_token::*, r#close_token::*, r#create_open_orders::*,
-    r#create_program_open_orders::*, r#create_token_account::*, r#create_token_ledger::*,
-    r#exact_out_route::*, r#route::*, r#route_with_token_ledger::*, r#set_token_ledger::*,
-    r#shared_accounts_exact_out_route::*, r#shared_accounts_route::*,
+    r#claim::*, r#claim_token::*, r#close_token::*, r#create_token_account::*,
+    r#create_token_ledger::*, r#exact_out_route::*, r#exact_out_route_v2::*, r#route::*,
+    r#route_v2::*, r#route_with_token_ledger::*, r#set_token_ledger::*,
+    r#shared_accounts_exact_out_route::*, r#shared_accounts_exact_out_route_v2::*,
+    r#shared_accounts_route::*, r#shared_accounts_route_v2::*,
     r#shared_accounts_route_with_token_ledger::*,
 };

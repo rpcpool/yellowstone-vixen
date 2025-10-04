@@ -7,9 +7,13 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+use crate::generated::types::Swap;
+
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct RemainingAccountsSlice {
-    pub accounts_type: u8,
-    pub length: u8,
+pub struct RoutePlanStepV2 {
+    pub swap: Swap,
+    pub bps: u16,
+    pub input_index: u8,
+    pub output_index: u8,
 }

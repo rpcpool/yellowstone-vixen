@@ -31,7 +31,7 @@ pub mod proto_types_parsers {
     impl IntoProto<proto_def::RemainingAccountsSlice> for RemainingAccountsSlice {
         fn into_proto(self) -> proto_def::RemainingAccountsSlice {
             proto_def::RemainingAccountsSlice {
-                accounts_type: self.accounts_type as i32,
+                accounts_type: self.accounts_type.into(),
                 length: self.length.into(),
             }
         }
@@ -47,6 +47,17 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::RoutePlanStepV2;
+    impl IntoProto<proto_def::RoutePlanStepV2> for RoutePlanStepV2 {
+        fn into_proto(self) -> proto_def::RoutePlanStepV2 {
+            proto_def::RoutePlanStepV2 {
+                swap: Some(self.swap.into_proto()),
+                bps: self.bps.into(),
+                input_index: self.input_index.into(),
+                output_index: self.output_index.into(),
+            }
+        }
+    }
     use crate::types::SwapEvent;
     impl IntoProto<proto_def::SwapEvent> for SwapEvent {
         fn into_proto(self) -> proto_def::SwapEvent {
@@ -56,6 +67,29 @@ pub mod proto_types_parsers {
                 input_amount: self.input_amount,
                 output_mint: self.output_mint.to_string(),
                 output_amount: self.output_amount,
+            }
+        }
+    }
+    use crate::types::SwapEventV2;
+    impl IntoProto<proto_def::SwapEventV2> for SwapEventV2 {
+        fn into_proto(self) -> proto_def::SwapEventV2 {
+            proto_def::SwapEventV2 {
+                input_mint: self.input_mint.to_string(),
+                input_amount: self.input_amount,
+                output_mint: self.output_mint.to_string(),
+                output_amount: self.output_amount,
+            }
+        }
+    }
+    use crate::types::SwapsEvent;
+    impl IntoProto<proto_def::SwapsEvent> for SwapsEvent {
+        fn into_proto(self) -> proto_def::SwapsEvent {
+            proto_def::SwapsEvent {
+                swap_events: self
+                    .swap_events
+                    .into_iter()
+                    .map(|x| x.into_proto())
+                    .collect(),
             }
         }
     }
@@ -211,11 +245,11 @@ pub mod proto_types_parsers {
                     remaining_accounts_info: remaining_accounts_info.map(|x| x.into_proto()),
                 }),
                 Swap::OneIntro => swap::Variant::OneIntro(proto_def::SwapOneIntro {}),
-                Swap::PumpdotfunWrappedBuy => {
-                    swap::Variant::PumpdotfunWrappedBuy(proto_def::SwapPumpdotfunWrappedBuy {})
+                Swap::PumpWrappedBuy => {
+                    swap::Variant::PumpWrappedBuy(proto_def::SwapPumpWrappedBuy {})
                 },
-                Swap::PumpdotfunWrappedSell => {
-                    swap::Variant::PumpdotfunWrappedSell(proto_def::SwapPumpdotfunWrappedSell {})
+                Swap::PumpWrappedSell => {
+                    swap::Variant::PumpWrappedSell(proto_def::SwapPumpWrappedSell {})
                 },
                 Swap::PerpsV2 => swap::Variant::PerpsV2(proto_def::SwapPerpsV2 {}),
                 Swap::PerpsV2AddLiquidity => {
@@ -270,12 +304,8 @@ pub mod proto_types_parsers {
                     in_index: in_index.into(),
                     out_index: out_index.into(),
                 }),
-                Swap::PumpdotfunAmmBuy => {
-                    swap::Variant::PumpdotfunAmmBuy(proto_def::SwapPumpdotfunAmmBuy {})
-                },
-                Swap::PumpdotfunAmmSell => {
-                    swap::Variant::PumpdotfunAmmSell(proto_def::SwapPumpdotfunAmmSell {})
-                },
+                Swap::PumpSwapBuy => swap::Variant::PumpSwapBuy(proto_def::SwapPumpSwapBuy {}),
+                Swap::PumpSwapSell => swap::Variant::PumpSwapSell(proto_def::SwapPumpSwapSell {}),
                 Swap::Gamma => swap::Variant::Gamma(proto_def::SwapGamma {}),
                 Swap::MeteoraDlmmSwapV2 {
                     remaining_accounts_info,
@@ -338,9 +368,50 @@ pub mod proto_types_parsers {
                 Swap::TesseraV { side } => {
                     swap::Variant::TesseraV(proto_def::SwapTesseraV { side: side as i32 })
                 },
-                Swap::RaydiumStable => {
-                    swap::Variant::RaydiumStable(proto_def::SwapRaydiumStable {})
+                Swap::PumpWrappedBuyV2 => {
+                    swap::Variant::PumpWrappedBuyV2(proto_def::SwapPumpWrappedBuyV2 {})
                 },
+                Swap::PumpWrappedSellV2 => {
+                    swap::Variant::PumpWrappedSellV2(proto_def::SwapPumpWrappedSellV2 {})
+                },
+                Swap::PumpSwapBuyV2 => {
+                    swap::Variant::PumpSwapBuyV2(proto_def::SwapPumpSwapBuyV2 {})
+                },
+                Swap::PumpSwapSellV2 => {
+                    swap::Variant::PumpSwapSellV2(proto_def::SwapPumpSwapSellV2 {})
+                },
+                Swap::Heaven { a_to_b } => swap::Variant::Heaven(proto_def::SwapHeaven { a_to_b }),
+                Swap::SolFiV2 { is_quote_to_base } => {
+                    swap::Variant::SolFiV2(proto_def::SwapSolFiV2 { is_quote_to_base })
+                },
+                Swap::Aquifer => swap::Variant::Aquifer(proto_def::SwapAquifer {}),
+                Swap::PumpWrappedBuyV3 => {
+                    swap::Variant::PumpWrappedBuyV3(proto_def::SwapPumpWrappedBuyV3 {})
+                },
+                Swap::PumpWrappedSellV3 => {
+                    swap::Variant::PumpWrappedSellV3(proto_def::SwapPumpWrappedSellV3 {})
+                },
+                Swap::PumpSwapBuyV3 => {
+                    swap::Variant::PumpSwapBuyV3(proto_def::SwapPumpSwapBuyV3 {})
+                },
+                Swap::PumpSwapSellV3 => {
+                    swap::Variant::PumpSwapSellV3(proto_def::SwapPumpSwapSellV3 {})
+                },
+                Swap::JupiterLendDeposit => {
+                    swap::Variant::JupiterLendDeposit(proto_def::SwapJupiterLendDeposit {})
+                },
+                Swap::JupiterLendRedeem => {
+                    swap::Variant::JupiterLendRedeem(proto_def::SwapJupiterLendRedeem {})
+                },
+                Swap::DefiTuna {
+                    a_to_b,
+                    remaining_accounts_info,
+                } => swap::Variant::DefiTuna(proto_def::SwapDefiTuna {
+                    a_to_b,
+                    remaining_accounts_info: remaining_accounts_info.map(|x| x.into_proto()),
+                }),
+                Swap::AlphaQ { a_to_b } => swap::Variant::AlphaQ(proto_def::SwapAlphaQ { a_to_b }),
+                Swap::RaydiumV2 => swap::Variant::RaydiumV2(proto_def::SwapRaydiumV2 {}),
             };
 
             proto_def::Swap {

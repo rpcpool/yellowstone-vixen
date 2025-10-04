@@ -42,6 +42,7 @@ shared-data = []
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+hex = "0.4"
 
 [build-dependencies]
 prost-build = "0.13.1"

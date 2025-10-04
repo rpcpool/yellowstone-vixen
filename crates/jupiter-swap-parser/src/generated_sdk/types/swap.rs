@@ -110,8 +110,8 @@ pub enum Swap {
         remaining_accounts_info: Option<RemainingAccountsInfo>,
     },
     OneIntro,
-    PumpdotfunWrappedBuy,
-    PumpdotfunWrappedSell,
+    PumpWrappedBuy,
+    PumpWrappedSell,
     PerpsV2,
     PerpsV2AddLiquidity,
     PerpsV2RemoveLiquidity,
@@ -144,8 +144,8 @@ pub enum Swap {
         in_index: u8,
         out_index: u8,
     },
-    PumpdotfunAmmBuy,
-    PumpdotfunAmmSell,
+    PumpSwapBuy,
+    PumpSwapSell,
     Gamma,
     MeteoraDlmmSwapV2 {
         remaining_accounts_info: RemainingAccountsInfo,
@@ -178,5 +178,29 @@ pub enum Swap {
     TesseraV {
         side: Side,
     },
-    RaydiumStable,
+    PumpWrappedBuyV2,
+    PumpWrappedSellV2,
+    PumpSwapBuyV2,
+    PumpSwapSellV2,
+    Heaven {
+        a_to_b: bool,
+    },
+    SolFiV2 {
+        is_quote_to_base: bool,
+    },
+    Aquifer,
+    PumpWrappedBuyV3,
+    PumpWrappedSellV3,
+    PumpSwapBuyV3,
+    PumpSwapSellV3,
+    JupiterLendDeposit,
+    JupiterLendRedeem,
+    DefiTuna {
+        a_to_b: bool,
+        remaining_accounts_info: Option<RemainingAccountsInfo>,
+    },
+    AlphaQ {
+        a_to_b: bool,
+    },
+    RaydiumV2,
 }

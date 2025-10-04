@@ -67,16 +67,29 @@ pub enum JupiterError {
     /// 6018 - Source mint and destination mint cannot the same
     #[error("Source mint and destination mint cannot the same")]
     SourceAndDestinationMintCannotBeTheSame = 0x1782,
+    /// 6019 - Invalid mint
+    #[error("Invalid mint")]
+    InvalidMint = 0x1783,
+    /// 6020 - Invalid program authority
+    #[error("Invalid program authority")]
+    InvalidProgramAuthority = 0x1784,
+    /// 6021 - Invalid output token account
+    #[error("Invalid output token account")]
+    InvalidOutputTokenAccount = 0x1785,
+    /// 6022 - Invalid fee wallet
+    #[error("Invalid fee wallet")]
+    InvalidFeeWallet = 0x1786,
+    /// 6023 - Invalid authority
+    #[error("Invalid authority")]
+    InvalidAuthority = 0x1787,
+    /// 6024 - Insufficient funds
+    #[error("Insufficient funds")]
+    InsufficientFunds = 0x1788,
+    /// 6025 - Invalid token account
+    #[error("Invalid token account")]
+    InvalidTokenAccount = 0x1789,
 }
 
-#[allow(deprecated)]
-impl solana_program_error::PrintProgramError for JupiterError {
-    fn print<E>(&self) {
-        solana_msg::msg!(&self.to_string());
-    }
-}
-
-#[allow(deprecated)]
-impl<T> solana_decode_error::DecodeError<T> for JupiterError {
-    fn type_of() -> &'static str { "JupiterError" }
+impl From<JupiterError> for solana_program_error::ProgramError {
+    fn from(e: JupiterError) -> Self { solana_program_error::ProgramError::Custom(e as u32) }
 }
