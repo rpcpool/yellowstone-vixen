@@ -52,28 +52,32 @@ pub enum JupiterProgramIx {
     CloseToken(CloseTokenIxAccounts, CloseTokenIxData),
     CreateTokenLedger(CreateTokenLedgerIxAccounts),
     CreateTokenAccount(CreateTokenAccountIxAccounts, CreateTokenAccountIxData),
-    ExactOutRoute(ExactOutRouteIxAccounts, ExactOutRouteIxData, Vec<SwapEvent>),
-    Route(RouteIxAccounts, RouteIxData, Vec<SwapEvent>),
+    ExactOutRoute(
+        ExactOutRouteIxAccounts,
+        ExactOutRouteIxData,
+        Vec<(SwapEvent, u16)>,
+    ),
+    Route(RouteIxAccounts, RouteIxData, Vec<(SwapEvent, u16)>),
     RouteWithTokenLedger(
         RouteWithTokenLedgerIxAccounts,
         RouteWithTokenLedgerIxData,
-        Vec<SwapEvent>,
+        Vec<(SwapEvent, u16)>,
     ),
     SetTokenLedger(SetTokenLedgerIxAccounts),
     SharedAccountsExactOutRoute(
         SharedAccountsExactOutRouteIxAccounts,
         SharedAccountsExactOutRouteIxData,
-        Vec<SwapEvent>,
+        Vec<(SwapEvent, u16)>,
     ),
     SharedAccountsRoute(
         SharedAccountsRouteIxAccounts,
         SharedAccountsRouteIxData,
-        Vec<SwapEvent>,
+        Vec<(SwapEvent, u16)>,
     ),
     SharedAccountsRouteWithTokenLedger(
         SharedAccountsRouteWithTokenLedgerIxAccounts,
         SharedAccountsRouteWithTokenLedgerIxData,
-        Vec<SwapEvent>,
+        Vec<(SwapEvent, u16)>,
     ),
     ExactOutRouteV2(
         ExactOutRouteV2IxAccounts,
@@ -254,10 +258,13 @@ impl InstructionParser {
                 let de_ix_data: ExactOutRouteIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for all SwapEvents in inner instructions
-                let swap_events: Vec<SwapEvent> = ix
+                let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
                     .iter()
-                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .filter_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                            .map(|event| (event, inner_ix.ix_index))
+                    })
                     .collect();
 
                 Ok(JupiterProgramIx::ExactOutRoute(
@@ -282,10 +289,13 @@ impl InstructionParser {
                 };
                 let de_ix_data: RouteIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for all SwapEvents in inner instructions
-                let swap_events: Vec<SwapEvent> = ix
+                let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
                     .iter()
-                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .filter_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                            .map(|event| (event, inner_ix.ix_index))
+                    })
                     .collect();
 
                 Ok(JupiterProgramIx::Route(
@@ -312,10 +322,13 @@ impl InstructionParser {
                 let de_ix_data: RouteWithTokenLedgerIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for all SwapEvents in inner instructions
-                let swap_events: Vec<SwapEvent> = ix
+                let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
                     .iter()
-                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .filter_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                            .map(|event| (event, inner_ix.ix_index))
+                    })
                     .collect();
 
                 Ok(JupiterProgramIx::RouteWithTokenLedger(
@@ -354,10 +367,13 @@ impl InstructionParser {
                 let de_ix_data: SharedAccountsExactOutRouteIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for all SwapEvents in inner instructions
-                let swap_events: Vec<SwapEvent> = ix
+                let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
                     .iter()
-                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .filter_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                            .map(|event| (event, inner_ix.ix_index))
+                    })
                     .collect();
 
                 Ok(JupiterProgramIx::SharedAccountsExactOutRoute(
@@ -387,10 +403,13 @@ impl InstructionParser {
                 let de_ix_data: SharedAccountsRouteIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for all SwapEvents in inner instructions
-                let swap_events: Vec<SwapEvent> = ix
+                let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
                     .iter()
-                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .filter_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                            .map(|event| (event, inner_ix.ix_index))
+                    })
                     .collect();
 
                 Ok(JupiterProgramIx::SharedAccountsRoute(
@@ -421,10 +440,13 @@ impl InstructionParser {
                 let de_ix_data: SharedAccountsRouteWithTokenLedgerIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for all SwapEvents in inner instructions
-                let swap_events: Vec<SwapEvent> = ix
+                let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
                     .iter()
-                    .filter_map(|inner_ix| SwapEvent::from_inner_instruction_data(&inner_ix.data))
+                    .filter_map(|inner_ix| {
+                        SwapEvent::from_inner_instruction_data(&inner_ix.data)
+                            .map(|event| (event, inner_ix.ix_index))
+                    })
                     .collect();
 
                 Ok(JupiterProgramIx::SharedAccountsRouteWithTokenLedger(
