@@ -39,7 +39,7 @@ pub mod util;
 
 pub mod filter_pipeline;
 
-pub use handler::{Handler, HandlerResult, Pipeline};
+pub use handler::{DynPipeline, Handler, HandlerResult, Pipeline, PipelineErrors};
 pub use util::*;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 pub use yellowstone_vixen_core::CommitmentLevel;

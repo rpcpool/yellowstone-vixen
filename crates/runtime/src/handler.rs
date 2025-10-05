@@ -32,7 +32,7 @@ impl<T: Handler<U>, U> Handler<U> for &T {
     }
 }
 
-pub(crate) use pipeline_error::Errors as PipelineErrors;
+pub use pipeline_error::Errors as PipelineErrors;
 
 mod pipeline_error {
     use smallvec::SmallVec;
