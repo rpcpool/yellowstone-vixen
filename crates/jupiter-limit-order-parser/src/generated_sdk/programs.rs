@@ -5,7 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use solana_program::{pubkey, pubkey::Pubkey};
+use solana_pubkey::{pubkey, Pubkey};
 
 /// `limit_order2` program ID.
 pub const LIMIT_ORDER2_ID: Pubkey = pubkey!("j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X");

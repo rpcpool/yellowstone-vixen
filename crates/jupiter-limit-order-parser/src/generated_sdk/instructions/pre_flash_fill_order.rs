@@ -5,65 +5,65 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const PRE_FLASH_FILL_ORDER_DISCRIMINATOR: [u8; 8] = [240, 47, 153, 68, 13, 190, 225, 42];
 
 /// Accounts.
 #[derive(Debug)]
 pub struct PreFlashFillOrder {
-    pub taker: solana_program::pubkey::Pubkey,
+    pub taker: solana_pubkey::Pubkey,
 
-    pub order: solana_program::pubkey::Pubkey,
+    pub order: solana_pubkey::Pubkey,
 
-    pub input_mint_reserve: solana_program::pubkey::Pubkey,
+    pub input_mint_reserve: solana_pubkey::Pubkey,
 
-    pub taker_input_mint_account: solana_program::pubkey::Pubkey,
+    pub taker_input_mint_account: solana_pubkey::Pubkey,
 
-    pub input_mint: solana_program::pubkey::Pubkey,
+    pub input_mint: solana_pubkey::Pubkey,
 
-    pub input_token_program: solana_program::pubkey::Pubkey,
+    pub input_token_program: solana_pubkey::Pubkey,
 
-    pub instruction: solana_program::pubkey::Pubkey,
+    pub instruction: solana_pubkey::Pubkey,
 }
 
 impl PreFlashFillOrder {
     pub fn instruction(
         &self,
         args: PreFlashFillOrderInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
         args: PreFlashFillOrderInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.taker, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.order, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.order, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.input_mint_reserve,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.taker_input_mint_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.instruction,
             false,
         ));
@@ -72,7 +72,7 @@ impl PreFlashFillOrder {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LIMIT_ORDER2_ID,
             accounts,
             data,
@@ -95,7 +95,9 @@ impl PreFlashFillOrderInstructionData {
 }
 
 impl Default for PreFlashFillOrderInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -117,100 +119,82 @@ pub struct PreFlashFillOrderInstructionArgs {
 ///   6. `[optional]` instruction (default to `Sysvar1nstructions1111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct PreFlashFillOrderBuilder {
-    taker: Option<solana_program::pubkey::Pubkey>,
-    order: Option<solana_program::pubkey::Pubkey>,
-    input_mint_reserve: Option<solana_program::pubkey::Pubkey>,
-    taker_input_mint_account: Option<solana_program::pubkey::Pubkey>,
-    input_mint: Option<solana_program::pubkey::Pubkey>,
-    input_token_program: Option<solana_program::pubkey::Pubkey>,
-    instruction: Option<solana_program::pubkey::Pubkey>,
+    taker: Option<solana_pubkey::Pubkey>,
+    order: Option<solana_pubkey::Pubkey>,
+    input_mint_reserve: Option<solana_pubkey::Pubkey>,
+    taker_input_mint_account: Option<solana_pubkey::Pubkey>,
+    input_mint: Option<solana_pubkey::Pubkey>,
+    input_token_program: Option<solana_pubkey::Pubkey>,
+    instruction: Option<solana_pubkey::Pubkey>,
     making_amount: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl PreFlashFillOrderBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
-    pub fn taker(&mut self, taker: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn taker(&mut self, taker: solana_pubkey::Pubkey) -> &mut Self {
         self.taker = Some(taker);
         self
     }
-
     #[inline(always)]
-    pub fn order(&mut self, order: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn order(&mut self, order: solana_pubkey::Pubkey) -> &mut Self {
         self.order = Some(order);
         self
     }
-
     #[inline(always)]
-    pub fn input_mint_reserve(
-        &mut self,
-        input_mint_reserve: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn input_mint_reserve(&mut self, input_mint_reserve: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint_reserve = Some(input_mint_reserve);
         self
     }
-
     #[inline(always)]
     pub fn taker_input_mint_account(
         &mut self,
-        taker_input_mint_account: solana_program::pubkey::Pubkey,
+        taker_input_mint_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.taker_input_mint_account = Some(taker_input_mint_account);
         self
     }
-
     #[inline(always)]
-    pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_mint(&mut self, input_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
-
     #[inline(always)]
-    pub fn input_token_program(
-        &mut self,
-        input_token_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn input_token_program(&mut self, input_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.input_token_program = Some(input_token_program);
         self
     }
-
     /// `[optional account, default to 'Sysvar1nstructions1111111111111111111111111']`
     #[inline(always)]
-    pub fn instruction(&mut self, instruction: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn instruction_field(&mut self, instruction: solana_pubkey::Pubkey) -> &mut Self {
         self.instruction = Some(instruction);
         self
     }
-
     #[inline(always)]
     pub fn making_amount(&mut self, making_amount: u64) -> &mut Self {
         self.making_amount = Some(making_amount);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
-    pub fn build_instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = PreFlashFillOrder {
             taker: self.taker.expect("taker is not set"),
             order: self.order.expect("order is not set"),
@@ -224,7 +208,7 @@ impl PreFlashFillOrderBuilder {
             input_token_program: self
                 .input_token_program
                 .expect("input_token_program is not set"),
-            instruction: self.instruction.unwrap_or(solana_program::pubkey!(
+            instruction: self.instruction.unwrap_or(solana_pubkey::pubkey!(
                 "Sysvar1nstructions1111111111111111111111111"
             )),
         };
@@ -241,46 +225,46 @@ impl PreFlashFillOrderBuilder {
 
 /// `pre_flash_fill_order` CPI accounts.
 pub struct PreFlashFillOrderCpiAccounts<'a, 'b> {
-    pub taker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub order: &'b solana_program::account_info::AccountInfo<'a>,
+    pub order: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint_reserve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint_reserve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub taker_input_mint_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker_input_mint_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub instruction: &'b solana_program::account_info::AccountInfo<'a>,
+    pub instruction: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `pre_flash_fill_order` CPI instruction.
 pub struct PreFlashFillOrderCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub taker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub order: &'b solana_program::account_info::AccountInfo<'a>,
+    pub order: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint_reserve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint_reserve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub taker_input_mint_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub taker_input_mint_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub instruction: &'b solana_program::account_info::AccountInfo<'a>,
+    pub instruction: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: PreFlashFillOrderInstructionArgs,
 }
 
 impl<'a, 'b> PreFlashFillOrderCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: PreFlashFillOrderCpiAccounts<'a, 'b>,
         args: PreFlashFillOrderInstructionArgs,
     ) -> Self {
@@ -296,75 +280,57 @@ impl<'a, 'b> PreFlashFillOrderCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.taker.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.order.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.order.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.input_mint_reserve.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.taker_input_mint_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.instruction.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -374,7 +340,7 @@ impl<'a, 'b> PreFlashFillOrderCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LIMIT_ORDER2_ID,
             accounts,
             data,
@@ -393,9 +359,9 @@ impl<'a, 'b> PreFlashFillOrderCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -417,7 +383,7 @@ pub struct PreFlashFillOrderCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(PreFlashFillOrderCpiBuilderInstruction {
             __program: program,
             taker: None,
@@ -432,75 +398,66 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
-
     #[inline(always)]
-    pub fn taker(&mut self, taker: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn taker(&mut self, taker: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.taker = Some(taker);
         self
     }
-
     #[inline(always)]
-    pub fn order(&mut self, order: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn order(&mut self, order: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.order = Some(order);
         self
     }
-
     #[inline(always)]
     pub fn input_mint_reserve(
         &mut self,
-        input_mint_reserve: &'b solana_program::account_info::AccountInfo<'a>,
+        input_mint_reserve: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_mint_reserve = Some(input_mint_reserve);
         self
     }
-
     #[inline(always)]
     pub fn taker_input_mint_account(
         &mut self,
-        taker_input_mint_account: &'b solana_program::account_info::AccountInfo<'a>,
+        taker_input_mint_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.taker_input_mint_account = Some(taker_input_mint_account);
         self
     }
-
     #[inline(always)]
     pub fn input_mint(
         &mut self,
-        input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        input_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_mint = Some(input_mint);
         self
     }
-
     #[inline(always)]
     pub fn input_token_program(
         &mut self,
-        input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        input_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_token_program = Some(input_token_program);
         self
     }
-
     #[inline(always)]
     pub fn instruction(
         &mut self,
-        instruction: &'b solana_program::account_info::AccountInfo<'a>,
+        instruction: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.instruction = Some(instruction);
         self
     }
-
     #[inline(always)]
     pub fn making_amount(&mut self, making_amount: u64) -> &mut Self {
         self.instruction.making_amount = Some(making_amount);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -509,7 +466,6 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -517,27 +473,20 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = PreFlashFillOrderInstructionArgs {
             making_amount: self
                 .instruction
@@ -584,19 +533,15 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct PreFlashFillOrderCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    taker: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    order: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_mint_reserve: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    taker_input_mint_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    instruction: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    taker: Option<&'b solana_account_info::AccountInfo<'a>>,
+    order: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_mint_reserve: Option<&'b solana_account_info::AccountInfo<'a>>,
+    taker_input_mint_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    instruction: Option<&'b solana_account_info::AccountInfo<'a>>,
     making_amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

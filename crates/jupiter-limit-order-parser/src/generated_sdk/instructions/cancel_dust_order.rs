@@ -5,89 +5,87 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const CANCEL_DUST_ORDER_DISCRIMINATOR: [u8; 8] = [197, 112, 189, 164, 79, 48, 23, 246];
 
 /// Accounts.
 #[derive(Debug)]
 pub struct CancelDustOrder {
-    pub signer: solana_program::pubkey::Pubkey,
+    pub signer: solana_pubkey::Pubkey,
 
-    pub maker: solana_program::pubkey::Pubkey,
+    pub maker: solana_pubkey::Pubkey,
 
-    pub order: solana_program::pubkey::Pubkey,
+    pub order: solana_pubkey::Pubkey,
 
-    pub input_mint_reserve: solana_program::pubkey::Pubkey,
+    pub input_mint_reserve: solana_pubkey::Pubkey,
 
-    pub maker_input_mint_account: solana_program::pubkey::Pubkey,
+    pub maker_input_mint_account: solana_pubkey::Pubkey,
 
-    pub input_mint: solana_program::pubkey::Pubkey,
+    pub input_mint: solana_pubkey::Pubkey,
 
-    pub input_token_program: solana_program::pubkey::Pubkey,
+    pub input_token_program: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl CancelDustOrder {
     pub fn instruction(
         &self,
         args: CancelDustOrderInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
         args: CancelDustOrderInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.signer,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.maker, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.order, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(self.maker, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.order, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             self.input_mint_reserve,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             self.maker_input_mint_account,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -96,7 +94,7 @@ impl CancelDustOrder {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::LIMIT_ORDER2_ID,
             accounts,
             data,
@@ -119,7 +117,9 @@ impl CancelDustOrderInstructionData {
 }
 
 impl Default for CancelDustOrderInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -145,135 +145,110 @@ pub struct CancelDustOrderInstructionArgs {
 ///   10. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct CancelDustOrderBuilder {
-    signer: Option<solana_program::pubkey::Pubkey>,
-    maker: Option<solana_program::pubkey::Pubkey>,
-    order: Option<solana_program::pubkey::Pubkey>,
-    input_mint_reserve: Option<solana_program::pubkey::Pubkey>,
-    maker_input_mint_account: Option<solana_program::pubkey::Pubkey>,
-    input_mint: Option<solana_program::pubkey::Pubkey>,
-    input_token_program: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    signer: Option<solana_pubkey::Pubkey>,
+    maker: Option<solana_pubkey::Pubkey>,
+    order: Option<solana_pubkey::Pubkey>,
+    input_mint_reserve: Option<solana_pubkey::Pubkey>,
+    maker_input_mint_account: Option<solana_pubkey::Pubkey>,
+    input_mint: Option<solana_pubkey::Pubkey>,
+    input_token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     one_usd_input_mint_amount: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CancelDustOrderBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
-    pub fn signer(&mut self, signer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn signer(&mut self, signer: solana_pubkey::Pubkey) -> &mut Self {
         self.signer = Some(signer);
         self
     }
-
     #[inline(always)]
-    pub fn maker(&mut self, maker: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn maker(&mut self, maker: solana_pubkey::Pubkey) -> &mut Self {
         self.maker = Some(maker);
         self
     }
-
     #[inline(always)]
-    pub fn order(&mut self, order: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn order(&mut self, order: solana_pubkey::Pubkey) -> &mut Self {
         self.order = Some(order);
         self
     }
-
     #[inline(always)]
-    pub fn input_mint_reserve(
-        &mut self,
-        input_mint_reserve: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn input_mint_reserve(&mut self, input_mint_reserve: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint_reserve = Some(input_mint_reserve);
         self
     }
-
     #[inline(always)]
     pub fn maker_input_mint_account(
         &mut self,
-        maker_input_mint_account: solana_program::pubkey::Pubkey,
+        maker_input_mint_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.maker_input_mint_account = Some(maker_input_mint_account);
         self
     }
-
     #[inline(always)]
-    pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_mint(&mut self, input_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
-
     #[inline(always)]
-    pub fn input_token_program(
-        &mut self,
-        input_token_program: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn input_token_program(&mut self, input_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.input_token_program = Some(input_token_program);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
     }
-
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn one_usd_input_mint_amount(&mut self, one_usd_input_mint_amount: u64) -> &mut Self {
         self.one_usd_input_mint_amount = Some(one_usd_input_mint_amount);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CancelDustOrder {
             signer: self.signer.expect("signer is not set"),
             maker: self.maker.expect("maker is not set"),
@@ -290,9 +265,9 @@ impl CancelDustOrderBuilder {
                 .expect("input_token_program is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
             associated_token_program: self.associated_token_program.unwrap_or(
-                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
@@ -310,62 +285,62 @@ impl CancelDustOrderBuilder {
 
 /// `cancel_dust_order` CPI accounts.
 pub struct CancelDustOrderCpiAccounts<'a, 'b> {
-    pub signer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub signer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub maker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub maker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub order: &'b solana_program::account_info::AccountInfo<'a>,
+    pub order: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint_reserve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint_reserve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub maker_input_mint_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub maker_input_mint_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `cancel_dust_order` CPI instruction.
 pub struct CancelDustOrderCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub signer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub signer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub maker: &'b solana_program::account_info::AccountInfo<'a>,
+    pub maker: &'b solana_account_info::AccountInfo<'a>,
 
-    pub order: &'b solana_program::account_info::AccountInfo<'a>,
+    pub order: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint_reserve: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint_reserve: &'b solana_account_info::AccountInfo<'a>,
 
-    pub maker_input_mint_account: &'b solana_program::account_info::AccountInfo<'a>,
+    pub maker_input_mint_account: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: CancelDustOrderInstructionArgs,
 }
 
 impl<'a, 'b> CancelDustOrderCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: CancelDustOrderCpiAccounts<'a, 'b>,
         args: CancelDustOrderInstructionArgs,
     ) -> Self {
@@ -385,91 +360,70 @@ impl<'a, 'b> CancelDustOrderCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.signer.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.maker.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.order.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(*self.maker.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(*self.order.key, false));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.input_mint_reserve.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.maker_input_mint_account.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -479,7 +433,7 @@ impl<'a, 'b> CancelDustOrderCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::LIMIT_ORDER2_ID,
             accounts,
             data,
@@ -502,9 +456,9 @@ impl<'a, 'b> CancelDustOrderCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -530,7 +484,7 @@ pub struct CancelDustOrderCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> CancelDustOrderCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(CancelDustOrderCpiBuilderInstruction {
             __program: program,
             signer: None,
@@ -549,111 +503,92 @@ impl<'a, 'b> CancelDustOrderCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
-
     #[inline(always)]
-    pub fn signer(
-        &mut self,
-        signer: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn signer(&mut self, signer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.signer = Some(signer);
         self
     }
-
     #[inline(always)]
-    pub fn maker(&mut self, maker: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn maker(&mut self, maker: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.maker = Some(maker);
         self
     }
-
     #[inline(always)]
-    pub fn order(&mut self, order: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn order(&mut self, order: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.order = Some(order);
         self
     }
-
     #[inline(always)]
     pub fn input_mint_reserve(
         &mut self,
-        input_mint_reserve: &'b solana_program::account_info::AccountInfo<'a>,
+        input_mint_reserve: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_mint_reserve = Some(input_mint_reserve);
         self
     }
-
     #[inline(always)]
     pub fn maker_input_mint_account(
         &mut self,
-        maker_input_mint_account: &'b solana_program::account_info::AccountInfo<'a>,
+        maker_input_mint_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.maker_input_mint_account = Some(maker_input_mint_account);
         self
     }
-
     #[inline(always)]
     pub fn input_mint(
         &mut self,
-        input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        input_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_mint = Some(input_mint);
         self
     }
-
     #[inline(always)]
     pub fn input_token_program(
         &mut self,
-        input_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        input_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_token_program = Some(input_token_program);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn one_usd_input_mint_amount(&mut self, one_usd_input_mint_amount: u64) -> &mut Self {
         self.instruction.one_usd_input_mint_amount = Some(one_usd_input_mint_amount);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -662,7 +597,6 @@ impl<'a, 'b> CancelDustOrderCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -670,27 +604,20 @@ impl<'a, 'b> CancelDustOrderCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = CancelDustOrderInstructionArgs {
             one_usd_input_mint_amount: self
                 .instruction
@@ -751,23 +678,19 @@ impl<'a, 'b> CancelDustOrderCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct CancelDustOrderCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    signer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    maker: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    order: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_mint_reserve: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    maker_input_mint_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    signer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    maker: Option<&'b solana_account_info::AccountInfo<'a>>,
+    order: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_mint_reserve: Option<&'b solana_account_info::AccountInfo<'a>>,
+    maker_input_mint_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     one_usd_input_mint_amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

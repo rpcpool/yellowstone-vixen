@@ -5,24 +5,27 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
 
-use crate::{
-    instructions::{
-        CancelDustOrder as CancelDustOrderIxAccounts,
-        CancelDustOrderInstructionArgs as CancelDustOrderIxData,
-        CancelOrder as CancelOrderIxAccounts, FillOrder as FillOrderIxAccounts,
-        FillOrderInstructionArgs as FillOrderIxData, FlashFillOrder as FlashFillOrderIxAccounts,
-        FlashFillOrderInstructionArgs as FlashFillOrderIxData,
-        InitializeOrder as InitializeOrderIxAccounts,
-        InitializeOrderInstructionArgs as InitializeOrderIxData,
-        PreFlashFillOrder as PreFlashFillOrderIxAccounts,
-        PreFlashFillOrderInstructionArgs as PreFlashFillOrderIxData,
-        UpdateFee as UpdateFeeIxAccounts, UpdateFeeInstructionArgs as UpdateFeeIxData,
-        WithdrawFee as WithdrawFeeIxAccounts,
-    },
-    ID,
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
+
+use crate::deserialize_checked;
+
+use crate::instructions::{
+    CancelDustOrder as CancelDustOrderIxAccounts,
+    CancelDustOrderInstructionArgs as CancelDustOrderIxData, CancelOrder as CancelOrderIxAccounts,
+    FillOrder as FillOrderIxAccounts, FillOrderInstructionArgs as FillOrderIxData,
+    FlashFillOrder as FlashFillOrderIxAccounts,
+    FlashFillOrderInstructionArgs as FlashFillOrderIxData,
+    InitializeOrder as InitializeOrderIxAccounts,
+    InitializeOrderInstructionArgs as InitializeOrderIxData,
+    PreFlashFillOrder as PreFlashFillOrderIxAccounts,
+    PreFlashFillOrderInstructionArgs as PreFlashFillOrderIxData, UpdateFee as UpdateFeeIxAccounts,
+    UpdateFeeInstructionArgs as UpdateFeeIxData, WithdrawFee as WithdrawFeeIxAccounts,
 };
+use crate::ID;
 
 /// LimitOrder2 Instructions
 #[derive(Debug)]
@@ -43,9 +46,16 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+
+    #[cfg(not(feature = "shared-data"))]
     type Output = LimitOrder2ProgramIx;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "LimitOrder2::InstructionParser".into() }
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<LimitOrder2ProgramIx>;
+
+    fn id(&self) -> std::borrow::Cow<'static, str> {
+        "LimitOrder2::InstructionParser".into()
+    }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -59,7 +69,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -68,194 +94,179 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        ID.to_bytes().into()
+    }
 }
 
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<LimitOrder2ProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [197, 112, 189, 164, 79, 48, 23, 246] => {
-                check_min_accounts_req(accounts_len, 11)?;
+                let expected_accounts_len = 11;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CancelDustOrderIxAccounts {
-                    signer: ix.accounts[0].0.into(),
-                    maker: ix.accounts[1].0.into(),
-                    order: ix.accounts[2].0.into(),
-                    input_mint_reserve: ix.accounts[3].0.into(),
-                    maker_input_mint_account: ix.accounts[4].0.into(),
-                    input_mint: ix.accounts[5].0.into(),
-                    input_token_program: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    associated_token_program: ix.accounts[8].0.into(),
-                    event_authority: ix.accounts[9].0.into(),
-                    program: ix.accounts[10].0.into(),
+                    signer: next_account(accounts)?,
+                    maker: next_account(accounts)?,
+                    order: next_account(accounts)?,
+                    input_mint_reserve: next_account(accounts)?,
+                    maker_input_mint_account: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    input_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: CancelDustOrderIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimitOrder2ProgramIx::CancelDustOrder(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [95, 129, 237, 240, 8, 49, 223, 132] => {
-                check_min_accounts_req(accounts_len, 9)?;
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CancelOrderIxAccounts {
-                    signer: ix.accounts[0].0.into(),
-                    maker: ix.accounts[1].0.into(),
-                    order: ix.accounts[2].0.into(),
-                    input_mint_reserve: ix.accounts[3].0.into(),
-                    maker_input_mint_account: if ix.accounts[4]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[4].0.into())
-                    },
-                    input_mint: ix.accounts[5].0.into(),
-                    input_token_program: ix.accounts[6].0.into(),
-                    event_authority: ix.accounts[7].0.into(),
-                    program: ix.accounts[8].0.into(),
+                    signer: next_account(accounts)?,
+                    maker: next_account(accounts)?,
+                    order: next_account(accounts)?,
+                    input_mint_reserve: next_account(accounts)?,
+                    maker_input_mint_account: next_program_id_optional_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    input_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(LimitOrder2ProgramIx::CancelOrder(ix_accounts))
             },
             [232, 122, 115, 25, 199, 143, 136, 162] => {
-                check_min_accounts_req(accounts_len, 16)?;
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = FillOrderIxAccounts {
-                    taker: ix.accounts[0].0.into(),
-                    maker: ix.accounts[1].0.into(),
-                    order: ix.accounts[2].0.into(),
-                    taker_input_mint_account: ix.accounts[3].0.into(),
-                    taker_output_mint_account: ix.accounts[4].0.into(),
-                    maker_output_mint_account: if ix.accounts[5]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[5].0.into())
-                    },
-                    fee_account: ix.accounts[6].0.into(),
-                    order_input_mint_account: ix.accounts[7].0.into(),
-                    input_mint: ix.accounts[8].0.into(),
-                    input_token_program: ix.accounts[9].0.into(),
-                    output_mint: ix.accounts[10].0.into(),
-                    output_token_program: ix.accounts[11].0.into(),
-                    jupiter_program: ix.accounts[12].0.into(),
-                    system_program: ix.accounts[13].0.into(),
-                    event_authority: ix.accounts[14].0.into(),
-                    program: ix.accounts[15].0.into(),
+                    taker: next_account(accounts)?,
+                    maker: next_account(accounts)?,
+                    order: next_account(accounts)?,
+                    taker_input_mint_account: next_account(accounts)?,
+                    taker_output_mint_account: next_account(accounts)?,
+                    maker_output_mint_account: next_program_id_optional_account(accounts)?,
+                    fee_account: next_account(accounts)?,
+                    order_input_mint_account: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    input_token_program: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    output_token_program: next_account(accounts)?,
+                    jupiter_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: FillOrderIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: FillOrderIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimitOrder2ProgramIx::FillOrder(ix_accounts, de_ix_data))
             },
             [252, 104, 18, 134, 164, 78, 18, 140] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = FlashFillOrderIxAccounts {
-                    taker: ix.accounts[0].0.into(),
-                    maker: ix.accounts[1].0.into(),
-                    order: ix.accounts[2].0.into(),
-                    input_mint_reserve: ix.accounts[3].0.into(),
-                    maker_output_mint_account: if ix.accounts[4]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[4].0.into())
-                    },
-                    taker_output_mint_account: if ix.accounts[5]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[5].0.into())
-                    },
-                    fee_account: ix.accounts[6].0.into(),
-                    input_token_program: ix.accounts[7].0.into(),
-                    output_mint: ix.accounts[8].0.into(),
-                    output_token_program: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
-                    event_authority: ix.accounts[11].0.into(),
-                    program: ix.accounts[12].0.into(),
+                    taker: next_account(accounts)?,
+                    maker: next_account(accounts)?,
+                    order: next_account(accounts)?,
+                    input_mint_reserve: next_account(accounts)?,
+                    maker_output_mint_account: next_program_id_optional_account(accounts)?,
+                    taker_output_mint_account: next_program_id_optional_account(accounts)?,
+                    fee_account: next_account(accounts)?,
+                    input_token_program: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    output_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: FlashFillOrderIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: FlashFillOrderIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimitOrder2ProgramIx::FlashFillOrder(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [133, 110, 74, 175, 112, 159, 245, 159] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeOrderIxAccounts {
-                    payer: ix.accounts[0].0.into(),
-                    maker: ix.accounts[1].0.into(),
-                    order: ix.accounts[2].0.into(),
-                    input_mint_reserve: ix.accounts[3].0.into(),
-                    maker_input_mint_account: ix.accounts[4].0.into(),
-                    fee: ix.accounts[5].0.into(),
-                    referral: if ix.accounts[6]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[6].0.into())
-                    },
-                    input_mint: ix.accounts[7].0.into(),
-                    output_mint: ix.accounts[8].0.into(),
-                    input_token_program: ix.accounts[9].0.into(),
-                    output_token_program: ix.accounts[10].0.into(),
-                    system_program: ix.accounts[11].0.into(),
-                    associated_token_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    payer: next_account(accounts)?,
+                    maker: next_account(accounts)?,
+                    order: next_account(accounts)?,
+                    input_mint_reserve: next_account(accounts)?,
+                    maker_input_mint_account: next_account(accounts)?,
+                    fee: next_account(accounts)?,
+                    referral: next_program_id_optional_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    input_token_program: next_account(accounts)?,
+                    output_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: InitializeOrderIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimitOrder2ProgramIx::InitializeOrder(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [240, 47, 153, 68, 13, 190, 225, 42] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = PreFlashFillOrderIxAccounts {
-                    taker: ix.accounts[0].0.into(),
-                    order: ix.accounts[1].0.into(),
-                    input_mint_reserve: ix.accounts[2].0.into(),
-                    taker_input_mint_account: ix.accounts[3].0.into(),
-                    input_mint: ix.accounts[4].0.into(),
-                    input_token_program: ix.accounts[5].0.into(),
-                    instruction: ix.accounts[6].0.into(),
+                    taker: next_account(accounts)?,
+                    order: next_account(accounts)?,
+                    input_mint_reserve: next_account(accounts)?,
+                    taker_input_mint_account: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    input_token_program: next_account(accounts)?,
+                    instruction: next_account(accounts)?,
                 };
                 let de_ix_data: PreFlashFillOrderIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimitOrder2ProgramIx::PreFlashFillOrder(
                     ix_accounts,
                     de_ix_data,
                 ))
             },
             [232, 253, 195, 247, 148, 212, 73, 222] => {
-                check_min_accounts_req(accounts_len, 3)?;
+                let expected_accounts_len = 3;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateFeeIxAccounts {
-                    admin: ix.accounts[0].0.into(),
-                    fee_authority: ix.accounts[1].0.into(),
-                    system_program: ix.accounts[2].0.into(),
+                    admin: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
                 };
-                let de_ix_data: UpdateFeeIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: UpdateFeeIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(LimitOrder2ProgramIx::UpdateFee(ix_accounts, de_ix_data))
             },
             [14, 122, 231, 218, 31, 238, 223, 150] => {
-                check_min_accounts_req(accounts_len, 6)?;
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawFeeIxAccounts {
-                    admin: ix.accounts[0].0.into(),
-                    fee_authority: ix.accounts[1].0.into(),
-                    program_fee_account: ix.accounts[2].0.into(),
-                    destination_token_account: ix.accounts[3].0.into(),
-                    token_program: ix.accounts[4].0.into(),
-                    mint: ix.accounts[5].0.into(),
+                    admin: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    program_fee_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    mint: next_account(accounts)?,
                 };
                 Ok(LimitOrder2ProgramIx::WithdrawFee(ix_accounts))
             },
@@ -286,7 +297,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -303,12 +321,56 @@ pub fn check_min_accounts_req(
     }
 }
 
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
+    }
+}
+
 // #[cfg(feature = "proto")]
 mod proto_parser {
+    use super::{InstructionParser, LimitOrder2ProgramIx};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{CancelDustOrderIxAccounts, InstructionParser, LimitOrder2ProgramIx};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
+    use super::CancelDustOrderIxAccounts;
     impl IntoProto<proto_def::CancelDustOrderIxAccounts> for CancelDustOrderIxAccounts {
         fn into_proto(self) -> proto_def::CancelDustOrderIxAccounts {
             proto_def::CancelDustOrderIxAccounts {
@@ -378,18 +440,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::FillOrderIxData {
             proto_def::FillOrderIxData {
                 input_amount: self.input_amount,
-                swap_data: self
-                    .swap_data
-                    .chunks(4)
-                    .map(|chunk| {
-                        u32::from_le_bytes([
-                            chunk.first().copied().unwrap_or(0),
-                            chunk.get(1).copied().unwrap_or(0),
-                            chunk.get(2).copied().unwrap_or(0),
-                            chunk.get(3).copied().unwrap_or(0),
-                        ])
-                    })
-                    .collect(),
+                swap_data: self.swap_data.into_iter().map(|b| b as u32).collect(),
             }
         }
     }
@@ -583,6 +634,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

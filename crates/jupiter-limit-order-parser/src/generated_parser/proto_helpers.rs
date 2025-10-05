@@ -9,7 +9,9 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::{proto_def, types::CancelDustOrderEvent};
+    use crate::proto_def;
+
+    use crate::types::CancelDustOrderEvent;
     impl IntoProto<proto_def::CancelDustOrderEvent> for CancelDustOrderEvent {
         fn into_proto(self) -> proto_def::CancelDustOrderEvent {
             proto_def::CancelDustOrderEvent {

@@ -10,7 +10,7 @@ pub(crate) mod r#cancel_order_event;
 pub(crate) mod r#create_order_event;
 pub(crate) mod r#trade_event;
 
-pub use self::{
-    r#cancel_dust_order_event::*, r#cancel_order_event::*, r#create_order_event::*,
-    r#trade_event::*,
-};
+pub use self::r#cancel_dust_order_event::*;
+pub use self::r#cancel_order_event::*;
+pub use self::r#create_order_event::*;
+pub use self::r#trade_event::*;

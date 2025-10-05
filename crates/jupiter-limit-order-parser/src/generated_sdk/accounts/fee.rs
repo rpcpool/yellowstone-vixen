@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -14,6 +15,8 @@ pub struct Fee {
     pub normal_fee_bps: u16,
     pub stable_fee_bps: u16,
 }
+
+pub const FEE_DISCRIMINATOR: [u8; 8] = [24, 55, 150, 250, 168, 27, 101, 178];
 
 impl Fee {
     pub const LEN: usize = 12;
@@ -25,12 +28,10 @@ impl Fee {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Fee {
+impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for Fee {
     type Error = std::io::Error;
 
-    fn try_from(
-        account_info: &solana_program::account_info::AccountInfo<'a>,
-    ) -> Result<Self, Self::Error> {
+    fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
         let mut data: &[u8] = &(*account_info.data).borrow();
         Self::deserialize(&mut data)
     }
@@ -39,7 +40,7 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Fee {
 #[cfg(feature = "fetch")]
 pub fn fetch_fee(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::DecodedAccount<Fee>, std::io::Error> {
     let accounts = fetch_all_fee(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -48,7 +49,7 @@ pub fn fetch_fee(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_fee(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::DecodedAccount<Fee>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -73,7 +74,7 @@ pub fn fetch_all_fee(
 #[cfg(feature = "fetch")]
 pub fn fetch_maybe_fee(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::MaybeAccount<Fee>, std::io::Error> {
     let accounts = fetch_all_maybe_fee(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -82,7 +83,7 @@ pub fn fetch_maybe_fee(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_maybe_fee(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::MaybeAccount<Fee>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -118,7 +119,9 @@ impl anchor_lang::AccountSerialize for Fee {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Fee {
-    fn owner() -> Pubkey { crate::LIMIT_ORDER2_ID }
+    fn owner() -> Pubkey {
+        crate::LIMIT_ORDER2_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -126,5 +129,5 @@ impl anchor_lang::IdlBuild for Fee {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Fee {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

@@ -42,22 +42,22 @@ pub enum LimitOrder2Error {
     InvalidAdmin = 0x1779,
     /// 6010 -
     #[error("")]
-    InvalidKeeper = 0x177a,
+    InvalidKeeper = 0x177A,
     /// 6011 -
     #[error("")]
-    MathOverflow = 0x177b,
+    MathOverflow = 0x177B,
     /// 6012 -
     #[error("")]
-    ProgramMismatch = 0x177c,
+    ProgramMismatch = 0x177C,
     /// 6013 -
     #[error("")]
-    UnknownInstruction = 0x177d,
+    UnknownInstruction = 0x177D,
     /// 6014 -
     #[error("")]
-    MissingRepayInstructions = 0x177e,
+    MissingRepayInstructions = 0x177E,
     /// 6015 -
     #[error("")]
-    InvalidOrder = 0x177f,
+    InvalidOrder = 0x177F,
     /// 6016 -
     #[error("")]
     InvalidBorrowMakingAmount = 0x1780,
@@ -90,20 +90,14 @@ pub enum LimitOrder2Error {
     InvalidSwappedAmount = 0x1789,
     /// 6026 -
     #[error("")]
-    InvalidDustOrder = 0x178a,
+    InvalidDustOrder = 0x178A,
     /// 6027 -
     #[error("")]
-    UnsupportedMint = 0x178b,
+    UnsupportedMint = 0x178B,
 }
 
-#[allow(deprecated)]
-impl solana_program::program_error::PrintProgramError for LimitOrder2Error {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
+impl From<LimitOrder2Error> for solana_program_error::ProgramError {
+    fn from(e: LimitOrder2Error) -> Self {
+        solana_program_error::ProgramError::Custom(e as u32)
     }
-}
-
-#[allow(deprecated)]
-impl<T> solana_program::decode_error::DecodeError<T> for LimitOrder2Error {
-    fn type_of() -> &'static str { "LimitOrder2Error" }
 }

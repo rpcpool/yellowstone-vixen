@@ -5,10 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::{
-    accounts::{Fee, Order},
-    ID,
-};
+use crate::accounts::Fee;
+use crate::accounts::Order;
+use crate::ID;
+
+use crate::deserialize_checked;
 
 /// LimitOrder2 Program State
 #[allow(clippy::large_enum_variant)]
@@ -23,11 +24,11 @@ impl LimitOrder2ProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
         let acc_discriminator: [u8; 8] = data_bytes[0..8].try_into()?;
         let acc = match acc_discriminator {
-            [24, 55, 150, 250, 168, 27, 101, 178] => {
-                Ok(LimitOrder2ProgramState::Fee(Fee::from_bytes(data_bytes)?))
-            },
+            [24, 55, 150, 250, 168, 27, 101, 178] => Ok(LimitOrder2ProgramState::Fee(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             [134, 173, 223, 185, 77, 86, 28, 51] => Ok(LimitOrder2ProgramState::Order(
-                Order::from_bytes(data_bytes)?,
+                deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
@@ -67,7 +68,9 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = LimitOrder2ProgramState;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "limit_order2::AccountParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> {
+        "limit_order2::AccountParser".into()
+    }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -83,22 +86,40 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
-        LimitOrder2ProgramState::try_unpack(&inner.data)
+            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+        let res = LimitOrder2ProgramState::try_unpack(&inner.data);
+
+        #[cfg(feature = "tracing")]
+        if let Err(e) = &res {
+            let acc_discriminator: [u8; 8] = inner.data[0..8].try_into()?;
+            tracing::info!(
+                name: "incorrectly_parsed_account",
+                name = "account_update",
+                program = ID.to_string(),
+                account = "deserialization_error",
+                discriminator = ?acc_discriminator,
+                error = ?e
+            );
+        }
+
+        res
     }
 }
 
 impl yellowstone_vixen_core::ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        ID.to_bytes().into()
+    }
 }
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
+    use super::{AccountParser, LimitOrder2ProgramState};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{AccountParser, Fee, LimitOrder2ProgramState};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
+    use super::Fee;
     impl IntoProto<proto_def::Fee> for Fee {
         fn into_proto(self) -> proto_def::Fee {
             proto_def::Fee {
@@ -154,6 +175,8 @@ mod proto_parser {
     impl ParseProto for AccountParser {
         type Message = proto_def::ProgramState;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            value.into_proto()
+        }
     }
 }
