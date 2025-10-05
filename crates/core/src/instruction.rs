@@ -15,7 +15,7 @@ use yellowstone_grpc_proto::{
     },
 };
 
-use crate::{Pubkey, TransactionUpdate};
+use crate::{KeyBytes, Pubkey, TransactionUpdate};
 
 // Static regex patterns for log parsing
 static INVOKE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -31,6 +31,17 @@ static FAILED_REGEX: LazyLock<Regex> =
 static CONSUMED_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"Program ([1-9A-HJ-NP-Za-km-z]{32,44}) consumed \d+ of \d+ compute units").unwrap()
 });
+
+/// Information about a token account created during transaction execution
+#[derive(Debug, Clone, Copy)]
+pub struct CreatedTokenAccount {
+    /// The pubkey of the created token account
+    pub account: KeyBytes<32>,
+    /// The mint of the token
+    pub mint: KeyBytes<32>,
+    /// The owner of the token account
+    pub owner: KeyBytes<32>,
+}
 
 /// Pre-parsed log message representation
 #[derive(Debug, Clone)]
@@ -140,6 +151,8 @@ pub struct InstructionShared {
     pub accounts: AccountKeys,
     /// The header of the transaction.
     pub message_header: MessageHeader,
+    /// Token accounts created during transaction execution (parsed from inner instructions)
+    pub created_token_accounts: Vec<CreatedTokenAccount>,
 }
 
 /// A parsed instruction from a transaction update.
@@ -215,6 +228,117 @@ impl AccountKeys {
 }
 
 impl InstructionUpdate {
+    /// Parse created token accounts from both outer and inner instructions
+    ///
+    /// Searches through all outer and inner instructions for SPL Token InitializeAccount/InitializeAccount2/InitializeAccount3
+    /// instructions and extracts the account, mint, and owner information.
+    fn parse_created_token_accounts(
+        outer_instructions: &[CompiledInstruction],
+        inner_instructions: &[InnerInstructions],
+        account_keys: &[Vec<u8>],
+        loaded_writable_addresses: &[Vec<u8>],
+        loaded_readonly_addresses: &[Vec<u8>],
+    ) -> Vec<CreatedTokenAccount> {
+        use spl_token::instruction::TokenInstruction;
+
+        let mut created_accounts = Vec::new();
+
+        // Helper to get account by index
+        let get_account = |idx: usize| -> Option<KeyBytes<32>> {
+            let mut i = idx;
+            for keys in [
+                account_keys,
+                loaded_writable_addresses,
+                loaded_readonly_addresses,
+            ] {
+                if i < keys.len() {
+                    return keys[i].as_slice().try_into().ok();
+                }
+                i = i.saturating_sub(keys.len());
+            }
+            None
+        };
+
+        // SPL Token program IDs
+        let spl_token_program: KeyBytes<32> = spl_token::ID.to_bytes().into();
+        let spl_token_2022_program: KeyBytes<32> = spl_token_2022::ID.to_bytes().into();
+
+        // Helper to process a compiled instruction
+        let mut process_instruction = |program_id_index: u32, accounts: &[u8], data: &[u8]| {
+            // Check if this is a SPL Token or Token-2022 program instruction
+            let Some(program_id) = get_account(program_id_index as usize) else {
+                return;
+            };
+
+            if program_id != spl_token_program && program_id != spl_token_2022_program {
+                return;
+            }
+
+            // Try to parse the instruction
+            if let Ok(token_ix) = TokenInstruction::unpack(data) {
+                match token_ix {
+                    // InitializeAccount: accounts = [account, mint, owner, rent_sysvar]
+                    TokenInstruction::InitializeAccount => {
+                        if accounts.len() >= 3 {
+                            if let (Some(account), Some(mint), Some(owner)) = (
+                                get_account(accounts[0] as usize),
+                                get_account(accounts[1] as usize),
+                                get_account(accounts[2] as usize),
+                            ) {
+                                created_accounts.push(CreatedTokenAccount {
+                                    account,
+                                    mint,
+                                    owner,
+                                });
+                            }
+                        }
+                    },
+                    // InitializeAccount2: accounts = [account, mint]
+                    // InitializeAccount3: accounts = [account, mint]
+                    // owner is extracted from instruction data, not accounts
+                    TokenInstruction::InitializeAccount2 { owner }
+                    | TokenInstruction::InitializeAccount3 { owner } => {
+                        if accounts.len() >= 2 {
+                            if let (Some(account), Some(mint)) = (
+                                get_account(accounts[0] as usize),
+                                get_account(accounts[1] as usize),
+                            ) {
+                                created_accounts.push(CreatedTokenAccount {
+                                    account,
+                                    mint,
+                                    owner: owner.to_bytes().into(),
+                                });
+                            }
+                        }
+                    },
+                    _ => {},
+                }
+            }
+        };
+
+        // Parse outer instructions
+        for outer_ix in outer_instructions {
+            process_instruction(
+                outer_ix.program_id_index,
+                &outer_ix.accounts,
+                &outer_ix.data,
+            );
+        }
+
+        // Parse inner instructions
+        for inner_ix_set in inner_instructions {
+            for inner_ix in &inner_ix_set.instructions {
+                process_instruction(
+                    inner_ix.program_id_index,
+                    &inner_ix.accounts,
+                    &inner_ix.data,
+                );
+            }
+        }
+
+        created_accounts
+    }
+
     /// Parse a transaction update into a list of instructions.
     ///
     /// # Errors
@@ -262,6 +386,15 @@ impl InstructionUpdate {
             address_table_lookups: _,
         } = message.ok_or(Missing::TransactionMessage)?;
 
+        // Parse created token accounts from both outer and inner instructions
+        let created_token_accounts = Self::parse_created_token_accounts(
+            &instructions,
+            &inner_instructions,
+            &account_keys,
+            &loaded_writable_addresses,
+            &loaded_readonly_addresses,
+        );
+
         let shared = Arc::new(InstructionShared {
             slot,
             signature,
@@ -283,6 +416,7 @@ impl InstructionUpdate {
                 dynamic_ro: loaded_readonly_addresses,
             },
             message_header: header.ok_or(Missing::TransactionMessageHeader)?,
+            created_token_accounts,
         });
 
         let mut outer = instructions
@@ -1086,5 +1220,65 @@ mod tests {
         println!("✓ All parent relationships verified correctly");
         println!("✓ ix_index values are unique and sequential");
         println!("✓ All parent programs exist in the transaction");
+    }
+
+    #[tokio::test]
+    async fn test_parse_created_token_accounts() {
+        use yellowstone_vixen_mock::create_mock_transaction_update;
+
+        let fixture_signature = "3BjJ4XxXi1ttr58wbT8Je3z75YwsH6mhQUcC46HSJUW69ANNeVmcixsx3FTJK459JiSr5jNMijtjcN6nQ2kR5ucG";
+        let expected_token_account = "26JJhFPRFNbH7Q9gdbbsyzb8TdQuA7CYJ1Zn4cg4PebD";
+
+        // Create a mock transaction update using the utility
+        let transaction_update = create_mock_transaction_update(fixture_signature)
+            .await
+            .expect("Failed to create mock transaction update");
+
+        // Parse instructions using the core parse_from_txn logic
+        let instruction_updates = super::InstructionUpdate::parse_from_txn(&transaction_update)
+            .expect("Failed to parse instructions from transaction update");
+
+        // Verify that we have some instructions
+        assert!(
+            !instruction_updates.is_empty(),
+            "Should have parsed some instructions"
+        );
+
+        // Get the created token accounts from the shared data
+        let created_token_accounts = &instruction_updates[0].shared.created_token_accounts;
+
+        println!(
+            "Found {} created token accounts",
+            created_token_accounts.len()
+        );
+        for (i, account) in created_token_accounts.iter().enumerate() {
+            let account_str = bs58::encode(&account.account.0).into_string();
+            let mint_str = bs58::encode(&account.mint.0).into_string();
+            let owner_str = bs58::encode(&account.owner.0).into_string();
+            println!(
+                "Created token account {i}: account={account_str}, mint={mint_str}, \
+                 owner={owner_str}"
+            );
+        }
+
+        // Parse the expected token account pubkey
+        let expected_account_bytes: [u8; 32] = bs58::decode(expected_token_account)
+            .into_vec()
+            .expect("Failed to decode expected token account")
+            .try_into()
+            .expect("Invalid pubkey length");
+
+        // Check if the expected token account exists in created_token_accounts
+        let found = created_token_accounts
+            .iter()
+            .any(|account| account.account.0 == expected_account_bytes);
+
+        assert!(
+            found,
+            "Expected token account {expected_token_account} should exist in \
+             created_token_accounts"
+        );
+
+        println!("✓ Token account {expected_token_account} found in created_token_accounts");
     }
 }

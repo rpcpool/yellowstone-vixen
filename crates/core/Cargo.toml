@@ -16,6 +16,8 @@ yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, optional = true }
 serde = { version = "1.0.198", features = ["derive"] }
 clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
+spl-token = { workspace = true }
+spl-token-2022 = { workspace = true }
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
