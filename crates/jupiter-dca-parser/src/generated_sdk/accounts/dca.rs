@@ -6,7 +6,7 @@
 //!
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -55,6 +55,8 @@ pub struct Dca {
     pub bump: u8,
 }
 
+pub const DCA_DISCRIMINATOR: [u8; 8] = [82, 93, 90, 127, 40, 101, 145, 154];
+
 impl Dca {
     pub const LEN: usize = 289;
 
@@ -65,12 +67,10 @@ impl Dca {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Dca {
+impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for Dca {
     type Error = std::io::Error;
 
-    fn try_from(
-        account_info: &solana_program::account_info::AccountInfo<'a>,
-    ) -> Result<Self, Self::Error> {
+    fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
         let mut data: &[u8] = &(*account_info.data).borrow();
         Self::deserialize(&mut data)
     }
@@ -79,7 +79,7 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Dca {
 #[cfg(feature = "fetch")]
 pub fn fetch_dca(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::DecodedAccount<Dca>, std::io::Error> {
     let accounts = fetch_all_dca(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -88,7 +88,7 @@ pub fn fetch_dca(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_dca(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::DecodedAccount<Dca>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -113,7 +113,7 @@ pub fn fetch_all_dca(
 #[cfg(feature = "fetch")]
 pub fn fetch_maybe_dca(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_program::pubkey::Pubkey,
+    address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::MaybeAccount<Dca>, std::io::Error> {
     let accounts = fetch_all_maybe_dca(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -122,7 +122,7 @@ pub fn fetch_maybe_dca(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_maybe_dca(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_program::pubkey::Pubkey],
+    addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::MaybeAccount<Dca>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
@@ -166,5 +166,5 @@ impl anchor_lang::IdlBuild for Dca {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Dca {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

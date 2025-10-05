@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -119,9 +118,7 @@ impl anchor_lang::AccountSerialize for Fee {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Fee {
-    fn owner() -> Pubkey {
-        crate::LIMIT_ORDER2_ID
-    }
+    fn owner() -> Pubkey { crate::LIMIT_ORDER2_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

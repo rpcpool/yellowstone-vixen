@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const PRE_FLASH_FILL_ORDER_DISCRIMINATOR: [u8; 8] = [240, 47, 153, 68, 13, 190, 225, 42];
 
@@ -35,6 +34,7 @@ impl PreFlashFillOrder {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -95,9 +95,7 @@ impl PreFlashFillOrderInstructionData {
 }
 
 impl Default for PreFlashFillOrderInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -131,24 +129,26 @@ pub struct PreFlashFillOrderBuilder {
 }
 
 impl PreFlashFillOrderBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn taker(&mut self, taker: solana_pubkey::Pubkey) -> &mut Self {
         self.taker = Some(taker);
         self
     }
+
     #[inline(always)]
     pub fn order(&mut self, order: solana_pubkey::Pubkey) -> &mut Self {
         self.order = Some(order);
         self
     }
+
     #[inline(always)]
     pub fn input_mint_reserve(&mut self, input_mint_reserve: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint_reserve = Some(input_mint_reserve);
         self
     }
+
     #[inline(always)]
     pub fn taker_input_mint_account(
         &mut self,
@@ -157,33 +157,39 @@ impl PreFlashFillOrderBuilder {
         self.taker_input_mint_account = Some(taker_input_mint_account);
         self
     }
+
     #[inline(always)]
     pub fn input_mint(&mut self, input_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
+
     #[inline(always)]
     pub fn input_token_program(&mut self, input_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.input_token_program = Some(input_token_program);
         self
     }
+
     /// `[optional account, default to 'Sysvar1nstructions1111111111111111111111111']`
     #[inline(always)]
     pub fn instruction_field(&mut self, instruction: solana_pubkey::Pubkey) -> &mut Self {
         self.instruction = Some(instruction);
         self
     }
+
     #[inline(always)]
     pub fn making_amount(&mut self, making_amount: u64) -> &mut Self {
         self.making_amount = Some(making_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -193,6 +199,7 @@ impl PreFlashFillOrderBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = PreFlashFillOrder {
@@ -280,10 +287,12 @@ impl<'a, 'b> PreFlashFillOrderCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -291,10 +300,12 @@ impl<'a, 'b> PreFlashFillOrderCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -398,16 +409,19 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn taker(&mut self, taker: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.taker = Some(taker);
         self
     }
+
     #[inline(always)]
     pub fn order(&mut self, order: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.order = Some(order);
         self
     }
+
     #[inline(always)]
     pub fn input_mint_reserve(
         &mut self,
@@ -416,6 +430,7 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
         self.instruction.input_mint_reserve = Some(input_mint_reserve);
         self
     }
+
     #[inline(always)]
     pub fn taker_input_mint_account(
         &mut self,
@@ -424,6 +439,7 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
         self.instruction.taker_input_mint_account = Some(taker_input_mint_account);
         self
     }
+
     #[inline(always)]
     pub fn input_mint(
         &mut self,
@@ -432,6 +448,7 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
         self.instruction.input_mint = Some(input_mint);
         self
     }
+
     #[inline(always)]
     pub fn input_token_program(
         &mut self,
@@ -440,6 +457,7 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
         self.instruction.input_token_program = Some(input_token_program);
         self
     }
+
     #[inline(always)]
     pub fn instruction(
         &mut self,
@@ -448,11 +466,13 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
         self.instruction.instruction = Some(instruction);
         self
     }
+
     #[inline(always)]
     pub fn making_amount(&mut self, making_amount: u64) -> &mut Self {
         self.instruction.making_amount = Some(making_amount);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -466,6 +486,7 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -480,10 +501,10 @@ impl<'a, 'b> PreFlashFillOrderCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

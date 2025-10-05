@@ -7,41 +7,40 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const OPEN_DCA_V2_DISCRIMINATOR: [u8; 8] = [142, 119, 43, 109, 162, 52, 11, 177];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct OpenDcaV2 {
-    pub dca: solana_program::pubkey::Pubkey,
+    pub dca: solana_pubkey::Pubkey,
 
-    pub user: solana_program::pubkey::Pubkey,
+    pub user: solana_pubkey::Pubkey,
 
-    pub payer: solana_program::pubkey::Pubkey,
+    pub payer: solana_pubkey::Pubkey,
 
-    pub input_mint: solana_program::pubkey::Pubkey,
+    pub input_mint: solana_pubkey::Pubkey,
 
-    pub output_mint: solana_program::pubkey::Pubkey,
+    pub output_mint: solana_pubkey::Pubkey,
 
-    pub user_ata: solana_program::pubkey::Pubkey,
+    pub user_ata: solana_pubkey::Pubkey,
 
-    pub in_ata: solana_program::pubkey::Pubkey,
+    pub in_ata: solana_pubkey::Pubkey,
 
-    pub out_ata: solana_program::pubkey::Pubkey,
+    pub out_ata: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl OpenDcaV2 {
-    pub fn instruction(
-        &self,
-        args: OpenDcaV2InstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self, args: OpenDcaV2InstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -50,55 +49,42 @@ impl OpenDcaV2 {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: OpenDcaV2InstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.dca, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.dca, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.user, true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.payer, true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.output_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.user_ata,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.in_ata,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.out_ata,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.user_ata, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.in_ata, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.out_ata, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -107,7 +93,7 @@ impl OpenDcaV2 {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::DCA_ID,
             accounts,
             data,
@@ -164,19 +150,19 @@ pub struct OpenDcaV2InstructionArgs {
 ///   12. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct OpenDcaV2Builder {
-    dca: Option<solana_program::pubkey::Pubkey>,
-    user: Option<solana_program::pubkey::Pubkey>,
-    payer: Option<solana_program::pubkey::Pubkey>,
-    input_mint: Option<solana_program::pubkey::Pubkey>,
-    output_mint: Option<solana_program::pubkey::Pubkey>,
-    user_ata: Option<solana_program::pubkey::Pubkey>,
-    in_ata: Option<solana_program::pubkey::Pubkey>,
-    out_ata: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    dca: Option<solana_pubkey::Pubkey>,
+    user: Option<solana_pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
+    input_mint: Option<solana_pubkey::Pubkey>,
+    output_mint: Option<solana_pubkey::Pubkey>,
+    user_ata: Option<solana_pubkey::Pubkey>,
+    in_ata: Option<solana_pubkey::Pubkey>,
+    out_ata: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     application_idx: Option<u64>,
     in_amount: Option<u64>,
     in_amount_per_cycle: Option<u64>,
@@ -184,70 +170,70 @@ pub struct OpenDcaV2Builder {
     min_out_amount: Option<u64>,
     max_out_amount: Option<u64>,
     start_at: Option<i64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl OpenDcaV2Builder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn dca(&mut self, dca: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn dca(&mut self, dca: solana_pubkey::Pubkey) -> &mut Self {
         self.dca = Some(dca);
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
 
     #[inline(always)]
-    pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_mint(&mut self, input_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
 
     #[inline(always)]
-    pub fn output_mint(&mut self, output_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn output_mint(&mut self, output_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.output_mint = Some(output_mint);
         self
     }
 
     #[inline(always)]
-    pub fn user_ata(&mut self, user_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user_ata(&mut self, user_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.user_ata = Some(user_ata);
         self
     }
 
     #[inline(always)]
-    pub fn in_ata(&mut self, in_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn in_ata(&mut self, in_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.in_ata = Some(in_ata);
         self
     }
 
     #[inline(always)]
-    pub fn out_ata(&mut self, out_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn out_ata(&mut self, out_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.out_ata = Some(out_ata);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -255,23 +241,20 @@ impl OpenDcaV2Builder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -323,10 +306,7 @@ impl OpenDcaV2Builder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -335,14 +315,14 @@ impl OpenDcaV2Builder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = OpenDcaV2 {
             dca: self.dca.expect("dca is not set"),
             user: self.user.expect("user is not set"),
@@ -354,8 +334,8 @@ impl OpenDcaV2Builder {
             out_ata: self.out_ata.expect("out_ata is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self
@@ -389,70 +369,70 @@ impl OpenDcaV2Builder {
 
 /// `open_dca_v2` CPI accounts.
 pub struct OpenDcaV2CpiAccounts<'a, 'b> {
-    pub dca: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dca: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub in_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub in_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub out_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub out_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `open_dca_v2` CPI instruction.
 pub struct OpenDcaV2Cpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub dca: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dca: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub in_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub in_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub out_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub out_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: OpenDcaV2InstructionArgs,
 }
 
 impl<'a, 'b> OpenDcaV2Cpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: OpenDcaV2CpiAccounts<'a, 'b>,
         args: OpenDcaV2InstructionArgs,
     ) -> Self {
@@ -476,27 +456,20 @@ impl<'a, 'b> OpenDcaV2Cpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -506,67 +479,57 @@ impl<'a, 'b> OpenDcaV2Cpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.dca.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.dca.key, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.user.key,
             true,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.payer.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.output_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.user_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.in_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.out_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -576,7 +539,7 @@ impl<'a, 'b> OpenDcaV2Cpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::DCA_ID,
             accounts,
             data,
@@ -601,9 +564,9 @@ impl<'a, 'b> OpenDcaV2Cpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -631,7 +594,7 @@ pub struct OpenDcaV2CpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(OpenDcaV2CpiBuilderInstruction {
             __program: program,
             dca: None,
@@ -660,19 +623,19 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn dca(&mut self, dca: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn dca(&mut self, dca: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.dca = Some(dca);
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
 
     #[inline(always)]
-    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
@@ -680,7 +643,7 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_mint(
         &mut self,
-        input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        input_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_mint = Some(input_mint);
         self
@@ -689,35 +652,26 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_mint(
         &mut self,
-        output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        output_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_mint = Some(output_mint);
         self
     }
 
     #[inline(always)]
-    pub fn user_ata(
-        &mut self,
-        user_ata: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn user_ata(&mut self, user_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user_ata = Some(user_ata);
         self
     }
 
     #[inline(always)]
-    pub fn in_ata(
-        &mut self,
-        in_ata: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn in_ata(&mut self, in_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.in_ata = Some(in_ata);
         self
     }
 
     #[inline(always)]
-    pub fn out_ata(
-        &mut self,
-        out_ata: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn out_ata(&mut self, out_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.out_ata = Some(out_ata);
         self
     }
@@ -725,7 +679,7 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -734,7 +688,7 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -743,7 +697,7 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -752,17 +706,14 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -816,7 +767,7 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -833,11 +784,7 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -846,14 +793,11 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = OpenDcaV2InstructionArgs {
             application_idx: self
                 .instruction
@@ -933,20 +877,20 @@ impl<'a, 'b> OpenDcaV2CpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct OpenDcaV2CpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    dca: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    in_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    dca: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    in_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     application_idx: Option<u64>,
     in_amount: Option<u64>,
     in_amount_per_cycle: Option<u64>,
@@ -955,9 +899,5 @@ struct OpenDcaV2CpiBuilderInstruction<'a, 'b> {
     max_out_amount: Option<u64>,
     start_at: Option<i64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

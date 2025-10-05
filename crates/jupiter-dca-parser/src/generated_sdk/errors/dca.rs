@@ -153,14 +153,6 @@ pub enum DcaError {
     SwapOutMoreThanUserMaximum = 0x179e,
 }
 
-#[allow(deprecated)]
-impl solana_program::program_error::PrintProgramError for DcaError {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
-    }
-}
-
-#[allow(deprecated)]
-impl<T> solana_program::decode_error::DecodeError<T> for DcaError {
-    fn type_of() -> &'static str { "DcaError" }
+impl From<DcaError> for solana_program_error::ProgramError {
+    fn from(e: DcaError) -> Self { solana_program_error::ProgramError::Custom(e as u32) }
 }

@@ -1,0 +1,1514 @@
+{
+    "address": "DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M",
+    "metadata": {
+        "name": "dca",
+        "version": "0.1.0",
+        "spec": "0.1.0"
+    },
+    "instructions": [
+        {
+            "name": "open_dca",
+            "discriminator": [
+                36,
+                65,
+                185,
+                54,
+                1,
+                210,
+                100,
+                163
+            ],
+            "accounts": [
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "user",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "input_mint"
+                },
+                {
+                    "name": "output_mint"
+                },
+                {
+                    "name": "user_ata",
+                    "writable": true
+                },
+                {
+                    "name": "in_ata",
+                    "writable": true
+                },
+                {
+                    "name": "out_ata",
+                    "writable": true
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                },
+                {
+                    "name": "event_authority"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "application_idx",
+                    "type": "u64"
+                },
+                {
+                    "name": "in_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "in_amount_per_cycle",
+                    "type": "u64"
+                },
+                {
+                    "name": "cycle_frequency",
+                    "type": "i64"
+                },
+                {
+                    "name": "min_out_amount",
+                    "type": {
+                        "option": "u64"
+                    }
+                },
+                {
+                    "name": "max_out_amount",
+                    "type": {
+                        "option": "u64"
+                    }
+                },
+                {
+                    "name": "start_at",
+                    "type": {
+                        "option": "i64"
+                    }
+                },
+                {
+                    "name": "close_wsol_in_ata",
+                    "type": {
+                        "option": "bool"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "open_dca_v2",
+            "discriminator": [
+                142,
+                119,
+                43,
+                109,
+                162,
+                52,
+                11,
+                177
+            ],
+            "accounts": [
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "user",
+                    "signer": true
+                },
+                {
+                    "name": "payer",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "input_mint"
+                },
+                {
+                    "name": "output_mint"
+                },
+                {
+                    "name": "user_ata",
+                    "writable": true
+                },
+                {
+                    "name": "in_ata",
+                    "writable": true
+                },
+                {
+                    "name": "out_ata",
+                    "writable": true
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                },
+                {
+                    "name": "event_authority"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "application_idx",
+                    "type": "u64"
+                },
+                {
+                    "name": "in_amount",
+                    "type": "u64"
+                },
+                {
+                    "name": "in_amount_per_cycle",
+                    "type": "u64"
+                },
+                {
+                    "name": "cycle_frequency",
+                    "type": "i64"
+                },
+                {
+                    "name": "min_out_amount",
+                    "type": {
+                        "option": "u64"
+                    }
+                },
+                {
+                    "name": "max_out_amount",
+                    "type": {
+                        "option": "u64"
+                    }
+                },
+                {
+                    "name": "start_at",
+                    "type": {
+                        "option": "i64"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "close_dca",
+            "discriminator": [
+                22,
+                7,
+                33,
+                98,
+                168,
+                183,
+                34,
+                243
+            ],
+            "accounts": [
+                {
+                    "name": "user",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "input_mint"
+                },
+                {
+                    "name": "output_mint"
+                },
+                {
+                    "name": "in_ata",
+                    "writable": true
+                },
+                {
+                    "name": "out_ata",
+                    "writable": true
+                },
+                {
+                    "name": "user_in_ata",
+                    "writable": true
+                },
+                {
+                    "name": "user_out_ata",
+                    "writable": true
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                },
+                {
+                    "name": "event_authority"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "withdraw",
+            "discriminator": [
+                183,
+                18,
+                70,
+                156,
+                148,
+                109,
+                161,
+                34
+            ],
+            "accounts": [
+                {
+                    "name": "user",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "input_mint"
+                },
+                {
+                    "name": "output_mint"
+                },
+                {
+                    "name": "dca_ata",
+                    "writable": true
+                },
+                {
+                    "name": "user_in_ata",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "user_out_ata",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                },
+                {
+                    "name": "event_authority"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "withdraw_params",
+                    "type": {
+                        "defined": {
+                            "name": "WithdrawParams"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "deposit",
+            "discriminator": [
+                242,
+                35,
+                198,
+                137,
+                82,
+                225,
+                242,
+                182
+            ],
+            "accounts": [
+                {
+                    "name": "user",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "in_ata",
+                    "writable": true
+                },
+                {
+                    "name": "user_in_ata",
+                    "writable": true
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "event_authority"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "deposit_in",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "withdraw_fees",
+            "discriminator": [
+                198,
+                212,
+                171,
+                109,
+                144,
+                215,
+                174,
+                89
+            ],
+            "accounts": [
+                {
+                    "name": "admin",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "mint"
+                },
+                {
+                    "name": "fee_authority",
+                    "docs": [
+                        "CHECK"
+                    ]
+                },
+                {
+                    "name": "program_fee_ata",
+                    "writable": true
+                },
+                {
+                    "name": "admin_fee_ata",
+                    "writable": true
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "amount",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "initiate_flash_fill",
+            "discriminator": [
+                143,
+                205,
+                3,
+                191,
+                162,
+                215,
+                245,
+                49
+            ],
+            "accounts": [
+                {
+                    "name": "keeper",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "input_mint",
+                    "docs": [
+                        "The token to borrow"
+                    ]
+                },
+                {
+                    "name": "keeper_in_ata",
+                    "docs": [
+                        "The account to send borrowed tokens to"
+                    ],
+                    "writable": true
+                },
+                {
+                    "name": "in_ata",
+                    "docs": [
+                        "The account to borrow from"
+                    ],
+                    "writable": true
+                },
+                {
+                    "name": "out_ata",
+                    "docs": [
+                        "The account to repay to"
+                    ]
+                },
+                {
+                    "name": "instructions_sysvar",
+                    "docs": [
+                        "Solana Instructions Sysvar"
+                    ]
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "fulfill_flash_fill",
+            "discriminator": [
+                115,
+                64,
+                226,
+                78,
+                33,
+                211,
+                105,
+                162
+            ],
+            "accounts": [
+                {
+                    "name": "keeper",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "input_mint"
+                },
+                {
+                    "name": "output_mint"
+                },
+                {
+                    "name": "keeper_in_ata"
+                },
+                {
+                    "name": "in_ata"
+                },
+                {
+                    "name": "out_ata"
+                },
+                {
+                    "name": "fee_authority",
+                    "docs": [
+                        "CHECK"
+                    ]
+                },
+                {
+                    "name": "fee_ata",
+                    "writable": true
+                },
+                {
+                    "name": "instructions_sysvar",
+                    "docs": [
+                        "Solana Instructions Sysvar"
+                    ]
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                },
+                {
+                    "name": "event_authority"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "repay_amount",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "initiate_dlmm_fill",
+            "discriminator": [
+                155,
+                193,
+                80,
+                121,
+                91,
+                147,
+                254,
+                187
+            ],
+            "accounts": [
+                {
+                    "name": "keeper",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "input_mint",
+                    "docs": [
+                        "The token to borrow"
+                    ]
+                },
+                {
+                    "name": "keeper_in_ata",
+                    "docs": [
+                        "The account to send borrowed tokens to"
+                    ],
+                    "writable": true
+                },
+                {
+                    "name": "in_ata",
+                    "docs": [
+                        "The account to borrow from"
+                    ],
+                    "writable": true
+                },
+                {
+                    "name": "out_ata",
+                    "docs": [
+                        "The account to repay to"
+                    ]
+                },
+                {
+                    "name": "instructions_sysvar",
+                    "docs": [
+                        "Solana Instructions Sysvar"
+                    ]
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "fulfill_dlmm_fill",
+            "discriminator": [
+                1,
+                230,
+                118,
+                251,
+                45,
+                177,
+                101,
+                187
+            ],
+            "accounts": [
+                {
+                    "name": "keeper",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "input_mint"
+                },
+                {
+                    "name": "output_mint"
+                },
+                {
+                    "name": "keeper_in_ata"
+                },
+                {
+                    "name": "in_ata"
+                },
+                {
+                    "name": "out_ata"
+                },
+                {
+                    "name": "fee_authority",
+                    "docs": [
+                        "CHECK"
+                    ]
+                },
+                {
+                    "name": "fee_ata",
+                    "writable": true
+                },
+                {
+                    "name": "instructions_sysvar",
+                    "docs": [
+                        "Solana Instructions Sysvar"
+                    ]
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                },
+                {
+                    "name": "event_authority"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": [
+                {
+                    "name": "repay_amount",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "transfer",
+            "discriminator": [
+                163,
+                52,
+                200,
+                231,
+                140,
+                3,
+                69,
+                186
+            ],
+            "accounts": [
+                {
+                    "name": "keeper",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "user",
+                    "writable": true
+                },
+                {
+                    "name": "output_mint"
+                },
+                {
+                    "name": "dca_out_ata",
+                    "writable": true
+                },
+                {
+                    "name": "user_out_ata",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "intermediate_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                },
+                {
+                    "name": "event_authority"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "end_and_close",
+            "discriminator": [
+                83,
+                125,
+                166,
+                69,
+                247,
+                252,
+                103,
+                133
+            ],
+            "accounts": [
+                {
+                    "name": "keeper",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "dca",
+                    "writable": true
+                },
+                {
+                    "name": "input_mint"
+                },
+                {
+                    "name": "output_mint"
+                },
+                {
+                    "name": "in_ata",
+                    "writable": true
+                },
+                {
+                    "name": "out_ata",
+                    "writable": true
+                },
+                {
+                    "name": "user",
+                    "writable": true
+                },
+                {
+                    "name": "user_out_ata",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "init_user_out_ata",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "intermediate_account",
+                    "writable": true,
+                    "optional": true
+                },
+                {
+                    "name": "system_program"
+                },
+                {
+                    "name": "token_program"
+                },
+                {
+                    "name": "associated_token_program"
+                },
+                {
+                    "name": "event_authority"
+                },
+                {
+                    "name": "program"
+                }
+            ],
+            "args": []
+        }
+    ],
+    "accounts": [
+        {
+            "name": "Dca",
+            "discriminator": [
+                82,
+                93,
+                90,
+                127,
+                40,
+                101,
+                145,
+                154
+            ]
+        }
+    ],
+    "events": [
+        {
+            "name": "CollectedFee",
+            "discriminator": [
+                42,
+                136,
+                216,
+                116,
+                181,
+                209,
+                109,
+                181
+            ]
+        },
+        {
+            "name": "Filled",
+            "discriminator": [
+                134,
+                4,
+                17,
+                63,
+                221,
+                45,
+                177,
+                173
+            ]
+        },
+        {
+            "name": "Opened",
+            "discriminator": [
+                166,
+                172,
+                97,
+                9,
+                77,
+                76,
+                189,
+                109
+            ]
+        },
+        {
+            "name": "Closed",
+            "discriminator": [
+                50,
+                31,
+                87,
+                155,
+                135,
+                220,
+                195,
+                239
+            ]
+        },
+        {
+            "name": "Withdraw",
+            "discriminator": [
+                192,
+                241,
+                201,
+                217,
+                70,
+                150,
+                90,
+                247
+            ]
+        },
+        {
+            "name": "Deposit",
+            "discriminator": [
+                62,
+                205,
+                242,
+                175,
+                244,
+                169,
+                136,
+                52
+            ]
+        }
+    ],
+    "errors": [
+        {
+            "code": 6000,
+            "name": "InvalidAmount",
+            "msg": "Invalid deposit amount"
+        },
+        {
+            "code": 6001,
+            "name": "InvalidCycleAmount",
+            "msg": "Invalid deposit amount"
+        },
+        {
+            "code": 6002,
+            "name": "InvalidPair",
+            "msg": "Invalid pair"
+        },
+        {
+            "code": 6003,
+            "name": "TooFrequent",
+            "msg": "Too frequent DCA cycle"
+        },
+        {
+            "code": 6004,
+            "name": "InvalidMinPrice",
+            "msg": "Minimum price constraint must be greater than 0"
+        },
+        {
+            "code": 6005,
+            "name": "InvalidMaxPrice",
+            "msg": "Maximum price constraint must be greater than 0"
+        },
+        {
+            "code": 6006,
+            "name": "InAmountInsufficient",
+            "msg": "In amount needs to be more than in amount per cycle"
+        },
+        {
+            "code": 6007,
+            "name": "Unauthorized",
+            "msg": "Wrong user"
+        },
+        {
+            "code": 6008,
+            "name": "NoInATA",
+            "msg": "inAta not passed in"
+        },
+        {
+            "code": 6009,
+            "name": "NoUserInATA",
+            "msg": "userInAta not passed in"
+        },
+        {
+            "code": 6010,
+            "name": "NoOutATA",
+            "msg": "outAta not passed in"
+        },
+        {
+            "code": 6011,
+            "name": "NoUserOutATA",
+            "msg": "userOutAta not passed in"
+        },
+        {
+            "code": 6012,
+            "name": "InsufficientBalanceInProgram",
+            "msg": "Trying to withdraw more than available"
+        },
+        {
+            "code": 6013,
+            "name": "InvalidDepositAmount",
+            "msg": "Deposit should be more than 0"
+        },
+        {
+            "code": 6014,
+            "name": "UserInsufficientBalance",
+            "msg": "User has insufficient balance"
+        },
+        {
+            "code": 6015,
+            "name": "UnauthorizedKeeper",
+            "msg": "Unauthorized Keeper"
+        },
+        {
+            "code": 6016,
+            "name": "UnrecognizedProgram",
+            "msg": "Unrecognized Program"
+        },
+        {
+            "code": 6017,
+            "name": "MathErrors",
+            "msg": "Calculation errors"
+        },
+        {
+            "code": 6018,
+            "name": "KeeperNotTimeToFill",
+            "msg": "Not time to fill"
+        },
+        {
+            "code": 6019,
+            "name": "OrderFillAmountWrong",
+            "msg": "Order amount wrong"
+        },
+        {
+            "code": 6020,
+            "name": "SwapOutAmountBelowMinimum",
+            "msg": "Out amount below expectations"
+        },
+        {
+            "code": 6021,
+            "name": "WrongAdmin",
+            "msg": "Wrong admin"
+        },
+        {
+            "code": 6022,
+            "name": "MathOverflow",
+            "msg": "Overflow in arithmetic operation"
+        },
+        {
+            "code": 6023,
+            "name": "AddressMismatch",
+            "msg": "Address Mismatch"
+        },
+        {
+            "code": 6024,
+            "name": "ProgramMismatch",
+            "msg": "Program Mismatch"
+        },
+        {
+            "code": 6025,
+            "name": "IncorrectRepaymentAmount",
+            "msg": "Incorrect Repayment Amount"
+        },
+        {
+            "code": 6026,
+            "name": "CannotBorrowBeforeRepay",
+            "msg": "Cannot Borrow Before Repay"
+        },
+        {
+            "code": 6027,
+            "name": "NoRepaymentInstructionFound",
+            "msg": "No Repayment Found"
+        },
+        {
+            "code": 6028,
+            "name": "MissingSwapInstructions",
+            "msg": "Missing Swap Instruction"
+        },
+        {
+            "code": 6029,
+            "name": "UnexpectedSwapProgram",
+            "msg": "Expected Instruction to use Jupiter Swap Program"
+        },
+        {
+            "code": 6030,
+            "name": "InvalidSwapMint",
+            "msg": "Invalid Swap Mint"
+        },
+        {
+            "code": 6031,
+            "name": "UnknownInstruction",
+            "msg": "Unknown Instruction"
+        },
+        {
+            "code": 6032,
+            "name": "MissingRepayInstructions",
+            "msg": "Missing Repay Instruction"
+        },
+        {
+            "code": 6033,
+            "name": "KeeperShortchanged",
+            "msg": "Keeper Shortchanged"
+        },
+        {
+            "code": 6034,
+            "name": "WrongSwapOutAccount",
+            "msg": "Jup Swap to Wrong Out Account"
+        },
+        {
+            "code": 6035,
+            "name": "WrongTransferAmount",
+            "msg": "Transfer amount should be exactly account balance"
+        },
+        {
+            "code": 6036,
+            "name": "InsufficientBalanceForRent",
+            "msg": "Insufficient balance for rent"
+        },
+        {
+            "code": 6037,
+            "name": "UnexpectedSolBalance",
+            "msg": "Unexpected SOL amount in intermediate account"
+        },
+        {
+            "code": 6038,
+            "name": "InsufficientWsolForTransfer",
+            "msg": "Too little WSOL to perform transfer"
+        },
+        {
+            "code": 6039,
+            "name": "MissedInstruction",
+            "msg": "Did not call initiate_flash_fill"
+        },
+        {
+            "code": 6040,
+            "name": "WrongProgram",
+            "msg": "Did not call this program's initiate_flash_fill"
+        },
+        {
+            "code": 6041,
+            "name": "BalanceNotZero",
+            "msg": "Can't close account with balance"
+        },
+        {
+            "code": 6042,
+            "name": "UnexpectedWSOLLeftover",
+            "msg": "Should not have WSOL leftover in DCA out-token account"
+        },
+        {
+            "code": 6043,
+            "name": "IntermediateAccountNotSet",
+            "msg": "Should pass in a WSOL intermediate account when transferring SOL"
+        },
+        {
+            "code": 6044,
+            "name": "UnexpectedSwapInstruction",
+            "msg": "Did not call jup swap"
+        },
+        {
+            "code": 6045,
+            "name": "SwapOutLessThanUserMinimum",
+            "msg": "Expect more from swap"
+        },
+        {
+            "code": 6046,
+            "name": "SwapOutMoreThanUserMaximum",
+            "msg": "Expect less from swap"
+        }
+    ],
+    "types": [
+        {
+            "name": "WithdrawParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "withdraw_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "withdrawal",
+                        "type": {
+                            "defined": {
+                                "name": "Withdrawal"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Withdrawal",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "In"
+                    },
+                    {
+                        "name": "Out"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Dca",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "user",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "input_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "output_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "idx",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "next_cycle_at",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "in_deposited",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "in_withdrawn",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "out_withdrawn",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "in_used",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "out_received",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "in_amount_per_cycle",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "cycle_frequency",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "next_cycle_amount_left",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "in_account",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "out_account",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "min_out_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "max_out_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "keeper_in_balance_before_borrow",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "dca_out_balance_before_swap",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "created_at",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "bump",
+                        "type": "u8"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CollectedFee",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "user_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "dca_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "u64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Filled",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "user_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "dca_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "input_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "output_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "in_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "out_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "fee_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "fee",
+                        "type": "u64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Opened",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "user_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "dca_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "in_deposited",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "input_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "output_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "cycle_frequency",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "in_amount_per_cycle",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "created_at",
+                        "type": "i64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Closed",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "user_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "dca_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "in_deposited",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "input_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "output_mint",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "cycle_frequency",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "in_amount_per_cycle",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "created_at",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "total_in_withdrawn",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "total_out_withdrawn",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "unfilled_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "user_closed",
+                        "type": "bool"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Withdraw",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "dca_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "in_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "out_amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "user_withdraw",
+                        "type": "bool"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Deposit",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "dca_key",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "u64"
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -163,9 +162,7 @@ impl anchor_lang::AccountSerialize for Order {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Order {
-    fn owner() -> Pubkey {
-        crate::LIMIT_ORDER2_ID
-    }
+    fn owner() -> Pubkey { crate::LIMIT_ORDER2_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

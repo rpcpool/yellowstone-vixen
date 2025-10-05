@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const UPDATE_FEE_DISCRIMINATOR: [u8; 8] = [232, 253, 195, 247, 148, 212, 73, 222];
 
@@ -24,6 +23,7 @@ impl UpdateFee {
     pub fn instruction(&self, args: UpdateFeeInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -69,9 +69,7 @@ impl UpdateFeeInstructionData {
 }
 
 impl Default for UpdateFeeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -99,41 +97,46 @@ pub struct UpdateFeeBuilder {
 }
 
 impl UpdateFeeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
+
     #[inline(always)]
     pub fn fee_authority(&mut self, fee_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.fee_authority = Some(fee_authority);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn normal_fee_bps(&mut self, normal_fee_bps: u16) -> &mut Self {
         self.normal_fee_bps = Some(normal_fee_bps);
         self
     }
+
     #[inline(always)]
     pub fn stable_fee_bps(&mut self, stable_fee_bps: u16) -> &mut Self {
         self.stable_fee_bps = Some(stable_fee_bps);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -143,6 +146,7 @@ impl UpdateFeeBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = UpdateFee {
@@ -204,10 +208,12 @@ impl<'a, 'b> UpdateFeeCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -215,10 +221,12 @@ impl<'a, 'b> UpdateFeeCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -295,11 +303,13 @@ impl<'a, 'b> UpdateFeeCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
+
     #[inline(always)]
     pub fn fee_authority(
         &mut self,
@@ -308,6 +318,7 @@ impl<'a, 'b> UpdateFeeCpiBuilder<'a, 'b> {
         self.instruction.fee_authority = Some(fee_authority);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -316,16 +327,19 @@ impl<'a, 'b> UpdateFeeCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn normal_fee_bps(&mut self, normal_fee_bps: u16) -> &mut Self {
         self.instruction.normal_fee_bps = Some(normal_fee_bps);
         self
     }
+
     #[inline(always)]
     pub fn stable_fee_bps(&mut self, stable_fee_bps: u16) -> &mut Self {
         self.instruction.stable_fee_bps = Some(stable_fee_bps);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -339,6 +353,7 @@ impl<'a, 'b> UpdateFeeCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -353,10 +368,10 @@ impl<'a, 'b> UpdateFeeCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

@@ -7,45 +7,47 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const FULFILL_DLMM_FILL_DISCRIMINATOR: [u8; 8] = [1, 230, 118, 251, 45, 177, 101, 187];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct FulfillDlmmFill {
-    pub keeper: solana_program::pubkey::Pubkey,
+    pub keeper: solana_pubkey::Pubkey,
 
-    pub dca: solana_program::pubkey::Pubkey,
+    pub dca: solana_pubkey::Pubkey,
 
-    pub input_mint: solana_program::pubkey::Pubkey,
+    pub input_mint: solana_pubkey::Pubkey,
 
-    pub output_mint: solana_program::pubkey::Pubkey,
+    pub output_mint: solana_pubkey::Pubkey,
 
-    pub keeper_in_ata: solana_program::pubkey::Pubkey,
+    pub keeper_in_ata: solana_pubkey::Pubkey,
 
-    pub in_ata: solana_program::pubkey::Pubkey,
+    pub in_ata: solana_pubkey::Pubkey,
 
-    pub out_ata: solana_program::pubkey::Pubkey,
+    pub out_ata: solana_pubkey::Pubkey,
     /// CHECK
-    pub fee_authority: solana_program::pubkey::Pubkey,
+    pub fee_authority: solana_pubkey::Pubkey,
 
-    pub fee_ata: solana_program::pubkey::Pubkey,
+    pub fee_ata: solana_pubkey::Pubkey,
     /// Solana Instructions Sysvar
-    pub instructions_sysvar: solana_program::pubkey::Pubkey,
+    pub instructions_sysvar: solana_pubkey::Pubkey,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl FulfillDlmmFill {
     pub fn instruction(
         &self,
         args: FulfillDlmmFillInstructionArgs,
-    ) -> solana_program::instruction::Instruction {
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -54,65 +56,57 @@ impl FulfillDlmmFill {
     pub fn instruction_with_remaining_accounts(
         &self,
         args: FulfillDlmmFillInstructionArgs,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(15 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.keeper,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.dca, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.keeper, true));
+        accounts.push(solana_instruction::AccountMeta::new(self.dca, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.output_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.keeper_in_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.in_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.out_ata,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.fee_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.fee_ata,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.fee_ata, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.instructions_sysvar,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
@@ -121,7 +115,7 @@ impl FulfillDlmmFill {
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::DCA_ID,
             accounts,
             data,
@@ -174,79 +168,79 @@ pub struct FulfillDlmmFillInstructionArgs {
 ///   14. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct FulfillDlmmFillBuilder {
-    keeper: Option<solana_program::pubkey::Pubkey>,
-    dca: Option<solana_program::pubkey::Pubkey>,
-    input_mint: Option<solana_program::pubkey::Pubkey>,
-    output_mint: Option<solana_program::pubkey::Pubkey>,
-    keeper_in_ata: Option<solana_program::pubkey::Pubkey>,
-    in_ata: Option<solana_program::pubkey::Pubkey>,
-    out_ata: Option<solana_program::pubkey::Pubkey>,
-    fee_authority: Option<solana_program::pubkey::Pubkey>,
-    fee_ata: Option<solana_program::pubkey::Pubkey>,
-    instructions_sysvar: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
+    keeper: Option<solana_pubkey::Pubkey>,
+    dca: Option<solana_pubkey::Pubkey>,
+    input_mint: Option<solana_pubkey::Pubkey>,
+    output_mint: Option<solana_pubkey::Pubkey>,
+    keeper_in_ata: Option<solana_pubkey::Pubkey>,
+    in_ata: Option<solana_pubkey::Pubkey>,
+    out_ata: Option<solana_pubkey::Pubkey>,
+    fee_authority: Option<solana_pubkey::Pubkey>,
+    fee_ata: Option<solana_pubkey::Pubkey>,
+    instructions_sysvar: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     repay_amount: Option<u64>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl FulfillDlmmFillBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn keeper(&mut self, keeper: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn keeper(&mut self, keeper: solana_pubkey::Pubkey) -> &mut Self {
         self.keeper = Some(keeper);
         self
     }
 
     #[inline(always)]
-    pub fn dca(&mut self, dca: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn dca(&mut self, dca: solana_pubkey::Pubkey) -> &mut Self {
         self.dca = Some(dca);
         self
     }
 
     #[inline(always)]
-    pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_mint(&mut self, input_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
 
     #[inline(always)]
-    pub fn output_mint(&mut self, output_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn output_mint(&mut self, output_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.output_mint = Some(output_mint);
         self
     }
 
     #[inline(always)]
-    pub fn keeper_in_ata(&mut self, keeper_in_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn keeper_in_ata(&mut self, keeper_in_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.keeper_in_ata = Some(keeper_in_ata);
         self
     }
 
     #[inline(always)]
-    pub fn in_ata(&mut self, in_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn in_ata(&mut self, in_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.in_ata = Some(in_ata);
         self
     }
 
     #[inline(always)]
-    pub fn out_ata(&mut self, out_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn out_ata(&mut self, out_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.out_ata = Some(out_ata);
         self
     }
 
     /// CHECK
     #[inline(always)]
-    pub fn fee_authority(&mut self, fee_authority: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn fee_authority(&mut self, fee_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.fee_authority = Some(fee_authority);
         self
     }
 
     #[inline(always)]
-    pub fn fee_ata(&mut self, fee_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn fee_ata(&mut self, fee_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.fee_ata = Some(fee_ata);
         self
     }
@@ -254,24 +248,21 @@ impl FulfillDlmmFillBuilder {
     /// `[optional account, default to 'Sysvar1nstructions1111111111111111111111111']`
     /// Solana Instructions Sysvar
     #[inline(always)]
-    pub fn instructions_sysvar(
-        &mut self,
-        instructions_sysvar: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn instructions_sysvar(&mut self, instructions_sysvar: solana_pubkey::Pubkey) -> &mut Self {
         self.instructions_sysvar = Some(instructions_sysvar);
         self
     }
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -279,23 +270,20 @@ impl FulfillDlmmFillBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
@@ -308,10 +296,7 @@ impl FulfillDlmmFillBuilder {
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -320,14 +305,14 @@ impl FulfillDlmmFillBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = FulfillDlmmFill {
             keeper: self.keeper.expect("keeper is not set"),
             dca: self.dca.expect("dca is not set"),
@@ -338,13 +323,13 @@ impl FulfillDlmmFillBuilder {
             out_ata: self.out_ata.expect("out_ata is not set"),
             fee_authority: self.fee_authority.expect("fee_authority is not set"),
             fee_ata: self.fee_ata.expect("fee_ata is not set"),
-            instructions_sysvar: self.instructions_sysvar.unwrap_or(solana_program::pubkey!(
+            instructions_sysvar: self.instructions_sysvar.unwrap_or(solana_pubkey::pubkey!(
                 "Sysvar1nstructions1111111111111111111111111"
             )),
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self
@@ -363,78 +348,78 @@ impl FulfillDlmmFillBuilder {
 
 /// `fulfill_dlmm_fill` CPI accounts.
 pub struct FulfillDlmmFillCpiAccounts<'a, 'b> {
-    pub keeper: &'b solana_program::account_info::AccountInfo<'a>,
+    pub keeper: &'b solana_account_info::AccountInfo<'a>,
 
-    pub dca: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dca: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub keeper_in_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub keeper_in_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub in_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub in_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub out_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub out_ata: &'b solana_account_info::AccountInfo<'a>,
     /// CHECK
-    pub fee_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub fee_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub fee_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub fee_ata: &'b solana_account_info::AccountInfo<'a>,
     /// Solana Instructions Sysvar
-    pub instructions_sysvar: &'b solana_program::account_info::AccountInfo<'a>,
+    pub instructions_sysvar: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `fulfill_dlmm_fill` CPI instruction.
 pub struct FulfillDlmmFillCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub keeper: &'b solana_program::account_info::AccountInfo<'a>,
+    pub keeper: &'b solana_account_info::AccountInfo<'a>,
 
-    pub dca: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dca: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub keeper_in_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub keeper_in_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub in_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub in_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub out_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub out_ata: &'b solana_account_info::AccountInfo<'a>,
     /// CHECK
-    pub fee_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub fee_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub fee_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub fee_ata: &'b solana_account_info::AccountInfo<'a>,
     /// Solana Instructions Sysvar
-    pub instructions_sysvar: &'b solana_program::account_info::AccountInfo<'a>,
+    pub instructions_sysvar: &'b solana_account_info::AccountInfo<'a>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: FulfillDlmmFillInstructionArgs,
 }
 
 impl<'a, 'b> FulfillDlmmFillCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: FulfillDlmmFillCpiAccounts<'a, 'b>,
         args: FulfillDlmmFillInstructionArgs,
     ) -> Self {
@@ -460,27 +445,20 @@ impl<'a, 'b> FulfillDlmmFillCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -490,75 +468,65 @@ impl<'a, 'b> FulfillDlmmFillCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(15 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.keeper.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.dca.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.keeper.key, true));
+        accounts.push(solana_instruction::AccountMeta::new(*self.dca.key, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.output_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.keeper_in_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.in_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.out_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.fee_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.fee_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.instructions_sysvar.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -568,7 +536,7 @@ impl<'a, 'b> FulfillDlmmFillCpi<'a, 'b> {
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::DCA_ID,
             accounts,
             data,
@@ -595,9 +563,9 @@ impl<'a, 'b> FulfillDlmmFillCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -627,7 +595,7 @@ pub struct FulfillDlmmFillCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(FulfillDlmmFillCpiBuilderInstruction {
             __program: program,
             keeper: None,
@@ -652,16 +620,13 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn keeper(
-        &mut self,
-        keeper: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn keeper(&mut self, keeper: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.keeper = Some(keeper);
         self
     }
 
     #[inline(always)]
-    pub fn dca(&mut self, dca: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn dca(&mut self, dca: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.dca = Some(dca);
         self
     }
@@ -669,7 +634,7 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_mint(
         &mut self,
-        input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        input_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_mint = Some(input_mint);
         self
@@ -678,7 +643,7 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_mint(
         &mut self,
-        output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        output_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_mint = Some(output_mint);
         self
@@ -687,26 +652,20 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn keeper_in_ata(
         &mut self,
-        keeper_in_ata: &'b solana_program::account_info::AccountInfo<'a>,
+        keeper_in_ata: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.keeper_in_ata = Some(keeper_in_ata);
         self
     }
 
     #[inline(always)]
-    pub fn in_ata(
-        &mut self,
-        in_ata: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn in_ata(&mut self, in_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.in_ata = Some(in_ata);
         self
     }
 
     #[inline(always)]
-    pub fn out_ata(
-        &mut self,
-        out_ata: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn out_ata(&mut self, out_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.out_ata = Some(out_ata);
         self
     }
@@ -715,17 +674,14 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn fee_authority(
         &mut self,
-        fee_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        fee_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.fee_authority = Some(fee_authority);
         self
     }
 
     #[inline(always)]
-    pub fn fee_ata(
-        &mut self,
-        fee_ata: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn fee_ata(&mut self, fee_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.fee_ata = Some(fee_ata);
         self
     }
@@ -734,7 +690,7 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn instructions_sysvar(
         &mut self,
-        instructions_sysvar: &'b solana_program::account_info::AccountInfo<'a>,
+        instructions_sysvar: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.instructions_sysvar = Some(instructions_sysvar);
         self
@@ -743,7 +699,7 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -752,7 +708,7 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -761,7 +717,7 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -770,17 +726,14 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -795,7 +748,7 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -812,11 +765,7 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -825,14 +774,11 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = FulfillDlmmFillInstructionArgs {
             repay_amount: self
                 .instruction
@@ -907,27 +853,23 @@ impl<'a, 'b> FulfillDlmmFillCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct FulfillDlmmFillCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    keeper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    dca: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    keeper_in_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    in_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    fee_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    fee_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    instructions_sysvar: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    keeper: Option<&'b solana_account_info::AccountInfo<'a>>,
+    dca: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    keeper_in_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    in_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    fee_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    fee_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    instructions_sysvar: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     repay_amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

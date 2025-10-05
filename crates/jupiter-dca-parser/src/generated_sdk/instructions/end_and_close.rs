@@ -7,42 +7,44 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const END_AND_CLOSE_DISCRIMINATOR: [u8; 8] = [83, 125, 166, 69, 247, 252, 103, 133];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct EndAndClose {
-    pub keeper: solana_program::pubkey::Pubkey,
+    pub keeper: solana_pubkey::Pubkey,
 
-    pub dca: solana_program::pubkey::Pubkey,
+    pub dca: solana_pubkey::Pubkey,
 
-    pub input_mint: solana_program::pubkey::Pubkey,
+    pub input_mint: solana_pubkey::Pubkey,
 
-    pub output_mint: solana_program::pubkey::Pubkey,
+    pub output_mint: solana_pubkey::Pubkey,
 
-    pub in_ata: solana_program::pubkey::Pubkey,
+    pub in_ata: solana_pubkey::Pubkey,
 
-    pub out_ata: solana_program::pubkey::Pubkey,
+    pub out_ata: solana_pubkey::Pubkey,
 
-    pub user: solana_program::pubkey::Pubkey,
+    pub user: solana_pubkey::Pubkey,
 
-    pub user_out_ata: Option<solana_program::pubkey::Pubkey>,
+    pub user_out_ata: Option<solana_pubkey::Pubkey>,
 
-    pub init_user_out_ata: Option<solana_program::pubkey::Pubkey>,
+    pub init_user_out_ata: Option<solana_pubkey::Pubkey>,
 
-    pub intermediate_account: Option<solana_program::pubkey::Pubkey>,
+    pub intermediate_account: Option<solana_pubkey::Pubkey>,
 
-    pub system_program: solana_program::pubkey::Pubkey,
+    pub system_program: solana_pubkey::Pubkey,
 
-    pub token_program: solana_program::pubkey::Pubkey,
+    pub token_program: solana_pubkey::Pubkey,
 
-    pub associated_token_program: solana_program::pubkey::Pubkey,
+    pub associated_token_program: solana_pubkey::Pubkey,
 
-    pub event_authority: solana_program::pubkey::Pubkey,
+    pub event_authority: solana_pubkey::Pubkey,
 
-    pub program: solana_program::pubkey::Pubkey,
+    pub program: solana_pubkey::Pubkey,
 }
 
 impl EndAndClose {
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
 
@@ -50,92 +52,76 @@ impl EndAndClose {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        remaining_accounts: &[solana_program::instruction::AccountMeta],
-    ) -> solana_program::instruction::Instruction {
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(15 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.keeper,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.dca, false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(self.keeper, true));
+        accounts.push(solana_instruction::AccountMeta::new(self.dca, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.input_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.output_mint,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.in_ata,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.out_ata,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            self.user, false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.in_ata, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.out_ata, false));
+        accounts.push(solana_instruction::AccountMeta::new(self.user, false));
         if let Some(user_out_ata) = self.user_out_ata {
-            accounts.push(solana_program::instruction::AccountMeta::new(
-                user_out_ata,
-                false,
-            ));
+            accounts.push(solana_instruction::AccountMeta::new(user_out_ata, false));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::DCA_ID,
                 false,
             ));
         }
         if let Some(init_user_out_ata) = self.init_user_out_ata {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 init_user_out_ata,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::DCA_ID,
                 false,
             ));
         }
         if let Some(intermediate_account) = self.intermediate_account {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 intermediate_account,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::DCA_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.system_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.associated_token_program,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.program,
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
         let data = borsh::to_vec(&EndAndCloseInstructionData::new()).unwrap();
 
-        solana_program::instruction::Instruction {
+        solana_instruction::Instruction {
             program_id: crate::DCA_ID,
             accounts,
             data,
@@ -182,75 +168,72 @@ impl Default for EndAndCloseInstructionData {
 ///   14. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct EndAndCloseBuilder {
-    keeper: Option<solana_program::pubkey::Pubkey>,
-    dca: Option<solana_program::pubkey::Pubkey>,
-    input_mint: Option<solana_program::pubkey::Pubkey>,
-    output_mint: Option<solana_program::pubkey::Pubkey>,
-    in_ata: Option<solana_program::pubkey::Pubkey>,
-    out_ata: Option<solana_program::pubkey::Pubkey>,
-    user: Option<solana_program::pubkey::Pubkey>,
-    user_out_ata: Option<solana_program::pubkey::Pubkey>,
-    init_user_out_ata: Option<solana_program::pubkey::Pubkey>,
-    intermediate_account: Option<solana_program::pubkey::Pubkey>,
-    system_program: Option<solana_program::pubkey::Pubkey>,
-    token_program: Option<solana_program::pubkey::Pubkey>,
-    associated_token_program: Option<solana_program::pubkey::Pubkey>,
-    event_authority: Option<solana_program::pubkey::Pubkey>,
-    program: Option<solana_program::pubkey::Pubkey>,
-    __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
+    keeper: Option<solana_pubkey::Pubkey>,
+    dca: Option<solana_pubkey::Pubkey>,
+    input_mint: Option<solana_pubkey::Pubkey>,
+    output_mint: Option<solana_pubkey::Pubkey>,
+    in_ata: Option<solana_pubkey::Pubkey>,
+    out_ata: Option<solana_pubkey::Pubkey>,
+    user: Option<solana_pubkey::Pubkey>,
+    user_out_ata: Option<solana_pubkey::Pubkey>,
+    init_user_out_ata: Option<solana_pubkey::Pubkey>,
+    intermediate_account: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    associated_token_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl EndAndCloseBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn keeper(&mut self, keeper: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn keeper(&mut self, keeper: solana_pubkey::Pubkey) -> &mut Self {
         self.keeper = Some(keeper);
         self
     }
 
     #[inline(always)]
-    pub fn dca(&mut self, dca: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn dca(&mut self, dca: solana_pubkey::Pubkey) -> &mut Self {
         self.dca = Some(dca);
         self
     }
 
     #[inline(always)]
-    pub fn input_mint(&mut self, input_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn input_mint(&mut self, input_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.input_mint = Some(input_mint);
         self
     }
 
     #[inline(always)]
-    pub fn output_mint(&mut self, output_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn output_mint(&mut self, output_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.output_mint = Some(output_mint);
         self
     }
 
     #[inline(always)]
-    pub fn in_ata(&mut self, in_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn in_ata(&mut self, in_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.in_ata = Some(in_ata);
         self
     }
 
     #[inline(always)]
-    pub fn out_ata(&mut self, out_ata: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn out_ata(&mut self, out_ata: solana_pubkey::Pubkey) -> &mut Self {
         self.out_ata = Some(out_ata);
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
 
     /// `[optional account]`
     #[inline(always)]
-    pub fn user_out_ata(
-        &mut self,
-        user_out_ata: Option<solana_program::pubkey::Pubkey>,
-    ) -> &mut Self {
+    pub fn user_out_ata(&mut self, user_out_ata: Option<solana_pubkey::Pubkey>) -> &mut Self {
         self.user_out_ata = user_out_ata;
         self
     }
@@ -259,7 +242,7 @@ impl EndAndCloseBuilder {
     #[inline(always)]
     pub fn init_user_out_ata(
         &mut self,
-        init_user_out_ata: Option<solana_program::pubkey::Pubkey>,
+        init_user_out_ata: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.init_user_out_ata = init_user_out_ata;
         self
@@ -269,7 +252,7 @@ impl EndAndCloseBuilder {
     #[inline(always)]
     pub fn intermediate_account(
         &mut self,
-        intermediate_account: Option<solana_program::pubkey::Pubkey>,
+        intermediate_account: Option<solana_pubkey::Pubkey>,
     ) -> &mut Self {
         self.intermediate_account = intermediate_account;
         self
@@ -277,14 +260,14 @@ impl EndAndCloseBuilder {
 
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
 
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
@@ -292,33 +275,27 @@ impl EndAndCloseBuilder {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: solana_program::pubkey::Pubkey,
+        associated_token_program: solana_pubkey::Pubkey,
     ) -> &mut Self {
         self.associated_token_program = Some(associated_token_program);
         self
     }
 
     #[inline(always)]
-    pub fn event_authority(
-        &mut self,
-        event_authority: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(&mut self, program: solana_program::pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
 
     /// Add an additional account to the instruction.
     #[inline(always)]
-    pub fn add_remaining_account(
-        &mut self,
-        account: solana_program::instruction::AccountMeta,
-    ) -> &mut Self {
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
@@ -327,14 +304,14 @@ impl EndAndCloseBuilder {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[solana_program::instruction::AccountMeta],
+        accounts: &[solana_instruction::AccountMeta],
     ) -> &mut Self {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
 
     #[allow(clippy::clone_on_copy)]
-    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+    pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = EndAndClose {
             keeper: self.keeper.expect("keeper is not set"),
             dca: self.dca.expect("dca is not set"),
@@ -348,8 +325,8 @@ impl EndAndCloseBuilder {
             intermediate_account: self.intermediate_account,
             system_program: self
                 .system_program
-                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
-            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             associated_token_program: self
@@ -365,76 +342,76 @@ impl EndAndCloseBuilder {
 
 /// `end_and_close` CPI accounts.
 pub struct EndAndCloseCpiAccounts<'a, 'b> {
-    pub keeper: &'b solana_program::account_info::AccountInfo<'a>,
+    pub keeper: &'b solana_account_info::AccountInfo<'a>,
 
-    pub dca: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dca: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub in_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub in_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub out_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub out_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub user_out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub init_user_out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub init_user_out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub intermediate_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub intermediate_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `end_and_close` CPI instruction.
 pub struct EndAndCloseCpi<'a, 'b> {
     /// The program to invoke.
-    pub __program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub keeper: &'b solana_program::account_info::AccountInfo<'a>,
+    pub keeper: &'b solana_account_info::AccountInfo<'a>,
 
-    pub dca: &'b solana_program::account_info::AccountInfo<'a>,
+    pub dca: &'b solana_account_info::AccountInfo<'a>,
 
-    pub input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub input_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    pub output_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub in_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub in_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub out_ata: &'b solana_program::account_info::AccountInfo<'a>,
+    pub out_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user: &'b solana_program::account_info::AccountInfo<'a>,
+    pub user: &'b solana_account_info::AccountInfo<'a>,
 
-    pub user_out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub user_out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub init_user_out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub init_user_out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub intermediate_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pub intermediate_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
-    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub associated_token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
-    pub program: &'b solana_program::account_info::AccountInfo<'a>,
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 impl<'a, 'b> EndAndCloseCpi<'a, 'b> {
     pub fn new(
-        program: &'b solana_program::account_info::AccountInfo<'a>,
+        program: &'b solana_account_info::AccountInfo<'a>,
         accounts: EndAndCloseCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
@@ -458,27 +435,20 @@ impl<'a, 'b> EndAndCloseCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -488,96 +458,83 @@ impl<'a, 'b> EndAndCloseCpi<'a, 'b> {
     pub fn invoke_signed_with_remaining_accounts(
         &self,
         signers_seeds: &[&[&[u8]]],
-        remaining_accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
-    ) -> solana_program::entrypoint::ProgramResult {
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(15 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.keeper.key,
-            true,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.dca.key,
-            false,
-        ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(*self.keeper.key, true));
+        accounts.push(solana_instruction::AccountMeta::new(*self.dca.key, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.input_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.output_mint.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.in_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.out_ata.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.user.key,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(*self.user.key, false));
         if let Some(user_out_ata) = self.user_out_ata {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 *user_out_ata.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::DCA_ID,
                 false,
             ));
         }
         if let Some(init_user_out_ata) = self.init_user_out_ata {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 *init_user_out_ata.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::DCA_ID,
                 false,
             ));
         }
         if let Some(intermediate_account) = self.intermediate_account {
-            accounts.push(solana_program::instruction::AccountMeta::new(
+            accounts.push(solana_instruction::AccountMeta::new(
                 *intermediate_account.key,
                 false,
             ));
         } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
                 crate::DCA_ID,
                 false,
             ));
         }
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.system_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.associated_token_program.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
-            accounts.push(solana_program::instruction::AccountMeta {
+            accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
                 is_signer: remaining_account.1,
                 is_writable: remaining_account.2,
@@ -585,7 +542,7 @@ impl<'a, 'b> EndAndCloseCpi<'a, 'b> {
         });
         let data = borsh::to_vec(&EndAndCloseInstructionData::new()).unwrap();
 
-        let instruction = solana_program::instruction::Instruction {
+        let instruction = solana_instruction::Instruction {
             program_id: crate::DCA_ID,
             accounts,
             data,
@@ -618,9 +575,9 @@ impl<'a, 'b> EndAndCloseCpi<'a, 'b> {
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
 
         if signers_seeds.is_empty() {
-            solana_program::program::invoke(&instruction, &account_infos)
+            solana_cpi::invoke(&instruction, &account_infos)
         } else {
-            solana_program::program::invoke_signed(&instruction, &account_infos, signers_seeds)
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
         }
     }
 }
@@ -650,7 +607,7 @@ pub struct EndAndCloseCpiBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
-    pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
         let instruction = Box::new(EndAndCloseCpiBuilderInstruction {
             __program: program,
             keeper: None,
@@ -674,16 +631,13 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn keeper(
-        &mut self,
-        keeper: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn keeper(&mut self, keeper: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.keeper = Some(keeper);
         self
     }
 
     #[inline(always)]
-    pub fn dca(&mut self, dca: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn dca(&mut self, dca: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.dca = Some(dca);
         self
     }
@@ -691,7 +645,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn input_mint(
         &mut self,
-        input_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        input_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.input_mint = Some(input_mint);
         self
@@ -700,32 +654,26 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn output_mint(
         &mut self,
-        output_mint: &'b solana_program::account_info::AccountInfo<'a>,
+        output_mint: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.output_mint = Some(output_mint);
         self
     }
 
     #[inline(always)]
-    pub fn in_ata(
-        &mut self,
-        in_ata: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn in_ata(&mut self, in_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.in_ata = Some(in_ata);
         self
     }
 
     #[inline(always)]
-    pub fn out_ata(
-        &mut self,
-        out_ata: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn out_ata(&mut self, out_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.out_ata = Some(out_ata);
         self
     }
 
     #[inline(always)]
-    pub fn user(&mut self, user: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+    pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
@@ -734,7 +682,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn user_out_ata(
         &mut self,
-        user_out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        user_out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.user_out_ata = user_out_ata;
         self
@@ -744,7 +692,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn init_user_out_ata(
         &mut self,
-        init_user_out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        init_user_out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.init_user_out_ata = init_user_out_ata;
         self
@@ -754,7 +702,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn intermediate_account(
         &mut self,
-        intermediate_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+        intermediate_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     ) -> &mut Self {
         self.instruction.intermediate_account = intermediate_account;
         self
@@ -763,7 +711,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn system_program(
         &mut self,
-        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.system_program = Some(system_program);
         self
@@ -772,7 +720,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn token_program(
         &mut self,
-        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.token_program = Some(token_program);
         self
@@ -781,7 +729,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
-        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+        associated_token_program: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
@@ -790,17 +738,14 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn event_authority(
         &mut self,
-        event_authority: &'b solana_program::account_info::AccountInfo<'a>,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.event_authority = Some(event_authority);
         self
     }
 
     #[inline(always)]
-    pub fn program(
-        &mut self,
-        program: &'b solana_program::account_info::AccountInfo<'a>,
-    ) -> &mut Self {
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
@@ -809,7 +754,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_account(
         &mut self,
-        account: &'b solana_program::account_info::AccountInfo<'a>,
+        account: &'b solana_account_info::AccountInfo<'a>,
         is_writable: bool,
         is_signer: bool,
     ) -> &mut Self {
@@ -826,11 +771,7 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn add_remaining_accounts(
         &mut self,
-        accounts: &[(
-            &'b solana_program::account_info::AccountInfo<'a>,
-            bool,
-            bool,
-        )],
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> &mut Self {
         self.instruction
             .__remaining_accounts
@@ -839,14 +780,11 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program::entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program::entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let instruction = EndAndCloseCpi {
             __program: self.instruction.__program,
 
@@ -904,26 +842,22 @@ impl<'a, 'b> EndAndCloseCpiBuilder<'a, 'b> {
 
 #[derive(Clone, Debug)]
 struct EndAndCloseCpiBuilderInstruction<'a, 'b> {
-    __program: &'b solana_program::account_info::AccountInfo<'a>,
-    keeper: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    dca: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    input_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    output_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    in_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    user_out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    init_user_out_ata: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    intermediate_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    event_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    keeper: Option<&'b solana_account_info::AccountInfo<'a>>,
+    dca: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    in_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    init_user_out_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    intermediate_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-    __remaining_accounts: Vec<(
-        &'b solana_program::account_info::AccountInfo<'a>,
-        bool,
-        bool,
-    )>,
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

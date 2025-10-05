@@ -5,9 +5,14 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
+#[cfg(feature = "shared-data")]
+use std::sync::Arc;
+
+#[cfg(feature = "shared-data")]
+use yellowstone_vixen_core::InstructionUpdateOutput;
 
 use crate::{
+    deserialize_checked,
     instructions::{
         CloseDca as CloseDcaIxAccounts, Deposit as DepositIxAccounts,
         DepositInstructionArgs as DepositIxData, EndAndClose as EndAndCloseIxAccounts,
@@ -49,7 +54,10 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+    #[cfg(not(feature = "shared-data"))]
     type Output = DcaProgramIx;
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<DcaProgramIx>;
 
     fn id(&self) -> std::borrow::Cow<'static, str> { "Dca::InstructionParser".into() }
 
@@ -65,7 +73,23 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
         ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
     ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
         if ix_update.program.equals_ref(ID) {
-            InstructionParser::parse_impl(ix_update)
+            let res = InstructionParser::parse_impl(ix_update);
+
+            #[cfg(feature = "tracing")]
+            if let Err(e) = &res {
+                let ix_discriminator: [u8; 8] = ix_update.data[0..8].try_into()?;
+
+                tracing::info!(
+                    name: "incorrectly_parsed_instruction",
+                    name = "ix_update",
+                    program = ID.to_string(),
+                    ix = "deserialization_error",
+                    discriminator = ?ix_discriminator,
+                    error = ?e
+                );
+            }
+
+            res
         } else {
             Err(yellowstone_vixen_core::ParseError::Filtered)
         }
@@ -80,274 +104,249 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<DcaProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<<Self as yellowstone_vixen_core::Parser>::Output> {
         let accounts_len = ix.accounts.len();
+        let accounts = &mut ix.accounts.iter();
+
+        #[cfg(feature = "shared-data")]
+        let shared_data = Arc::clone(&ix.shared);
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
-        let mut ix_data = &ix.data[8..];
+        let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [36, 65, 185, 54, 1, 210, 100, 163] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = OpenDcaIxAccounts {
-                    dca: ix.accounts[0].0.into(),
-                    user: ix.accounts[1].0.into(),
-                    input_mint: ix.accounts[2].0.into(),
-                    output_mint: ix.accounts[3].0.into(),
-                    user_ata: ix.accounts[4].0.into(),
-                    in_ata: ix.accounts[5].0.into(),
-                    out_ata: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
-                    event_authority: ix.accounts[10].0.into(),
-                    program: ix.accounts[11].0.into(),
+                    dca: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    user_ata: next_account(accounts)?,
+                    in_ata: next_account(accounts)?,
+                    out_ata: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: OpenDcaIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: OpenDcaIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DcaProgramIx::OpenDca(ix_accounts, de_ix_data))
             },
             [142, 119, 43, 109, 162, 52, 11, 177] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = OpenDcaV2IxAccounts {
-                    dca: ix.accounts[0].0.into(),
-                    user: ix.accounts[1].0.into(),
-                    payer: ix.accounts[2].0.into(),
-                    input_mint: ix.accounts[3].0.into(),
-                    output_mint: ix.accounts[4].0.into(),
-                    user_ata: ix.accounts[5].0.into(),
-                    in_ata: ix.accounts[6].0.into(),
-                    out_ata: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    associated_token_program: ix.accounts[10].0.into(),
-                    event_authority: ix.accounts[11].0.into(),
-                    program: ix.accounts[12].0.into(),
+                    dca: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    user_ata: next_account(accounts)?,
+                    in_ata: next_account(accounts)?,
+                    out_ata: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: OpenDcaV2IxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: OpenDcaV2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DcaProgramIx::OpenDcaV2(ix_accounts, de_ix_data))
             },
             [22, 7, 33, 98, 168, 183, 34, 243] => {
-                check_min_accounts_req(accounts_len, 13)?;
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CloseDcaIxAccounts {
-                    user: ix.accounts[0].0.into(),
-                    dca: ix.accounts[1].0.into(),
-                    input_mint: ix.accounts[2].0.into(),
-                    output_mint: ix.accounts[3].0.into(),
-                    in_ata: ix.accounts[4].0.into(),
-                    out_ata: ix.accounts[5].0.into(),
-                    user_in_ata: ix.accounts[6].0.into(),
-                    user_out_ata: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
-                    associated_token_program: ix.accounts[10].0.into(),
-                    event_authority: ix.accounts[11].0.into(),
-                    program: ix.accounts[12].0.into(),
+                    user: next_account(accounts)?,
+                    dca: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    in_ata: next_account(accounts)?,
+                    out_ata: next_account(accounts)?,
+                    user_in_ata: next_account(accounts)?,
+                    user_out_ata: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(DcaProgramIx::CloseDca(ix_accounts))
             },
             [183, 18, 70, 156, 148, 109, 161, 34] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawIxAccounts {
-                    user: ix.accounts[0].0.into(),
-                    dca: ix.accounts[1].0.into(),
-                    input_mint: ix.accounts[2].0.into(),
-                    output_mint: ix.accounts[3].0.into(),
-                    dca_ata: ix.accounts[4].0.into(),
-                    user_in_ata: if ix.accounts[5]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[5].0.into())
-                    },
-                    user_out_ata: if ix.accounts[6]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[6].0.into())
-                    },
-                    system_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
-                    event_authority: ix.accounts[10].0.into(),
-                    program: ix.accounts[11].0.into(),
+                    user: next_account(accounts)?,
+                    dca: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    dca_ata: next_account(accounts)?,
+                    user_in_ata: next_program_id_optional_account(accounts)?,
+                    user_out_ata: next_program_id_optional_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: WithdrawIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DcaProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
             [242, 35, 198, 137, 82, 225, 242, 182] => {
-                check_min_accounts_req(accounts_len, 7)?;
+                let expected_accounts_len = 7;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = DepositIxAccounts {
-                    user: ix.accounts[0].0.into(),
-                    dca: ix.accounts[1].0.into(),
-                    in_ata: ix.accounts[2].0.into(),
-                    user_in_ata: ix.accounts[3].0.into(),
-                    token_program: ix.accounts[4].0.into(),
-                    event_authority: ix.accounts[5].0.into(),
-                    program: ix.accounts[6].0.into(),
+                    user: next_account(accounts)?,
+                    dca: next_account(accounts)?,
+                    in_ata: next_account(accounts)?,
+                    user_in_ata: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
-                let de_ix_data: DepositIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: DepositIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DcaProgramIx::Deposit(ix_accounts, de_ix_data))
             },
             [198, 212, 171, 109, 144, 215, 174, 89] => {
-                check_min_accounts_req(accounts_len, 8)?;
+                let expected_accounts_len = 8;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = WithdrawFeesIxAccounts {
-                    admin: ix.accounts[0].0.into(),
-                    mint: ix.accounts[1].0.into(),
-                    fee_authority: ix.accounts[2].0.into(),
-                    program_fee_ata: ix.accounts[3].0.into(),
-                    admin_fee_ata: ix.accounts[4].0.into(),
-                    system_program: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
-                    associated_token_program: ix.accounts[7].0.into(),
+                    admin: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    program_fee_ata: next_account(accounts)?,
+                    admin_fee_ata: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
-                let de_ix_data: WithdrawFeesIxData = BorshDeserialize::deserialize(&mut ix_data)?;
+                let de_ix_data: WithdrawFeesIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DcaProgramIx::WithdrawFees(ix_accounts, de_ix_data))
             },
             [143, 205, 3, 191, 162, 215, 245, 49] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitiateFlashFillIxAccounts {
-                    keeper: ix.accounts[0].0.into(),
-                    dca: ix.accounts[1].0.into(),
-                    input_mint: ix.accounts[2].0.into(),
-                    keeper_in_ata: ix.accounts[3].0.into(),
-                    in_ata: ix.accounts[4].0.into(),
-                    out_ata: ix.accounts[5].0.into(),
-                    instructions_sysvar: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
+                    keeper: next_account(accounts)?,
+                    dca: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    keeper_in_ata: next_account(accounts)?,
+                    in_ata: next_account(accounts)?,
+                    out_ata: next_account(accounts)?,
+                    instructions_sysvar: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
                 Ok(DcaProgramIx::InitiateFlashFill(ix_accounts))
             },
             [115, 64, 226, 78, 33, 211, 105, 162] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = FulfillFlashFillIxAccounts {
-                    keeper: ix.accounts[0].0.into(),
-                    dca: ix.accounts[1].0.into(),
-                    input_mint: ix.accounts[2].0.into(),
-                    output_mint: ix.accounts[3].0.into(),
-                    keeper_in_ata: ix.accounts[4].0.into(),
-                    in_ata: ix.accounts[5].0.into(),
-                    out_ata: ix.accounts[6].0.into(),
-                    fee_authority: ix.accounts[7].0.into(),
-                    fee_ata: ix.accounts[8].0.into(),
-                    instructions_sysvar: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    associated_token_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    keeper: next_account(accounts)?,
+                    dca: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    keeper_in_ata: next_account(accounts)?,
+                    in_ata: next_account(accounts)?,
+                    out_ata: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    fee_ata: next_account(accounts)?,
+                    instructions_sysvar: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: FulfillFlashFillIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DcaProgramIx::FulfillFlashFill(ix_accounts, de_ix_data))
             },
             [155, 193, 80, 121, 91, 147, 254, 187] => {
-                check_min_accounts_req(accounts_len, 10)?;
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitiateDlmmFillIxAccounts {
-                    keeper: ix.accounts[0].0.into(),
-                    dca: ix.accounts[1].0.into(),
-                    input_mint: ix.accounts[2].0.into(),
-                    keeper_in_ata: ix.accounts[3].0.into(),
-                    in_ata: ix.accounts[4].0.into(),
-                    out_ata: ix.accounts[5].0.into(),
-                    instructions_sysvar: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
+                    keeper: next_account(accounts)?,
+                    dca: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    keeper_in_ata: next_account(accounts)?,
+                    in_ata: next_account(accounts)?,
+                    out_ata: next_account(accounts)?,
+                    instructions_sysvar: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
                 };
                 Ok(DcaProgramIx::InitiateDlmmFill(ix_accounts))
             },
             [1, 230, 118, 251, 45, 177, 101, 187] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = FulfillDlmmFillIxAccounts {
-                    keeper: ix.accounts[0].0.into(),
-                    dca: ix.accounts[1].0.into(),
-                    input_mint: ix.accounts[2].0.into(),
-                    output_mint: ix.accounts[3].0.into(),
-                    keeper_in_ata: ix.accounts[4].0.into(),
-                    in_ata: ix.accounts[5].0.into(),
-                    out_ata: ix.accounts[6].0.into(),
-                    fee_authority: ix.accounts[7].0.into(),
-                    fee_ata: ix.accounts[8].0.into(),
-                    instructions_sysvar: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    associated_token_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    keeper: next_account(accounts)?,
+                    dca: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    keeper_in_ata: next_account(accounts)?,
+                    in_ata: next_account(accounts)?,
+                    out_ata: next_account(accounts)?,
+                    fee_authority: next_account(accounts)?,
+                    fee_ata: next_account(accounts)?,
+                    instructions_sysvar: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 let de_ix_data: FulfillDlmmFillIxData =
-                    BorshDeserialize::deserialize(&mut ix_data)?;
+                    deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(DcaProgramIx::FulfillDlmmFill(ix_accounts, de_ix_data))
             },
             [163, 52, 200, 231, 140, 3, 69, 186] => {
-                check_min_accounts_req(accounts_len, 12)?;
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = TransferIxAccounts {
-                    keeper: ix.accounts[0].0.into(),
-                    dca: ix.accounts[1].0.into(),
-                    user: ix.accounts[2].0.into(),
-                    output_mint: ix.accounts[3].0.into(),
-                    dca_out_ata: ix.accounts[4].0.into(),
-                    user_out_ata: if ix.accounts[5]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[5].0.into())
-                    },
-                    intermediate_account: if ix.accounts[6]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[6].0.into())
-                    },
-                    system_program: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
-                    associated_token_program: ix.accounts[9].0.into(),
-                    event_authority: ix.accounts[10].0.into(),
-                    program: ix.accounts[11].0.into(),
+                    keeper: next_account(accounts)?,
+                    dca: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    dca_out_ata: next_account(accounts)?,
+                    user_out_ata: next_program_id_optional_account(accounts)?,
+                    intermediate_account: next_program_id_optional_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(DcaProgramIx::Transfer(ix_accounts))
             },
             [83, 125, 166, 69, 247, 252, 103, 133] => {
-                check_min_accounts_req(accounts_len, 15)?;
+                let expected_accounts_len = 15;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = EndAndCloseIxAccounts {
-                    keeper: ix.accounts[0].0.into(),
-                    dca: ix.accounts[1].0.into(),
-                    input_mint: ix.accounts[2].0.into(),
-                    output_mint: ix.accounts[3].0.into(),
-                    in_ata: ix.accounts[4].0.into(),
-                    out_ata: ix.accounts[5].0.into(),
-                    user: ix.accounts[6].0.into(),
-                    user_out_ata: if ix.accounts[7]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[7].0.into())
-                    },
-                    init_user_out_ata: if ix.accounts[8]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[8].0.into())
-                    },
-                    intermediate_account: if ix.accounts[9]
-                        .eq(&yellowstone_vixen_core::KeyBytes::from(ID.to_bytes()))
-                    {
-                        None
-                    } else {
-                        Some(ix.accounts[9].0.into())
-                    },
-                    system_program: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    associated_token_program: ix.accounts[12].0.into(),
-                    event_authority: ix.accounts[13].0.into(),
-                    program: ix.accounts[14].0.into(),
+                    keeper: next_account(accounts)?,
+                    dca: next_account(accounts)?,
+                    input_mint: next_account(accounts)?,
+                    output_mint: next_account(accounts)?,
+                    in_ata: next_account(accounts)?,
+                    out_ata: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    user_out_ata: next_program_id_optional_account(accounts)?,
+                    init_user_out_ata: next_program_id_optional_account(accounts)?,
+                    intermediate_account: next_program_id_optional_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
                 };
                 Ok(DcaProgramIx::EndAndClose(ix_accounts))
             },
@@ -378,7 +377,14 @@ impl InstructionParser {
             },
         }
 
-        ix
+        #[cfg(not(feature = "shared-data"))]
+        return ix;
+
+        #[cfg(feature = "shared-data")]
+        ix.map(|ix| InstructionUpdateOutput {
+            parsed_ix: ix,
+            shared_data,
+        })
     }
 }
 
@@ -392,6 +398,49 @@ pub fn check_min_accounts_req(
         )))
     } else {
         Ok(())
+    }
+}
+
+fn next_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+) -> Result<solana_pubkey::Pubkey, yellowstone_vixen_core::ParseError> {
+    accounts
+        .next()
+        .ok_or(yellowstone_vixen_core::ParseError::from(
+            "No more accounts to parse",
+        ))
+        .map(|acc| acc.0.into())
+}
+
+/// Gets the next optional account using the ommited account strategy (account is not passed at all at the instruction).
+/// ### Be careful to use this function when more than one account is optional in the Instruction.
+///  Only by order there is no way to which ones of the optional accounts are present.
+pub fn next_optional_account<'a, T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>>(
+    accounts: &mut T,
+    actual_accounts_len: usize,
+    expected_accounts_len: &mut usize,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    if actual_accounts_len == *expected_accounts_len + 1 {
+        *expected_accounts_len += 1;
+        Ok(Some(next_account(accounts)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Gets the next optional account using the traditional Program ID strategy.
+///  (If account key is the program ID, means account is not present)
+pub fn next_program_id_optional_account<
+    'a,
+    T: Iterator<Item = &'a yellowstone_vixen_core::KeyBytes<32>>,
+>(
+    accounts: &mut T,
+) -> Result<Option<solana_pubkey::Pubkey>, yellowstone_vixen_core::ParseError> {
+    let account_key = next_account(accounts)?;
+    if account_key.eq(&ID) {
+        Ok(None)
+    } else {
+        Ok(Some(account_key))
     }
 }
 
@@ -798,6 +847,12 @@ mod proto_parser {
     impl ParseProto for InstructionParser {
         type Message = proto_def::ProgramIxs;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            #[cfg(not(feature = "shared-data"))]
+            return value.into_proto();
+
+            #[cfg(feature = "shared-data")]
+            value.parsed_ix.into_proto()
+        }
     }
 }

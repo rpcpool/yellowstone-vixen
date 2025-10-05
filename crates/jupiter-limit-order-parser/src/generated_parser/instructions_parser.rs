@@ -11,21 +11,23 @@ use std::sync::Arc;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
-use crate::deserialize_checked;
-
-use crate::instructions::{
-    CancelDustOrder as CancelDustOrderIxAccounts,
-    CancelDustOrderInstructionArgs as CancelDustOrderIxData, CancelOrder as CancelOrderIxAccounts,
-    FillOrder as FillOrderIxAccounts, FillOrderInstructionArgs as FillOrderIxData,
-    FlashFillOrder as FlashFillOrderIxAccounts,
-    FlashFillOrderInstructionArgs as FlashFillOrderIxData,
-    InitializeOrder as InitializeOrderIxAccounts,
-    InitializeOrderInstructionArgs as InitializeOrderIxData,
-    PreFlashFillOrder as PreFlashFillOrderIxAccounts,
-    PreFlashFillOrderInstructionArgs as PreFlashFillOrderIxData, UpdateFee as UpdateFeeIxAccounts,
-    UpdateFeeInstructionArgs as UpdateFeeIxData, WithdrawFee as WithdrawFeeIxAccounts,
+use crate::{
+    deserialize_checked,
+    instructions::{
+        CancelDustOrder as CancelDustOrderIxAccounts,
+        CancelDustOrderInstructionArgs as CancelDustOrderIxData,
+        CancelOrder as CancelOrderIxAccounts, FillOrder as FillOrderIxAccounts,
+        FillOrderInstructionArgs as FillOrderIxData, FlashFillOrder as FlashFillOrderIxAccounts,
+        FlashFillOrderInstructionArgs as FlashFillOrderIxData,
+        InitializeOrder as InitializeOrderIxAccounts,
+        InitializeOrderInstructionArgs as InitializeOrderIxData,
+        PreFlashFillOrder as PreFlashFillOrderIxAccounts,
+        PreFlashFillOrderInstructionArgs as PreFlashFillOrderIxData,
+        UpdateFee as UpdateFeeIxAccounts, UpdateFeeInstructionArgs as UpdateFeeIxData,
+        WithdrawFee as WithdrawFeeIxAccounts,
+    },
+    ID,
 };
-use crate::ID;
 
 /// LimitOrder2 Instructions
 #[derive(Debug)]
@@ -46,16 +48,12 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-
     #[cfg(not(feature = "shared-data"))]
     type Output = LimitOrder2ProgramIx;
-
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<LimitOrder2ProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "LimitOrder2::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "LimitOrder2::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -94,9 +92,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -366,11 +362,10 @@ pub fn next_program_id_optional_account<
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{InstructionParser, LimitOrder2ProgramIx};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::CancelDustOrderIxAccounts;
+    use super::{CancelDustOrderIxAccounts, InstructionParser, LimitOrder2ProgramIx};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::CancelDustOrderIxAccounts> for CancelDustOrderIxAccounts {
         fn into_proto(self) -> proto_def::CancelDustOrderIxAccounts {
             proto_def::CancelDustOrderIxAccounts {
