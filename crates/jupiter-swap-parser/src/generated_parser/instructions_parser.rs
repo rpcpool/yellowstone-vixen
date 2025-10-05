@@ -82,18 +82,18 @@ pub enum JupiterProgramIx {
     ExactOutRouteV2(
         ExactOutRouteV2IxAccounts,
         ExactOutRouteV2IxData,
-        Option<SwapsEvent>,
+        Option<(SwapsEvent, u16)>,
     ),
-    RouteV2(RouteV2IxAccounts, RouteV2IxData, Option<SwapsEvent>),
+    RouteV2(RouteV2IxAccounts, RouteV2IxData, Option<(SwapsEvent, u16)>),
     SharedAccountsExactOutRouteV2(
         SharedAccountsExactOutRouteV2IxAccounts,
         SharedAccountsExactOutRouteV2IxData,
-        Option<SwapsEvent>,
+        Option<(SwapsEvent, u16)>,
     ),
     SharedAccountsRouteV2(
         SharedAccountsRouteV2IxAccounts,
         SharedAccountsRouteV2IxData,
-        Option<SwapsEvent>,
+        Option<(SwapsEvent, u16)>,
     ),
 }
 
@@ -473,10 +473,10 @@ impl InstructionParser {
                 let de_ix_data: ExactOutRouteV2IxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for SwapsEvent in inner instructions (at most one)
-                let swaps_event: Option<SwapsEvent> = ix
-                    .inner
-                    .iter()
-                    .find_map(|inner_ix| SwapsEvent::from_inner_instruction_data(&inner_ix.data));
+                let swaps_event: Option<(SwapsEvent, u16)> = ix.inner.iter().find_map(|inner_ix| {
+                    SwapsEvent::from_inner_instruction_data(&inner_ix.data)
+                        .map(|event| (event, inner_ix.ix_index))
+                });
 
                 Ok(JupiterProgramIx::ExactOutRouteV2(
                     ix_accounts,
@@ -501,10 +501,10 @@ impl InstructionParser {
                 };
                 let de_ix_data: RouteV2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for SwapsEvent in inner instructions (at most one)
-                let swaps_event: Option<SwapsEvent> = ix
-                    .inner
-                    .iter()
-                    .find_map(|inner_ix| SwapsEvent::from_inner_instruction_data(&inner_ix.data));
+                let swaps_event: Option<(SwapsEvent, u16)> = ix.inner.iter().find_map(|inner_ix| {
+                    SwapsEvent::from_inner_instruction_data(&inner_ix.data)
+                        .map(|event| (event, inner_ix.ix_index))
+                });
 
                 Ok(JupiterProgramIx::RouteV2(
                     ix_accounts,
@@ -532,10 +532,10 @@ impl InstructionParser {
                 let de_ix_data: SharedAccountsExactOutRouteV2IxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for SwapsEvent in inner instructions (at most one)
-                let swaps_event: Option<SwapsEvent> = ix
-                    .inner
-                    .iter()
-                    .find_map(|inner_ix| SwapsEvent::from_inner_instruction_data(&inner_ix.data));
+                let swaps_event: Option<(SwapsEvent, u16)> = ix.inner.iter().find_map(|inner_ix| {
+                    SwapsEvent::from_inner_instruction_data(&inner_ix.data)
+                        .map(|event| (event, inner_ix.ix_index))
+                });
 
                 Ok(JupiterProgramIx::SharedAccountsExactOutRouteV2(
                     ix_accounts,
@@ -563,10 +563,10 @@ impl InstructionParser {
                 let de_ix_data: SharedAccountsRouteV2IxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 // Search for SwapsEvent in inner instructions (at most one)
-                let swaps_event: Option<SwapsEvent> = ix
-                    .inner
-                    .iter()
-                    .find_map(|inner_ix| SwapsEvent::from_inner_instruction_data(&inner_ix.data));
+                let swaps_event: Option<(SwapsEvent, u16)> = ix.inner.iter().find_map(|inner_ix| {
+                    SwapsEvent::from_inner_instruction_data(&inner_ix.data)
+                        .map(|event| (event, inner_ix.ix_index))
+                });
 
                 Ok(JupiterProgramIx::SharedAccountsRouteV2(
                     ix_accounts,
