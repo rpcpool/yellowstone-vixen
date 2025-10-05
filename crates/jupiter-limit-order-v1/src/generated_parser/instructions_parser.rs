@@ -293,6 +293,7 @@ impl InstructionParser {
         ix.map(|ix| InstructionUpdateOutput {
             parsed_ix: ix,
             shared_data,
+            ix_index,
         })
     }
 }
