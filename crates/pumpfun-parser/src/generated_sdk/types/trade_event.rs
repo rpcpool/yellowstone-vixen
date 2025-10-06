@@ -27,22 +27,6 @@ pub struct TradeEventV1 {
     pub timestamp: i64,
     pub virtual_sol_reserves: u64,
     pub virtual_token_reserves: u64,
-    pub real_sol_reserves: u64,
-    pub real_token_reserves: u64,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub fee_recipient: Pubkey,
-    pub fee_basis_points: u64,
-    pub fee: u64,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub creator: Pubkey,
-    pub creator_fee_basis_points: u64,
-    pub creator_fee: u64,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -117,8 +101,10 @@ impl TradeEvent {
                 }
 
                 // If V2 fails, try V1
-                if let Ok(v1_event) = TradeEventV1::try_from_slice(trade_event_data) {
-                    return Some(TradeEvent::V1(v1_event));
+                if trade_event_data.len() >= 105 {
+                    if let Ok(v1_event) = TradeEventV1::try_from_slice(&trade_event_data[..105]) {
+                        return Some(TradeEvent::V1(v1_event));
+                    }
                 }
             }
         }
@@ -188,6 +174,35 @@ mod tests {
                 assert_eq!(v2_event.sol_amount, 746603006);
                 assert_eq!(v2_event.token_amount, 3097133016837);
                 println!("Parsed as TradeEventV2: {v2_event:?}");
+            },
+        }
+    }
+
+    #[test]
+    fn test_parse_trade_event_from_inner_data_2() {
+        // Test data from provided hex string
+        let hex_data = "e445a52e51cb9a1dbddb7fd34ee661eecddf7a61032a3659959072d68caa7505675f59f27ce4dc3c5694d49d02a066ff80f0fa02000000002763c79b3001000001dbc22f7b145afb82a6d4870b3a07451eaa1dd766e10f3025a5f66da7b99f6caff1f73c670000000041c41b2c080000007b3fca13194203004118f82f010000007ba7b7c787430200";
+
+        let data = hex::decode(hex_data).expect("Failed to decode hex");
+
+        let result = TradeEvent::from_inner_instruction_data(&data);
+        assert!(
+            result.is_some(),
+            "Should successfully parse TradeEvent from inner instruction data"
+        );
+
+        let trade_event = result.unwrap();
+
+        // This should be parsed as V2 based on the data length
+        match trade_event {
+            TradeEvent::V1(v1_event) => {
+                assert!(v1_event.is_buy);
+                assert_eq!(v1_event.sol_amount, 50000000);
+                assert_eq!(v1_event.token_amount, 1308283593511);
+                println!("Parsed as TradeEventV1: {v1_event:?}");
+            },
+            TradeEvent::V2(v2_event) => {
+                panic!("Expected TradeEventV1, got TradeEventV2: {v2_event:?}");
             },
         }
     }
