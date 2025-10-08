@@ -46,7 +46,7 @@ pub mod proto_types_parsers {
                             .collect(),
                         weights: route_vec
                             .iter()
-                            .flat_map(|route| route.weights.iter().cloned())
+                            .flat_map(|route| route.weights.iter().map(|&w| w as u32))
                             .collect(),
                     })
                     .collect(),
@@ -128,7 +128,7 @@ pub mod proto_types_parsers {
         fn into_proto(self) -> proto_def::Route {
             proto_def::Route {
                 dexes: self.dexes.into_iter().map(|x| x as i32).collect(),
-                weights: self.weights,
+                weights: self.weights.into_iter().map(|x| x as u32).collect(),
             }
         }
     }
@@ -174,7 +174,7 @@ pub mod proto_types_parsers {
                             .collect(),
                         weights: route_vec
                             .iter()
-                            .flat_map(|route| route.weights.iter().cloned())
+                            .flat_map(|route| route.weights.iter().map(|&w| w as u32))
                             .collect(),
                     })
                     .collect(),
