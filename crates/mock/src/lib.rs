@@ -28,16 +28,17 @@ use solana_sdk::{account::Account, bs58, pubkey::Pubkey, signature::Signature};
 use solana_transaction_status::{
     option_serializer::OptionSerializer, EncodedConfirmedTransactionWithStatusMeta,
     EncodedTransaction, EncodedTransactionWithStatusMeta, UiCompiledInstruction,
-    UiInnerInstructions, UiInstruction, UiMessage,
+    UiInnerInstructions, UiInstruction, UiMessage, UiTransactionTokenBalance,
 };
 use yellowstone_grpc_proto::{
     geyser::{
         SubscribeUpdateAccount, SubscribeUpdateAccountInfo, SubscribeUpdateTransaction,
         SubscribeUpdateTransactionInfo,
     },
+    prelude::MessageHeader,
     solana::storage::confirmed_block::{
-        CompiledInstruction, InnerInstruction, InnerInstructions, Message, Transaction,
-        TransactionStatusMeta,
+        CompiledInstruction, InnerInstruction, InnerInstructions, Message, TokenBalance,
+        Transaction, TransactionStatusMeta,
     },
 };
 use yellowstone_vixen_core::{
@@ -117,7 +118,9 @@ impl TryFrom<SubscribeUpdateAccount> for AccountInfo {
 pub struct SerializablePubkey(pub [u8; 32]);
 
 impl Debug for SerializablePubkey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { Display::fmt(self, f) }
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(self, f)
+    }
 }
 
 impl Display for SerializablePubkey {
@@ -127,11 +130,15 @@ impl Display for SerializablePubkey {
 }
 
 impl From<VixenPubkey> for SerializablePubkey {
-    fn from(value: VixenPubkey) -> Self { Self(value.into_bytes()) }
+    fn from(value: VixenPubkey) -> Self {
+        Self(value.into_bytes())
+    }
 }
 
 impl From<SerializablePubkey> for VixenPubkey {
-    fn from(value: SerializablePubkey) -> Self { Self::new(value.0) }
+    fn from(value: SerializablePubkey) -> Self {
+        Self::new(value.0)
+    }
 }
 
 pub type IxIndex = [usize; 2]; // [outer_ix_index, inner_ix_index]
@@ -274,10 +281,38 @@ fn filter_ixs(
         .collect::<Vec<SerializableInstructionUpdate>>()
 }
 
+/// Convert UiTransactionTokenBalance to TokenBalance protobuf
+fn convert_ui_token_balance(
+    ui_balance: &UiTransactionTokenBalance,
+) -> Result<TokenBalance, Box<dyn std::error::Error>> {
+    Ok(TokenBalance {
+        account_index: ui_balance.account_index as u32,
+        mint: ui_balance.mint.clone(),
+        ui_token_amount: None, // Simplified - handlers mainly need mint/owner
+        owner: ui_balance
+            .owner
+            .as_ref()
+            .map(|s| s.to_string())
+            .unwrap_or_default(),
+        program_id: ui_balance
+            .program_id
+            .as_ref()
+            .map(|s| s.to_string())
+            .unwrap_or_default(),
+    })
+}
+
+/// Convert a vector of UiTransactionTokenBalance to TokenBalance protobuf
+fn convert_token_balances(
+    ui_balances: Vec<UiTransactionTokenBalance>,
+) -> Result<Vec<TokenBalance>, Box<dyn std::error::Error>> {
+    ui_balances.iter().map(convert_ui_token_balance).collect()
+}
+
 #[allow(clippy::too_many_lines)]
 fn convert_to_transaction_update(
     value: EncodedConfirmedTransactionWithStatusMeta,
-) -> Result<TransactionUpdate, String> {
+) -> Result<TransactionUpdate, Box<dyn std::error::Error>> {
     let EncodedConfirmedTransactionWithStatusMeta {
         transaction,
         slot,
@@ -293,13 +328,13 @@ fn convert_to_transaction_update(
     let mut instructions: Vec<CompiledInstruction> = Vec::new();
     let mut inner_instructions: Vec<InnerInstructions> = Vec::new();
     let mut signatures: Vec<Vec<u8>> = Vec::new();
-    let message_header: Option<yellowstone_grpc_proto::prelude::MessageHeader>;
+    let message_header: Option<MessageHeader>;
     let recent_blockhash: Vec<u8>;
 
     if let EncodedTransaction::Json(tx_data) = transaction {
         if let UiMessage::Raw(raw_message) = tx_data.message {
             // Extract and convert message header
-            message_header = Some(yellowstone_grpc_proto::prelude::MessageHeader {
+            message_header = Some(MessageHeader {
                 num_required_signatures: u32::from(raw_message.header.num_required_signatures),
                 num_readonly_signed_accounts: u32::from(
                     raw_message.header.num_readonly_signed_accounts,
@@ -310,15 +345,11 @@ fn convert_to_transaction_update(
             });
 
             // Extract recent blockhash
-            recent_blockhash = bs58::decode(&raw_message.recent_blockhash)
-                .into_vec()
-                .map_err(|e| format!("Error decoding recent blockhash: {e:?}"))?;
+            recent_blockhash = decode_bs58_to_bytes(&raw_message.recent_blockhash)?;
 
             // Convert account keys from strings to bytes
             for key_str in raw_message.account_keys {
-                let key_bytes = bs58::decode(key_str)
-                    .into_vec()
-                    .map_err(|e| format!("Error decoding account key: {e:?}"))?;
+                let key_bytes = decode_bs58_to_bytes(&key_str)?;
                 account_keys.push(key_bytes);
             }
 
@@ -333,9 +364,7 @@ fn convert_to_transaction_update(
 
             // Convert signatures
             for sig_str in tx_data.signatures {
-                let sig_bytes = bs58::decode(sig_str)
-                    .into_vec()
-                    .map_err(|e| format!("Error decoding signature: {e:?}"))?;
+                let sig_bytes = decode_bs58_to_bytes(&sig_str)?;
                 signatures.push(sig_bytes);
             }
         } else {
@@ -373,15 +402,11 @@ fn convert_to_transaction_update(
         // Convert loaded addresses
         if let OptionSerializer::Some(loaded) = &meta.loaded_addresses {
             for addr_str in &loaded.writable {
-                let addr_bytes = bs58::decode(addr_str)
-                    .into_vec()
-                    .map_err(|e| format!("Error decoding loaded writable address: {e:?}"))?;
+                let addr_bytes = decode_bs58_to_bytes(addr_str)?;
                 loaded_writable_addresses.push(addr_bytes);
             }
             for addr_str in &loaded.readonly {
-                let addr_bytes = bs58::decode(addr_str)
-                    .into_vec()
-                    .map_err(|e| format!("Error decoding loaded readonly address: {e:?}"))?;
+                let addr_bytes = decode_bs58_to_bytes(addr_str)?;
                 loaded_readonly_addresses.push(addr_bytes);
             }
         }
@@ -389,7 +414,7 @@ fn convert_to_transaction_update(
 
     let transaction_info = SubscribeUpdateTransactionInfo {
         signature: signatures.first().cloned().unwrap_or_default(),
-        is_vote: false, // Default for mock
+        is_vote: false,
         transaction: Some(Transaction {
             signatures,
             message: Some(Message {
@@ -401,44 +426,51 @@ fn convert_to_transaction_update(
                 address_table_lookups: vec![],
             }),
         }),
-        meta: meta.map(|m| TransactionStatusMeta {
-            err: None, // Convert transaction error types is complex, skip for mock
-            fee: m.fee,
-            pre_balances: m.pre_balances,
-            post_balances: m.post_balances,
-            inner_instructions,
-            inner_instructions_none: false,
-            log_messages: match m.log_messages {
-                OptionSerializer::Some(logs) => logs,
-                OptionSerializer::None | OptionSerializer::Skip => vec![],
-            },
-            log_messages_none: false,
-            pre_token_balances: match m.pre_token_balances {
-                OptionSerializer::Some(_) | OptionSerializer::None | OptionSerializer::Skip => {
-                    vec![]
-                }, // Token balance conversion is complex, skip for mock
-            },
-            post_token_balances: match m.post_token_balances {
-                OptionSerializer::Some(_) | OptionSerializer::None | OptionSerializer::Skip => {
-                    vec![]
-                }, // Token balance conversion is complex, skip for mock
-            },
-            rewards: match m.rewards {
-                OptionSerializer::Some(_) | OptionSerializer::None | OptionSerializer::Skip => {
-                    vec![]
-                }, // Reward conversion is complex, skip for mock
-            },
-            loaded_writable_addresses,
-            loaded_readonly_addresses,
-            return_data: None,
-            return_data_none: false,
-            compute_units_consumed: match m.compute_units_consumed {
-                OptionSerializer::Some(units) => Some(units),
-                OptionSerializer::None | OptionSerializer::Skip => None,
-            },
-            cost_units: None,
-        }),
-        index: 0, // Default for mock
+        meta: meta
+            .map(|m| {
+                // Convert token balances properly (this is the FIX!)
+                let pre_token_balances = match m.pre_token_balances {
+                    OptionSerializer::Some(balances) => {
+                        convert_token_balances(balances).unwrap_or_else(|_| vec![])
+                    },
+                    OptionSerializer::None | OptionSerializer::Skip => vec![],
+                };
+
+                let post_token_balances = match m.post_token_balances {
+                    OptionSerializer::Some(balances) => {
+                        convert_token_balances(balances).unwrap_or_else(|_| vec![])
+                    },
+                    OptionSerializer::None | OptionSerializer::Skip => vec![],
+                };
+
+                Some(TransactionStatusMeta {
+                    err: None,
+                    fee: m.fee,
+                    pre_balances: m.pre_balances,
+                    post_balances: m.post_balances,
+                    inner_instructions,
+                    inner_instructions_none: false,
+                    log_messages: match m.log_messages {
+                        OptionSerializer::Some(logs) => logs,
+                        OptionSerializer::None | OptionSerializer::Skip => vec![],
+                    },
+                    log_messages_none: false,
+                    pre_token_balances,
+                    post_token_balances,
+                    rewards: vec![],
+                    loaded_writable_addresses,
+                    loaded_readonly_addresses,
+                    return_data: None,
+                    return_data_none: false,
+                    compute_units_consumed: match m.compute_units_consumed {
+                        OptionSerializer::Some(units) => Some(units),
+                        OptionSerializer::None | OptionSerializer::Skip => None,
+                    },
+                    cost_units: None,
+                })
+            })
+            .flatten(),
+        index: 0,
     };
 
     Ok(SubscribeUpdateTransaction {
@@ -613,7 +645,9 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
 }
 
 #[must_use]
-pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) }
+pub fn get_rpc_client() -> RpcClient {
+    RpcClient::new(RPC_ENDPOINT.to_string())
+}
 
 #[derive(Debug, Clone)]
 pub enum FixtureData {
