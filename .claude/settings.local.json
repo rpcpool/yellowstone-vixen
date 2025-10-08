@@ -5,7 +5,9 @@
       "Bash(cargo test:*)",
       "Bash(find:*)",
       "Bash(cargo fmt:*)",
-      "Bash(cargo clippy:*)"
+      "Bash(cargo clippy:*)",
+      "Bash(curl -s https://api.mainnet-beta.solana.com -X POST -H \"Content-Type: application/json\" -d '{\n  \"\"\"\"jsonrpc\"\"\"\": \"\"\"\"2.0\"\"\"\",\n  \"\"\"\"id\"\"\"\": 1,\n  \"\"\"\"method\"\"\"\": \"\"\"\"getTransaction\"\"\"\",\n  \"\"\"\"params\"\"\"\": [\n    \"\"\"\"5gtu6ARVv16QjWi2QR3CZwwPJAEL3TNqvX5HKBz39uB9ky53E2Q7MBjxLqW1a3BFUoXkEEgfmAdsedSeHjpCEau3\"\"\"\",\n    {\n      \"\"\"\"encoding\"\"\"\": \"\"\"\"jsonParsed\"\"\"\",\n      \"\"\"\"maxSupportedTransactionVersion\"\"\"\": 0\n    }\n  ]\n}')",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []
