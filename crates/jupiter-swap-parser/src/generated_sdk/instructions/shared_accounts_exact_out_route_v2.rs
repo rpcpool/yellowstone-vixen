@@ -135,7 +135,7 @@ impl Default for SharedAccountsExactOutRouteV2InstructionData {
     fn default() -> Self { Self::new() }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(BorshSerialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SharedAccountsExactOutRouteV2InstructionArgs {
     pub id: u8,
@@ -145,6 +145,30 @@ pub struct SharedAccountsExactOutRouteV2InstructionArgs {
     pub platform_fee_bps: u16,
     pub positive_slippage_bps: u16,
     pub route_plan: Vec<RoutePlanStepV2>,
+}
+
+impl BorshDeserialize for SharedAccountsExactOutRouteV2InstructionArgs {
+    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let id = u8::deserialize_reader(reader)?;
+        let out_amount = u64::deserialize_reader(reader)?;
+        let quoted_in_amount = u64::deserialize_reader(reader)?;
+        let slippage_bps = u16::deserialize_reader(reader)?;
+        let platform_fee_bps = u16::deserialize_reader(reader)?;
+        let positive_slippage_bps = u16::deserialize_reader(reader)?;
+
+        let route_plan: Vec<RoutePlanStepV2> =
+            Vec::<RoutePlanStepV2>::deserialize_reader(reader).unwrap_or_default();
+
+        Ok(Self {
+            id,
+            out_amount,
+            quoted_in_amount,
+            slippage_bps,
+            platform_fee_bps,
+            positive_slippage_bps,
+            route_plan,
+        })
+    }
 }
 
 /// Instruction builder for `SharedAccountsExactOutRouteV2`.

@@ -136,13 +136,46 @@ impl Default for RouteWithTokenLedgerInstructionData {
     fn default() -> Self { Self::new() }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(BorshSerialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RouteWithTokenLedgerInstructionArgs {
     pub route_plan: Vec<RoutePlanStep>,
     pub quoted_out_amount: u64,
     pub slippage_bps: u16,
     pub platform_fee_bps: u8,
+}
+
+impl BorshDeserialize for RouteWithTokenLedgerInstructionArgs {
+    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let mut data = Vec::new();
+        reader.read_to_end(&mut data)?;
+
+        if data.len() < 12 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Data too short",
+            ));
+        }
+
+        // Fixed fields at end: quoted_out_amount(8) + slippage_bps(2) + platform_fee_bps(1) = 11 bytes
+        let end_offset = data.len();
+        let platform_fee_bps = data[end_offset - 1];
+        let slippage_bps = u16::from_le_bytes([data[end_offset - 3], data[end_offset - 2]]);
+        let quoted_out_amount =
+            u64::from_le_bytes(data[end_offset - 11..end_offset - 3].try_into().unwrap());
+
+        // route_plan before the fixed fields
+        let route_plan_data = &data[0..end_offset - 11];
+        let route_plan: Vec<RoutePlanStep> =
+            Vec::<RoutePlanStep>::try_from_slice(route_plan_data).unwrap_or_default();
+
+        Ok(Self {
+            route_plan,
+            quoted_out_amount,
+            slippage_bps,
+            platform_fee_bps,
+        })
+    }
 }
 
 /// Instruction builder for `RouteWithTokenLedger`.

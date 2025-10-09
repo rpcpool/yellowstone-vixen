@@ -455,6 +455,10 @@ impl InstructionParser {
                 let de_ix_data: WithdrawIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(RaydiumCpSwapProgramIx::Withdraw(ix_accounts, de_ix_data))
             },
+            // self cpi log
+            [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d] => {
+                Err(yellowstone_vixen_core::ParseError::Filtered)
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),

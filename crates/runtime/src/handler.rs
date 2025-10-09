@@ -75,12 +75,18 @@ mod pipeline_error {
             match &self {
                 Errors::Parse(_) | Errors::Handlers(_) => {
                     for e in self {
-                        tracing::error!(
-                            err = %crate::Chain(&e),
-                            handler,
-                            r#type = std::any::type_name::<T>(),
-                            "Handler failed",
-                        );
+                        // Skip logging for common benign errors
+                        let err_msg = format!("{}", crate::Chain(&e));
+                        if !err_msg.contains("Invalid Instruction discriminator")
+                            && !err_msg.contains("Instruction data too short")
+                        {
+                            tracing::error!(
+                                err = %crate::Chain(&e),
+                                handler,
+                                r#type = std::any::type_name::<T>(),
+                                "Handler failed",
+                            );
+                        }
                     }
                 },
                 Errors::AlreadyHandled(_) => {
