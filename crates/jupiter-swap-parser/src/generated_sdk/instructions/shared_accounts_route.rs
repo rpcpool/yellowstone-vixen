@@ -154,7 +154,7 @@ impl Default for SharedAccountsRouteInstructionData {
     fn default() -> Self { Self::new() }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(BorshSerialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SharedAccountsRouteInstructionArgs {
     pub id: u8,
@@ -163,6 +163,57 @@ pub struct SharedAccountsRouteInstructionArgs {
     pub quoted_out_amount: u64,
     pub slippage_bps: u16,
     pub platform_fee_bps: u8,
+}
+
+impl BorshDeserialize for SharedAccountsRouteInstructionArgs {
+    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        // Read all data into a buffer since we need to parse from the end
+        let mut data = Vec::new();
+        reader.read_to_end(&mut data)?;
+
+        if data.len() < 20 {
+            // Minimum: 1 (id) + 4 (empty vec len) + 8 (in_amount) + 8 (quoted_out_amount) + 2 (slippage_bps) + 1 (platform_fee_bps) = 24
+            // But could be 20 if vec is truly empty after the length field
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Data too short for SharedAccountsRouteInstructionArgs",
+            ));
+        }
+
+        // Parse fixed-size fields from the end (last 19 bytes)
+        let end_offset = data.len();
+        let platform_fee_bps = data[end_offset - 1];
+        let slippage_bps = u16::from_le_bytes([data[end_offset - 3], data[end_offset - 2]]);
+        let quoted_out_amount =
+            u64::from_le_bytes(data[end_offset - 11..end_offset - 3].try_into().unwrap());
+        let in_amount =
+            u64::from_le_bytes(data[end_offset - 19..end_offset - 11].try_into().unwrap());
+
+        // Parse id from the beginning
+        let id = data[0];
+
+        // Everything between id and the last 19 bytes is the route_plan vec
+        let route_plan_data = &data[1..end_offset - 19];
+
+        // Try to deserialize route_plan, if it fails use empty vec
+        let route_plan = match Vec::<RoutePlanStep>::try_from_slice(route_plan_data) {
+            Ok(plan) => plan,
+            Err(_) => {
+                // Forward compatibility: if we can't parse route_plan (e.g., unknown swap types),
+                // just return an empty vec so we can still access the other fields
+                Vec::new()
+            },
+        };
+
+        Ok(Self {
+            id,
+            route_plan,
+            in_amount,
+            quoted_out_amount,
+            slippage_bps,
+            platform_fee_bps,
+        })
+    }
 }
 
 /// Instruction builder for `SharedAccountsRoute`.

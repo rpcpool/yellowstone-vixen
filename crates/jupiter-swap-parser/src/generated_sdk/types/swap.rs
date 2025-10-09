@@ -204,3 +204,109 @@ pub enum Swap {
     },
     RaydiumV2,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_deserialize_shared_accounts_route_with_unknown_swap() {
+        // Hex data from the user - includes 8-byte instruction discriminator
+        // This data contains swap discriminator 108 (MeteoraDammV2WithRemainingAccounts)
+        // which doesn't exist in the current SDK, testing forward compatibility
+        let hex = "c1209b3341d69c8101030000006c64000157045dbfef6229530e0064010226640203904d414c0300000048392e1300000000640000";
+        let data = hex::decode(hex).expect("Failed to decode hex");
+
+        // Skip the 8-byte instruction discriminator to get instruction args
+        let args_data = &data[8..];
+
+        // Try to deserialize as SharedAccountsRouteInstructionArgs
+        use crate::generated_sdk::instructions::SharedAccountsRouteInstructionArgs;
+        match SharedAccountsRouteInstructionArgs::try_from_slice(args_data) {
+            Ok(ix_data) => {
+                println!("\n=== Successfully deserialized with forward compatibility! ===");
+                println!("ID: {}", ix_data.id);
+                println!(
+                    "Route plan steps: {} (empty due to unknown swap types)",
+                    ix_data.route_plan.len()
+                );
+
+                println!("\n=== Transaction Details (parsed from end) ===");
+                println!("In amount: {}", ix_data.in_amount);
+                println!("Quoted out amount: {}", ix_data.quoted_out_amount);
+                println!("Slippage BPS: {}", ix_data.slippage_bps);
+                println!("Platform fee BPS: {}", ix_data.platform_fee_bps);
+
+                // Verify we have the expected data from the fixed fields
+                assert_eq!(ix_data.id, 1);
+                assert_eq!(ix_data.in_amount, 14164250000);
+                assert_eq!(ix_data.quoted_out_amount, 321796424);
+                assert_eq!(ix_data.slippage_bps, 100);
+                assert_eq!(ix_data.platform_fee_bps, 0);
+
+                // Route plan should be empty because it contains unknown swap type
+                assert_eq!(
+                    ix_data.route_plan.len(),
+                    0,
+                    "Route plan should be empty when unknown swaps are encountered"
+                );
+
+                println!(
+                    "\n✓ Forward compatibility working! We can still parse amounts and fees even \
+                     with unknown swap types."
+                );
+            },
+            Err(e) => {
+                panic!("Failed to deserialize: {:?}", e);
+            },
+        }
+    }
+
+    #[test]
+    fn test_deserialize_shared_accounts_route_with_unknown_swap_case2() {
+        // Second test case with different unknown swap types
+        let hex = "c1209b3341d69c81020400000068016400015900640102265802046c0c0204005ed0b200000000305e167767010100000000";
+        let data = hex::decode(hex).expect("Failed to decode hex");
+
+        // Skip the 8-byte instruction discriminator
+        let args_data = &data[8..];
+
+        // Deserialize
+        use crate::generated_sdk::instructions::SharedAccountsRouteInstructionArgs;
+        match SharedAccountsRouteInstructionArgs::try_from_slice(args_data) {
+            Ok(ix_data) => {
+                println!("\n=== Case 2: Successfully deserialized with forward compatibility! ===");
+                println!("ID: {}", ix_data.id);
+                println!(
+                    "Route plan steps: {} (empty due to unknown swap types)",
+                    ix_data.route_plan.len()
+                );
+
+                println!("\n=== Transaction Details (parsed from end) ===");
+                println!("In amount: {}", ix_data.in_amount);
+                println!("Quoted out amount: {}", ix_data.quoted_out_amount);
+                println!("Slippage BPS: {}", ix_data.slippage_bps);
+                println!("Platform fee BPS: {}", ix_data.platform_fee_bps);
+
+                // Verify the fixed fields
+                assert_eq!(ix_data.id, 2);
+                assert_eq!(ix_data.in_amount, 3000000000);
+                assert_eq!(ix_data.quoted_out_amount, 283018867924528);
+                assert_eq!(ix_data.slippage_bps, 0);
+                assert_eq!(ix_data.platform_fee_bps, 0);
+
+                // Route plan should be empty due to unknown swap types
+                assert_eq!(
+                    ix_data.route_plan.len(),
+                    0,
+                    "Route plan should be empty when unknown swaps are encountered"
+                );
+
+                println!("\n✓ Forward compatibility confirmed for case 2!");
+            },
+            Err(e) => {
+                panic!("Failed to deserialize case 2: {:?}", e);
+            },
+        }
+    }
+}

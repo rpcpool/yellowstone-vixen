@@ -39,5 +39,8 @@ tracing = ["dep:tracing", "dep:strum", "dep:strum_macros"]
 # Exposes shared transaction data like tx signature, slot and more, to be available in Vixen Handlers
 shared-data = []
 
+[dev-dependencies]
+hex = "0.4"
+
 [build-dependencies]
 prost-build = "0.13.1"

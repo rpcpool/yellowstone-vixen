@@ -1101,3 +1101,41 @@ struct SwapTobV3CpiBuilderInstruction<'a, 'b> {
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_deserialize_swap_args_with_unknown_dex() {
+        // Test data that may contain unknown Dex variants
+        // This ensures forward compatibility when new Dex types are added
+        let hex = "0ebf2cf68ee1e09d3d41bb16000000009f83b61600000000775e7c1600000000010000003d41bb1600000000010000000300000002000000434302000000560e010000002e01000000640100000019010000006420a107006400001458020000000000";
+        let data = hex::decode(hex).expect("Failed to decode hex");
+
+        // Skip the 8-byte instruction discriminator
+        let args_data = &data[8..];
+
+        // Try to deserialize as SwapArgs
+        match SwapTobV3InstructionArgs::try_from_slice(args_data) {
+            Ok(ix) => {
+                println!(
+                    "\n=== Successfully deserialized SwapArgs with forward compatibility! ==="
+                );
+                println!("Amount in: {}", ix.args.amount_in);
+                println!("Expected amount out: {}", ix.args.expect_amount_out);
+                println!("Min return: {}", ix.args.min_return);
+                println!("Amounts vec length: {}", ix.args.amounts.len());
+                println!(
+                    "Routes vec length: {} (may be empty if unknown Dex types)",
+                    ix.args.routes.len()
+                );
+
+                println!("\n✓ Forward compatibility working for OKX DEX SwapArgs!");
+            },
+            Err(e) => {
+                panic!("Failed to deserialize SwapArgs: {:?}", e);
+            },
+        }
+    }
+}

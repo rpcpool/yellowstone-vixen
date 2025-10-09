@@ -9,7 +9,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 use crate::generated::types::Route;
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(BorshSerialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SwapArgs {
     pub amount_in: u64,
@@ -17,4 +17,48 @@ pub struct SwapArgs {
     pub min_return: u64,
     pub amounts: Vec<u64>,
     pub routes: Vec<Vec<Route>>,
+}
+
+impl BorshDeserialize for SwapArgs {
+    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        // Parse the three fixed u64 fields at the beginning
+        let amount_in = u64::deserialize_reader(reader)?;
+        let expect_amount_out = u64::deserialize_reader(reader)?;
+        let min_return = u64::deserialize_reader(reader)?;
+
+        // Try to deserialize amounts vec
+        let amounts = match Vec::<u64>::deserialize_reader(reader) {
+            Ok(a) => a,
+            Err(_) => {
+                // If amounts fails, we can't continue reliably
+                // Return with empty amounts and routes
+                return Ok(Self {
+                    amount_in,
+                    expect_amount_out,
+                    min_return,
+                    amounts: Vec::new(),
+                    routes: Vec::new(),
+                });
+            },
+        };
+
+        // Try to deserialize routes vec
+        // If this fails (e.g., unknown Dex variants), return empty routes
+        let routes = match Vec::<Vec<Route>>::deserialize_reader(reader) {
+            Ok(r) => r,
+            Err(_) => {
+                // Forward compatibility: if we can't parse routes (e.g., unknown Dex types),
+                // just return an empty vec so we can still access the amount fields
+                Vec::new()
+            },
+        };
+
+        Ok(Self {
+            amount_in,
+            expect_amount_out,
+            min_return,
+            amounts,
+            routes,
+        })
+    }
 }
