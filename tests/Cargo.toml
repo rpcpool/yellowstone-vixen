@@ -11,11 +11,29 @@ path = "integration_test.rs"
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
 yellowstone-vixen-jupiter-swap-parser = { workspace = true }
+yellowstone-vixen-mock = { workspace = true }
 kryptogo-vixen-okx-dex-parser = { workspace = true }
+yellowstone-vixen-boop-parser = { workspace = true }
+yellowstone-vixen-meteora-amm-parser = { workspace = true }
+yellowstone-vixen-meteora-dbc-parser = { workspace = true }
+yellowstone-vixen-meteora-parser = { workspace = true }
+yellowstone-vixen-meteora-pools-parser = { workspace = true }
+yellowstone-vixen-moonshot-parser = { workspace = true }
+yellowstone-vixen-orca-whirlpool-parser = { workspace = true }
+yellowstone-vixen-pancake-parser = { workspace = true }
+yellowstone-vixen-pump-swaps-parser = { workspace = true }
+yellowstone-vixen-pumpfun-parser = { workspace = true }
+yellowstone-vixen-raydium-amm-v4-parser = { workspace = true }
+yellowstone-vixen-raydium-clmm-parser = { workspace = true }
+yellowstone-vixen-raydium-cpmm-parser = { workspace = true }
+yellowstone-vixen-raydium-launchpad-parser = { workspace = true }
 tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
 parking_lot = "0.12"
 clap = { version = "4.0", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 toml = "0.8"
+solana-sdk = "2.1"
+solana-client = "2.1"

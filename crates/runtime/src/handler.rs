@@ -48,32 +48,53 @@ mod pipeline_error {
         pub fn as_unit(self) { let Self(()) = self; }
     }
 
+    /// Errors that can occur during pipeline execution.
     #[derive(Debug)]
     pub enum Errors {
+        /// Error occurred during parsing.
         Parse(BoxedError),
+        /// Errors occurred in one or more handlers.
         Handlers(SmallVec<[BoxedError; 1]>),
+        /// Error was already handled by a previous pipeline.
         AlreadyHandled(Handled),
     }
 
     impl Errors {
+        /// Creates a parse error from any error type.
         #[inline]
         #[must_use]
         pub fn parse<E: std::error::Error + Send + Sync + 'static>(e: E) -> Self {
             Self::Parse(Box::new(e))
         }
 
+        /// Handles the error by logging it and marking it as handled.
         #[allow(clippy::unused_self)]
         #[allow(clippy::extra_unused_type_parameters)]
-        pub fn handle<T>(self, _handler: &str) -> Handled {
-            // TODO: uncomment when we find it useful
-            // for e in self {
-            //     tracing::error!(
-            //         err = %crate::Chain(&e),
-            //         handler,
-            //         r#type = std::any::type_name::<T>(),
-            //         "Handler failed",
-            //     );
-            // }
+        pub fn handle<T>(self, handler: &str) -> Handled {
+            // Only log actual errors, not AlreadyHandled to avoid duplicate logs
+            match &self {
+                Errors::Parse(_) | Errors::Handlers(_) => {
+                    for e in self {
+                        tracing::error!(
+                            err = %crate::Chain(&e),
+                            handler,
+                            r#type = std::any::type_name::<T>(),
+                            "Handler failed",
+                        );
+                    }
+                },
+                Errors::AlreadyHandled(_) => {
+                    // Don't log - error was already logged when first handled
+                    // uncomment if you want to see the error already handled
+                    /*
+                    tracing::debug!(
+                        handler,
+                        r#type = std::any::type_name::<T>(),
+                        "Error already handled by previous pipeline",
+                    ); */
+                },
+                // NOTE: Filter is already ignored in pub async fn handle(&self, value: &P::Input) -> Result<(), PipelineErrors> {
+            }
 
             Handled(())
         }

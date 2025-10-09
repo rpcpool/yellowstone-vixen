@@ -5,7 +5,8 @@
       "Bash(cargo test:*)",
       "Bash(find:*)",
       "Bash(cargo fmt:*)",
-      "Bash(cargo clippy:*)"
+      "Bash(cargo clippy:*)",
+      "Bash(RUST_LOG=warn cargo test --package yellowstone-vixen-integration-tests --test integration_test -- --show-output test_okx_specific_signatures)"
     ],
     "deny": [],
     "ask": []

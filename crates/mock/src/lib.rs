@@ -30,20 +30,16 @@ use solana_transaction_status::{
     EncodedTransaction, EncodedTransactionWithStatusMeta, UiCompiledInstruction,
     UiInnerInstructions, UiInstruction, UiMessage,
 };
-use yellowstone_grpc_proto::{
-    geyser::{
-        SubscribeUpdateAccount, SubscribeUpdateAccountInfo, SubscribeUpdateTransaction,
-        SubscribeUpdateTransactionInfo,
-    },
-    solana::storage::confirmed_block::{
-        CompiledInstruction, InnerInstruction, InnerInstructions, Message, Transaction,
-        TransactionStatusMeta,
-    },
+use yellowstone_grpc_proto::geyser::{
+    SubscribeUpdateAccount, SubscribeUpdateAccountInfo, SubscribeUpdateTransaction,
 };
 use yellowstone_vixen_core::{
     instruction::{InstructionShared, InstructionUpdate},
-    ProgramParser, Pubkey as VixenPubkey, TransactionUpdate,
+    ProgramParser, Pubkey as VixenPubkey,
 };
+
+mod tx;
+pub use tx::*;
 
 //TODO: Look these up from the Vixen.toml config file
 const RPC_ENDPOINT: &str = "https://api.mainnet-beta.solana.com";
@@ -274,179 +270,6 @@ fn filter_ixs(
         .collect::<Vec<SerializableInstructionUpdate>>()
 }
 
-#[allow(clippy::too_many_lines)]
-fn convert_to_transaction_update(
-    value: EncodedConfirmedTransactionWithStatusMeta,
-) -> Result<TransactionUpdate, String> {
-    let EncodedConfirmedTransactionWithStatusMeta {
-        transaction,
-        slot,
-        block_time: _,
-    } = value;
-    let EncodedTransactionWithStatusMeta {
-        transaction,
-        meta,
-        version: _,
-    } = transaction;
-
-    let mut account_keys: Vec<Vec<u8>> = Vec::new();
-    let mut instructions: Vec<CompiledInstruction> = Vec::new();
-    let mut inner_instructions: Vec<InnerInstructions> = Vec::new();
-    let mut signatures: Vec<Vec<u8>> = Vec::new();
-    let message_header: Option<yellowstone_grpc_proto::prelude::MessageHeader>;
-    let recent_blockhash: Vec<u8>;
-
-    if let EncodedTransaction::Json(tx_data) = transaction {
-        if let UiMessage::Raw(raw_message) = tx_data.message {
-            // Extract and convert message header
-            message_header = Some(yellowstone_grpc_proto::prelude::MessageHeader {
-                num_required_signatures: u32::from(raw_message.header.num_required_signatures),
-                num_readonly_signed_accounts: u32::from(
-                    raw_message.header.num_readonly_signed_accounts,
-                ),
-                num_readonly_unsigned_accounts: u32::from(
-                    raw_message.header.num_readonly_unsigned_accounts,
-                ),
-            });
-
-            // Extract recent blockhash
-            recent_blockhash = bs58::decode(&raw_message.recent_blockhash)
-                .into_vec()
-                .map_err(|e| format!("Error decoding recent blockhash: {e:?}"))?;
-
-            // Convert account keys from strings to bytes
-            for key_str in raw_message.account_keys {
-                let key_bytes = bs58::decode(key_str)
-                    .into_vec()
-                    .map_err(|e| format!("Error decoding account key: {e:?}"))?;
-                account_keys.push(key_bytes);
-            }
-
-            // Convert instructions
-            for ui_instruction in raw_message.instructions {
-                instructions.push(CompiledInstruction {
-                    program_id_index: u32::from(ui_instruction.program_id_index),
-                    accounts: ui_instruction.accounts,
-                    data: decode_bs58_to_bytes(&ui_instruction.data)?,
-                });
-            }
-
-            // Convert signatures
-            for sig_str in tx_data.signatures {
-                let sig_bytes = bs58::decode(sig_str)
-                    .into_vec()
-                    .map_err(|e| format!("Error decoding signature: {e:?}"))?;
-                signatures.push(sig_bytes);
-            }
-        } else {
-            return Err("Invalid transaction encoding".into());
-        }
-    } else {
-        return Err("Invalid transaction encoding".into());
-    }
-
-    let mut loaded_writable_addresses: Vec<Vec<u8>> = Vec::new();
-    let mut loaded_readonly_addresses: Vec<Vec<u8>> = Vec::new();
-
-    if let Some(meta) = &meta {
-        // Convert inner instructions
-        if let OptionSerializer::Some(inner_ixs) = &meta.inner_instructions {
-            for inner_ix in inner_ixs {
-                let mut converted_instructions: Vec<InnerInstruction> = Vec::new();
-                for ui_instruction in &inner_ix.instructions {
-                    if let UiInstruction::Compiled(compiled_ix) = ui_instruction {
-                        converted_instructions.push(InnerInstruction {
-                            program_id_index: u32::from(compiled_ix.program_id_index),
-                            accounts: compiled_ix.accounts.clone(),
-                            data: decode_bs58_to_bytes(&compiled_ix.data)?,
-                            stack_height: compiled_ix.stack_height,
-                        });
-                    }
-                }
-                inner_instructions.push(InnerInstructions {
-                    index: u32::from(inner_ix.index),
-                    instructions: converted_instructions,
-                });
-            }
-        }
-
-        // Convert loaded addresses
-        if let OptionSerializer::Some(loaded) = &meta.loaded_addresses {
-            for addr_str in &loaded.writable {
-                let addr_bytes = bs58::decode(addr_str)
-                    .into_vec()
-                    .map_err(|e| format!("Error decoding loaded writable address: {e:?}"))?;
-                loaded_writable_addresses.push(addr_bytes);
-            }
-            for addr_str in &loaded.readonly {
-                let addr_bytes = bs58::decode(addr_str)
-                    .into_vec()
-                    .map_err(|e| format!("Error decoding loaded readonly address: {e:?}"))?;
-                loaded_readonly_addresses.push(addr_bytes);
-            }
-        }
-    }
-
-    let transaction_info = SubscribeUpdateTransactionInfo {
-        signature: signatures.first().cloned().unwrap_or_default(),
-        is_vote: false, // Default for mock
-        transaction: Some(Transaction {
-            signatures,
-            message: Some(Message {
-                header: message_header,
-                account_keys,
-                recent_blockhash,
-                instructions,
-                versioned: false,
-                address_table_lookups: vec![],
-            }),
-        }),
-        meta: meta.map(|m| TransactionStatusMeta {
-            err: None, // Convert transaction error types is complex, skip for mock
-            fee: m.fee,
-            pre_balances: m.pre_balances,
-            post_balances: m.post_balances,
-            inner_instructions,
-            inner_instructions_none: false,
-            log_messages: match m.log_messages {
-                OptionSerializer::Some(logs) => logs,
-                OptionSerializer::None | OptionSerializer::Skip => vec![],
-            },
-            log_messages_none: false,
-            pre_token_balances: match m.pre_token_balances {
-                OptionSerializer::Some(_) | OptionSerializer::None | OptionSerializer::Skip => {
-                    vec![]
-                }, // Token balance conversion is complex, skip for mock
-            },
-            post_token_balances: match m.post_token_balances {
-                OptionSerializer::Some(_) | OptionSerializer::None | OptionSerializer::Skip => {
-                    vec![]
-                }, // Token balance conversion is complex, skip for mock
-            },
-            rewards: match m.rewards {
-                OptionSerializer::Some(_) | OptionSerializer::None | OptionSerializer::Skip => {
-                    vec![]
-                }, // Reward conversion is complex, skip for mock
-            },
-            loaded_writable_addresses,
-            loaded_readonly_addresses,
-            return_data: None,
-            return_data_none: false,
-            compute_units_consumed: match m.compute_units_consumed {
-                OptionSerializer::Some(units) => Some(units),
-                OptionSerializer::None | OptionSerializer::Skip => None,
-            },
-            cost_units: None,
-        }),
-        index: 0, // Default for mock
-    };
-
-    Ok(SubscribeUpdateTransaction {
-        slot,
-        transaction: Some(transaction_info),
-    })
-}
-
 fn try_from_tx_meta<P: ProgramParser>(
     value: EncodedConfirmedTransactionWithStatusMeta,
     parser: &P,
@@ -556,33 +379,6 @@ macro_rules! run_ix_parse {
     };
 }
 
-/// Create a mock `TransactionUpdate` from a transaction signature for testing
-pub async fn create_mock_transaction_update(
-    signature: &str,
-) -> Result<TransactionUpdate, Box<dyn std::error::Error>> {
-    let sig = Signature::from_str(signature)?;
-    let rpc_client = get_rpc_client();
-
-    let params = json!([sig.to_string(), {
-        "encoding": "json",
-        "maxSupportedTransactionVersion": 0
-    }]);
-
-    let tx = rpc_client
-        .send(RpcRequest::GetTransaction, params)
-        .await
-        .map_err(|e| format!("Error fetching tx: {e:?}"))?;
-
-    convert_to_transaction_update(tx).map_err(Into::into)
-}
-
-/// Parse instructions from a `TransactionUpdate` using the core `parse_from_txn` logic
-pub fn parse_instructions_from_txn_update(
-    txn_update: &TransactionUpdate,
-) -> Result<Vec<InstructionUpdate>, Box<dyn std::error::Error>> {
-    InstructionUpdate::parse_from_txn(txn_update).map_err(Into::into)
-}
-
 pub async fn load_fixture<P: ProgramParser>(
     fixture: &str,
     parser: &P,
@@ -619,6 +415,7 @@ pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) 
 pub enum FixtureData {
     Account(SubscribeUpdateAccount),
     Instructions(Vec<SerializableInstructionUpdate>),
+    TransactionUpdate(Box<SubscribeUpdateTransaction>),
 }
 
 async fn fetch_fixture<P: ProgramParser>(
@@ -677,6 +474,11 @@ fn write_fixture(
             FixtureData::Instructions(instructions) => {
                 let data = serde_json::to_string(&instructions)?;
                 fs::write(&path, data)?;
+            },
+            FixtureData::TransactionUpdate(tx_update) => {
+                let serializable = SerializableTransactionUpdate::from(tx_update.as_ref());
+                let json_str = serde_json::to_string_pretty(&serializable)?;
+                fs::write(&path, json_str)?;
             },
         }
         Ok(data)

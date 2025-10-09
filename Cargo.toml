@@ -38,6 +38,3 @@ yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", versi
 yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.3.0" }
 yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.3.0" }
 yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.3.0" }
-
-spl-token = { version = "4.0" }
-spl-token-2022 = { version = "3.0" }

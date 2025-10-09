@@ -13,5 +13,5 @@ use crate::generated::types::Dex;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Route {
     pub dexes: Vec<Dex>,
-    pub weights: Vec<u32>,
+    pub weights: Vec<u8>,
 }
