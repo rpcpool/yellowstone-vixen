@@ -56,7 +56,7 @@ fn convert_token_balances(ui_balances: &[UiTransactionTokenBalance]) -> Vec<Toke
 }
 
 #[allow(clippy::too_many_lines)]
-fn convert_to_transaction_update(
+pub fn convert_to_transaction_update(
     value: EncodedConfirmedTransactionWithStatusMeta,
 ) -> Result<TransactionUpdate, Box<dyn std::error::Error>> {
     let EncodedConfirmedTransactionWithStatusMeta {
