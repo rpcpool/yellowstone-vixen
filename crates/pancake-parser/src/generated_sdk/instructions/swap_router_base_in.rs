@@ -24,6 +24,8 @@ pub struct SwapRouterBaseIn {
     pub token_program2022: solana_pubkey::Pubkey,
     /// Memo program
     pub memo_program: solana_pubkey::Pubkey,
+    /// The token account that receives output tokens from the swap
+    pub output_token_account: solana_pubkey::Pubkey,
 }
 
 impl SwapRouterBaseIn {
@@ -121,6 +123,7 @@ pub struct SwapRouterBaseInBuilder {
     token_program: Option<solana_pubkey::Pubkey>,
     token_program2022: Option<solana_pubkey::Pubkey>,
     memo_program: Option<solana_pubkey::Pubkey>,
+    output_token_account: Option<solana_pubkey::Pubkey>,
     amount_in: Option<u64>,
     amount_out_minimum: Option<u64>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
@@ -174,6 +177,16 @@ impl SwapRouterBaseInBuilder {
         self
     }
 
+    /// The token account that receives output tokens from the swap
+    #[inline(always)]
+    pub fn output_token_account(
+        &mut self,
+        output_token_account: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.output_token_account = Some(output_token_account);
+        self
+    }
+
     #[inline(always)]
     pub fn amount_in(&mut self, amount_in: u64) -> &mut Self {
         self.amount_in = Some(amount_in);
@@ -220,6 +233,9 @@ impl SwapRouterBaseInBuilder {
             memo_program: self.memo_program.unwrap_or(solana_pubkey::pubkey!(
                 "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
             )),
+            output_token_account: self
+                .output_token_account
+                .unwrap_or(solana_pubkey::Pubkey::default()),
         };
         let args = SwapRouterBaseInInstructionArgs {
             amount_in: self.amount_in.clone().expect("amount_in is not set"),
@@ -399,6 +415,7 @@ impl<'a, 'b> SwapRouterBaseInCpiBuilder<'a, 'b> {
             token_program: None,
             token_program2022: None,
             memo_program: None,
+            output_token_account: None,
             amount_in: None,
             amount_out_minimum: None,
             __remaining_accounts: Vec::new(),
@@ -569,6 +586,8 @@ struct SwapRouterBaseInCpiBuilderInstruction<'a, 'b> {
     token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_program2022: Option<&'b solana_account_info::AccountInfo<'a>>,
     memo_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    #[allow(dead_code)]
+    output_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     amount_in: Option<u64>,
     amount_out_minimum: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.

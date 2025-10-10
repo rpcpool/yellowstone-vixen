@@ -564,6 +564,16 @@ impl InstructionParser {
             [69, 125, 115, 218, 245, 186, 242, 196] => {
                 let expected_accounts_len = 6;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
+
+                // Extract output_token_account from the 9th account from the end
+                let output_token_account = if ix.accounts.len() >= 10 {
+                    solana_pubkey::Pubkey::from(<[u8; 32]>::from(
+                        ix.accounts[ix.accounts.len() / 10 * 10 - 2],
+                    ))
+                } else {
+                    solana_pubkey::Pubkey::default()
+                };
+
                 let ix_accounts = SwapRouterBaseInIxAccounts {
                     payer: next_account(accounts)?,
                     input_token_account: next_account(accounts)?,
@@ -571,6 +581,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     token_program2022: next_account(accounts)?,
                     memo_program: next_account(accounts)?,
+                    output_token_account,
                 };
                 let de_ix_data: SwapRouterBaseInIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
@@ -1312,6 +1323,7 @@ mod proto_parser {
                 token_program: self.token_program.to_string(),
                 token_program2022: self.token_program2022.to_string(),
                 memo_program: self.memo_program.to_string(),
+                output_token_account: self.output_token_account.to_string(),
             }
         }
     }
