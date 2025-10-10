@@ -92,7 +92,11 @@ pub enum AmmV3ProgramIx {
     ),
     SetRewardParams(SetRewardParamsIxAccounts, SetRewardParamsIxData),
     Swap(SwapIxAccounts, SwapIxData, Option<SwapEvent>),
-    SwapRouterBaseIn(SwapRouterBaseInIxAccounts, SwapRouterBaseInIxData),
+    SwapRouterBaseIn(
+        SwapRouterBaseInIxAccounts,
+        SwapRouterBaseInIxData,
+        Vec<SwapEvent>,
+    ),
     SwapV2(SwapV2IxAccounts, SwapV2IxData, Option<SwapEvent>),
     TogglePermissionlessFarmSwitch(
         TogglePermissionlessFarmSwitchIxAccounts,
@@ -570,7 +574,17 @@ impl InstructionParser {
                 };
                 let de_ix_data: SwapRouterBaseInIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(AmmV3ProgramIx::SwapRouterBaseIn(ix_accounts, de_ix_data))
+                let swap_events = SwapEvent::all_from_logs(
+                    &ix.parsed_logs
+                        .iter()
+                        .filter_map(|&idx| ix.shared.log_messages.get(idx).map(|s| s.as_str()))
+                        .collect::<Vec<_>>(),
+                );
+                Ok(AmmV3ProgramIx::SwapRouterBaseIn(
+                    ix_accounts,
+                    de_ix_data,
+                    swap_events,
+                ))
             },
             [43, 4, 237, 11, 26, 201, 30, 98] => {
                 let expected_accounts_len = 13;
@@ -1594,7 +1608,7 @@ mod proto_parser {
                         data: Some(data.into_proto()),
                     })),
                 },
-                AmmV3ProgramIx::SwapRouterBaseIn(acc, data) => proto_def::ProgramIxs {
+                AmmV3ProgramIx::SwapRouterBaseIn(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapRouterBaseIn(
                         proto_def::SwapRouterBaseInIx {
                             accounts: Some(acc.into_proto()),

@@ -70,6 +70,11 @@ impl SwapEvent {
         None
     }
 
+    /// Parse all SwapEvents from program logs (for router instructions)
+    pub fn all_from_logs(logs: &[&str]) -> Vec<Self> {
+        logs.iter().filter_map(|log| Self::from_log(log)).collect()
+    }
+
     /// Parse SwapEvent from a single log message
     pub fn from_log(log: &str) -> Option<Self> {
         use base64::{engine::general_purpose, Engine as _};
