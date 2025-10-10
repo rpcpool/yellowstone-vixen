@@ -233,9 +233,7 @@ impl SwapRouterBaseInBuilder {
             memo_program: self.memo_program.unwrap_or(solana_pubkey::pubkey!(
                 "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
             )),
-            output_token_account: self
-                .output_token_account
-                .unwrap_or_default(),
+            output_token_account: self.output_token_account.unwrap_or_default(),
         };
         let args = SwapRouterBaseInInstructionArgs {
             amount_in: self.amount_in.clone().expect("amount_in is not set"),
