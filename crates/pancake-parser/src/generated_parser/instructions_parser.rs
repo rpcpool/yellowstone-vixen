@@ -1323,7 +1323,6 @@ mod proto_parser {
                 token_program: self.token_program.to_string(),
                 token_program2022: self.token_program2022.to_string(),
                 memo_program: self.memo_program.to_string(),
-                output_token_account: self.output_token_account.to_string(),
             }
         }
     }
