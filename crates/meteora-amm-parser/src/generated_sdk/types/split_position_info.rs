@@ -9,12 +9,10 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct BaseFeeStruct {
-    pub cliff_fee_numerator: u64,
-    pub base_fee_mode: u8,
-    pub padding0: [u8; 5],
-    pub first_factor: u16,
-    pub second_factor: [u8; 8],
-    pub third_factor: u64,
-    pub padding1: u64,
+pub struct SplitPositionInfo {
+    pub liquidity: u128,
+    pub fee_a: u64,
+    pub fee_b: u64,
+    pub reward0: u64,
+    pub reward1: u64,
 }

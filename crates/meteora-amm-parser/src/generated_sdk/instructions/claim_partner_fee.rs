@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const CLAIM_PARTNER_FEE_DISCRIMINATOR: [u8; 8] = [97, 206, 39, 105, 94, 94, 126, 148];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct ClaimPartnerFee {
@@ -144,7 +146,7 @@ pub struct ClaimPartnerFeeInstructionArgs {
 ///
 /// ### Accounts:
 ///
-///   0. `[]` pool_authority
+///   0. `[optional]` pool_authority (default to `HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC`)
 ///   1. `[writable]` pool
 ///   2. `[writable]` token_a_account
 ///   3. `[writable]` token_b_account
@@ -180,6 +182,7 @@ pub struct ClaimPartnerFeeBuilder {
 impl ClaimPartnerFeeBuilder {
     pub fn new() -> Self { Self::default() }
 
+    /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
@@ -298,7 +301,9 @@ impl ClaimPartnerFeeBuilder {
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = ClaimPartnerFee {
-            pool_authority: self.pool_authority.expect("pool_authority is not set"),
+            pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
+                "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+            )),
             pool: self.pool.expect("pool is not set"),
             token_a_account: self.token_a_account.expect("token_a_account is not set"),
             token_b_account: self.token_b_account.expect("token_b_account is not set"),
@@ -410,7 +415,7 @@ impl<'a, 'b> ClaimPartnerFeeCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
@@ -418,15 +423,12 @@ impl<'a, 'b> ClaimPartnerFeeCpi<'a, 'b> {
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -437,7 +439,7 @@ impl<'a, 'b> ClaimPartnerFeeCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool_authority.key,
@@ -735,14 +737,11 @@ impl<'a, 'b> ClaimPartnerFeeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = ClaimPartnerFeeInstructionArgs {
             max_amount_a: self
                 .instruction

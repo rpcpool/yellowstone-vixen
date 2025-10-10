@@ -9,12 +9,11 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct BaseFeeStruct {
-    pub cliff_fee_numerator: u64,
-    pub base_fee_mode: u8,
-    pub padding0: [u8; 5],
-    pub first_factor: u16,
-    pub second_factor: [u8; 8],
-    pub third_factor: u64,
-    pub padding1: u64,
+pub struct SwapParameters2 {
+    /// When it's exact in, partial fill, this will be amount_in. When it's exact out, this will be amount_out
+    pub amount0: u64,
+    /// When it's exact in, partial fill, this will be minimum_amount_out. When it's exact out, this will be maximum_amount_in
+    pub amount1: u64,
+    /// Swap mode, refer [SwapMode]
+    pub swap_mode: u8,
 }

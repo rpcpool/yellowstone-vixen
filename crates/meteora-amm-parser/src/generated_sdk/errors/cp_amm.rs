@@ -136,16 +136,41 @@ pub enum CpAmmError {
     /// 6041 - Invalid config type
     #[error("Invalid config type")]
     InvalidConfigType = 0x1799,
+    /// 6042 - Invalid pool creator
+    #[error("Invalid pool creator")]
+    InvalidPoolCreator = 0x179a,
+    /// 6043 - Reward vault is frozen, must skip reward to proceed
+    #[error("Reward vault is frozen, must skip reward to proceed")]
+    RewardVaultFrozenSkipRequired = 0x179b,
+    /// 6044 - Invalid parameters for split position
+    #[error("Invalid parameters for split position")]
+    InvalidSplitPositionParameters = 0x179c,
+    /// 6045 - Unsupported split position has vesting lock
+    #[error("Unsupported split position has vesting lock")]
+    UnsupportPositionHasVestingLock = 0x179d,
+    /// 6046 - Same position
+    #[error("Same position")]
+    SamePosition = 0x179e,
+    /// 6047 - Invalid base fee mode
+    #[error("Invalid base fee mode")]
+    InvalidBaseFeeMode = 0x179f,
+    /// 6048 - Invalid fee rate limiter
+    #[error("Invalid fee rate limiter")]
+    InvalidFeeRateLimiter = 0x17a0,
+    /// 6049 - Fail to validate single swap instruction in rate limiter
+    #[error("Fail to validate single swap instruction in rate limiter")]
+    FailToValidateSingleSwapInstruction = 0x17a1,
+    /// 6050 - Invalid fee scheduler
+    #[error("Invalid fee scheduler")]
+    InvalidFeeScheduler = 0x17a2,
+    /// 6051 - Undetermined error
+    #[error("Undetermined error")]
+    UndeterminedError = 0x17a3,
+    /// 6052 - Invalid pool version
+    #[error("Invalid pool version")]
+    InvalidPoolVersion = 0x17a4,
 }
 
-#[allow(deprecated)]
-impl solana_program_error::PrintProgramError for CpAmmError {
-    fn print<E>(&self) {
-        solana_msg::msg!(&self.to_string());
-    }
-}
-
-#[allow(deprecated)]
-impl<T> solana_decode_error::DecodeError<T> for CpAmmError {
-    fn type_of() -> &'static str { "CpAmmError" }
+impl From<CpAmmError> for solana_program_error::ProgramError {
+    fn from(e: CpAmmError) -> Self { solana_program_error::ProgramError::Custom(e as u32) }
 }

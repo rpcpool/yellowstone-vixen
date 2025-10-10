@@ -27,6 +27,8 @@ pub struct Vesting {
     pub padding2: [u128; 4],
 }
 
+pub const VESTING_DISCRIMINATOR: [u8; 8] = [100, 149, 66, 138, 95, 200, 128, 241];
+
 impl Vesting {
     pub const LEN: usize = 184;
 
@@ -136,5 +138,5 @@ impl anchor_lang::IdlBuild for Vesting {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Vesting {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

@@ -183,7 +183,8 @@ mod proto_parser {
                 token_b_flag: self.token_b_flag.into(),
                 collect_fee_mode: self.collect_fee_mode.into(),
                 pool_type: self.pool_type.into(),
-                padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
+                version: self.version.into(),
+                padding0: self.padding0.into(),
                 fee_a_per_liquidity: self
                     .fee_a_per_liquidity
                     .into_iter()
@@ -196,6 +197,7 @@ mod proto_parser {
                     .collect(),
                 permanent_lock_liquidity: self.permanent_lock_liquidity.to_string(),
                 metrics: Some(self.metrics.into_proto()),
+                creator: self.creator.to_string(),
                 padding1: self.padding1.to_vec(),
                 reward_infos: self
                     .reward_infos

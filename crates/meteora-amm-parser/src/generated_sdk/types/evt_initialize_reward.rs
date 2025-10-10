@@ -26,6 +26,11 @@ pub struct EvtInitializeReward {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub funder: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub creator: Pubkey,
     pub reward_index: u8,
     pub reward_duration: u64,
 }

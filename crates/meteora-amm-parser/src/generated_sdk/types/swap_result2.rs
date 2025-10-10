@@ -9,12 +9,14 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct BaseFeeStruct {
-    pub cliff_fee_numerator: u64,
-    pub base_fee_mode: u8,
-    pub padding0: [u8; 5],
-    pub first_factor: u16,
-    pub second_factor: [u8; 8],
-    pub third_factor: u64,
-    pub padding1: u64,
+pub struct SwapResult2 {
+    pub included_fee_input_amount: u64,
+    pub excluded_fee_input_amount: u64,
+    pub amount_left: u64,
+    pub output_amount: u64,
+    pub next_sqrt_price: u128,
+    pub trading_fee: u64,
+    pub protocol_fee: u64,
+    pub partner_fee: u64,
+    pub referral_fee: u64,
 }
