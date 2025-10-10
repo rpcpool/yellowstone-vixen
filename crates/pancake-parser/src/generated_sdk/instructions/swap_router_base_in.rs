@@ -235,7 +235,7 @@ impl SwapRouterBaseInBuilder {
             )),
             output_token_account: self
                 .output_token_account
-                .unwrap_or(solana_pubkey::Pubkey::default()),
+                .unwrap_or_default(),
         };
         let args = SwapRouterBaseInInstructionArgs {
             amount_in: self.amount_in.clone().expect("amount_in is not set"),

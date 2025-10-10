@@ -502,7 +502,9 @@ impl InstructionUpdate {
 
         // Two-pointer algorithm: traverse instruction tree and logs simultaneously
         let mut log_idx = 0;
-        Self::assign_logs_recursive(outer, &parsed_logs, &mut log_idx, 1);
+        let _orphaned_logs = Self::assign_logs_recursive(outer, &parsed_logs, &mut log_idx, 1);
+        // Note: orphaned_logs at depth 1 means logs that couldn't be assigned to any instruction
+        // This shouldn't happen in well-formed transactions, but we discard them here
     }
 
     /// Pre-parse log messages into structured representation
@@ -560,25 +562,39 @@ impl InstructionUpdate {
         parsed_logs: &[ParsedLog],
         log_idx: &mut usize,
         current_depth: usize,
-    ) {
+    ) -> Vec<usize> {
+        let mut parent_logs = Vec::new();
+
         for instruction in instructions {
             // Find this instruction's invoke log at current_depth
             let mut found_invoke = false;
             while *log_idx < parsed_logs.len() {
-                if let ParsedLog::Invoke {
-                    program_id,
-                    depth,
-                    original_idx,
-                } = &parsed_logs[*log_idx]
-                {
-                    if *depth == current_depth && *program_id == instruction.program {
+                match &parsed_logs[*log_idx] {
+                    ParsedLog::Invoke {
+                        program_id,
+                        depth,
+                        original_idx,
+                    } if *depth == current_depth && *program_id == instruction.program => {
                         instruction.parsed_logs.push(*original_idx);
                         *log_idx += 1;
                         found_invoke = true;
                         break;
-                    }
+                    },
+                    // If we encounter logs that don't match, they might belong to parent
+                    ParsedLog::Other { original_idx }
+                    | ParsedLog::Consumed { original_idx, .. } => {
+                        parent_logs.push(*original_idx);
+                        *log_idx += 1;
+                    },
+                    // If we hit an invoke at shallower depth, stop searching
+                    ParsedLog::Invoke { depth, .. } if *depth < current_depth => {
+                        break;
+                    },
+                    // Otherwise keep searching
+                    _ => {
+                        *log_idx += 1;
+                    },
                 }
-                *log_idx += 1;
             }
 
             if !found_invoke {
@@ -599,12 +615,14 @@ impl InstructionUpdate {
                             // No inner instructions but found deeper invoke - skip
                             *log_idx += 1;
                         } else {
-                            Self::assign_logs_recursive(
+                            let returned_logs = Self::assign_logs_recursive(
                                 &mut instruction.inner,
                                 parsed_logs,
                                 log_idx,
                                 current_depth + 1,
                             );
+                            // Assign the returned logs (that belonged to this parent) to this instruction
+                            instruction.parsed_logs.extend(returned_logs);
                         }
                     },
 
@@ -648,6 +666,8 @@ impl InstructionUpdate {
                 }
             }
         }
+
+        parent_logs
     }
 
     #[inline]
