@@ -5,7 +5,7 @@ use topograph::{
     executor::{self, Executor, Nonblock, Tokio},
     prelude::*,
 };
-use tracing::warn;
+use tracing::{warn, Instrument};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdatePing},
     tonic::Status,
@@ -87,6 +87,7 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
                         #[cfg(feature = "prometheus")]
                         update_type,
                     )
+                    .instrument(tracing::info_span!("vixen.process.account"))
                     .await;
             },
             UpdateOneof::Transaction(t) => {
@@ -104,7 +105,9 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
                     update_type,
                 );
 
-                futures_util::future::join_all([transaction_fut, instruction_fut]).await;
+                futures_util::future::join_all([transaction_fut, instruction_fut])
+                    .instrument(tracing::info_span!("vixen.process.transaction"))
+                    .await;
             },
             UpdateOneof::BlockMeta(b) => {
                 pipelines
@@ -116,6 +119,7 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
                         #[cfg(feature = "prometheus")]
                         update_type,
                     )
+                    .instrument(tracing::info_span!("vixen.process.block_meta"))
                     .await;
             },
             UpdateOneof::Block(b) => {
@@ -128,6 +132,7 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
                         #[cfg(feature = "prometheus")]
                         update_type,
                     )
+                    .instrument(tracing::info_span!("vixen.process.block"))
                     .await;
             },
             UpdateOneof::Slot(s) => {
@@ -140,6 +145,7 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
                         #[cfg(feature = "prometheus")]
                         update_type,
                     )
+                    .instrument(tracing::info_span!("vixen.process.slot"))
                     .await;
             },
             UpdateOneof::Ping(SubscribeUpdatePing {}) => (),
