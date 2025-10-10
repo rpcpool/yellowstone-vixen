@@ -155,9 +155,7 @@ where
         let parsed = match self
             .0
             .parse(value)
-            .instrument(tracing::info_span!(
-                "vixen.parse",
-            ))
+            .instrument(tracing::info_span!("vixen.parse",))
             .await
         {
             Ok(p) => p,
@@ -168,15 +166,10 @@ where
 
         let errs = (&self.1)
             .into_iter()
-            .map(|h| {
-                async move {
-                    h
-                        .handle(parsed)
-                        .instrument(tracing::info_span!(
-                            "vixen.handle",
-                        ))
-                        .await
-                }
+            .map(|h| async move {
+                h.handle(parsed)
+                    .instrument(tracing::info_span!("vixen.handle",))
+                    .await
             })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
             .filter_map(|r| async move { r.err() })
