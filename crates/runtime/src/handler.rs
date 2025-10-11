@@ -152,7 +152,12 @@ where
     /// # Errors
     /// If any of the related handlers executions errors, returns those errors
     pub async fn handle(&self, value: &P::Input) -> Result<(), PipelineErrors> {
-        let parsed = match self.0.parse(value).await {
+        let parsed = match self
+            .0
+            .parse(value)
+            .instrument(tracing::info_span!("vixen.parse",))
+            .await
+        {
             Ok(p) => p,
             Err(ParseError::Filtered) => return Ok(()),
             Err(ParseError::Other(e)) => return Err(PipelineErrors::Parse(e)),
@@ -161,7 +166,11 @@ where
 
         let errs = (&self.1)
             .into_iter()
-            .map(|h| async move { h.handle(parsed).await })
+            .map(|h| async move {
+                h.handle(parsed)
+                    .instrument(tracing::info_span!("vixen.handle",))
+                    .await
+            })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
             .filter_map(|r| async move { r.err() })
             .collect::<SmallVec<[_; 1]>>()
