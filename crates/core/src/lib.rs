@@ -861,3 +861,36 @@ impl From<Filters> for SubscribeRequest {
         }
     }
 }
+
+/// Helper to create a swap instruction error message that won't be filtered as benign.
+/// Use this in parsers by wrapping deserialization errors for swap instructions.
+#[inline]
+pub fn swap_instruction_error(ix_name: &str, source: std::io::Error) -> std::io::Error {
+    std::io::Error::new(
+        source.kind(),
+        format!("Swap Instruction Failed [{}]: {}", ix_name, source),
+    )
+}
+
+/// Deserialize with special error handling for swap-related instructions.
+/// This wraps a deserialize function and adds "Swap Instruction Failed" to errors
+/// so they will be logged at ERROR level instead of being filtered as benign.
+///
+/// # Example
+/// ```ignore
+/// use yellowstone_vixen_core::deserialize_checked_swap;
+/// let result = deserialize_checked_swap(data, discriminator, ix_name, deserialize_checked)?;
+/// ```
+#[inline]
+pub fn deserialize_checked_swap<T, E>(
+    data: &[u8],
+    discriminator: &[u8],
+    ix_name: &str,
+    deserialize_fn: impl FnOnce(&[u8], &[u8]) -> Result<T, E>,
+) -> Result<T, std::io::Error>
+where
+    E: Into<std::io::Error>,
+{
+    deserialize_fn(data, discriminator)
+        .map_err(|e| swap_instruction_error(ix_name, e.into()))
+}

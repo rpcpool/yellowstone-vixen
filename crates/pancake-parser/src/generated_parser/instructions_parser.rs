@@ -548,7 +548,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     tick_array: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                let de_ix_data: SwapIxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "Swap", deserialize_checked)?;
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
@@ -584,7 +584,7 @@ impl InstructionParser {
                     output_token_account,
                 };
                 let de_ix_data: SwapRouterBaseInIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SwapRouterBaseIn", deserialize_checked)?;
                 let swap_events = SwapEvent::all_from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -615,7 +615,7 @@ impl InstructionParser {
                     input_vault_mint: next_account(accounts)?,
                     output_vault_mint: next_account(accounts)?,
                 };
-                let de_ix_data: SwapV2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                let de_ix_data: SwapV2IxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SwapV2", deserialize_checked)?;
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);

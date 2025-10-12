@@ -196,7 +196,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     associated_token_program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                let de_ix_data: BuyTokenIxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "BuyToken", deserialize_checked)?;
 
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
@@ -554,7 +554,7 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                     associated_token_program: next_account(accounts)?,
                 };
-                let de_ix_data: SellTokenIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                let de_ix_data: SellTokenIxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SellToken", deserialize_checked)?;
 
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {

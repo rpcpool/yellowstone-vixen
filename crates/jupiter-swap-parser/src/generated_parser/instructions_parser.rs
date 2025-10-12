@@ -256,7 +256,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: ExactOutRouteIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "ExactOutRoute", deserialize_checked)?;
                 // Search for all SwapEvents in inner instructions
                 let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
@@ -287,7 +287,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: RouteIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                let de_ix_data: RouteIxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "Route", deserialize_checked)?;
                 // Search for all SwapEvents in inner instructions
                 let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
@@ -320,7 +320,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: RouteWithTokenLedgerIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "RouteWithTokenLedger", deserialize_checked)?;
                 // Search for all SwapEvents in inner instructions
                 let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
@@ -365,7 +365,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsExactOutRouteIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SharedAccountsExactOutRoute", deserialize_checked)?;
                 // Search for all SwapEvents in inner instructions
                 let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
@@ -401,7 +401,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsRouteIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SharedAccountsRoute", deserialize_checked)?;
                 // Search for all SwapEvents in inner instructions
                 let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
@@ -438,7 +438,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsRouteWithTokenLedgerIxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SharedAccountsRouteWithTokenLedger", deserialize_checked)?;
                 // Search for all SwapEvents in inner instructions
                 let swap_events: Vec<(SwapEvent, u16)> = ix
                     .inner
@@ -471,7 +471,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: ExactOutRouteV2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "ExactOutRouteV2", deserialize_checked)?;
                 // Search for SwapsEvent in inner instructions (at most one)
                 let swaps_event: Option<(SwapsEvent, u16)> = ix.inner.iter().find_map(|inner_ix| {
                     SwapsEvent::from_inner_instruction_data(&inner_ix.data)
@@ -499,7 +499,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: RouteV2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                let de_ix_data: RouteV2IxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "RouteV2", deserialize_checked)?;
                 // Search for SwapsEvent in inner instructions (at most one)
                 let swaps_event: Option<(SwapsEvent, u16)> = ix.inner.iter().find_map(|inner_ix| {
                     SwapsEvent::from_inner_instruction_data(&inner_ix.data)
@@ -530,7 +530,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsExactOutRouteV2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SharedAccountsExactOutRouteV2", deserialize_checked)?;
                 // Search for SwapsEvent in inner instructions (at most one)
                 let swaps_event: Option<(SwapsEvent, u16)> = ix.inner.iter().find_map(|inner_ix| {
                     SwapsEvent::from_inner_instruction_data(&inner_ix.data)
@@ -561,7 +561,7 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: SharedAccountsRouteV2IxData =
-                    deserialize_checked(ix_data, &ix_discriminator)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SharedAccountsRouteV2", deserialize_checked)?;
                 // Search for SwapsEvent in inner instructions (at most one)
                 let swaps_event: Option<(SwapsEvent, u16)> = ix.inner.iter().find_map(|inner_ix| {
                     SwapsEvent::from_inner_instruction_data(&inner_ix.data)

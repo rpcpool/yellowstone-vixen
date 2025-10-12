@@ -136,7 +136,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: BuyIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                let de_ix_data: BuyIxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "Buy", deserialize_checked)?;
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
@@ -253,7 +253,7 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SellIxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                let de_ix_data: SellIxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "Sell", deserialize_checked)?;
 
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
