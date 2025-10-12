@@ -352,7 +352,12 @@ impl InstructionParser {
                     observation_state: next_account(accounts)?,
                 };
                 let de_ix_data: SwapBaseInputIxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SwapBaseInput", deserialize_checked)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(
+                        ix_data,
+                        &ix_discriminator,
+                        "SwapBaseInput",
+                        deserialize_checked,
+                    )?;
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);
@@ -388,7 +393,12 @@ impl InstructionParser {
                     observation_state: next_account(accounts)?,
                 };
                 let de_ix_data: SwapBaseOutputIxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SwapBaseOutput", deserialize_checked)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(
+                        ix_data,
+                        &ix_discriminator,
+                        "SwapBaseOutput",
+                        deserialize_checked,
+                    )?;
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
                     return Err(yellowstone_vixen_core::ParseError::Filtered);

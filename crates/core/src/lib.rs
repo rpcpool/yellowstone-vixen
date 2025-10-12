@@ -865,16 +865,21 @@ impl From<Filters> for SubscribeRequest {
 /// Helper to create a swap instruction error message that won't be filtered as benign.
 /// Use this in parsers by wrapping deserialization errors for swap instructions.
 #[inline]
-pub fn swap_instruction_error(ix_name: &str, source: std::io::Error) -> std::io::Error {
+#[must_use]
+pub fn swap_instruction_error(ix_name: &str, source: &std::io::Error) -> std::io::Error {
     std::io::Error::new(
         source.kind(),
-        format!("Swap Instruction Failed [{}]: {}", ix_name, source),
+        format!("Swap Instruction Failed [{ix_name}]: {source}"),
     )
 }
 
 /// Deserialize with special error handling for swap-related instructions.
 /// This wraps a deserialize function and adds "Swap Instruction Failed" to errors
 /// so they will be logged at ERROR level instead of being filtered as benign.
+///
+/// # Errors
+/// Returns an `std::io::Error` with "Swap Instruction Failed" prefix if deserialization fails.
+/// This ensures swap instruction parsing errors are logged at ERROR level.
 ///
 /// # Example
 /// ```ignore
@@ -891,6 +896,5 @@ pub fn deserialize_checked_swap<T, E>(
 where
     E: Into<std::io::Error>,
 {
-    deserialize_fn(data, discriminator)
-        .map_err(|e| swap_instruction_error(ix_name, e.into()))
+    deserialize_fn(data, discriminator).map_err(|e| swap_instruction_error(ix_name, &e.into()))
 }

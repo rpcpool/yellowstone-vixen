@@ -709,7 +709,12 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "Swap", deserialize_checked)?;
+                let de_ix_data: SwapIxData = yellowstone_vixen_core::deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "Swap",
+                    deserialize_checked,
+                )?;
 
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {
@@ -743,7 +748,12 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: Swap2IxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "Swap2", deserialize_checked)?;
+                let de_ix_data: Swap2IxData = yellowstone_vixen_core::deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "Swap2",
+                    deserialize_checked,
+                )?;
 
                 // Filter out trades handled by Jupiter or OKX aggregators
                 if ix.parent_program.as_ref().is_some_and(is_known_aggregator) {

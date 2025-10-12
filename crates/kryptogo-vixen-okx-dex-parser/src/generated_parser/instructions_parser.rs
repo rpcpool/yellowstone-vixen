@@ -215,7 +215,12 @@ impl InstructionParser {
                     system_program: next_program_id_optional_account(accounts)?,
                 };
                 let de_ix_data: CommissionSolProxySwapIxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "CommissionSolProxySwap", deserialize_checked)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(
+                        ix_data,
+                        &ix_discriminator,
+                        "CommissionSolProxySwap",
+                        deserialize_checked,
+                    )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -241,7 +246,12 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                 };
                 let de_ix_data: CommissionSolSwapIxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "CommissionSolSwap", deserialize_checked)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(
+                        ix_data,
+                        &ix_discriminator,
+                        "CommissionSolSwap",
+                        deserialize_checked,
+                    )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -273,7 +283,12 @@ impl InstructionParser {
                     system_program: next_program_id_optional_account(accounts)?,
                 };
                 let de_ix_data: CommissionSplProxySwapIxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "CommissionSplProxySwap", deserialize_checked)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(
+                        ix_data,
+                        &ix_discriminator,
+                        "CommissionSplProxySwap",
+                        deserialize_checked,
+                    )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -299,7 +314,12 @@ impl InstructionParser {
                     token_program: next_account(accounts)?,
                 };
                 let de_ix_data: CommissionSplSwapIxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "CommissionSplSwap", deserialize_checked)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(
+                        ix_data,
+                        &ix_discriminator,
+                        "CommissionSplSwap",
+                        deserialize_checked,
+                    )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -387,7 +407,12 @@ impl InstructionParser {
                     system_program: next_program_id_optional_account(accounts)?,
                 };
                 let de_ix_data: PlatformFeeSolProxySwapV2IxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "PlatformFeeSolProxySwapV2", deserialize_checked)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(
+                        ix_data,
+                        &ix_discriminator,
+                        "PlatformFeeSolProxySwapV2",
+                        deserialize_checked,
+                    )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -441,7 +466,12 @@ impl InstructionParser {
                     system_program: next_program_id_optional_account(accounts)?,
                 };
                 let de_ix_data: PlatformFeeSplProxySwapV2IxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "PlatformFeeSplProxySwapV2", deserialize_checked)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(
+                        ix_data,
+                        &ix_discriminator,
+                        "PlatformFeeSplProxySwapV2",
+                        deserialize_checked,
+                    )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -471,7 +501,12 @@ impl InstructionParser {
                     associated_token_program: next_program_id_optional_account(accounts)?,
                     system_program: next_program_id_optional_account(accounts)?,
                 };
-                let de_ix_data: ProxySwapIxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "ProxySwap", deserialize_checked)?;
+                let de_ix_data: ProxySwapIxData = yellowstone_vixen_core::deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "ProxySwap",
+                    deserialize_checked,
+                )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -494,7 +529,12 @@ impl InstructionParser {
                     source_mint: next_account(accounts)?,
                     destination_mint: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "Swap", deserialize_checked)?;
+                let de_ix_data: SwapIxData = yellowstone_vixen_core::deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "Swap",
+                    deserialize_checked,
+                )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -526,7 +566,12 @@ impl InstructionParser {
                     associated_token_program: next_program_id_optional_account(accounts)?,
                     system_program: next_program_id_optional_account(accounts)?,
                 };
-                let de_ix_data: SwapTobV3IxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SwapTobV3", deserialize_checked)?;
+                let de_ix_data: SwapTobV3IxData = yellowstone_vixen_core::deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "SwapTobV3",
+                    deserialize_checked,
+                )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -560,7 +605,12 @@ impl InstructionParser {
                     sol_receiver: next_program_id_optional_account(accounts)?,
                 };
                 let de_ix_data: SwapTobV3WithReceiverIxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SwapTobV3WithReceiver", deserialize_checked)?;
+                    yellowstone_vixen_core::deserialize_checked_swap(
+                        ix_data,
+                        &ix_discriminator,
+                        "SwapTobV3WithReceiver",
+                        deserialize_checked,
+                    )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
@@ -592,7 +642,12 @@ impl InstructionParser {
                     associated_token_program: next_program_id_optional_account(accounts)?,
                     system_program: next_program_id_optional_account(accounts)?,
                 };
-                let de_ix_data: SwapV3IxData = yellowstone_vixen_core::deserialize_checked_swap(ix_data, &ix_discriminator, "SwapV3", deserialize_checked)?;
+                let de_ix_data: SwapV3IxData = yellowstone_vixen_core::deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "SwapV3",
+                    deserialize_checked,
+                )?;
                 let aggregation_event = AggregationEvent::from_logs(
                     &ix.parsed_logs
                         .iter()
