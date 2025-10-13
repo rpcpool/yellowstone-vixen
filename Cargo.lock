@@ -9155,6 +9155,7 @@ version = "0.5.0"
 dependencies = [
  "bs58",
  "clap",
+ "hex",
  "regex",
  "serde",
  "spl-token 6.0.0",

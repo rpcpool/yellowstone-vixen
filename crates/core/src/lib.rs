@@ -866,10 +866,16 @@ impl From<Filters> for SubscribeRequest {
 /// Use this in parsers by wrapping deserialization errors for swap instructions.
 #[inline]
 #[must_use]
-pub fn swap_instruction_error(ix_name: &str, source: &std::io::Error) -> std::io::Error {
+pub fn swap_instruction_error(
+    ix_name: &str,
+    source: &std::io::Error,
+    data: &[u8],
+) -> std::io::Error {
+    let data_hex = hex::encode(data);
+
     std::io::Error::new(
         source.kind(),
-        format!("Swap Instruction Failed [{ix_name}]: {source}"),
+        format!("Swap Instruction Failed [{ix_name}]: {source} | ix_data_hex: {data_hex}"),
     )
 }
 
@@ -896,5 +902,6 @@ pub fn deserialize_checked_swap<T, E>(
 where
     E: Into<std::io::Error>,
 {
-    deserialize_fn(data, discriminator).map_err(|e| swap_instruction_error(ix_name, &e.into()))
+    deserialize_fn(data, discriminator)
+        .map_err(|e| swap_instruction_error(ix_name, &e.into(), data))
 }
