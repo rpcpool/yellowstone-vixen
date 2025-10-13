@@ -95,6 +95,7 @@ impl SingleInstructionPipeline {
     /// # Errors
     /// Returns an error if the inner pipeline fails.
     pub async fn handle(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
+        let mut err = None;
         let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
         let pipe = &self.0;
 
@@ -107,15 +108,15 @@ impl SingleInstructionPipeline {
             match res {
                 Ok(()) => (),
                 Err(PipelineErrors::AlreadyHandled(h)) => h.as_unit(),
-                Err(e) => {
-                    let handled = e.handle::<InstructionUpdate>(&pipe.id());
-
-                    return Err(PipelineErrors::AlreadyHandled(handled));
-                },
+                Err(e) => err = Some(e.handle::<InstructionUpdate>(&pipe.id())),
             }
         }
 
-        Ok(())
+        if let Some(h) = err {
+            Err(PipelineErrors::AlreadyHandled(h))
+        } else {
+            Ok(())
+        }
     }
 }
 
