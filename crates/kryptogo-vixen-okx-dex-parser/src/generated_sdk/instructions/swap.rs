@@ -88,11 +88,23 @@ impl Default for SwapInstructionData {
     fn default() -> Self { Self::new() }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(BorshSerialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SwapInstructionArgs {
     pub data: SwapArgs,
     pub order_id: u64,
+}
+
+impl BorshDeserialize for SwapInstructionArgs {
+    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let data = SwapArgs::deserialize_reader(reader)?;
+
+        // Try to read order_id, if it fails (old version without order_id), use default value 0
+        // This provides backward compatibility with older OKX instruction format that didn't include order_id
+        let order_id = u64::deserialize_reader(reader).unwrap_or(0);
+
+        Ok(Self { data, order_id })
+    }
 }
 
 /// Instruction builder for `Swap`.

@@ -1417,3 +1417,158 @@ mod proto_parser {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use yellowstone_vixen_core::{
+        instruction::{InstructionShared, InstructionUpdate},
+        Pubkey,
+    };
+
+    use super::*;
+
+    // Helper function to create a Pubkey from a base58 string
+    fn pubkey_from_str(s: &str) -> Pubkey { s.parse().unwrap() }
+
+    #[test]
+    fn test_swap_instruction_without_order_id() {
+        // Test parsing old version Swap instruction (without order_id field)
+        // This is the actual data from the error log that was failing
+        let accounts = vec![
+            pubkey_from_str("11111111111111111111111111111111"), // payer
+            pubkey_from_str("11111111111111111111111111111111"), // source_token_account
+            pubkey_from_str("11111111111111111111111111111111"), // destination_token_account
+            pubkey_from_str("11111111111111111111111111111111"), // source_mint
+            pubkey_from_str("11111111111111111111111111111111"), // destination_mint
+        ];
+
+        // Swap discriminator: [248, 198, 158, 145, 225, 117, 135, 200]
+        let mut data = vec![248, 198, 158, 145, 225, 117, 135, 200];
+
+        // Instruction data from error log (54 bytes, WITHOUT order_id)
+        let ix_data_hex = "d676b0d200000000a37e7c1e040000006a44ab0e0400000001000000d676b0d2000000000100000001000000010000000a0100000064";
+        data.extend_from_slice(&hex::decode(ix_data_hex).unwrap());
+
+        let ix_update = InstructionUpdate {
+            accounts: accounts.clone(),
+            data,
+            program: pubkey_from_str("CDSr3ssLcRB6XYPJwAfFt18MZvEZp4LjHcvzBVZ45duo"), // OKX DEX program
+            parent_program: None,
+            inner: vec![],
+            shared: Arc::new(InstructionShared {
+                slot: 0,
+                signature: vec![],
+                is_vote: false,
+                txn_index: 0,
+                err: None,
+                fee: 0,
+                pre_balances: vec![],
+                post_balances: vec![],
+                pre_token_balances: vec![],
+                post_token_balances: vec![],
+                log_messages: vec![],
+                rewards: vec![],
+                compute_units_consumed: None,
+                recent_blockhash: vec![],
+                accounts: Default::default(),
+                message_header: Default::default(),
+                created_token_accounts: vec![],
+            }),
+            ix_index: 0,
+            parsed_logs: vec![],
+        };
+
+        let result = InstructionParser::parse_impl(&ix_update);
+        assert!(
+            result.is_ok(),
+            "Should successfully parse Swap instruction without order_id"
+        );
+
+        if let Ok(DexSolanaProgramIx::Swap(_accounts, ix_data, _event)) = result {
+            // Verify that order_id defaults to 0 for old version
+            assert_eq!(ix_data.order_id, 0, "order_id should default to 0");
+
+            // Verify SwapArgs data is correctly parsed
+            assert_eq!(ix_data.data.amount_in, 3_534_780_118);
+            assert_eq!(ix_data.data.expect_amount_out, 17_691_344_547);
+            assert_eq!(ix_data.data.min_return, 17_425_974_378);
+            assert_eq!(ix_data.data.amounts.len(), 1);
+            assert_eq!(ix_data.data.amounts[0], 3_534_780_118);
+            assert_eq!(ix_data.data.routes.len(), 1);
+            assert_eq!(ix_data.data.routes[0].len(), 1);
+        } else {
+            panic!("Expected Swap instruction");
+        }
+    }
+
+    #[test]
+    fn test_swap_instruction_with_order_id() {
+        // Test parsing new version Swap instruction (with order_id field)
+        let accounts = vec![
+            pubkey_from_str("11111111111111111111111111111111"), // payer
+            pubkey_from_str("11111111111111111111111111111111"), // source_token_account
+            pubkey_from_str("11111111111111111111111111111111"), // destination_token_account
+            pubkey_from_str("11111111111111111111111111111111"), // source_mint
+            pubkey_from_str("11111111111111111111111111111111"), // destination_mint
+        ];
+
+        // Swap discriminator: [248, 198, 158, 145, 225, 117, 135, 200]
+        let mut data = vec![248, 198, 158, 145, 225, 117, 135, 200];
+
+        // Instruction data (54 bytes) + order_id (8 bytes) = 62 bytes
+        let ix_data_hex = "d676b0d200000000a37e7c1e040000006a44ab0e0400000001000000d676b0d2000000000100000001000000010000000a0100000064";
+        data.extend_from_slice(&hex::decode(ix_data_hex).unwrap());
+
+        // Add order_id: 12345678
+        data.extend_from_slice(&12345678u64.to_le_bytes());
+
+        let ix_update = InstructionUpdate {
+            accounts: accounts.clone(),
+            data,
+            program: pubkey_from_str("CDSr3ssLcRB6XYPJwAfFt18MZvEZp4LjHcvzBVZ45duo"),
+            parent_program: None,
+            inner: vec![],
+            shared: Arc::new(InstructionShared {
+                slot: 0,
+                signature: vec![],
+                is_vote: false,
+                txn_index: 0,
+                err: None,
+                fee: 0,
+                pre_balances: vec![],
+                post_balances: vec![],
+                pre_token_balances: vec![],
+                post_token_balances: vec![],
+                log_messages: vec![],
+                rewards: vec![],
+                compute_units_consumed: None,
+                recent_blockhash: vec![],
+                accounts: Default::default(),
+                message_header: Default::default(),
+                created_token_accounts: vec![],
+            }),
+            ix_index: 0,
+            parsed_logs: vec![],
+        };
+
+        let result = InstructionParser::parse_impl(&ix_update);
+        assert!(
+            result.is_ok(),
+            "Should successfully parse Swap instruction with order_id"
+        );
+
+        if let Ok(DexSolanaProgramIx::Swap(_accounts, ix_data, _event)) = result {
+            // Verify that order_id is correctly parsed
+            assert_eq!(ix_data.order_id, 12345678, "order_id should be 12345678");
+
+            // Verify SwapArgs data is correctly parsed
+            assert_eq!(ix_data.data.amount_in, 3_534_780_118);
+            assert_eq!(ix_data.data.expect_amount_out, 17_691_344_547);
+            assert_eq!(ix_data.data.min_return, 17_425_974_378);
+        } else {
+            panic!("Expected Swap instruction");
+        }
+    }
+}
