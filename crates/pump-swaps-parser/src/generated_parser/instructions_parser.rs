@@ -122,28 +122,60 @@ impl InstructionParser {
         let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
             [102, 6, 61, 18, 1, 218, 235, 234] => {
-                let expected_accounts_len = 19;
+                let expected_accounts_len = 17;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
+
+                // Parse first 17 required accounts
+                let pool = next_account(accounts)?;
+                let user = next_account(accounts)?;
+                let global_config = next_account(accounts)?;
+                let base_mint = next_account(accounts)?;
+                let quote_mint = next_account(accounts)?;
+                let user_base_token_account = next_account(accounts)?;
+                let user_quote_token_account = next_account(accounts)?;
+                let pool_base_token_account = next_account(accounts)?;
+                let pool_quote_token_account = next_account(accounts)?;
+                let protocol_fee_recipient = next_account(accounts)?;
+                let protocol_fee_recipient_token_account = next_account(accounts)?;
+                let base_token_program = next_account(accounts)?;
+                let quote_token_program = next_account(accounts)?;
+                let system_program = next_account(accounts)?;
+                let associated_token_program = next_account(accounts)?;
+                let event_authority = next_account(accounts)?;
+                let program = next_account(accounts)?;
+
+                // Optional coin_creator accounts (accounts 18 and 19)
+                let coin_creator_vault_ata = if accounts_len >= 18 {
+                    next_account(accounts)?
+                } else {
+                    solana_pubkey::Pubkey::default()
+                };
+                let coin_creator_vault_authority = if accounts_len >= 19 {
+                    next_account(accounts)?
+                } else {
+                    solana_pubkey::Pubkey::default()
+                };
+
                 let ix_accounts = BuyIxAccounts {
-                    pool: next_account(accounts)?,
-                    user: next_account(accounts)?,
-                    global_config: next_account(accounts)?,
-                    base_mint: next_account(accounts)?,
-                    quote_mint: next_account(accounts)?,
-                    user_base_token_account: next_account(accounts)?,
-                    user_quote_token_account: next_account(accounts)?,
-                    pool_base_token_account: next_account(accounts)?,
-                    pool_quote_token_account: next_account(accounts)?,
-                    protocol_fee_recipient: next_account(accounts)?,
-                    protocol_fee_recipient_token_account: next_account(accounts)?,
-                    base_token_program: next_account(accounts)?,
-                    quote_token_program: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    associated_token_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                    coin_creator_vault_ata: next_account(accounts)?,
-                    coin_creator_vault_authority: next_account(accounts)?,
+                    pool,
+                    user,
+                    global_config,
+                    base_mint,
+                    quote_mint,
+                    user_base_token_account,
+                    user_quote_token_account,
+                    pool_base_token_account,
+                    pool_quote_token_account,
+                    protocol_fee_recipient,
+                    protocol_fee_recipient_token_account,
+                    base_token_program,
+                    quote_token_program,
+                    system_program,
+                    associated_token_program,
+                    event_authority,
+                    program,
+                    coin_creator_vault_ata,
+                    coin_creator_vault_authority,
                 };
                 let de_ix_data: BuyIxData = yellowstone_vixen_core::deserialize_checked_swap(
                     ix_data,
@@ -268,28 +300,60 @@ impl InstructionParser {
                 Ok(PumpAmmProgramIx::ExtendAccount(ix_accounts))
             },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
-                let expected_accounts_len = 19;
+                let expected_accounts_len = 17;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
+
+                // Parse first 17 required accounts
+                let pool = next_account(accounts)?;
+                let user = next_account(accounts)?;
+                let global_config = next_account(accounts)?;
+                let base_mint = next_account(accounts)?;
+                let quote_mint = next_account(accounts)?;
+                let user_base_token_account = next_account(accounts)?;
+                let user_quote_token_account = next_account(accounts)?;
+                let pool_base_token_account = next_account(accounts)?;
+                let pool_quote_token_account = next_account(accounts)?;
+                let protocol_fee_recipient = next_account(accounts)?;
+                let protocol_fee_recipient_token_account = next_account(accounts)?;
+                let base_token_program = next_account(accounts)?;
+                let quote_token_program = next_account(accounts)?;
+                let system_program = next_account(accounts)?;
+                let associated_token_program = next_account(accounts)?;
+                let event_authority = next_account(accounts)?;
+                let program = next_account(accounts)?;
+
+                // Optional coin_creator accounts (accounts 18 and 19)
+                let coin_creator_vault_ata = if accounts_len >= 18 {
+                    next_account(accounts)?
+                } else {
+                    solana_pubkey::Pubkey::default()
+                };
+                let coin_creator_vault_authority = if accounts_len >= 19 {
+                    next_account(accounts)?
+                } else {
+                    solana_pubkey::Pubkey::default()
+                };
+
                 let ix_accounts = SellIxAccounts {
-                    pool: next_account(accounts)?,
-                    user: next_account(accounts)?,
-                    global_config: next_account(accounts)?,
-                    base_mint: next_account(accounts)?,
-                    quote_mint: next_account(accounts)?,
-                    user_base_token_account: next_account(accounts)?,
-                    user_quote_token_account: next_account(accounts)?,
-                    pool_base_token_account: next_account(accounts)?,
-                    pool_quote_token_account: next_account(accounts)?,
-                    protocol_fee_recipient: next_account(accounts)?,
-                    protocol_fee_recipient_token_account: next_account(accounts)?,
-                    base_token_program: next_account(accounts)?,
-                    quote_token_program: next_account(accounts)?,
-                    system_program: next_account(accounts)?,
-                    associated_token_program: next_account(accounts)?,
-                    event_authority: next_account(accounts)?,
-                    program: next_account(accounts)?,
-                    coin_creator_vault_ata: next_account(accounts)?,
-                    coin_creator_vault_authority: next_account(accounts)?,
+                    pool,
+                    user,
+                    global_config,
+                    base_mint,
+                    quote_mint,
+                    user_base_token_account,
+                    user_quote_token_account,
+                    pool_base_token_account,
+                    pool_quote_token_account,
+                    protocol_fee_recipient,
+                    protocol_fee_recipient_token_account,
+                    base_token_program,
+                    quote_token_program,
+                    system_program,
+                    associated_token_program,
+                    event_authority,
+                    program,
+                    coin_creator_vault_ata,
+                    coin_creator_vault_authority,
                 };
                 let de_ix_data: SellIxData = yellowstone_vixen_core::deserialize_checked_swap(
                     ix_data,
@@ -880,6 +944,211 @@ mod proto_parser {
 
             #[cfg(feature = "shared-data")]
             value.parsed_ix.into_proto()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use yellowstone_vixen_core::{
+        instruction::{InstructionShared, InstructionUpdate},
+        Pubkey,
+    };
+
+    use super::*;
+
+    // Helper function to create a Pubkey from a base58 string
+    fn pubkey_from_str(s: &str) -> Pubkey { s.parse().unwrap() }
+
+    #[test]
+    fn test_buy_with_17_accounts() {
+        // Test Buy instruction with 17 accounts (old version without coin_creator)
+        let accounts = vec![
+            // 1. Pool
+            pubkey_from_str("8LWu7QM2dGR1G8nKDHthckea57bkCzXyBTAKPJUBDHo8"),
+            // 2. User
+            pubkey_from_str("HooaG4M4CGusxvTAPgQyB8yzkqEr3HvGdkDaHwdrhjcN"),
+            // 3. Global Config
+            pubkey_from_str("ADyA8hdefvWN2dbGGWFotbzWxrAvLW83WG6QCVXvJKqw"),
+            // 4. Base Mint
+            pubkey_from_str("RR2giBie9syZdUKgT6wUzXiNhSGfJdcxMXGLYzZpump"),
+            // 5. Quote Mint (WSOL)
+            pubkey_from_str("So11111111111111111111111111111111111111112"),
+            // 6. User Base Token Account
+            pubkey_from_str("GgUGgB9yXxBmKAs9bfCQQEVp7poqKV4TzA1Quad7uq2w"),
+            // 7. User Quote Token Account
+            pubkey_from_str("EJeihaYQscQ2tbAWFpbiMuPxLAygM9pBK3NRiZ5JtoB6"),
+            // 8. Pool Base Token Account
+            pubkey_from_str("3YZT6Y8kJDQ5RExjdGbDKx7JmYLEGCGKVSYEnbJdmQYg"),
+            // 9. Pool Quote Token Account
+            pubkey_from_str("8tXG6b9RvshLvSNGWvhbPg8xKdR8NqvUXQv1pD9EJwnt"),
+            // 10. Protocol Fee Recipient
+            pubkey_from_str("8LWu7QM2dGR1G8nKDHthckea57bkCzXyBTAKPJUBDHo8"),
+            // 11. Protocol Fee Recipient Token Account
+            pubkey_from_str("X5QPJcpph4mBAJDzc4hRziFftSbcygV59kRb2Fu6Je1"),
+            // 12. Base Token Program
+            pubkey_from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            // 13. Quote Token Program
+            pubkey_from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            // 14. System Program
+            pubkey_from_str("11111111111111111111111111111111"),
+            // 15. Associated Token Program
+            pubkey_from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+            // 16. Event Authority
+            pubkey_from_str("GS4CU59F31iL7aR2Q8zVS8DRrcRnXX1yjQ66TqNVQnaR"),
+            // 17. Program
+            pubkey_from_str("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"),
+        ];
+
+        // Buy discriminator: [102, 6, 61, 18, 1, 218, 235, 234]
+        let mut data = vec![102, 6, 61, 18, 1, 218, 235, 234];
+        // Add dummy instruction data (base_amount_out: u64, max_quote_amount_in: u64)
+        data.extend_from_slice(&1000u64.to_le_bytes());
+        data.extend_from_slice(&2000u64.to_le_bytes());
+
+        let ix_update = InstructionUpdate {
+            accounts: accounts.clone(),
+            data,
+            program: pubkey_from_str("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"),
+            parent_program: None,
+            inner: vec![],
+            shared: Arc::new(InstructionShared {
+                slot: 0,
+                signature: vec![],
+                is_vote: false,
+                txn_index: 0,
+                err: None,
+                fee: 0,
+                pre_balances: vec![],
+                post_balances: vec![],
+                pre_token_balances: vec![],
+                post_token_balances: vec![],
+                log_messages: vec![],
+                rewards: vec![],
+                compute_units_consumed: None,
+                recent_blockhash: vec![],
+                accounts: Default::default(),
+                message_header: Default::default(),
+                created_token_accounts: vec![],
+            }),
+            ix_index: 0,
+            parsed_logs: vec![],
+        };
+
+        let result = InstructionParser::parse_impl(&ix_update);
+        assert!(
+            result.is_ok(),
+            "Should successfully parse Buy with 17 accounts"
+        );
+
+        if let Ok(PumpAmmProgramIx::Buy(ix_accounts, _ix_data, _event)) = result {
+            // Verify first account is correctly parsed
+            assert_eq!(
+                ix_accounts.pool.to_string(),
+                "8LWu7QM2dGR1G8nKDHthckea57bkCzXyBTAKPJUBDHo8"
+            );
+            assert_eq!(
+                ix_accounts.user.to_string(),
+                "HooaG4M4CGusxvTAPgQyB8yzkqEr3HvGdkDaHwdrhjcN"
+            );
+
+            // Verify coin_creator accounts are default (since only 17 accounts provided)
+            assert_eq!(
+                ix_accounts.coin_creator_vault_ata,
+                solana_pubkey::Pubkey::default()
+            );
+            assert_eq!(
+                ix_accounts.coin_creator_vault_authority,
+                solana_pubkey::Pubkey::default()
+            );
+        } else {
+            panic!("Expected Buy instruction");
+        }
+    }
+
+    #[test]
+    fn test_buy_with_19_accounts() {
+        // Test Buy instruction with 19 accounts (new version with coin_creator)
+        let mut accounts = vec![
+            pubkey_from_str("8LWu7QM2dGR1G8nKDHthckea57bkCzXyBTAKPJUBDHo8"),
+            pubkey_from_str("HooaG4M4CGusxvTAPgQyB8yzkqEr3HvGdkDaHwdrhjcN"),
+            pubkey_from_str("ADyA8hdefvWN2dbGGWFotbzWxrAvLW83WG6QCVXvJKqw"),
+            pubkey_from_str("RR2giBie9syZdUKgT6wUzXiNhSGfJdcxMXGLYzZpump"),
+            pubkey_from_str("So11111111111111111111111111111111111111112"),
+            pubkey_from_str("GgUGgB9yXxBmKAs9bfCQQEVp7poqKV4TzA1Quad7uq2w"),
+            pubkey_from_str("EJeihaYQscQ2tbAWFpbiMuPxLAygM9pBK3NRiZ5JtoB6"),
+            pubkey_from_str("3YZT6Y8kJDQ5RExjdGbDKx7JmYLEGCGKVSYEnbJdmQYg"),
+            pubkey_from_str("8tXG6b9RvshLvSNGWvhbPg8xKdR8NqvUXQv1pD9EJwnt"),
+            pubkey_from_str("8LWu7QM2dGR1G8nKDHthckea57bkCzXyBTAKPJUBDHo8"),
+            pubkey_from_str("X5QPJcpph4mBAJDzc4hRziFftSbcygV59kRb2Fu6Je1"),
+            pubkey_from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            pubkey_from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            pubkey_from_str("11111111111111111111111111111111"),
+            pubkey_from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+            pubkey_from_str("GS4CU59F31iL7aR2Q8zVS8DRrcRnXX1yjQ66TqNVQnaR"),
+            pubkey_from_str("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"),
+        ];
+        // Add coin_creator accounts
+        accounts.push(pubkey_from_str(
+            "5ExJb6vY5Y3CzVHJpY5xf4dqV3Fg8hKjZ8LqZvC2pump",
+        ));
+        accounts.push(pubkey_from_str(
+            "6DaKqH8UrC9CfVXmR9LtXsPqHvZ9DkX7UqNzGFZpump",
+        ));
+
+        let mut data = vec![102, 6, 61, 18, 1, 218, 235, 234];
+        data.extend_from_slice(&1000u64.to_le_bytes());
+        data.extend_from_slice(&2000u64.to_le_bytes());
+
+        let ix_update = InstructionUpdate {
+            accounts: accounts.clone(),
+            data,
+            program: pubkey_from_str("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"),
+            parent_program: None,
+            inner: vec![],
+            shared: Arc::new(InstructionShared {
+                slot: 0,
+                signature: vec![],
+                is_vote: false,
+                txn_index: 0,
+                err: None,
+                fee: 0,
+                pre_balances: vec![],
+                post_balances: vec![],
+                pre_token_balances: vec![],
+                post_token_balances: vec![],
+                log_messages: vec![],
+                rewards: vec![],
+                compute_units_consumed: None,
+                recent_blockhash: vec![],
+                accounts: Default::default(),
+                message_header: Default::default(),
+                created_token_accounts: vec![],
+            }),
+            ix_index: 0,
+            parsed_logs: vec![],
+        };
+
+        let result = InstructionParser::parse_impl(&ix_update);
+        assert!(
+            result.is_ok(),
+            "Should successfully parse Buy with 19 accounts"
+        );
+
+        if let Ok(PumpAmmProgramIx::Buy(ix_accounts, _ix_data, _event)) = result {
+            // Verify coin_creator accounts are correctly parsed
+            assert_eq!(
+                ix_accounts.coin_creator_vault_ata.to_string(),
+                "5ExJb6vY5Y3CzVHJpY5xf4dqV3Fg8hKjZ8LqZvC2pump"
+            );
+            assert_eq!(
+                ix_accounts.coin_creator_vault_authority.to_string(),
+                "6DaKqH8UrC9CfVXmR9LtXsPqHvZ9DkX7UqNzGFZpump"
+            );
+        } else {
+            panic!("Expected Buy instruction");
         }
     }
 }
