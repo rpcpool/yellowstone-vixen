@@ -134,7 +134,9 @@ impl anchor_lang::AccountSerialize for PresetParameter {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for PresetParameter {
-    fn owner() -> Pubkey { crate::LB_CLMM_ID }
+    fn owner() -> Pubkey {
+        crate::LB_CLMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

@@ -78,5 +78,7 @@ impl solana_program_error::PrintProgramError for JupiterError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for JupiterError {
-    fn type_of() -> &'static str { "JupiterError" }
+    fn type_of() -> &'static str {
+        "JupiterError"
+    }
 }

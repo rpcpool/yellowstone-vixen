@@ -28,11 +28,14 @@ pub(crate) mod r#evt_create_token_badge;
 pub(crate) mod r#evt_fund_reward;
 pub(crate) mod r#evt_initialize_pool;
 pub(crate) mod r#evt_initialize_reward;
+pub(crate) mod r#evt_liquidity_change;
 pub(crate) mod r#evt_lock_position;
 pub(crate) mod r#evt_permanent_lock_position;
 pub(crate) mod r#evt_remove_liquidity;
 pub(crate) mod r#evt_set_pool_status;
+pub(crate) mod r#evt_split_position2;
 pub(crate) mod r#evt_swap;
+pub(crate) mod r#evt_swap2;
 pub(crate) mod r#evt_update_reward_duration;
 pub(crate) mod r#evt_update_reward_funder;
 pub(crate) mod r#evt_withdraw_ineligible_reward;
@@ -44,23 +47,62 @@ pub(crate) mod r#pool_metrics;
 pub(crate) mod r#position_metrics;
 pub(crate) mod r#remove_liquidity_parameters;
 pub(crate) mod r#reward_info;
+pub(crate) mod r#split_amount_info;
+pub(crate) mod r#split_position_info;
+pub(crate) mod r#split_position_parameters2;
 pub(crate) mod r#swap_parameters;
+pub(crate) mod r#swap_parameters2;
 pub(crate) mod r#swap_result;
+pub(crate) mod r#swap_result2;
 pub(crate) mod r#user_reward_info;
 
-pub use self::{
-    r#add_liquidity_parameters::*, r#base_fee_config::*, r#base_fee_parameters::*,
-    r#base_fee_struct::*, r#dynamic_fee_config::*, r#dynamic_fee_parameters::*,
-    r#dynamic_fee_struct::*, r#evt_add_liquidity::*, r#evt_claim_partner_fee::*,
-    r#evt_claim_position_fee::*, r#evt_claim_protocol_fee::*, r#evt_claim_reward::*,
-    r#evt_close_claim_fee_operator::*, r#evt_close_config::*, r#evt_close_position::*,
-    r#evt_create_claim_fee_operator::*, r#evt_create_config::*, r#evt_create_dynamic_config::*,
-    r#evt_create_position::*, r#evt_create_token_badge::*, r#evt_fund_reward::*,
-    r#evt_initialize_pool::*, r#evt_initialize_reward::*, r#evt_lock_position::*,
-    r#evt_permanent_lock_position::*, r#evt_remove_liquidity::*, r#evt_set_pool_status::*,
-    r#evt_swap::*, r#evt_update_reward_duration::*, r#evt_update_reward_funder::*,
-    r#evt_withdraw_ineligible_reward::*, r#initialize_customizable_pool_parameters::*,
-    r#pool_fee_parameters::*, r#pool_fees_config::*, r#pool_fees_struct::*, r#pool_metrics::*,
-    r#position_metrics::*, r#remove_liquidity_parameters::*, r#reward_info::*,
-    r#swap_parameters::*, r#swap_result::*, r#user_reward_info::*,
-};
+pub use self::r#add_liquidity_parameters::*;
+pub use self::r#base_fee_config::*;
+pub use self::r#base_fee_parameters::*;
+pub use self::r#base_fee_struct::*;
+pub use self::r#dynamic_fee_config::*;
+pub use self::r#dynamic_fee_parameters::*;
+pub use self::r#dynamic_fee_struct::*;
+pub use self::r#evt_add_liquidity::*;
+pub use self::r#evt_claim_partner_fee::*;
+pub use self::r#evt_claim_position_fee::*;
+pub use self::r#evt_claim_protocol_fee::*;
+pub use self::r#evt_claim_reward::*;
+pub use self::r#evt_close_claim_fee_operator::*;
+pub use self::r#evt_close_config::*;
+pub use self::r#evt_close_position::*;
+pub use self::r#evt_create_claim_fee_operator::*;
+pub use self::r#evt_create_config::*;
+pub use self::r#evt_create_dynamic_config::*;
+pub use self::r#evt_create_position::*;
+pub use self::r#evt_create_token_badge::*;
+pub use self::r#evt_fund_reward::*;
+pub use self::r#evt_initialize_pool::*;
+pub use self::r#evt_initialize_reward::*;
+pub use self::r#evt_liquidity_change::*;
+pub use self::r#evt_lock_position::*;
+pub use self::r#evt_permanent_lock_position::*;
+pub use self::r#evt_remove_liquidity::*;
+pub use self::r#evt_set_pool_status::*;
+pub use self::r#evt_split_position2::*;
+pub use self::r#evt_swap::*;
+pub use self::r#evt_swap2::*;
+pub use self::r#evt_update_reward_duration::*;
+pub use self::r#evt_update_reward_funder::*;
+pub use self::r#evt_withdraw_ineligible_reward::*;
+pub use self::r#initialize_customizable_pool_parameters::*;
+pub use self::r#pool_fee_parameters::*;
+pub use self::r#pool_fees_config::*;
+pub use self::r#pool_fees_struct::*;
+pub use self::r#pool_metrics::*;
+pub use self::r#position_metrics::*;
+pub use self::r#remove_liquidity_parameters::*;
+pub use self::r#reward_info::*;
+pub use self::r#split_amount_info::*;
+pub use self::r#split_position_info::*;
+pub use self::r#split_position_parameters2::*;
+pub use self::r#swap_parameters::*;
+pub use self::r#swap_parameters2::*;
+pub use self::r#swap_result::*;
+pub use self::r#swap_result2::*;
+pub use self::r#user_reward_info::*;

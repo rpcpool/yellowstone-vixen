@@ -133,7 +133,9 @@ impl ClaimProtocolFeeInstructionData {
 }
 
 impl Default for ClaimProtocolFeeInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `ClaimProtocolFee`.
@@ -176,7 +178,9 @@ pub struct ClaimProtocolFeeBuilder {
 }
 
 impl ClaimProtocolFeeBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// `[optional account, default to 'FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM']`
     #[inline(always)]
@@ -764,7 +768,9 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

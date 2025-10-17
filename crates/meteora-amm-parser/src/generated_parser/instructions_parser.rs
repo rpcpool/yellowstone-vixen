@@ -11,50 +11,51 @@ use std::sync::Arc;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
-use crate::{
-    deserialize_checked,
-    instructions::{
-        AddLiquidity as AddLiquidityIxAccounts, AddLiquidityInstructionArgs as AddLiquidityIxData,
-        ClaimPartnerFee as ClaimPartnerFeeIxAccounts,
-        ClaimPartnerFeeInstructionArgs as ClaimPartnerFeeIxData,
-        ClaimPositionFee as ClaimPositionFeeIxAccounts,
-        ClaimProtocolFee as ClaimProtocolFeeIxAccounts, ClaimReward as ClaimRewardIxAccounts,
-        ClaimRewardInstructionArgs as ClaimRewardIxData,
-        CloseClaimFeeOperator as CloseClaimFeeOperatorIxAccounts,
-        CloseConfig as CloseConfigIxAccounts, ClosePosition as ClosePositionIxAccounts,
-        CreateClaimFeeOperator as CreateClaimFeeOperatorIxAccounts,
-        CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
-        CreateDynamicConfig as CreateDynamicConfigIxAccounts,
-        CreateDynamicConfigInstructionArgs as CreateDynamicConfigIxData,
-        CreatePosition as CreatePositionIxAccounts, CreateTokenBadge as CreateTokenBadgeIxAccounts,
-        FundReward as FundRewardIxAccounts, FundRewardInstructionArgs as FundRewardIxData,
-        InitializeCustomizablePool as InitializeCustomizablePoolIxAccounts,
-        InitializeCustomizablePoolInstructionArgs as InitializeCustomizablePoolIxData,
-        InitializePool as InitializePoolIxAccounts,
-        InitializePoolInstructionArgs as InitializePoolIxData,
-        InitializePoolWithDynamicConfig as InitializePoolWithDynamicConfigIxAccounts,
-        InitializePoolWithDynamicConfigInstructionArgs as InitializePoolWithDynamicConfigIxData,
-        InitializeReward as InitializeRewardIxAccounts,
-        InitializeRewardInstructionArgs as InitializeRewardIxData,
-        LockPosition as LockPositionIxAccounts, LockPositionInstructionArgs as LockPositionIxData,
-        PermanentLockPosition as PermanentLockPositionIxAccounts,
-        PermanentLockPositionInstructionArgs as PermanentLockPositionIxData,
-        RefreshVesting as RefreshVestingIxAccounts,
-        RemoveAllLiquidity as RemoveAllLiquidityIxAccounts,
-        RemoveAllLiquidityInstructionArgs as RemoveAllLiquidityIxData,
-        RemoveLiquidity as RemoveLiquidityIxAccounts,
-        RemoveLiquidityInstructionArgs as RemoveLiquidityIxData,
-        SetPoolStatus as SetPoolStatusIxAccounts,
-        SetPoolStatusInstructionArgs as SetPoolStatusIxData, Swap as SwapIxAccounts,
-        SwapInstructionArgs as SwapIxData, UpdateRewardDuration as UpdateRewardDurationIxAccounts,
-        UpdateRewardDurationInstructionArgs as UpdateRewardDurationIxData,
-        UpdateRewardFunder as UpdateRewardFunderIxAccounts,
-        UpdateRewardFunderInstructionArgs as UpdateRewardFunderIxData,
-        WithdrawIneligibleReward as WithdrawIneligibleRewardIxAccounts,
-        WithdrawIneligibleRewardInstructionArgs as WithdrawIneligibleRewardIxData,
-    },
-    ID,
+use crate::deserialize_checked;
+
+use crate::instructions::{
+    AddLiquidity as AddLiquidityIxAccounts, AddLiquidityInstructionArgs as AddLiquidityIxData,
+    ClaimPartnerFee as ClaimPartnerFeeIxAccounts,
+    ClaimPartnerFeeInstructionArgs as ClaimPartnerFeeIxData,
+    ClaimPositionFee as ClaimPositionFeeIxAccounts, ClaimProtocolFee as ClaimProtocolFeeIxAccounts,
+    ClaimProtocolFeeInstructionArgs as ClaimProtocolFeeIxData,
+    ClaimReward as ClaimRewardIxAccounts, ClaimRewardInstructionArgs as ClaimRewardIxData,
+    CloseClaimFeeOperator as CloseClaimFeeOperatorIxAccounts, CloseConfig as CloseConfigIxAccounts,
+    ClosePosition as ClosePositionIxAccounts, CloseTokenBadge as CloseTokenBadgeIxAccounts,
+    CreateClaimFeeOperator as CreateClaimFeeOperatorIxAccounts,
+    CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
+    CreateDynamicConfig as CreateDynamicConfigIxAccounts,
+    CreateDynamicConfigInstructionArgs as CreateDynamicConfigIxData,
+    CreatePosition as CreatePositionIxAccounts, CreateTokenBadge as CreateTokenBadgeIxAccounts,
+    FundReward as FundRewardIxAccounts, FundRewardInstructionArgs as FundRewardIxData,
+    InitializeCustomizablePool as InitializeCustomizablePoolIxAccounts,
+    InitializeCustomizablePoolInstructionArgs as InitializeCustomizablePoolIxData,
+    InitializePool as InitializePoolIxAccounts,
+    InitializePoolInstructionArgs as InitializePoolIxData,
+    InitializePoolWithDynamicConfig as InitializePoolWithDynamicConfigIxAccounts,
+    InitializePoolWithDynamicConfigInstructionArgs as InitializePoolWithDynamicConfigIxData,
+    InitializeReward as InitializeRewardIxAccounts,
+    InitializeRewardInstructionArgs as InitializeRewardIxData,
+    LockPosition as LockPositionIxAccounts, LockPositionInstructionArgs as LockPositionIxData,
+    PermanentLockPosition as PermanentLockPositionIxAccounts,
+    PermanentLockPositionInstructionArgs as PermanentLockPositionIxData,
+    RefreshVesting as RefreshVestingIxAccounts, RemoveAllLiquidity as RemoveAllLiquidityIxAccounts,
+    RemoveAllLiquidityInstructionArgs as RemoveAllLiquidityIxData,
+    RemoveLiquidity as RemoveLiquidityIxAccounts,
+    RemoveLiquidityInstructionArgs as RemoveLiquidityIxData,
+    SetPoolStatus as SetPoolStatusIxAccounts, SetPoolStatusInstructionArgs as SetPoolStatusIxData,
+    SplitPosition as SplitPositionIxAccounts, SplitPosition2 as SplitPosition2IxAccounts,
+    SplitPosition2InstructionArgs as SplitPosition2IxData,
+    SplitPositionInstructionArgs as SplitPositionIxData, Swap as SwapIxAccounts,
+    Swap2 as Swap2IxAccounts, Swap2InstructionArgs as Swap2IxData,
+    SwapInstructionArgs as SwapIxData, UpdateRewardDuration as UpdateRewardDurationIxAccounts,
+    UpdateRewardDurationInstructionArgs as UpdateRewardDurationIxData,
+    UpdateRewardFunder as UpdateRewardFunderIxAccounts,
+    UpdateRewardFunderInstructionArgs as UpdateRewardFunderIxData,
+    WithdrawIneligibleReward as WithdrawIneligibleRewardIxAccounts,
+    WithdrawIneligibleRewardInstructionArgs as WithdrawIneligibleRewardIxData,
 };
+use crate::ID;
 
 /// CpAmm Instructions
 #[derive(Debug)]
@@ -63,11 +64,12 @@ pub enum CpAmmProgramIx {
     AddLiquidity(AddLiquidityIxAccounts, AddLiquidityIxData),
     ClaimPartnerFee(ClaimPartnerFeeIxAccounts, ClaimPartnerFeeIxData),
     ClaimPositionFee(ClaimPositionFeeIxAccounts),
-    ClaimProtocolFee(ClaimProtocolFeeIxAccounts),
+    ClaimProtocolFee(ClaimProtocolFeeIxAccounts, ClaimProtocolFeeIxData),
     ClaimReward(ClaimRewardIxAccounts, ClaimRewardIxData),
     CloseClaimFeeOperator(CloseClaimFeeOperatorIxAccounts),
     CloseConfig(CloseConfigIxAccounts),
     ClosePosition(ClosePositionIxAccounts),
+    CloseTokenBadge(CloseTokenBadgeIxAccounts),
     CreateClaimFeeOperator(CreateClaimFeeOperatorIxAccounts),
     CreateConfig(CreateConfigIxAccounts, CreateConfigIxData),
     CreateDynamicConfig(CreateDynamicConfigIxAccounts, CreateDynamicConfigIxData),
@@ -90,7 +92,10 @@ pub enum CpAmmProgramIx {
     RemoveAllLiquidity(RemoveAllLiquidityIxAccounts, RemoveAllLiquidityIxData),
     RemoveLiquidity(RemoveLiquidityIxAccounts, RemoveLiquidityIxData),
     SetPoolStatus(SetPoolStatusIxAccounts, SetPoolStatusIxData),
+    SplitPosition(SplitPositionIxAccounts, SplitPositionIxData),
+    SplitPosition2(SplitPosition2IxAccounts, SplitPosition2IxData),
     Swap(SwapIxAccounts, SwapIxData),
+    Swap2(Swap2IxAccounts, Swap2IxData),
     UpdateRewardDuration(UpdateRewardDurationIxAccounts, UpdateRewardDurationIxData),
     UpdateRewardFunder(UpdateRewardFunderIxAccounts, UpdateRewardFunderIxData),
     WithdrawIneligibleReward(
@@ -104,12 +109,16 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+
     #[cfg(not(feature = "shared-data"))]
     type Output = CpAmmProgramIx;
+
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<CpAmmProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "CpAmm::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> {
+        "CpAmm::InstructionParser".into()
+    }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -148,7 +157,9 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        ID.to_bytes().into()
+    }
 }
 
 impl InstructionParser {
@@ -250,7 +261,9 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                Ok(CpAmmProgramIx::ClaimProtocolFee(ix_accounts))
+                let de_ix_data: ClaimProtocolFeeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(CpAmmProgramIx::ClaimProtocolFee(ix_accounts, de_ix_data))
             },
             [149, 95, 181, 242, 94, 90, 158, 162] => {
                 let expected_accounts_len = 11;
@@ -312,6 +325,18 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 Ok(CpAmmProgramIx::ClosePosition(ix_accounts))
+            },
+            [108, 146, 86, 110, 179, 254, 10, 104] => {
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = CloseTokenBadgeIxAccounts {
+                    token_badge: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    rent_receiver: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                Ok(CpAmmProgramIx::CloseTokenBadge(ix_accounts))
             },
             [169, 62, 207, 107, 58, 187, 162, 109] => {
                 let expected_accounts_len = 6;
@@ -495,14 +520,15 @@ impl InstructionParser {
                 ))
             },
             [95, 135, 192, 196, 242, 129, 230, 68] => {
-                let expected_accounts_len = 9;
+                let expected_accounts_len = 10;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = InitializeRewardIxAccounts {
                     pool_authority: next_account(accounts)?,
                     pool: next_account(accounts)?,
                     reward_vault: next_account(accounts)?,
                     reward_mint: next_account(accounts)?,
-                    admin: next_account(accounts)?,
+                    signer: next_account(accounts)?,
+                    payer: next_account(accounts)?,
                     token_program: next_account(accounts)?,
                     system_program: next_account(accounts)?,
                     event_authority: next_account(accounts)?,
@@ -620,6 +646,42 @@ impl InstructionParser {
                     deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::SetPoolStatus(ix_accounts, de_ix_data))
             },
+            [172, 241, 221, 138, 161, 29, 253, 42] => {
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SplitPositionIxAccounts {
+                    pool: next_account(accounts)?,
+                    first_position: next_account(accounts)?,
+                    first_position_nft_account: next_account(accounts)?,
+                    second_position: next_account(accounts)?,
+                    second_position_nft_account: next_account(accounts)?,
+                    first_owner: next_account(accounts)?,
+                    second_owner: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: SplitPositionIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(CpAmmProgramIx::SplitPosition(ix_accounts, de_ix_data))
+            },
+            [221, 147, 228, 207, 140, 212, 17, 119] => {
+                let expected_accounts_len = 9;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SplitPosition2IxAccounts {
+                    pool: next_account(accounts)?,
+                    first_position: next_account(accounts)?,
+                    first_position_nft_account: next_account(accounts)?,
+                    second_position: next_account(accounts)?,
+                    second_position_nft_account: next_account(accounts)?,
+                    first_owner: next_account(accounts)?,
+                    second_owner: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: SplitPosition2IxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(CpAmmProgramIx::SplitPosition2(ix_accounts, de_ix_data))
+            },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
                 let expected_accounts_len = 14;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
@@ -642,12 +704,34 @@ impl InstructionParser {
                 let de_ix_data: SwapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(CpAmmProgramIx::Swap(ix_accounts, de_ix_data))
             },
+            [65, 75, 63, 76, 235, 91, 91, 136] => {
+                let expected_accounts_len = 14;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = Swap2IxAccounts {
+                    pool_authority: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    input_token_account: next_account(accounts)?,
+                    output_token_account: next_account(accounts)?,
+                    token_a_vault: next_account(accounts)?,
+                    token_b_vault: next_account(accounts)?,
+                    token_a_mint: next_account(accounts)?,
+                    token_b_mint: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                    token_a_program: next_account(accounts)?,
+                    token_b_program: next_account(accounts)?,
+                    referral_token_account: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: Swap2IxData = deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(CpAmmProgramIx::Swap2(ix_accounts, de_ix_data))
+            },
             [138, 174, 196, 169, 213, 235, 254, 107] => {
                 let expected_accounts_len = 4;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateRewardDurationIxAccounts {
                     pool: next_account(accounts)?,
-                    admin: next_account(accounts)?,
+                    signer: next_account(accounts)?,
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
@@ -663,7 +747,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = UpdateRewardFunderIxAccounts {
                     pool: next_account(accounts)?,
-                    admin: next_account(accounts)?,
+                    signer: next_account(accounts)?,
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
@@ -788,10 +872,11 @@ pub fn next_program_id_optional_account<
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
+    use super::{CpAmmProgramIx, InstructionParser};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{AddLiquidityIxAccounts, CpAmmProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
+    use super::AddLiquidityIxAccounts;
     impl IntoProto<proto_def::AddLiquidityIxAccounts> for AddLiquidityIxAccounts {
         fn into_proto(self) -> proto_def::AddLiquidityIxAccounts {
             proto_def::AddLiquidityIxAccounts {
@@ -892,6 +977,15 @@ mod proto_parser {
             }
         }
     }
+    use super::ClaimProtocolFeeIxData;
+    impl IntoProto<proto_def::ClaimProtocolFeeIxData> for ClaimProtocolFeeIxData {
+        fn into_proto(self) -> proto_def::ClaimProtocolFeeIxData {
+            proto_def::ClaimProtocolFeeIxData {
+                max_amount_a: self.max_amount_a,
+                max_amount_b: self.max_amount_b,
+            }
+        }
+    }
     use super::ClaimRewardIxAccounts;
     impl IntoProto<proto_def::ClaimRewardIxAccounts> for ClaimRewardIxAccounts {
         fn into_proto(self) -> proto_def::ClaimRewardIxAccounts {
@@ -915,6 +1009,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::ClaimRewardIxData {
             proto_def::ClaimRewardIxData {
                 reward_index: self.reward_index.into(),
+                skip_reward: self.skip_reward.into(),
             }
         }
     }
@@ -954,6 +1049,18 @@ mod proto_parser {
                 rent_receiver: self.rent_receiver.to_string(),
                 owner: self.owner.to_string(),
                 token_program: self.token_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::CloseTokenBadgeIxAccounts;
+    impl IntoProto<proto_def::CloseTokenBadgeIxAccounts> for CloseTokenBadgeIxAccounts {
+        fn into_proto(self) -> proto_def::CloseTokenBadgeIxAccounts {
+            proto_def::CloseTokenBadgeIxAccounts {
+                token_badge: self.token_badge.to_string(),
+                admin: self.admin.to_string(),
+                rent_receiver: self.rent_receiver.to_string(),
                 event_authority: self.event_authority.to_string(),
                 program: self.program.to_string(),
             }
@@ -1197,7 +1304,8 @@ mod proto_parser {
                 pool: self.pool.to_string(),
                 reward_vault: self.reward_vault.to_string(),
                 reward_mint: self.reward_mint.to_string(),
-                admin: self.admin.to_string(),
+                signer: self.signer.to_string(),
+                payer: self.payer.to_string(),
                 token_program: self.token_program.to_string(),
                 system_program: self.system_program.to_string(),
                 event_authority: self.event_authority.to_string(),
@@ -1355,6 +1463,62 @@ mod proto_parser {
             }
         }
     }
+    use super::SplitPositionIxAccounts;
+    impl IntoProto<proto_def::SplitPositionIxAccounts> for SplitPositionIxAccounts {
+        fn into_proto(self) -> proto_def::SplitPositionIxAccounts {
+            proto_def::SplitPositionIxAccounts {
+                pool: self.pool.to_string(),
+                first_position: self.first_position.to_string(),
+                first_position_nft_account: self.first_position_nft_account.to_string(),
+                second_position: self.second_position.to_string(),
+                second_position_nft_account: self.second_position_nft_account.to_string(),
+                first_owner: self.first_owner.to_string(),
+                second_owner: self.second_owner.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SplitPositionIxData;
+    impl IntoProto<proto_def::SplitPositionIxData> for SplitPositionIxData {
+        fn into_proto(self) -> proto_def::SplitPositionIxData {
+            proto_def::SplitPositionIxData {
+                unlocked_liquidity_percentage: self.unlocked_liquidity_percentage.into(),
+                permanent_locked_liquidity_percentage: self
+                    .permanent_locked_liquidity_percentage
+                    .into(),
+                fee_a_percentage: self.fee_a_percentage.into(),
+                fee_b_percentage: self.fee_b_percentage.into(),
+                reward0_percentage: self.reward0_percentage.into(),
+                reward1_percentage: self.reward1_percentage.into(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
+            }
+        }
+    }
+    use super::SplitPosition2IxAccounts;
+    impl IntoProto<proto_def::SplitPosition2IxAccounts> for SplitPosition2IxAccounts {
+        fn into_proto(self) -> proto_def::SplitPosition2IxAccounts {
+            proto_def::SplitPosition2IxAccounts {
+                pool: self.pool.to_string(),
+                first_position: self.first_position.to_string(),
+                first_position_nft_account: self.first_position_nft_account.to_string(),
+                second_position: self.second_position.to_string(),
+                second_position_nft_account: self.second_position_nft_account.to_string(),
+                first_owner: self.first_owner.to_string(),
+                second_owner: self.second_owner.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SplitPosition2IxData;
+    impl IntoProto<proto_def::SplitPosition2IxData> for SplitPosition2IxData {
+        fn into_proto(self) -> proto_def::SplitPosition2IxData {
+            proto_def::SplitPosition2IxData {
+                numerator: self.numerator,
+            }
+        }
+    }
     use super::SwapIxAccounts;
     impl IntoProto<proto_def::SwapIxAccounts> for SwapIxAccounts {
         fn into_proto(self) -> proto_def::SwapIxAccounts {
@@ -1384,12 +1548,41 @@ mod proto_parser {
             }
         }
     }
+    use super::Swap2IxAccounts;
+    impl IntoProto<proto_def::Swap2IxAccounts> for Swap2IxAccounts {
+        fn into_proto(self) -> proto_def::Swap2IxAccounts {
+            proto_def::Swap2IxAccounts {
+                pool_authority: self.pool_authority.to_string(),
+                pool: self.pool.to_string(),
+                input_token_account: self.input_token_account.to_string(),
+                output_token_account: self.output_token_account.to_string(),
+                token_a_vault: self.token_a_vault.to_string(),
+                token_b_vault: self.token_b_vault.to_string(),
+                token_a_mint: self.token_a_mint.to_string(),
+                token_b_mint: self.token_b_mint.to_string(),
+                payer: self.payer.to_string(),
+                token_a_program: self.token_a_program.to_string(),
+                token_b_program: self.token_b_program.to_string(),
+                referral_token_account: self.referral_token_account.map(|p| p.to_string()),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::Swap2IxData;
+    impl IntoProto<proto_def::Swap2IxData> for Swap2IxData {
+        fn into_proto(self) -> proto_def::Swap2IxData {
+            proto_def::Swap2IxData {
+                params: Some(self.params.into_proto()),
+            }
+        }
+    }
     use super::UpdateRewardDurationIxAccounts;
     impl IntoProto<proto_def::UpdateRewardDurationIxAccounts> for UpdateRewardDurationIxAccounts {
         fn into_proto(self) -> proto_def::UpdateRewardDurationIxAccounts {
             proto_def::UpdateRewardDurationIxAccounts {
                 pool: self.pool.to_string(),
-                admin: self.admin.to_string(),
+                signer: self.signer.to_string(),
                 event_authority: self.event_authority.to_string(),
                 program: self.program.to_string(),
             }
@@ -1409,7 +1602,7 @@ mod proto_parser {
         fn into_proto(self) -> proto_def::UpdateRewardFunderIxAccounts {
             proto_def::UpdateRewardFunderIxAccounts {
                 pool: self.pool.to_string(),
-                admin: self.admin.to_string(),
+                signer: self.signer.to_string(),
                 event_authority: self.event_authority.to_string(),
                 program: self.program.to_string(),
             }
@@ -1477,10 +1670,11 @@ mod proto_parser {
                         },
                     )),
                 },
-                CpAmmProgramIx::ClaimProtocolFee(acc) => proto_def::ProgramIxs {
+                CpAmmProgramIx::ClaimProtocolFee(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimProtocolFee(
                         proto_def::ClaimProtocolFeeIx {
                             accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
                     )),
                 },
@@ -1509,6 +1703,13 @@ mod proto_parser {
                 CpAmmProgramIx::ClosePosition(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::ClosePosition(
                         proto_def::ClosePositionIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                CpAmmProgramIx::CloseTokenBadge(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CloseTokenBadge(
+                        proto_def::CloseTokenBadgeIx {
                             accounts: Some(acc.into_proto()),
                         },
                     )),
@@ -1641,8 +1842,30 @@ mod proto_parser {
                         },
                     )),
                 },
+                CpAmmProgramIx::SplitPosition(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SplitPosition(
+                        proto_def::SplitPositionIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                CpAmmProgramIx::SplitPosition2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SplitPosition2(
+                        proto_def::SplitPosition2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
                 CpAmmProgramIx::Swap(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
+                        accounts: Some(acc.into_proto()),
+                        data: Some(data.into_proto()),
+                    })),
+                },
+                CpAmmProgramIx::Swap2(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap2(proto_def::Swap2Ix {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
                     })),

@@ -9,7 +9,7 @@ use std::{env, path::PathBuf};
 
 fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    std::env::set_var("PROTOC", protobuf_src::protoc());
+
     // #[cfg(feature = "proto")]
     prost_build::Config::new()
         .enable_type_names()

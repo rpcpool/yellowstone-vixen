@@ -91,7 +91,9 @@ impl WithdrawProtocolFeesInstructionData {
 }
 
 impl Default for WithdrawProtocolFeesInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `WithdrawProtocolFees`.
@@ -118,7 +120,9 @@ pub struct WithdrawProtocolFeesBuilder {
 }
 
 impl WithdrawProtocolFeesBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Pool account (PDA)
     #[inline(always)]
@@ -480,7 +484,9 @@ impl<'a, 'b> WithdrawProtocolFeesCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

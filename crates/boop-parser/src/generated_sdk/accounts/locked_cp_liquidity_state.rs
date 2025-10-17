@@ -154,7 +154,9 @@ impl anchor_lang::AccountSerialize for LockedCpLiquidityState {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for LockedCpLiquidityState {
-    fn owner() -> Pubkey { crate::BOOP_ID }
+    fn owner() -> Pubkey {
+        crate::BOOP_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

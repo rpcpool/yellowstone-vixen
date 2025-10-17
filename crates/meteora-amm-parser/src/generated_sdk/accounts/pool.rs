@@ -5,10 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use crate::generated::types::PoolFeesStruct;
+use crate::generated::types::PoolMetrics;
+use crate::generated::types::RewardInfo;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
-
-use crate::generated::types::{PoolFeesStruct, PoolMetrics, RewardInfo};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -84,8 +86,10 @@ pub struct Pool {
     pub collect_fee_mode: u8,
     /// pool type
     pub pool_type: u8,
+    /// pool version, 0: max_fee is still capped at 50%, 1: max_fee is capped at 99%
+    pub version: u8,
     /// padding
-    pub padding0: [u8; 2],
+    pub padding0: u8,
     /// cumulative
     pub fee_a_per_liquidity: [u8; 32],
     /// cumulative
@@ -93,11 +97,19 @@ pub struct Pool {
     pub permanent_lock_liquidity: u128,
     /// metrics
     pub metrics: PoolMetrics,
+    /// pool creator
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub creator: Pubkey,
     /// Padding for further use
-    pub padding1: [u64; 10],
+    pub padding1: [u64; 6],
     /// Farming reward information
     pub reward_infos: [RewardInfo; 2],
 }
+
+pub const POOL_DISCRIMINATOR: [u8; 8] = [241, 154, 109, 4, 17, 177, 109, 188];
 
 impl Pool {
     pub const LEN: usize = 1112;
@@ -200,7 +212,9 @@ impl anchor_lang::AccountSerialize for Pool {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Pool {
-    fn owner() -> Pubkey { crate::CP_AMM_ID }
+    fn owner() -> Pubkey {
+        crate::CP_AMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -208,5 +222,5 @@ impl anchor_lang::IdlBuild for Pool {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Pool {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

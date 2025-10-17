@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const INITIALIZE_POOL_DISCRIMINATOR: [u8; 8] = [95, 180, 10, 172, 84, 174, 232, 40];
 
 /// Accounts.
 #[derive(Debug)]
@@ -58,7 +61,6 @@ impl InitializePool {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -139,8 +141,8 @@ impl InitializePool {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&InitializePoolInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = InitializePoolInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -163,10 +165,16 @@ impl InitializePoolInstructionData {
             discriminator: [95, 180, 10, 172, 84, 174, 232, 40],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for InitializePoolInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -175,6 +183,12 @@ pub struct InitializePoolInstructionArgs {
     pub liquidity: u128,
     pub sqrt_price: u128,
     pub activation_point: Option<u64>,
+}
+
+impl InitializePoolInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 /// Instruction builder for `InitializePool`.
@@ -186,7 +200,7 @@ pub struct InitializePoolInstructionArgs {
 ///   2. `[writable]` position_nft_account
 ///   3. `[writable, signer]` payer
 ///   4. `[]` config
-///   5. `[]` pool_authority
+///   5. `[optional]` pool_authority (default to `HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC`)
 ///   6. `[writable]` pool
 ///   7. `[writable]` position
 ///   8. `[]` token_a_mint
@@ -230,21 +244,20 @@ pub struct InitializePoolBuilder {
 }
 
 impl InitializePoolBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
     pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
-
     /// position_nft_mint
     #[inline(always)]
     pub fn position_nft_mint(&mut self, position_nft_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.position_nft_mint = Some(position_nft_mint);
         self
     }
-
     /// position nft account
     #[inline(always)]
     pub fn position_nft_account(
@@ -254,96 +267,83 @@ impl InitializePoolBuilder {
         self.position_nft_account = Some(position_nft_account);
         self
     }
-
     /// Address paying to create the pool. Can be anyone
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
-
     /// Which config the pool belongs to.
     #[inline(always)]
     pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
-
+    /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
-
     /// Initialize an account to store the pool state
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
         self.position = Some(position);
         self
     }
-
     /// Token a mint
     #[inline(always)]
     pub fn token_a_mint(&mut self, token_a_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_mint = Some(token_a_mint);
         self
     }
-
     /// Token b mint
     #[inline(always)]
     pub fn token_b_mint(&mut self, token_b_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_mint = Some(token_b_mint);
         self
     }
-
     /// Token a vault for the pool
     #[inline(always)]
     pub fn token_a_vault(&mut self, token_a_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_vault = Some(token_a_vault);
         self
     }
-
     /// Token b vault for the pool
     #[inline(always)]
     pub fn token_b_vault(&mut self, token_b_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_vault = Some(token_b_vault);
         self
     }
-
     /// payer token a account
     #[inline(always)]
     pub fn payer_token_a(&mut self, payer_token_a: solana_pubkey::Pubkey) -> &mut Self {
         self.payer_token_a = Some(payer_token_a);
         self
     }
-
     /// creator token b account
     #[inline(always)]
     pub fn payer_token_b(&mut self, payer_token_b: solana_pubkey::Pubkey) -> &mut Self {
         self.payer_token_b = Some(payer_token_b);
         self
     }
-
     /// Program to create mint account and mint tokens
     #[inline(always)]
     pub fn token_a_program(&mut self, token_a_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_program = Some(token_a_program);
         self
     }
-
     /// Program to create mint account and mint tokens
     #[inline(always)]
     pub fn token_b_program(&mut self, token_b_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_program = Some(token_b_program);
         self
     }
-
     /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     /// Program to create NFT mint/token account and transfer for token22 account
     #[inline(always)]
@@ -351,52 +351,44 @@ impl InitializePoolBuilder {
         self.token2022_program = Some(token2022_program);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn liquidity(&mut self, liquidity: u128) -> &mut Self {
         self.liquidity = Some(liquidity);
         self
     }
-
     #[inline(always)]
     pub fn sqrt_price(&mut self, sqrt_price: u128) -> &mut Self {
         self.sqrt_price = Some(sqrt_price);
         self
     }
-
     /// `[optional argument]`
     #[inline(always)]
     pub fn activation_point(&mut self, activation_point: u64) -> &mut Self {
         self.activation_point = Some(activation_point);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -406,7 +398,6 @@ impl InitializePoolBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializePool {
@@ -419,7 +410,9 @@ impl InitializePoolBuilder {
                 .expect("position_nft_account is not set"),
             payer: self.payer.expect("payer is not set"),
             config: self.config.expect("config is not set"),
-            pool_authority: self.pool_authority.expect("pool_authority is not set"),
+            pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
+                "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+            )),
             pool: self.pool.expect("pool is not set"),
             position: self.position.expect("position is not set"),
             token_a_mint: self.token_a_mint.expect("token_a_mint is not set"),
@@ -571,28 +564,21 @@ impl<'a, 'b> InitializePoolCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -600,7 +586,7 @@ impl<'a, 'b> InitializePoolCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(20 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.creator.key,
@@ -683,8 +669,8 @@ impl<'a, 'b> InitializePoolCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&InitializePoolInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = InitializePoolInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -786,13 +772,11 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn creator(&mut self, creator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.creator = Some(creator);
         self
     }
-
     /// position_nft_mint
     #[inline(always)]
     pub fn position_nft_mint(
@@ -802,7 +786,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.position_nft_mint = Some(position_nft_mint);
         self
     }
-
     /// position nft account
     #[inline(always)]
     pub fn position_nft_account(
@@ -812,21 +795,18 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.position_nft_account = Some(position_nft_account);
         self
     }
-
     /// Address paying to create the pool. Can be anyone
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
-
     /// Which config the pool belongs to.
     #[inline(always)]
     pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
-
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -835,20 +815,17 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
-
     /// Initialize an account to store the pool state
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn position(&mut self, position: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.position = Some(position);
         self
     }
-
     /// Token a mint
     #[inline(always)]
     pub fn token_a_mint(
@@ -858,7 +835,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.token_a_mint = Some(token_a_mint);
         self
     }
-
     /// Token b mint
     #[inline(always)]
     pub fn token_b_mint(
@@ -868,7 +844,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.token_b_mint = Some(token_b_mint);
         self
     }
-
     /// Token a vault for the pool
     #[inline(always)]
     pub fn token_a_vault(
@@ -878,7 +853,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.token_a_vault = Some(token_a_vault);
         self
     }
-
     /// Token b vault for the pool
     #[inline(always)]
     pub fn token_b_vault(
@@ -888,7 +862,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.token_b_vault = Some(token_b_vault);
         self
     }
-
     /// payer token a account
     #[inline(always)]
     pub fn payer_token_a(
@@ -898,7 +871,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.payer_token_a = Some(payer_token_a);
         self
     }
-
     /// creator token b account
     #[inline(always)]
     pub fn payer_token_b(
@@ -908,7 +880,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.payer_token_b = Some(payer_token_b);
         self
     }
-
     /// Program to create mint account and mint tokens
     #[inline(always)]
     pub fn token_a_program(
@@ -918,7 +889,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.token_a_program = Some(token_a_program);
         self
     }
-
     /// Program to create mint account and mint tokens
     #[inline(always)]
     pub fn token_b_program(
@@ -928,7 +898,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.token_b_program = Some(token_b_program);
         self
     }
-
     /// Program to create NFT mint/token account and transfer for token22 account
     #[inline(always)]
     pub fn token2022_program(
@@ -938,7 +907,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.token2022_program = Some(token2022_program);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -947,7 +915,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -956,32 +923,27 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn liquidity(&mut self, liquidity: u128) -> &mut Self {
         self.instruction.liquidity = Some(liquidity);
         self
     }
-
     #[inline(always)]
     pub fn sqrt_price(&mut self, sqrt_price: u128) -> &mut Self {
         self.instruction.sqrt_price = Some(sqrt_price);
         self
     }
-
     /// `[optional argument]`
     #[inline(always)]
     pub fn activation_point(&mut self, activation_point: u64) -> &mut Self {
         self.instruction.activation_point = Some(activation_point);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -995,7 +957,6 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1010,16 +971,13 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = InitializePoolInstructionArgs {
             liquidity: self
                 .instruction

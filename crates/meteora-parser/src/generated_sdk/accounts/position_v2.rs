@@ -169,7 +169,9 @@ impl anchor_lang::AccountSerialize for PositionV2 {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for PositionV2 {
-    fn owner() -> Pubkey { crate::LB_CLMM_ID }
+    fn owner() -> Pubkey {
+        crate::LB_CLMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

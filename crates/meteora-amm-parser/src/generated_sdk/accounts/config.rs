@@ -5,10 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
-use solana_pubkey::Pubkey;
-
 use crate::generated::types::PoolFeesConfig;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -46,6 +46,8 @@ pub struct Config {
     /// Padding for further use
     pub padding1: [u64; 10],
 }
+
+pub const CONFIG_DISCRIMINATOR: [u8; 8] = [155, 12, 170, 224, 30, 250, 204, 130];
 
 impl Config {
     pub const LEN: usize = 328;
@@ -148,7 +150,9 @@ impl anchor_lang::AccountSerialize for Config {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Config {
-    fn owner() -> Pubkey { crate::CP_AMM_ID }
+    fn owner() -> Pubkey {
+        crate::CP_AMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -156,5 +160,5 @@ impl anchor_lang::IdlBuild for Config {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Config {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

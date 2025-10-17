@@ -5,10 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use crate::generated::types::PositionMetrics;
+use crate::generated::types::UserRewardInfo;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
-
-use crate::generated::types::{PositionMetrics, UserRewardInfo};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -46,6 +47,8 @@ pub struct Position {
     /// padding for future usage
     pub padding: [u128; 6],
 }
+
+pub const POSITION_DISCRIMINATOR: [u8; 8] = [170, 188, 143, 228, 122, 64, 247, 208];
 
 impl Position {
     pub const LEN: usize = 408;
@@ -148,7 +151,9 @@ impl anchor_lang::AccountSerialize for Position {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Position {
-    fn owner() -> Pubkey { crate::CP_AMM_ID }
+    fn owner() -> Pubkey {
+        crate::CP_AMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -156,5 +161,5 @@ impl anchor_lang::IdlBuild for Position {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Position {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

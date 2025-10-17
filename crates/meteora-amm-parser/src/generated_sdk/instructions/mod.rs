@@ -13,6 +13,7 @@ pub(crate) mod r#claim_reward;
 pub(crate) mod r#close_claim_fee_operator;
 pub(crate) mod r#close_config;
 pub(crate) mod r#close_position;
+pub(crate) mod r#close_token_badge;
 pub(crate) mod r#create_claim_fee_operator;
 pub(crate) mod r#create_config;
 pub(crate) mod r#create_dynamic_config;
@@ -29,19 +30,43 @@ pub(crate) mod r#refresh_vesting;
 pub(crate) mod r#remove_all_liquidity;
 pub(crate) mod r#remove_liquidity;
 pub(crate) mod r#set_pool_status;
+pub(crate) mod r#split_position;
+pub(crate) mod r#split_position2;
 pub(crate) mod r#swap;
+pub(crate) mod r#swap2;
 pub(crate) mod r#update_reward_duration;
 pub(crate) mod r#update_reward_funder;
 pub(crate) mod r#withdraw_ineligible_reward;
 
-pub use self::{
-    r#add_liquidity::*, r#claim_partner_fee::*, r#claim_position_fee::*, r#claim_protocol_fee::*,
-    r#claim_reward::*, r#close_claim_fee_operator::*, r#close_config::*, r#close_position::*,
-    r#create_claim_fee_operator::*, r#create_config::*, r#create_dynamic_config::*,
-    r#create_position::*, r#create_token_badge::*, r#fund_reward::*,
-    r#initialize_customizable_pool::*, r#initialize_pool::*,
-    r#initialize_pool_with_dynamic_config::*, r#initialize_reward::*, r#lock_position::*,
-    r#permanent_lock_position::*, r#refresh_vesting::*, r#remove_all_liquidity::*,
-    r#remove_liquidity::*, r#set_pool_status::*, r#swap::*, r#update_reward_duration::*,
-    r#update_reward_funder::*, r#withdraw_ineligible_reward::*,
-};
+pub use self::r#add_liquidity::*;
+pub use self::r#claim_partner_fee::*;
+pub use self::r#claim_position_fee::*;
+pub use self::r#claim_protocol_fee::*;
+pub use self::r#claim_reward::*;
+pub use self::r#close_claim_fee_operator::*;
+pub use self::r#close_config::*;
+pub use self::r#close_position::*;
+pub use self::r#close_token_badge::*;
+pub use self::r#create_claim_fee_operator::*;
+pub use self::r#create_config::*;
+pub use self::r#create_dynamic_config::*;
+pub use self::r#create_position::*;
+pub use self::r#create_token_badge::*;
+pub use self::r#fund_reward::*;
+pub use self::r#initialize_customizable_pool::*;
+pub use self::r#initialize_pool::*;
+pub use self::r#initialize_pool_with_dynamic_config::*;
+pub use self::r#initialize_reward::*;
+pub use self::r#lock_position::*;
+pub use self::r#permanent_lock_position::*;
+pub use self::r#refresh_vesting::*;
+pub use self::r#remove_all_liquidity::*;
+pub use self::r#remove_liquidity::*;
+pub use self::r#set_pool_status::*;
+pub use self::r#split_position::*;
+pub use self::r#split_position2::*;
+pub use self::r#swap::*;
+pub use self::r#swap2::*;
+pub use self::r#update_reward_duration::*;
+pub use self::r#update_reward_funder::*;
+pub use self::r#withdraw_ineligible_reward::*;

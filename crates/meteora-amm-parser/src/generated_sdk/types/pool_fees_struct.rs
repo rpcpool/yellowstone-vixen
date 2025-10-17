@@ -5,9 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
-
-use crate::generated::types::{BaseFeeStruct, DynamicFeeStruct};
+use crate::generated::types::BaseFeeStruct;
+use crate::generated::types::DynamicFeeStruct;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 
 /// Information regarding fee charges
 /// trading_fee = amount * trade_fee_numerator / denominator

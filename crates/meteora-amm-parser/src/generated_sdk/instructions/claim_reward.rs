@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const CLAIM_REWARD_DISCRIMINATOR: [u8; 8] = [149, 95, 181, 242, 94, 90, 158, 162];
 
 /// Accounts.
 #[derive(Debug)]
@@ -37,7 +40,6 @@ impl ClaimReward {
     pub fn instruction(&self, args: ClaimRewardInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -84,8 +86,8 @@ impl ClaimReward {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&ClaimRewardInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = ClaimRewardInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -108,23 +110,36 @@ impl ClaimRewardInstructionData {
             discriminator: [149, 95, 181, 242, 94, 90, 158, 162],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for ClaimRewardInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ClaimRewardInstructionArgs {
     pub reward_index: u8,
+    pub skip_reward: u8,
+}
+
+impl ClaimRewardInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 /// Instruction builder for `ClaimReward`.
 ///
 /// ### Accounts:
 ///
-///   0. `[]` pool_authority
+///   0. `[optional]` pool_authority (default to `HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC`)
 ///   1. `[writable]` pool
 ///   2. `[writable]` position
 ///   3. `[writable]` reward_vault
@@ -149,49 +164,46 @@ pub struct ClaimRewardBuilder {
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
     reward_index: Option<u8>,
+    skip_reward: Option<u8>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl ClaimRewardBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
+    /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
         self.position = Some(position);
         self
     }
-
     /// The vault token account for reward token
     #[inline(always)]
     pub fn reward_vault(&mut self, reward_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_vault = Some(reward_vault);
         self
     }
-
     #[inline(always)]
     pub fn reward_mint(&mut self, reward_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_mint = Some(reward_mint);
         self
     }
-
     #[inline(always)]
     pub fn user_token_account(&mut self, user_token_account: solana_pubkey::Pubkey) -> &mut Self {
         self.user_token_account = Some(user_token_account);
         self
     }
-
     /// The token account for nft
     #[inline(always)]
     pub fn position_nft_account(
@@ -201,46 +213,44 @@ impl ClaimRewardBuilder {
         self.position_nft_account = Some(position_nft_account);
         self
     }
-
     /// owner of position
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
-
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
         self.reward_index = Some(reward_index);
         self
     }
-
+    #[inline(always)]
+    pub fn skip_reward(&mut self, skip_reward: u8) -> &mut Self {
+        self.skip_reward = Some(skip_reward);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -250,11 +260,12 @@ impl ClaimRewardBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = ClaimReward {
-            pool_authority: self.pool_authority.expect("pool_authority is not set"),
+            pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
+                "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+            )),
             pool: self.pool.expect("pool is not set"),
             position: self.position.expect("position is not set"),
             reward_vault: self.reward_vault.expect("reward_vault is not set"),
@@ -274,6 +285,7 @@ impl ClaimRewardBuilder {
         };
         let args = ClaimRewardInstructionArgs {
             reward_index: self.reward_index.clone().expect("reward_index is not set"),
+            skip_reward: self.skip_reward.clone().expect("skip_reward is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -357,28 +369,21 @@ impl<'a, 'b> ClaimRewardCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -386,7 +391,7 @@ impl<'a, 'b> ClaimRewardCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool_authority.key,
@@ -436,8 +441,8 @@ impl<'a, 'b> ClaimRewardCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&ClaimRewardInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = ClaimRewardInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -506,11 +511,11 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
             event_authority: None,
             program: None,
             reward_index: None,
+            skip_reward: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -519,19 +524,16 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn position(&mut self, position: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.position = Some(position);
         self
     }
-
     /// The vault token account for reward token
     #[inline(always)]
     pub fn reward_vault(
@@ -541,7 +543,6 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
         self.instruction.reward_vault = Some(reward_vault);
         self
     }
-
     #[inline(always)]
     pub fn reward_mint(
         &mut self,
@@ -550,7 +551,6 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
         self.instruction.reward_mint = Some(reward_mint);
         self
     }
-
     #[inline(always)]
     pub fn user_token_account(
         &mut self,
@@ -559,7 +559,6 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
         self.instruction.user_token_account = Some(user_token_account);
         self
     }
-
     /// The token account for nft
     #[inline(always)]
     pub fn position_nft_account(
@@ -569,14 +568,12 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
         self.instruction.position_nft_account = Some(position_nft_account);
         self
     }
-
     /// owner of position
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
-
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -585,7 +582,6 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -594,19 +590,21 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
         self.instruction.reward_index = Some(reward_index);
         self
     }
-
+    #[inline(always)]
+    pub fn skip_reward(&mut self, skip_reward: u8) -> &mut Self {
+        self.instruction.skip_reward = Some(skip_reward);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -620,7 +618,6 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -635,22 +632,24 @@ impl<'a, 'b> ClaimRewardCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = ClaimRewardInstructionArgs {
             reward_index: self
                 .instruction
                 .reward_index
                 .clone()
                 .expect("reward_index is not set"),
+            skip_reward: self
+                .instruction
+                .skip_reward
+                .clone()
+                .expect("skip_reward is not set"),
         };
         let instruction = ClaimRewardCpi {
             __program: self.instruction.__program,
@@ -721,6 +720,7 @@ struct ClaimRewardCpiBuilderInstruction<'a, 'b> {
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
     reward_index: Option<u8>,
+    skip_reward: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

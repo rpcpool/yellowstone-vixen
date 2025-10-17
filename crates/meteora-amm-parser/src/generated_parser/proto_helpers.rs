@@ -9,7 +9,9 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::{proto_def, types::AddLiquidityParameters};
+    use crate::proto_def;
+
+    use crate::types::AddLiquidityParameters;
     impl IntoProto<proto_def::AddLiquidityParameters> for AddLiquidityParameters {
         fn into_proto(self) -> proto_def::AddLiquidityParameters {
             proto_def::AddLiquidityParameters {
@@ -24,11 +26,11 @@ pub mod proto_types_parsers {
         fn into_proto(self) -> proto_def::BaseFeeConfig {
             proto_def::BaseFeeConfig {
                 cliff_fee_numerator: self.cliff_fee_numerator,
-                fee_scheduler_mode: self.fee_scheduler_mode.into(),
+                base_fee_mode: self.base_fee_mode.into(),
                 padding: self.padding.into_iter().map(|x| x.into()).collect(),
-                number_of_period: self.number_of_period.into(),
-                period_frequency: self.period_frequency,
-                reduction_factor: self.reduction_factor,
+                first_factor: self.first_factor.into(),
+                second_factor: self.second_factor.into_iter().map(|x| x.into()).collect(),
+                third_factor: self.third_factor,
             }
         }
     }
@@ -37,10 +39,10 @@ pub mod proto_types_parsers {
         fn into_proto(self) -> proto_def::BaseFeeParameters {
             proto_def::BaseFeeParameters {
                 cliff_fee_numerator: self.cliff_fee_numerator,
-                number_of_period: self.number_of_period.into(),
-                period_frequency: self.period_frequency,
-                reduction_factor: self.reduction_factor,
-                fee_scheduler_mode: self.fee_scheduler_mode.into(),
+                first_factor: self.first_factor.into(),
+                second_factor: self.second_factor.into_iter().map(|x| x.into()).collect(),
+                third_factor: self.third_factor,
+                base_fee_mode: self.base_fee_mode.into(),
             }
         }
     }
@@ -49,11 +51,11 @@ pub mod proto_types_parsers {
         fn into_proto(self) -> proto_def::BaseFeeStruct {
             proto_def::BaseFeeStruct {
                 cliff_fee_numerator: self.cliff_fee_numerator,
-                fee_scheduler_mode: self.fee_scheduler_mode.into(),
+                base_fee_mode: self.base_fee_mode.into(),
                 padding0: self.padding0.into_iter().map(|x| x.into()).collect(),
-                number_of_period: self.number_of_period.into(),
-                period_frequency: self.period_frequency,
-                reduction_factor: self.reduction_factor,
+                first_factor: self.first_factor.into(),
+                second_factor: self.second_factor.into_iter().map(|x| x.into()).collect(),
+                third_factor: self.third_factor,
                 padding1: self.padding1,
             }
         }
@@ -261,6 +263,9 @@ pub mod proto_types_parsers {
                 reward_index: self.reward_index.into(),
                 amount: self.amount,
                 transfer_fee_excluded_amount_in: self.transfer_fee_excluded_amount_in,
+                reward_duration_end: self.reward_duration_end,
+                pre_reward_rate: self.pre_reward_rate.to_string(),
+                post_reward_rate: self.post_reward_rate.to_string(),
             }
         }
     }
@@ -299,8 +304,29 @@ pub mod proto_types_parsers {
                 pool: self.pool.to_string(),
                 reward_mint: self.reward_mint.to_string(),
                 funder: self.funder.to_string(),
+                creator: self.creator.to_string(),
                 reward_index: self.reward_index.into(),
                 reward_duration: self.reward_duration,
+            }
+        }
+    }
+    use crate::types::EvtLiquidityChange;
+    impl IntoProto<proto_def::EvtLiquidityChange> for EvtLiquidityChange {
+        fn into_proto(self) -> proto_def::EvtLiquidityChange {
+            proto_def::EvtLiquidityChange {
+                pool: self.pool.to_string(),
+                position: self.position.to_string(),
+                owner: self.owner.to_string(),
+                token_a_amount: self.token_a_amount,
+                token_b_amount: self.token_b_amount,
+                transfer_fee_included_token_a_amount: self.transfer_fee_included_token_a_amount,
+                transfer_fee_included_token_b_amount: self.transfer_fee_included_token_b_amount,
+                reserve_a_amount: self.reserve_a_amount,
+                reserve_b_amount: self.reserve_b_amount,
+                liquidity_delta: self.liquidity_delta.to_string(),
+                token_a_amount_threshold: self.token_a_amount_threshold,
+                token_b_amount_threshold: self.token_b_amount_threshold,
+                change_type: self.change_type.into(),
             }
         }
     }
@@ -353,6 +379,23 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::EvtSplitPosition2;
+    impl IntoProto<proto_def::EvtSplitPosition2> for EvtSplitPosition2 {
+        fn into_proto(self) -> proto_def::EvtSplitPosition2 {
+            proto_def::EvtSplitPosition2 {
+                pool: self.pool.to_string(),
+                first_owner: self.first_owner.to_string(),
+                second_owner: self.second_owner.to_string(),
+                first_position: self.first_position.to_string(),
+                second_position: self.second_position.to_string(),
+                current_sqrt_price: self.current_sqrt_price.to_string(),
+                amount_splits: Some(self.amount_splits.into_proto()),
+                first_position_info: Some(self.first_position_info.into_proto()),
+                second_position_info: Some(self.second_position_info.into_proto()),
+                split_position_parameters: Some(self.split_position_parameters.into_proto()),
+            }
+        }
+    }
     use crate::types::EvtSwap;
     impl IntoProto<proto_def::EvtSwap> for EvtSwap {
         fn into_proto(self) -> proto_def::EvtSwap {
@@ -364,6 +407,25 @@ pub mod proto_types_parsers {
                 swap_result: Some(self.swap_result.into_proto()),
                 actual_amount_in: self.actual_amount_in,
                 current_timestamp: self.current_timestamp,
+            }
+        }
+    }
+    use crate::types::EvtSwap2;
+    impl IntoProto<proto_def::EvtSwap2> for EvtSwap2 {
+        fn into_proto(self) -> proto_def::EvtSwap2 {
+            proto_def::EvtSwap2 {
+                pool: self.pool.to_string(),
+                trade_direction: self.trade_direction.into(),
+                collect_fee_mode: self.collect_fee_mode.into(),
+                has_referral: self.has_referral,
+                params: Some(self.params.into_proto()),
+                swap_result: Some(self.swap_result.into_proto()),
+                included_transfer_fee_amount_in: self.included_transfer_fee_amount_in,
+                included_transfer_fee_amount_out: self.included_transfer_fee_amount_out,
+                excluded_transfer_fee_amount_out: self.excluded_transfer_fee_amount_out,
+                current_timestamp: self.current_timestamp,
+                reserve_a_amount: self.reserve_a_amount,
+                reserve_b_amount: self.reserve_b_amount,
             }
         }
     }
@@ -422,9 +484,7 @@ pub mod proto_types_parsers {
         fn into_proto(self) -> proto_def::PoolFeeParameters {
             proto_def::PoolFeeParameters {
                 base_fee: Some(self.base_fee.into_proto()),
-                protocol_fee_percent: self.protocol_fee_percent.into(),
-                partner_fee_percent: self.partner_fee_percent.into(),
-                referral_fee_percent: self.referral_fee_percent.into(),
+                padding: self.padding.into_iter().map(|x| x.into()).collect(),
                 dynamic_fee: self.dynamic_fee.map(|x| x.into_proto()),
             }
         }
@@ -516,12 +576,60 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::SplitAmountInfo;
+    impl IntoProto<proto_def::SplitAmountInfo> for SplitAmountInfo {
+        fn into_proto(self) -> proto_def::SplitAmountInfo {
+            proto_def::SplitAmountInfo {
+                permanent_locked_liquidity: self.permanent_locked_liquidity.to_string(),
+                unlocked_liquidity: self.unlocked_liquidity.to_string(),
+                fee_a: self.fee_a,
+                fee_b: self.fee_b,
+                reward0: self.reward0,
+                reward1: self.reward1,
+            }
+        }
+    }
+    use crate::types::SplitPositionInfo;
+    impl IntoProto<proto_def::SplitPositionInfo> for SplitPositionInfo {
+        fn into_proto(self) -> proto_def::SplitPositionInfo {
+            proto_def::SplitPositionInfo {
+                liquidity: self.liquidity.to_string(),
+                fee_a: self.fee_a,
+                fee_b: self.fee_b,
+                reward0: self.reward0,
+                reward1: self.reward1,
+            }
+        }
+    }
+    use crate::types::SplitPositionParameters2;
+    impl IntoProto<proto_def::SplitPositionParameters2> for SplitPositionParameters2 {
+        fn into_proto(self) -> proto_def::SplitPositionParameters2 {
+            proto_def::SplitPositionParameters2 {
+                unlocked_liquidity_numerator: self.unlocked_liquidity_numerator,
+                permanent_locked_liquidity_numerator: self.permanent_locked_liquidity_numerator,
+                fee_a_numerator: self.fee_a_numerator,
+                fee_b_numerator: self.fee_b_numerator,
+                reward0_numerator: self.reward0_numerator,
+                reward1_numerator: self.reward1_numerator,
+            }
+        }
+    }
     use crate::types::SwapParameters;
     impl IntoProto<proto_def::SwapParameters> for SwapParameters {
         fn into_proto(self) -> proto_def::SwapParameters {
             proto_def::SwapParameters {
                 amount_in: self.amount_in,
                 minimum_amount_out: self.minimum_amount_out,
+            }
+        }
+    }
+    use crate::types::SwapParameters2;
+    impl IntoProto<proto_def::SwapParameters2> for SwapParameters2 {
+        fn into_proto(self) -> proto_def::SwapParameters2 {
+            proto_def::SwapParameters2 {
+                amount0: self.amount0,
+                amount1: self.amount1,
+                swap_mode: self.swap_mode.into(),
             }
         }
     }
@@ -532,6 +640,22 @@ pub mod proto_types_parsers {
                 output_amount: self.output_amount,
                 next_sqrt_price: self.next_sqrt_price.to_string(),
                 lp_fee: self.lp_fee,
+                protocol_fee: self.protocol_fee,
+                partner_fee: self.partner_fee,
+                referral_fee: self.referral_fee,
+            }
+        }
+    }
+    use crate::types::SwapResult2;
+    impl IntoProto<proto_def::SwapResult2> for SwapResult2 {
+        fn into_proto(self) -> proto_def::SwapResult2 {
+            proto_def::SwapResult2 {
+                included_fee_input_amount: self.included_fee_input_amount,
+                excluded_fee_input_amount: self.excluded_fee_input_amount,
+                amount_left: self.amount_left,
+                output_amount: self.output_amount,
+                next_sqrt_price: self.next_sqrt_price.to_string(),
+                trading_fee: self.trading_fee,
                 protocol_fee: self.protocol_fee,
                 partner_fee: self.partner_fee,
                 referral_fee: self.referral_fee,

@@ -5,9 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
-
-use crate::generated::types::{BaseFeeParameters, DynamicFeeParameters};
+use crate::generated::types::BaseFeeParameters;
+use crate::generated::types::DynamicFeeParameters;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 
 /// Information regarding fee charges
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -15,12 +16,8 @@ use crate::generated::types::{BaseFeeParameters, DynamicFeeParameters};
 pub struct PoolFeeParameters {
     /// Base fee
     pub base_fee: BaseFeeParameters,
-    /// Protocol trade fee percent
-    pub protocol_fee_percent: u8,
-    /// partner fee percent
-    pub partner_fee_percent: u8,
-    /// referral fee percent
-    pub referral_fee_percent: u8,
+    /// padding
+    pub padding: [u8; 3],
     /// dynamic fee
     pub dynamic_fee: Option<DynamicFeeParameters>,
 }

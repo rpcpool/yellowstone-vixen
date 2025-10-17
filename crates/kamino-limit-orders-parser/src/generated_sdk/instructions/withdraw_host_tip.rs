@@ -73,7 +73,9 @@ impl WithdrawHostTipInstructionData {
 }
 
 impl Default for WithdrawHostTipInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `WithdrawHostTip`.
@@ -94,7 +96,9 @@ pub struct WithdrawHostTipBuilder {
 }
 
 impl WithdrawHostTipBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     #[inline(always)]
     pub fn admin_authority(&mut self, admin_authority: solana_pubkey::Pubkey) -> &mut Self {
@@ -362,7 +366,9 @@ impl<'a, 'b> WithdrawHostTipCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

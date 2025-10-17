@@ -122,7 +122,9 @@ impl anchor_lang::AccountSerialize for Oracle {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Oracle {
-    fn owner() -> Pubkey { crate::LB_CLMM_ID }
+    fn owner() -> Pubkey {
+        crate::LB_CLMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

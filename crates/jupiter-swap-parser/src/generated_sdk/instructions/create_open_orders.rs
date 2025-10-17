@@ -81,7 +81,9 @@ impl CreateOpenOrdersInstructionData {
 }
 
 impl Default for CreateOpenOrdersInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `CreateOpenOrders`.
@@ -106,7 +108,9 @@ pub struct CreateOpenOrdersBuilder {
 }
 
 impl CreateOpenOrdersBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     #[inline(always)]
     pub fn open_orders(&mut self, open_orders: solana_pubkey::Pubkey) -> &mut Self {
@@ -421,7 +425,9 @@ impl<'a, 'b> CreateOpenOrdersCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

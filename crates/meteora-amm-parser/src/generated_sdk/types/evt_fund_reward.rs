@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -29,4 +30,7 @@ pub struct EvtFundReward {
     pub reward_index: u8,
     pub amount: u64,
     pub transfer_fee_excluded_amount_in: u64,
+    pub reward_duration_end: u64,
+    pub pre_reward_rate: u128,
+    pub post_reward_rate: u128,
 }

@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -22,6 +23,8 @@ pub struct ClaimFeeOperator {
     #[cfg_attr(feature = "serde", serde(with = "serde_with::As::<serde_with::Bytes>"))]
     pub padding: [u8; 128],
 }
+
+pub const CLAIM_FEE_OPERATOR_DISCRIMINATOR: [u8; 8] = [166, 48, 134, 86, 34, 200, 188, 150];
 
 impl ClaimFeeOperator {
     pub const LEN: usize = 168;
@@ -124,7 +127,9 @@ impl anchor_lang::AccountSerialize for ClaimFeeOperator {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for ClaimFeeOperator {
-    fn owner() -> Pubkey { crate::CP_AMM_ID }
+    fn owner() -> Pubkey {
+        crate::CP_AMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -132,5 +137,5 @@ impl anchor_lang::IdlBuild for ClaimFeeOperator {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for ClaimFeeOperator {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

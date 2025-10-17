@@ -42,22 +42,22 @@ pub enum CpAmmError {
     InvalidAuthorityToCreateThePool = 0x1779,
     /// 6010 - Invalid activation type
     #[error("Invalid activation type")]
-    InvalidActivationType = 0x177a,
+    InvalidActivationType = 0x177A,
     /// 6011 - Invalid activation point
     #[error("Invalid activation point")]
-    InvalidActivationPoint = 0x177b,
+    InvalidActivationPoint = 0x177B,
     /// 6012 - Quote token must be SOL,USDC
     #[error("Quote token must be SOL,USDC")]
-    InvalidQuoteMint = 0x177c,
+    InvalidQuoteMint = 0x177C,
     /// 6013 - Invalid fee curve
     #[error("Invalid fee curve")]
-    InvalidFeeCurve = 0x177d,
+    InvalidFeeCurve = 0x177D,
     /// 6014 - Invalid Price Range
     #[error("Invalid Price Range")]
-    InvalidPriceRange = 0x177e,
+    InvalidPriceRange = 0x177E,
     /// 6015 - Trade is over price range
     #[error("Trade is over price range")]
-    PriceRangeViolation = 0x177f,
+    PriceRangeViolation = 0x177F,
     /// 6016 - Invalid parameters
     #[error("Invalid parameters")]
     InvalidParameters = 0x1780,
@@ -90,22 +90,22 @@ pub enum CpAmmError {
     InvalidPoolStatus = 0x1789,
     /// 6026 - Unsupported native mint token2022
     #[error("Unsupported native mint token2022")]
-    UnsupportNativeMintToken2022 = 0x178a,
+    UnsupportNativeMintToken2022 = 0x178A,
     /// 6027 - Invalid reward index
     #[error("Invalid reward index")]
-    InvalidRewardIndex = 0x178b,
+    InvalidRewardIndex = 0x178B,
     /// 6028 - Invalid reward duration
     #[error("Invalid reward duration")]
-    InvalidRewardDuration = 0x178c,
+    InvalidRewardDuration = 0x178C,
     /// 6029 - Reward already initialized
     #[error("Reward already initialized")]
-    RewardInitialized = 0x178d,
+    RewardInitialized = 0x178D,
     /// 6030 - Reward not initialized
     #[error("Reward not initialized")]
-    RewardUninitialized = 0x178e,
+    RewardUninitialized = 0x178E,
     /// 6031 - Invalid reward vault
     #[error("Invalid reward vault")]
-    InvalidRewardVault = 0x178f,
+    InvalidRewardVault = 0x178F,
     /// 6032 - Must withdraw ineligible reward
     #[error("Must withdraw ineligible reward")]
     MustWithdrawnIneligibleReward = 0x1790,
@@ -136,16 +136,43 @@ pub enum CpAmmError {
     /// 6041 - Invalid config type
     #[error("Invalid config type")]
     InvalidConfigType = 0x1799,
+    /// 6042 - Invalid pool creator
+    #[error("Invalid pool creator")]
+    InvalidPoolCreator = 0x179A,
+    /// 6043 - Reward vault is frozen, must skip reward to proceed
+    #[error("Reward vault is frozen, must skip reward to proceed")]
+    RewardVaultFrozenSkipRequired = 0x179B,
+    /// 6044 - Invalid parameters for split position
+    #[error("Invalid parameters for split position")]
+    InvalidSplitPositionParameters = 0x179C,
+    /// 6045 - Unsupported split position has vesting lock
+    #[error("Unsupported split position has vesting lock")]
+    UnsupportPositionHasVestingLock = 0x179D,
+    /// 6046 - Same position
+    #[error("Same position")]
+    SamePosition = 0x179E,
+    /// 6047 - Invalid base fee mode
+    #[error("Invalid base fee mode")]
+    InvalidBaseFeeMode = 0x179F,
+    /// 6048 - Invalid fee rate limiter
+    #[error("Invalid fee rate limiter")]
+    InvalidFeeRateLimiter = 0x17A0,
+    /// 6049 - Fail to validate single swap instruction in rate limiter
+    #[error("Fail to validate single swap instruction in rate limiter")]
+    FailToValidateSingleSwapInstruction = 0x17A1,
+    /// 6050 - Invalid fee scheduler
+    #[error("Invalid fee scheduler")]
+    InvalidFeeScheduler = 0x17A2,
+    /// 6051 - Undetermined error
+    #[error("Undetermined error")]
+    UndeterminedError = 0x17A3,
+    /// 6052 - Invalid pool version
+    #[error("Invalid pool version")]
+    InvalidPoolVersion = 0x17A4,
 }
 
-#[allow(deprecated)]
-impl solana_program_error::PrintProgramError for CpAmmError {
-    fn print<E>(&self) {
-        solana_msg::msg!(&self.to_string());
+impl From<CpAmmError> for solana_program_error::ProgramError {
+    fn from(e: CpAmmError) -> Self {
+        solana_program_error::ProgramError::Custom(e as u32)
     }
-}
-
-#[allow(deprecated)]
-impl<T> solana_decode_error::DecodeError<T> for CpAmmError {
-    fn type_of() -> &'static str { "CpAmmError" }
 }

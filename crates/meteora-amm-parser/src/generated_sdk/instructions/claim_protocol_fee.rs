@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const CLAIM_PROTOCOL_FEE_DISCRIMINATOR: [u8; 8] = [165, 228, 133, 48, 99, 249, 255, 33];
 
 /// Accounts.
 #[derive(Debug)]
@@ -40,14 +43,17 @@ pub struct ClaimProtocolFee {
 }
 
 impl ClaimProtocolFee {
-    pub fn instruction(&self) -> solana_instruction::Instruction {
-        self.instruction_with_remaining_accounts(&[])
+    pub fn instruction(
+        &self,
+        args: ClaimProtocolFeeInstructionArgs,
+    ) -> solana_instruction::Instruction {
+        self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
+        args: ClaimProtocolFeeInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
@@ -105,7 +111,9 @@ impl ClaimProtocolFee {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = borsh::to_vec(&ClaimProtocolFeeInstructionData::new()).unwrap();
+        let mut data = ClaimProtocolFeeInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
+        data.append(&mut args);
 
         solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
@@ -127,17 +135,36 @@ impl ClaimProtocolFeeInstructionData {
             discriminator: [165, 228, 133, 48, 99, 249, 255, 33],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for ClaimProtocolFeeInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ClaimProtocolFeeInstructionArgs {
+    pub max_amount_a: u64,
+    pub max_amount_b: u64,
+}
+
+impl ClaimProtocolFeeInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 /// Instruction builder for `ClaimProtocolFee`.
 ///
 /// ### Accounts:
 ///
-///   0. `[]` pool_authority
+///   0. `[optional]` pool_authority (default to `HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC`)
 ///   1. `[writable]` pool
 ///   2. `[writable]` token_a_vault
 ///   3. `[writable]` token_b_vault
@@ -167,113 +194,112 @@ pub struct ClaimProtocolFeeBuilder {
     token_b_program: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
+    max_amount_a: Option<u64>,
+    max_amount_b: Option<u64>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl ClaimProtocolFeeBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
+    /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
-
     /// The vault token account for input token
     #[inline(always)]
     pub fn token_a_vault(&mut self, token_a_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_vault = Some(token_a_vault);
         self
     }
-
     /// The vault token account for output token
     #[inline(always)]
     pub fn token_b_vault(&mut self, token_b_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_vault = Some(token_b_vault);
         self
     }
-
     /// The mint of token a
     #[inline(always)]
     pub fn token_a_mint(&mut self, token_a_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_mint = Some(token_a_mint);
         self
     }
-
     /// The mint of token b
     #[inline(always)]
     pub fn token_b_mint(&mut self, token_b_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_mint = Some(token_b_mint);
         self
     }
-
     /// The treasury token a account
     #[inline(always)]
     pub fn token_a_account(&mut self, token_a_account: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_account = Some(token_a_account);
         self
     }
-
     /// The treasury token b account
     #[inline(always)]
     pub fn token_b_account(&mut self, token_b_account: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_account = Some(token_b_account);
         self
     }
-
     /// Claim fee operator
     #[inline(always)]
     pub fn claim_fee_operator(&mut self, claim_fee_operator: solana_pubkey::Pubkey) -> &mut Self {
         self.claim_fee_operator = Some(claim_fee_operator);
         self
     }
-
     /// Operator
     #[inline(always)]
     pub fn operator(&mut self, operator: solana_pubkey::Pubkey) -> &mut Self {
         self.operator = Some(operator);
         self
     }
-
     /// Token a program
     #[inline(always)]
     pub fn token_a_program(&mut self, token_a_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_program = Some(token_a_program);
         self
     }
-
     /// Token b program
     #[inline(always)]
     pub fn token_b_program(&mut self, token_b_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_program = Some(token_b_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
+    #[inline(always)]
+    pub fn max_amount_a(&mut self, max_amount_a: u64) -> &mut Self {
+        self.max_amount_a = Some(max_amount_a);
+        self
+    }
+    #[inline(always)]
+    pub fn max_amount_b(&mut self, max_amount_b: u64) -> &mut Self {
+        self.max_amount_b = Some(max_amount_b);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -283,11 +309,12 @@ impl ClaimProtocolFeeBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = ClaimProtocolFee {
-            pool_authority: self.pool_authority.expect("pool_authority is not set"),
+            pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
+                "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+            )),
             pool: self.pool.expect("pool is not set"),
             token_a_vault: self.token_a_vault.expect("token_a_vault is not set"),
             token_b_vault: self.token_b_vault.expect("token_b_vault is not set"),
@@ -304,8 +331,12 @@ impl ClaimProtocolFeeBuilder {
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
+        let args = ClaimProtocolFeeInstructionArgs {
+            max_amount_a: self.max_amount_a.clone().expect("max_amount_a is not set"),
+            max_amount_b: self.max_amount_b.clone().expect("max_amount_b is not set"),
+        };
 
-        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
+        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
@@ -372,12 +403,15 @@ pub struct ClaimProtocolFeeCpi<'a, 'b> {
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
+    /// The arguments for the instruction.
+    pub __args: ClaimProtocolFeeInstructionArgs,
 }
 
 impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
         accounts: ClaimProtocolFeeCpiAccounts<'a, 'b>,
+        args: ClaimProtocolFeeInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -395,30 +429,24 @@ impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
             token_b_program: accounts.token_b_program,
             event_authority: accounts.event_authority,
             program: accounts.program,
+            __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -426,7 +454,7 @@ impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool_authority.key,
@@ -488,7 +516,9 @@ impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = borsh::to_vec(&ClaimProtocolFeeInstructionData::new()).unwrap();
+        let mut data = ClaimProtocolFeeInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
+        data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
@@ -564,11 +594,12 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
             token_b_program: None,
             event_authority: None,
             program: None,
+            max_amount_a: None,
+            max_amount_b: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -577,13 +608,11 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
-
     /// The vault token account for input token
     #[inline(always)]
     pub fn token_a_vault(
@@ -593,7 +622,6 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.token_a_vault = Some(token_a_vault);
         self
     }
-
     /// The vault token account for output token
     #[inline(always)]
     pub fn token_b_vault(
@@ -603,7 +631,6 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.token_b_vault = Some(token_b_vault);
         self
     }
-
     /// The mint of token a
     #[inline(always)]
     pub fn token_a_mint(
@@ -613,7 +640,6 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.token_a_mint = Some(token_a_mint);
         self
     }
-
     /// The mint of token b
     #[inline(always)]
     pub fn token_b_mint(
@@ -623,7 +649,6 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.token_b_mint = Some(token_b_mint);
         self
     }
-
     /// The treasury token a account
     #[inline(always)]
     pub fn token_a_account(
@@ -633,7 +658,6 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.token_a_account = Some(token_a_account);
         self
     }
-
     /// The treasury token b account
     #[inline(always)]
     pub fn token_b_account(
@@ -643,7 +667,6 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.token_b_account = Some(token_b_account);
         self
     }
-
     /// Claim fee operator
     #[inline(always)]
     pub fn claim_fee_operator(
@@ -653,14 +676,12 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.claim_fee_operator = Some(claim_fee_operator);
         self
     }
-
     /// Operator
     #[inline(always)]
     pub fn operator(&mut self, operator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.operator = Some(operator);
         self
     }
-
     /// Token a program
     #[inline(always)]
     pub fn token_a_program(
@@ -670,7 +691,6 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.token_a_program = Some(token_a_program);
         self
     }
-
     /// Token b program
     #[inline(always)]
     pub fn token_b_program(
@@ -680,7 +700,6 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.token_b_program = Some(token_b_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -689,13 +708,21 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
+    #[inline(always)]
+    pub fn max_amount_a(&mut self, max_amount_a: u64) -> &mut Self {
+        self.instruction.max_amount_a = Some(max_amount_a);
+        self
+    }
+    #[inline(always)]
+    pub fn max_amount_b(&mut self, max_amount_b: u64) -> &mut Self {
+        self.instruction.max_amount_b = Some(max_amount_b);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -709,7 +736,6 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -724,16 +750,25 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
+        let args = ClaimProtocolFeeInstructionArgs {
+            max_amount_a: self
+                .instruction
+                .max_amount_a
+                .clone()
+                .expect("max_amount_a is not set"),
+            max_amount_b: self
+                .instruction
+                .max_amount_b
+                .clone()
+                .expect("max_amount_b is not set"),
+        };
         let instruction = ClaimProtocolFeeCpi {
             __program: self.instruction.__program,
 
@@ -797,6 +832,7 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
                 .expect("event_authority is not set"),
 
             program: self.instruction.program.expect("program is not set"),
+            __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -822,6 +858,8 @@ struct ClaimProtocolFeeCpiBuilderInstruction<'a, 'b> {
     token_b_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    max_amount_a: Option<u64>,
+    max_amount_b: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

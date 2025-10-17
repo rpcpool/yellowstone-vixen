@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const LOCK_POSITION_DISCRIMINATOR: [u8; 8] = [227, 62, 2, 252, 247, 10, 171, 185];
 
 /// Accounts.
 #[derive(Debug)]
@@ -36,7 +39,6 @@ impl LockPosition {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -71,8 +73,8 @@ impl LockPosition {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&LockPositionInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = LockPositionInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -95,10 +97,16 @@ impl LockPositionInstructionData {
             discriminator: [227, 62, 2, 252, 247, 10, 171, 185],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for LockPositionInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -109,6 +117,12 @@ pub struct LockPositionInstructionArgs {
     pub cliff_unlock_liquidity: u128,
     pub liquidity_per_period: u128,
     pub number_of_period: u16,
+}
+
+impl LockPositionInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 /// Instruction builder for `LockPosition`.
@@ -144,26 +158,24 @@ pub struct LockPositionBuilder {
 }
 
 impl LockPositionBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
         self.position = Some(position);
         self
     }
-
     #[inline(always)]
     pub fn vesting(&mut self, vesting: solana_pubkey::Pubkey) -> &mut Self {
         self.vesting = Some(vesting);
         self
     }
-
     /// The token account for nft
     #[inline(always)]
     pub fn position_nft_account(
@@ -173,77 +185,65 @@ impl LockPositionBuilder {
         self.position_nft_account = Some(position_nft_account);
         self
     }
-
     /// owner of position
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
-
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     /// `[optional argument]`
     #[inline(always)]
     pub fn cliff_point(&mut self, cliff_point: u64) -> &mut Self {
         self.cliff_point = Some(cliff_point);
         self
     }
-
     #[inline(always)]
     pub fn period_frequency(&mut self, period_frequency: u64) -> &mut Self {
         self.period_frequency = Some(period_frequency);
         self
     }
-
     #[inline(always)]
     pub fn cliff_unlock_liquidity(&mut self, cliff_unlock_liquidity: u128) -> &mut Self {
         self.cliff_unlock_liquidity = Some(cliff_unlock_liquidity);
         self
     }
-
     #[inline(always)]
     pub fn liquidity_per_period(&mut self, liquidity_per_period: u128) -> &mut Self {
         self.liquidity_per_period = Some(liquidity_per_period);
         self
     }
-
     #[inline(always)]
     pub fn number_of_period(&mut self, number_of_period: u16) -> &mut Self {
         self.number_of_period = Some(number_of_period);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -253,7 +253,6 @@ impl LockPositionBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = LockPosition {
@@ -362,28 +361,21 @@ impl<'a, 'b> LockPositionCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -391,7 +383,7 @@ impl<'a, 'b> LockPositionCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool.key,
@@ -433,8 +425,8 @@ impl<'a, 'b> LockPositionCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&LockPositionInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = LockPositionInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -505,25 +497,21 @@ impl<'a, 'b> LockPositionCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn position(&mut self, position: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.position = Some(position);
         self
     }
-
     #[inline(always)]
     pub fn vesting(&mut self, vesting: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.vesting = Some(vesting);
         self
     }
-
     /// The token account for nft
     #[inline(always)]
     pub fn position_nft_account(
@@ -533,20 +521,17 @@ impl<'a, 'b> LockPositionCpiBuilder<'a, 'b> {
         self.instruction.position_nft_account = Some(position_nft_account);
         self
     }
-
     /// owner of position
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
-
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -555,7 +540,6 @@ impl<'a, 'b> LockPositionCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -564,44 +548,37 @@ impl<'a, 'b> LockPositionCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     /// `[optional argument]`
     #[inline(always)]
     pub fn cliff_point(&mut self, cliff_point: u64) -> &mut Self {
         self.instruction.cliff_point = Some(cliff_point);
         self
     }
-
     #[inline(always)]
     pub fn period_frequency(&mut self, period_frequency: u64) -> &mut Self {
         self.instruction.period_frequency = Some(period_frequency);
         self
     }
-
     #[inline(always)]
     pub fn cliff_unlock_liquidity(&mut self, cliff_unlock_liquidity: u128) -> &mut Self {
         self.instruction.cliff_unlock_liquidity = Some(cliff_unlock_liquidity);
         self
     }
-
     #[inline(always)]
     pub fn liquidity_per_period(&mut self, liquidity_per_period: u128) -> &mut Self {
         self.instruction.liquidity_per_period = Some(liquidity_per_period);
         self
     }
-
     #[inline(always)]
     pub fn number_of_period(&mut self, number_of_period: u16) -> &mut Self {
         self.instruction.number_of_period = Some(number_of_period);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -615,7 +592,6 @@ impl<'a, 'b> LockPositionCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -630,16 +606,13 @@ impl<'a, 'b> LockPositionCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = LockPositionInstructionArgs {
             cliff_point: self.instruction.cliff_point.clone(),
             period_frequency: self
