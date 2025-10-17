@@ -129,7 +129,5 @@ impl solana_program_error::PrintProgramError for DynamicBondingCurveError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for DynamicBondingCurveError {
-    fn type_of() -> &'static str {
-        "DynamicBondingCurveError"
-    }
+    fn type_of() -> &'static str { "DynamicBondingCurveError" }
 }

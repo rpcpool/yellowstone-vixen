@@ -171,9 +171,7 @@ impl LockRaydiumLiquidityInstructionData {
 }
 
 impl Default for LockRaydiumLiquidityInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `LockRaydiumLiquidity`.
@@ -230,9 +228,7 @@ pub struct LockRaydiumLiquidityBuilder {
 }
 
 impl LockRaydiumLiquidityBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// `[optional account, default to 'LockrWmn6K5twhz3y9w1dQERbmgSaRkfnTeTKbpofwE']`
     #[inline(always)]
@@ -1031,9 +1027,7 @@ impl<'a, 'b> LockRaydiumLiquidityCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

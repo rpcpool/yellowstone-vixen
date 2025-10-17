@@ -126,9 +126,7 @@ impl anchor_lang::AccountSerialize for ClaimFeeOperator {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for ClaimFeeOperator {
-    fn owner() -> Pubkey {
-        crate::LB_CLMM_ID
-    }
+    fn owner() -> Pubkey { crate::LB_CLMM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

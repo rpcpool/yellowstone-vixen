@@ -270,7 +270,5 @@ impl solana_program_error::PrintProgramError for LbClmmError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for LbClmmError {
-    fn type_of() -> &'static str {
-        "LbClmmError"
-    }
+    fn type_of() -> &'static str { "LbClmmError" }
 }

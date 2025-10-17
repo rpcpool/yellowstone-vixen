@@ -88,9 +88,7 @@ impl CreateMintMetadataInstructionData {
 }
 
 impl Default for CreateMintMetadataInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `CreateMintMetadata`.
@@ -117,9 +115,7 @@ pub struct CreateMintMetadataBuilder {
 }
 
 impl CreateMintMetadataBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// Pool account
     #[inline(always)]
@@ -470,9 +466,7 @@ impl<'a, 'b> CreateMintMetadataCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
