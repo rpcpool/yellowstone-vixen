@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const WITHDRAW_INELIGIBLE_REWARD_DISCRIMINATOR: [u8; 8] = [148, 206, 42, 195, 247, 49, 103, 8];
 
@@ -39,6 +38,7 @@ impl WithdrawIneligibleReward {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -108,15 +108,11 @@ impl WithdrawIneligibleRewardInstructionData {
         }
     }
 
-    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
-        borsh::to_vec(self)
-    }
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for WithdrawIneligibleRewardInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -126,9 +122,7 @@ pub struct WithdrawIneligibleRewardInstructionArgs {
 }
 
 impl WithdrawIneligibleRewardInstructionArgs {
-    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
-        borsh::to_vec(self)
-    }
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 /// Instruction builder for `WithdrawIneligibleReward`.
@@ -160,30 +154,33 @@ pub struct WithdrawIneligibleRewardBuilder {
 }
 
 impl WithdrawIneligibleRewardBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn reward_vault(&mut self, reward_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_vault = Some(reward_vault);
         self
     }
+
     #[inline(always)]
     pub fn reward_mint(&mut self, reward_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.reward_mint = Some(reward_mint);
         self
     }
+
     #[inline(always)]
     pub fn funder_token_account(
         &mut self,
@@ -192,38 +189,45 @@ impl WithdrawIneligibleRewardBuilder {
         self.funder_token_account = Some(funder_token_account);
         self
     }
+
     #[inline(always)]
     pub fn funder(&mut self, funder: solana_pubkey::Pubkey) -> &mut Self {
         self.funder = Some(funder);
         self
     }
+
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
         self.reward_index = Some(reward_index);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -233,6 +237,7 @@ impl WithdrawIneligibleRewardBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = WithdrawIneligibleReward {
@@ -327,10 +332,12 @@ impl<'a, 'b> WithdrawIneligibleRewardCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -338,10 +345,12 @@ impl<'a, 'b> WithdrawIneligibleRewardCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -461,6 +470,7 @@ impl<'a, 'b> WithdrawIneligibleRewardCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -469,11 +479,13 @@ impl<'a, 'b> WithdrawIneligibleRewardCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn reward_vault(
         &mut self,
@@ -482,6 +494,7 @@ impl<'a, 'b> WithdrawIneligibleRewardCpiBuilder<'a, 'b> {
         self.instruction.reward_vault = Some(reward_vault);
         self
     }
+
     #[inline(always)]
     pub fn reward_mint(
         &mut self,
@@ -490,6 +503,7 @@ impl<'a, 'b> WithdrawIneligibleRewardCpiBuilder<'a, 'b> {
         self.instruction.reward_mint = Some(reward_mint);
         self
     }
+
     #[inline(always)]
     pub fn funder_token_account(
         &mut self,
@@ -498,11 +512,13 @@ impl<'a, 'b> WithdrawIneligibleRewardCpiBuilder<'a, 'b> {
         self.instruction.funder_token_account = Some(funder_token_account);
         self
     }
+
     #[inline(always)]
     pub fn funder(&mut self, funder: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.funder = Some(funder);
         self
     }
+
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -511,6 +527,7 @@ impl<'a, 'b> WithdrawIneligibleRewardCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -519,16 +536,19 @@ impl<'a, 'b> WithdrawIneligibleRewardCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
         self.instruction.reward_index = Some(reward_index);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -542,6 +562,7 @@ impl<'a, 'b> WithdrawIneligibleRewardCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -556,10 +577,10 @@ impl<'a, 'b> WithdrawIneligibleRewardCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
 pub const CREATE_DYNAMIC_CONFIG_DISCRIMINATOR: [u8; 8] = [81, 251, 122, 78, 66, 57, 208, 82];
@@ -32,6 +31,7 @@ impl CreateDynamicConfig {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -82,15 +82,11 @@ impl CreateDynamicConfigInstructionData {
         }
     }
 
-    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
-        borsh::to_vec(self)
-    }
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for CreateDynamicConfigInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -101,9 +97,7 @@ pub struct CreateDynamicConfigInstructionArgs {
 }
 
 impl CreateDynamicConfigInstructionArgs {
-    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
-        borsh::to_vec(self)
-    }
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 /// Instruction builder for `CreateDynamicConfig`.
@@ -128,51 +122,58 @@ pub struct CreateDynamicConfigBuilder {
 }
 
 impl CreateDynamicConfigBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn config(&mut self, config: solana_pubkey::Pubkey) -> &mut Self {
         self.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
+
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn index(&mut self, index: u64) -> &mut Self {
         self.index = Some(index);
         self
     }
+
     #[inline(always)]
     pub fn pool_creator_authority(&mut self, pool_creator_authority: Pubkey) -> &mut Self {
         self.pool_creator_authority = Some(pool_creator_authority);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -182,6 +183,7 @@ impl CreateDynamicConfigBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateDynamicConfig {
@@ -252,10 +254,12 @@ impl<'a, 'b> CreateDynamicConfigCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -263,10 +267,12 @@ impl<'a, 'b> CreateDynamicConfigCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -359,16 +365,19 @@ impl<'a, 'b> CreateDynamicConfigCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn config(&mut self, config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.config = Some(config);
         self
     }
+
     #[inline(always)]
     pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
+
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -377,6 +386,7 @@ impl<'a, 'b> CreateDynamicConfigCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -385,21 +395,25 @@ impl<'a, 'b> CreateDynamicConfigCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn index(&mut self, index: u64) -> &mut Self {
         self.instruction.index = Some(index);
         self
     }
+
     #[inline(always)]
     pub fn pool_creator_authority(&mut self, pool_creator_authority: Pubkey) -> &mut Self {
         self.instruction.pool_creator_authority = Some(pool_creator_authority);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -413,6 +427,7 @@ impl<'a, 'b> CreateDynamicConfigCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -427,10 +442,10 @@ impl<'a, 'b> CreateDynamicConfigCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

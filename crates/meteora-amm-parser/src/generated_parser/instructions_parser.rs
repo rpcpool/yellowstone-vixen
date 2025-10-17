@@ -11,51 +11,56 @@ use std::sync::Arc;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
-use crate::deserialize_checked;
-
-use crate::instructions::{
-    AddLiquidity as AddLiquidityIxAccounts, AddLiquidityInstructionArgs as AddLiquidityIxData,
-    ClaimPartnerFee as ClaimPartnerFeeIxAccounts,
-    ClaimPartnerFeeInstructionArgs as ClaimPartnerFeeIxData,
-    ClaimPositionFee as ClaimPositionFeeIxAccounts, ClaimProtocolFee as ClaimProtocolFeeIxAccounts,
-    ClaimProtocolFeeInstructionArgs as ClaimProtocolFeeIxData,
-    ClaimReward as ClaimRewardIxAccounts, ClaimRewardInstructionArgs as ClaimRewardIxData,
-    CloseClaimFeeOperator as CloseClaimFeeOperatorIxAccounts, CloseConfig as CloseConfigIxAccounts,
-    ClosePosition as ClosePositionIxAccounts, CloseTokenBadge as CloseTokenBadgeIxAccounts,
-    CreateClaimFeeOperator as CreateClaimFeeOperatorIxAccounts,
-    CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
-    CreateDynamicConfig as CreateDynamicConfigIxAccounts,
-    CreateDynamicConfigInstructionArgs as CreateDynamicConfigIxData,
-    CreatePosition as CreatePositionIxAccounts, CreateTokenBadge as CreateTokenBadgeIxAccounts,
-    FundReward as FundRewardIxAccounts, FundRewardInstructionArgs as FundRewardIxData,
-    InitializeCustomizablePool as InitializeCustomizablePoolIxAccounts,
-    InitializeCustomizablePoolInstructionArgs as InitializeCustomizablePoolIxData,
-    InitializePool as InitializePoolIxAccounts,
-    InitializePoolInstructionArgs as InitializePoolIxData,
-    InitializePoolWithDynamicConfig as InitializePoolWithDynamicConfigIxAccounts,
-    InitializePoolWithDynamicConfigInstructionArgs as InitializePoolWithDynamicConfigIxData,
-    InitializeReward as InitializeRewardIxAccounts,
-    InitializeRewardInstructionArgs as InitializeRewardIxData,
-    LockPosition as LockPositionIxAccounts, LockPositionInstructionArgs as LockPositionIxData,
-    PermanentLockPosition as PermanentLockPositionIxAccounts,
-    PermanentLockPositionInstructionArgs as PermanentLockPositionIxData,
-    RefreshVesting as RefreshVestingIxAccounts, RemoveAllLiquidity as RemoveAllLiquidityIxAccounts,
-    RemoveAllLiquidityInstructionArgs as RemoveAllLiquidityIxData,
-    RemoveLiquidity as RemoveLiquidityIxAccounts,
-    RemoveLiquidityInstructionArgs as RemoveLiquidityIxData,
-    SetPoolStatus as SetPoolStatusIxAccounts, SetPoolStatusInstructionArgs as SetPoolStatusIxData,
-    SplitPosition as SplitPositionIxAccounts, SplitPosition2 as SplitPosition2IxAccounts,
-    SplitPosition2InstructionArgs as SplitPosition2IxData,
-    SplitPositionInstructionArgs as SplitPositionIxData, Swap as SwapIxAccounts,
-    Swap2 as Swap2IxAccounts, Swap2InstructionArgs as Swap2IxData,
-    SwapInstructionArgs as SwapIxData, UpdateRewardDuration as UpdateRewardDurationIxAccounts,
-    UpdateRewardDurationInstructionArgs as UpdateRewardDurationIxData,
-    UpdateRewardFunder as UpdateRewardFunderIxAccounts,
-    UpdateRewardFunderInstructionArgs as UpdateRewardFunderIxData,
-    WithdrawIneligibleReward as WithdrawIneligibleRewardIxAccounts,
-    WithdrawIneligibleRewardInstructionArgs as WithdrawIneligibleRewardIxData,
+use crate::{
+    deserialize_checked,
+    instructions::{
+        AddLiquidity as AddLiquidityIxAccounts, AddLiquidityInstructionArgs as AddLiquidityIxData,
+        ClaimPartnerFee as ClaimPartnerFeeIxAccounts,
+        ClaimPartnerFeeInstructionArgs as ClaimPartnerFeeIxData,
+        ClaimPositionFee as ClaimPositionFeeIxAccounts,
+        ClaimProtocolFee as ClaimProtocolFeeIxAccounts,
+        ClaimProtocolFeeInstructionArgs as ClaimProtocolFeeIxData,
+        ClaimReward as ClaimRewardIxAccounts, ClaimRewardInstructionArgs as ClaimRewardIxData,
+        CloseClaimFeeOperator as CloseClaimFeeOperatorIxAccounts,
+        CloseConfig as CloseConfigIxAccounts, ClosePosition as ClosePositionIxAccounts,
+        CloseTokenBadge as CloseTokenBadgeIxAccounts,
+        CreateClaimFeeOperator as CreateClaimFeeOperatorIxAccounts,
+        CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
+        CreateDynamicConfig as CreateDynamicConfigIxAccounts,
+        CreateDynamicConfigInstructionArgs as CreateDynamicConfigIxData,
+        CreatePosition as CreatePositionIxAccounts, CreateTokenBadge as CreateTokenBadgeIxAccounts,
+        FundReward as FundRewardIxAccounts, FundRewardInstructionArgs as FundRewardIxData,
+        InitializeCustomizablePool as InitializeCustomizablePoolIxAccounts,
+        InitializeCustomizablePoolInstructionArgs as InitializeCustomizablePoolIxData,
+        InitializePool as InitializePoolIxAccounts,
+        InitializePoolInstructionArgs as InitializePoolIxData,
+        InitializePoolWithDynamicConfig as InitializePoolWithDynamicConfigIxAccounts,
+        InitializePoolWithDynamicConfigInstructionArgs as InitializePoolWithDynamicConfigIxData,
+        InitializeReward as InitializeRewardIxAccounts,
+        InitializeRewardInstructionArgs as InitializeRewardIxData,
+        LockPosition as LockPositionIxAccounts, LockPositionInstructionArgs as LockPositionIxData,
+        PermanentLockPosition as PermanentLockPositionIxAccounts,
+        PermanentLockPositionInstructionArgs as PermanentLockPositionIxData,
+        RefreshVesting as RefreshVestingIxAccounts,
+        RemoveAllLiquidity as RemoveAllLiquidityIxAccounts,
+        RemoveAllLiquidityInstructionArgs as RemoveAllLiquidityIxData,
+        RemoveLiquidity as RemoveLiquidityIxAccounts,
+        RemoveLiquidityInstructionArgs as RemoveLiquidityIxData,
+        SetPoolStatus as SetPoolStatusIxAccounts,
+        SetPoolStatusInstructionArgs as SetPoolStatusIxData,
+        SplitPosition as SplitPositionIxAccounts, SplitPosition2 as SplitPosition2IxAccounts,
+        SplitPosition2InstructionArgs as SplitPosition2IxData,
+        SplitPositionInstructionArgs as SplitPositionIxData, Swap as SwapIxAccounts,
+        Swap2 as Swap2IxAccounts, Swap2InstructionArgs as Swap2IxData,
+        SwapInstructionArgs as SwapIxData, UpdateRewardDuration as UpdateRewardDurationIxAccounts,
+        UpdateRewardDurationInstructionArgs as UpdateRewardDurationIxData,
+        UpdateRewardFunder as UpdateRewardFunderIxAccounts,
+        UpdateRewardFunderInstructionArgs as UpdateRewardFunderIxData,
+        WithdrawIneligibleReward as WithdrawIneligibleRewardIxAccounts,
+        WithdrawIneligibleRewardInstructionArgs as WithdrawIneligibleRewardIxData,
+    },
+    ID,
 };
-use crate::ID;
 
 /// CpAmm Instructions
 #[derive(Debug)]
@@ -109,16 +114,12 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-
     #[cfg(not(feature = "shared-data"))]
     type Output = CpAmmProgramIx;
-
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<CpAmmProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "CpAmm::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "CpAmm::InstructionParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -157,9 +158,7 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 impl InstructionParser {
@@ -872,11 +871,10 @@ pub fn next_program_id_optional_account<
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{CpAmmProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::AddLiquidityIxAccounts;
+    use super::{AddLiquidityIxAccounts, CpAmmProgramIx, InstructionParser};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::AddLiquidityIxAccounts> for AddLiquidityIxAccounts {
         fn into_proto(self) -> proto_def::AddLiquidityIxAccounts {
             proto_def::AddLiquidityIxAccounts {

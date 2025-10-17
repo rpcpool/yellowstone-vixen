@@ -12,9 +12,6 @@ pub(crate) mod r#position;
 pub(crate) mod r#token_badge;
 pub(crate) mod r#vesting;
 
-pub use self::r#claim_fee_operator::*;
-pub use self::r#config::*;
-pub use self::r#pool::*;
-pub use self::r#position::*;
-pub use self::r#token_badge::*;
-pub use self::r#vesting::*;
+pub use self::{
+    r#claim_fee_operator::*, r#config::*, r#pool::*, r#position::*, r#token_badge::*, r#vesting::*,
+};

@@ -5,10 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::BaseFeeParameters;
-use crate::generated::types::DynamicFeeParameters;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
+
+use crate::generated::types::{BaseFeeParameters, DynamicFeeParameters};
 
 /// Information regarding fee charges
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

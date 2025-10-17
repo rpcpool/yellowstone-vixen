@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const REFRESH_VESTING_DISCRIMINATOR: [u8; 8] = [9, 94, 216, 14, 116, 204, 247, 0];
 
@@ -26,6 +25,7 @@ impl RefreshVesting {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -68,15 +68,11 @@ impl RefreshVestingInstructionData {
         }
     }
 
-    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
-        borsh::to_vec(self)
-    }
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for RefreshVestingInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `RefreshVesting`.
@@ -97,19 +93,20 @@ pub struct RefreshVestingBuilder {
 }
 
 impl RefreshVestingBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
         self.position = Some(position);
         self
     }
+
     /// The token account for nft
     #[inline(always)]
     pub fn position_nft_account(
@@ -119,17 +116,20 @@ impl RefreshVestingBuilder {
         self.position_nft_account = Some(position_nft_account);
         self
     }
+
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -139,6 +139,7 @@ impl RefreshVestingBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = RefreshVesting {
@@ -192,10 +193,12 @@ impl<'a, 'b> RefreshVestingCpi<'a, 'b> {
             owner: accounts.owner,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -203,10 +206,12 @@ impl<'a, 'b> RefreshVestingCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -289,16 +294,19 @@ impl<'a, 'b> RefreshVestingCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn position(&mut self, position: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.position = Some(position);
         self
     }
+
     /// The token account for nft
     #[inline(always)]
     pub fn position_nft_account(
@@ -308,11 +316,13 @@ impl<'a, 'b> RefreshVestingCpiBuilder<'a, 'b> {
         self.instruction.position_nft_account = Some(position_nft_account);
         self
     }
+
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -326,6 +336,7 @@ impl<'a, 'b> RefreshVestingCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -340,10 +351,10 @@ impl<'a, 'b> RefreshVestingCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

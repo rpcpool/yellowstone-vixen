@@ -5,11 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::SwapParameters2;
-use crate::generated::types::SwapResult2;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
+
+use crate::generated::types::{SwapParameters2, SwapResult2};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

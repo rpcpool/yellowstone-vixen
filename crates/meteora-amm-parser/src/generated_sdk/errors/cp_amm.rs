@@ -42,22 +42,22 @@ pub enum CpAmmError {
     InvalidAuthorityToCreateThePool = 0x1779,
     /// 6010 - Invalid activation type
     #[error("Invalid activation type")]
-    InvalidActivationType = 0x177A,
+    InvalidActivationType = 0x177a,
     /// 6011 - Invalid activation point
     #[error("Invalid activation point")]
-    InvalidActivationPoint = 0x177B,
+    InvalidActivationPoint = 0x177b,
     /// 6012 - Quote token must be SOL,USDC
     #[error("Quote token must be SOL,USDC")]
-    InvalidQuoteMint = 0x177C,
+    InvalidQuoteMint = 0x177c,
     /// 6013 - Invalid fee curve
     #[error("Invalid fee curve")]
-    InvalidFeeCurve = 0x177D,
+    InvalidFeeCurve = 0x177d,
     /// 6014 - Invalid Price Range
     #[error("Invalid Price Range")]
-    InvalidPriceRange = 0x177E,
+    InvalidPriceRange = 0x177e,
     /// 6015 - Trade is over price range
     #[error("Trade is over price range")]
-    PriceRangeViolation = 0x177F,
+    PriceRangeViolation = 0x177f,
     /// 6016 - Invalid parameters
     #[error("Invalid parameters")]
     InvalidParameters = 0x1780,
@@ -90,22 +90,22 @@ pub enum CpAmmError {
     InvalidPoolStatus = 0x1789,
     /// 6026 - Unsupported native mint token2022
     #[error("Unsupported native mint token2022")]
-    UnsupportNativeMintToken2022 = 0x178A,
+    UnsupportNativeMintToken2022 = 0x178a,
     /// 6027 - Invalid reward index
     #[error("Invalid reward index")]
-    InvalidRewardIndex = 0x178B,
+    InvalidRewardIndex = 0x178b,
     /// 6028 - Invalid reward duration
     #[error("Invalid reward duration")]
-    InvalidRewardDuration = 0x178C,
+    InvalidRewardDuration = 0x178c,
     /// 6029 - Reward already initialized
     #[error("Reward already initialized")]
-    RewardInitialized = 0x178D,
+    RewardInitialized = 0x178d,
     /// 6030 - Reward not initialized
     #[error("Reward not initialized")]
-    RewardUninitialized = 0x178E,
+    RewardUninitialized = 0x178e,
     /// 6031 - Invalid reward vault
     #[error("Invalid reward vault")]
-    InvalidRewardVault = 0x178F,
+    InvalidRewardVault = 0x178f,
     /// 6032 - Must withdraw ineligible reward
     #[error("Must withdraw ineligible reward")]
     MustWithdrawnIneligibleReward = 0x1790,
@@ -138,41 +138,39 @@ pub enum CpAmmError {
     InvalidConfigType = 0x1799,
     /// 6042 - Invalid pool creator
     #[error("Invalid pool creator")]
-    InvalidPoolCreator = 0x179A,
+    InvalidPoolCreator = 0x179a,
     /// 6043 - Reward vault is frozen, must skip reward to proceed
     #[error("Reward vault is frozen, must skip reward to proceed")]
-    RewardVaultFrozenSkipRequired = 0x179B,
+    RewardVaultFrozenSkipRequired = 0x179b,
     /// 6044 - Invalid parameters for split position
     #[error("Invalid parameters for split position")]
-    InvalidSplitPositionParameters = 0x179C,
+    InvalidSplitPositionParameters = 0x179c,
     /// 6045 - Unsupported split position has vesting lock
     #[error("Unsupported split position has vesting lock")]
-    UnsupportPositionHasVestingLock = 0x179D,
+    UnsupportPositionHasVestingLock = 0x179d,
     /// 6046 - Same position
     #[error("Same position")]
-    SamePosition = 0x179E,
+    SamePosition = 0x179e,
     /// 6047 - Invalid base fee mode
     #[error("Invalid base fee mode")]
-    InvalidBaseFeeMode = 0x179F,
+    InvalidBaseFeeMode = 0x179f,
     /// 6048 - Invalid fee rate limiter
     #[error("Invalid fee rate limiter")]
-    InvalidFeeRateLimiter = 0x17A0,
+    InvalidFeeRateLimiter = 0x17a0,
     /// 6049 - Fail to validate single swap instruction in rate limiter
     #[error("Fail to validate single swap instruction in rate limiter")]
-    FailToValidateSingleSwapInstruction = 0x17A1,
+    FailToValidateSingleSwapInstruction = 0x17a1,
     /// 6050 - Invalid fee scheduler
     #[error("Invalid fee scheduler")]
-    InvalidFeeScheduler = 0x17A2,
+    InvalidFeeScheduler = 0x17a2,
     /// 6051 - Undetermined error
     #[error("Undetermined error")]
-    UndeterminedError = 0x17A3,
+    UndeterminedError = 0x17a3,
     /// 6052 - Invalid pool version
     #[error("Invalid pool version")]
-    InvalidPoolVersion = 0x17A4,
+    InvalidPoolVersion = 0x17a4,
 }
 
 impl From<CpAmmError> for solana_program_error::ProgramError {
-    fn from(e: CpAmmError) -> Self {
-        solana_program_error::ProgramError::Custom(e as u32)
-    }
+    fn from(e: CpAmmError) -> Self { solana_program_error::ProgramError::Custom(e as u32) }
 }

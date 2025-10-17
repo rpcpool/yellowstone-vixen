@@ -5,11 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::PositionMetrics;
-use crate::generated::types::UserRewardInfo;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
+
+use crate::generated::types::{PositionMetrics, UserRewardInfo};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -151,9 +150,7 @@ impl anchor_lang::AccountSerialize for Position {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Position {
-    fn owner() -> Pubkey {
-        crate::CP_AMM_ID
-    }
+    fn owner() -> Pubkey { crate::CP_AMM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

@@ -5,10 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::PoolFeeParameters;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
+
+use crate::generated::types::PoolFeeParameters;
 
 /// Create static config
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]

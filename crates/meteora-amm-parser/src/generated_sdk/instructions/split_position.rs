@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 pub const SPLIT_POSITION_DISCRIMINATOR: [u8; 8] = [172, 241, 221, 138, 161, 29, 253, 42];
 
@@ -39,6 +38,7 @@ impl SplitPosition {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -106,15 +106,11 @@ impl SplitPositionInstructionData {
         }
     }
 
-    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
-        borsh::to_vec(self)
-    }
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for SplitPositionInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -130,9 +126,7 @@ pub struct SplitPositionInstructionArgs {
 }
 
 impl SplitPositionInstructionArgs {
-    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
-        borsh::to_vec(self)
-    }
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 /// Instruction builder for `SplitPosition`.
@@ -170,20 +164,21 @@ pub struct SplitPositionBuilder {
 }
 
 impl SplitPositionBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     /// The first position
     #[inline(always)]
     pub fn first_position(&mut self, first_position: solana_pubkey::Pubkey) -> &mut Self {
         self.first_position = Some(first_position);
         self
     }
+
     /// The token account for position nft
     #[inline(always)]
     pub fn first_position_nft_account(
@@ -193,12 +188,14 @@ impl SplitPositionBuilder {
         self.first_position_nft_account = Some(first_position_nft_account);
         self
     }
+
     /// The second position
     #[inline(always)]
     pub fn second_position(&mut self, second_position: solana_pubkey::Pubkey) -> &mut Self {
         self.second_position = Some(second_position);
         self
     }
+
     /// The token account for position nft
     #[inline(always)]
     pub fn second_position_nft_account(
@@ -208,28 +205,33 @@ impl SplitPositionBuilder {
         self.second_position_nft_account = Some(second_position_nft_account);
         self
     }
+
     /// Owner of first position
     #[inline(always)]
     pub fn first_owner(&mut self, first_owner: solana_pubkey::Pubkey) -> &mut Self {
         self.first_owner = Some(first_owner);
         self
     }
+
     /// Owner of second position
     #[inline(always)]
     pub fn second_owner(&mut self, second_owner: solana_pubkey::Pubkey) -> &mut Self {
         self.second_owner = Some(second_owner);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn unlocked_liquidity_percentage(
         &mut self,
@@ -238,6 +240,7 @@ impl SplitPositionBuilder {
         self.unlocked_liquidity_percentage = Some(unlocked_liquidity_percentage);
         self
     }
+
     #[inline(always)]
     pub fn permanent_locked_liquidity_percentage(
         &mut self,
@@ -246,37 +249,44 @@ impl SplitPositionBuilder {
         self.permanent_locked_liquidity_percentage = Some(permanent_locked_liquidity_percentage);
         self
     }
+
     #[inline(always)]
     pub fn fee_a_percentage(&mut self, fee_a_percentage: u8) -> &mut Self {
         self.fee_a_percentage = Some(fee_a_percentage);
         self
     }
+
     #[inline(always)]
     pub fn fee_b_percentage(&mut self, fee_b_percentage: u8) -> &mut Self {
         self.fee_b_percentage = Some(fee_b_percentage);
         self
     }
+
     #[inline(always)]
     pub fn reward0_percentage(&mut self, reward0_percentage: u8) -> &mut Self {
         self.reward0_percentage = Some(reward0_percentage);
         self
     }
+
     #[inline(always)]
     pub fn reward1_percentage(&mut self, reward1_percentage: u8) -> &mut Self {
         self.reward1_percentage = Some(reward1_percentage);
         self
     }
+
     #[inline(always)]
     pub fn padding(&mut self, padding: [u8; 16]) -> &mut Self {
         self.padding = Some(padding);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -286,6 +296,7 @@ impl SplitPositionBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = SplitPosition {
@@ -402,10 +413,12 @@ impl<'a, 'b> SplitPositionCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -413,10 +426,12 @@ impl<'a, 'b> SplitPositionCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -540,11 +555,13 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     /// The first position
     #[inline(always)]
     pub fn first_position(
@@ -554,6 +571,7 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
         self.instruction.first_position = Some(first_position);
         self
     }
+
     /// The token account for position nft
     #[inline(always)]
     pub fn first_position_nft_account(
@@ -563,6 +581,7 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
         self.instruction.first_position_nft_account = Some(first_position_nft_account);
         self
     }
+
     /// The second position
     #[inline(always)]
     pub fn second_position(
@@ -572,6 +591,7 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
         self.instruction.second_position = Some(second_position);
         self
     }
+
     /// The token account for position nft
     #[inline(always)]
     pub fn second_position_nft_account(
@@ -581,6 +601,7 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
         self.instruction.second_position_nft_account = Some(second_position_nft_account);
         self
     }
+
     /// Owner of first position
     #[inline(always)]
     pub fn first_owner(
@@ -590,6 +611,7 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
         self.instruction.first_owner = Some(first_owner);
         self
     }
+
     /// Owner of second position
     #[inline(always)]
     pub fn second_owner(
@@ -599,6 +621,7 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
         self.instruction.second_owner = Some(second_owner);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -607,11 +630,13 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn unlocked_liquidity_percentage(
         &mut self,
@@ -620,6 +645,7 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
         self.instruction.unlocked_liquidity_percentage = Some(unlocked_liquidity_percentage);
         self
     }
+
     #[inline(always)]
     pub fn permanent_locked_liquidity_percentage(
         &mut self,
@@ -629,31 +655,37 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
             Some(permanent_locked_liquidity_percentage);
         self
     }
+
     #[inline(always)]
     pub fn fee_a_percentage(&mut self, fee_a_percentage: u8) -> &mut Self {
         self.instruction.fee_a_percentage = Some(fee_a_percentage);
         self
     }
+
     #[inline(always)]
     pub fn fee_b_percentage(&mut self, fee_b_percentage: u8) -> &mut Self {
         self.instruction.fee_b_percentage = Some(fee_b_percentage);
         self
     }
+
     #[inline(always)]
     pub fn reward0_percentage(&mut self, reward0_percentage: u8) -> &mut Self {
         self.instruction.reward0_percentage = Some(reward0_percentage);
         self
     }
+
     #[inline(always)]
     pub fn reward1_percentage(&mut self, reward1_percentage: u8) -> &mut Self {
         self.instruction.reward1_percentage = Some(reward1_percentage);
         self
     }
+
     #[inline(always)]
     pub fn padding(&mut self, padding: [u8; 16]) -> &mut Self {
         self.instruction.padding = Some(padding);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -667,6 +699,7 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -681,10 +714,10 @@ impl<'a, 'b> SplitPositionCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {

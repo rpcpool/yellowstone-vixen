@@ -5,15 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::accounts::ClaimFeeOperator;
-use crate::accounts::Config;
-use crate::accounts::Pool;
-use crate::accounts::Position;
-use crate::accounts::TokenBadge;
-use crate::accounts::Vesting;
-use crate::ID;
-
-use crate::deserialize_checked;
+use crate::{
+    accounts::{ClaimFeeOperator, Config, Pool, Position, TokenBadge, Vesting},
+    deserialize_checked, ID,
+};
 
 /// CpAmm Program State
 #[allow(clippy::large_enum_variant)]
@@ -88,9 +83,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = CpAmmProgramState;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "cp_amm::AccountParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "cp_amm::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -128,18 +121,15 @@ impl yellowstone_vixen_core::Parser for AccountParser {
 
 impl yellowstone_vixen_core::ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
 }
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
-    use super::{AccountParser, CpAmmProgramState};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::ClaimFeeOperator;
+    use super::{AccountParser, ClaimFeeOperator, CpAmmProgramState};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     impl IntoProto<proto_def::ClaimFeeOperator> for ClaimFeeOperator {
         fn into_proto(self) -> proto_def::ClaimFeeOperator {
             proto_def::ClaimFeeOperator {
@@ -306,8 +296,6 @@ mod proto_parser {
     impl ParseProto for AccountParser {
         type Message = proto_def::ProgramState;
 
-        fn output_into_message(value: Self::Output) -> Self::Message {
-            value.into_proto()
-        }
+        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
     }
 }

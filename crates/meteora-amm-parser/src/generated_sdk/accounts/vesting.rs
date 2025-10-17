@@ -5,8 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -131,9 +130,7 @@ impl anchor_lang::AccountSerialize for Vesting {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Vesting {
-    fn owner() -> Pubkey {
-        crate::CP_AMM_ID
-    }
+    fn owner() -> Pubkey { crate::CP_AMM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

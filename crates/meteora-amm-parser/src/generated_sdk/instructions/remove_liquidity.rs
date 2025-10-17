@@ -5,9 +5,9 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::generated::types::RemoveLiquidityParameters;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 
 pub const REMOVE_LIQUIDITY_DISCRIMINATOR: [u8; 8] = [80, 85, 209, 72, 24, 206, 177, 108];
 
@@ -52,6 +52,7 @@ impl RemoveLiquidity {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -139,15 +140,11 @@ impl RemoveLiquidityInstructionData {
         }
     }
 
-    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
-        borsh::to_vec(self)
-    }
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for RemoveLiquidityInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -157,9 +154,7 @@ pub struct RemoveLiquidityInstructionArgs {
 }
 
 impl RemoveLiquidityInstructionArgs {
-    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
-        borsh::to_vec(self)
-    }
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 /// Instruction builder for `RemoveLiquidity`.
@@ -203,61 +198,69 @@ pub struct RemoveLiquidityBuilder {
 }
 
 impl RemoveLiquidityBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
+
     /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
         self.position = Some(position);
         self
     }
+
     /// The user token a account
     #[inline(always)]
     pub fn token_a_account(&mut self, token_a_account: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_account = Some(token_a_account);
         self
     }
+
     /// The user token b account
     #[inline(always)]
     pub fn token_b_account(&mut self, token_b_account: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_account = Some(token_b_account);
         self
     }
+
     /// The vault token account for input token
     #[inline(always)]
     pub fn token_a_vault(&mut self, token_a_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_vault = Some(token_a_vault);
         self
     }
+
     /// The vault token account for output token
     #[inline(always)]
     pub fn token_b_vault(&mut self, token_b_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_vault = Some(token_b_vault);
         self
     }
+
     /// The mint of token a
     #[inline(always)]
     pub fn token_a_mint(&mut self, token_a_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_mint = Some(token_a_mint);
         self
     }
+
     /// The mint of token b
     #[inline(always)]
     pub fn token_b_mint(&mut self, token_b_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_mint = Some(token_b_mint);
         self
     }
+
     /// The token account for nft
     #[inline(always)]
     pub fn position_nft_account(
@@ -267,45 +270,53 @@ impl RemoveLiquidityBuilder {
         self.position_nft_account = Some(position_nft_account);
         self
     }
+
     /// owner of position
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
         self.owner = Some(owner);
         self
     }
+
     /// Token a program
     #[inline(always)]
     pub fn token_a_program(&mut self, token_a_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_a_program = Some(token_a_program);
         self
     }
+
     /// Token b program
     #[inline(always)]
     pub fn token_b_program(&mut self, token_b_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_b_program = Some(token_b_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn params(&mut self, params: RemoveLiquidityParameters) -> &mut Self {
         self.params = Some(params);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
+
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -315,6 +326,7 @@ impl RemoveLiquidityBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
+
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = RemoveLiquidity {
@@ -443,10 +455,12 @@ impl<'a, 'b> RemoveLiquidityCpi<'a, 'b> {
             __args: args,
         }
     }
+
     #[inline(always)]
     pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
+
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
@@ -454,10 +468,12 @@ impl<'a, 'b> RemoveLiquidityCpi<'a, 'b> {
     ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
+
     #[inline(always)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
+
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -617,6 +633,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
+
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -625,16 +642,19 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
+
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
+
     #[inline(always)]
     pub fn position(&mut self, position: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.position = Some(position);
         self
     }
+
     /// The user token a account
     #[inline(always)]
     pub fn token_a_account(
@@ -644,6 +664,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.token_a_account = Some(token_a_account);
         self
     }
+
     /// The user token b account
     #[inline(always)]
     pub fn token_b_account(
@@ -653,6 +674,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.token_b_account = Some(token_b_account);
         self
     }
+
     /// The vault token account for input token
     #[inline(always)]
     pub fn token_a_vault(
@@ -662,6 +684,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.token_a_vault = Some(token_a_vault);
         self
     }
+
     /// The vault token account for output token
     #[inline(always)]
     pub fn token_b_vault(
@@ -671,6 +694,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.token_b_vault = Some(token_b_vault);
         self
     }
+
     /// The mint of token a
     #[inline(always)]
     pub fn token_a_mint(
@@ -680,6 +704,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.token_a_mint = Some(token_a_mint);
         self
     }
+
     /// The mint of token b
     #[inline(always)]
     pub fn token_b_mint(
@@ -689,6 +714,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.token_b_mint = Some(token_b_mint);
         self
     }
+
     /// The token account for nft
     #[inline(always)]
     pub fn position_nft_account(
@@ -698,12 +724,14 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.position_nft_account = Some(position_nft_account);
         self
     }
+
     /// owner of position
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.owner = Some(owner);
         self
     }
+
     /// Token a program
     #[inline(always)]
     pub fn token_a_program(
@@ -713,6 +741,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.token_a_program = Some(token_a_program);
         self
     }
+
     /// Token b program
     #[inline(always)]
     pub fn token_b_program(
@@ -722,6 +751,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.token_b_program = Some(token_b_program);
         self
     }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -730,16 +760,19 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
+
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
+
     #[inline(always)]
     pub fn params(&mut self, params: RemoveLiquidityParameters) -> &mut Self {
         self.instruction.params = Some(params);
         self
     }
+
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -753,6 +786,7 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
+
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -767,10 +801,10 @@ impl<'a, 'b> RemoveLiquidityCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
+
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_error::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
+
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
