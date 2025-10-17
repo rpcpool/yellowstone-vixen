@@ -7,14 +7,20 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-pub const CLAIM_PROTOCOL_FEE_DISCRIMINATOR: [u8; 8] = [165, 228, 133, 48, 99, 249, 255, 33];
+use crate::generated::types::SwapParameters2;
+
+pub const SWAP2_DISCRIMINATOR: [u8; 8] = [65, 75, 63, 76, 235, 91, 91, 136];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct ClaimProtocolFee {
+pub struct Swap2 {
     pub pool_authority: solana_pubkey::Pubkey,
-
+    /// Pool account
     pub pool: solana_pubkey::Pubkey,
+    /// The user token account for input token
+    pub input_token_account: solana_pubkey::Pubkey,
+    /// The user token account for output token
+    pub output_token_account: solana_pubkey::Pubkey,
     /// The vault token account for input token
     pub token_a_vault: solana_pubkey::Pubkey,
     /// The vault token account for output token
@@ -23,29 +29,22 @@ pub struct ClaimProtocolFee {
     pub token_a_mint: solana_pubkey::Pubkey,
     /// The mint of token b
     pub token_b_mint: solana_pubkey::Pubkey,
-    /// The treasury token a account
-    pub token_a_account: solana_pubkey::Pubkey,
-    /// The treasury token b account
-    pub token_b_account: solana_pubkey::Pubkey,
-    /// Claim fee operator
-    pub claim_fee_operator: solana_pubkey::Pubkey,
-    /// Operator
-    pub operator: solana_pubkey::Pubkey,
+    /// The user performing the swap
+    pub payer: solana_pubkey::Pubkey,
     /// Token a program
     pub token_a_program: solana_pubkey::Pubkey,
     /// Token b program
     pub token_b_program: solana_pubkey::Pubkey,
+    /// referral token account
+    pub referral_token_account: Option<solana_pubkey::Pubkey>,
 
     pub event_authority: solana_pubkey::Pubkey,
 
     pub program: solana_pubkey::Pubkey,
 }
 
-impl ClaimProtocolFee {
-    pub fn instruction(
-        &self,
-        args: ClaimProtocolFeeInstructionArgs,
-    ) -> solana_instruction::Instruction {
+impl Swap2 {
+    pub fn instruction(&self, args: Swap2InstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -53,7 +52,7 @@ impl ClaimProtocolFee {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: ClaimProtocolFeeInstructionArgs,
+        args: Swap2InstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
@@ -62,6 +61,14 @@ impl ClaimProtocolFee {
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(self.pool, false));
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.input_token_account,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.output_token_account,
+            false,
+        ));
         accounts.push(solana_instruction::AccountMeta::new(
             self.token_a_vault,
             false,
@@ -78,21 +85,8 @@ impl ClaimProtocolFee {
             self.token_b_mint,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new(
-            self.token_a_account,
-            false,
-        ));
-        accounts.push(solana_instruction::AccountMeta::new(
-            self.token_b_account,
-            false,
-        ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.claim_fee_operator,
-            false,
-        ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.operator,
-            true,
+            self.payer, true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_a_program,
@@ -102,6 +96,17 @@ impl ClaimProtocolFee {
             self.token_b_program,
             false,
         ));
+        if let Some(referral_token_account) = self.referral_token_account {
+            accounts.push(solana_instruction::AccountMeta::new(
+                referral_token_account,
+                false,
+            ));
+        } else {
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
+                crate::CP_AMM_ID,
+                false,
+            ));
+        }
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
@@ -111,7 +116,7 @@ impl ClaimProtocolFee {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = ClaimProtocolFeeInstructionData::new().try_to_vec().unwrap();
+        let mut data = Swap2InstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -125,75 +130,73 @@ impl ClaimProtocolFee {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ClaimProtocolFeeInstructionData {
+pub struct Swap2InstructionData {
     discriminator: [u8; 8],
 }
 
-impl ClaimProtocolFeeInstructionData {
+impl Swap2InstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [165, 228, 133, 48, 99, 249, 255, 33],
+            discriminator: [65, 75, 63, 76, 235, 91, 91, 136],
         }
     }
 
     pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
-impl Default for ClaimProtocolFeeInstructionData {
+impl Default for Swap2InstructionData {
     fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ClaimProtocolFeeInstructionArgs {
-    pub max_amount_a: u64,
-    pub max_amount_b: u64,
+pub struct Swap2InstructionArgs {
+    pub params: SwapParameters2,
 }
 
-impl ClaimProtocolFeeInstructionArgs {
+impl Swap2InstructionArgs {
     pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
-/// Instruction builder for `ClaimProtocolFee`.
+/// Instruction builder for `Swap2`.
 ///
 /// ### Accounts:
 ///
 ///   0. `[optional]` pool_authority (default to `HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC`)
 ///   1. `[writable]` pool
-///   2. `[writable]` token_a_vault
-///   3. `[writable]` token_b_vault
-///   4. `[]` token_a_mint
-///   5. `[]` token_b_mint
-///   6. `[writable]` token_a_account
-///   7. `[writable]` token_b_account
-///   8. `[]` claim_fee_operator
-///   9. `[signer]` operator
-///   10. `[]` token_a_program
-///   11. `[]` token_b_program
+///   2. `[writable]` input_token_account
+///   3. `[writable]` output_token_account
+///   4. `[writable]` token_a_vault
+///   5. `[writable]` token_b_vault
+///   6. `[]` token_a_mint
+///   7. `[]` token_b_mint
+///   8. `[signer]` payer
+///   9. `[]` token_a_program
+///   10. `[]` token_b_program
+///   11. `[writable, optional]` referral_token_account
 ///   12. `[]` event_authority
 ///   13. `[]` program
 #[derive(Clone, Debug, Default)]
-pub struct ClaimProtocolFeeBuilder {
+pub struct Swap2Builder {
     pool_authority: Option<solana_pubkey::Pubkey>,
     pool: Option<solana_pubkey::Pubkey>,
+    input_token_account: Option<solana_pubkey::Pubkey>,
+    output_token_account: Option<solana_pubkey::Pubkey>,
     token_a_vault: Option<solana_pubkey::Pubkey>,
     token_b_vault: Option<solana_pubkey::Pubkey>,
     token_a_mint: Option<solana_pubkey::Pubkey>,
     token_b_mint: Option<solana_pubkey::Pubkey>,
-    token_a_account: Option<solana_pubkey::Pubkey>,
-    token_b_account: Option<solana_pubkey::Pubkey>,
-    claim_fee_operator: Option<solana_pubkey::Pubkey>,
-    operator: Option<solana_pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
     token_a_program: Option<solana_pubkey::Pubkey>,
     token_b_program: Option<solana_pubkey::Pubkey>,
+    referral_token_account: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
-    max_amount_a: Option<u64>,
-    max_amount_b: Option<u64>,
+    params: Option<SwapParameters2>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl ClaimProtocolFeeBuilder {
+impl Swap2Builder {
     pub fn new() -> Self { Self::default() }
 
     /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
@@ -203,9 +206,27 @@ impl ClaimProtocolFeeBuilder {
         self
     }
 
+    /// Pool account
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
+        self
+    }
+
+    /// The user token account for input token
+    #[inline(always)]
+    pub fn input_token_account(&mut self, input_token_account: solana_pubkey::Pubkey) -> &mut Self {
+        self.input_token_account = Some(input_token_account);
+        self
+    }
+
+    /// The user token account for output token
+    #[inline(always)]
+    pub fn output_token_account(
+        &mut self,
+        output_token_account: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.output_token_account = Some(output_token_account);
         self
     }
 
@@ -237,31 +258,10 @@ impl ClaimProtocolFeeBuilder {
         self
     }
 
-    /// The treasury token a account
+    /// The user performing the swap
     #[inline(always)]
-    pub fn token_a_account(&mut self, token_a_account: solana_pubkey::Pubkey) -> &mut Self {
-        self.token_a_account = Some(token_a_account);
-        self
-    }
-
-    /// The treasury token b account
-    #[inline(always)]
-    pub fn token_b_account(&mut self, token_b_account: solana_pubkey::Pubkey) -> &mut Self {
-        self.token_b_account = Some(token_b_account);
-        self
-    }
-
-    /// Claim fee operator
-    #[inline(always)]
-    pub fn claim_fee_operator(&mut self, claim_fee_operator: solana_pubkey::Pubkey) -> &mut Self {
-        self.claim_fee_operator = Some(claim_fee_operator);
-        self
-    }
-
-    /// Operator
-    #[inline(always)]
-    pub fn operator(&mut self, operator: solana_pubkey::Pubkey) -> &mut Self {
-        self.operator = Some(operator);
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
+        self.payer = Some(payer);
         self
     }
 
@@ -279,6 +279,17 @@ impl ClaimProtocolFeeBuilder {
         self
     }
 
+    /// `[optional account]`
+    /// referral token account
+    #[inline(always)]
+    pub fn referral_token_account(
+        &mut self,
+        referral_token_account: Option<solana_pubkey::Pubkey>,
+    ) -> &mut Self {
+        self.referral_token_account = referral_token_account;
+        self
+    }
+
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
@@ -292,14 +303,8 @@ impl ClaimProtocolFeeBuilder {
     }
 
     #[inline(always)]
-    pub fn max_amount_a(&mut self, max_amount_a: u64) -> &mut Self {
-        self.max_amount_a = Some(max_amount_a);
-        self
-    }
-
-    #[inline(always)]
-    pub fn max_amount_b(&mut self, max_amount_b: u64) -> &mut Self {
-        self.max_amount_b = Some(max_amount_b);
+    pub fn params(&mut self, params: SwapParameters2) -> &mut Self {
+        self.params = Some(params);
         self
     }
 
@@ -322,40 +327,45 @@ impl ClaimProtocolFeeBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = ClaimProtocolFee {
+        let accounts = Swap2 {
             pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
                 "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
             )),
             pool: self.pool.expect("pool is not set"),
+            input_token_account: self
+                .input_token_account
+                .expect("input_token_account is not set"),
+            output_token_account: self
+                .output_token_account
+                .expect("output_token_account is not set"),
             token_a_vault: self.token_a_vault.expect("token_a_vault is not set"),
             token_b_vault: self.token_b_vault.expect("token_b_vault is not set"),
             token_a_mint: self.token_a_mint.expect("token_a_mint is not set"),
             token_b_mint: self.token_b_mint.expect("token_b_mint is not set"),
-            token_a_account: self.token_a_account.expect("token_a_account is not set"),
-            token_b_account: self.token_b_account.expect("token_b_account is not set"),
-            claim_fee_operator: self
-                .claim_fee_operator
-                .expect("claim_fee_operator is not set"),
-            operator: self.operator.expect("operator is not set"),
+            payer: self.payer.expect("payer is not set"),
             token_a_program: self.token_a_program.expect("token_a_program is not set"),
             token_b_program: self.token_b_program.expect("token_b_program is not set"),
+            referral_token_account: self.referral_token_account,
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
-        let args = ClaimProtocolFeeInstructionArgs {
-            max_amount_a: self.max_amount_a.clone().expect("max_amount_a is not set"),
-            max_amount_b: self.max_amount_b.clone().expect("max_amount_b is not set"),
+        let args = Swap2InstructionArgs {
+            params: self.params.clone().expect("params is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `claim_protocol_fee` CPI accounts.
-pub struct ClaimProtocolFeeCpiAccounts<'a, 'b> {
+/// `swap2` CPI accounts.
+pub struct Swap2CpiAccounts<'a, 'b> {
     pub pool_authority: &'b solana_account_info::AccountInfo<'a>,
-
+    /// Pool account
     pub pool: &'b solana_account_info::AccountInfo<'a>,
+    /// The user token account for input token
+    pub input_token_account: &'b solana_account_info::AccountInfo<'a>,
+    /// The user token account for output token
+    pub output_token_account: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for input token
     pub token_a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for output token
@@ -364,32 +374,32 @@ pub struct ClaimProtocolFeeCpiAccounts<'a, 'b> {
     pub token_a_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of token b
     pub token_b_mint: &'b solana_account_info::AccountInfo<'a>,
-    /// The treasury token a account
-    pub token_a_account: &'b solana_account_info::AccountInfo<'a>,
-    /// The treasury token b account
-    pub token_b_account: &'b solana_account_info::AccountInfo<'a>,
-    /// Claim fee operator
-    pub claim_fee_operator: &'b solana_account_info::AccountInfo<'a>,
-    /// Operator
-    pub operator: &'b solana_account_info::AccountInfo<'a>,
+    /// The user performing the swap
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// Token a program
     pub token_a_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token b program
     pub token_b_program: &'b solana_account_info::AccountInfo<'a>,
+    /// referral token account
+    pub referral_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `claim_protocol_fee` CPI instruction.
-pub struct ClaimProtocolFeeCpi<'a, 'b> {
+/// `swap2` CPI instruction.
+pub struct Swap2Cpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
 
     pub pool_authority: &'b solana_account_info::AccountInfo<'a>,
-
+    /// Pool account
     pub pool: &'b solana_account_info::AccountInfo<'a>,
+    /// The user token account for input token
+    pub input_token_account: &'b solana_account_info::AccountInfo<'a>,
+    /// The user token account for output token
+    pub output_token_account: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for input token
     pub token_a_vault: &'b solana_account_info::AccountInfo<'a>,
     /// The vault token account for output token
@@ -398,46 +408,42 @@ pub struct ClaimProtocolFeeCpi<'a, 'b> {
     pub token_a_mint: &'b solana_account_info::AccountInfo<'a>,
     /// The mint of token b
     pub token_b_mint: &'b solana_account_info::AccountInfo<'a>,
-    /// The treasury token a account
-    pub token_a_account: &'b solana_account_info::AccountInfo<'a>,
-    /// The treasury token b account
-    pub token_b_account: &'b solana_account_info::AccountInfo<'a>,
-    /// Claim fee operator
-    pub claim_fee_operator: &'b solana_account_info::AccountInfo<'a>,
-    /// Operator
-    pub operator: &'b solana_account_info::AccountInfo<'a>,
+    /// The user performing the swap
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
     /// Token a program
     pub token_a_program: &'b solana_account_info::AccountInfo<'a>,
     /// Token b program
     pub token_b_program: &'b solana_account_info::AccountInfo<'a>,
+    /// referral token account
+    pub referral_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: ClaimProtocolFeeInstructionArgs,
+    pub __args: Swap2InstructionArgs,
 }
 
-impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
+impl<'a, 'b> Swap2Cpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: ClaimProtocolFeeCpiAccounts<'a, 'b>,
-        args: ClaimProtocolFeeInstructionArgs,
+        accounts: Swap2CpiAccounts<'a, 'b>,
+        args: Swap2InstructionArgs,
     ) -> Self {
         Self {
             __program: program,
             pool_authority: accounts.pool_authority,
             pool: accounts.pool,
+            input_token_account: accounts.input_token_account,
+            output_token_account: accounts.output_token_account,
             token_a_vault: accounts.token_a_vault,
             token_b_vault: accounts.token_b_vault,
             token_a_mint: accounts.token_a_mint,
             token_b_mint: accounts.token_b_mint,
-            token_a_account: accounts.token_a_account,
-            token_b_account: accounts.token_b_account,
-            claim_fee_operator: accounts.claim_fee_operator,
-            operator: accounts.operator,
+            payer: accounts.payer,
             token_a_program: accounts.token_a_program,
             token_b_program: accounts.token_b_program,
+            referral_token_account: accounts.referral_token_account,
             event_authority: accounts.event_authority,
             program: accounts.program,
             __args: args,
@@ -477,6 +483,14 @@ impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
         ));
         accounts.push(solana_instruction::AccountMeta::new(*self.pool.key, false));
         accounts.push(solana_instruction::AccountMeta::new(
+            *self.input_token_account.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.output_token_account.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.token_a_vault.key,
             false,
         ));
@@ -492,20 +506,8 @@ impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
             *self.token_b_mint.key,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new(
-            *self.token_a_account.key,
-            false,
-        ));
-        accounts.push(solana_instruction::AccountMeta::new(
-            *self.token_b_account.key,
-            false,
-        ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.claim_fee_operator.key,
-            false,
-        ));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.operator.key,
+            *self.payer.key,
             true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -516,6 +518,17 @@ impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
             *self.token_b_program.key,
             false,
         ));
+        if let Some(referral_token_account) = self.referral_token_account {
+            accounts.push(solana_instruction::AccountMeta::new(
+                *referral_token_account.key,
+                false,
+            ));
+        } else {
+            accounts.push(solana_instruction::AccountMeta::new_readonly(
+                crate::CP_AMM_ID,
+                false,
+            ));
+        }
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
@@ -531,7 +544,7 @@ impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = ClaimProtocolFeeInstructionData::new().try_to_vec().unwrap();
+        let mut data = Swap2InstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -544,16 +557,18 @@ impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
         account_infos.push(self.__program.clone());
         account_infos.push(self.pool_authority.clone());
         account_infos.push(self.pool.clone());
+        account_infos.push(self.input_token_account.clone());
+        account_infos.push(self.output_token_account.clone());
         account_infos.push(self.token_a_vault.clone());
         account_infos.push(self.token_b_vault.clone());
         account_infos.push(self.token_a_mint.clone());
         account_infos.push(self.token_b_mint.clone());
-        account_infos.push(self.token_a_account.clone());
-        account_infos.push(self.token_b_account.clone());
-        account_infos.push(self.claim_fee_operator.clone());
-        account_infos.push(self.operator.clone());
+        account_infos.push(self.payer.clone());
         account_infos.push(self.token_a_program.clone());
         account_infos.push(self.token_b_program.clone());
+        if let Some(referral_token_account) = self.referral_token_account {
+            account_infos.push(referral_token_account.clone());
+        }
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
         remaining_accounts
@@ -568,49 +583,48 @@ impl<'a, 'b> ClaimProtocolFeeCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `ClaimProtocolFee` via CPI.
+/// Instruction builder for `Swap2` via CPI.
 ///
 /// ### Accounts:
 ///
 ///   0. `[]` pool_authority
 ///   1. `[writable]` pool
-///   2. `[writable]` token_a_vault
-///   3. `[writable]` token_b_vault
-///   4. `[]` token_a_mint
-///   5. `[]` token_b_mint
-///   6. `[writable]` token_a_account
-///   7. `[writable]` token_b_account
-///   8. `[]` claim_fee_operator
-///   9. `[signer]` operator
-///   10. `[]` token_a_program
-///   11. `[]` token_b_program
+///   2. `[writable]` input_token_account
+///   3. `[writable]` output_token_account
+///   4. `[writable]` token_a_vault
+///   5. `[writable]` token_b_vault
+///   6. `[]` token_a_mint
+///   7. `[]` token_b_mint
+///   8. `[signer]` payer
+///   9. `[]` token_a_program
+///   10. `[]` token_b_program
+///   11. `[writable, optional]` referral_token_account
 ///   12. `[]` event_authority
 ///   13. `[]` program
 #[derive(Clone, Debug)]
-pub struct ClaimProtocolFeeCpiBuilder<'a, 'b> {
-    instruction: Box<ClaimProtocolFeeCpiBuilderInstruction<'a, 'b>>,
+pub struct Swap2CpiBuilder<'a, 'b> {
+    instruction: Box<Swap2CpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
+impl<'a, 'b> Swap2CpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(ClaimProtocolFeeCpiBuilderInstruction {
+        let instruction = Box::new(Swap2CpiBuilderInstruction {
             __program: program,
             pool_authority: None,
             pool: None,
+            input_token_account: None,
+            output_token_account: None,
             token_a_vault: None,
             token_b_vault: None,
             token_a_mint: None,
             token_b_mint: None,
-            token_a_account: None,
-            token_b_account: None,
-            claim_fee_operator: None,
-            operator: None,
+            payer: None,
             token_a_program: None,
             token_b_program: None,
+            referral_token_account: None,
             event_authority: None,
             program: None,
-            max_amount_a: None,
-            max_amount_b: None,
+            params: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -625,9 +639,30 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self
     }
 
+    /// Pool account
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
+        self
+    }
+
+    /// The user token account for input token
+    #[inline(always)]
+    pub fn input_token_account(
+        &mut self,
+        input_token_account: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.input_token_account = Some(input_token_account);
+        self
+    }
+
+    /// The user token account for output token
+    #[inline(always)]
+    pub fn output_token_account(
+        &mut self,
+        output_token_account: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.output_token_account = Some(output_token_account);
         self
     }
 
@@ -671,40 +706,10 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self
     }
 
-    /// The treasury token a account
+    /// The user performing the swap
     #[inline(always)]
-    pub fn token_a_account(
-        &mut self,
-        token_a_account: &'b solana_account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.token_a_account = Some(token_a_account);
-        self
-    }
-
-    /// The treasury token b account
-    #[inline(always)]
-    pub fn token_b_account(
-        &mut self,
-        token_b_account: &'b solana_account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.token_b_account = Some(token_b_account);
-        self
-    }
-
-    /// Claim fee operator
-    #[inline(always)]
-    pub fn claim_fee_operator(
-        &mut self,
-        claim_fee_operator: &'b solana_account_info::AccountInfo<'a>,
-    ) -> &mut Self {
-        self.instruction.claim_fee_operator = Some(claim_fee_operator);
-        self
-    }
-
-    /// Operator
-    #[inline(always)]
-    pub fn operator(&mut self, operator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.operator = Some(operator);
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.payer = Some(payer);
         self
     }
 
@@ -728,6 +733,17 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
         self
     }
 
+    /// `[optional account]`
+    /// referral token account
+    #[inline(always)]
+    pub fn referral_token_account(
+        &mut self,
+        referral_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    ) -> &mut Self {
+        self.instruction.referral_token_account = referral_token_account;
+        self
+    }
+
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -744,14 +760,8 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn max_amount_a(&mut self, max_amount_a: u64) -> &mut Self {
-        self.instruction.max_amount_a = Some(max_amount_a);
-        self
-    }
-
-    #[inline(always)]
-    pub fn max_amount_b(&mut self, max_amount_b: u64) -> &mut Self {
-        self.instruction.max_amount_b = Some(max_amount_b);
+    pub fn params(&mut self, params: SwapParameters2) -> &mut Self {
+        self.instruction.params = Some(params);
         self
     }
 
@@ -790,19 +800,10 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
-        let args = ClaimProtocolFeeInstructionArgs {
-            max_amount_a: self
-                .instruction
-                .max_amount_a
-                .clone()
-                .expect("max_amount_a is not set"),
-            max_amount_b: self
-                .instruction
-                .max_amount_b
-                .clone()
-                .expect("max_amount_b is not set"),
+        let args = Swap2InstructionArgs {
+            params: self.instruction.params.clone().expect("params is not set"),
         };
-        let instruction = ClaimProtocolFeeCpi {
+        let instruction = Swap2Cpi {
             __program: self.instruction.__program,
 
             pool_authority: self
@@ -811,6 +812,16 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
                 .expect("pool_authority is not set"),
 
             pool: self.instruction.pool.expect("pool is not set"),
+
+            input_token_account: self
+                .instruction
+                .input_token_account
+                .expect("input_token_account is not set"),
+
+            output_token_account: self
+                .instruction
+                .output_token_account
+                .expect("output_token_account is not set"),
 
             token_a_vault: self
                 .instruction
@@ -832,22 +843,7 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
                 .token_b_mint
                 .expect("token_b_mint is not set"),
 
-            token_a_account: self
-                .instruction
-                .token_a_account
-                .expect("token_a_account is not set"),
-
-            token_b_account: self
-                .instruction
-                .token_b_account
-                .expect("token_b_account is not set"),
-
-            claim_fee_operator: self
-                .instruction
-                .claim_fee_operator
-                .expect("claim_fee_operator is not set"),
-
-            operator: self.instruction.operator.expect("operator is not set"),
+            payer: self.instruction.payer.expect("payer is not set"),
 
             token_a_program: self
                 .instruction
@@ -858,6 +854,8 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
                 .instruction
                 .token_b_program
                 .expect("token_b_program is not set"),
+
+            referral_token_account: self.instruction.referral_token_account,
 
             event_authority: self
                 .instruction
@@ -875,24 +873,23 @@ impl<'a, 'b> ClaimProtocolFeeCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct ClaimProtocolFeeCpiBuilderInstruction<'a, 'b> {
+struct Swap2CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     pool_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     pool: Option<&'b solana_account_info::AccountInfo<'a>>,
+    input_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    output_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_a_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_b_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_a_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_b_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
-    token_a_account: Option<&'b solana_account_info::AccountInfo<'a>>,
-    token_b_account: Option<&'b solana_account_info::AccountInfo<'a>>,
-    claim_fee_operator: Option<&'b solana_account_info::AccountInfo<'a>>,
-    operator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_a_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_b_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    referral_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    max_amount_a: Option<u64>,
-    max_amount_b: Option<u64>,
+    params: Option<SwapParameters2>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

@@ -23,6 +23,8 @@ pub struct TokenBadge {
     pub padding: [u8; 128],
 }
 
+pub const TOKEN_BADGE_DISCRIMINATOR: [u8; 8] = [116, 219, 204, 229, 249, 116, 255, 150];
+
 impl TokenBadge {
     pub const LEN: usize = 168;
 
@@ -132,5 +134,5 @@ impl anchor_lang::IdlBuild for TokenBadge {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for TokenBadge {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

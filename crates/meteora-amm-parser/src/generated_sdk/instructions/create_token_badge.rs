@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const CREATE_TOKEN_BADGE_DISCRIMINATOR: [u8; 8] = [88, 206, 0, 91, 60, 175, 151, 118];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateTokenBadge {
@@ -57,7 +59,7 @@ impl CreateTokenBadge {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = borsh::to_vec(&CreateTokenBadgeInstructionData::new()).unwrap();
+        let data = CreateTokenBadgeInstructionData::new().try_to_vec().unwrap();
 
         solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
@@ -79,6 +81,8 @@ impl CreateTokenBadgeInstructionData {
             discriminator: [88, 206, 0, 91, 60, 175, 151, 118],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for CreateTokenBadgeInstructionData {
@@ -230,7 +234,7 @@ impl<'a, 'b> CreateTokenBadgeCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
@@ -238,15 +242,12 @@ impl<'a, 'b> CreateTokenBadgeCpi<'a, 'b> {
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -257,7 +258,7 @@ impl<'a, 'b> CreateTokenBadgeCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(6 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
             *self.token_badge.key,
@@ -287,7 +288,7 @@ impl<'a, 'b> CreateTokenBadgeCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = borsh::to_vec(&CreateTokenBadgeInstructionData::new()).unwrap();
+        let data = CreateTokenBadgeInstructionData::new().try_to_vec().unwrap();
 
         let instruction = solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
@@ -422,14 +423,11 @@ impl<'a, 'b> CreateTokenBadgeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let instruction = CreateTokenBadgeCpi {
             __program: self.instruction.__program,
 

@@ -7,30 +7,35 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-pub const FUND_REWARD_DISCRIMINATOR: [u8; 8] = [188, 50, 249, 165, 93, 151, 38, 63];
+pub const SPLIT_POSITION2_DISCRIMINATOR: [u8; 8] = [221, 147, 228, 207, 140, 212, 17, 119];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct FundReward {
+pub struct SplitPosition2 {
     pub pool: solana_pubkey::Pubkey,
-
-    pub reward_vault: solana_pubkey::Pubkey,
-
-    pub reward_mint: solana_pubkey::Pubkey,
-
-    pub funder_token_account: solana_pubkey::Pubkey,
-
-    pub funder: solana_pubkey::Pubkey,
-
-    pub token_program: solana_pubkey::Pubkey,
+    /// The first position
+    pub first_position: solana_pubkey::Pubkey,
+    /// The token account for position nft
+    pub first_position_nft_account: solana_pubkey::Pubkey,
+    /// The second position
+    pub second_position: solana_pubkey::Pubkey,
+    /// The token account for position nft
+    pub second_position_nft_account: solana_pubkey::Pubkey,
+    /// Owner of first position
+    pub first_owner: solana_pubkey::Pubkey,
+    /// Owner of second position
+    pub second_owner: solana_pubkey::Pubkey,
 
     pub event_authority: solana_pubkey::Pubkey,
 
     pub program: solana_pubkey::Pubkey,
 }
 
-impl FundReward {
-    pub fn instruction(&self, args: FundRewardInstructionArgs) -> solana_instruction::Instruction {
+impl SplitPosition2 {
+    pub fn instruction(
+        &self,
+        args: SplitPosition2InstructionArgs,
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
 
@@ -38,30 +43,34 @@ impl FundReward {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: FundRewardInstructionArgs,
+        args: SplitPosition2InstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(self.pool, false));
         accounts.push(solana_instruction::AccountMeta::new(
-            self.reward_vault,
+            self.first_position,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.reward_mint,
+            self.first_position_nft_account,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            self.funder_token_account,
+            self.second_position,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.funder,
+            self.second_position_nft_account,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.first_owner,
             true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.token_program,
-            false,
+            self.second_owner,
+            true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
@@ -72,7 +81,7 @@ impl FundReward {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = FundRewardInstructionData::new().try_to_vec().unwrap();
+        let mut data = SplitPosition2InstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -86,65 +95,63 @@ impl FundReward {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct FundRewardInstructionData {
+pub struct SplitPosition2InstructionData {
     discriminator: [u8; 8],
 }
 
-impl FundRewardInstructionData {
+impl SplitPosition2InstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [188, 50, 249, 165, 93, 151, 38, 63],
+            discriminator: [221, 147, 228, 207, 140, 212, 17, 119],
         }
     }
 
     pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
-impl Default for FundRewardInstructionData {
+impl Default for SplitPosition2InstructionData {
     fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct FundRewardInstructionArgs {
-    pub reward_index: u8,
-    pub amount: u64,
-    pub carry_forward: bool,
+pub struct SplitPosition2InstructionArgs {
+    pub numerator: u32,
 }
 
-impl FundRewardInstructionArgs {
+impl SplitPosition2InstructionArgs {
     pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
-/// Instruction builder for `FundReward`.
+/// Instruction builder for `SplitPosition2`.
 ///
 /// ### Accounts:
 ///
 ///   0. `[writable]` pool
-///   1. `[writable]` reward_vault
-///   2. `[]` reward_mint
-///   3. `[writable]` funder_token_account
-///   4. `[signer]` funder
-///   5. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   6. `[]` event_authority
-///   7. `[]` program
+///   1. `[writable]` first_position
+///   2. `[]` first_position_nft_account
+///   3. `[writable]` second_position
+///   4. `[]` second_position_nft_account
+///   5. `[signer]` first_owner
+///   6. `[signer]` second_owner
+///   7. `[]` event_authority
+///   8. `[]` program
 #[derive(Clone, Debug, Default)]
-pub struct FundRewardBuilder {
+pub struct SplitPosition2Builder {
     pool: Option<solana_pubkey::Pubkey>,
-    reward_vault: Option<solana_pubkey::Pubkey>,
-    reward_mint: Option<solana_pubkey::Pubkey>,
-    funder_token_account: Option<solana_pubkey::Pubkey>,
-    funder: Option<solana_pubkey::Pubkey>,
-    token_program: Option<solana_pubkey::Pubkey>,
+    first_position: Option<solana_pubkey::Pubkey>,
+    first_position_nft_account: Option<solana_pubkey::Pubkey>,
+    second_position: Option<solana_pubkey::Pubkey>,
+    second_position_nft_account: Option<solana_pubkey::Pubkey>,
+    first_owner: Option<solana_pubkey::Pubkey>,
+    second_owner: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
-    reward_index: Option<u8>,
-    amount: Option<u64>,
-    carry_forward: Option<bool>,
+    numerator: Option<u32>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl FundRewardBuilder {
+impl SplitPosition2Builder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
@@ -153,37 +160,51 @@ impl FundRewardBuilder {
         self
     }
 
+    /// The first position
     #[inline(always)]
-    pub fn reward_vault(&mut self, reward_vault: solana_pubkey::Pubkey) -> &mut Self {
-        self.reward_vault = Some(reward_vault);
+    pub fn first_position(&mut self, first_position: solana_pubkey::Pubkey) -> &mut Self {
+        self.first_position = Some(first_position);
         self
     }
 
+    /// The token account for position nft
     #[inline(always)]
-    pub fn reward_mint(&mut self, reward_mint: solana_pubkey::Pubkey) -> &mut Self {
-        self.reward_mint = Some(reward_mint);
-        self
-    }
-
-    #[inline(always)]
-    pub fn funder_token_account(
+    pub fn first_position_nft_account(
         &mut self,
-        funder_token_account: solana_pubkey::Pubkey,
+        first_position_nft_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
-        self.funder_token_account = Some(funder_token_account);
+        self.first_position_nft_account = Some(first_position_nft_account);
         self
     }
 
+    /// The second position
     #[inline(always)]
-    pub fn funder(&mut self, funder: solana_pubkey::Pubkey) -> &mut Self {
-        self.funder = Some(funder);
+    pub fn second_position(&mut self, second_position: solana_pubkey::Pubkey) -> &mut Self {
+        self.second_position = Some(second_position);
         self
     }
 
-    /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
+    /// The token account for position nft
     #[inline(always)]
-    pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
-        self.token_program = Some(token_program);
+    pub fn second_position_nft_account(
+        &mut self,
+        second_position_nft_account: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.second_position_nft_account = Some(second_position_nft_account);
+        self
+    }
+
+    /// Owner of first position
+    #[inline(always)]
+    pub fn first_owner(&mut self, first_owner: solana_pubkey::Pubkey) -> &mut Self {
+        self.first_owner = Some(first_owner);
+        self
+    }
+
+    /// Owner of second position
+    #[inline(always)]
+    pub fn second_owner(&mut self, second_owner: solana_pubkey::Pubkey) -> &mut Self {
+        self.second_owner = Some(second_owner);
         self
     }
 
@@ -200,20 +221,8 @@ impl FundRewardBuilder {
     }
 
     #[inline(always)]
-    pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
-        self.reward_index = Some(reward_index);
-        self
-    }
-
-    #[inline(always)]
-    pub fn amount(&mut self, amount: u64) -> &mut Self {
-        self.amount = Some(amount);
-        self
-    }
-
-    #[inline(always)]
-    pub fn carry_forward(&mut self, carry_forward: bool) -> &mut Self {
-        self.carry_forward = Some(carry_forward);
+    pub fn numerator(&mut self, numerator: u32) -> &mut Self {
+        self.numerator = Some(numerator);
         self
     }
 
@@ -236,90 +245,91 @@ impl FundRewardBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = FundReward {
+        let accounts = SplitPosition2 {
             pool: self.pool.expect("pool is not set"),
-            reward_vault: self.reward_vault.expect("reward_vault is not set"),
-            reward_mint: self.reward_mint.expect("reward_mint is not set"),
-            funder_token_account: self
-                .funder_token_account
-                .expect("funder_token_account is not set"),
-            funder: self.funder.expect("funder is not set"),
-            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )),
+            first_position: self.first_position.expect("first_position is not set"),
+            first_position_nft_account: self
+                .first_position_nft_account
+                .expect("first_position_nft_account is not set"),
+            second_position: self.second_position.expect("second_position is not set"),
+            second_position_nft_account: self
+                .second_position_nft_account
+                .expect("second_position_nft_account is not set"),
+            first_owner: self.first_owner.expect("first_owner is not set"),
+            second_owner: self.second_owner.expect("second_owner is not set"),
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
-        let args = FundRewardInstructionArgs {
-            reward_index: self.reward_index.clone().expect("reward_index is not set"),
-            amount: self.amount.clone().expect("amount is not set"),
-            carry_forward: self
-                .carry_forward
-                .clone()
-                .expect("carry_forward is not set"),
+        let args = SplitPosition2InstructionArgs {
+            numerator: self.numerator.clone().expect("numerator is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `fund_reward` CPI accounts.
-pub struct FundRewardCpiAccounts<'a, 'b> {
+/// `split_position2` CPI accounts.
+pub struct SplitPosition2CpiAccounts<'a, 'b> {
     pub pool: &'b solana_account_info::AccountInfo<'a>,
-
-    pub reward_vault: &'b solana_account_info::AccountInfo<'a>,
-
-    pub reward_mint: &'b solana_account_info::AccountInfo<'a>,
-
-    pub funder_token_account: &'b solana_account_info::AccountInfo<'a>,
-
-    pub funder: &'b solana_account_info::AccountInfo<'a>,
-
-    pub token_program: &'b solana_account_info::AccountInfo<'a>,
+    /// The first position
+    pub first_position: &'b solana_account_info::AccountInfo<'a>,
+    /// The token account for position nft
+    pub first_position_nft_account: &'b solana_account_info::AccountInfo<'a>,
+    /// The second position
+    pub second_position: &'b solana_account_info::AccountInfo<'a>,
+    /// The token account for position nft
+    pub second_position_nft_account: &'b solana_account_info::AccountInfo<'a>,
+    /// Owner of first position
+    pub first_owner: &'b solana_account_info::AccountInfo<'a>,
+    /// Owner of second position
+    pub second_owner: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `fund_reward` CPI instruction.
-pub struct FundRewardCpi<'a, 'b> {
+/// `split_position2` CPI instruction.
+pub struct SplitPosition2Cpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
 
     pub pool: &'b solana_account_info::AccountInfo<'a>,
-
-    pub reward_vault: &'b solana_account_info::AccountInfo<'a>,
-
-    pub reward_mint: &'b solana_account_info::AccountInfo<'a>,
-
-    pub funder_token_account: &'b solana_account_info::AccountInfo<'a>,
-
-    pub funder: &'b solana_account_info::AccountInfo<'a>,
-
-    pub token_program: &'b solana_account_info::AccountInfo<'a>,
+    /// The first position
+    pub first_position: &'b solana_account_info::AccountInfo<'a>,
+    /// The token account for position nft
+    pub first_position_nft_account: &'b solana_account_info::AccountInfo<'a>,
+    /// The second position
+    pub second_position: &'b solana_account_info::AccountInfo<'a>,
+    /// The token account for position nft
+    pub second_position_nft_account: &'b solana_account_info::AccountInfo<'a>,
+    /// Owner of first position
+    pub first_owner: &'b solana_account_info::AccountInfo<'a>,
+    /// Owner of second position
+    pub second_owner: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: FundRewardInstructionArgs,
+    pub __args: SplitPosition2InstructionArgs,
 }
 
-impl<'a, 'b> FundRewardCpi<'a, 'b> {
+impl<'a, 'b> SplitPosition2Cpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: FundRewardCpiAccounts<'a, 'b>,
-        args: FundRewardInstructionArgs,
+        accounts: SplitPosition2CpiAccounts<'a, 'b>,
+        args: SplitPosition2InstructionArgs,
     ) -> Self {
         Self {
             __program: program,
             pool: accounts.pool,
-            reward_vault: accounts.reward_vault,
-            reward_mint: accounts.reward_mint,
-            funder_token_account: accounts.funder_token_account,
-            funder: accounts.funder,
-            token_program: accounts.token_program,
+            first_position: accounts.first_position,
+            first_position_nft_account: accounts.first_position_nft_account,
+            second_position: accounts.second_position,
+            second_position_nft_account: accounts.second_position_nft_account,
+            first_owner: accounts.first_owner,
+            second_owner: accounts.second_owner,
             event_authority: accounts.event_authority,
             program: accounts.program,
             __args: args,
@@ -352,27 +362,31 @@ impl<'a, 'b> FundRewardCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_error::ProgramResult {
-        let mut accounts = Vec::with_capacity(8 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(*self.pool.key, false));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.reward_vault.key,
+            *self.first_position.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.reward_mint.key,
+            *self.first_position_nft_account.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.funder_token_account.key,
+            *self.second_position.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.funder.key,
+            *self.second_position_nft_account.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.first_owner.key,
             true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.token_program.key,
-            false,
+            *self.second_owner.key,
+            true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
@@ -389,7 +403,7 @@ impl<'a, 'b> FundRewardCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = FundRewardInstructionData::new().try_to_vec().unwrap();
+        let mut data = SplitPosition2InstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -398,14 +412,15 @@ impl<'a, 'b> FundRewardCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(10 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.pool.clone());
-        account_infos.push(self.reward_vault.clone());
-        account_infos.push(self.reward_mint.clone());
-        account_infos.push(self.funder_token_account.clone());
-        account_infos.push(self.funder.clone());
-        account_infos.push(self.token_program.clone());
+        account_infos.push(self.first_position.clone());
+        account_infos.push(self.first_position_nft_account.clone());
+        account_infos.push(self.second_position.clone());
+        account_infos.push(self.second_position_nft_account.clone());
+        account_infos.push(self.first_owner.clone());
+        account_infos.push(self.second_owner.clone());
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
         remaining_accounts
@@ -420,38 +435,38 @@ impl<'a, 'b> FundRewardCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `FundReward` via CPI.
+/// Instruction builder for `SplitPosition2` via CPI.
 ///
 /// ### Accounts:
 ///
 ///   0. `[writable]` pool
-///   1. `[writable]` reward_vault
-///   2. `[]` reward_mint
-///   3. `[writable]` funder_token_account
-///   4. `[signer]` funder
-///   5. `[]` token_program
-///   6. `[]` event_authority
-///   7. `[]` program
+///   1. `[writable]` first_position
+///   2. `[]` first_position_nft_account
+///   3. `[writable]` second_position
+///   4. `[]` second_position_nft_account
+///   5. `[signer]` first_owner
+///   6. `[signer]` second_owner
+///   7. `[]` event_authority
+///   8. `[]` program
 #[derive(Clone, Debug)]
-pub struct FundRewardCpiBuilder<'a, 'b> {
-    instruction: Box<FundRewardCpiBuilderInstruction<'a, 'b>>,
+pub struct SplitPosition2CpiBuilder<'a, 'b> {
+    instruction: Box<SplitPosition2CpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> FundRewardCpiBuilder<'a, 'b> {
+impl<'a, 'b> SplitPosition2CpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(FundRewardCpiBuilderInstruction {
+        let instruction = Box::new(SplitPosition2CpiBuilderInstruction {
             __program: program,
             pool: None,
-            reward_vault: None,
-            reward_mint: None,
-            funder_token_account: None,
-            funder: None,
-            token_program: None,
+            first_position: None,
+            first_position_nft_account: None,
+            second_position: None,
+            second_position_nft_account: None,
+            first_owner: None,
+            second_owner: None,
             event_authority: None,
             program: None,
-            reward_index: None,
-            amount: None,
-            carry_forward: None,
+            numerator: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -463,45 +478,63 @@ impl<'a, 'b> FundRewardCpiBuilder<'a, 'b> {
         self
     }
 
+    /// The first position
     #[inline(always)]
-    pub fn reward_vault(
+    pub fn first_position(
         &mut self,
-        reward_vault: &'b solana_account_info::AccountInfo<'a>,
+        first_position: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.reward_vault = Some(reward_vault);
+        self.instruction.first_position = Some(first_position);
         self
     }
 
+    /// The token account for position nft
     #[inline(always)]
-    pub fn reward_mint(
+    pub fn first_position_nft_account(
         &mut self,
-        reward_mint: &'b solana_account_info::AccountInfo<'a>,
+        first_position_nft_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.reward_mint = Some(reward_mint);
+        self.instruction.first_position_nft_account = Some(first_position_nft_account);
         self
     }
 
+    /// The second position
     #[inline(always)]
-    pub fn funder_token_account(
+    pub fn second_position(
         &mut self,
-        funder_token_account: &'b solana_account_info::AccountInfo<'a>,
+        second_position: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.funder_token_account = Some(funder_token_account);
+        self.instruction.second_position = Some(second_position);
         self
     }
 
+    /// The token account for position nft
     #[inline(always)]
-    pub fn funder(&mut self, funder: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.funder = Some(funder);
+    pub fn second_position_nft_account(
+        &mut self,
+        second_position_nft_account: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.second_position_nft_account = Some(second_position_nft_account);
         self
     }
 
+    /// Owner of first position
     #[inline(always)]
-    pub fn token_program(
+    pub fn first_owner(
         &mut self,
-        token_program: &'b solana_account_info::AccountInfo<'a>,
+        first_owner: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.token_program = Some(token_program);
+        self.instruction.first_owner = Some(first_owner);
+        self
+    }
+
+    /// Owner of second position
+    #[inline(always)]
+    pub fn second_owner(
+        &mut self,
+        second_owner: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.second_owner = Some(second_owner);
         self
     }
 
@@ -521,20 +554,8 @@ impl<'a, 'b> FundRewardCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn reward_index(&mut self, reward_index: u8) -> &mut Self {
-        self.instruction.reward_index = Some(reward_index);
-        self
-    }
-
-    #[inline(always)]
-    pub fn amount(&mut self, amount: u64) -> &mut Self {
-        self.instruction.amount = Some(amount);
-        self
-    }
-
-    #[inline(always)]
-    pub fn carry_forward(&mut self, carry_forward: bool) -> &mut Self {
-        self.instruction.carry_forward = Some(carry_forward);
+    pub fn numerator(&mut self, numerator: u32) -> &mut Self {
+        self.instruction.numerator = Some(numerator);
         self
     }
 
@@ -573,45 +594,47 @@ impl<'a, 'b> FundRewardCpiBuilder<'a, 'b> {
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
-        let args = FundRewardInstructionArgs {
-            reward_index: self
+        let args = SplitPosition2InstructionArgs {
+            numerator: self
                 .instruction
-                .reward_index
+                .numerator
                 .clone()
-                .expect("reward_index is not set"),
-            amount: self.instruction.amount.clone().expect("amount is not set"),
-            carry_forward: self
-                .instruction
-                .carry_forward
-                .clone()
-                .expect("carry_forward is not set"),
+                .expect("numerator is not set"),
         };
-        let instruction = FundRewardCpi {
+        let instruction = SplitPosition2Cpi {
             __program: self.instruction.__program,
 
             pool: self.instruction.pool.expect("pool is not set"),
 
-            reward_vault: self
+            first_position: self
                 .instruction
-                .reward_vault
-                .expect("reward_vault is not set"),
+                .first_position
+                .expect("first_position is not set"),
 
-            reward_mint: self
+            first_position_nft_account: self
                 .instruction
-                .reward_mint
-                .expect("reward_mint is not set"),
+                .first_position_nft_account
+                .expect("first_position_nft_account is not set"),
 
-            funder_token_account: self
+            second_position: self
                 .instruction
-                .funder_token_account
-                .expect("funder_token_account is not set"),
+                .second_position
+                .expect("second_position is not set"),
 
-            funder: self.instruction.funder.expect("funder is not set"),
-
-            token_program: self
+            second_position_nft_account: self
                 .instruction
-                .token_program
-                .expect("token_program is not set"),
+                .second_position_nft_account
+                .expect("second_position_nft_account is not set"),
+
+            first_owner: self
+                .instruction
+                .first_owner
+                .expect("first_owner is not set"),
+
+            second_owner: self
+                .instruction
+                .second_owner
+                .expect("second_owner is not set"),
 
             event_authority: self
                 .instruction
@@ -629,19 +652,18 @@ impl<'a, 'b> FundRewardCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct FundRewardCpiBuilderInstruction<'a, 'b> {
+struct SplitPosition2CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     pool: Option<&'b solana_account_info::AccountInfo<'a>>,
-    reward_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
-    reward_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
-    funder_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
-    funder: Option<&'b solana_account_info::AccountInfo<'a>>,
-    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    first_position: Option<&'b solana_account_info::AccountInfo<'a>>,
+    first_position_nft_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    second_position: Option<&'b solana_account_info::AccountInfo<'a>>,
+    second_position_nft_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    first_owner: Option<&'b solana_account_info::AccountInfo<'a>>,
+    second_owner: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    reward_index: Option<u8>,
-    amount: Option<u64>,
-    carry_forward: Option<bool>,
+    numerator: Option<u32>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

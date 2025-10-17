@@ -7,12 +7,14 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const UPDATE_REWARD_DURATION_DISCRIMINATOR: [u8; 8] = [138, 174, 196, 169, 213, 235, 254, 107];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct UpdateRewardDuration {
     pub pool: solana_pubkey::Pubkey,
 
-    pub admin: solana_pubkey::Pubkey,
+    pub signer: solana_pubkey::Pubkey,
 
     pub event_authority: solana_pubkey::Pubkey,
 
@@ -37,7 +39,8 @@ impl UpdateRewardDuration {
         let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(self.pool, false));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.admin, true,
+            self.signer,
+            true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
@@ -48,8 +51,10 @@ impl UpdateRewardDuration {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&UpdateRewardDurationInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = UpdateRewardDurationInstructionData::new()
+            .try_to_vec()
+            .unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -72,6 +77,8 @@ impl UpdateRewardDurationInstructionData {
             discriminator: [138, 174, 196, 169, 213, 235, 254, 107],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for UpdateRewardDurationInstructionData {
@@ -85,18 +92,22 @@ pub struct UpdateRewardDurationInstructionArgs {
     pub new_duration: u64,
 }
 
+impl UpdateRewardDurationInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
+}
+
 /// Instruction builder for `UpdateRewardDuration`.
 ///
 /// ### Accounts:
 ///
 ///   0. `[writable]` pool
-///   1. `[signer]` admin
+///   1. `[signer]` signer
 ///   2. `[]` event_authority
 ///   3. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct UpdateRewardDurationBuilder {
     pool: Option<solana_pubkey::Pubkey>,
-    admin: Option<solana_pubkey::Pubkey>,
+    signer: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
     reward_index: Option<u8>,
@@ -114,8 +125,8 @@ impl UpdateRewardDurationBuilder {
     }
 
     #[inline(always)]
-    pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
-        self.admin = Some(admin);
+    pub fn signer(&mut self, signer: solana_pubkey::Pubkey) -> &mut Self {
+        self.signer = Some(signer);
         self
     }
 
@@ -164,7 +175,7 @@ impl UpdateRewardDurationBuilder {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = UpdateRewardDuration {
             pool: self.pool.expect("pool is not set"),
-            admin: self.admin.expect("admin is not set"),
+            signer: self.signer.expect("signer is not set"),
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
@@ -181,7 +192,7 @@ impl UpdateRewardDurationBuilder {
 pub struct UpdateRewardDurationCpiAccounts<'a, 'b> {
     pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub admin: &'b solana_account_info::AccountInfo<'a>,
+    pub signer: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
@@ -195,7 +206,7 @@ pub struct UpdateRewardDurationCpi<'a, 'b> {
 
     pub pool: &'b solana_account_info::AccountInfo<'a>,
 
-    pub admin: &'b solana_account_info::AccountInfo<'a>,
+    pub signer: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
@@ -213,7 +224,7 @@ impl<'a, 'b> UpdateRewardDurationCpi<'a, 'b> {
         Self {
             __program: program,
             pool: accounts.pool,
-            admin: accounts.admin,
+            signer: accounts.signer,
             event_authority: accounts.event_authority,
             program: accounts.program,
             __args: args,
@@ -221,7 +232,7 @@ impl<'a, 'b> UpdateRewardDurationCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
@@ -229,15 +240,12 @@ impl<'a, 'b> UpdateRewardDurationCpi<'a, 'b> {
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -248,11 +256,11 @@ impl<'a, 'b> UpdateRewardDurationCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(*self.pool.key, false));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.admin.key,
+            *self.signer.key,
             true,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -270,8 +278,10 @@ impl<'a, 'b> UpdateRewardDurationCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&UpdateRewardDurationInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = UpdateRewardDurationInstructionData::new()
+            .try_to_vec()
+            .unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -282,7 +292,7 @@ impl<'a, 'b> UpdateRewardDurationCpi<'a, 'b> {
         let mut account_infos = Vec::with_capacity(5 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.pool.clone());
-        account_infos.push(self.admin.clone());
+        account_infos.push(self.signer.clone());
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
         remaining_accounts
@@ -302,7 +312,7 @@ impl<'a, 'b> UpdateRewardDurationCpi<'a, 'b> {
 /// ### Accounts:
 ///
 ///   0. `[writable]` pool
-///   1. `[signer]` admin
+///   1. `[signer]` signer
 ///   2. `[]` event_authority
 ///   3. `[]` program
 #[derive(Clone, Debug)]
@@ -315,7 +325,7 @@ impl<'a, 'b> UpdateRewardDurationCpiBuilder<'a, 'b> {
         let instruction = Box::new(UpdateRewardDurationCpiBuilderInstruction {
             __program: program,
             pool: None,
-            admin: None,
+            signer: None,
             event_authority: None,
             program: None,
             reward_index: None,
@@ -332,8 +342,8 @@ impl<'a, 'b> UpdateRewardDurationCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.admin = Some(admin);
+    pub fn signer(&mut self, signer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.signer = Some(signer);
         self
     }
 
@@ -394,14 +404,11 @@ impl<'a, 'b> UpdateRewardDurationCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = UpdateRewardDurationInstructionArgs {
             reward_index: self
                 .instruction
@@ -419,7 +426,7 @@ impl<'a, 'b> UpdateRewardDurationCpiBuilder<'a, 'b> {
 
             pool: self.instruction.pool.expect("pool is not set"),
 
-            admin: self.instruction.admin.expect("admin is not set"),
+            signer: self.instruction.signer.expect("signer is not set"),
 
             event_authority: self
                 .instruction
@@ -440,7 +447,7 @@ impl<'a, 'b> UpdateRewardDurationCpiBuilder<'a, 'b> {
 struct UpdateRewardDurationCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     pool: Option<&'b solana_account_info::AccountInfo<'a>>,
-    admin: Option<&'b solana_account_info::AccountInfo<'a>>,
+    signer: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
     reward_index: Option<u8>,

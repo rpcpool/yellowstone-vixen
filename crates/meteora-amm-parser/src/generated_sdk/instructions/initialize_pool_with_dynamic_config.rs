@@ -9,6 +9,9 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 use crate::generated::types::InitializeCustomizablePoolParameters;
 
+pub const INITIALIZE_POOL_WITH_DYNAMIC_CONFIG_DISCRIMINATOR: [u8; 8] =
+    [149, 82, 72, 197, 253, 252, 68, 15];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct InitializePoolWithDynamicConfig {
@@ -147,9 +150,10 @@ impl InitializePoolWithDynamicConfig {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data =
-            borsh::to_vec(&InitializePoolWithDynamicConfigInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = InitializePoolWithDynamicConfigInstructionData::new()
+            .try_to_vec()
+            .unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -172,6 +176,8 @@ impl InitializePoolWithDynamicConfigInstructionData {
             discriminator: [149, 82, 72, 197, 253, 252, 68, 15],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for InitializePoolWithDynamicConfigInstructionData {
@@ -184,6 +190,10 @@ pub struct InitializePoolWithDynamicConfigInstructionArgs {
     pub params: InitializeCustomizablePoolParameters,
 }
 
+impl InitializePoolWithDynamicConfigInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
+}
+
 /// Instruction builder for `InitializePoolWithDynamicConfig`.
 ///
 /// ### Accounts:
@@ -194,7 +204,7 @@ pub struct InitializePoolWithDynamicConfigInstructionArgs {
 ///   3. `[writable, signer]` payer
 ///   4. `[signer]` pool_creator_authority
 ///   5. `[]` config
-///   6. `[]` pool_authority
+///   6. `[optional]` pool_authority (default to `HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC`)
 ///   7. `[writable]` pool
 ///   8. `[writable]` position
 ///   9. `[]` token_a_mint
@@ -285,6 +295,7 @@ impl InitializePoolWithDynamicConfigBuilder {
         self
     }
 
+    /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
@@ -425,7 +436,9 @@ impl InitializePoolWithDynamicConfigBuilder {
                 .pool_creator_authority
                 .expect("pool_creator_authority is not set"),
             config: self.config.expect("config is not set"),
-            pool_authority: self.pool_authority.expect("pool_authority is not set"),
+            pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
+                "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+            )),
             pool: self.pool.expect("pool is not set"),
             position: self.position.expect("position is not set"),
             token_a_mint: self.token_a_mint.expect("token_a_mint is not set"),
@@ -582,7 +595,7 @@ impl<'a, 'b> InitializePoolWithDynamicConfigCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
@@ -590,15 +603,12 @@ impl<'a, 'b> InitializePoolWithDynamicConfigCpi<'a, 'b> {
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -609,7 +619,7 @@ impl<'a, 'b> InitializePoolWithDynamicConfigCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(21 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.creator.key,
@@ -696,9 +706,10 @@ impl<'a, 'b> InitializePoolWithDynamicConfigCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data =
-            borsh::to_vec(&InitializePoolWithDynamicConfigInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = InitializePoolWithDynamicConfigInstructionData::new()
+            .try_to_vec()
+            .unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -1023,14 +1034,11 @@ impl<'a, 'b> InitializePoolWithDynamicConfigCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = InitializePoolWithDynamicConfigInstructionArgs {
             params: self.instruction.params.clone().expect("params is not set"),
         };

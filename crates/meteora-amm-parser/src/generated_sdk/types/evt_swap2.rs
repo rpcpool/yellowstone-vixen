@@ -8,28 +8,25 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
+use crate::generated::types::{SwapParameters2, SwapResult2};
+
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct EvtFundReward {
+pub struct EvtSwap2 {
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub pool: Pubkey,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub funder: Pubkey,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub mint_reward: Pubkey,
-    pub reward_index: u8,
-    pub amount: u64,
-    pub transfer_fee_excluded_amount_in: u64,
-    pub reward_duration_end: u64,
-    pub pre_reward_rate: u128,
-    pub post_reward_rate: u128,
+    pub trade_direction: u8,
+    pub collect_fee_mode: u8,
+    pub has_referral: bool,
+    pub params: SwapParameters2,
+    pub swap_result: SwapResult2,
+    pub included_transfer_fee_amount_in: u64,
+    pub included_transfer_fee_amount_out: u64,
+    pub excluded_transfer_fee_amount_out: u64,
+    pub current_timestamp: u64,
+    pub reserve_a_amount: u64,
+    pub reserve_b_amount: u64,
 }

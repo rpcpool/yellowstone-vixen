@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const CLOSE_POSITION_DISCRIMINATOR: [u8; 8] = [123, 134, 81, 0, 49, 68, 98, 98];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct ClosePosition {
@@ -78,7 +80,7 @@ impl ClosePosition {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = borsh::to_vec(&ClosePositionInstructionData::new()).unwrap();
+        let data = ClosePositionInstructionData::new().try_to_vec().unwrap();
 
         solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
@@ -100,6 +102,8 @@ impl ClosePositionInstructionData {
             discriminator: [123, 134, 81, 0, 49, 68, 98, 98],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for ClosePositionInstructionData {
@@ -114,7 +118,7 @@ impl Default for ClosePositionInstructionData {
 ///   1. `[writable]` position_nft_account
 ///   2. `[writable]` pool
 ///   3. `[writable]` position
-///   4. `[]` pool_authority
+///   4. `[optional]` pool_authority (default to `HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC`)
 ///   5. `[writable]` rent_receiver
 ///   6. `[signer]` owner
 ///   7. `[optional]` token_program (default to `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`)
@@ -167,6 +171,7 @@ impl ClosePositionBuilder {
         self
     }
 
+    /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
@@ -234,7 +239,9 @@ impl ClosePositionBuilder {
                 .expect("position_nft_account is not set"),
             pool: self.pool.expect("pool is not set"),
             position: self.position.expect("position is not set"),
-            pool_authority: self.pool_authority.expect("pool_authority is not set"),
+            pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
+                "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+            )),
             rent_receiver: self.rent_receiver.expect("rent_receiver is not set"),
             owner: self.owner.expect("owner is not set"),
             token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
@@ -319,7 +326,7 @@ impl<'a, 'b> ClosePositionCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
@@ -327,15 +334,12 @@ impl<'a, 'b> ClosePositionCpi<'a, 'b> {
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -346,7 +350,7 @@ impl<'a, 'b> ClosePositionCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
             *self.position_nft_mint.key,
@@ -392,7 +396,7 @@ impl<'a, 'b> ClosePositionCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = borsh::to_vec(&ClosePositionInstructionData::new()).unwrap();
+        let data = ClosePositionInstructionData::new().try_to_vec().unwrap();
 
         let instruction = solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
@@ -573,14 +577,11 @@ impl<'a, 'b> ClosePositionCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let instruction = ClosePositionCpi {
             __program: self.instruction.__program,
 

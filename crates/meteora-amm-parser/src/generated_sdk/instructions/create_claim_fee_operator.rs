@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const CREATE_CLAIM_FEE_OPERATOR_DISCRIMINATOR: [u8; 8] = [169, 62, 207, 107, 58, 187, 162, 109];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateClaimFeeOperator {
@@ -57,7 +59,9 @@ impl CreateClaimFeeOperator {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = borsh::to_vec(&CreateClaimFeeOperatorInstructionData::new()).unwrap();
+        let data = CreateClaimFeeOperatorInstructionData::new()
+            .try_to_vec()
+            .unwrap();
 
         solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
@@ -79,6 +83,8 @@ impl CreateClaimFeeOperatorInstructionData {
             discriminator: [169, 62, 207, 107, 58, 187, 162, 109],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for CreateClaimFeeOperatorInstructionData {
@@ -232,7 +238,7 @@ impl<'a, 'b> CreateClaimFeeOperatorCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
@@ -240,15 +246,12 @@ impl<'a, 'b> CreateClaimFeeOperatorCpi<'a, 'b> {
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -259,7 +262,7 @@ impl<'a, 'b> CreateClaimFeeOperatorCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(6 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
             *self.claim_fee_operator.key,
@@ -289,7 +292,9 @@ impl<'a, 'b> CreateClaimFeeOperatorCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = borsh::to_vec(&CreateClaimFeeOperatorInstructionData::new()).unwrap();
+        let data = CreateClaimFeeOperatorInstructionData::new()
+            .try_to_vec()
+            .unwrap();
 
         let instruction = solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
@@ -421,14 +426,11 @@ impl<'a, 'b> CreateClaimFeeOperatorCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let instruction = CreateClaimFeeOperatorCpi {
             __program: self.instruction.__program,
 

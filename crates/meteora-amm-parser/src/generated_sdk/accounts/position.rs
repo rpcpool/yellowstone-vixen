@@ -47,6 +47,8 @@ pub struct Position {
     pub padding: [u128; 6],
 }
 
+pub const POSITION_DISCRIMINATOR: [u8; 8] = [170, 188, 143, 228, 122, 64, 247, 208];
+
 impl Position {
     pub const LEN: usize = 408;
 
@@ -156,5 +158,5 @@ impl anchor_lang::IdlBuild for Position {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Position {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

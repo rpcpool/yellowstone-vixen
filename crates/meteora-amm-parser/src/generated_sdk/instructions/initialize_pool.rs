@@ -7,6 +7,8 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
+pub const INITIALIZE_POOL_DISCRIMINATOR: [u8; 8] = [95, 180, 10, 172, 84, 174, 232, 40];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct InitializePool {
@@ -139,8 +141,8 @@ impl InitializePool {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&InitializePoolInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = InitializePoolInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -163,6 +165,8 @@ impl InitializePoolInstructionData {
             discriminator: [95, 180, 10, 172, 84, 174, 232, 40],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for InitializePoolInstructionData {
@@ -177,6 +181,10 @@ pub struct InitializePoolInstructionArgs {
     pub activation_point: Option<u64>,
 }
 
+impl InitializePoolInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
+}
+
 /// Instruction builder for `InitializePool`.
 ///
 /// ### Accounts:
@@ -186,7 +194,7 @@ pub struct InitializePoolInstructionArgs {
 ///   2. `[writable]` position_nft_account
 ///   3. `[writable, signer]` payer
 ///   4. `[]` config
-///   5. `[]` pool_authority
+///   5. `[optional]` pool_authority (default to `HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC`)
 ///   6. `[writable]` pool
 ///   7. `[writable]` position
 ///   8. `[]` token_a_mint
@@ -269,6 +277,7 @@ impl InitializePoolBuilder {
         self
     }
 
+    /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
@@ -419,7 +428,9 @@ impl InitializePoolBuilder {
                 .expect("position_nft_account is not set"),
             payer: self.payer.expect("payer is not set"),
             config: self.config.expect("config is not set"),
-            pool_authority: self.pool_authority.expect("pool_authority is not set"),
+            pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
+                "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+            )),
             pool: self.pool.expect("pool is not set"),
             position: self.position.expect("position is not set"),
             token_a_mint: self.token_a_mint.expect("token_a_mint is not set"),
@@ -573,7 +584,7 @@ impl<'a, 'b> InitializePoolCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
@@ -581,15 +592,12 @@ impl<'a, 'b> InitializePoolCpi<'a, 'b> {
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -600,7 +608,7 @@ impl<'a, 'b> InitializePoolCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(20 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.creator.key,
@@ -683,8 +691,8 @@ impl<'a, 'b> InitializePoolCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&InitializePoolInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = InitializePoolInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -1012,14 +1020,11 @@ impl<'a, 'b> InitializePoolCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = InitializePoolInstructionArgs {
             liquidity: self
                 .instruction

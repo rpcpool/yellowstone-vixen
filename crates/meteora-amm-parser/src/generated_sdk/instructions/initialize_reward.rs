@@ -8,6 +8,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_pubkey::Pubkey;
 
+pub const INITIALIZE_REWARD_DISCRIMINATOR: [u8; 8] = [95, 135, 192, 196, 242, 129, 230, 68];
+
 /// Accounts.
 #[derive(Debug)]
 pub struct InitializeReward {
@@ -19,7 +21,9 @@ pub struct InitializeReward {
 
     pub reward_mint: solana_pubkey::Pubkey,
 
-    pub admin: solana_pubkey::Pubkey,
+    pub signer: solana_pubkey::Pubkey,
+
+    pub payer: solana_pubkey::Pubkey,
 
     pub token_program: solana_pubkey::Pubkey,
 
@@ -45,7 +49,7 @@ impl InitializeReward {
         args: InitializeRewardInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.pool_authority,
             false,
@@ -59,7 +63,11 @@ impl InitializeReward {
             self.reward_mint,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new(self.admin, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.signer,
+            true,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.token_program,
             false,
@@ -77,8 +85,8 @@ impl InitializeReward {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&InitializeRewardInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = InitializeRewardInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -101,6 +109,8 @@ impl InitializeRewardInstructionData {
             discriminator: [95, 135, 192, 196, 242, 129, 230, 68],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
 impl Default for InitializeRewardInstructionData {
@@ -115,26 +125,32 @@ pub struct InitializeRewardInstructionArgs {
     pub funder: Pubkey,
 }
 
+impl InitializeRewardInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
+}
+
 /// Instruction builder for `InitializeReward`.
 ///
 /// ### Accounts:
 ///
-///   0. `[]` pool_authority
+///   0. `[optional]` pool_authority (default to `HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC`)
 ///   1. `[writable]` pool
 ///   2. `[writable]` reward_vault
 ///   3. `[]` reward_mint
-///   4. `[writable, signer]` admin
-///   5. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   7. `[]` event_authority
-///   8. `[]` program
+///   4. `[signer]` signer
+///   5. `[writable, signer]` payer
+///   6. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   7. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   8. `[]` event_authority
+///   9. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct InitializeRewardBuilder {
     pool_authority: Option<solana_pubkey::Pubkey>,
     pool: Option<solana_pubkey::Pubkey>,
     reward_vault: Option<solana_pubkey::Pubkey>,
     reward_mint: Option<solana_pubkey::Pubkey>,
-    admin: Option<solana_pubkey::Pubkey>,
+    signer: Option<solana_pubkey::Pubkey>,
+    payer: Option<solana_pubkey::Pubkey>,
     token_program: Option<solana_pubkey::Pubkey>,
     system_program: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
@@ -148,6 +164,7 @@ pub struct InitializeRewardBuilder {
 impl InitializeRewardBuilder {
     pub fn new() -> Self { Self::default() }
 
+    /// `[optional account, default to 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC']`
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
@@ -173,8 +190,14 @@ impl InitializeRewardBuilder {
     }
 
     #[inline(always)]
-    pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
-        self.admin = Some(admin);
+    pub fn signer(&mut self, signer: solana_pubkey::Pubkey) -> &mut Self {
+        self.signer = Some(signer);
+        self
+    }
+
+    #[inline(always)]
+    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
+        self.payer = Some(payer);
         self
     }
 
@@ -242,11 +265,14 @@ impl InitializeRewardBuilder {
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = InitializeReward {
-            pool_authority: self.pool_authority.expect("pool_authority is not set"),
+            pool_authority: self.pool_authority.unwrap_or(solana_pubkey::pubkey!(
+                "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+            )),
             pool: self.pool.expect("pool is not set"),
             reward_vault: self.reward_vault.expect("reward_vault is not set"),
             reward_mint: self.reward_mint.expect("reward_mint is not set"),
-            admin: self.admin.expect("admin is not set"),
+            signer: self.signer.expect("signer is not set"),
+            payer: self.payer.expect("payer is not set"),
             token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
@@ -279,7 +305,9 @@ pub struct InitializeRewardCpiAccounts<'a, 'b> {
 
     pub reward_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub admin: &'b solana_account_info::AccountInfo<'a>,
+    pub signer: &'b solana_account_info::AccountInfo<'a>,
+
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
@@ -303,7 +331,9 @@ pub struct InitializeRewardCpi<'a, 'b> {
 
     pub reward_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub admin: &'b solana_account_info::AccountInfo<'a>,
+    pub signer: &'b solana_account_info::AccountInfo<'a>,
+
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
 
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
@@ -328,7 +358,8 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
             pool: accounts.pool,
             reward_vault: accounts.reward_vault,
             reward_mint: accounts.reward_mint,
-            admin: accounts.admin,
+            signer: accounts.signer,
+            payer: accounts.payer,
             token_program: accounts.token_program,
             system_program: accounts.system_program,
             event_authority: accounts.event_authority,
@@ -338,7 +369,7 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
 
@@ -346,15 +377,12 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
 
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
 
@@ -365,8 +393,8 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
+    ) -> solana_program_error::ProgramResult {
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.pool_authority.key,
             false,
@@ -380,7 +408,11 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
             *self.reward_mint.key,
             false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new(*self.admin.key, true));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.signer.key,
+            true,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.token_program.key,
             false,
@@ -404,8 +436,8 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&InitializeRewardInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = InitializeRewardInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -413,13 +445,14 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(10 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(11 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.pool_authority.clone());
         account_infos.push(self.pool.clone());
         account_infos.push(self.reward_vault.clone());
         account_infos.push(self.reward_mint.clone());
-        account_infos.push(self.admin.clone());
+        account_infos.push(self.signer.clone());
+        account_infos.push(self.payer.clone());
         account_infos.push(self.token_program.clone());
         account_infos.push(self.system_program.clone());
         account_infos.push(self.event_authority.clone());
@@ -444,11 +477,12 @@ impl<'a, 'b> InitializeRewardCpi<'a, 'b> {
 ///   1. `[writable]` pool
 ///   2. `[writable]` reward_vault
 ///   3. `[]` reward_mint
-///   4. `[writable, signer]` admin
-///   5. `[]` token_program
-///   6. `[]` system_program
-///   7. `[]` event_authority
-///   8. `[]` program
+///   4. `[signer]` signer
+///   5. `[writable, signer]` payer
+///   6. `[]` token_program
+///   7. `[]` system_program
+///   8. `[]` event_authority
+///   9. `[]` program
 #[derive(Clone, Debug)]
 pub struct InitializeRewardCpiBuilder<'a, 'b> {
     instruction: Box<InitializeRewardCpiBuilderInstruction<'a, 'b>>,
@@ -462,7 +496,8 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
             pool: None,
             reward_vault: None,
             reward_mint: None,
-            admin: None,
+            signer: None,
+            payer: None,
             token_program: None,
             system_program: None,
             event_authority: None,
@@ -509,8 +544,14 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.admin = Some(admin);
+    pub fn signer(&mut self, signer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.signer = Some(signer);
+        self
+    }
+
+    #[inline(always)]
+    pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.payer = Some(payer);
         self
     }
 
@@ -595,14 +636,11 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_error::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = InitializeRewardInstructionArgs {
             reward_index: self
                 .instruction
@@ -636,7 +674,9 @@ impl<'a, 'b> InitializeRewardCpiBuilder<'a, 'b> {
                 .reward_mint
                 .expect("reward_mint is not set"),
 
-            admin: self.instruction.admin.expect("admin is not set"),
+            signer: self.instruction.signer.expect("signer is not set"),
+
+            payer: self.instruction.payer.expect("payer is not set"),
 
             token_program: self
                 .instruction
@@ -670,7 +710,8 @@ struct InitializeRewardCpiBuilderInstruction<'a, 'b> {
     pool: Option<&'b solana_account_info::AccountInfo<'a>>,
     reward_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     reward_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
-    admin: Option<&'b solana_account_info::AccountInfo<'a>>,
+    signer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,

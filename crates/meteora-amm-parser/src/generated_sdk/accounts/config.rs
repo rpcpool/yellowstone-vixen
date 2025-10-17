@@ -47,6 +47,8 @@ pub struct Config {
     pub padding1: [u64; 10],
 }
 
+pub const CONFIG_DISCRIMINATOR: [u8; 8] = [155, 12, 170, 224, 30, 250, 204, 130];
+
 impl Config {
     pub const LEN: usize = 328;
 
@@ -156,5 +158,5 @@ impl anchor_lang::IdlBuild for Config {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Config {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

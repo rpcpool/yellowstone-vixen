@@ -10,7 +10,7 @@ use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct EvtFundReward {
+pub struct EvtLiquidityChange {
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
@@ -20,16 +20,20 @@ pub struct EvtFundReward {
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    pub funder: Pubkey,
+    pub position: Pubkey,
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
-    pub mint_reward: Pubkey,
-    pub reward_index: u8,
-    pub amount: u64,
-    pub transfer_fee_excluded_amount_in: u64,
-    pub reward_duration_end: u64,
-    pub pre_reward_rate: u128,
-    pub post_reward_rate: u128,
+    pub owner: Pubkey,
+    pub token_a_amount: u64,
+    pub token_b_amount: u64,
+    pub transfer_fee_included_token_a_amount: u64,
+    pub transfer_fee_included_token_b_amount: u64,
+    pub reserve_a_amount: u64,
+    pub reserve_b_amount: u64,
+    pub liquidity_delta: u128,
+    pub token_a_amount_threshold: u64,
+    pub token_b_amount_threshold: u64,
+    pub change_type: u8,
 }

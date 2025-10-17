@@ -24,6 +24,7 @@ message ClaimPositionFeeIx {
 
 message ClaimProtocolFeeIx {
 	ClaimProtocolFeeIxAccounts accounts = 1;
+	ClaimProtocolFeeIxData data = 2;
 }
 
 message ClaimRewardIx {
@@ -41,6 +42,10 @@ message CloseConfigIx {
 
 message ClosePositionIx {
 	ClosePositionIxAccounts accounts = 1;
+}
+
+message CloseTokenBadgeIx {
+	CloseTokenBadgeIxAccounts accounts = 1;
 }
 
 message CreateClaimFeeOperatorIx {
@@ -119,9 +124,24 @@ message SetPoolStatusIx {
 	SetPoolStatusIxData data = 2;
 }
 
+message SplitPositionIx {
+	SplitPositionIxAccounts accounts = 1;
+	SplitPositionIxData data = 2;
+}
+
+message SplitPosition2Ix {
+	SplitPosition2IxAccounts accounts = 1;
+	SplitPosition2IxData data = 2;
+}
+
 message SwapIx {
 	SwapIxAccounts accounts = 1;
 	SwapIxData data = 2;
+}
+
+message Swap2Ix {
+	Swap2IxAccounts accounts = 1;
+	Swap2IxData data = 2;
 }
 
 message UpdateRewardDurationIx {
@@ -148,28 +168,28 @@ message AddLiquidityParameters {
 
 message BaseFeeConfig {
 	uint64 cliff_fee_numerator = 1;
-	uint32 fee_scheduler_mode = 2;
+	uint32 base_fee_mode = 2;
 	repeated uint32 padding = 3;
-	uint32 number_of_period = 4;
-	uint64 period_frequency = 5;
-	uint64 reduction_factor = 6;
+	uint32 first_factor = 4;
+	repeated uint32 second_factor = 5;
+	uint64 third_factor = 6;
 }
 
 message BaseFeeParameters {
 	uint64 cliff_fee_numerator = 1;
-	uint32 number_of_period = 2;
-	uint64 period_frequency = 3;
-	uint64 reduction_factor = 4;
-	uint32 fee_scheduler_mode = 5;
+	uint32 first_factor = 2;
+	repeated uint32 second_factor = 3;
+	uint64 third_factor = 4;
+	uint32 base_fee_mode = 5;
 }
 
 message BaseFeeStruct {
 	uint64 cliff_fee_numerator = 1;
-	uint32 fee_scheduler_mode = 2;
+	uint32 base_fee_mode = 2;
 	repeated uint32 padding0 = 3;
-	uint32 number_of_period = 4;
-	uint64 period_frequency = 5;
-	uint64 reduction_factor = 6;
+	uint32 first_factor = 4;
+	repeated uint32 second_factor = 5;
+	uint64 third_factor = 6;
 	uint64 padding1 = 7;
 }
 
@@ -309,6 +329,9 @@ message EvtFundReward {
 	uint32 reward_index = 4;
 	uint64 amount = 5;
 	uint64 transfer_fee_excluded_amount_in = 6;
+	uint64 reward_duration_end = 7;
+	string pre_reward_rate = 8;
+	string post_reward_rate = 9;
 }
 
 message EvtInitializePool {
@@ -339,8 +362,25 @@ message EvtInitializeReward {
 	string pool = 1;
 	string reward_mint = 2;
 	string funder = 3;
-	uint32 reward_index = 4;
-	uint64 reward_duration = 5;
+	string creator = 4;
+	uint32 reward_index = 5;
+	uint64 reward_duration = 6;
+}
+
+message EvtLiquidityChange {
+	string pool = 1;
+	string position = 2;
+	string owner = 3;
+	uint64 token_a_amount = 4;
+	uint64 token_b_amount = 5;
+	uint64 transfer_fee_included_token_a_amount = 6;
+	uint64 transfer_fee_included_token_b_amount = 7;
+	uint64 reserve_a_amount = 8;
+	uint64 reserve_b_amount = 9;
+	string liquidity_delta = 10;
+	uint64 token_a_amount_threshold = 11;
+	uint64 token_b_amount_threshold = 12;
+	uint32 change_type = 13;
 }
 
 message EvtLockPosition {
@@ -376,6 +416,19 @@ message EvtSetPoolStatus {
 	uint32 status = 2;
 }
 
+message EvtSplitPosition2 {
+	string pool = 1;
+	string first_owner = 2;
+	string second_owner = 3;
+	string first_position = 4;
+	string second_position = 5;
+	string current_sqrt_price = 6;
+	SplitAmountInfo amount_splits = 7;
+	SplitPositionInfo first_position_info = 8;
+	SplitPositionInfo second_position_info = 9;
+	SplitPositionParameters2 split_position_parameters = 10;
+}
+
 message EvtSwap {
 	string pool = 1;
 	uint32 trade_direction = 2;
@@ -384,6 +437,21 @@ message EvtSwap {
 	SwapResult swap_result = 5;
 	uint64 actual_amount_in = 6;
 	uint64 current_timestamp = 7;
+}
+
+message EvtSwap2 {
+	string pool = 1;
+	uint32 trade_direction = 2;
+	uint32 collect_fee_mode = 3;
+	bool has_referral = 4;
+	SwapParameters2 params = 5;
+	SwapResult2 swap_result = 6;
+	uint64 included_transfer_fee_amount_in = 7;
+	uint64 included_transfer_fee_amount_out = 8;
+	uint64 excluded_transfer_fee_amount_out = 9;
+	uint64 current_timestamp = 10;
+	uint64 reserve_a_amount = 11;
+	uint64 reserve_b_amount = 12;
 }
 
 message EvtUpdateRewardDuration {
@@ -420,10 +488,8 @@ message InitializeCustomizablePoolParameters {
 
 message PoolFeeParameters {
 	BaseFeeParameters base_fee = 1;
-	uint32 protocol_fee_percent = 2;
-	uint32 partner_fee_percent = 3;
-	uint32 referral_fee_percent = 4;
-	optional DynamicFeeParameters dynamic_fee = 5;
+	repeated uint32 padding = 2;
+	optional DynamicFeeParameters dynamic_fee = 3;
 }
 
 message PoolFeesConfig {
@@ -484,9 +550,41 @@ message RewardInfo {
 	uint64 cumulative_seconds_with_empty_liquidity_reward = 13;
 }
 
+message SplitAmountInfo {
+	string permanent_locked_liquidity = 1;
+	string unlocked_liquidity = 2;
+	uint64 fee_a = 3;
+	uint64 fee_b = 4;
+	uint64 reward0 = 5;
+	uint64 reward1 = 6;
+}
+
+message SplitPositionInfo {
+	string liquidity = 1;
+	uint64 fee_a = 2;
+	uint64 fee_b = 3;
+	uint64 reward0 = 4;
+	uint64 reward1 = 5;
+}
+
+message SplitPositionParameters2 {
+	uint32 unlocked_liquidity_numerator = 1;
+	uint32 permanent_locked_liquidity_numerator = 2;
+	uint32 fee_a_numerator = 3;
+	uint32 fee_b_numerator = 4;
+	uint32 reward0_numerator = 5;
+	uint32 reward1_numerator = 6;
+}
+
 message SwapParameters {
 	uint64 amount_in = 1;
 	uint64 minimum_amount_out = 2;
+}
+
+message SwapParameters2 {
+	uint64 amount0 = 1;
+	uint64 amount1 = 2;
+	uint32 swap_mode = 3;
 }
 
 message SwapResult {
@@ -496,6 +594,18 @@ message SwapResult {
 	uint64 protocol_fee = 4;
 	uint64 partner_fee = 5;
 	uint64 referral_fee = 6;
+}
+
+message SwapResult2 {
+	uint64 included_fee_input_amount = 1;
+	uint64 excluded_fee_input_amount = 2;
+	uint64 amount_left = 3;
+	uint64 output_amount = 4;
+	string next_sqrt_price = 5;
+	uint64 trading_fee = 6;
+	uint64 protocol_fee = 7;
+	uint64 partner_fee = 8;
+	uint64 referral_fee = 9;
 }
 
 message UserRewardInfo {
@@ -548,13 +658,15 @@ message Pool {
 	uint32 token_b_flag = 21;
 	uint32 collect_fee_mode = 22;
 	uint32 pool_type = 23;
-	repeated uint32 padding0 = 24;
-	repeated uint32 fee_a_per_liquidity = 25;
-	repeated uint32 fee_b_per_liquidity = 26;
-	string permanent_lock_liquidity = 27;
-	PoolMetrics metrics = 28;
-	repeated uint64 padding1 = 29;
-	repeated RewardInfo reward_infos = 30;
+	uint32 version = 24;
+	uint32 padding0 = 25;
+	repeated uint32 fee_a_per_liquidity = 26;
+	repeated uint32 fee_b_per_liquidity = 27;
+	string permanent_lock_liquidity = 28;
+	PoolMetrics metrics = 29;
+	string creator = 30;
+	repeated uint64 padding1 = 31;
+	repeated RewardInfo reward_infos = 32;
 }
 
 message Position {
@@ -668,6 +780,10 @@ message ClaimProtocolFeeIxAccounts {
 	string program = 14;
 }
 
+message ClaimProtocolFeeIxData {
+	uint64 max_amount_a = 1;
+	uint64 max_amount_b = 2;
+}
 
 message ClaimRewardIxAccounts {
 	string pool_authority = 1;
@@ -685,6 +801,7 @@ message ClaimRewardIxAccounts {
 
 message ClaimRewardIxData {
 	uint32 reward_index = 1;
+	uint32 skip_reward = 2;
 }
 
 message CloseClaimFeeOperatorIxAccounts {
@@ -716,6 +833,15 @@ message ClosePositionIxAccounts {
 	string token_program = 8;
 	string event_authority = 9;
 	string program = 10;
+}
+
+
+message CloseTokenBadgeIxAccounts {
+	string token_badge = 1;
+	string admin = 2;
+	string rent_receiver = 3;
+	string event_authority = 4;
+	string program = 5;
 }
 
 
@@ -891,11 +1017,12 @@ message InitializeRewardIxAccounts {
 	string pool = 2;
 	string reward_vault = 3;
 	string reward_mint = 4;
-	string admin = 5;
-	string token_program = 6;
-	string system_program = 7;
-	string event_authority = 8;
-	string program = 9;
+	string signer = 5;
+	string payer = 6;
+	string token_program = 7;
+	string system_program = 8;
+	string event_authority = 9;
+	string program = 10;
 }
 
 message InitializeRewardIxData {
@@ -1001,6 +1128,44 @@ message SetPoolStatusIxData {
 	uint32 status = 1;
 }
 
+message SplitPositionIxAccounts {
+	string pool = 1;
+	string first_position = 2;
+	string first_position_nft_account = 3;
+	string second_position = 4;
+	string second_position_nft_account = 5;
+	string first_owner = 6;
+	string second_owner = 7;
+	string event_authority = 8;
+	string program = 9;
+}
+
+message SplitPositionIxData {
+	uint32 unlocked_liquidity_percentage = 1;
+	uint32 permanent_locked_liquidity_percentage = 2;
+	uint32 fee_a_percentage = 3;
+	uint32 fee_b_percentage = 4;
+	uint32 reward0_percentage = 5;
+	uint32 reward1_percentage = 6;
+	repeated uint32 padding = 7;
+}
+
+message SplitPosition2IxAccounts {
+	string pool = 1;
+	string first_position = 2;
+	string first_position_nft_account = 3;
+	string second_position = 4;
+	string second_position_nft_account = 5;
+	string first_owner = 6;
+	string second_owner = 7;
+	string event_authority = 8;
+	string program = 9;
+}
+
+message SplitPosition2IxData {
+	uint32 numerator = 1;
+}
+
 message SwapIxAccounts {
 	string pool_authority = 1;
 	string pool = 2;
@@ -1022,9 +1187,30 @@ message SwapIxData {
 	SwapParameters params = 1;
 }
 
+message Swap2IxAccounts {
+	string pool_authority = 1;
+	string pool = 2;
+	string input_token_account = 3;
+	string output_token_account = 4;
+	string token_a_vault = 5;
+	string token_b_vault = 6;
+	string token_a_mint = 7;
+	string token_b_mint = 8;
+	string payer = 9;
+	string token_a_program = 10;
+	string token_b_program = 11;
+	optional string referral_token_account = 12;
+	string event_authority = 13;
+	string program = 14;
+}
+
+message Swap2IxData {
+	SwapParameters2 params = 1;
+}
+
 message UpdateRewardDurationIxAccounts {
 	string pool = 1;
-	string admin = 2;
+	string signer = 2;
 	string event_authority = 3;
 	string program = 4;
 }
@@ -1036,7 +1222,7 @@ message UpdateRewardDurationIxData {
 
 message UpdateRewardFunderIxAccounts {
 	string pool = 1;
-	string admin = 2;
+	string signer = 2;
 	string event_authority = 3;
 	string program = 4;
 }
@@ -1084,26 +1270,30 @@ message ProgramIxs {
         	CloseClaimFeeOperatorIx close_claim_fee_operator = 6;
         	CloseConfigIx close_config = 7;
         	ClosePositionIx close_position = 8;
-        	CreateClaimFeeOperatorIx create_claim_fee_operator = 9;
-        	CreateConfigIx create_config = 10;
-        	CreateDynamicConfigIx create_dynamic_config = 11;
-        	CreatePositionIx create_position = 12;
-        	CreateTokenBadgeIx create_token_badge = 13;
-        	FundRewardIx fund_reward = 14;
-        	InitializeCustomizablePoolIx initialize_customizable_pool = 15;
-        	InitializePoolIx initialize_pool = 16;
-        	InitializePoolWithDynamicConfigIx initialize_pool_with_dynamic_config = 17;
-        	InitializeRewardIx initialize_reward = 18;
-        	LockPositionIx lock_position = 19;
-        	PermanentLockPositionIx permanent_lock_position = 20;
-        	RefreshVestingIx refresh_vesting = 21;
-        	RemoveAllLiquidityIx remove_all_liquidity = 22;
-        	RemoveLiquidityIx remove_liquidity = 23;
-        	SetPoolStatusIx set_pool_status = 24;
-        	SwapIx swap = 25;
-        	UpdateRewardDurationIx update_reward_duration = 26;
-        	UpdateRewardFunderIx update_reward_funder = 27;
-        	WithdrawIneligibleRewardIx withdraw_ineligible_reward = 28;
+        	CloseTokenBadgeIx close_token_badge = 9;
+        	CreateClaimFeeOperatorIx create_claim_fee_operator = 10;
+        	CreateConfigIx create_config = 11;
+        	CreateDynamicConfigIx create_dynamic_config = 12;
+        	CreatePositionIx create_position = 13;
+        	CreateTokenBadgeIx create_token_badge = 14;
+        	FundRewardIx fund_reward = 15;
+        	InitializeCustomizablePoolIx initialize_customizable_pool = 16;
+        	InitializePoolIx initialize_pool = 17;
+        	InitializePoolWithDynamicConfigIx initialize_pool_with_dynamic_config = 18;
+        	InitializeRewardIx initialize_reward = 19;
+        	LockPositionIx lock_position = 20;
+        	PermanentLockPositionIx permanent_lock_position = 21;
+        	RefreshVestingIx refresh_vesting = 22;
+        	RemoveAllLiquidityIx remove_all_liquidity = 23;
+        	RemoveLiquidityIx remove_liquidity = 24;
+        	SetPoolStatusIx set_pool_status = 25;
+        	SplitPositionIx split_position = 26;
+        	SplitPosition2Ix split_position2 = 27;
+        	SwapIx swap = 28;
+        	Swap2Ix swap2 = 29;
+        	UpdateRewardDurationIx update_reward_duration = 30;
+        	UpdateRewardFunderIx update_reward_funder = 31;
+        	WithdrawIneligibleRewardIx withdraw_ineligible_reward = 32;
         }
 }
 

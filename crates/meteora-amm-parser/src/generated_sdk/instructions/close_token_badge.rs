@@ -7,21 +7,23 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-pub const REFRESH_VESTING_DISCRIMINATOR: [u8; 8] = [9, 94, 216, 14, 116, 204, 247, 0];
+pub const CLOSE_TOKEN_BADGE_DISCRIMINATOR: [u8; 8] = [108, 146, 86, 110, 179, 254, 10, 104];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct RefreshVesting {
-    pub pool: solana_pubkey::Pubkey,
+pub struct CloseTokenBadge {
+    pub token_badge: solana_pubkey::Pubkey,
 
-    pub position: solana_pubkey::Pubkey,
-    /// The token account for nft
-    pub position_nft_account: solana_pubkey::Pubkey,
+    pub admin: solana_pubkey::Pubkey,
 
-    pub owner: solana_pubkey::Pubkey,
+    pub rent_receiver: solana_pubkey::Pubkey,
+
+    pub event_authority: solana_pubkey::Pubkey,
+
+    pub program: solana_pubkey::Pubkey,
 }
 
-impl RefreshVesting {
+impl CloseTokenBadge {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
@@ -32,20 +34,26 @@ impl RefreshVesting {
         &self,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.pool, false,
+        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.token_badge,
+            false,
         ));
-        accounts.push(solana_instruction::AccountMeta::new(self.position, false));
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.position_nft_account,
+        accounts.push(solana_instruction::AccountMeta::new(self.admin, true));
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.rent_receiver,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.owner, false,
+            self.event_authority,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.program,
+            false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = RefreshVestingInstructionData::new().try_to_vec().unwrap();
+        let data = CloseTokenBadgeInstructionData::new().try_to_vec().unwrap();
 
         solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
@@ -57,69 +65,73 @@ impl RefreshVesting {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct RefreshVestingInstructionData {
+pub struct CloseTokenBadgeInstructionData {
     discriminator: [u8; 8],
 }
 
-impl RefreshVestingInstructionData {
+impl CloseTokenBadgeInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [9, 94, 216, 14, 116, 204, 247, 0],
+            discriminator: [108, 146, 86, 110, 179, 254, 10, 104],
         }
     }
 
     pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> { borsh::to_vec(self) }
 }
 
-impl Default for RefreshVestingInstructionData {
+impl Default for CloseTokenBadgeInstructionData {
     fn default() -> Self { Self::new() }
 }
 
-/// Instruction builder for `RefreshVesting`.
+/// Instruction builder for `CloseTokenBadge`.
 ///
 /// ### Accounts:
 ///
-///   0. `[]` pool
-///   1. `[writable]` position
-///   2. `[]` position_nft_account
-///   3. `[]` owner
+///   0. `[writable]` token_badge
+///   1. `[writable, signer]` admin
+///   2. `[writable]` rent_receiver
+///   3. `[]` event_authority
+///   4. `[]` program
 #[derive(Clone, Debug, Default)]
-pub struct RefreshVestingBuilder {
-    pool: Option<solana_pubkey::Pubkey>,
-    position: Option<solana_pubkey::Pubkey>,
-    position_nft_account: Option<solana_pubkey::Pubkey>,
-    owner: Option<solana_pubkey::Pubkey>,
+pub struct CloseTokenBadgeBuilder {
+    token_badge: Option<solana_pubkey::Pubkey>,
+    admin: Option<solana_pubkey::Pubkey>,
+    rent_receiver: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    program: Option<solana_pubkey::Pubkey>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl RefreshVestingBuilder {
+impl CloseTokenBadgeBuilder {
     pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
-    pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
-        self.pool = Some(pool);
+    pub fn token_badge(&mut self, token_badge: solana_pubkey::Pubkey) -> &mut Self {
+        self.token_badge = Some(token_badge);
         self
     }
 
     #[inline(always)]
-    pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
-        self.position = Some(position);
-        self
-    }
-
-    /// The token account for nft
-    #[inline(always)]
-    pub fn position_nft_account(
-        &mut self,
-        position_nft_account: solana_pubkey::Pubkey,
-    ) -> &mut Self {
-        self.position_nft_account = Some(position_nft_account);
+    pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
+        self.admin = Some(admin);
         self
     }
 
     #[inline(always)]
-    pub fn owner(&mut self, owner: solana_pubkey::Pubkey) -> &mut Self {
-        self.owner = Some(owner);
+    pub fn rent_receiver(&mut self, rent_receiver: solana_pubkey::Pubkey) -> &mut Self {
+        self.rent_receiver = Some(rent_receiver);
+        self
+    }
+
+    #[inline(always)]
+    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
+        self.event_authority = Some(event_authority);
+        self
+    }
+
+    #[inline(always)]
+    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
+        self.program = Some(program);
         self
     }
 
@@ -142,55 +154,59 @@ impl RefreshVestingBuilder {
 
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = RefreshVesting {
-            pool: self.pool.expect("pool is not set"),
-            position: self.position.expect("position is not set"),
-            position_nft_account: self
-                .position_nft_account
-                .expect("position_nft_account is not set"),
-            owner: self.owner.expect("owner is not set"),
+        let accounts = CloseTokenBadge {
+            token_badge: self.token_badge.expect("token_badge is not set"),
+            admin: self.admin.expect("admin is not set"),
+            rent_receiver: self.rent_receiver.expect("rent_receiver is not set"),
+            event_authority: self.event_authority.expect("event_authority is not set"),
+            program: self.program.expect("program is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
     }
 }
 
-/// `refresh_vesting` CPI accounts.
-pub struct RefreshVestingCpiAccounts<'a, 'b> {
-    pub pool: &'b solana_account_info::AccountInfo<'a>,
+/// `close_token_badge` CPI accounts.
+pub struct CloseTokenBadgeCpiAccounts<'a, 'b> {
+    pub token_badge: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position: &'b solana_account_info::AccountInfo<'a>,
-    /// The token account for nft
-    pub position_nft_account: &'b solana_account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
 
-    pub owner: &'b solana_account_info::AccountInfo<'a>,
+    pub rent_receiver: &'b solana_account_info::AccountInfo<'a>,
+
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
+
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `refresh_vesting` CPI instruction.
-pub struct RefreshVestingCpi<'a, 'b> {
+/// `close_token_badge` CPI instruction.
+pub struct CloseTokenBadgeCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    pub pool: &'b solana_account_info::AccountInfo<'a>,
+    pub token_badge: &'b solana_account_info::AccountInfo<'a>,
 
-    pub position: &'b solana_account_info::AccountInfo<'a>,
-    /// The token account for nft
-    pub position_nft_account: &'b solana_account_info::AccountInfo<'a>,
+    pub admin: &'b solana_account_info::AccountInfo<'a>,
 
-    pub owner: &'b solana_account_info::AccountInfo<'a>,
+    pub rent_receiver: &'b solana_account_info::AccountInfo<'a>,
+
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
+
+    pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-impl<'a, 'b> RefreshVestingCpi<'a, 'b> {
+impl<'a, 'b> CloseTokenBadgeCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: RefreshVestingCpiAccounts<'a, 'b>,
+        accounts: CloseTokenBadgeCpiAccounts<'a, 'b>,
     ) -> Self {
         Self {
             __program: program,
-            pool: accounts.pool,
-            position: accounts.position,
-            position_nft_account: accounts.position_nft_account,
-            owner: accounts.owner,
+            token_badge: accounts.token_badge,
+            admin: accounts.admin,
+            rent_receiver: accounts.rent_receiver,
+            event_authority: accounts.event_authority,
+            program: accounts.program,
         }
     }
 
@@ -220,21 +236,22 @@ impl<'a, 'b> RefreshVestingCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_error::ProgramResult {
-        let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.pool.key,
-            false,
-        ));
+        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
-            *self.position.key,
+            *self.token_badge.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(*self.admin.key, true));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.rent_receiver.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.position_nft_account.key,
+            *self.event_authority.key,
             false,
         ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.owner.key,
+            *self.program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
@@ -244,19 +261,20 @@ impl<'a, 'b> RefreshVestingCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = RefreshVestingInstructionData::new().try_to_vec().unwrap();
+        let data = CloseTokenBadgeInstructionData::new().try_to_vec().unwrap();
 
         let instruction = solana_instruction::Instruction {
             program_id: crate::CP_AMM_ID,
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(6 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
-        account_infos.push(self.pool.clone());
-        account_infos.push(self.position.clone());
-        account_infos.push(self.position_nft_account.clone());
-        account_infos.push(self.owner.clone());
+        account_infos.push(self.token_badge.clone());
+        account_infos.push(self.admin.clone());
+        account_infos.push(self.rent_receiver.clone());
+        account_infos.push(self.event_authority.clone());
+        account_infos.push(self.program.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -269,57 +287,70 @@ impl<'a, 'b> RefreshVestingCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `RefreshVesting` via CPI.
+/// Instruction builder for `CloseTokenBadge` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[]` pool
-///   1. `[writable]` position
-///   2. `[]` position_nft_account
-///   3. `[]` owner
+///   0. `[writable]` token_badge
+///   1. `[writable, signer]` admin
+///   2. `[writable]` rent_receiver
+///   3. `[]` event_authority
+///   4. `[]` program
 #[derive(Clone, Debug)]
-pub struct RefreshVestingCpiBuilder<'a, 'b> {
-    instruction: Box<RefreshVestingCpiBuilderInstruction<'a, 'b>>,
+pub struct CloseTokenBadgeCpiBuilder<'a, 'b> {
+    instruction: Box<CloseTokenBadgeCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> RefreshVestingCpiBuilder<'a, 'b> {
+impl<'a, 'b> CloseTokenBadgeCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(RefreshVestingCpiBuilderInstruction {
+        let instruction = Box::new(CloseTokenBadgeCpiBuilderInstruction {
             __program: program,
-            pool: None,
-            position: None,
-            position_nft_account: None,
-            owner: None,
+            token_badge: None,
+            admin: None,
+            rent_receiver: None,
+            event_authority: None,
+            program: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
 
     #[inline(always)]
-    pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.pool = Some(pool);
-        self
-    }
-
-    #[inline(always)]
-    pub fn position(&mut self, position: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.position = Some(position);
-        self
-    }
-
-    /// The token account for nft
-    #[inline(always)]
-    pub fn position_nft_account(
+    pub fn token_badge(
         &mut self,
-        position_nft_account: &'b solana_account_info::AccountInfo<'a>,
+        token_badge: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.position_nft_account = Some(position_nft_account);
+        self.instruction.token_badge = Some(token_badge);
         self
     }
 
     #[inline(always)]
-    pub fn owner(&mut self, owner: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.owner = Some(owner);
+    pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.admin = Some(admin);
+        self
+    }
+
+    #[inline(always)]
+    pub fn rent_receiver(
+        &mut self,
+        rent_receiver: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.rent_receiver = Some(rent_receiver);
+        self
+    }
+
+    #[inline(always)]
+    pub fn event_authority(
+        &mut self,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.event_authority = Some(event_authority);
+        self
+    }
+
+    #[inline(always)]
+    pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.program = Some(program);
         self
     }
 
@@ -358,19 +389,27 @@ impl<'a, 'b> RefreshVestingCpiBuilder<'a, 'b> {
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
-        let instruction = RefreshVestingCpi {
+        let instruction = CloseTokenBadgeCpi {
             __program: self.instruction.__program,
 
-            pool: self.instruction.pool.expect("pool is not set"),
-
-            position: self.instruction.position.expect("position is not set"),
-
-            position_nft_account: self
+            token_badge: self
                 .instruction
-                .position_nft_account
-                .expect("position_nft_account is not set"),
+                .token_badge
+                .expect("token_badge is not set"),
 
-            owner: self.instruction.owner.expect("owner is not set"),
+            admin: self.instruction.admin.expect("admin is not set"),
+
+            rent_receiver: self
+                .instruction
+                .rent_receiver
+                .expect("rent_receiver is not set"),
+
+            event_authority: self
+                .instruction
+                .event_authority
+                .expect("event_authority is not set"),
+
+            program: self.instruction.program.expect("program is not set"),
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -380,12 +419,13 @@ impl<'a, 'b> RefreshVestingCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct RefreshVestingCpiBuilderInstruction<'a, 'b> {
+struct CloseTokenBadgeCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
-    pool: Option<&'b solana_account_info::AccountInfo<'a>>,
-    position: Option<&'b solana_account_info::AccountInfo<'a>>,
-    position_nft_account: Option<&'b solana_account_info::AccountInfo<'a>>,
-    owner: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_badge: Option<&'b solana_account_info::AccountInfo<'a>>,
+    admin: Option<&'b solana_account_info::AccountInfo<'a>>,
+    rent_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    program: Option<&'b solana_account_info::AccountInfo<'a>>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }
