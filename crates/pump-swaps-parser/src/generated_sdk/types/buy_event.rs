@@ -55,13 +55,6 @@ pub struct BuyEventV1 {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub protocol_fee_recipient_token_account: Pubkey,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub coin_creator: Pubkey,
-    pub coin_creator_fee_basis_points: u64,
-    pub coin_creator_fee: u64,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -154,9 +147,11 @@ impl BuyEvent {
                     return Some(BuyEvent::V2(v2_event));
                 }
 
-                // If V2 fails, try V1
-                if let Ok(v1_event) = BuyEventV1::try_from_slice(buy_event_data) {
-                    return Some(BuyEvent::V1(v1_event));
+                // If V2 fails, try V1 using first 304 bytes
+                if buy_event_data.len() >= 304 {
+                    if let Ok(v1_event) = BuyEventV1::try_from_slice(&buy_event_data[..304]) {
+                        return Some(BuyEvent::V1(v1_event));
+                    }
                 }
             }
         }
@@ -193,6 +188,35 @@ mod tests {
                 assert_eq!(v2_event.base_amount_out, 1679256717);
                 assert_eq!(v2_event.quote_amount_in, 4234433689233);
                 println!("Parsed as BuyEventV2: {v2_event:?}");
+            },
+        }
+    }
+
+    #[test]
+    fn test_parse_buy_event_from_inner_data_2() {
+        // Test data from provided hex string
+        let hex_data = "e445a52e51cb9a1d67f4521f2cf57777466ae767000000007ab926280400000040d2df0300000000d7dba22d0600000040d2df0300000000a2ad7239ea4a00001ddebece3700000046e81803000000001400000000000000f89501000000000005000000000000007e650000000000003e7e1a0300000000bce31a030000000053f374f6d5d82abec4f7d9fd8c049b34a26d1ca30dedcefce235706d1651aa04224c4b9c12de1f3d475cfaac12bf064a6fa8c72a91215c5aa6421afda96dedd1d3e74285f8661d86000c86590599281aec68c75eee8a7dae154758fb9aea1a59a2888646025021eea1d6df668efa393621de11ccb6a7c71a69b34c0c3b0791a94ac2f8d0dd5cbc97e3289c197cb5062a54f3d956b9ce6e5115f96567aa5cb3e677d915955f8880731ceb4a75a0cc96c174fa4095c4e1d9967acfc42845ae67ae";
+
+        let data = hex::decode(hex_data).expect("Failed to decode hex");
+
+        let result = BuyEvent::from_inner_instruction_data(&data);
+        assert!(
+            result.is_some(),
+            "Should successfully parse BuyEvent from inner instruction data"
+        );
+
+        let buy_event = result.unwrap();
+
+        // This should be parsed as V2 based on the data length
+        match buy_event {
+            BuyEvent::V1(v1_event) => {
+                assert_eq!(v1_event.timestamp, 1743219270);
+                assert_eq!(v1_event.base_amount_out, 17853495674);
+                assert_eq!(v1_event.quote_amount_in, 51963974);
+                println!("Parsed as BuyEventV1: {v1_event:?}");
+            },
+            BuyEvent::V2(v2_event) => {
+                panic!("Expected BuyEventV1, got BuyEventV2: {v2_event:?}");
             },
         }
     }
