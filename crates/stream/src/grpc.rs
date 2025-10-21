@@ -32,8 +32,8 @@ pub enum Error {
 #[derive(Debug)]
 pub struct GrpcHandler(pub(super) broadcast::Sender<Any>);
 
-impl<T: Message + Name + Sync> Handler<T> for GrpcHandler {
-    async fn handle(&self, value: &T) -> HandlerResult<()> {
+impl<T: Message + Name + Sync, R: Sync> Handler<T, R> for GrpcHandler {
+    async fn handle(&self, value: &T, _raw: &R) -> HandlerResult<()> {
         self.0.send(Any::from_msg(value)?).ok();
         Ok(())
     }

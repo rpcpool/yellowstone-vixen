@@ -26,8 +26,8 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync> Handler<V> for Logger {
-    async fn handle(&self, _value: &V) -> HandlerResult<()> { Ok(()) }
+impl<V: std::fmt::Debug + Sync, R: Sync> Handler<V, R> for Logger {
+    async fn handle(&self, _value: &V, _raw: &R) -> HandlerResult<()> { Ok(()) }
 }
 
 #[rustfmt::skip]

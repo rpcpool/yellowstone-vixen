@@ -75,7 +75,7 @@ where
     P::Input: Send + Sync,
     H: Debug + Sync,
     for<'i> &'i H: IntoIterator,
-    for<'i> <&'i H as IntoIterator>::Item: Handler<P::Output>,
+    for<'i> <&'i H as IntoIterator>::Item: Handler<P::Output, P::Input>,
 {
     /// Handle fn for `FilterPipeline`
     ///
@@ -92,7 +92,7 @@ where
         let errs = self
             .handlers
             .into_iter()
-            .map(|h| async move { h.handle(parsed).await })
+            .map(|h| async move { h.handle(parsed, value).await })
             .collect::<futures_util::stream::FuturesUnordered<_>>()
             .filter_map(|r| async move { r.err() })
             .collect::<SmallVec<[_; 1]>>()
@@ -113,7 +113,7 @@ where
     P::Output: Send + Sync,
     H: Debug + Sync,
     for<'i> &'i H: IntoIterator,
-    for<'i> <&'i H as IntoIterator>::Item: Handler<P::Output> + Send,
+    for<'i> <&'i H as IntoIterator>::Item: Handler<P::Output, P::Input> + Send,
 {
     fn handle<'h>(
         &'h self,
