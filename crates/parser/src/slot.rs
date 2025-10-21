@@ -9,7 +9,7 @@ impl Parser for SlotParser {
     type Input = SlotUpdate;
     type Output = SlotUpdate;
 
-    fn id(&self) -> Cow<str> { "yellowstone::SlotParser".into() }
+    fn id(&self) -> Cow<'static, str> { "yellowstone::SlotParser".into() }
 
     fn prefilter(&self) -> Prefilter { Prefilter::builder().slots().build().unwrap() }
 
