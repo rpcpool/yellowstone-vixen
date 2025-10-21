@@ -19,16 +19,20 @@ type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 /// The result returned by a handler.
 pub type HandlerResult<T> = Result<T, BoxedError>;
 
-/// A handler callback for a parsed value.
-pub trait Handler<T> {
-    /// Consume the parsed value.
-    fn handle(&self, value: &T) -> impl Future<Output = HandlerResult<()>> + Send;
+/// A handler callback for a parsed value and its corresponding raw event.
+pub trait Handler<T, R>
+where R: Sync
+{
+    /// Consume the parsed value together with the raw event.
+    fn handle(&self, value: &T, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send;
 }
 
-impl<T: Handler<U>, U> Handler<U> for &T {
+impl<T: Handler<U, R>, U, R> Handler<U, R> for &T
+where R: Sync
+{
     #[inline]
-    fn handle(&self, value: &U) -> impl Future<Output = HandlerResult<()>> + Send {
-        <T as Handler<U>>::handle(self, value)
+    fn handle(&self, value: &U, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send {
+        <T as Handler<U, R>>::handle(self, value, raw_event)
     }
 }
 
@@ -145,7 +149,8 @@ impl<P, I> Pipeline<P, I>
 where
     for<'i> &'i I: IntoIterator,
     P: Parser,
-    for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output>,
+    P::Input: Sync,
+    for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output, P::Input>,
 {
     /// Handle fn for `Pipeline`
     ///
@@ -167,7 +172,7 @@ where
         let errs = (&self.1)
             .into_iter()
             .map(|h| async move {
-                h.handle(parsed)
+                h.handle(parsed, value)
                     .instrument(tracing::info_span!("vixen.handle",))
                     .await
             })
@@ -209,7 +214,7 @@ where
     for<'i> &'i I: IntoIterator,
     P::Input: Sync,
     P::Output: Send + Sync,
-    for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output> + Send,
+    for<'i> <&'i I as IntoIterator>::Item: Handler<P::Output, P::Input> + Send,
 {
     fn handle<'h>(
         &'h self,

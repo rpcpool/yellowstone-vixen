@@ -24,8 +24,8 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync> yellowstone_vixen::Handler<V> for Logger {
-    async fn handle(&self, _value: &V) -> yellowstone_vixen::HandlerResult<()> { Ok(()) }
+impl<V: std::fmt::Debug + Sync, R: Sync> yellowstone_vixen::Handler<V, R> for Logger {
+    async fn handle(&self, _value: &V, _raw: &R) -> yellowstone_vixen::HandlerResult<()> { Ok(()) }
 }
 
 #[tokio::main]
