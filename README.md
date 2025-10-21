@@ -56,8 +56,8 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync> yellowstone_vixen::Handler<V> for Logger {
-    async fn handle(&self, value: &V) -> yellowstone_vixen::HandlerResult<()> {
+impl<V: std::fmt::Debug + Sync, R: Sync> vixen::Handler<V, R> for Logger {
+    async fn handle(&self, _value: &V, _raw: &R) -> vixen::HandlerResult<()> {
         tracing::info!(?value);
         Ok(())
     }
@@ -73,7 +73,7 @@ fn main() {
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
 
-    yellowstone_vixen::Runtime<YellowstoneGrpcSourc>::builder()
+    yellowstone_vixen::Runtime<YellowstoneGrpcSource>::builder()
         .account(Pipeline::new(AccountParser, [Logger]))
         .instruction(Pipeline::new(InstructionParser, [Logger]))
         .build(config)
