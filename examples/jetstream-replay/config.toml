@@ -1,0 +1,11 @@
+[source]
+archive_url = "https://api.old-faithful.net"
+epoch = 800
+threads = 4
+reorder_buffer_size = 1000
+slot_timeout_secs = 30
+
+[filters]
+# Add any filters needed for parsing specific programs or accounts
+# For example, to filter for specific programs:
+# programs = ["11111111111111111111111111111112"]
