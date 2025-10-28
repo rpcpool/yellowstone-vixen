@@ -86,7 +86,9 @@ pub struct SolanaSnapshotSource {
 impl SourceTrait for SolanaSnapshotSource {
     type Config = SolanaSnapshotConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     async fn connect(
         &self,

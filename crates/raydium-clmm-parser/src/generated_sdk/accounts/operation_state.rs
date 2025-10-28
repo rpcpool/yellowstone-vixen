@@ -119,7 +119,9 @@ impl anchor_lang::AccountSerialize for OperationState {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for OperationState {
-    fn owner() -> Pubkey { crate::AMM_V3_ID }
+    fn owner() -> Pubkey {
+        crate::AMM_V3_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

@@ -84,7 +84,9 @@ impl From<FumaroleConfig> for yellowstone_fumarole_client::config::FumaroleConfi
 impl SourceTrait for YellowstoneFumaroleSource {
     type Config = FumaroleConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { filters, config } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { filters, config }
+    }
 
     async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
         let filters = self.filters.clone();

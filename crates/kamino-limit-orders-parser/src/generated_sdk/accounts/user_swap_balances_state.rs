@@ -118,7 +118,9 @@ impl anchor_lang::AccountSerialize for UserSwapBalancesState {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for UserSwapBalancesState {
-    fn owner() -> Pubkey { crate::LIMO_ID }
+    fn owner() -> Pubkey {
+        crate::LIMO_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

@@ -60,7 +60,9 @@ impl SolanaAccountsRpcSource {
 impl SourceTrait for SolanaAccountsRpcSource {
     type Config = SolanaAccountsRpcConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
         let filters = &self.filters;

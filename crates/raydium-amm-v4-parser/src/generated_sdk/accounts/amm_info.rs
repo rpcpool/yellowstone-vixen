@@ -195,7 +195,9 @@ impl anchor_lang::AccountSerialize for AmmInfo {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for AmmInfo {
-    fn owner() -> Pubkey { crate::RAYDIUM_AMM_V4_ID }
+    fn owner() -> Pubkey {
+        crate::RAYDIUM_AMM_V4_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

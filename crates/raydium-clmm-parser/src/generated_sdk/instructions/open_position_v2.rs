@@ -180,7 +180,9 @@ impl OpenPositionV2InstructionData {
 }
 
 impl Default for OpenPositionV2InstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -260,7 +262,9 @@ pub struct OpenPositionV2Builder {
 }
 
 impl OpenPositionV2Builder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
@@ -1200,7 +1204,9 @@ impl<'a, 'b> OpenPositionV2CpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

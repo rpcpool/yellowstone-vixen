@@ -130,7 +130,9 @@ impl anchor_lang::AccountSerialize for Vesting {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Vesting {
-    fn owner() -> Pubkey { crate::CP_AMM_ID }
+    fn owner() -> Pubkey {
+        crate::CP_AMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

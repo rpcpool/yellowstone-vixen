@@ -75,7 +75,9 @@ impl ExtendAccountInstructionData {
 }
 
 impl Default for ExtendAccountInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `ExtendAccount`.
@@ -98,7 +100,9 @@ pub struct ExtendAccountBuilder {
 }
 
 impl ExtendAccountBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     #[inline(always)]
     pub fn account(&mut self, account: solana_pubkey::Pubkey) -> &mut Self {
@@ -385,7 +389,9 @@ impl<'a, 'b> ExtendAccountCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

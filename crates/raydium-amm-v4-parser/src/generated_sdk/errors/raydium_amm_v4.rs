@@ -192,5 +192,7 @@ impl solana_program_error::PrintProgramError for RaydiumAmmV4Error {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for RaydiumAmmV4Error {
-    fn type_of() -> &'static str { "RaydiumAmmV4Error" }
+    fn type_of() -> &'static str {
+        "RaydiumAmmV4Error"
+    }
 }

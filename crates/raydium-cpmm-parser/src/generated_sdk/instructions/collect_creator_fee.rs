@@ -130,7 +130,9 @@ impl CollectCreatorFeeInstructionData {
 }
 
 impl Default for CollectCreatorFeeInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `CollectCreatorFee`.
@@ -171,7 +173,9 @@ pub struct CollectCreatorFeeBuilder {
 }
 
 impl CollectCreatorFeeBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Only pool creator can collect fee
     #[inline(always)]
@@ -746,7 +750,9 @@ impl<'a, 'b> CollectCreatorFeeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

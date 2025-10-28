@@ -147,7 +147,9 @@ impl anchor_lang::AccountSerialize for Global {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Global {
-    fn owner() -> Pubkey { crate::PUMP_ID }
+    fn owner() -> Pubkey {
+        crate::PUMP_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

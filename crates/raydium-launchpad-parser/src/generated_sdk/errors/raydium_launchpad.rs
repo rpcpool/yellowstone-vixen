@@ -84,5 +84,7 @@ impl solana_program_error::PrintProgramError for RaydiumLaunchpadError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for RaydiumLaunchpadError {
-    fn type_of() -> &'static str { "RaydiumLaunchpadError" }
+    fn type_of() -> &'static str {
+        "RaydiumLaunchpadError"
+    }
 }

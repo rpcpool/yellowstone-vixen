@@ -66,5 +66,7 @@ impl solana_program_error::PrintProgramError for RaydiumCpSwapError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for RaydiumCpSwapError {
-    fn type_of() -> &'static str { "RaydiumCpSwapError" }
+    fn type_of() -> &'static str {
+        "RaydiumCpSwapError"
+    }
 }

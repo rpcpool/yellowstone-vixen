@@ -137,7 +137,9 @@ impl anchor_lang::AccountSerialize for VestingRecord {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for VestingRecord {
-    fn owner() -> Pubkey { crate::RAYDIUM_LAUNCHPAD_ID }
+    fn owner() -> Pubkey {
+        crate::RAYDIUM_LAUNCHPAD_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

@@ -71,7 +71,9 @@ impl CreateConfigAccountInstructionData {
 }
 
 impl Default for CreateConfigAccountInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `CreateConfigAccount`.
@@ -94,7 +96,9 @@ pub struct CreateConfigAccountBuilder {
 }
 
 impl CreateConfigAccountBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
@@ -381,7 +385,9 @@ impl<'a, 'b> CreateConfigAccountCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

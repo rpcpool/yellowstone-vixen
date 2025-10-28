@@ -172,5 +172,7 @@ pub enum CpAmmError {
 }
 
 impl From<CpAmmError> for solana_program_error::ProgramError {
-    fn from(e: CpAmmError) -> Self { solana_program_error::ProgramError::Custom(e as u32) }
+    fn from(e: CpAmmError) -> Self {
+        solana_program_error::ProgramError::Custom(e as u32)
+    }
 }

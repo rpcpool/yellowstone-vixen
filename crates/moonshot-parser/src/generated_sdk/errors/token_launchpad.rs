@@ -129,5 +129,7 @@ impl solana_program_error::PrintProgramError for TokenLaunchpadError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for TokenLaunchpadError {
-    fn type_of() -> &'static str { "TokenLaunchpadError" }
+    fn type_of() -> &'static str {
+        "TokenLaunchpadError"
+    }
 }

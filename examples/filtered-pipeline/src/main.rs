@@ -33,7 +33,9 @@ pub struct Opts {
 pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync, R: Sync> vixen::Handler<V, R> for Logger {
-    async fn handle(&self, _value: &V, _raw: &R) -> vixen::HandlerResult<()> { Ok(()) }
+    async fn handle(&self, _value: &V, _raw: &R) -> vixen::HandlerResult<()> {
+        Ok(())
+    }
 }
 fn main() {
     let Opts { config } = Opts::parse();

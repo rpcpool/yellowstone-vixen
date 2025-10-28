@@ -38,9 +38,13 @@ impl Parser for BlockMetaParser {
     type Input = SubscribeUpdateBlockMeta;
     type Output = BlockMetaUpdate;
 
-    fn id(&self) -> Cow<'static, str> { "yellowstone::BlockMetaParser".into() }
+    fn id(&self) -> Cow<'static, str> {
+        "yellowstone::BlockMetaParser".into()
+    }
 
-    fn prefilter(&self) -> Prefilter { Prefilter::builder().block_metas().build().unwrap() }
+    fn prefilter(&self) -> Prefilter {
+        Prefilter::builder().block_metas().build().unwrap()
+    }
 
     async fn parse(&self, block_meta: &SubscribeUpdateBlockMeta) -> ParseResult<Self::Output> {
         let rewards = block_meta.rewards.as_ref().map(|reward| Rewards {

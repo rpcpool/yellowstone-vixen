@@ -221,7 +221,9 @@ impl MigrateToCpswapInstructionData {
 }
 
 impl Default for MigrateToCpswapInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `MigrateToCpswap`.
@@ -290,7 +292,9 @@ pub struct MigrateToCpswapBuilder {
 }
 
 impl MigrateToCpswapBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Only migrate_to_cpswap_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_cpswap_wallet saved in global_config
@@ -1349,7 +1353,9 @@ impl<'a, 'b> MigrateToCpswapCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

@@ -33,7 +33,9 @@ pub enum Error {
 
 impl From<std::io::Error> for Error {
     #[inline]
-    fn from(value: std::io::Error) -> Self { Self::Runtime(value.into()) }
+    fn from(value: std::io::Error) -> Self {
+        Self::Runtime(value.into())
+    }
 }
 
 /// A Vixen program stream server.
@@ -63,7 +65,9 @@ impl<S: SourceTrait> fmt::Debug for Server<'_, S> {
 
 impl<S: SourceTrait> Server<'_, S> {
     /// Create a new stream server builder.
-    pub fn builder() -> StreamBuilder<'static, S> { StreamBuilder::default() }
+    pub fn builder() -> StreamBuilder<'static, S> {
+        StreamBuilder::default()
+    }
 }
 
 impl<S: SourceTrait> Server<'_, S> {
@@ -105,7 +109,9 @@ impl<S: SourceTrait> Server<'_, S> {
     /// }
     /// ```
     #[inline]
-    pub fn run(self) { util::handle_fatal(self.try_run()); }
+    pub fn run(self) {
+        util::handle_fatal(self.try_run());
+    }
 
     /// Error returning variant of [`Self::run`].
     ///
@@ -158,7 +164,9 @@ impl<S: SourceTrait> Server<'_, S> {
     /// }
     /// ```
     #[inline]
-    pub async fn run_async(self) { util::handle_fatal(self.try_run_async().await); }
+    pub async fn run_async(self) {
+        util::handle_fatal(self.try_run_async().await);
+    }
 
     /// Error returning variant of [`Self::run_async`].
     ///

@@ -147,7 +147,9 @@ impl anchor_lang::AccountSerialize for AmmConfig {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for AmmConfig {
-    fn owner() -> Pubkey { crate::RAYDIUM_CP_SWAP_ID }
+    fn owner() -> Pubkey {
+        crate::RAYDIUM_CP_SWAP_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

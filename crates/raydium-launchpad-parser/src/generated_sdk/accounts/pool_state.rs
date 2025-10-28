@@ -222,7 +222,9 @@ impl anchor_lang::AccountSerialize for PoolState {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for PoolState {
-    fn owner() -> Pubkey { crate::RAYDIUM_LAUNCHPAD_ID }
+    fn owner() -> Pubkey {
+        crate::RAYDIUM_LAUNCHPAD_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]

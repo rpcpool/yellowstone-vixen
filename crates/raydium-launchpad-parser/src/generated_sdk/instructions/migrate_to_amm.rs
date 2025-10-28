@@ -232,7 +232,9 @@ impl MigrateToAmmInstructionData {
 }
 
 impl Default for MigrateToAmmInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -320,7 +322,9 @@ pub struct MigrateToAmmBuilder {
 }
 
 impl MigrateToAmmBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Only migrate_to_amm_wallet can migrate to cpswap pool
     /// This signer must match the migrate_to_amm_wallet saved in global_config
@@ -1495,7 +1499,9 @@ impl<'a, 'b> MigrateToAmmCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

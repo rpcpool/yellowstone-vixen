@@ -148,7 +148,9 @@ impl AddLiquidityByWeightInstructionData {
 }
 
 impl Default for AddLiquidityByWeightInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -208,7 +210,9 @@ pub struct AddLiquidityByWeightBuilder {
 }
 
 impl AddLiquidityByWeightBuilder {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     #[inline(always)]
     pub fn position(&mut self, position: solana_pubkey::Pubkey) -> &mut Self {
@@ -895,7 +899,9 @@ impl<'a, 'b> AddLiquidityByWeightCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+        self.invoke_signed(&[])
+    }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
