@@ -1,7 +1,9 @@
 # This is an example TOML configuration file for Yellowstone Vixen.
 # Copy to Vixen.toml and them modify as needed.
 
-# Only needed if you are using the Yellowstone gRPC as a source.
+# Source configuration - Choose ONE of the following source types:
+
+# Option 1: Yellowstone gRPC source
 [source]
 # The endpoint of the dragon's mouth stream.
 # This is the URL where the stream can be accessed.
@@ -15,11 +17,36 @@ x-token = "<X-TOKEN>"
 # This defines how long to wait for a connection before timing out.
 timeout = 60
 
-# # Only needed if you are using Fumarole as a source.
+# Option 2: Fumarole source (uncomment to use instead of gRPC)
 # [source]
 # endpoint = "https://index.rpcpool.com"
 # x-token = "<X-TOKEN>"
 # subscriber-name = "my_subscribe_group"
+
+# Option 3: Jetstreamer historical replay source (uncomment to use instead of gRPC)
+# [source]
+# type = "jetstream"
+# archive_url = "https://api.old-faithful.net"
+# epoch = 800
+# threads = 4
+# reorder_buffer_size = 1000
+# slot_timeout_secs = 30
+# network = "mainnet"
+# compact_index_base_url = "https://files.old-faithful.net"
+# network_capacity_mb = 1000
+
+# Alternative: Replay a specific slot range instead of epoch
+# [source]
+# type = "jetstream"
+# archive_url = "https://api.old-faithful.net"
+# slot_start = 345600000
+# slot_end = 345700000
+# threads = 4
+# reorder_buffer_size = 1000
+# slot_timeout_secs = 30
+# network = "mainnet"
+# compact_index_base_url = "https://files.old-faithful.net"
+# network_capacity_mb = 1000
 
 # Metrics configuration section.
 # Uncomment the following lines if you are running Prometheus 

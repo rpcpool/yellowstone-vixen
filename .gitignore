@@ -2,3 +2,7 @@ target/
 crates/mock/fixtures
 *.env*
 Vixen.toml
+
+# ClickHouse data directories created by Jetstreamer
+bin/
+**/bin/

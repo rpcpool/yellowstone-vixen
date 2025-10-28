@@ -19,5 +19,9 @@ yellowstone-grpc-proto = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
-# jet streamer core  features 
-jetstreamer = "0.1.4"
+thiserror = { workspace = true }
+tokio-util = { workspace = true }
+prost-types = { workspace = true }
+# Jetstreamer firehose for direct streaming without ClickHouse
+jetstreamer-firehose = "0.1.4"
+jetstreamer-utils = "0.1.4"

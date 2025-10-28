@@ -28,10 +28,11 @@ Yellowstone Vixen solves core challenges for Solana dApp developers:
 ## Features
 
 - **🛠 Parser + Handler Architecture**: Build pipelines that transform raw Solana events into structured models and trigger custom logic.
-- **🔥 Flexible Source Integration**: Register custom data sources or use existing ones like Dragon's Mouth for Solana Geyser streams.
+- **🔥 Flexible Source Integration**: Register custom data sources including historical replay from Old Faithful archive via Jetstreamer.
 - **📈 Metrics Support**: Prometheus /metrics endpoint available out-of-the-box.
 - **🧪 Offline Testing with Fixtures**: Test parsers without connecting to live Solana nodes using devnet fixtures.
 - **🔄 gRPC Streaming API**: Serve parsed program events directly to external systems or clients.
+- **📚 Historical Data Analysis**: Replay and analyze past Solana epochs with >2.7M TPS throughput.
 
 ## Quick Start
 
@@ -123,6 +124,7 @@ Yellowstone Vixen supports several official data sources for ingesting Solana ac
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`yellowstone-grpc-source`](./crates/yellowstone-grpc-source)         | **Dragon's Mouth (gRPC Source)**: Scalable and reliable streaming of account and transaction data from Solana nodes via the Dragon's Mouth Geyser plugin. Can be self-hosted or accessed via commercial vendors. See the [Dragon's Mouth documentation](https://docs.triton.one/project-yellowstone/dragons-mouth-grpc-subscriptions) and [Yellowstone repository](https://github.com/rpcpool/yellowstone-grpc) for more details.                                                                              |
 | [`yellowstone-fumarole-source`](./crates/yellowstone-fumarole-source) | **Fumarole Reliable Streams**: Scalable, reliable, and persistent streaming of Solana accounts and transactions. Fumarole merges data from multiple nodes for high availability, supports consumer groups for horizontal scalability, and allows clients to resume streams after interruptions. Currently in limited beta—contact Triton support for access. [Learn more](https://blog.triton.one/introducing-yellowstone-fumarole) or see the [GitHub repo](https://github.com/rpcpool/yellowstone-fumarole). |
+| [`jetstreamer-source`](./crates/jetstreamer-source)                   | **Jetstreamer Historical Replay**: High-throughput streaming of historical Solana ledger data from the Old Faithful archive. Supports epoch-based and slot-range queries with multi-threaded processing and out-of-order slot handling. Achieves >2.7M TPS for historical data analysis. See the [jetstream-replay example](./examples/jetstream-replay/) and [Old Faithful archive](https://anza.xyz/old-faithful) for more details.                                                                     |
 | [`solana-rpc-source`](./crates/solana-rpc-source)                     | **Solana RPC Source**: Pulls account data directly from a Solana node's JSON-RPC API using `getProgramAccounts`.                                                                                                                                                                                                                                                                                                                                                                                               |
 | [`solana-snapshot-source`](./crates/solana-snapshot-source)           | **Solana Snapshot Source**: Loads and processes Solana ledger snapshots for offline or historical analysis.                                                                                                                                                                                                                                                                                                                                                                                                    |
 
@@ -132,6 +134,7 @@ Refer to the crate documentation for setup instructions and configuration option
 
 - [**Mock Testing for Parsers**](./crates/mock/README.md): Load and replay devnet accounts or transactions offline.
 - [**Usage Examples**](./examples/): A variety of example projects that demonstrate how to use the features.
+  - [**jetstream-replay**](./examples/jetstream-replay/): Historical data replay from Old Faithful archive using Jetstreamer.
 - [**Example Vixen Configuration**](./Vixen.example.toml): Starter TOML file for pipeline configuration.
 - [**Generate Parsers from IDL**](./docs/codama-parser-generation.md): Use Codama to automatically generate Vixen parsers from Anchor or custom IDL files.
 

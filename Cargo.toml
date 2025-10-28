@@ -12,6 +12,7 @@ publish = false
 
 
 [workspace.dependencies]
+anyhow = "^1.0"
 async-trait = "^0.1"
 borsh = "^1.0.0"
 bs58 = "^0.5.1"
@@ -62,6 +63,7 @@ strum_macros = "^0.2.0"
 tar = "^0.4.0"
 tempfile = "^3.5.0"
 thiserror = "^1.0.64"
+tokio-util = "^0.7"
 tonic = "^0.12.1"
 tonic-reflection = "^0.12.1"
 tonic-build = "^0.12.1"
@@ -69,6 +71,7 @@ toml = "^0.8.0"
 topograph =  "^0.4.0"
 tokio = "^1.37.0"
 tracing = "^0.1.40"
+tracing-subscriber = "^0.3"
 zstd = "^0.13.0"
 
 yellowstone-fumarole-client = "^0.2.0"
@@ -104,4 +107,5 @@ yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", versi
 yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.3.1" }
 yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.3.1" }
 yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.3.1" }
+yellowstone-vixen-jetstreamer-source = { path = "crates/jetstreamer-source", version = "0.1.0" }
 
