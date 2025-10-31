@@ -1,18 +1,17 @@
 use std::time::{Duration, Instant};
 
 use anyhow::Result;
-use jetstreamer_source::{JetstreamSource, JetstreamSourceConfig, SlotRangeConfig};
+use yellowstone_vixen_jetstream_source::{JetstreamSource, JetstreamSourceConfig, SlotRangeConfig, register_metrics};
 use tokio::sync::mpsc;
 use tracing::{error, info, warn};
 use tracing_subscriber::fmt;
 use yellowstone_vixen::sources::SourceTrait;
+use warp::Filter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize tracing
     fmt::init();
 
-    // Create Jetstream source configuration for epoch 800
     let config = JetstreamSourceConfig {
         archive_url: "https://api.old-faithful.net".to_string(),
         range: SlotRangeConfig {
@@ -20,12 +19,12 @@ async fn main() -> Result<()> {
             slot_end: None,
             epoch: Some(800), // Use epoch 800 as specified in acceptance criteria
         },
-        threads: 4,
+        threads:4 ,
         reorder_buffer_size: 1000,
         slot_timeout_secs: 5, // Shorter timeout for testing
         network: "mainnet".to_string(),
         compact_index_base_url: "https://files.old-faithful.net".to_string(),
-        network_capacity_mb: 1000,
+        network_capacity_mb: 10000,
     };
 
     info!("Starting Jetstream replay example");
@@ -40,93 +39,79 @@ async fn main() -> Result<()> {
         "Source configuration details"
     );
 
-    // Create empty filters
+    let prometheus_registry = prometheus::Registry::new();
+    register_metrics(&prometheus_registry);
+
+    let metrics_route = warp::path!("metrics")
+        .map(move || {
+            use prometheus::Encoder;
+            let encoder = prometheus::TextEncoder::new();
+
+            let mut buffer = Vec::new();
+            if let Err(e) = encoder.encode(&prometheus_registry.gather(), &mut buffer) {
+                error!("Could not encode metrics: {}", e);
+                return warp::reply::with_status("".to_string(), warp::http::StatusCode::INTERNAL_SERVER_ERROR);
+            };
+
+            let response = String::from_utf8(buffer).unwrap_or_default();
+            warp::reply::with_status(response, warp::http::StatusCode::OK)
+        });
+
+    info!("Starting metrics server on http://localhost:9090/metrics");
+    tokio::spawn(async move {
+        warp::serve(metrics_route)
+            .run(([127, 0, 0, 1], 9090))
+            .await;
+    });
+
     let filters = yellowstone_vixen_core::Filters::new(std::collections::HashMap::new());
-
-    // Create Jetstream source
     let source = JetstreamSource::new(config, filters);
-
-    // Create channel for updates
     let (tx, mut rx) = mpsc::channel(1000);
-
-    // Start timing
     let start_time = Instant::now();
-
-    // Start the source
     let source_handle = tokio::spawn(async move { source.connect(tx).await });
 
-    // Collect statistics
     let mut update_count = 0;
     let mut block_count = 0;
     let mut transaction_count = 0;
 
-    // Process updates with timeout
-    let timeout = Duration::from_secs(30);
-    loop {
-        tokio::select! {
-            result = rx.recv() => {
-                match result {
-                    Some(Ok(update)) => {
-                        update_count += 1;
+    let timeout_duration = Duration::from_secs(30);
+    let timeout_deadline = start_time + timeout_duration;
 
-                        // Log the update data with structured tracing
-                        info!(
-                            update_number = update_count,
-                            timestamp = ?update.created_at,
-                            "Received data update"
-                        );
+    while let Some(result) = rx.recv().await {
+        match result {
+            Ok(update) => {
+                update_count += 1;
+                info!(update_count, "Received update");
 
-                        match update.update_oneof {
-                            Some(yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof::Block(block_update)) => {
-                                block_count += 1;
-                                info!(
-                                    slot = block_update.slot,
-                                    blockhash = %block_update.blockhash,
-                                    executed_tx_count = block_update.executed_transaction_count,
-                                    parent_slot = block_update.parent_slot,
-                                    "Block update received"
-                                );
-                                if let Some(rewards) = &block_update.rewards {
-                                    let num_partitions = rewards.num_partitions
-                                        .as_ref()
-                                        .map(|np| np.num_partitions)
-                                        .unwrap_or(0);
-                                    info!(partitions = num_partitions, "Block rewards data");
-                                }
-                            }
-                            Some(yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof::Transaction(tx_update)) => {
-                                transaction_count += 1;
-                                info!(slot = tx_update.slot, "Transaction update received");
-                                // Jetstreamer provides minimal transaction data
-                                info!("Transaction contains minimal data from Jetstreamer");
-                            }
-                            Some(other) => {
-                                warn!(update_type = ?other, "Received unknown update type");
-                            }
-                            None => {
-                                warn!("Received update with no data content");
-                            }
-                        }
+                match update.update_oneof {
+                    Some(yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof::Block(block_update)) => {
+                        block_count += 1;
+                        info!(slot = block_update.slot, "Block received");
                     }
-                    Some(Err(e)) => {
-                        error!(error = %e, "Error receiving update from channel");
-                        break;
+                    Some(yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof::Transaction(tx_update)) => {
+                        transaction_count += 1;
+                        info!(slot = tx_update.slot, "Transaction received");
                     }
-                    None => break, // Channel closed
+                    Some(other) => {
+                        warn!(update_type = ?other, "Received unknown update type");
+                    }
+                    None => {
+                        warn!("Received update with no data content");
+                    }
                 }
             }
-            _ = tokio::time::sleep(Duration::from_millis(100)) => {
-                if start_time.elapsed() > timeout {
-                    break;
-                }
+            Err(e) => {
+                error!(error = %e, "Error receiving update from channel");
+                break;
             }
+        }
+
+        if Instant::now() > timeout_deadline {
+            break;
         }
     }
 
-    // Wait for source to complete
     let _ = source_handle.await;
-
-    // Log final results with structured tracing
     let processing_time = start_time.elapsed().as_secs_f64();
     info!(
         total_updates = update_count,
@@ -138,6 +123,7 @@ async fn main() -> Result<()> {
 
     if update_count > 0 {
         info!("SUCCESS - Real data streaming works!");
+        info!("Metrics available at: http://localhost:9090/metrics");
     } else {
         warn!("CONNECTED - Jetstreamer integration functional but no data received within timeout");
     }

@@ -13,4 +13,6 @@ anyhow = { workspace = true }
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
-jetstreamer-source = { path = "../../crates/jetstreamer-source" }
+yellowstone-vixen-jetstream-source = { path = "../../crates/jetstreamer-source", features = ["prometheus"] }
+prometheus = { workspace = true }
+warp = "0.3"
