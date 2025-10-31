@@ -1,12 +1,12 @@
 [package]
-name = "jetstreamer-source"
-version = "0.1.0"
-description = "Jetstreamer source for the Yellowstone Vixen"
+name = "yellowstone-vixen-jetstream-source"
+version = "0.3.1"
+description = "Jetstream source for the Yellowstone Vixen"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-publish.workspace = true
+readme = "./../../README.md"
 
 [dependencies]
 async-trait = { workspace = true }
@@ -25,3 +25,8 @@ prost-types = { workspace = true }
 # Jetstreamer firehose for direct streaming without ClickHouse
 jetstreamer-firehose = "0.1.4"
 jetstreamer-utils = "0.1.4"
+prometheus = { workspace = true, optional = true }
+
+[features]
+default = []
+prometheus = ["dep:prometheus"]

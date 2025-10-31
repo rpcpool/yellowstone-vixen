@@ -17,6 +17,12 @@ use yellowstone_grpc_proto::{
 use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
+#[cfg(feature = "prometheus")]
+mod metrics;
+
+#[cfg(feature = "prometheus")]
+pub use metrics::register_metrics;
+
 struct VixenStreamHandler {
     tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
     reorder_buffer: Arc<RwLock<ReorderBuffer>>,
@@ -31,7 +37,10 @@ impl VixenStreamHandler {
     }
 
     async fn process_block(&self, block: BlockData) -> Result<(), Error> {
-        info!(slot = block.slot(), "FIREHOSE: Processing block");
+        info!(slot = block.slot(), "Processing block");
+
+        #[cfg(feature = "prometheus")]
+        crate::metrics::JETSTREAM_BLOCKS_RECEIVED.inc();
 
         match block {
             BlockData::Block {
@@ -75,7 +84,7 @@ impl VixenStreamHandler {
                     let ready_updates = buffer.add_slot(slot, vec![update]);
 
                     for ready_update in ready_updates {
-                        info!("FIREHOSE: Sending ready block update for slot {}", slot);
+                        info!(slot, "Sending ready block update");
                         if let Err(e) = self.tx.send(Ok(ready_update)).await {
                             let error_msg = format!("Failed to send block update: {}", e);
                             error!("{}", error_msg);
@@ -93,7 +102,10 @@ impl VixenStreamHandler {
     }
 
     async fn process_transaction(&self, tx: TransactionData) -> Result<(), Error> {
-        info!(signature = ?tx.signature, slot = tx.slot, "FIREHOSE: Processing transaction");
+        info!(signature = ?tx.signature, slot = tx.slot, "Processing transaction");
+
+        #[cfg(feature = "prometheus")]
+        crate::metrics::JETSTREAM_TRANSACTIONS_RECEIVED.inc();
 
         let update = SubscribeUpdate {
             filters: vec![],
@@ -113,10 +125,7 @@ impl VixenStreamHandler {
             let ready_updates = buffer.add_slot(tx.slot, vec![update]);
 
             for ready_update in ready_updates {
-                info!(
-                    "FIREHOSE: Sending ready transaction update for slot {}",
-                    tx.slot
-                );
+                info!(slot = tx.slot, "Sending ready transaction update");
                 if let Err(e) = self.tx.send(Ok(ready_update)).await {
                     let error_msg = format!("Failed to send transaction update: {}", e);
                     error!("{}", error_msg);
@@ -218,11 +227,7 @@ impl ReorderBuffer {
     }
 
     fn add_slot(&mut self, slot: u64, updates: Vec<SubscribeUpdate>) -> Vec<SubscribeUpdate> {
-        info!(
-            "REORDER BUFFER: Adding slot {} with {} updates",
-            slot,
-            updates.len()
-        );
+        info!(slot, updates = updates.len(), "Adding slot to reorder buffer");
         let mut ready_updates = Vec::new();
 
         if slot == self.next_expected_slot {
@@ -467,10 +472,10 @@ impl JetstreamSource {
                     };
 
                     if !ready_updates.is_empty() {
-                        info!("TIMEOUT CHECKER: Flushing {} timed-out updates", ready_updates.len());
+                        info!(count = ready_updates.len(), "Flushing timed-out updates");
                     }
                     for update in ready_updates {
-                        info!("TIMEOUT CHECKER: Sending timed-out update");
+                        info!("Sending timed-out update");
                         if tx.send(Ok(update)).await.is_err() {
                             return;
                         }

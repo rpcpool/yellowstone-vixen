@@ -106,4 +106,4 @@ yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", versi
 yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.3.1" }
 yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.3.1" }
 yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.3.1" }
-yellowstone-vixen-jetstreamer-source = { path = "crates/jetstreamer-source", version = "0.1.0" }
+yellowstone-vixen-jetstream-source = { path = "crates/jetstreamer-source", version = "0.3.1" }

@@ -2227,7 +2227,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -3458,13 +3458,15 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "jetstreamer-source",
+ "prometheus",
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "warp",
  "yellowstone-grpc-proto",
  "yellowstone-vixen",
  "yellowstone-vixen-core",
+ "yellowstone-vixen-jetstream-source",
 ]
 
 [[package]]
@@ -3508,27 +3510,6 @@ dependencies = [
  "tokio",
  "xxhash-rust",
  "zstd",
-]
-
-[[package]]
-name = "jetstreamer-source"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "clap 4.5.48",
- "futures-util",
- "jetstreamer-firehose",
- "jetstreamer-utils",
- "prost-types 0.13.5",
- "serde",
- "thiserror 1.0.69",
- "tokio",
- "tokio-util 0.7.16",
- "tracing",
- "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
- "yellowstone-vixen",
- "yellowstone-vixen-core",
 ]
 
 [[package]]
@@ -4068,6 +4049,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
+name = "mime_guess"
+version = "2.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7c44f8e672c00fe5308fa235f821cb4198414e1c77935c1ab6948d3fd78550e"
+dependencies = [
+ "mime",
+ "unicase",
+]
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4139,6 +4130,24 @@ dependencies = [
  "proc-macro2",
  "quote 1.0.40",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "multer"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01acbdc23469fd8fe07ab135923371d5f5a422fbf9c522158677c8eb15bc51c2"
+dependencies = [
+ "bytes",
+ "encoding_rs",
+ "futures-util",
+ "http 0.2.12",
+ "httparse",
+ "log",
+ "memchr",
+ "mime",
+ "spin",
+ "version_check",
 ]
 
 [[package]]
@@ -5777,7 +5786,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.11.0",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -5941,6 +5950,12 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "scoped-tls"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1cf6437eb19a8f4a6cc0f7dca544973b0b78843adbfeb3683d1a94a0024a294"
 
 [[package]]
 name = "scopeguard"
@@ -9257,8 +9272,8 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "tokio-stream",
- "tokio-tungstenite",
- "tungstenite",
+ "tokio-tungstenite 0.20.1",
+ "tungstenite 0.20.1",
  "url 2.5.7",
 ]
 
@@ -9284,8 +9299,8 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "tokio-stream",
- "tokio-tungstenite",
- "tungstenite",
+ "tokio-tungstenite 0.20.1",
+ "tungstenite 0.20.1",
  "url 2.5.7",
 ]
 
@@ -12941,7 +12956,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix 1.1.2",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -13196,8 +13211,20 @@ dependencies = [
  "rustls 0.21.12",
  "tokio",
  "tokio-rustls 0.24.1",
- "tungstenite",
+ "tungstenite 0.20.1",
  "webpki-roots 0.25.4",
+]
+
+[[package]]
+name = "tokio-tungstenite"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c83b561d025642014097b66e6c1bb422783339e0909e4429cde4749d1990bc38"
+dependencies = [
+ "futures-util",
+ "log",
+ "tokio",
+ "tungstenite 0.21.0",
 ]
 
 [[package]]
@@ -13696,6 +13723,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "tungstenite"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ef1a641ea34f399a848dea702823bbecfb4c486f911735368f1f137cb8257e1"
+dependencies = [
+ "byteorder",
+ "bytes",
+ "data-encoding",
+ "http 1.3.1",
+ "httparse",
+ "log",
+ "rand 0.8.5",
+ "sha1",
+ "thiserror 1.0.69",
+ "url 2.5.7",
+ "utf-8",
+]
+
+[[package]]
 name = "typenum"
 version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13919,6 +13965,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "warp"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4378d202ff965b011c64817db11d5829506d3404edeadb61f190d111da3f231c"
+dependencies = [
+ "bytes",
+ "futures-channel",
+ "futures-util",
+ "headers",
+ "http 0.2.12",
+ "hyper 0.14.32",
+ "log",
+ "mime",
+ "mime_guess",
+ "multer",
+ "percent-encoding 2.3.2",
+ "pin-project",
+ "scoped-tls",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "tokio",
+ "tokio-tungstenite 0.21.0",
+ "tokio-util 0.7.16",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
 name = "wasi"
 version = "0.9.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -14132,7 +14207,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -14806,6 +14881,28 @@ dependencies = [
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
  "yellowstone-vixen-yellowstone-grpc-source",
+]
+
+[[package]]
+name = "yellowstone-vixen-jetstream-source"
+version = "0.3.1"
+dependencies = [
+ "async-trait",
+ "clap 4.5.48",
+ "futures-util",
+ "jetstreamer-firehose",
+ "jetstreamer-utils",
+ "prometheus",
+ "prost-types 0.13.5",
+ "serde",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util 0.7.16",
+ "tracing",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen",
+ "yellowstone-vixen-core",
 ]
 
 [[package]]
