@@ -155,7 +155,5 @@ impl solana_program_error::PrintProgramError for AmmV3Error {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for AmmV3Error {
-    fn type_of() -> &'static str {
-        "AmmV3Error"
-    }
+    fn type_of() -> &'static str { "AmmV3Error" }
 }

@@ -126,9 +126,7 @@ impl CollectFundFeeInstructionData {
 }
 
 impl Default for CollectFundFeeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -174,9 +172,7 @@ pub struct CollectFundFeeBuilder {
 }
 
 impl CollectFundFeeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// Only admin or fund_owner can collect fee now
     #[inline(always)]
@@ -740,9 +736,7 @@ impl<'a, 'b> CollectFundFeeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

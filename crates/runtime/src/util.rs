@@ -25,39 +25,29 @@ pub fn handle_fatal_msg<T, E: Error>(res: Result<T, E>, msg: &str) -> T {
 pub struct PrivateString(pub String);
 
 impl std::fmt::Debug for PrivateString {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("<private>")
-    }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str("<private>") }
 }
 
 impl std::ops::Deref for PrivateString {
     type Target = String;
 
     #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl std::ops::DerefMut for PrivateString {
     #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 impl From<String> for PrivateString {
     #[inline]
-    fn from(value: String) -> Self {
-        Self(value)
-    }
+    fn from(value: String) -> Self { Self(value) }
 }
 
 impl From<PrivateString> for String {
     #[inline]
-    fn from(PrivateString(value): PrivateString) -> Self {
-        value
-    }
+    fn from(PrivateString(value): PrivateString) -> Self { value }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -165,9 +155,7 @@ pub mod stop {
     impl StopCode {
         /// Convert the stop code into a unit value.
         #[inline]
-        pub fn as_unit(self) {
-            let Self(()) = self;
-        }
+        pub fn as_unit(self) { let Self(()) = self; }
     }
 
     /// A sender for requesting a task to stop.
@@ -186,9 +174,7 @@ pub mod stop {
         /// Send a stop signal, or do nothing if the receiver has already been
         /// dropped.
         #[inline]
-        pub fn maybe_send(self) {
-            self.send_or_else(|| ());
-        }
+        pub fn maybe_send(self) { self.send_or_else(|| ()); }
     }
 
     /// A receiver for a stop signal.

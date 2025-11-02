@@ -139,9 +139,7 @@ impl anchor_lang::AccountSerialize for PersonalPositionState {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for PersonalPositionState {
-    fn owner() -> Pubkey {
-        crate::AMM_V3_ID
-    }
+    fn owner() -> Pubkey { crate::AMM_V3_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

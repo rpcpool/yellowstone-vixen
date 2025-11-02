@@ -132,9 +132,7 @@ impl LogUserSwapBalancesStartInstructionData {
 }
 
 impl Default for LogUserSwapBalancesStartInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `LogUserSwapBalancesStart`.
@@ -173,9 +171,7 @@ pub struct LogUserSwapBalancesStartBuilder {
 }
 
 impl LogUserSwapBalancesStartBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
     pub fn maker(&mut self, maker: solana_pubkey::Pubkey) -> &mut Self {
@@ -704,9 +700,7 @@ impl<'a, 'b> LogUserSwapBalancesStartCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

@@ -124,9 +124,7 @@ impl anchor_lang::AccountSerialize for TickArrayBitmapExtension {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for TickArrayBitmapExtension {
-    fn owner() -> Pubkey {
-        crate::AMM_V3_ID
-    }
+    fn owner() -> Pubkey { crate::AMM_V3_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

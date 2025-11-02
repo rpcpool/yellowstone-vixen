@@ -143,9 +143,7 @@ impl InitializeVirtualPoolWithSplTokenInstructionData {
 }
 
 impl Default for InitializeVirtualPoolWithSplTokenInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -197,9 +195,7 @@ pub struct InitializeVirtualPoolWithSplTokenBuilder {
 }
 
 impl InitializeVirtualPoolWithSplTokenBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// Which config the pool belongs to.
     #[inline(always)]
@@ -826,9 +822,7 @@ impl<'a, 'b> InitializeVirtualPoolWithSplTokenCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

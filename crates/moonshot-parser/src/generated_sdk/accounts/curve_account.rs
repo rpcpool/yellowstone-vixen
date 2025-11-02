@@ -134,9 +134,7 @@ impl anchor_lang::AccountSerialize for CurveAccount {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for CurveAccount {
-    fn owner() -> Pubkey {
-        crate::TOKEN_LAUNCHPAD_ID
-    }
+    fn owner() -> Pubkey { crate::TOKEN_LAUNCHPAD_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

@@ -23,8 +23,8 @@ thiserror = { workspace = true }
 tokio-util = { workspace = true }
 prost-types = { workspace = true }
 # Jetstreamer firehose for direct streaming without ClickHouse
-jetstreamer-firehose = "0.1.4"
-jetstreamer-utils = "0.1.4"
+jetstreamer-firehose = "0.1.6"
+jetstreamer-utils = "0.1.6"
 prometheus = { workspace = true, optional = true }
 
 [features]

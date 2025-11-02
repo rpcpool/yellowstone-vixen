@@ -97,9 +97,7 @@ impl ClaimCreatorFeeInstructionData {
 }
 
 impl Default for ClaimCreatorFeeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `ClaimCreatorFee`.
@@ -128,9 +126,7 @@ pub struct ClaimCreatorFeeBuilder {
 }
 
 impl ClaimCreatorFeeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// The pool creator
     #[inline(always)]
@@ -538,9 +534,7 @@ impl<'a, 'b> ClaimCreatorFeeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

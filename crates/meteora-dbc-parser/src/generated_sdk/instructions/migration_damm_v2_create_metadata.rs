@@ -88,9 +88,7 @@ impl MigrationDammV2CreateMetadataInstructionData {
 }
 
 impl Default for MigrationDammV2CreateMetadataInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `MigrationDammV2CreateMetadata`.
@@ -117,9 +115,7 @@ pub struct MigrationDammV2CreateMetadataBuilder {
 }
 
 impl MigrationDammV2CreateMetadataBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
     pub fn virtual_pool(&mut self, virtual_pool: solana_pubkey::Pubkey) -> &mut Self {
@@ -461,9 +457,7 @@ impl<'a, 'b> MigrationDammV2CreateMetadataCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

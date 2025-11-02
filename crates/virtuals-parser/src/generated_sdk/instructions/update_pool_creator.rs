@@ -105,9 +105,7 @@ impl UpdatePoolCreatorInstructionData {
 }
 
 impl Default for UpdatePoolCreatorInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `UpdatePoolCreator`.
@@ -140,9 +138,7 @@ pub struct UpdatePoolCreatorBuilder {
 }
 
 impl UpdatePoolCreatorBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
     pub fn creator(&mut self, creator: solana_pubkey::Pubkey) -> &mut Self {
@@ -594,9 +590,7 @@ impl<'a, 'b> UpdatePoolCreatorCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

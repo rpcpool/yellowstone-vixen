@@ -219,7 +219,5 @@ impl solana_program_error::PrintProgramError for WhirlpoolError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for WhirlpoolError {
-    fn type_of() -> &'static str {
-        "WhirlpoolError"
-    }
+    fn type_of() -> &'static str { "WhirlpoolError" }
 }

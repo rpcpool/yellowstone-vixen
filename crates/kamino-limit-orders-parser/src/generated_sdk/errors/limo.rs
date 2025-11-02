@@ -159,7 +159,5 @@ impl solana_program_error::PrintProgramError for LimoError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for LimoError {
-    fn type_of() -> &'static str {
-        "LimoError"
-    }
+    fn type_of() -> &'static str { "LimoError" }
 }

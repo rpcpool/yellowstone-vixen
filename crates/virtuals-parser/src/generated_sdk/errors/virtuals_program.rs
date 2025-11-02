@@ -60,7 +60,5 @@ impl solana_program_error::PrintProgramError for VirtualsProgramError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for VirtualsProgramError {
-    fn type_of() -> &'static str {
-        "VirtualsProgramError"
-    }
+    fn type_of() -> &'static str { "VirtualsProgramError" }
 }

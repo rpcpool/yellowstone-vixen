@@ -126,9 +126,7 @@ impl anchor_lang::AccountSerialize for TokenBadge {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for TokenBadge {
-    fn owner() -> Pubkey {
-        crate::CP_AMM_ID
-    }
+    fn owner() -> Pubkey { crate::CP_AMM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

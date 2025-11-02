@@ -180,7 +180,5 @@ impl solana_program_error::PrintProgramError for AmmError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for AmmError {
-    fn type_of() -> &'static str {
-        "AmmError"
-    }
+    fn type_of() -> &'static str { "AmmError" }
 }

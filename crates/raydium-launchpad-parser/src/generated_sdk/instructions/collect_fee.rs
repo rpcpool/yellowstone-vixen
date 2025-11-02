@@ -96,9 +96,7 @@ impl CollectFeeInstructionData {
 }
 
 impl Default for CollectFeeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `CollectFee`.
@@ -127,9 +125,7 @@ pub struct CollectFeeBuilder {
 }
 
 impl CollectFeeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// Only protocol_fee_owner saved in global_config can collect protocol fee now
     #[inline(always)]
@@ -523,9 +519,7 @@ impl<'a, 'b> CollectFeeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

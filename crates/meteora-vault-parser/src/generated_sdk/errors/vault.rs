@@ -81,7 +81,5 @@ impl solana_program_error::PrintProgramError for VaultError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for VaultError {
-    fn type_of() -> &'static str {
-        "VaultError"
-    }
+    fn type_of() -> &'static str { "VaultError" }
 }

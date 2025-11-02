@@ -3467,13 +3467,14 @@ dependencies = [
  "yellowstone-vixen",
  "yellowstone-vixen-core",
  "yellowstone-vixen-jetstream-source",
+ "yellowstone-vixen-parser",
 ]
 
 [[package]]
 name = "jetstreamer-firehose"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf10a64ff283e04426dabeecf552dc181b71525de2b34a6c837d6c114a7a9e55"
+checksum = "be8a98393788c60cc0f43a1646412c8ecad9db836355657ad04c73d87544e15b"
 dependencies = [
  "base64 0.22.1",
  "bincode",
@@ -3514,9 +3515,9 @@ dependencies = [
 
 [[package]]
 name = "jetstreamer-utils"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7ade1d20c313a5f571b5a281bdc9834e4c93137df6d9071ec78e9ec3d8f0e1b"
+checksum = "acb29cbb9bc0474986d355a2cc6c36f6f3c377cfdc423ff41ad7622f4ec0ab01"
 dependencies = [
  "ctrlc",
  "libc",

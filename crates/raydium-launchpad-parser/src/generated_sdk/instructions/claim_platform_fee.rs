@@ -111,9 +111,7 @@ impl ClaimPlatformFeeInstructionData {
 }
 
 impl Default for ClaimPlatformFeeInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `ClaimPlatformFee`.
@@ -146,9 +144,7 @@ pub struct ClaimPlatformFeeBuilder {
 }
 
 impl ClaimPlatformFeeBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// Only the wallet stored in platform_config can collect platform fees
     #[inline(always)]
@@ -624,9 +620,7 @@ impl<'a, 'b> ClaimPlatformFeeCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

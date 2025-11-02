@@ -78,9 +78,7 @@ impl CollectDustInstructionData {
 }
 
 impl Default for CollectDustInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 /// Instruction builder for `CollectDust`.
@@ -103,9 +101,7 @@ pub struct CollectDustBuilder {
 }
 
 impl CollectDustBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// vault
     #[inline(always)]
@@ -406,9 +402,7 @@ impl<'a, 'b> CollectDustCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

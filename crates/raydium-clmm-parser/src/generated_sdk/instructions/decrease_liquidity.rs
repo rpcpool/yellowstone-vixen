@@ -124,9 +124,7 @@ impl DecreaseLiquidityInstructionData {
 }
 
 impl Default for DecreaseLiquidityInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -174,9 +172,7 @@ pub struct DecreaseLiquidityBuilder {
 }
 
 impl DecreaseLiquidityBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     #[inline(always)]
     pub fn nft_owner(&mut self, nft_owner: solana_pubkey::Pubkey) -> &mut Self {
@@ -729,9 +725,7 @@ impl<'a, 'b> DecreaseLiquidityCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

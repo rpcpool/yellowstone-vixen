@@ -131,9 +131,7 @@ impl anchor_lang::AccountSerialize for WhirlpoolsConfig {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for WhirlpoolsConfig {
-    fn owner() -> Pubkey {
-        crate::WHIRLPOOL_ID
-    }
+    fn owner() -> Pubkey { crate::WHIRLPOOL_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

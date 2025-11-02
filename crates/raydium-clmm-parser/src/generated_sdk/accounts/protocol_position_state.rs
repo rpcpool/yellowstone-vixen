@@ -132,9 +132,7 @@ impl anchor_lang::AccountSerialize for ProtocolPositionState {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for ProtocolPositionState {
-    fn owner() -> Pubkey {
-        crate::AMM_V3_ID
-    }
+    fn owner() -> Pubkey { crate::AMM_V3_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

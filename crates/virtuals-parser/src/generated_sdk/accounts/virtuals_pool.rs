@@ -131,9 +131,7 @@ impl anchor_lang::AccountSerialize for VirtualsPool {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for VirtualsPool {
-    fn owner() -> Pubkey {
-        crate::VIRTUALS_PROGRAM_ID
-    }
+    fn owner() -> Pubkey { crate::VIRTUALS_PROGRAM_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]

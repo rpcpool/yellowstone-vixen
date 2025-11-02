@@ -105,9 +105,7 @@ impl InitializeStrategyInstructionData {
 }
 
 impl Default for InitializeStrategyInstructionData {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -151,9 +149,7 @@ pub struct InitializeStrategyBuilder {
 }
 
 impl InitializeStrategyBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// Vault account
     #[inline(always)]
@@ -647,9 +643,7 @@ impl<'a, 'b> InitializeStrategyCpiBuilder<'a, 'b> {
     }
 
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
-        self.invoke_signed(&[])
-    }
+    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
 
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]

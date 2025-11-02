@@ -114,7 +114,5 @@ impl solana_program_error::PrintProgramError for PumpError {
 
 #[allow(deprecated)]
 impl<T> solana_decode_error::DecodeError<T> for PumpError {
-    fn type_of() -> &'static str {
-        "PumpError"
-    }
+    fn type_of() -> &'static str { "PumpError" }
 }

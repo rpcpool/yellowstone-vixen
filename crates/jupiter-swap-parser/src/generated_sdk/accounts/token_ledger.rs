@@ -121,9 +121,7 @@ impl anchor_lang::AccountSerialize for TokenLedger {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for TokenLedger {
-    fn owner() -> Pubkey {
-        crate::JUPITER_ID
-    }
+    fn owner() -> Pubkey { crate::JUPITER_ID }
 }
 
 #[cfg(feature = "anchor-idl-build")]
