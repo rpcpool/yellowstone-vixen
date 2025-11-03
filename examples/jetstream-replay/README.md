@@ -19,6 +19,7 @@ The Jetstream source enables streaming historical Solana ledger data at high thr
 - ✅ Vixen integration with token program instruction parsing
 - ✅ Structured logging of SPL Token instructions (Transfer, Mint, Burn, etc.)
 - ✅ Configurable threading and buffering
+- ✅ Prometheus metrics via Vixen runtime (blocks, transactions, parsing stats)
 
 ## Usage
 

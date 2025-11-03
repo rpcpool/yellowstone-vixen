@@ -13,12 +13,6 @@ use yellowstone_grpc_proto::{
 use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
-#[cfg(feature = "prometheus")]
-mod metrics;
-
-#[cfg(feature = "prometheus")]
-pub use metrics::register_metrics;
-
 struct VixenStreamHandler {
     tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
     filters: Filters,
@@ -38,20 +32,8 @@ impl VixenStreamHandler {
         }
     }
 
-    fn jetstream_block_received() {
-        #[cfg(feature = "prometheus")]
-        crate::metrics::JETSTREAM_BLOCKS_RECEIVED.inc();
-    }
-
-    fn jetstream_transaction_received() {
-        #[cfg(feature = "prometheus")]
-        crate::metrics::JETSTREAM_TRANSACTIONS_RECEIVED.inc();
-    }
-
     async fn process_block(&self, block: BlockData) -> Result<(), Error> {
         info!(slot = block.slot(), "Processing block");
-
-        Self::jetstream_block_received();
 
         match block {
             BlockData::Block {
@@ -119,15 +101,13 @@ impl VixenStreamHandler {
             debug!(signature = ?tx.signature, slot = tx.slot, "Transaction filtered out");
             return Ok(());
         }
-
-        Self::jetstream_transaction_received();
         // TODO: Populate transaction field with protobuf-encoded transaction data
         let update = SubscribeUpdate {
             filters: vec![],
             update_oneof: Some(UpdateOneof::Transaction(
                 yellowstone_grpc_proto::geyser::SubscribeUpdateTransaction {
                     slot: tx.slot,
-                    transaction: None, // protobuf-encoded tx when available
+                    transaction: None, //protobuf-encoded tx when available
                 },
             )),
             created_at: Some(yellowstone_grpc_proto::prost_types::Timestamp::from(
@@ -191,6 +171,7 @@ impl VixenStreamHandler {
 
 /// Jetstream source configuration
 #[derive(Debug, Clone, serde::Deserialize, clap::Args)]
+#[serde(rename_all = "kebab-case")]
 pub struct JetstreamSourceConfig {
     /// Old Faithful archive URL
     #[arg(long, env)]
@@ -216,6 +197,14 @@ pub struct JetstreamSourceConfig {
     #[arg(long, env, default_value = "1000")]
     pub network_capacity_mb: usize,
 
+    /// Reorder buffer size
+    #[arg(long, env, default_value = "1000")]
+    pub reorder_buffer_size: usize,
+
+    /// Slot timeout in seconds
+    #[arg(long, env, default_value = "30")]
+    pub slot_timeout_secs: u64,
+
     /// Control transaction filtering: true = permissive (all), false = strict (limited).
     #[arg(long, env, default_value = "true")]
     pub permissive_transaction_filtering: bool,
@@ -223,6 +212,7 @@ pub struct JetstreamSourceConfig {
 
 /// Configuration for slot ranges or epochs
 #[derive(Debug, Clone, serde::Deserialize, clap::Args)]
+#[serde(rename_all = "kebab-case")]
 pub struct SlotRangeConfig {
     /// Start slot (conflicts with epoch)
     #[arg(long, env, conflicts_with = "epoch")]
@@ -278,7 +268,9 @@ pub struct JetstreamSource {
 impl SourceTrait for JetstreamSource {
     type Config = JetstreamSourceConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     async fn connect(
         &self,
@@ -489,6 +481,8 @@ mod tests {
             network: "mainnet".to_string(),
             compact_index_base_url: "https://files.old-faithful.net".to_string(),
             network_capacity_mb: 1000,
+            reorder_buffer_size: 1000,
+            slot_timeout_secs: 30,
             permissive_transaction_filtering: true,
         };
 
@@ -515,6 +509,8 @@ mod tests {
             network: "mainnet".to_string(),
             compact_index_base_url: "https://files.old-faithful.net".to_string(),
             network_capacity_mb: 1000,
+            reorder_buffer_size: 1000,
+            slot_timeout_secs: 30,
             permissive_transaction_filtering: true,
         };
 
@@ -556,6 +552,8 @@ mod tests {
             network: "mainnet".to_string(),
             compact_index_base_url: "https://files.test.com".to_string(),
             network_capacity_mb: 1000,
+            reorder_buffer_size: 1000,
+            slot_timeout_secs: 30,
             permissive_transaction_filtering: true,
         };
 

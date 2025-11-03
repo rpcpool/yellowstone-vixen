@@ -10,7 +10,7 @@ tokio = { workspace = true, features = ["full"] }
 tracing = { workspace = true }
 tracing-subscriber = "0.3"
 anyhow = { workspace = true }
-yellowstone-vixen = { workspace = true }
+yellowstone-vixen = { workspace = true, features = ["prometheus"] }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-jetstream-source = { path = "../../crates/jetstreamer-source", features = ["prometheus"] }
