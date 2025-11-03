@@ -127,7 +127,7 @@ impl VixenStreamHandler {
             update_oneof: Some(UpdateOneof::Transaction(
                 yellowstone_grpc_proto::geyser::SubscribeUpdateTransaction {
                     slot: tx.slot,
-                    transaction: None,
+                    transaction: None, // protobuf-encoded tx when available
                 },
             )),
             created_at: Some(yellowstone_grpc_proto::prost_types::Timestamp::from(
