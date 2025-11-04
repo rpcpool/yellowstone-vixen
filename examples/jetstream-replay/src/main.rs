@@ -250,10 +250,9 @@ async fn main() -> Result<()> {
 
     info!("Building Vixen runtime with token program instruction parser");
     let runtime = Runtime::<JetstreamSource>::builder()
-        .instruction(Pipeline::new(
-            TokenProgramIxParser,
-            [TokenInstructionLogger],
-        ))
+        .instruction(Pipeline::new(TokenProgramIxParser, [
+            TokenInstructionLogger,
+        ]))
         .metrics(prometheus_registry)
         .build(vixen_config);
 

@@ -28,7 +28,7 @@ pnpm install @codama/renderers-vixen-parser
 
 For the parser generation script, you’ll also need:
 
-```bash
+`{ "savq/melange-nvim" }``bash
 pnpm install \
   @codama/nodes \
   @codama/nodes-from-anchor \
