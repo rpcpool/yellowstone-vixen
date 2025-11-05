@@ -13,7 +13,7 @@ Vixen is a framework for building real-time program data pipelines in Rust. This
 
 3. **Initialize a JavaScript Project (for Codegen)**
 
-    From within the parser directory (where the `idl.json` file is located) run:
+    From within the parser directory (where the `idl.json` file is located), run:
 
     ```bash
     pnpm init
@@ -40,7 +40,7 @@ pnpm install \
 
 **1. Create a Parser Generation Script**
 
-In the same directory create a new file called `codama.cjs`:
+In the same directory, create a new file called `codama.cjs`:
 
 ```javascript
 // codama.cjs
@@ -74,7 +74,9 @@ visit(
 ```bash
 node codama.cjs
 ```
+
 Your folder structure should look like this:
+
 ```bash
 example-parser/
 ├── proto/
@@ -98,14 +100,16 @@ example-parser/
 ```
 
 **3. Build and Verify**
-Before building you project, ensure there is a const export of the program address in `generated_sdk/programs.rs`:
+Before building your project, ensure there is a const export of the program address in `generated_sdk/programs.rs`:
 
 ```rust
 pub const DCA_ID: Pubkey = pubkey!("DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M");
+```
 
 ```bash
 cargo build
 ```
+
 If successful, you now have a working parser for Solana account data using Yellowstone Vixen.
 
 ## 🎉 You’re Done!
