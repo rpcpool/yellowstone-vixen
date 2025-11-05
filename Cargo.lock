@@ -9354,6 +9354,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-jupiter-order-parser"
+version = "0.1.0"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive",
+ "num-traits",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
+ "solana-account-info 2.3.0",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error 2.2.2",
+ "solana-pubkey 2.4.0",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic 0.12.3",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen-jupiter-swap-parser"
 version = "0.5.0"
 dependencies = [
