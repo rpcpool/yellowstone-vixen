@@ -301,7 +301,7 @@ impl InstructionParser {
                     aggregation_event,
                 ))
             },
-            [235, 71, 211, 196, 114, 199, 143, 92] => {
+            [235, 71, 211, 196, 114, 199, 143, 92] | [173, 131, 78, 38, 150, 165, 123, 15] => {
                 let expected_accounts_len = 7;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = CommissionSplSwapIxAccounts {
