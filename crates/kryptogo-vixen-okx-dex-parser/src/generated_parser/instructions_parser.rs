@@ -519,7 +519,7 @@ impl InstructionParser {
                     aggregation_event,
                 ))
             },
-            [248, 198, 158, 145, 225, 117, 135, 200] => {
+            [248, 198, 158, 145, 225, 117, 135, 200] | [65, 75, 63, 76, 235, 91, 91, 136] => {
                 let expected_accounts_len = 5;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SwapIxAccounts {
