@@ -71,8 +71,8 @@ impl SolanaSnapshot {
 
 #[derive(Debug, Clone, Deserialize, Serialize, clap::Args)]
 pub struct SolanaSnapshotConfig {
-    path: PathBuf,
-    max_workers: usize,
+    pub path: PathBuf,
+    pub max_workers: usize,
 }
 
 /// A `Source` implementation for the Solana Snapshot API.
