@@ -21,6 +21,22 @@ timeout = 60
 # x-token = "<X-TOKEN>"
 # subscriber-name = "my_subscribe_group"
 
+# Jetstream source configuration (alternative to Yellowstone gRPC)
+[source]
+archive-url = "https://api.old-faithful.net"
+epoch = 800  # Or use slot-start/slot-end instead
+threads = 4
+reorder-buffer-size = 1000
+slot-timeout-secs = 30
+network = "mainnet"
+compact-index-base-url = "https://files.old-faithful.net"
+network-capacity-mb = 1000
+permissive-transaction-filtering = true
+
+[filters]
+# Add filters for specific programs/accounts if needed
+# programs = ["11111111111111111111111111111112"]
+
 # Metrics configuration section.
 # Uncomment the following lines if you are running Prometheus 
 
@@ -44,3 +60,4 @@ timeout = 60
 # The metrics export interval in seconds.
 # This defines how often metrics data is exported.
 #export-interval = 60
+

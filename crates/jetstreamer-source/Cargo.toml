@@ -1,0 +1,32 @@
+[package]
+name = "yellowstone-vixen-jetstream-source"
+version = "0.3.1"
+description = "Jetstream source for the Yellowstone Vixen"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "./../../README.md"
+
+[dependencies]
+async-trait = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
+tracing = { workspace = true }
+futures-util = { workspace = true, features = ["sink"] }
+yellowstone-vixen = { workspace = true }
+yellowstone-vixen-core = { workspace = true }
+yellowstone-grpc-proto = { workspace = true }
+yellowstone-grpc-client = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
+thiserror = { workspace = true }
+tokio-util = { workspace = true }
+prost-types = { workspace = true }
+# Jetstreamer firehose for direct streaming without ClickHouse
+jetstreamer-firehose = "0.1.6"
+jetstreamer-utils = "0.1.6"
+prometheus = { workspace = true, optional = true }
+
+[features]
+default = []
+prometheus = ["dep:prometheus"]
