@@ -1,0 +1,28 @@
+[package]
+name = "yellowstone-vixen-proc-macro"
+description = "Generate a Vixen parser from Codama IDL"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true, features = [
+  "full",
+  "parsing",
+], default-features = false }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+codama-nodes = { workspace = true }
+hex = { workspace = true }
+bs58 = { workspace = true }
+base64 = { workspace = true }
+
+[dev-dependencies]
+prettyplease = { workspace = true }

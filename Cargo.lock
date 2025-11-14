@@ -885,6 +885,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo_toml"
+version = "0.20.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88da5a13c620b4ca0078845707ea9c3faf11edbc3ffd8497d11d686211cd1ac0"
+dependencies = [
+ "serde",
+ "toml 0.8.23",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1015,6 +1025,59 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7caa3f9de89ddbe2c607f4101924c5abec803763ae9534e4f4d7d8f84aa81f0"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "codama-errors"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69a7b7b16f9b57be0ca6ea44b40f5e6b4aeedcd30bfd33d2998721dd9c2d807f"
+dependencies = [
+ "cargo_toml",
+ "proc-macro2",
+ "serde_json",
+ "syn 2.0.106",
+ "thiserror 2.0.16",
+]
+
+[[package]]
+name = "codama-nodes"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf3194539453ecd51fb72c8440e3aa4a84352a41d61dea8f37d1d5f2428d0419"
+dependencies = [
+ "codama-errors",
+ "codama-nodes-derive",
+ "derive_more",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "codama-nodes-derive"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c138c3a7ed16bdcea33cb7b708a650b575464d86077a558c3b6ce091d4ec7455"
+dependencies = [
+ "codama-errors",
+ "codama-syn-helpers",
+ "derive_more",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+]
+
+[[package]]
+name = "codama-syn-helpers"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1ce2a27f09caf6476c857c809718fac9213ce4124ad0002f1f12f2964681ccc"
+dependencies = [
+ "codama-errors",
+ "derive_more",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
@@ -1371,6 +1434,26 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "derive_more"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
@@ -9239,6 +9322,7 @@ dependencies = [
  "borsh 1.5.7",
  "bs58",
  "bytemuck",
+ "solana-pubkey",
  "spl-pod 0.3.1",
  "spl-token 6.0.0",
  "spl-token-2022 9.0.0",
@@ -9254,6 +9338,22 @@ dependencies = [
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-proto",
+]
+
+[[package]]
+name = "yellowstone-vixen-proc-macro"
+version = "0.6.0"
+dependencies = [
+ "base64 0.22.1",
+ "bs58",
+ "codama-nodes",
+ "hex",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn 2.0.106",
 ]
 
 [[package]]
