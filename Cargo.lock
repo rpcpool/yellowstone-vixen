@@ -9376,7 +9376,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-pump-fees-parser"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9402,7 +9402,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-pump-swaps-parser"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9428,7 +9428,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-pumpfun-parser"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
