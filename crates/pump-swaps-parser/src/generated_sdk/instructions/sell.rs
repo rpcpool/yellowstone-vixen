@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const SELL_DISCRIMINATOR: [u8; 8] = [51, 230, 133, 164, 1, 127, 131, 173];
 
 /// Accounts.
 #[derive(Debug)]
@@ -47,13 +50,16 @@ pub struct Sell {
     pub coin_creator_vault_ata: solana_pubkey::Pubkey,
 
     pub coin_creator_vault_authority: solana_pubkey::Pubkey,
+
+    pub fee_config: solana_pubkey::Pubkey,
+
+    pub fee_program: solana_pubkey::Pubkey,
 }
 
 impl Sell {
     pub fn instruction(&self, args: SellInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -61,10 +67,8 @@ impl Sell {
         args: SellInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(19 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.pool, false,
-        ));
+        let mut accounts = Vec::with_capacity(21 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(self.pool, false));
         accounts.push(solana_instruction::AccountMeta::new(self.user, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.global_config,
@@ -134,9 +138,17 @@ impl Sell {
             self.coin_creator_vault_authority,
             false,
         ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.fee_config,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.fee_program,
+            false,
+        ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&SellInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = SellInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -159,10 +171,16 @@ impl SellInstructionData {
             discriminator: [51, 230, 133, 164, 1, 127, 131, 173],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for SellInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -172,11 +190,17 @@ pub struct SellInstructionArgs {
     pub min_quote_amount_out: u64,
 }
 
+impl SellInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
+}
+
 /// Instruction builder for `Sell`.
 ///
 /// ### Accounts:
 ///
-///   0. `[]` pool
+///   0. `[writable]` pool
 ///   1. `[writable, signer]` user
 ///   2. `[]` global_config
 ///   3. `[]` base_mint
@@ -192,9 +216,11 @@ pub struct SellInstructionArgs {
 ///   13. `[optional]` system_program (default to `11111111111111111111111111111111`)
 ///   14. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   15. `[]` event_authority
-///   16. `[]` program
+///   16. `[optional]` program (default to `pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA`)
 ///   17. `[writable]` coin_creator_vault_ata
 ///   18. `[]` coin_creator_vault_authority
+///   19. `[]` fee_config
+///   20. `[optional]` fee_program (default to `pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ`)
 #[derive(Clone, Debug, Default)]
 pub struct SellBuilder {
     pool: Option<solana_pubkey::Pubkey>,
@@ -216,44 +242,42 @@ pub struct SellBuilder {
     program: Option<solana_pubkey::Pubkey>,
     coin_creator_vault_ata: Option<solana_pubkey::Pubkey>,
     coin_creator_vault_authority: Option<solana_pubkey::Pubkey>,
+    fee_config: Option<solana_pubkey::Pubkey>,
+    fee_program: Option<solana_pubkey::Pubkey>,
     base_amount_in: Option<u64>,
     min_quote_amount_out: Option<u64>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl SellBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
-
     #[inline(always)]
     pub fn global_config(&mut self, global_config: solana_pubkey::Pubkey) -> &mut Self {
         self.global_config = Some(global_config);
         self
     }
-
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.base_mint = Some(base_mint);
         self
     }
-
     #[inline(always)]
     pub fn quote_mint(&mut self, quote_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_mint = Some(quote_mint);
         self
     }
-
     #[inline(always)]
     pub fn user_base_token_account(
         &mut self,
@@ -262,7 +286,6 @@ impl SellBuilder {
         self.user_base_token_account = Some(user_base_token_account);
         self
     }
-
     #[inline(always)]
     pub fn user_quote_token_account(
         &mut self,
@@ -271,7 +294,6 @@ impl SellBuilder {
         self.user_quote_token_account = Some(user_quote_token_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_base_token_account(
         &mut self,
@@ -280,7 +302,6 @@ impl SellBuilder {
         self.pool_base_token_account = Some(pool_base_token_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_quote_token_account(
         &mut self,
@@ -289,7 +310,6 @@ impl SellBuilder {
         self.pool_quote_token_account = Some(pool_quote_token_account);
         self
     }
-
     #[inline(always)]
     pub fn protocol_fee_recipient(
         &mut self,
@@ -298,7 +318,6 @@ impl SellBuilder {
         self.protocol_fee_recipient = Some(protocol_fee_recipient);
         self
     }
-
     #[inline(always)]
     pub fn protocol_fee_recipient_token_account(
         &mut self,
@@ -307,26 +326,22 @@ impl SellBuilder {
         self.protocol_fee_recipient_token_account = Some(protocol_fee_recipient_token_account);
         self
     }
-
     #[inline(always)]
     pub fn base_token_program(&mut self, base_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.base_token_program = Some(base_token_program);
         self
     }
-
     #[inline(always)]
     pub fn quote_token_program(&mut self, quote_token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.quote_token_program = Some(quote_token_program);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     #[inline(always)]
     pub fn associated_token_program(
@@ -336,19 +351,17 @@ impl SellBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
+    /// `[optional account, default to 'pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA']`
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn coin_creator_vault_ata(
         &mut self,
@@ -357,7 +370,6 @@ impl SellBuilder {
         self.coin_creator_vault_ata = Some(coin_creator_vault_ata);
         self
     }
-
     #[inline(always)]
     pub fn coin_creator_vault_authority(
         &mut self,
@@ -366,26 +378,33 @@ impl SellBuilder {
         self.coin_creator_vault_authority = Some(coin_creator_vault_authority);
         self
     }
-
+    #[inline(always)]
+    pub fn fee_config(&mut self, fee_config: solana_pubkey::Pubkey) -> &mut Self {
+        self.fee_config = Some(fee_config);
+        self
+    }
+    /// `[optional account, default to 'pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ']`
+    #[inline(always)]
+    pub fn fee_program(&mut self, fee_program: solana_pubkey::Pubkey) -> &mut Self {
+        self.fee_program = Some(fee_program);
+        self
+    }
     #[inline(always)]
     pub fn base_amount_in(&mut self, base_amount_in: u64) -> &mut Self {
         self.base_amount_in = Some(base_amount_in);
         self
     }
-
     #[inline(always)]
     pub fn min_quote_amount_out(&mut self, min_quote_amount_out: u64) -> &mut Self {
         self.min_quote_amount_out = Some(min_quote_amount_out);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -395,7 +414,6 @@ impl SellBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = Sell {
@@ -435,13 +453,19 @@ impl SellBuilder {
                 solana_pubkey::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
             ),
             event_authority: self.event_authority.expect("event_authority is not set"),
-            program: self.program.expect("program is not set"),
+            program: self.program.unwrap_or(solana_pubkey::pubkey!(
+                "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA"
+            )),
             coin_creator_vault_ata: self
                 .coin_creator_vault_ata
                 .expect("coin_creator_vault_ata is not set"),
             coin_creator_vault_authority: self
                 .coin_creator_vault_authority
                 .expect("coin_creator_vault_authority is not set"),
+            fee_config: self.fee_config.expect("fee_config is not set"),
+            fee_program: self.fee_program.unwrap_or(solana_pubkey::pubkey!(
+                "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ"
+            )),
         };
         let args = SellInstructionArgs {
             base_amount_in: self
@@ -497,6 +521,10 @@ pub struct SellCpiAccounts<'a, 'b> {
     pub coin_creator_vault_ata: &'b solana_account_info::AccountInfo<'a>,
 
     pub coin_creator_vault_authority: &'b solana_account_info::AccountInfo<'a>,
+
+    pub fee_config: &'b solana_account_info::AccountInfo<'a>,
+
+    pub fee_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `sell` CPI instruction.
@@ -541,6 +569,10 @@ pub struct SellCpi<'a, 'b> {
     pub coin_creator_vault_ata: &'b solana_account_info::AccountInfo<'a>,
 
     pub coin_creator_vault_authority: &'b solana_account_info::AccountInfo<'a>,
+
+    pub fee_config: &'b solana_account_info::AccountInfo<'a>,
+
+    pub fee_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: SellInstructionArgs,
 }
@@ -572,31 +604,26 @@ impl<'a, 'b> SellCpi<'a, 'b> {
             program: accounts.program,
             coin_creator_vault_ata: accounts.coin_creator_vault_ata,
             coin_creator_vault_authority: accounts.coin_creator_vault_authority,
+            fee_config: accounts.fee_config,
+            fee_program: accounts.fee_program,
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -604,12 +631,9 @@ impl<'a, 'b> SellCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(19 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.pool.key,
-            false,
-        ));
+    ) -> solana_program_error::ProgramResult {
+        let mut accounts = Vec::with_capacity(21 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(*self.pool.key, false));
         accounts.push(solana_instruction::AccountMeta::new(*self.user.key, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.global_config.key,
@@ -679,6 +703,14 @@ impl<'a, 'b> SellCpi<'a, 'b> {
             *self.coin_creator_vault_authority.key,
             false,
         ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.fee_config.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.fee_program.key,
+            false,
+        ));
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
@@ -686,8 +718,8 @@ impl<'a, 'b> SellCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&SellInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = SellInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -695,7 +727,7 @@ impl<'a, 'b> SellCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(20 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(22 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.pool.clone());
         account_infos.push(self.user.clone());
@@ -716,6 +748,8 @@ impl<'a, 'b> SellCpi<'a, 'b> {
         account_infos.push(self.program.clone());
         account_infos.push(self.coin_creator_vault_ata.clone());
         account_infos.push(self.coin_creator_vault_authority.clone());
+        account_infos.push(self.fee_config.clone());
+        account_infos.push(self.fee_program.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -732,7 +766,7 @@ impl<'a, 'b> SellCpi<'a, 'b> {
 ///
 /// ### Accounts:
 ///
-///   0. `[]` pool
+///   0. `[writable]` pool
 ///   1. `[writable, signer]` user
 ///   2. `[]` global_config
 ///   3. `[]` base_mint
@@ -751,6 +785,8 @@ impl<'a, 'b> SellCpi<'a, 'b> {
 ///   16. `[]` program
 ///   17. `[writable]` coin_creator_vault_ata
 ///   18. `[]` coin_creator_vault_authority
+///   19. `[]` fee_config
+///   20. `[]` fee_program
 #[derive(Clone, Debug)]
 pub struct SellCpiBuilder<'a, 'b> {
     instruction: Box<SellCpiBuilderInstruction<'a, 'b>>,
@@ -779,25 +815,24 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
             program: None,
             coin_creator_vault_ata: None,
             coin_creator_vault_authority: None,
+            fee_config: None,
+            fee_program: None,
             base_amount_in: None,
             min_quote_amount_out: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
-
     #[inline(always)]
     pub fn global_config(
         &mut self,
@@ -806,13 +841,11 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.global_config = Some(global_config);
         self
     }
-
     #[inline(always)]
     pub fn base_mint(&mut self, base_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.base_mint = Some(base_mint);
         self
     }
-
     #[inline(always)]
     pub fn quote_mint(
         &mut self,
@@ -821,7 +854,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.quote_mint = Some(quote_mint);
         self
     }
-
     #[inline(always)]
     pub fn user_base_token_account(
         &mut self,
@@ -830,7 +862,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.user_base_token_account = Some(user_base_token_account);
         self
     }
-
     #[inline(always)]
     pub fn user_quote_token_account(
         &mut self,
@@ -839,7 +870,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.user_quote_token_account = Some(user_quote_token_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_base_token_account(
         &mut self,
@@ -848,7 +878,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.pool_base_token_account = Some(pool_base_token_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_quote_token_account(
         &mut self,
@@ -857,7 +886,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.pool_quote_token_account = Some(pool_quote_token_account);
         self
     }
-
     #[inline(always)]
     pub fn protocol_fee_recipient(
         &mut self,
@@ -866,7 +894,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.protocol_fee_recipient = Some(protocol_fee_recipient);
         self
     }
-
     #[inline(always)]
     pub fn protocol_fee_recipient_token_account(
         &mut self,
@@ -876,7 +903,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
             Some(protocol_fee_recipient_token_account);
         self
     }
-
     #[inline(always)]
     pub fn base_token_program(
         &mut self,
@@ -885,7 +911,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.base_token_program = Some(base_token_program);
         self
     }
-
     #[inline(always)]
     pub fn quote_token_program(
         &mut self,
@@ -894,7 +919,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.quote_token_program = Some(quote_token_program);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -903,7 +927,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -912,7 +935,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -921,13 +943,11 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn coin_creator_vault_ata(
         &mut self,
@@ -936,7 +956,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.coin_creator_vault_ata = Some(coin_creator_vault_ata);
         self
     }
-
     #[inline(always)]
     pub fn coin_creator_vault_authority(
         &mut self,
@@ -945,19 +964,32 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
         self.instruction.coin_creator_vault_authority = Some(coin_creator_vault_authority);
         self
     }
-
+    #[inline(always)]
+    pub fn fee_config(
+        &mut self,
+        fee_config: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.fee_config = Some(fee_config);
+        self
+    }
+    #[inline(always)]
+    pub fn fee_program(
+        &mut self,
+        fee_program: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.fee_program = Some(fee_program);
+        self
+    }
     #[inline(always)]
     pub fn base_amount_in(&mut self, base_amount_in: u64) -> &mut Self {
         self.instruction.base_amount_in = Some(base_amount_in);
         self
     }
-
     #[inline(always)]
     pub fn min_quote_amount_out(&mut self, min_quote_amount_out: u64) -> &mut Self {
         self.instruction.min_quote_amount_out = Some(min_quote_amount_out);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -971,7 +1003,6 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -986,16 +1017,13 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = SellInstructionArgs {
             base_amount_in: self
                 .instruction
@@ -1090,6 +1118,13 @@ impl<'a, 'b> SellCpiBuilder<'a, 'b> {
                 .instruction
                 .coin_creator_vault_authority
                 .expect("coin_creator_vault_authority is not set"),
+
+            fee_config: self.instruction.fee_config.expect("fee_config is not set"),
+
+            fee_program: self
+                .instruction
+                .fee_program
+                .expect("fee_program is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -1121,6 +1156,8 @@ struct SellCpiBuilderInstruction<'a, 'b> {
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
     coin_creator_vault_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
     coin_creator_vault_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    fee_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    fee_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     base_amount_in: Option<u64>,
     min_quote_amount_out: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.

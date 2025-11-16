@@ -5,20 +5,50 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+pub(crate) mod r#admin_set_creator;
+pub(crate) mod r#admin_set_idl_authority;
+pub(crate) mod r#admin_update_token_incentives;
 pub(crate) mod r#buy;
+pub(crate) mod r#buy_exact_sol_in;
+pub(crate) mod r#claim_token_incentives;
+pub(crate) mod r#close_user_volume_accumulator;
 pub(crate) mod r#collect_creator_fee;
 pub(crate) mod r#create;
+pub(crate) mod r#create_v2;
 pub(crate) mod r#extend_account;
+pub(crate) mod r#init_user_volume_accumulator;
 pub(crate) mod r#initialize;
 pub(crate) mod r#migrate;
 pub(crate) mod r#sell;
 pub(crate) mod r#set_creator;
 pub(crate) mod r#set_metaplex_creator;
 pub(crate) mod r#set_params;
+pub(crate) mod r#set_reserved_fee_recipients;
+pub(crate) mod r#sync_user_volume_accumulator;
+pub(crate) mod r#toggle_create_v2;
+pub(crate) mod r#toggle_mayhem_mode;
 pub(crate) mod r#update_global_authority;
 
-pub use self::{
-    r#buy::*, r#collect_creator_fee::*, r#create::*, r#extend_account::*, r#initialize::*,
-    r#migrate::*, r#sell::*, r#set_creator::*, r#set_metaplex_creator::*, r#set_params::*,
-    r#update_global_authority::*,
-};
+pub use self::r#admin_set_creator::*;
+pub use self::r#admin_set_idl_authority::*;
+pub use self::r#admin_update_token_incentives::*;
+pub use self::r#buy::*;
+pub use self::r#buy_exact_sol_in::*;
+pub use self::r#claim_token_incentives::*;
+pub use self::r#close_user_volume_accumulator::*;
+pub use self::r#collect_creator_fee::*;
+pub use self::r#create::*;
+pub use self::r#create_v2::*;
+pub use self::r#extend_account::*;
+pub use self::r#init_user_volume_accumulator::*;
+pub use self::r#initialize::*;
+pub use self::r#migrate::*;
+pub use self::r#sell::*;
+pub use self::r#set_creator::*;
+pub use self::r#set_metaplex_creator::*;
+pub use self::r#set_params::*;
+pub use self::r#set_reserved_fee_recipients::*;
+pub use self::r#sync_user_volume_accumulator::*;
+pub use self::r#toggle_create_v2::*;
+pub use self::r#toggle_mayhem_mode::*;
+pub use self::r#update_global_authority::*;

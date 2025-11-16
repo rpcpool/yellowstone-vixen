@@ -42,22 +42,22 @@ pub enum PumpError {
     NewSizeShouldBeGreaterThanCurrentSize = 0x1779,
     /// 6010 - Account type not supported
     #[error("Account type not supported")]
-    AccountTypeNotSupported = 0x177a,
+    AccountTypeNotSupported = 0x177A,
     /// 6011 - initial_real_token_reserves should be less than token_total_supply
     #[error("initial_real_token_reserves should be less than token_total_supply")]
-    InitialRealTokenReservesShouldBeLessThanTokenTotalSupply = 0x177b,
+    InitialRealTokenReservesShouldBeLessThanTokenTotalSupply = 0x177B,
     /// 6012 - initial_virtual_token_reserves should be greater than initial_real_token_reserves
     #[error("initial_virtual_token_reserves should be greater than initial_real_token_reserves")]
-    InitialVirtualTokenReservesShouldBeGreaterThanInitialRealTokenReserves = 0x177c,
+    InitialVirtualTokenReservesShouldBeGreaterThanInitialRealTokenReserves = 0x177C,
     /// 6013 - fee_basis_points greater than maximum
     #[error("fee_basis_points greater than maximum")]
-    FeeBasisPointsGreaterThanMaximum = 0x177d,
+    FeeBasisPointsGreaterThanMaximum = 0x177D,
     /// 6014 - Withdraw authority cannot be set to System Program ID
     #[error("Withdraw authority cannot be set to System Program ID")]
-    AllZerosWithdrawAuthority = 0x177e,
+    AllZerosWithdrawAuthority = 0x177E,
     /// 6015 - pool_migration_fee should be less than final_real_sol_reserves
     #[error("pool_migration_fee should be less than final_real_sol_reserves")]
-    PoolMigrationFeeShouldBeLessThanFinalRealSolReserves = 0x177f,
+    PoolMigrationFeeShouldBeLessThanFinalRealSolReserves = 0x177F,
     /// 6016 - pool_migration_fee should be greater than creator_fee + MAX_MIGRATE_FEES
     #[error("pool_migration_fee should be greater than creator_fee + MAX_MIGRATE_FEES")]
     PoolMigrationFeeShouldBeGreaterThanCreatorFeePlusMaxMigrateFees = 0x1780,
@@ -90,29 +90,77 @@ pub enum PumpError {
     Truncation = 0x1789,
     /// 6026 - Division by zero
     #[error("Division by zero")]
-    DivisionByZero = 0x178a,
+    DivisionByZero = 0x178A,
     /// 6027 - Not enough remaining accounts
     #[error("Not enough remaining accounts")]
-    NotEnoughRemainingAccounts = 0x178b,
+    NotEnoughRemainingAccounts = 0x178B,
     /// 6028 - All fee recipients should be non-zero
     #[error("All fee recipients should be non-zero")]
-    AllFeeRecipientsShouldBeNonZero = 0x178c,
+    AllFeeRecipientsShouldBeNonZero = 0x178C,
     /// 6029 - Unsorted or not unique fee recipients
     #[error("Unsorted or not unique fee recipients")]
-    UnsortedNotUniqueFeeRecipients = 0x178d,
+    UnsortedNotUniqueFeeRecipients = 0x178D,
     /// 6030 - Creator should not be zero
     #[error("Creator should not be zero")]
-    CreatorShouldNotBeZero = 0x178e,
+    CreatorShouldNotBeZero = 0x178E,
+    /// 6031 -
+    #[error("")]
+    StartTimeInThePast = 0x178F,
+    /// 6032 -
+    #[error("")]
+    EndTimeInThePast = 0x1790,
+    /// 6033 -
+    #[error("")]
+    EndTimeBeforeStartTime = 0x1791,
+    /// 6034 -
+    #[error("")]
+    TimeRangeTooLarge = 0x1792,
+    /// 6035 -
+    #[error("")]
+    EndTimeBeforeCurrentDay = 0x1793,
+    /// 6036 -
+    #[error("")]
+    SupplyUpdateForFinishedRange = 0x1794,
+    /// 6037 -
+    #[error("")]
+    DayIndexAfterEndIndex = 0x1795,
+    /// 6038 -
+    #[error("")]
+    DayInActiveRange = 0x1796,
+    /// 6039 -
+    #[error("")]
+    InvalidIncentiveMint = 0x1797,
+    /// 6040 - Buy: Not enough SOL to cover for rent exemption.
+    #[error("Buy: Not enough SOL to cover for rent exemption.")]
+    BuyNotEnoughSolToCoverRent = 0x1798,
+    /// 6041 - Buy: Not enough SOL to cover for fees.
+    #[error("Buy: Not enough SOL to cover for fees.")]
+    BuyNotEnoughSolToCoverFees = 0x1799,
+    /// 6042 - Slippage: Would buy less tokens than expected min_tokens_out
+    #[error("Slippage: Would buy less tokens than expected min_tokens_out")]
+    BuySlippageBelowMinTokensOut = 0x179A,
+    /// 6043 -
+    #[error("")]
+    NameTooLong = 0x179B,
+    /// 6044 -
+    #[error("")]
+    SymbolTooLong = 0x179C,
+    /// 6045 -
+    #[error("")]
+    UriTooLong = 0x179D,
+    /// 6046 -
+    #[error("")]
+    CreateV2Disabled = 0x179E,
+    /// 6047 -
+    #[error("")]
+    CpitializeMayhemFailed = 0x179F,
+    /// 6048 -
+    #[error("")]
+    MayhemModeDisabled = 0x17A0,
 }
 
-#[allow(deprecated)]
-impl solana_program_error::PrintProgramError for PumpError {
-    fn print<E>(&self) {
-        solana_msg::msg!(&self.to_string());
+impl From<PumpError> for solana_program_error::ProgramError {
+    fn from(e: PumpError) -> Self {
+        solana_program_error::ProgramError::Custom(e as u32)
     }
-}
-
-#[allow(deprecated)]
-impl<T> solana_decode_error::DecodeError<T> for PumpError {
-    fn type_of() -> &'static str { "PumpError" }
 }

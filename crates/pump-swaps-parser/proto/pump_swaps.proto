@@ -8,9 +8,32 @@ syntax = "proto3";
 
 package vixen.parser.pump_swaps;
 
+message AdminSetCoinCreatorIx {
+	AdminSetCoinCreatorIxAccounts accounts = 1;
+	AdminSetCoinCreatorIxData data = 2;
+}
+
+message AdminUpdateTokenIncentivesIx {
+	AdminUpdateTokenIncentivesIxAccounts accounts = 1;
+	AdminUpdateTokenIncentivesIxData data = 2;
+}
+
 message BuyIx {
 	BuyIxAccounts accounts = 1;
 	BuyIxData data = 2;
+}
+
+message BuyExactQuoteInIx {
+	BuyExactQuoteInIxAccounts accounts = 1;
+	BuyExactQuoteInIxData data = 2;
+}
+
+message ClaimTokenIncentivesIx {
+	ClaimTokenIncentivesIxAccounts accounts = 1;
+}
+
+message CloseUserVolumeAccumulatorIx {
+	CloseUserVolumeAccumulatorIxAccounts accounts = 1;
 }
 
 message CollectCoinCreatorFeeIx {
@@ -41,6 +64,10 @@ message ExtendAccountIx {
 	ExtendAccountIxAccounts accounts = 1;
 }
 
+message InitUserVolumeAccumulatorIx {
+	InitUserVolumeAccumulatorIxAccounts accounts = 1;
+}
+
 message SellIx {
 	SellIxAccounts accounts = 1;
 	SellIxData data = 2;
@@ -48,6 +75,20 @@ message SellIx {
 
 message SetCoinCreatorIx {
 	SetCoinCreatorIxAccounts accounts = 1;
+}
+
+message SetReservedFeeRecipientsIx {
+	SetReservedFeeRecipientsIxAccounts accounts = 1;
+	SetReservedFeeRecipientsIxData data = 2;
+}
+
+message SyncUserVolumeAccumulatorIx {
+	SyncUserVolumeAccumulatorIxAccounts accounts = 1;
+}
+
+message ToggleMayhemModeIx {
+	ToggleMayhemModeIxAccounts accounts = 1;
+	ToggleMayhemModeIxData data = 2;
 }
 
 message UpdateAdminIx {
@@ -64,6 +105,25 @@ message WithdrawIx {
 	WithdrawIxData data = 2;
 }
 
+
+message AdminSetCoinCreatorEvent {
+	int64 timestamp = 1;
+	string admin_set_coin_creator_authority = 2;
+	string base_mint = 3;
+	string pool = 4;
+	string old_coin_creator = 5;
+	string new_coin_creator = 6;
+}
+
+message AdminUpdateTokenIncentivesEvent {
+	int64 start_time = 1;
+	int64 end_time = 2;
+	uint64 day_number = 3;
+	uint64 token_supply_per_day = 4;
+	string mint = 5;
+	int64 seconds_in_a_day = 6;
+	int64 timestamp = 7;
+}
 
 message BuyEvent {
 	int64 timestamp = 1;
@@ -89,6 +149,31 @@ message BuyEvent {
 	string coin_creator = 21;
 	uint64 coin_creator_fee_basis_points = 22;
 	uint64 coin_creator_fee = 23;
+	bool track_volume = 24;
+	uint64 total_unclaimed_tokens = 25;
+	uint64 total_claimed_tokens = 26;
+	uint64 current_sol_volume = 27;
+	int64 last_update_timestamp = 28;
+	uint64 min_base_amount_out = 29;
+	string ix_name = 30;
+}
+
+message ClaimTokenIncentivesEvent {
+	string user = 1;
+	string mint = 2;
+	uint64 amount = 3;
+	int64 timestamp = 4;
+	uint64 total_claimed_tokens = 5;
+	uint64 current_sol_volume = 6;
+}
+
+message CloseUserVolumeAccumulatorEvent {
+	string user = 1;
+	int64 timestamp = 2;
+	uint64 total_unclaimed_tokens = 3;
+	uint64 total_claimed_tokens = 4;
+	uint64 current_sol_volume = 5;
+	int64 last_update_timestamp = 6;
 }
 
 message CollectCoinCreatorFeeEvent {
@@ -106,6 +191,7 @@ message CreateConfigEvent {
 	uint64 protocol_fee_basis_points = 4;
 	repeated string protocol_fee_recipients = 5;
 	uint64 coin_creator_fee_basis_points = 6;
+	string admin_set_coin_creator_authority = 7;
 }
 
 message CreatePoolEvent {
@@ -129,6 +215,7 @@ message CreatePoolEvent {
 	string user_base_token_account = 18;
 	string user_quote_token_account = 19;
 	string coin_creator = 20;
+	bool is_mayhem_mode = 21;
 }
 
 message DepositEvent {
@@ -166,6 +253,29 @@ message ExtendAccountEvent {
 	string user = 3;
 	uint64 current_size = 4;
 	uint64 new_size = 5;
+}
+
+message FeeTier {
+	string market_cap_lamports_threshold = 1;
+	Fees fees = 2;
+}
+
+message Fees {
+	uint64 lp_fee_bps = 1;
+	uint64 protocol_fee_bps = 2;
+	uint64 creator_fee_bps = 3;
+}
+
+message InitUserVolumeAccumulatorEvent {
+	string payer = 1;
+	string user = 2;
+	int64 timestamp = 3;
+}
+
+message ReservedFeeRecipientsEvent {
+	int64 timestamp = 1;
+	string reserved_fee_recipient = 2;
+	repeated string reserved_fee_recipients = 3;
 }
 
 message SellEvent {
@@ -210,6 +320,13 @@ message SetMetaplexCoinCreatorEvent {
 	string coin_creator = 5;
 }
 
+message SyncUserVolumeAccumulatorEvent {
+	string user = 1;
+	uint64 total_claimed_tokens_before = 2;
+	uint64 total_claimed_tokens_after = 3;
+	int64 timestamp = 4;
+}
+
 message UpdateAdminEvent {
 	int64 timestamp = 1;
 	string admin = 2;
@@ -223,6 +340,7 @@ message UpdateFeeConfigEvent {
 	uint64 protocol_fee_basis_points = 4;
 	repeated string protocol_fee_recipients = 5;
 	uint64 coin_creator_fee_basis_points = 6;
+	string admin_set_coin_creator_authority = 7;
 }
 
 message WithdrawEvent {
@@ -253,6 +371,14 @@ message BondingCurve {
 	uint64 token_total_supply = 5;
 	bool complete = 6;
 	string creator = 7;
+	bool is_mayhem_mode = 8;
+}
+
+message FeeConfig {
+	uint32 bump = 1;
+	string admin = 2;
+	Fees flat_fees = 3;
+	repeated FeeTier fee_tiers = 4;
 }
 
 message GlobalConfig {
@@ -262,6 +388,20 @@ message GlobalConfig {
 	uint32 disable_flags = 4;
 	repeated string protocol_fee_recipients = 5;
 	uint64 coin_creator_fee_basis_points = 6;
+	string admin_set_coin_creator_authority = 7;
+	string whitelist_pda = 8;
+	string reserved_fee_recipient = 9;
+	bool mayhem_mode_enabled = 10;
+	repeated string reserved_fee_recipients = 11;
+}
+
+message GlobalVolumeAccumulator {
+	int64 start_time = 1;
+	int64 end_time = 2;
+	int64 seconds_in_a_day = 3;
+	string mint = 4;
+	repeated uint64 total_token_supply = 5;
+	repeated uint64 sol_volumes = 6;
 }
 
 message Pool {
@@ -275,8 +415,52 @@ message Pool {
 	string pool_quote_token_account = 8;
 	uint64 lp_supply = 9;
 	string coin_creator = 10;
+	bool is_mayhem_mode = 11;
 }
 
+message UserVolumeAccumulator {
+	string user = 1;
+	bool needs_claim = 2;
+	uint64 total_unclaimed_tokens = 3;
+	uint64 total_claimed_tokens = 4;
+	uint64 current_sol_volume = 5;
+	int64 last_update_timestamp = 6;
+	bool has_total_claimed_tokens = 7;
+}
+
+
+message AdminSetCoinCreatorIxAccounts {
+	string admin_set_coin_creator_authority = 1;
+	string global_config = 2;
+	string pool = 3;
+	string event_authority = 4;
+	string program = 5;
+}
+
+message AdminSetCoinCreatorIxData {
+	string coin_creator = 1;
+}
+
+message AdminUpdateTokenIncentivesIxAccounts {
+	string admin = 1;
+	string global_config = 2;
+	string global_volume_accumulator = 3;
+	string mint = 4;
+	string global_incentive_token_account = 5;
+	string associated_token_program = 6;
+	string system_program = 7;
+	string token_program = 8;
+	string event_authority = 9;
+	string program = 10;
+}
+
+message AdminUpdateTokenIncentivesIxData {
+	int64 start_time = 1;
+	int64 end_time = 2;
+	int64 seconds_in_a_day = 3;
+	uint64 day_number = 4;
+	uint64 token_supply_per_day = 5;
+}
 
 message BuyIxAccounts {
 	string pool = 1;
@@ -298,12 +482,71 @@ message BuyIxAccounts {
 	string program = 17;
 	string coin_creator_vault_ata = 18;
 	string coin_creator_vault_authority = 19;
+	string global_volume_accumulator = 20;
+	string user_volume_accumulator = 21;
+	string fee_config = 22;
+	string fee_program = 23;
 }
 
 message BuyIxData {
 	uint64 base_amount_out = 1;
 	uint64 max_quote_amount_in = 2;
 }
+
+message BuyExactQuoteInIxAccounts {
+	string pool = 1;
+	string user = 2;
+	string global_config = 3;
+	string base_mint = 4;
+	string quote_mint = 5;
+	string user_base_token_account = 6;
+	string user_quote_token_account = 7;
+	string pool_base_token_account = 8;
+	string pool_quote_token_account = 9;
+	string protocol_fee_recipient = 10;
+	string protocol_fee_recipient_token_account = 11;
+	string base_token_program = 12;
+	string quote_token_program = 13;
+	string system_program = 14;
+	string associated_token_program = 15;
+	string event_authority = 16;
+	string program = 17;
+	string coin_creator_vault_ata = 18;
+	string coin_creator_vault_authority = 19;
+	string global_volume_accumulator = 20;
+	string user_volume_accumulator = 21;
+	string fee_config = 22;
+	string fee_program = 23;
+}
+
+message BuyExactQuoteInIxData {
+	uint64 spendable_quote_in = 1;
+	uint64 min_base_amount_out = 2;
+}
+
+message ClaimTokenIncentivesIxAccounts {
+	string user = 1;
+	string user_ata = 2;
+	string global_volume_accumulator = 3;
+	string global_incentive_token_account = 4;
+	string user_volume_accumulator = 5;
+	string mint = 6;
+	string token_program = 7;
+	string system_program = 8;
+	string associated_token_program = 9;
+	string event_authority = 10;
+	string program = 11;
+	string payer = 12;
+}
+
+
+message CloseUserVolumeAccumulatorIxAccounts {
+	string user = 1;
+	string user_volume_accumulator = 2;
+	string event_authority = 3;
+	string program = 4;
+}
+
 
 message CollectCoinCreatorFeeIxAccounts {
 	string quote_mint = 1;
@@ -330,6 +573,7 @@ message CreateConfigIxData {
 	uint64 protocol_fee_basis_points = 2;
 	repeated string protocol_fee_recipients = 3;
 	uint64 coin_creator_fee_basis_points = 4;
+	string admin_set_coin_creator_authority = 5;
 }
 
 message CreatePoolIxAccounts {
@@ -358,6 +602,7 @@ message CreatePoolIxData {
 	uint64 base_amount_in = 2;
 	uint64 quote_amount_in = 3;
 	string coin_creator = 4;
+	bool is_mayhem_mode = 5;
 }
 
 message DepositIxAccounts {
@@ -408,6 +653,16 @@ message ExtendAccountIxAccounts {
 }
 
 
+message InitUserVolumeAccumulatorIxAccounts {
+	string payer = 1;
+	string user = 2;
+	string user_volume_accumulator = 3;
+	string system_program = 4;
+	string event_authority = 5;
+	string program = 6;
+}
+
+
 message SellIxAccounts {
 	string pool = 1;
 	string user = 2;
@@ -428,6 +683,8 @@ message SellIxAccounts {
 	string program = 17;
 	string coin_creator_vault_ata = 18;
 	string coin_creator_vault_authority = 19;
+	string fee_config = 20;
+	string fee_program = 21;
 }
 
 message SellIxData {
@@ -443,6 +700,37 @@ message SetCoinCreatorIxAccounts {
 	string program = 5;
 }
 
+
+message SetReservedFeeRecipientsIxAccounts {
+	string global_config = 1;
+	string admin = 2;
+	string event_authority = 3;
+	string program = 4;
+}
+
+message SetReservedFeeRecipientsIxData {
+	string whitelist_pda = 1;
+}
+
+message SyncUserVolumeAccumulatorIxAccounts {
+	string user = 1;
+	string global_volume_accumulator = 2;
+	string user_volume_accumulator = 3;
+	string event_authority = 4;
+	string program = 5;
+}
+
+
+message ToggleMayhemModeIxAccounts {
+	string admin = 1;
+	string global_config = 2;
+	string event_authority = 3;
+	string program = 4;
+}
+
+message ToggleMayhemModeIxData {
+	bool enabled = 1;
+}
 
 message UpdateAdminIxAccounts {
 	string admin = 1;
@@ -465,6 +753,7 @@ message UpdateFeeConfigIxData {
 	uint64 protocol_fee_basis_points = 2;
 	repeated string protocol_fee_recipients = 3;
 	uint64 coin_creator_fee_basis_points = 4;
+	string admin_set_coin_creator_authority = 5;
 }
 
 message WithdrawIxAccounts {
@@ -495,25 +784,37 @@ message WithdrawIxData {
 message ProgramState {
     oneof state_oneof {
         	BondingCurve bonding_curve = 1;
-        	GlobalConfig global_config = 2;
-        	Pool pool = 3;
+        	FeeConfig fee_config = 2;
+        	GlobalConfig global_config = 3;
+        	GlobalVolumeAccumulator global_volume_accumulator = 4;
+        	Pool pool = 5;
+        	UserVolumeAccumulator user_volume_accumulator = 6;
         }
 }
 
 message ProgramIxs {
     oneof ix_oneof {
-        	BuyIx buy = 1;
-        	CollectCoinCreatorFeeIx collect_coin_creator_fee = 2;
-        	CreateConfigIx create_config = 3;
-        	CreatePoolIx create_pool = 4;
-        	DepositIx deposit = 5;
-        	DisableIx disable = 6;
-        	ExtendAccountIx extend_account = 7;
-        	SellIx sell = 8;
-        	SetCoinCreatorIx set_coin_creator = 9;
-        	UpdateAdminIx update_admin = 10;
-        	UpdateFeeConfigIx update_fee_config = 11;
-        	WithdrawIx withdraw = 12;
+        	AdminSetCoinCreatorIx admin_set_coin_creator = 1;
+        	AdminUpdateTokenIncentivesIx admin_update_token_incentives = 2;
+        	BuyIx buy = 3;
+        	BuyExactQuoteInIx buy_exact_quote_in = 4;
+        	ClaimTokenIncentivesIx claim_token_incentives = 5;
+        	CloseUserVolumeAccumulatorIx close_user_volume_accumulator = 6;
+        	CollectCoinCreatorFeeIx collect_coin_creator_fee = 7;
+        	CreateConfigIx create_config = 8;
+        	CreatePoolIx create_pool = 9;
+        	DepositIx deposit = 10;
+        	DisableIx disable = 11;
+        	ExtendAccountIx extend_account = 12;
+        	InitUserVolumeAccumulatorIx init_user_volume_accumulator = 13;
+        	SellIx sell = 14;
+        	SetCoinCreatorIx set_coin_creator = 15;
+        	SetReservedFeeRecipientsIx set_reserved_fee_recipients = 16;
+        	SyncUserVolumeAccumulatorIx sync_user_volume_accumulator = 17;
+        	ToggleMayhemModeIx toggle_mayhem_mode = 18;
+        	UpdateAdminIx update_admin = 19;
+        	UpdateFeeConfigIx update_fee_config = 20;
+        	WithdrawIx withdraw = 21;
         }
 }
 

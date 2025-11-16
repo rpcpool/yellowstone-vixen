@@ -5,21 +5,46 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+pub(crate) mod r#admin_set_coin_creator;
+pub(crate) mod r#admin_update_token_incentives;
 pub(crate) mod r#buy;
+pub(crate) mod r#buy_exact_quote_in;
+pub(crate) mod r#claim_token_incentives;
+pub(crate) mod r#close_user_volume_accumulator;
 pub(crate) mod r#collect_coin_creator_fee;
 pub(crate) mod r#create_config;
 pub(crate) mod r#create_pool;
 pub(crate) mod r#deposit;
 pub(crate) mod r#disable;
 pub(crate) mod r#extend_account;
+pub(crate) mod r#init_user_volume_accumulator;
 pub(crate) mod r#sell;
 pub(crate) mod r#set_coin_creator;
+pub(crate) mod r#set_reserved_fee_recipients;
+pub(crate) mod r#sync_user_volume_accumulator;
+pub(crate) mod r#toggle_mayhem_mode;
 pub(crate) mod r#update_admin;
 pub(crate) mod r#update_fee_config;
 pub(crate) mod r#withdraw;
 
-pub use self::{
-    r#buy::*, r#collect_coin_creator_fee::*, r#create_config::*, r#create_pool::*, r#deposit::*,
-    r#disable::*, r#extend_account::*, r#sell::*, r#set_coin_creator::*, r#update_admin::*,
-    r#update_fee_config::*, r#withdraw::*,
-};
+pub use self::r#admin_set_coin_creator::*;
+pub use self::r#admin_update_token_incentives::*;
+pub use self::r#buy::*;
+pub use self::r#buy_exact_quote_in::*;
+pub use self::r#claim_token_incentives::*;
+pub use self::r#close_user_volume_accumulator::*;
+pub use self::r#collect_coin_creator_fee::*;
+pub use self::r#create_config::*;
+pub use self::r#create_pool::*;
+pub use self::r#deposit::*;
+pub use self::r#disable::*;
+pub use self::r#extend_account::*;
+pub use self::r#init_user_volume_accumulator::*;
+pub use self::r#sell::*;
+pub use self::r#set_coin_creator::*;
+pub use self::r#set_reserved_fee_recipients::*;
+pub use self::r#sync_user_volume_accumulator::*;
+pub use self::r#toggle_mayhem_mode::*;
+pub use self::r#update_admin::*;
+pub use self::r#update_fee_config::*;
+pub use self::r#withdraw::*;

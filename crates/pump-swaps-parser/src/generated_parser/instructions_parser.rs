@@ -11,37 +11,64 @@ use std::sync::Arc;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
-use crate::{
-    deserialize_checked,
-    instructions::{
-        Buy as BuyIxAccounts, BuyInstructionArgs as BuyIxData,
-        CollectCoinCreatorFee as CollectCoinCreatorFeeIxAccounts,
-        CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
-        CreatePool as CreatePoolIxAccounts, CreatePoolInstructionArgs as CreatePoolIxData,
-        Deposit as DepositIxAccounts, DepositInstructionArgs as DepositIxData,
-        Disable as DisableIxAccounts, DisableInstructionArgs as DisableIxData,
-        ExtendAccount as ExtendAccountIxAccounts, Sell as SellIxAccounts,
-        SellInstructionArgs as SellIxData, SetCoinCreator as SetCoinCreatorIxAccounts,
-        UpdateAdmin as UpdateAdminIxAccounts, UpdateFeeConfig as UpdateFeeConfigIxAccounts,
-        UpdateFeeConfigInstructionArgs as UpdateFeeConfigIxData, Withdraw as WithdrawIxAccounts,
-        WithdrawInstructionArgs as WithdrawIxData,
-    },
-    ID,
+use crate::deserialize_checked;
+
+use crate::instructions::{
+    AdminSetCoinCreator as AdminSetCoinCreatorIxAccounts,
+    AdminSetCoinCreatorInstructionArgs as AdminSetCoinCreatorIxData,
+    AdminUpdateTokenIncentives as AdminUpdateTokenIncentivesIxAccounts,
+    AdminUpdateTokenIncentivesInstructionArgs as AdminUpdateTokenIncentivesIxData,
+    Buy as BuyIxAccounts, BuyExactQuoteIn as BuyExactQuoteInIxAccounts,
+    BuyExactQuoteInInstructionArgs as BuyExactQuoteInIxData, BuyInstructionArgs as BuyIxData,
+    ClaimTokenIncentives as ClaimTokenIncentivesIxAccounts,
+    CloseUserVolumeAccumulator as CloseUserVolumeAccumulatorIxAccounts,
+    CollectCoinCreatorFee as CollectCoinCreatorFeeIxAccounts,
+    CreateConfig as CreateConfigIxAccounts, CreateConfigInstructionArgs as CreateConfigIxData,
+    CreatePool as CreatePoolIxAccounts, CreatePoolInstructionArgs as CreatePoolIxData,
+    Deposit as DepositIxAccounts, DepositInstructionArgs as DepositIxData,
+    Disable as DisableIxAccounts, DisableInstructionArgs as DisableIxData,
+    ExtendAccount as ExtendAccountIxAccounts,
+    InitUserVolumeAccumulator as InitUserVolumeAccumulatorIxAccounts, Sell as SellIxAccounts,
+    SellInstructionArgs as SellIxData, SetCoinCreator as SetCoinCreatorIxAccounts,
+    SetReservedFeeRecipients as SetReservedFeeRecipientsIxAccounts,
+    SetReservedFeeRecipientsInstructionArgs as SetReservedFeeRecipientsIxData,
+    SyncUserVolumeAccumulator as SyncUserVolumeAccumulatorIxAccounts,
+    ToggleMayhemMode as ToggleMayhemModeIxAccounts,
+    ToggleMayhemModeInstructionArgs as ToggleMayhemModeIxData,
+    UpdateAdmin as UpdateAdminIxAccounts, UpdateFeeConfig as UpdateFeeConfigIxAccounts,
+    UpdateFeeConfigInstructionArgs as UpdateFeeConfigIxData, Withdraw as WithdrawIxAccounts,
+    WithdrawInstructionArgs as WithdrawIxData,
 };
+use crate::ID;
 
 /// PumpAmm Instructions
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum PumpAmmProgramIx {
+    AdminSetCoinCreator(AdminSetCoinCreatorIxAccounts, AdminSetCoinCreatorIxData),
+    AdminUpdateTokenIncentives(
+        AdminUpdateTokenIncentivesIxAccounts,
+        AdminUpdateTokenIncentivesIxData,
+    ),
     Buy(BuyIxAccounts, BuyIxData),
+    BuyExactQuoteIn(BuyExactQuoteInIxAccounts, BuyExactQuoteInIxData),
+    ClaimTokenIncentives(ClaimTokenIncentivesIxAccounts),
+    CloseUserVolumeAccumulator(CloseUserVolumeAccumulatorIxAccounts),
     CollectCoinCreatorFee(CollectCoinCreatorFeeIxAccounts),
     CreateConfig(CreateConfigIxAccounts, CreateConfigIxData),
     CreatePool(CreatePoolIxAccounts, CreatePoolIxData),
     Deposit(DepositIxAccounts, DepositIxData),
     Disable(DisableIxAccounts, DisableIxData),
     ExtendAccount(ExtendAccountIxAccounts),
+    InitUserVolumeAccumulator(InitUserVolumeAccumulatorIxAccounts),
     Sell(SellIxAccounts, SellIxData),
     SetCoinCreator(SetCoinCreatorIxAccounts),
+    SetReservedFeeRecipients(
+        SetReservedFeeRecipientsIxAccounts,
+        SetReservedFeeRecipientsIxData,
+    ),
+    SyncUserVolumeAccumulator(SyncUserVolumeAccumulatorIxAccounts),
+    ToggleMayhemMode(ToggleMayhemModeIxAccounts, ToggleMayhemModeIxData),
     UpdateAdmin(UpdateAdminIxAccounts),
     UpdateFeeConfig(UpdateFeeConfigIxAccounts, UpdateFeeConfigIxData),
     Withdraw(WithdrawIxAccounts, WithdrawIxData),
@@ -52,12 +79,16 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+
     #[cfg(not(feature = "shared-data"))]
     type Output = PumpAmmProgramIx;
+
     #[cfg(feature = "shared-data")]
     type Output = InstructionUpdateOutput<PumpAmmProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "PumpAmm::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> {
+        "PumpAmm::InstructionParser".into()
+    }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -96,7 +127,9 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        ID.to_bytes().into()
+    }
 }
 
 impl InstructionParser {
@@ -112,8 +145,47 @@ impl InstructionParser {
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let ix_data = &ix.data[8..];
         let ix = match ix_discriminator {
+            [242, 40, 117, 145, 73, 96, 105, 104] => {
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = AdminSetCoinCreatorIxAccounts {
+                    admin_set_coin_creator_authority: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    pool: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: AdminSetCoinCreatorIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(PumpAmmProgramIx::AdminSetCoinCreator(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [209, 11, 115, 87, 213, 23, 124, 204] => {
+                let expected_accounts_len = 10;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = AdminUpdateTokenIncentivesIxAccounts {
+                    admin: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    global_volume_accumulator: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    global_incentive_token_account: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: AdminUpdateTokenIncentivesIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(PumpAmmProgramIx::AdminUpdateTokenIncentives(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
             [102, 6, 61, 18, 1, 218, 235, 234] => {
-                let expected_accounts_len = 19;
+                let expected_accounts_len = 23;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = BuyIxAccounts {
                     pool: next_account(accounts)?,
@@ -135,9 +207,75 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                     coin_creator_vault_ata: next_account(accounts)?,
                     coin_creator_vault_authority: next_account(accounts)?,
+                    global_volume_accumulator: next_account(accounts)?,
+                    user_volume_accumulator: next_account(accounts)?,
+                    fee_config: next_account(accounts)?,
+                    fee_program: next_account(accounts)?,
                 };
                 let de_ix_data: BuyIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(PumpAmmProgramIx::Buy(ix_accounts, de_ix_data))
+            },
+            [198, 46, 21, 82, 180, 217, 232, 112] => {
+                let expected_accounts_len = 23;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = BuyExactQuoteInIxAccounts {
+                    pool: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    base_mint: next_account(accounts)?,
+                    quote_mint: next_account(accounts)?,
+                    user_base_token_account: next_account(accounts)?,
+                    user_quote_token_account: next_account(accounts)?,
+                    pool_base_token_account: next_account(accounts)?,
+                    pool_quote_token_account: next_account(accounts)?,
+                    protocol_fee_recipient: next_account(accounts)?,
+                    protocol_fee_recipient_token_account: next_account(accounts)?,
+                    base_token_program: next_account(accounts)?,
+                    quote_token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                    coin_creator_vault_ata: next_account(accounts)?,
+                    coin_creator_vault_authority: next_account(accounts)?,
+                    global_volume_accumulator: next_account(accounts)?,
+                    user_volume_accumulator: next_account(accounts)?,
+                    fee_config: next_account(accounts)?,
+                    fee_program: next_account(accounts)?,
+                };
+                let de_ix_data: BuyExactQuoteInIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(PumpAmmProgramIx::BuyExactQuoteIn(ix_accounts, de_ix_data))
+            },
+            [16, 4, 71, 28, 204, 1, 40, 27] => {
+                let expected_accounts_len = 12;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = ClaimTokenIncentivesIxAccounts {
+                    user: next_account(accounts)?,
+                    user_ata: next_account(accounts)?,
+                    global_volume_accumulator: next_account(accounts)?,
+                    global_incentive_token_account: next_account(accounts)?,
+                    user_volume_accumulator: next_account(accounts)?,
+                    mint: next_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    associated_token_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                    payer: next_account(accounts)?,
+                };
+                Ok(PumpAmmProgramIx::ClaimTokenIncentives(ix_accounts))
+            },
+            [249, 69, 164, 218, 150, 103, 84, 138] => {
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = CloseUserVolumeAccumulatorIxAccounts {
+                    user: next_account(accounts)?,
+                    user_volume_accumulator: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                Ok(PumpAmmProgramIx::CloseUserVolumeAccumulator(ix_accounts))
             },
             [160, 57, 89, 42, 181, 139, 43, 66] => {
                 let expected_accounts_len = 8;
@@ -241,8 +379,21 @@ impl InstructionParser {
                 };
                 Ok(PumpAmmProgramIx::ExtendAccount(ix_accounts))
             },
+            [94, 6, 202, 115, 255, 96, 232, 183] => {
+                let expected_accounts_len = 6;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = InitUserVolumeAccumulatorIxAccounts {
+                    payer: next_account(accounts)?,
+                    user: next_account(accounts)?,
+                    user_volume_accumulator: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                Ok(PumpAmmProgramIx::InitUserVolumeAccumulator(ix_accounts))
+            },
             [51, 230, 133, 164, 1, 127, 131, 173] => {
-                let expected_accounts_len = 19;
+                let expected_accounts_len = 21;
                 check_min_accounts_req(accounts_len, expected_accounts_len)?;
                 let ix_accounts = SellIxAccounts {
                     pool: next_account(accounts)?,
@@ -264,6 +415,8 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                     coin_creator_vault_ata: next_account(accounts)?,
                     coin_creator_vault_authority: next_account(accounts)?,
+                    fee_config: next_account(accounts)?,
+                    fee_program: next_account(accounts)?,
                 };
                 let de_ix_data: SellIxData = deserialize_checked(ix_data, &ix_discriminator)?;
                 Ok(PumpAmmProgramIx::Sell(ix_accounts, de_ix_data))
@@ -279,6 +432,47 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 Ok(PumpAmmProgramIx::SetCoinCreator(ix_accounts))
+            },
+            [111, 172, 162, 232, 114, 89, 213, 142] => {
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SetReservedFeeRecipientsIxAccounts {
+                    global_config: next_account(accounts)?,
+                    admin: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: SetReservedFeeRecipientsIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(PumpAmmProgramIx::SetReservedFeeRecipients(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [86, 31, 192, 87, 163, 87, 79, 238] => {
+                let expected_accounts_len = 5;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SyncUserVolumeAccumulatorIxAccounts {
+                    user: next_account(accounts)?,
+                    global_volume_accumulator: next_account(accounts)?,
+                    user_volume_accumulator: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                Ok(PumpAmmProgramIx::SyncUserVolumeAccumulator(ix_accounts))
+            },
+            [1, 9, 111, 208, 100, 31, 255, 163] => {
+                let expected_accounts_len = 4;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = ToggleMayhemModeIxAccounts {
+                    admin: next_account(accounts)?,
+                    global_config: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: ToggleMayhemModeIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(PumpAmmProgramIx::ToggleMayhemMode(ix_accounts, de_ix_data))
             },
             [161, 176, 40, 213, 60, 184, 179, 228] => {
                 let expected_accounts_len = 5;
@@ -424,10 +618,62 @@ pub fn next_program_id_optional_account<
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
+    use super::{InstructionParser, PumpAmmProgramIx};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{BuyIxAccounts, InstructionParser, PumpAmmProgramIx};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
+    use super::AdminSetCoinCreatorIxAccounts;
+    impl IntoProto<proto_def::AdminSetCoinCreatorIxAccounts> for AdminSetCoinCreatorIxAccounts {
+        fn into_proto(self) -> proto_def::AdminSetCoinCreatorIxAccounts {
+            proto_def::AdminSetCoinCreatorIxAccounts {
+                admin_set_coin_creator_authority: self.admin_set_coin_creator_authority.to_string(),
+                global_config: self.global_config.to_string(),
+                pool: self.pool.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::AdminSetCoinCreatorIxData;
+    impl IntoProto<proto_def::AdminSetCoinCreatorIxData> for AdminSetCoinCreatorIxData {
+        fn into_proto(self) -> proto_def::AdminSetCoinCreatorIxData {
+            proto_def::AdminSetCoinCreatorIxData {
+                coin_creator: self.coin_creator.to_string(),
+            }
+        }
+    }
+    use super::AdminUpdateTokenIncentivesIxAccounts;
+    impl IntoProto<proto_def::AdminUpdateTokenIncentivesIxAccounts>
+        for AdminUpdateTokenIncentivesIxAccounts
+    {
+        fn into_proto(self) -> proto_def::AdminUpdateTokenIncentivesIxAccounts {
+            proto_def::AdminUpdateTokenIncentivesIxAccounts {
+                admin: self.admin.to_string(),
+                global_config: self.global_config.to_string(),
+                global_volume_accumulator: self.global_volume_accumulator.to_string(),
+                mint: self.mint.to_string(),
+                global_incentive_token_account: self.global_incentive_token_account.to_string(),
+                associated_token_program: self.associated_token_program.to_string(),
+                system_program: self.system_program.to_string(),
+                token_program: self.token_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::AdminUpdateTokenIncentivesIxData;
+    impl IntoProto<proto_def::AdminUpdateTokenIncentivesIxData> for AdminUpdateTokenIncentivesIxData {
+        fn into_proto(self) -> proto_def::AdminUpdateTokenIncentivesIxData {
+            proto_def::AdminUpdateTokenIncentivesIxData {
+                start_time: self.start_time,
+                end_time: self.end_time,
+                seconds_in_a_day: self.seconds_in_a_day,
+                day_number: self.day_number,
+                token_supply_per_day: self.token_supply_per_day,
+            }
+        }
+    }
+    use super::BuyIxAccounts;
     impl IntoProto<proto_def::BuyIxAccounts> for BuyIxAccounts {
         fn into_proto(self) -> proto_def::BuyIxAccounts {
             proto_def::BuyIxAccounts {
@@ -452,6 +698,10 @@ mod proto_parser {
                 program: self.program.to_string(),
                 coin_creator_vault_ata: self.coin_creator_vault_ata.to_string(),
                 coin_creator_vault_authority: self.coin_creator_vault_authority.to_string(),
+                global_volume_accumulator: self.global_volume_accumulator.to_string(),
+                user_volume_accumulator: self.user_volume_accumulator.to_string(),
+                fee_config: self.fee_config.to_string(),
+                fee_program: self.fee_program.to_string(),
             }
         }
     }
@@ -461,6 +711,79 @@ mod proto_parser {
             proto_def::BuyIxData {
                 base_amount_out: self.base_amount_out,
                 max_quote_amount_in: self.max_quote_amount_in,
+            }
+        }
+    }
+    use super::BuyExactQuoteInIxAccounts;
+    impl IntoProto<proto_def::BuyExactQuoteInIxAccounts> for BuyExactQuoteInIxAccounts {
+        fn into_proto(self) -> proto_def::BuyExactQuoteInIxAccounts {
+            proto_def::BuyExactQuoteInIxAccounts {
+                pool: self.pool.to_string(),
+                user: self.user.to_string(),
+                global_config: self.global_config.to_string(),
+                base_mint: self.base_mint.to_string(),
+                quote_mint: self.quote_mint.to_string(),
+                user_base_token_account: self.user_base_token_account.to_string(),
+                user_quote_token_account: self.user_quote_token_account.to_string(),
+                pool_base_token_account: self.pool_base_token_account.to_string(),
+                pool_quote_token_account: self.pool_quote_token_account.to_string(),
+                protocol_fee_recipient: self.protocol_fee_recipient.to_string(),
+                protocol_fee_recipient_token_account: self
+                    .protocol_fee_recipient_token_account
+                    .to_string(),
+                base_token_program: self.base_token_program.to_string(),
+                quote_token_program: self.quote_token_program.to_string(),
+                system_program: self.system_program.to_string(),
+                associated_token_program: self.associated_token_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+                coin_creator_vault_ata: self.coin_creator_vault_ata.to_string(),
+                coin_creator_vault_authority: self.coin_creator_vault_authority.to_string(),
+                global_volume_accumulator: self.global_volume_accumulator.to_string(),
+                user_volume_accumulator: self.user_volume_accumulator.to_string(),
+                fee_config: self.fee_config.to_string(),
+                fee_program: self.fee_program.to_string(),
+            }
+        }
+    }
+    use super::BuyExactQuoteInIxData;
+    impl IntoProto<proto_def::BuyExactQuoteInIxData> for BuyExactQuoteInIxData {
+        fn into_proto(self) -> proto_def::BuyExactQuoteInIxData {
+            proto_def::BuyExactQuoteInIxData {
+                spendable_quote_in: self.spendable_quote_in,
+                min_base_amount_out: self.min_base_amount_out,
+            }
+        }
+    }
+    use super::ClaimTokenIncentivesIxAccounts;
+    impl IntoProto<proto_def::ClaimTokenIncentivesIxAccounts> for ClaimTokenIncentivesIxAccounts {
+        fn into_proto(self) -> proto_def::ClaimTokenIncentivesIxAccounts {
+            proto_def::ClaimTokenIncentivesIxAccounts {
+                user: self.user.to_string(),
+                user_ata: self.user_ata.to_string(),
+                global_volume_accumulator: self.global_volume_accumulator.to_string(),
+                global_incentive_token_account: self.global_incentive_token_account.to_string(),
+                user_volume_accumulator: self.user_volume_accumulator.to_string(),
+                mint: self.mint.to_string(),
+                token_program: self.token_program.to_string(),
+                system_program: self.system_program.to_string(),
+                associated_token_program: self.associated_token_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+                payer: self.payer.to_string(),
+            }
+        }
+    }
+    use super::CloseUserVolumeAccumulatorIxAccounts;
+    impl IntoProto<proto_def::CloseUserVolumeAccumulatorIxAccounts>
+        for CloseUserVolumeAccumulatorIxAccounts
+    {
+        fn into_proto(self) -> proto_def::CloseUserVolumeAccumulatorIxAccounts {
+            proto_def::CloseUserVolumeAccumulatorIxAccounts {
+                user: self.user.to_string(),
+                user_volume_accumulator: self.user_volume_accumulator.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
             }
         }
     }
@@ -503,6 +826,7 @@ mod proto_parser {
                     .map(|x| x.to_string())
                     .collect(),
                 coin_creator_fee_basis_points: self.coin_creator_fee_basis_points,
+                admin_set_coin_creator_authority: self.admin_set_coin_creator_authority.to_string(),
             }
         }
     }
@@ -539,6 +863,7 @@ mod proto_parser {
                 base_amount_in: self.base_amount_in,
                 quote_amount_in: self.quote_amount_in,
                 coin_creator: self.coin_creator.to_string(),
+                is_mayhem_mode: self.is_mayhem_mode,
             }
         }
     }
@@ -609,6 +934,21 @@ mod proto_parser {
             }
         }
     }
+    use super::InitUserVolumeAccumulatorIxAccounts;
+    impl IntoProto<proto_def::InitUserVolumeAccumulatorIxAccounts>
+        for InitUserVolumeAccumulatorIxAccounts
+    {
+        fn into_proto(self) -> proto_def::InitUserVolumeAccumulatorIxAccounts {
+            proto_def::InitUserVolumeAccumulatorIxAccounts {
+                payer: self.payer.to_string(),
+                user: self.user.to_string(),
+                user_volume_accumulator: self.user_volume_accumulator.to_string(),
+                system_program: self.system_program.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
     use super::SellIxAccounts;
     impl IntoProto<proto_def::SellIxAccounts> for SellIxAccounts {
         fn into_proto(self) -> proto_def::SellIxAccounts {
@@ -634,6 +974,8 @@ mod proto_parser {
                 program: self.program.to_string(),
                 coin_creator_vault_ata: self.coin_creator_vault_ata.to_string(),
                 coin_creator_vault_authority: self.coin_creator_vault_authority.to_string(),
+                fee_config: self.fee_config.to_string(),
+                fee_program: self.fee_program.to_string(),
             }
         }
     }
@@ -655,6 +997,60 @@ mod proto_parser {
                 bonding_curve: self.bonding_curve.to_string(),
                 event_authority: self.event_authority.to_string(),
                 program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SetReservedFeeRecipientsIxAccounts;
+    impl IntoProto<proto_def::SetReservedFeeRecipientsIxAccounts>
+        for SetReservedFeeRecipientsIxAccounts
+    {
+        fn into_proto(self) -> proto_def::SetReservedFeeRecipientsIxAccounts {
+            proto_def::SetReservedFeeRecipientsIxAccounts {
+                global_config: self.global_config.to_string(),
+                admin: self.admin.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SetReservedFeeRecipientsIxData;
+    impl IntoProto<proto_def::SetReservedFeeRecipientsIxData> for SetReservedFeeRecipientsIxData {
+        fn into_proto(self) -> proto_def::SetReservedFeeRecipientsIxData {
+            proto_def::SetReservedFeeRecipientsIxData {
+                whitelist_pda: self.whitelist_pda.to_string(),
+            }
+        }
+    }
+    use super::SyncUserVolumeAccumulatorIxAccounts;
+    impl IntoProto<proto_def::SyncUserVolumeAccumulatorIxAccounts>
+        for SyncUserVolumeAccumulatorIxAccounts
+    {
+        fn into_proto(self) -> proto_def::SyncUserVolumeAccumulatorIxAccounts {
+            proto_def::SyncUserVolumeAccumulatorIxAccounts {
+                user: self.user.to_string(),
+                global_volume_accumulator: self.global_volume_accumulator.to_string(),
+                user_volume_accumulator: self.user_volume_accumulator.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::ToggleMayhemModeIxAccounts;
+    impl IntoProto<proto_def::ToggleMayhemModeIxAccounts> for ToggleMayhemModeIxAccounts {
+        fn into_proto(self) -> proto_def::ToggleMayhemModeIxAccounts {
+            proto_def::ToggleMayhemModeIxAccounts {
+                admin: self.admin.to_string(),
+                global_config: self.global_config.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::ToggleMayhemModeIxData;
+    impl IntoProto<proto_def::ToggleMayhemModeIxData> for ToggleMayhemModeIxData {
+        fn into_proto(self) -> proto_def::ToggleMayhemModeIxData {
+            proto_def::ToggleMayhemModeIxData {
+                enabled: self.enabled,
             }
         }
     }
@@ -693,6 +1089,7 @@ mod proto_parser {
                     .map(|x| x.to_string())
                     .collect(),
                 coin_creator_fee_basis_points: self.coin_creator_fee_basis_points,
+                admin_set_coin_creator_authority: self.admin_set_coin_creator_authority.to_string(),
             }
         }
     }
@@ -732,11 +1129,49 @@ mod proto_parser {
     impl IntoProto<proto_def::ProgramIxs> for PumpAmmProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
+                PumpAmmProgramIx::AdminSetCoinCreator(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AdminSetCoinCreator(
+                        proto_def::AdminSetCoinCreatorIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                PumpAmmProgramIx::AdminUpdateTokenIncentives(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::AdminUpdateTokenIncentives(
+                        proto_def::AdminUpdateTokenIncentivesIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
                 PumpAmmProgramIx::Buy(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Buy(proto_def::BuyIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
                     })),
+                },
+                PumpAmmProgramIx::BuyExactQuoteIn(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::BuyExactQuoteIn(
+                        proto_def::BuyExactQuoteInIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                PumpAmmProgramIx::ClaimTokenIncentives(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ClaimTokenIncentives(
+                        proto_def::ClaimTokenIncentivesIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                PumpAmmProgramIx::CloseUserVolumeAccumulator(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CloseUserVolumeAccumulator(
+                        proto_def::CloseUserVolumeAccumulatorIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
                 },
                 PumpAmmProgramIx::CollectCoinCreatorFee(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::CollectCoinCreatorFee(
@@ -784,6 +1219,13 @@ mod proto_parser {
                         },
                     )),
                 },
+                PumpAmmProgramIx::InitUserVolumeAccumulator(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::InitUserVolumeAccumulator(
+                        proto_def::InitUserVolumeAccumulatorIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
                 PumpAmmProgramIx::Sell(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Sell(proto_def::SellIx {
                         accounts: Some(acc.into_proto()),
@@ -794,6 +1236,29 @@ mod proto_parser {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SetCoinCreator(
                         proto_def::SetCoinCreatorIx {
                             accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                PumpAmmProgramIx::SetReservedFeeRecipients(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SetReservedFeeRecipients(
+                        proto_def::SetReservedFeeRecipientsIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                PumpAmmProgramIx::SyncUserVolumeAccumulator(acc) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SyncUserVolumeAccumulator(
+                        proto_def::SyncUserVolumeAccumulatorIx {
+                            accounts: Some(acc.into_proto()),
+                        },
+                    )),
+                },
+                PumpAmmProgramIx::ToggleMayhemMode(acc, data) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::ToggleMayhemMode(
+                        proto_def::ToggleMayhemModeIx {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
                         },
                     )),
                 },

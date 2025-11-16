@@ -7,7 +7,6 @@ license.workspace = true
 repository.workspace = true
 authors.workspace = true
 
-
 [dependencies]
 prost.workspace = true
 yellowstone-vixen-core = { workspace = true, features = ["proto"] }

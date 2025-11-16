@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const BUY_DISCRIMINATOR: [u8; 8] = [102, 6, 61, 18, 1, 218, 235, 234];
 
 /// Accounts.
 #[derive(Debug)]
@@ -33,13 +36,20 @@ pub struct Buy {
     pub event_authority: solana_pubkey::Pubkey,
 
     pub program: solana_pubkey::Pubkey,
+
+    pub global_volume_accumulator: solana_pubkey::Pubkey,
+
+    pub user_volume_accumulator: solana_pubkey::Pubkey,
+
+    pub fee_config: solana_pubkey::Pubkey,
+
+    pub fee_program: solana_pubkey::Pubkey,
 }
 
 impl Buy {
     pub fn instruction(&self, args: BuyInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -47,7 +57,7 @@ impl Buy {
         args: BuyInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.global,
             false,
@@ -92,9 +102,25 @@ impl Buy {
             self.program,
             false,
         ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.global_volume_accumulator,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.user_volume_accumulator,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.fee_config,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.fee_program,
+            false,
+        ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&BuyInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = BuyInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -117,10 +143,16 @@ impl BuyInstructionData {
             discriminator: [102, 6, 61, 18, 1, 218, 235, 234],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for BuyInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -128,6 +160,12 @@ impl Default for BuyInstructionData {
 pub struct BuyInstructionArgs {
     pub amount: u64,
     pub max_sol_cost: u64,
+}
+
+impl BuyInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 /// Instruction builder for `Buy`.
@@ -145,7 +183,11 @@ pub struct BuyInstructionArgs {
 ///   8. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
 ///   9. `[writable]` creator_vault
 ///   10. `[]` event_authority
-///   11. `[]` program
+///   11. `[optional]` program (default to `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`)
+///   12. `[]` global_volume_accumulator
+///   13. `[writable]` user_volume_accumulator
+///   14. `[]` fee_config
+///   15. `[optional]` fee_program (default to `pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ`)
 #[derive(Clone, Debug, Default)]
 pub struct BuyBuilder {
     global: Option<solana_pubkey::Pubkey>,
@@ -160,38 +202,39 @@ pub struct BuyBuilder {
     creator_vault: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
+    global_volume_accumulator: Option<solana_pubkey::Pubkey>,
+    user_volume_accumulator: Option<solana_pubkey::Pubkey>,
+    fee_config: Option<solana_pubkey::Pubkey>,
+    fee_program: Option<solana_pubkey::Pubkey>,
     amount: Option<u64>,
     max_sol_cost: Option<u64>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl BuyBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
     pub fn global(&mut self, global: solana_pubkey::Pubkey) -> &mut Self {
         self.global = Some(global);
         self
     }
-
     #[inline(always)]
     pub fn fee_recipient(&mut self, fee_recipient: solana_pubkey::Pubkey) -> &mut Self {
         self.fee_recipient = Some(fee_recipient);
         self
     }
-
     #[inline(always)]
     pub fn mint(&mut self, mint: solana_pubkey::Pubkey) -> &mut Self {
         self.mint = Some(mint);
         self
     }
-
     #[inline(always)]
     pub fn bonding_curve(&mut self, bonding_curve: solana_pubkey::Pubkey) -> &mut Self {
         self.bonding_curve = Some(bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn associated_bonding_curve(
         &mut self,
@@ -200,70 +243,87 @@ impl BuyBuilder {
         self.associated_bonding_curve = Some(associated_bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn associated_user(&mut self, associated_user: solana_pubkey::Pubkey) -> &mut Self {
         self.associated_user = Some(associated_user);
         self
     }
-
     #[inline(always)]
     pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
-
     #[inline(always)]
     pub fn creator_vault(&mut self, creator_vault: solana_pubkey::Pubkey) -> &mut Self {
         self.creator_vault = Some(creator_vault);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
+    /// `[optional account, default to '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P']`
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
+    #[inline(always)]
+    pub fn global_volume_accumulator(
+        &mut self,
+        global_volume_accumulator: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.global_volume_accumulator = Some(global_volume_accumulator);
+        self
+    }
+    #[inline(always)]
+    pub fn user_volume_accumulator(
+        &mut self,
+        user_volume_accumulator: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.user_volume_accumulator = Some(user_volume_accumulator);
+        self
+    }
+    #[inline(always)]
+    pub fn fee_config(&mut self, fee_config: solana_pubkey::Pubkey) -> &mut Self {
+        self.fee_config = Some(fee_config);
+        self
+    }
+    /// `[optional account, default to 'pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ']`
+    #[inline(always)]
+    pub fn fee_program(&mut self, fee_program: solana_pubkey::Pubkey) -> &mut Self {
+        self.fee_program = Some(fee_program);
+        self
+    }
     #[inline(always)]
     pub fn amount(&mut self, amount: u64) -> &mut Self {
         self.amount = Some(amount);
         self
     }
-
     #[inline(always)]
     pub fn max_sol_cost(&mut self, max_sol_cost: u64) -> &mut Self {
         self.max_sol_cost = Some(max_sol_cost);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -273,7 +333,6 @@ impl BuyBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = Buy {
@@ -294,7 +353,19 @@ impl BuyBuilder {
             )),
             creator_vault: self.creator_vault.expect("creator_vault is not set"),
             event_authority: self.event_authority.expect("event_authority is not set"),
-            program: self.program.expect("program is not set"),
+            program: self.program.unwrap_or(solana_pubkey::pubkey!(
+                "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
+            )),
+            global_volume_accumulator: self
+                .global_volume_accumulator
+                .expect("global_volume_accumulator is not set"),
+            user_volume_accumulator: self
+                .user_volume_accumulator
+                .expect("user_volume_accumulator is not set"),
+            fee_config: self.fee_config.expect("fee_config is not set"),
+            fee_program: self.fee_program.unwrap_or(solana_pubkey::pubkey!(
+                "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ"
+            )),
         };
         let args = BuyInstructionArgs {
             amount: self.amount.clone().expect("amount is not set"),
@@ -330,6 +401,14 @@ pub struct BuyCpiAccounts<'a, 'b> {
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
+
+    pub global_volume_accumulator: &'b solana_account_info::AccountInfo<'a>,
+
+    pub user_volume_accumulator: &'b solana_account_info::AccountInfo<'a>,
+
+    pub fee_config: &'b solana_account_info::AccountInfo<'a>,
+
+    pub fee_program: &'b solana_account_info::AccountInfo<'a>,
 }
 
 /// `buy` CPI instruction.
@@ -360,6 +439,14 @@ pub struct BuyCpi<'a, 'b> {
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
+
+    pub global_volume_accumulator: &'b solana_account_info::AccountInfo<'a>,
+
+    pub user_volume_accumulator: &'b solana_account_info::AccountInfo<'a>,
+
+    pub fee_config: &'b solana_account_info::AccountInfo<'a>,
+
+    pub fee_program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
     pub __args: BuyInstructionArgs,
 }
@@ -384,31 +471,28 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
             creator_vault: accounts.creator_vault,
             event_authority: accounts.event_authority,
             program: accounts.program,
+            global_volume_accumulator: accounts.global_volume_accumulator,
+            user_volume_accumulator: accounts.user_volume_accumulator,
+            fee_config: accounts.fee_config,
+            fee_program: accounts.fee_program,
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -416,8 +500,8 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
+    ) -> solana_program_error::ProgramResult {
+        let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.global.key,
             false,
@@ -463,6 +547,22 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
             *self.program.key,
             false,
         ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.global_volume_accumulator.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.user_volume_accumulator.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.fee_config.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.fee_program.key,
+            false,
+        ));
         remaining_accounts.iter().for_each(|remaining_account| {
             accounts.push(solana_instruction::AccountMeta {
                 pubkey: *remaining_account.0.key,
@@ -470,8 +570,8 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&BuyInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = BuyInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -479,7 +579,7 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(13 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(17 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.global.clone());
         account_infos.push(self.fee_recipient.clone());
@@ -493,6 +593,10 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
         account_infos.push(self.creator_vault.clone());
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
+        account_infos.push(self.global_volume_accumulator.clone());
+        account_infos.push(self.user_volume_accumulator.clone());
+        account_infos.push(self.fee_config.clone());
+        account_infos.push(self.fee_program.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -521,6 +625,10 @@ impl<'a, 'b> BuyCpi<'a, 'b> {
 ///   9. `[writable]` creator_vault
 ///   10. `[]` event_authority
 ///   11. `[]` program
+///   12. `[]` global_volume_accumulator
+///   13. `[writable]` user_volume_accumulator
+///   14. `[]` fee_config
+///   15. `[]` fee_program
 #[derive(Clone, Debug)]
 pub struct BuyCpiBuilder<'a, 'b> {
     instruction: Box<BuyCpiBuilderInstruction<'a, 'b>>,
@@ -542,19 +650,21 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
             creator_vault: None,
             event_authority: None,
             program: None,
+            global_volume_accumulator: None,
+            user_volume_accumulator: None,
+            fee_config: None,
+            fee_program: None,
             amount: None,
             max_sol_cost: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn global(&mut self, global: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.global = Some(global);
         self
     }
-
     #[inline(always)]
     pub fn fee_recipient(
         &mut self,
@@ -563,13 +673,11 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
         self.instruction.fee_recipient = Some(fee_recipient);
         self
     }
-
     #[inline(always)]
     pub fn mint(&mut self, mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.mint = Some(mint);
         self
     }
-
     #[inline(always)]
     pub fn bonding_curve(
         &mut self,
@@ -578,7 +686,6 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve = Some(bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn associated_bonding_curve(
         &mut self,
@@ -587,7 +694,6 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
         self.instruction.associated_bonding_curve = Some(associated_bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn associated_user(
         &mut self,
@@ -596,13 +702,11 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
         self.instruction.associated_user = Some(associated_user);
         self
     }
-
     #[inline(always)]
     pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -611,7 +715,6 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -620,7 +723,6 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
-
     #[inline(always)]
     pub fn creator_vault(
         &mut self,
@@ -629,7 +731,6 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
         self.instruction.creator_vault = Some(creator_vault);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -638,25 +739,53 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
+    #[inline(always)]
+    pub fn global_volume_accumulator(
+        &mut self,
+        global_volume_accumulator: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.global_volume_accumulator = Some(global_volume_accumulator);
+        self
+    }
+    #[inline(always)]
+    pub fn user_volume_accumulator(
+        &mut self,
+        user_volume_accumulator: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.user_volume_accumulator = Some(user_volume_accumulator);
+        self
+    }
+    #[inline(always)]
+    pub fn fee_config(
+        &mut self,
+        fee_config: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.fee_config = Some(fee_config);
+        self
+    }
+    #[inline(always)]
+    pub fn fee_program(
+        &mut self,
+        fee_program: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.fee_program = Some(fee_program);
+        self
+    }
     #[inline(always)]
     pub fn amount(&mut self, amount: u64) -> &mut Self {
         self.instruction.amount = Some(amount);
         self
     }
-
     #[inline(always)]
     pub fn max_sol_cost(&mut self, max_sol_cost: u64) -> &mut Self {
         self.instruction.max_sol_cost = Some(max_sol_cost);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -670,7 +799,6 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -685,16 +813,13 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = BuyInstructionArgs {
             amount: self.instruction.amount.clone().expect("amount is not set"),
             max_sol_cost: self
@@ -753,6 +878,23 @@ impl<'a, 'b> BuyCpiBuilder<'a, 'b> {
                 .expect("event_authority is not set"),
 
             program: self.instruction.program.expect("program is not set"),
+
+            global_volume_accumulator: self
+                .instruction
+                .global_volume_accumulator
+                .expect("global_volume_accumulator is not set"),
+
+            user_volume_accumulator: self
+                .instruction
+                .user_volume_accumulator
+                .expect("user_volume_accumulator is not set"),
+
+            fee_config: self.instruction.fee_config.expect("fee_config is not set"),
+
+            fee_program: self
+                .instruction
+                .fee_program
+                .expect("fee_program is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -777,6 +919,10 @@ struct BuyCpiBuilderInstruction<'a, 'b> {
     creator_vault: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    global_volume_accumulator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    user_volume_accumulator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    fee_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    fee_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     amount: Option<u64>,
     max_sol_cost: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.

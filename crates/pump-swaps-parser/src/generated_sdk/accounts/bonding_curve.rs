@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -23,10 +24,13 @@ pub struct BondingCurve {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub creator: Pubkey,
+    pub is_mayhem_mode: bool,
 }
 
+pub const BONDING_CURVE_DISCRIMINATOR: [u8; 8] = [23, 183, 248, 55, 96, 216, 172, 96];
+
 impl BondingCurve {
-    pub const LEN: usize = 81;
+    pub const LEN: usize = 82;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -126,7 +130,9 @@ impl anchor_lang::AccountSerialize for BondingCurve {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for BondingCurve {
-    fn owner() -> Pubkey { crate::PUMP_AMM_ID }
+    fn owner() -> Pubkey {
+        crate::PUMP_AMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -134,5 +140,5 @@ impl anchor_lang::IdlBuild for BondingCurve {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for BondingCurve {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

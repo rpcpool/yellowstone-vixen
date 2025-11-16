@@ -1,0 +1,23 @@
+{
+  "name": "pumpfun-parser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.0",
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@codama/nodes-from-anchor": "^1.2.9",
+    "@codama/renderers-js": "^1.4.3",
+    "@codama/renderers-rust": "^1.2.7"
+  }
+}

@@ -5,7 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+
+pub const MIGRATE_DISCRIMINATOR: [u8; 8] = [155, 234, 231, 146, 236, 158, 162, 30];
 
 /// Accounts.
 #[derive(Debug)]
@@ -63,7 +66,6 @@ impl Migrate {
     pub fn instruction(&self) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(&[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -160,7 +162,7 @@ impl Migrate {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = borsh::to_vec(&MigrateInstructionData::new()).unwrap();
+        let data = MigrateInstructionData::new().try_to_vec().unwrap();
 
         solana_instruction::Instruction {
             program_id: crate::PUMP_ID,
@@ -182,10 +184,16 @@ impl MigrateInstructionData {
             discriminator: [155, 234, 231, 146, 236, 158, 162, 30],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for MigrateInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Instruction builder for `Migrate`.
@@ -246,32 +254,29 @@ pub struct MigrateBuilder {
 }
 
 impl MigrateBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
     pub fn global(&mut self, global: solana_pubkey::Pubkey) -> &mut Self {
         self.global = Some(global);
         self
     }
-
     #[inline(always)]
     pub fn withdraw_authority(&mut self, withdraw_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.withdraw_authority = Some(withdraw_authority);
         self
     }
-
     #[inline(always)]
     pub fn mint(&mut self, mint: solana_pubkey::Pubkey) -> &mut Self {
         self.mint = Some(mint);
         self
     }
-
     #[inline(always)]
     pub fn bonding_curve(&mut self, bonding_curve: solana_pubkey::Pubkey) -> &mut Self {
         self.bonding_curve = Some(bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn associated_bonding_curve(
         &mut self,
@@ -280,46 +285,39 @@ impl MigrateBuilder {
         self.associated_bonding_curve = Some(associated_bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
-
     /// `[optional account, default to 'pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA']`
     #[inline(always)]
     pub fn pump_amm(&mut self, pump_amm: solana_pubkey::Pubkey) -> &mut Self {
         self.pump_amm = Some(pump_amm);
         self
     }
-
     #[inline(always)]
     pub fn pool(&mut self, pool: solana_pubkey::Pubkey) -> &mut Self {
         self.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn pool_authority(&mut self, pool_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn pool_authority_mint_account(
         &mut self,
@@ -328,7 +326,6 @@ impl MigrateBuilder {
         self.pool_authority_mint_account = Some(pool_authority_mint_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_authority_wsol_account(
         &mut self,
@@ -337,26 +334,22 @@ impl MigrateBuilder {
         self.pool_authority_wsol_account = Some(pool_authority_wsol_account);
         self
     }
-
     #[inline(always)]
     pub fn amm_global_config(&mut self, amm_global_config: solana_pubkey::Pubkey) -> &mut Self {
         self.amm_global_config = Some(amm_global_config);
         self
     }
-
     /// `[optional account, default to 'So11111111111111111111111111111111111111112']`
     #[inline(always)]
     pub fn wsol_mint(&mut self, wsol_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.wsol_mint = Some(wsol_mint);
         self
     }
-
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: solana_pubkey::Pubkey) -> &mut Self {
         self.lp_mint = Some(lp_mint);
         self
     }
-
     #[inline(always)]
     pub fn user_pool_token_account(
         &mut self,
@@ -365,7 +358,6 @@ impl MigrateBuilder {
         self.user_pool_token_account = Some(user_pool_token_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_base_token_account(
         &mut self,
@@ -374,7 +366,6 @@ impl MigrateBuilder {
         self.pool_base_token_account = Some(pool_base_token_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_quote_token_account(
         &mut self,
@@ -383,14 +374,12 @@ impl MigrateBuilder {
         self.pool_quote_token_account = Some(pool_quote_token_account);
         self
     }
-
     /// `[optional account, default to 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']`
     #[inline(always)]
     pub fn token2022_program(&mut self, token2022_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token2022_program = Some(token2022_program);
         self
     }
-
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     #[inline(always)]
     pub fn associated_token_program(
@@ -400,7 +389,6 @@ impl MigrateBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
-
     #[inline(always)]
     pub fn pump_amm_event_authority(
         &mut self,
@@ -409,26 +397,22 @@ impl MigrateBuilder {
         self.pump_amm_event_authority = Some(pump_amm_event_authority);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -438,7 +422,6 @@ impl MigrateBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = Migrate {
@@ -640,28 +623,21 @@ impl<'a, 'b> MigrateCpi<'a, 'b> {
             program: accounts.program,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -669,7 +645,7 @@ impl<'a, 'b> MigrateCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(24 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.global.key,
@@ -771,7 +747,7 @@ impl<'a, 'b> MigrateCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = borsh::to_vec(&MigrateInstructionData::new()).unwrap();
+        let data = MigrateInstructionData::new().try_to_vec().unwrap();
 
         let instruction = solana_instruction::Instruction {
             program_id: crate::PUMP_ID,
@@ -881,13 +857,11 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn global(&mut self, global: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.global = Some(global);
         self
     }
-
     #[inline(always)]
     pub fn withdraw_authority(
         &mut self,
@@ -896,13 +870,11 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.withdraw_authority = Some(withdraw_authority);
         self
     }
-
     #[inline(always)]
     pub fn mint(&mut self, mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.mint = Some(mint);
         self
     }
-
     #[inline(always)]
     pub fn bonding_curve(
         &mut self,
@@ -911,7 +883,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve = Some(bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn associated_bonding_curve(
         &mut self,
@@ -920,13 +891,11 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.associated_bonding_curve = Some(associated_bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -935,7 +904,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -944,19 +912,16 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
-
     #[inline(always)]
     pub fn pump_amm(&mut self, pump_amm: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pump_amm = Some(pump_amm);
         self
     }
-
     #[inline(always)]
     pub fn pool(&mut self, pool: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.pool = Some(pool);
         self
     }
-
     #[inline(always)]
     pub fn pool_authority(
         &mut self,
@@ -965,7 +930,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.pool_authority = Some(pool_authority);
         self
     }
-
     #[inline(always)]
     pub fn pool_authority_mint_account(
         &mut self,
@@ -974,7 +938,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.pool_authority_mint_account = Some(pool_authority_mint_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_authority_wsol_account(
         &mut self,
@@ -983,7 +946,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.pool_authority_wsol_account = Some(pool_authority_wsol_account);
         self
     }
-
     #[inline(always)]
     pub fn amm_global_config(
         &mut self,
@@ -992,19 +954,16 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.amm_global_config = Some(amm_global_config);
         self
     }
-
     #[inline(always)]
     pub fn wsol_mint(&mut self, wsol_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.wsol_mint = Some(wsol_mint);
         self
     }
-
     #[inline(always)]
     pub fn lp_mint(&mut self, lp_mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.lp_mint = Some(lp_mint);
         self
     }
-
     #[inline(always)]
     pub fn user_pool_token_account(
         &mut self,
@@ -1013,7 +972,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.user_pool_token_account = Some(user_pool_token_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_base_token_account(
         &mut self,
@@ -1022,7 +980,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.pool_base_token_account = Some(pool_base_token_account);
         self
     }
-
     #[inline(always)]
     pub fn pool_quote_token_account(
         &mut self,
@@ -1031,7 +988,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.pool_quote_token_account = Some(pool_quote_token_account);
         self
     }
-
     #[inline(always)]
     pub fn token2022_program(
         &mut self,
@@ -1040,7 +996,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.token2022_program = Some(token2022_program);
         self
     }
-
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -1049,7 +1004,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
-
     #[inline(always)]
     pub fn pump_amm_event_authority(
         &mut self,
@@ -1058,7 +1012,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.pump_amm_event_authority = Some(pump_amm_event_authority);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -1067,13 +1020,11 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -1087,7 +1038,6 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -1102,16 +1052,13 @@ impl<'a, 'b> MigrateCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let instruction = MigrateCpi {
             __program: self.instruction.__program,
 

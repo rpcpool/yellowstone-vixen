@@ -5,20 +5,44 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+pub(crate) mod r#admin_set_creator_event;
+pub(crate) mod r#admin_set_idl_authority_event;
+pub(crate) mod r#admin_update_token_incentives_event;
+pub(crate) mod r#claim_token_incentives_event;
+pub(crate) mod r#close_user_volume_accumulator_event;
 pub(crate) mod r#collect_creator_fee_event;
 pub(crate) mod r#complete_event;
 pub(crate) mod r#complete_pump_amm_migration_event;
 pub(crate) mod r#create_event;
 pub(crate) mod r#extend_account_event;
+pub(crate) mod r#fee_tier;
+pub(crate) mod r#fees;
+pub(crate) mod r#init_user_volume_accumulator_event;
+pub(crate) mod r#reserved_fee_recipients_event;
 pub(crate) mod r#set_creator_event;
 pub(crate) mod r#set_metaplex_creator_event;
 pub(crate) mod r#set_params_event;
+pub(crate) mod r#sync_user_volume_accumulator_event;
 pub(crate) mod r#trade_event;
 pub(crate) mod r#update_global_authority_event;
 
-pub use self::{
-    r#collect_creator_fee_event::*, r#complete_event::*, r#complete_pump_amm_migration_event::*,
-    r#create_event::*, r#extend_account_event::*, r#set_creator_event::*,
-    r#set_metaplex_creator_event::*, r#set_params_event::*, r#trade_event::*,
-    r#update_global_authority_event::*,
-};
+pub use self::r#admin_set_creator_event::*;
+pub use self::r#admin_set_idl_authority_event::*;
+pub use self::r#admin_update_token_incentives_event::*;
+pub use self::r#claim_token_incentives_event::*;
+pub use self::r#close_user_volume_accumulator_event::*;
+pub use self::r#collect_creator_fee_event::*;
+pub use self::r#complete_event::*;
+pub use self::r#complete_pump_amm_migration_event::*;
+pub use self::r#create_event::*;
+pub use self::r#extend_account_event::*;
+pub use self::r#fee_tier::*;
+pub use self::r#fees::*;
+pub use self::r#init_user_volume_accumulator_event::*;
+pub use self::r#reserved_fee_recipients_event::*;
+pub use self::r#set_creator_event::*;
+pub use self::r#set_metaplex_creator_event::*;
+pub use self::r#set_params_event::*;
+pub use self::r#sync_user_volume_accumulator_event::*;
+pub use self::r#trade_event::*;
+pub use self::r#update_global_authority_event::*;

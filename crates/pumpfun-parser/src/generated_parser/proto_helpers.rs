@@ -9,7 +9,70 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::{proto_def, types::CollectCreatorFeeEvent};
+    use crate::proto_def;
+
+    use crate::types::AdminSetCreatorEvent;
+    impl IntoProto<proto_def::AdminSetCreatorEvent> for AdminSetCreatorEvent {
+        fn into_proto(self) -> proto_def::AdminSetCreatorEvent {
+            proto_def::AdminSetCreatorEvent {
+                timestamp: self.timestamp,
+                admin_set_creator_authority: self.admin_set_creator_authority.to_string(),
+                mint: self.mint.to_string(),
+                bonding_curve: self.bonding_curve.to_string(),
+                old_creator: self.old_creator.to_string(),
+                new_creator: self.new_creator.to_string(),
+            }
+        }
+    }
+    use crate::types::AdminSetIdlAuthorityEvent;
+    impl IntoProto<proto_def::AdminSetIdlAuthorityEvent> for AdminSetIdlAuthorityEvent {
+        fn into_proto(self) -> proto_def::AdminSetIdlAuthorityEvent {
+            proto_def::AdminSetIdlAuthorityEvent {
+                idl_authority: self.idl_authority.to_string(),
+            }
+        }
+    }
+    use crate::types::AdminUpdateTokenIncentivesEvent;
+    impl IntoProto<proto_def::AdminUpdateTokenIncentivesEvent> for AdminUpdateTokenIncentivesEvent {
+        fn into_proto(self) -> proto_def::AdminUpdateTokenIncentivesEvent {
+            proto_def::AdminUpdateTokenIncentivesEvent {
+                start_time: self.start_time,
+                end_time: self.end_time,
+                day_number: self.day_number,
+                token_supply_per_day: self.token_supply_per_day,
+                mint: self.mint.to_string(),
+                seconds_in_a_day: self.seconds_in_a_day,
+                timestamp: self.timestamp,
+            }
+        }
+    }
+    use crate::types::ClaimTokenIncentivesEvent;
+    impl IntoProto<proto_def::ClaimTokenIncentivesEvent> for ClaimTokenIncentivesEvent {
+        fn into_proto(self) -> proto_def::ClaimTokenIncentivesEvent {
+            proto_def::ClaimTokenIncentivesEvent {
+                user: self.user.to_string(),
+                mint: self.mint.to_string(),
+                amount: self.amount,
+                timestamp: self.timestamp,
+                total_claimed_tokens: self.total_claimed_tokens,
+                current_sol_volume: self.current_sol_volume,
+            }
+        }
+    }
+    use crate::types::CloseUserVolumeAccumulatorEvent;
+    impl IntoProto<proto_def::CloseUserVolumeAccumulatorEvent> for CloseUserVolumeAccumulatorEvent {
+        fn into_proto(self) -> proto_def::CloseUserVolumeAccumulatorEvent {
+            proto_def::CloseUserVolumeAccumulatorEvent {
+                user: self.user.to_string(),
+                timestamp: self.timestamp,
+                total_unclaimed_tokens: self.total_unclaimed_tokens,
+                total_claimed_tokens: self.total_claimed_tokens,
+                current_sol_volume: self.current_sol_volume,
+                last_update_timestamp: self.last_update_timestamp,
+            }
+        }
+    }
+    use crate::types::CollectCreatorFeeEvent;
     impl IntoProto<proto_def::CollectCreatorFeeEvent> for CollectCreatorFeeEvent {
         fn into_proto(self) -> proto_def::CollectCreatorFeeEvent {
             proto_def::CollectCreatorFeeEvent {
@@ -61,6 +124,8 @@ pub mod proto_types_parsers {
                 virtual_sol_reserves: self.virtual_sol_reserves,
                 real_token_reserves: self.real_token_reserves,
                 token_total_supply: self.token_total_supply,
+                token_program: self.token_program.to_string(),
+                is_mayhem_mode: self.is_mayhem_mode,
             }
         }
     }
@@ -73,6 +138,49 @@ pub mod proto_types_parsers {
                 current_size: self.current_size,
                 new_size: self.new_size,
                 timestamp: self.timestamp,
+            }
+        }
+    }
+    use crate::types::FeeTier;
+    impl IntoProto<proto_def::FeeTier> for FeeTier {
+        fn into_proto(self) -> proto_def::FeeTier {
+            proto_def::FeeTier {
+                market_cap_lamports_threshold: self.market_cap_lamports_threshold.to_string(),
+                fees: Some(self.fees.into_proto()),
+            }
+        }
+    }
+    use crate::types::Fees;
+    impl IntoProto<proto_def::Fees> for Fees {
+        fn into_proto(self) -> proto_def::Fees {
+            proto_def::Fees {
+                lp_fee_bps: self.lp_fee_bps,
+                protocol_fee_bps: self.protocol_fee_bps,
+                creator_fee_bps: self.creator_fee_bps,
+            }
+        }
+    }
+    use crate::types::InitUserVolumeAccumulatorEvent;
+    impl IntoProto<proto_def::InitUserVolumeAccumulatorEvent> for InitUserVolumeAccumulatorEvent {
+        fn into_proto(self) -> proto_def::InitUserVolumeAccumulatorEvent {
+            proto_def::InitUserVolumeAccumulatorEvent {
+                payer: self.payer.to_string(),
+                user: self.user.to_string(),
+                timestamp: self.timestamp,
+            }
+        }
+    }
+    use crate::types::ReservedFeeRecipientsEvent;
+    impl IntoProto<proto_def::ReservedFeeRecipientsEvent> for ReservedFeeRecipientsEvent {
+        fn into_proto(self) -> proto_def::ReservedFeeRecipientsEvent {
+            proto_def::ReservedFeeRecipientsEvent {
+                timestamp: self.timestamp,
+                reserved_fee_recipient: self.reserved_fee_recipient.to_string(),
+                reserved_fee_recipients: self
+                    .reserved_fee_recipients
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
             }
         }
     }
@@ -120,6 +228,18 @@ pub mod proto_types_parsers {
                     .collect(),
                 timestamp: self.timestamp,
                 set_creator_authority: self.set_creator_authority.to_string(),
+                admin_set_creator_authority: self.admin_set_creator_authority.to_string(),
+            }
+        }
+    }
+    use crate::types::SyncUserVolumeAccumulatorEvent;
+    impl IntoProto<proto_def::SyncUserVolumeAccumulatorEvent> for SyncUserVolumeAccumulatorEvent {
+        fn into_proto(self) -> proto_def::SyncUserVolumeAccumulatorEvent {
+            proto_def::SyncUserVolumeAccumulatorEvent {
+                user: self.user.to_string(),
+                total_claimed_tokens_before: self.total_claimed_tokens_before,
+                total_claimed_tokens_after: self.total_claimed_tokens_after,
+                timestamp: self.timestamp,
             }
         }
     }
@@ -143,6 +263,12 @@ pub mod proto_types_parsers {
                 creator: self.creator.to_string(),
                 creator_fee_basis_points: self.creator_fee_basis_points,
                 creator_fee: self.creator_fee,
+                track_volume: self.track_volume,
+                total_unclaimed_tokens: self.total_unclaimed_tokens,
+                total_claimed_tokens: self.total_claimed_tokens,
+                current_sol_volume: self.current_sol_volume,
+                last_update_timestamp: self.last_update_timestamp,
+                ix_name: self.ix_name,
             }
         }
     }

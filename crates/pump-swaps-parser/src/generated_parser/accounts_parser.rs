@@ -5,10 +5,15 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::{
-    accounts::{BondingCurve, GlobalConfig, Pool},
-    deserialize_checked, ID,
-};
+use crate::accounts::BondingCurve;
+use crate::accounts::FeeConfig;
+use crate::accounts::GlobalConfig;
+use crate::accounts::GlobalVolumeAccumulator;
+use crate::accounts::Pool;
+use crate::accounts::UserVolumeAccumulator;
+use crate::ID;
+
+use crate::deserialize_checked;
 
 /// PumpAmm Program State
 #[allow(clippy::large_enum_variant)]
@@ -16,8 +21,11 @@ use crate::{
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
 pub enum PumpAmmProgramState {
     BondingCurve(BondingCurve),
+    FeeConfig(FeeConfig),
     GlobalConfig(GlobalConfig),
+    GlobalVolumeAccumulator(GlobalVolumeAccumulator),
     Pool(Pool),
+    UserVolumeAccumulator(UserVolumeAccumulator),
 }
 
 impl PumpAmmProgramState {
@@ -27,12 +35,25 @@ impl PumpAmmProgramState {
             [23, 183, 248, 55, 96, 216, 172, 96] => Ok(PumpAmmProgramState::BondingCurve(
                 deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
+            [143, 52, 146, 187, 219, 123, 76, 155] => Ok(PumpAmmProgramState::FeeConfig(
+                deserialize_checked(data_bytes, &acc_discriminator)?,
+            )),
             [149, 8, 156, 202, 160, 252, 176, 217] => Ok(PumpAmmProgramState::GlobalConfig(
                 deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
+            [202, 42, 246, 43, 142, 190, 30, 255] => {
+                Ok(PumpAmmProgramState::GlobalVolumeAccumulator(
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
+                ))
+            },
             [241, 154, 109, 4, 17, 177, 109, 188] => Ok(PumpAmmProgramState::Pool(
                 deserialize_checked(data_bytes, &acc_discriminator)?,
             )),
+            [86, 255, 112, 14, 102, 53, 154, 250] => {
+                Ok(PumpAmmProgramState::UserVolumeAccumulator(
+                    deserialize_checked(data_bytes, &acc_discriminator)?,
+                ))
+            },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Account discriminator".to_owned(),
             )),
@@ -71,7 +92,9 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = PumpAmmProgramState;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "pump_amm::AccountParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> {
+        "pump_amm::AccountParser".into()
+    }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -109,15 +132,18 @@ impl yellowstone_vixen_core::Parser for AccountParser {
 
 impl yellowstone_vixen_core::ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        ID.to_bytes().into()
+    }
 }
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
+    use super::{AccountParser, PumpAmmProgramState};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{AccountParser, BondingCurve, PumpAmmProgramState};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
+    use super::BondingCurve;
     impl IntoProto<proto_def::BondingCurve> for BondingCurve {
         fn into_proto(self) -> proto_def::BondingCurve {
             proto_def::BondingCurve {
@@ -128,6 +154,18 @@ mod proto_parser {
                 token_total_supply: self.token_total_supply,
                 complete: self.complete,
                 creator: self.creator.to_string(),
+                is_mayhem_mode: self.is_mayhem_mode,
+            }
+        }
+    }
+    use super::FeeConfig;
+    impl IntoProto<proto_def::FeeConfig> for FeeConfig {
+        fn into_proto(self) -> proto_def::FeeConfig {
+            proto_def::FeeConfig {
+                bump: self.bump.into(),
+                admin: self.admin.to_string(),
+                flat_fees: Some(self.flat_fees.into_proto()),
+                fee_tiers: self.fee_tiers.into_iter().map(|x| x.into_proto()).collect(),
             }
         }
     }
@@ -145,6 +183,28 @@ mod proto_parser {
                     .map(|x| x.to_string())
                     .collect(),
                 coin_creator_fee_basis_points: self.coin_creator_fee_basis_points,
+                admin_set_coin_creator_authority: self.admin_set_coin_creator_authority.to_string(),
+                whitelist_pda: self.whitelist_pda.to_string(),
+                reserved_fee_recipient: self.reserved_fee_recipient.to_string(),
+                mayhem_mode_enabled: self.mayhem_mode_enabled,
+                reserved_fee_recipients: self
+                    .reserved_fee_recipients
+                    .into_iter()
+                    .map(|x| x.to_string())
+                    .collect(),
+            }
+        }
+    }
+    use super::GlobalVolumeAccumulator;
+    impl IntoProto<proto_def::GlobalVolumeAccumulator> for GlobalVolumeAccumulator {
+        fn into_proto(self) -> proto_def::GlobalVolumeAccumulator {
+            proto_def::GlobalVolumeAccumulator {
+                start_time: self.start_time,
+                end_time: self.end_time,
+                seconds_in_a_day: self.seconds_in_a_day,
+                mint: self.mint.to_string(),
+                total_token_supply: self.total_token_supply.to_vec(),
+                sol_volumes: self.sol_volumes.to_vec(),
             }
         }
     }
@@ -162,6 +222,21 @@ mod proto_parser {
                 pool_quote_token_account: self.pool_quote_token_account.to_string(),
                 lp_supply: self.lp_supply,
                 coin_creator: self.coin_creator.to_string(),
+                is_mayhem_mode: self.is_mayhem_mode,
+            }
+        }
+    }
+    use super::UserVolumeAccumulator;
+    impl IntoProto<proto_def::UserVolumeAccumulator> for UserVolumeAccumulator {
+        fn into_proto(self) -> proto_def::UserVolumeAccumulator {
+            proto_def::UserVolumeAccumulator {
+                user: self.user.to_string(),
+                needs_claim: self.needs_claim,
+                total_unclaimed_tokens: self.total_unclaimed_tokens,
+                total_claimed_tokens: self.total_claimed_tokens,
+                current_sol_volume: self.current_sol_volume,
+                last_update_timestamp: self.last_update_timestamp,
+                has_total_claimed_tokens: self.has_total_claimed_tokens,
             }
         }
     }
@@ -172,11 +247,20 @@ mod proto_parser {
                 PumpAmmProgramState::BondingCurve(data) => {
                     proto_def::program_state::StateOneof::BondingCurve(data.into_proto())
                 },
+                PumpAmmProgramState::FeeConfig(data) => {
+                    proto_def::program_state::StateOneof::FeeConfig(data.into_proto())
+                },
                 PumpAmmProgramState::GlobalConfig(data) => {
                     proto_def::program_state::StateOneof::GlobalConfig(data.into_proto())
                 },
+                PumpAmmProgramState::GlobalVolumeAccumulator(data) => {
+                    proto_def::program_state::StateOneof::GlobalVolumeAccumulator(data.into_proto())
+                },
                 PumpAmmProgramState::Pool(data) => {
                     proto_def::program_state::StateOneof::Pool(data.into_proto())
+                },
+                PumpAmmProgramState::UserVolumeAccumulator(data) => {
+                    proto_def::program_state::StateOneof::UserVolumeAccumulator(data.into_proto())
                 },
             };
 
@@ -189,6 +273,8 @@ mod proto_parser {
     impl ParseProto for AccountParser {
         type Message = proto_def::ProgramState;
 
-        fn output_into_message(value: Self::Output) -> Self::Message { value.into_proto() }
+        fn output_into_message(value: Self::Output) -> Self::Message {
+            value.into_proto()
+        }
     }
 }

@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -63,4 +64,5 @@ pub struct CreatePoolEvent {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub coin_creator: Pubkey,
+    pub is_mayhem_mode: bool,
 }

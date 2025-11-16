@@ -5,24 +5,48 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
+pub(crate) mod r#admin_set_coin_creator_event;
+pub(crate) mod r#admin_update_token_incentives_event;
 pub(crate) mod r#buy_event;
+pub(crate) mod r#claim_token_incentives_event;
+pub(crate) mod r#close_user_volume_accumulator_event;
 pub(crate) mod r#collect_coin_creator_fee_event;
 pub(crate) mod r#create_config_event;
 pub(crate) mod r#create_pool_event;
 pub(crate) mod r#deposit_event;
 pub(crate) mod r#disable_event;
 pub(crate) mod r#extend_account_event;
+pub(crate) mod r#fee_tier;
+pub(crate) mod r#fees;
+pub(crate) mod r#init_user_volume_accumulator_event;
+pub(crate) mod r#reserved_fee_recipients_event;
 pub(crate) mod r#sell_event;
 pub(crate) mod r#set_bonding_curve_coin_creator_event;
 pub(crate) mod r#set_metaplex_coin_creator_event;
+pub(crate) mod r#sync_user_volume_accumulator_event;
 pub(crate) mod r#update_admin_event;
 pub(crate) mod r#update_fee_config_event;
 pub(crate) mod r#withdraw_event;
 
-pub use self::{
-    r#buy_event::*, r#collect_coin_creator_fee_event::*, r#create_config_event::*,
-    r#create_pool_event::*, r#deposit_event::*, r#disable_event::*, r#extend_account_event::*,
-    r#sell_event::*, r#set_bonding_curve_coin_creator_event::*,
-    r#set_metaplex_coin_creator_event::*, r#update_admin_event::*, r#update_fee_config_event::*,
-    r#withdraw_event::*,
-};
+pub use self::r#admin_set_coin_creator_event::*;
+pub use self::r#admin_update_token_incentives_event::*;
+pub use self::r#buy_event::*;
+pub use self::r#claim_token_incentives_event::*;
+pub use self::r#close_user_volume_accumulator_event::*;
+pub use self::r#collect_coin_creator_fee_event::*;
+pub use self::r#create_config_event::*;
+pub use self::r#create_pool_event::*;
+pub use self::r#deposit_event::*;
+pub use self::r#disable_event::*;
+pub use self::r#extend_account_event::*;
+pub use self::r#fee_tier::*;
+pub use self::r#fees::*;
+pub use self::r#init_user_volume_accumulator_event::*;
+pub use self::r#reserved_fee_recipients_event::*;
+pub use self::r#sell_event::*;
+pub use self::r#set_bonding_curve_coin_creator_event::*;
+pub use self::r#set_metaplex_coin_creator_event::*;
+pub use self::r#sync_user_volume_accumulator_event::*;
+pub use self::r#update_admin_event::*;
+pub use self::r#update_fee_config_event::*;
+pub use self::r#withdraw_event::*;

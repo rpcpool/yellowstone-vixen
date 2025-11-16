@@ -5,8 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
+
+pub const CREATE_DISCRIMINATOR: [u8; 8] = [24, 30, 200, 40, 5, 28, 7, 119];
 
 /// Accounts.
 #[derive(Debug)]
@@ -44,7 +47,6 @@ impl Create {
     pub fn instruction(&self, args: CreateInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -100,8 +102,8 @@ impl Create {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&CreateInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = CreateInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -124,10 +126,16 @@ impl CreateInstructionData {
             discriminator: [24, 30, 200, 40, 5, 28, 7, 119],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for CreateInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -137,6 +145,12 @@ pub struct CreateInstructionArgs {
     pub symbol: String,
     pub uri: String,
     pub creator: Pubkey,
+}
+
+impl CreateInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 /// Instruction builder for `Create`.
@@ -181,26 +195,24 @@ pub struct CreateBuilder {
 }
 
 impl CreateBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
     pub fn mint(&mut self, mint: solana_pubkey::Pubkey) -> &mut Self {
         self.mint = Some(mint);
         self
     }
-
     #[inline(always)]
     pub fn mint_authority(&mut self, mint_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.mint_authority = Some(mint_authority);
         self
     }
-
     #[inline(always)]
     pub fn bonding_curve(&mut self, bonding_curve: solana_pubkey::Pubkey) -> &mut Self {
         self.bonding_curve = Some(bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn associated_bonding_curve(
         &mut self,
@@ -209,46 +221,39 @@ impl CreateBuilder {
         self.associated_bonding_curve = Some(associated_bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn global(&mut self, global: solana_pubkey::Pubkey) -> &mut Self {
         self.global = Some(global);
         self
     }
-
     /// `[optional account, default to 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s']`
     #[inline(always)]
     pub fn mpl_token_metadata(&mut self, mpl_token_metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.mpl_token_metadata = Some(mpl_token_metadata);
         self
     }
-
     #[inline(always)]
     pub fn metadata(&mut self, metadata: solana_pubkey::Pubkey) -> &mut Self {
         self.metadata = Some(metadata);
         self
     }
-
     #[inline(always)]
     pub fn user(&mut self, user: solana_pubkey::Pubkey) -> &mut Self {
         self.user = Some(user);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
     #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
         self.token_program = Some(token_program);
         self
     }
-
     /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
     #[inline(always)]
     pub fn associated_token_program(
@@ -258,57 +263,48 @@ impl CreateBuilder {
         self.associated_token_program = Some(associated_token_program);
         self
     }
-
     /// `[optional account, default to 'SysvarRent111111111111111111111111111111111']`
     #[inline(always)]
     pub fn rent(&mut self, rent: solana_pubkey::Pubkey) -> &mut Self {
         self.rent = Some(rent);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn name(&mut self, name: String) -> &mut Self {
         self.name = Some(name);
         self
     }
-
     #[inline(always)]
     pub fn symbol(&mut self, symbol: String) -> &mut Self {
         self.symbol = Some(symbol);
         self
     }
-
     #[inline(always)]
     pub fn uri(&mut self, uri: String) -> &mut Self {
         self.uri = Some(uri);
         self
     }
-
     #[inline(always)]
     pub fn creator(&mut self, creator: Pubkey) -> &mut Self {
         self.creator = Some(creator);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -318,7 +314,6 @@ impl CreateBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = Create {
@@ -452,28 +447,21 @@ impl<'a, 'b> CreateCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -481,7 +469,7 @@ impl<'a, 'b> CreateCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(*self.mint.key, true));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -540,8 +528,8 @@ impl<'a, 'b> CreateCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&CreateInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = CreateInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -626,13 +614,11 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn mint(&mut self, mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.mint = Some(mint);
         self
     }
-
     #[inline(always)]
     pub fn mint_authority(
         &mut self,
@@ -641,7 +627,6 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         self.instruction.mint_authority = Some(mint_authority);
         self
     }
-
     #[inline(always)]
     pub fn bonding_curve(
         &mut self,
@@ -650,7 +635,6 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         self.instruction.bonding_curve = Some(bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn associated_bonding_curve(
         &mut self,
@@ -659,13 +643,11 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         self.instruction.associated_bonding_curve = Some(associated_bonding_curve);
         self
     }
-
     #[inline(always)]
     pub fn global(&mut self, global: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.global = Some(global);
         self
     }
-
     #[inline(always)]
     pub fn mpl_token_metadata(
         &mut self,
@@ -674,19 +656,16 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         self.instruction.mpl_token_metadata = Some(mpl_token_metadata);
         self
     }
-
     #[inline(always)]
     pub fn metadata(&mut self, metadata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.metadata = Some(metadata);
         self
     }
-
     #[inline(always)]
     pub fn user(&mut self, user: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.user = Some(user);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -695,7 +674,6 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn token_program(
         &mut self,
@@ -704,7 +682,6 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
-
     #[inline(always)]
     pub fn associated_token_program(
         &mut self,
@@ -713,13 +690,11 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
-
     #[inline(always)]
     pub fn rent(&mut self, rent: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.rent = Some(rent);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -728,37 +703,31 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn name(&mut self, name: String) -> &mut Self {
         self.instruction.name = Some(name);
         self
     }
-
     #[inline(always)]
     pub fn symbol(&mut self, symbol: String) -> &mut Self {
         self.instruction.symbol = Some(symbol);
         self
     }
-
     #[inline(always)]
     pub fn uri(&mut self, uri: String) -> &mut Self {
         self.instruction.uri = Some(uri);
         self
     }
-
     #[inline(always)]
     pub fn creator(&mut self, creator: Pubkey) -> &mut Self {
         self.instruction.creator = Some(creator);
         self
     }
-
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -772,7 +741,6 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -787,16 +755,13 @@ impl<'a, 'b> CreateCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = CreateInstructionArgs {
             name: self.instruction.name.clone().expect("name is not set"),
             symbol: self.instruction.symbol.clone().expect("symbol is not set"),
