@@ -162,7 +162,7 @@ mod proto_parser {
         fn into_proto(self) -> InitializeGroupDataProto {
             InitializeGroupDataProto {
                 update_authority: Some(self.update_authority.0.to_string()),
-                max_size: Into::<u32>::into(self.max_size).into(),
+                max_size: Into::<u64>::into(self.max_size),
             }
         }
     }
@@ -172,7 +172,7 @@ mod proto_parser {
     {
         fn into_proto(self) -> UpdateGroupMaxSizeDataProto {
             UpdateGroupMaxSizeDataProto {
-                max_size: Into::<u32>::into(self.max_size).into(),
+                max_size: Into::<u64>::into(self.max_size),
             }
         }
     }

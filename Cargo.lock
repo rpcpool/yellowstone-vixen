@@ -4501,7 +4501,7 @@ dependencies = [
  "spl-generic-token",
  "spl-token 8.0.0",
  "spl-token-2022 8.0.1",
- "spl-token-group-interface 0.6.0",
+ "spl-token-group-interface",
  "spl-token-metadata-interface 0.7.0",
  "thiserror 2.0.16",
  "zstd",
@@ -6536,10 +6536,10 @@ dependencies = [
  "solana-transaction-status-client-types",
  "solana-vote-interface",
  "spl-associated-token-account",
- "spl-memo 6.0.0",
+ "spl-memo",
  "spl-token 8.0.0",
  "spl-token-2022 8.0.1",
- "spl-token-group-interface 0.6.0",
+ "spl-token-group-interface",
  "spl-token-metadata-interface 0.7.0",
  "thiserror 2.0.16",
 ]
@@ -6840,15 +6840,6 @@ dependencies = [
 
 [[package]]
 name = "spl-memo"
-version = "5.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0dba2f2bb6419523405d21c301a32c9f9568354d4742552e7972af801f4bdb3"
-dependencies = [
- "solana-program",
-]
-
-[[package]]
-name = "spl-memo"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f09647c0974e33366efeb83b8e2daebb329f0420149e74d3a4bd2c08cf9f7cb"
@@ -6973,20 +6964,6 @@ dependencies = [
 
 [[package]]
 name = "spl-tlv-account-resolution"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37a75a5f0fcc58126693ed78a17042e9dc53f07e357d6be91789f7d62aff61a4"
-dependencies = [
- "bytemuck",
- "solana-program",
- "spl-discriminator 0.3.0",
- "spl-pod 0.3.1",
- "spl-program-error 0.5.0",
- "spl-type-length-value 0.5.0",
-]
-
-[[package]]
-name = "spl-tlv-account-resolution"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1408e961215688715d5a1063cbdcf982de225c45f99c82b4f7d7e1dd22b998d7"
@@ -7052,30 +7029,6 @@ dependencies = [
 
 [[package]]
 name = "spl-token-2022"
-version = "4.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33afcf7a47274725990c783a6e86330883cae26655ad6e2d910f765e530d2cef"
-dependencies = [
- "arrayref",
- "bytemuck",
- "num-derive",
- "num-traits",
- "num_enum",
- "solana-program",
- "solana-security-txt",
- "solana-zk-token-sdk",
- "spl-memo 5.0.0",
- "spl-pod 0.3.1",
- "spl-token 6.0.0",
- "spl-token-group-interface 0.3.0",
- "spl-token-metadata-interface 0.4.0",
- "spl-transfer-hook-interface 0.7.0",
- "spl-type-length-value 0.5.0",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "spl-token-2022"
 version = "8.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "31f0dfbb079eebaee55e793e92ca5f433744f4b71ee04880bfd6beefba5973e5"
@@ -7105,15 +7058,15 @@ dependencies = [
  "solana-sysvar",
  "solana-zk-sdk",
  "spl-elgamal-registry 0.2.0",
- "spl-memo 6.0.0",
+ "spl-memo",
  "spl-pod 0.5.1",
  "spl-token 8.0.0",
  "spl-token-confidential-transfer-ciphertext-arithmetic",
  "spl-token-confidential-transfer-proof-extraction 0.3.0",
  "spl-token-confidential-transfer-proof-generation",
- "spl-token-group-interface 0.6.0",
+ "spl-token-group-interface",
  "spl-token-metadata-interface 0.7.0",
- "spl-transfer-hook-interface 0.10.0",
+ "spl-transfer-hook-interface",
  "spl-type-length-value 0.8.0",
  "thiserror 2.0.16",
 ]
@@ -7149,15 +7102,15 @@ dependencies = [
  "solana-sysvar",
  "solana-zk-sdk",
  "spl-elgamal-registry 0.3.0",
- "spl-memo 6.0.0",
+ "spl-memo",
  "spl-pod 0.5.1",
  "spl-token 8.0.0",
  "spl-token-confidential-transfer-ciphertext-arithmetic",
  "spl-token-confidential-transfer-proof-extraction 0.4.1",
  "spl-token-confidential-transfer-proof-generation",
- "spl-token-group-interface 0.6.0",
+ "spl-token-group-interface",
  "spl-token-metadata-interface 0.7.0",
- "spl-transfer-hook-interface 0.10.0",
+ "spl-transfer-hook-interface",
  "spl-type-length-value 0.8.0",
  "thiserror 2.0.16",
 ]
@@ -7227,19 +7180,6 @@ dependencies = [
 
 [[package]]
 name = "spl-token-group-interface"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df8752b85a5ecc1d9f3a43bce3dd9a6a053673aacf5deb513d1cbb88d3534ffd"
-dependencies = [
- "bytemuck",
- "solana-program",
- "spl-discriminator 0.3.0",
- "spl-pod 0.3.1",
- "spl-program-error 0.5.0",
-]
-
-[[package]]
-name = "spl-token-group-interface"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5597b4cd76f85ce7cd206045b7dc22da8c25516573d42d267c8d1fd128db5129"
@@ -7294,22 +7234,6 @@ dependencies = [
 
 [[package]]
 name = "spl-transfer-hook-interface"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a110f33d941275d9f868b96daaa993f1e73b6806cc8836e43075b4d3ad8338a7"
-dependencies = [
- "arrayref",
- "bytemuck",
- "solana-program",
- "spl-discriminator 0.3.0",
- "spl-pod 0.3.1",
- "spl-program-error 0.5.0",
- "spl-tlv-account-resolution 0.7.0",
- "spl-type-length-value 0.5.0",
-]
-
-[[package]]
-name = "spl-transfer-hook-interface"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7e905b849b6aba63bde8c4badac944ebb6c8e6e14817029cbe1bc16829133bd"
@@ -7328,7 +7252,7 @@ dependencies = [
  "spl-discriminator 0.4.1",
  "spl-pod 0.5.1",
  "spl-program-error 0.7.0",
- "spl-tlv-account-resolution 0.10.0",
+ "spl-tlv-account-resolution",
  "spl-type-length-value 0.8.0",
  "thiserror 2.0.16",
 ]
@@ -9314,12 +9238,13 @@ version = "0.5.1"
 dependencies = [
  "borsh 1.5.7",
  "bs58",
+ "bytemuck",
  "spl-pod 0.3.1",
  "spl-token 6.0.0",
- "spl-token-2022 4.0.1",
- "spl-token-group-interface 0.3.0",
- "spl-token-metadata-interface 0.4.0",
- "spl-type-length-value 0.5.0",
+ "spl-token-2022 9.0.0",
+ "spl-token-group-interface",
+ "spl-token-metadata-interface 0.7.0",
+ "spl-type-length-value 0.8.0",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -9550,10 +9475,10 @@ dependencies = [
  "spl-pod 0.3.1",
  "spl-stake-pool",
  "spl-token 6.0.0",
- "spl-token-2022 4.0.1",
- "spl-token-group-interface 0.3.0",
+ "spl-token-2022 9.0.0",
+ "spl-token-group-interface",
  "spl-token-metadata-interface 0.4.0",
- "spl-type-length-value 0.5.0",
+ "spl-type-length-value 0.8.0",
  "thiserror 1.0.69",
  "tokio",
  "yellowstone-grpc-proto",
