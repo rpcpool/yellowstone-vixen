@@ -224,14 +224,9 @@ mod proto_parser {
 mod tests {
     use core::panic;
 
-    use spl_token_2022::{
-        extension::{BaseStateWithExtensions, StateWithExtensions},
-        state::Account,
-    };
     use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
 
     use super::{AccountParser, ExtensionData, Parser, TokenExtensionState};
-    use crate::token_extension_program::account_parser::extension_account_type;
 
     #[tokio::test]
     async fn test_mint_account_parsing() {

@@ -294,13 +294,10 @@ mod proto_parser {
 mod tests {
     use std::ops::Mul;
 
-    use spl_token_2022::instruction::TokenInstruction;
     use yellowstone_vixen_mock::tx_fixture;
 
     use super::{InstructionParser, Parser, TokenExtensionProgramIx};
-    use crate::{
-        token_extension_program::helpers::decode_extension_ix_type, token_program::TokenProgramIx,
-    };
+    use crate::token_program::TokenProgramIx;
     #[tokio::test]
     async fn test_mint_to_checked_ix_parsing() {
         let parser = InstructionParser;
