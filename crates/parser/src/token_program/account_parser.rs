@@ -19,14 +19,16 @@ pub enum TokenProgramState {
 impl TokenProgramState {
     pub fn try_unpack(data_bytes: &[u8]) -> ParseResult<Self> {
         let acc = match data_bytes.len() {
-            Mint::LEN => Mint::unpack(data_bytes).map(Self::Mint).map_err(Into::into),
-            Account::LEN => Account::unpack(data_bytes)
+            Mint::LEN => Mint::unpack_from_slice(data_bytes)
+                .map(Self::Mint)
+                .map_err(Into::into),
+            Account::LEN => Account::unpack_from_slice(data_bytes)
                 .map(Self::TokenAccount)
                 .map_err(Into::into),
-            Multisig::LEN => Multisig::unpack(data_bytes)
+            Multisig::LEN => Multisig::unpack_from_slice(data_bytes)
                 .map(Self::Multisig)
                 .map_err(Into::into),
-            _ => Err(ParseError::from("Invalid Account data length".to_owned())),
+            _ => return Err(ParseError::Filtered),
         };
 
         #[cfg(feature = "tracing")]
