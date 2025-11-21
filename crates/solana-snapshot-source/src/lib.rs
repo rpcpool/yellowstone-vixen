@@ -1,4 +1,9 @@
-use std::{collections::HashMap, fs::File, path::PathBuf, sync::mpsc};
+use std::{
+    collections::HashMap,
+    fs::File,
+    path::PathBuf,
+    sync::{mpsc, Arc},
+};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -14,7 +19,7 @@ use yellowstone_grpc_proto::{
     tonic::Status,
 };
 use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
-use yellowstone_vixen_core::Filters;
+use yellowstone_vixen_core::{Filters, Pubkey};
 use zstd::Decoder;
 
 pub struct AccountFile(PathBuf, usize);
@@ -82,6 +87,27 @@ pub struct SolanaSnapshotSource {
     config: SolanaSnapshotConfig,
 }
 
+#[derive(Clone)]
+struct FilterOwnerKeyLookup(Arc<HashMap<Pubkey, Vec<String>>>);
+
+impl FilterOwnerKeyLookup {
+    fn new(filters: &Filters) -> Self {
+        let mut lookup: HashMap<Pubkey, Vec<String>> = HashMap::new();
+
+        for (key, parser_filter) in filters.parsers_filters.iter() {
+            if let Some(account_filter) = parser_filter.account.as_ref() {
+                for owner in &account_filter.owners {
+                    lookup.entry(*owner).or_default().push(key.clone());
+                }
+            }
+        }
+
+        Self(Arc::new(lookup))
+    }
+
+    fn lookup_by_owner(&self, owner: &Pubkey) -> Option<Vec<String>> { self.0.get(owner).cloned() }
+}
+
 #[async_trait]
 impl SourceTrait for SolanaSnapshotSource {
     type Config = SolanaSnapshotConfig;
@@ -95,23 +121,7 @@ impl SourceTrait for SolanaSnapshotSource {
         let filters = self.filters.clone();
         let config = self.config.clone();
 
-        let mut owner_to_filters: HashMap<yellowstone_vixen_core::Pubkey, Vec<String>> =
-            HashMap::new();
-        let mut all_owners = Vec::new();
-
-        for (key, parser_filter) in filters.parsers_filters.iter() {
-            if let Some(account_filter) = parser_filter.account.as_ref() {
-                for owner in &account_filter.owners {
-                    owner_to_filters
-                        .entry(*owner)
-                        .or_default()
-                        .push(key.clone());
-                    if !all_owners.contains(owner) {
-                        all_owners.push(*owner);
-                    }
-                }
-            }
-        }
+        let filter_owner_key_lookup = FilterOwnerKeyLookup::new(&filters);
 
         let solana_snapshot = SolanaSnapshot::unpack_compressed(config.path.clone())?;
 
@@ -141,12 +151,15 @@ impl SourceTrait for SolanaSnapshotSource {
         let sender_handle = tokio::spawn(async move {
             while let Ok(event) = sync_rx.recv() {
                 match event {
-                    Event::AccountUpdate(account, filter_keys) => {
+                    Event::AccountUpdate {
+                        account_update,
+                        filters,
+                    } => {
                         if let Err(err) = tx
                             .send(Ok(SubscribeUpdate {
-                                filters: filter_keys,
+                                filters,
                                 created_at: None,
-                                update_oneof: Some(UpdateOneof::Account(account)),
+                                update_oneof: Some(UpdateOneof::Account(account_update)),
                             }))
                             .await
                         {
@@ -161,8 +174,7 @@ impl SourceTrait for SolanaSnapshotSource {
         for AccountFile(path, current_len) in solana_snapshot.accounts {
             let sync_tx = sync_tx.clone();
             let slot = solana_snapshot.slot;
-            let all_owners = all_owners.clone();
-            let owner_to_filters = owner_to_filters.clone();
+            let filter_owner_key_lookup = filter_owner_key_lookup.clone();
 
             account_file_workers.spawn(async move {
                 let (accounts, _usize) = AccountsFile::new_from_file(
@@ -174,18 +186,13 @@ impl SourceTrait for SolanaSnapshotSource {
 
                 accounts.scan_accounts(|_size, account| {
                     let account_owner =
-                        yellowstone_vixen_core::Pubkey::try_from(account.owner.as_ref())
-                            .expect("Owner address is Pubkey");
+                        Pubkey::try_from(account.owner.as_ref()).expect("Owner address is Pubkey");
 
-                    if all_owners.contains(&account_owner) {
-                        // Get the specific filter keys for this owner
-                        let filter_keys = owner_to_filters
-                            .get(&account_owner)
-                            .cloned()
-                            .unwrap_or_default();
-
-                        let _ = sync_tx.send(Event::AccountUpdate(
-                            SubscribeUpdateAccount {
+                    if let Some(filter_keys) =
+                        filter_owner_key_lookup.lookup_by_owner(&account_owner)
+                    {
+                        let _ = sync_tx.send(Event::AccountUpdate {
+                            account_update: SubscribeUpdateAccount {
                                 account: Some(SubscribeUpdateAccountInfo {
                                     pubkey: account.pubkey().to_bytes().to_vec(),
                                     lamports: account.lamports,
@@ -199,8 +206,8 @@ impl SourceTrait for SolanaSnapshotSource {
                                 slot,
                                 is_startup: true,
                             },
-                            filter_keys,
-                        ));
+                            filters: filter_keys,
+                        });
                     }
                 });
             });
@@ -220,6 +227,9 @@ impl SourceTrait for SolanaSnapshotSource {
 }
 
 enum Event {
-    AccountUpdate(SubscribeUpdateAccount, Vec<String>),
+    AccountUpdate {
+        account_update: SubscribeUpdateAccount,
+        filters: Vec<String>,
+    },
     SnapshotFinished,
 }
