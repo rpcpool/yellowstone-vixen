@@ -2,11 +2,7 @@ use spl_token_2022::extension::confidential_transfer::instruction::ConfidentialT
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 
 use super::helpers::{decode_extension_ix_type, ExtensionIxParser};
-use crate::{
-    helpers::check_min_accounts_req, token_program::InitializeMintAccounts, Error, Result,
-};
-
-const SOLANA_ZK_PROOF_PROGRAM_ID: &str = "ZkTokenProof1111111111111111111111111111111";
+use crate::{helpers::check_min_accounts_req, token_program::InitializeMintAccounts, Result};
 
 #[derive(Debug, Clone, Copy)]
 pub struct UpdateMintAccounts {
@@ -82,21 +78,20 @@ pub struct CreditsAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
-pub struct TransferWithSplitProofsAccounts {
+#[derive(Debug, Clone, Copy)]
+
+pub struct TransferWithFeeAccounts {
     pub source_account: Pubkey,
     pub mint: Pubkey,
     pub destination: Pubkey,
-    pub verify_ciphertext_commitment_equality_proof: Pubkey,
-    pub verify_batched_grouped_cipher_text_2_handles_validity_proof: Pubkey,
-    pub verify_batched_range_proof_u128: Option<Pubkey>,
-    pub verify_batched_range_proof_u256: Option<Pubkey>,
-    pub verify_batched_grouped_cipher_text_2_handles_validity_proof_next: Option<Pubkey>,
-    pub verify_fee_sigma_proof: Option<Pubkey>,
-    pub destination_account_for_lamports: Option<Pubkey>,
-    pub context_state_account_owner: Option<Pubkey>,
-    pub zk_token_proof_program: Option<Pubkey>,
-    pub owner: Option<Pubkey>,
+}
+
+#[derive(Debug, Clone, Copy)]
+
+pub struct ConfigureAccountWithRegistryAccounts {
+    pub account: Pubkey,
+    pub mint: Pubkey,
+    pub registry: Pubkey,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -115,14 +110,15 @@ pub enum ConfidentaltransferIx {
     DisableConfidentialCredits(CreditsAccounts),
     EnableNonConfidentialCredits(CreditsAccounts),
     DisableNonConfidentialCredits(CreditsAccounts),
-    TransferWithSplitProofs(TransferWithSplitProofsAccounts),
+    TransferWithFee(TransferWithFeeAccounts),
+    ConfigureAccountWithRegistry(ConfigureAccountWithRegistryAccounts),
 }
 
 impl ExtensionIxParser for ConfidentaltransferIx {
     #[allow(clippy::too_many_lines)]
     fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
-        let ix_type = decode_extension_ix_type(&ix.data)?;
+        let ix_type = decode_extension_ix_type(&ix.data[1..])?;
         match ix_type {
             ConfidentialTransferInstruction::InitializeMint => {
                 check_min_accounts_req(accounts_len, 1)?;
@@ -262,104 +258,25 @@ impl ExtensionIxParser for ConfidentaltransferIx {
                     },
                 ))
             },
-
-            ConfidentialTransferInstruction::TransferWithSplitProofs => {
-                check_min_accounts_req(accounts_len, 13)?;
-
-                match accounts_len {
-                    7 => Ok(ConfidentaltransferIx::TransferWithSplitProofs(
-                        TransferWithSplitProofsAccounts {
-                            source_account: ix.accounts[0],
-                            mint: ix.accounts[1],
-                            destination: ix.accounts[2],
-                            verify_ciphertext_commitment_equality_proof: ix.accounts[3],
-                            verify_batched_grouped_cipher_text_2_handles_validity_proof: ix
-                                .accounts[4],
-                            verify_batched_range_proof_u128: Some(ix.accounts[5]),
-                            owner: Some(ix.accounts[6]),
-                            // Optional accounts
-                            verify_batched_range_proof_u256: None,
-                            verify_batched_grouped_cipher_text_2_handles_validity_proof_next: None,
-                            verify_fee_sigma_proof: None,
-                            destination_account_for_lamports: None,
-                            context_state_account_owner: None,
-                            zk_token_proof_program: None,
-                        },
-                    )),
-                    9 => {
-                        let ninth_account = ix.accounts[8];
-                        if ninth_account.to_string() == SOLANA_ZK_PROOF_PROGRAM_ID {
-                            Ok(ConfidentaltransferIx::TransferWithSplitProofs(
-                                TransferWithSplitProofsAccounts {
-                                    source_account: ix.accounts[0],
-                                    mint: ix.accounts[1],
-                                    destination: ix.accounts[2],
-                                    verify_ciphertext_commitment_equality_proof: ix.accounts[3],
-                                    verify_batched_grouped_cipher_text_2_handles_validity_proof: ix
-                                    .accounts[4],
-                                    verify_batched_range_proof_u128: Some(ix.accounts[5]),
-                                    destination_account_for_lamports: Some(ix.accounts[6]),
-                                    context_state_account_owner: Some(ix.accounts[7]),
-                                    zk_token_proof_program: Some(ix.accounts[8]),
-
-                                    // Optional accounts
-                                    owner: None,
-                                    verify_fee_sigma_proof: None,
-                                    verify_batched_range_proof_u256: None,
-                                    verify_batched_grouped_cipher_text_2_handles_validity_proof_next:
-                                    None,
-                                },
-                            ))
-                        } else {
-                            Ok(ConfidentaltransferIx::TransferWithSplitProofs(
-                                TransferWithSplitProofsAccounts {
-                                    source_account: ix.accounts[0],
-                                    mint: ix.accounts[1],
-                                    destination: ix.accounts[2],
-                                    verify_ciphertext_commitment_equality_proof: ix.accounts[3],
-                                    verify_batched_grouped_cipher_text_2_handles_validity_proof: ix
-                                    .accounts[4],
-                                    verify_fee_sigma_proof: Some(ix.accounts[5]),
-                                    verify_batched_range_proof_u256: Some(ix.accounts[6]),
-                                    verify_batched_grouped_cipher_text_2_handles_validity_proof_next:
-                                    Some(ix.accounts[7]),
-                                    owner: Some(ix.accounts[8]),
-
-                                    // Optional accounts
-                                    verify_batched_range_proof_u128: None,
-                                    destination_account_for_lamports: None,
-                                    context_state_account_owner: None,
-                                    zk_token_proof_program: None,
-                                },
-                            ))
-                        }
+            ConfidentialTransferInstruction::TransferWithFee => {
+                check_min_accounts_req(accounts_len, 5)?;
+                Ok(ConfidentaltransferIx::TransferWithFee(
+                    TransferWithFeeAccounts {
+                        source_account: ix.accounts[0],
+                        mint: ix.accounts[1],
+                        destination: ix.accounts[2],
                     },
-
-                    11 => Ok(ConfidentaltransferIx::TransferWithSplitProofs(
-                        TransferWithSplitProofsAccounts {
-                            source_account: ix.accounts[0],
-                            mint: ix.accounts[1],
-                            destination: ix.accounts[2],
-                            verify_ciphertext_commitment_equality_proof: ix.accounts[3],
-                            verify_batched_grouped_cipher_text_2_handles_validity_proof: ix
-                                .accounts[4],
-                            verify_batched_range_proof_u256: Some(ix.accounts[5]),
-                            verify_batched_grouped_cipher_text_2_handles_validity_proof_next: Some(
-                                ix.accounts[6],
-                            ),
-                            verify_fee_sigma_proof: Some(ix.accounts[7]),
-                            destination_account_for_lamports: Some(ix.accounts[8]),
-                            context_state_account_owner: Some(ix.accounts[9]),
-                            zk_token_proof_program: Some(ix.accounts[10]),
-                            verify_batched_range_proof_u128: None,
-                            owner: None,
-                        },
-                    )),
-
-                    _ => Err(Error::new(format!(
-                        "Invalid number of accounts for TransferWithSplitProofs: {accounts_len}"
-                    ))),
-                }
+                ))
+            },
+            ConfidentialTransferInstruction::ConfigureAccountWithRegistry => {
+                check_min_accounts_req(accounts_len, 4)?;
+                Ok(ConfidentaltransferIx::ConfigureAccountWithRegistry(
+                    ConfigureAccountWithRegistryAccounts {
+                        account: ix.accounts[0],
+                        mint: ix.accounts[1],
+                        registry: ix.accounts[2],
+                    },
+                ))
             },
         }
     }
@@ -374,24 +291,23 @@ mod proto_parser {
         ApplyPendingBalanceIxProto, ApproveAccountAccountsProto, ApproveAccountIxProto,
         ConfidentialTransferAccountsProto, ConfidentialTransferExtIxProto,
         ConfidentialTransferIxProto, ConfigureAccountAccountsProto, ConfigureAccountIxProto,
+        ConfigureAccountWithRegistryAccountsProto, ConfigureAccountWithRegistryIxProto,
         CreditsAccountsProto, DepositAccountsProto, DepositIxProto,
         DisableConfidentialCreditsIxProto, DisableNonConfidentialCreditsIxProto,
         EmptyAccountAccountsProto, EmptyAccountIxProto, EnableConfidentialCreditsIxProto,
         EnableNonConfidentialCreditsIxProto, InitializeConfidentialMintAccountsProto,
-        InitializeConfidentialMintIxProto, TransferWithSplitProofsAccountsProto,
-        TransferWithSplitProofsIxProto, UpdateMintAccountsProto, UpdateMintIxProto,
-        WithdrawAccountsProto, WithdrawIxProto,
+        InitializeConfidentialMintIxProto, TransferWithFeeAccountsProto, TransferWithFeeIxProto,
+        UpdateMintAccountsProto, UpdateMintIxProto, WithdrawAccountsProto, WithdrawIxProto,
     };
 
     use super::{
         ApplyPendingBalanceAccounts, ApproveAccountAccounts, ConfidentaltransferIx,
         ConfidentialTransferAccounts, ConfigureAccountAccounts, CreditsAccounts, DepositAccounts,
-        EmptyAccountAccounts, InitializeMintAccounts, TransferWithSplitProofsAccounts,
-        UpdateMintAccounts, WithdrawAccounts,
+        EmptyAccountAccounts, InitializeMintAccounts, UpdateMintAccounts, WithdrawAccounts,
     };
-    use crate::helpers::{
-        proto::{FromOptPubkeyToOptString, FromVecPubkeyToVecString},
-        IntoProto,
+    use crate::{
+        helpers::{proto::FromVecPubkeyToVecString, IntoProto},
+        token_extension_program::{ConfigureAccountWithRegistryAccounts, TransferWithFeeAccounts},
     };
 
     impl IntoProto<InitializeConfidentialMintAccountsProto> for InitializeMintAccounts {
@@ -500,38 +416,25 @@ mod proto_parser {
         }
     }
 
-    impl IntoProto<TransferWithSplitProofsAccountsProto> for TransferWithSplitProofsAccounts {
-        fn into_proto(self) -> TransferWithSplitProofsAccountsProto {
-            TransferWithSplitProofsAccountsProto {
+    impl IntoProto<TransferWithFeeAccountsProto> for TransferWithFeeAccounts {
+        fn into_proto(self) -> TransferWithFeeAccountsProto {
+            TransferWithFeeAccountsProto {
                 source_account: self.source_account.to_string(),
                 mint: self.mint.to_string(),
                 destination: self.destination.to_string(),
-                verify_ciphertext_commitment_equality_proof: self
-                    .verify_ciphertext_commitment_equality_proof
-                    .to_string(),
-                verify_batched_grouped_cipher_text_2_handles_validity_proof: self
-                    .verify_batched_grouped_cipher_text_2_handles_validity_proof
-                    .to_string(),
-                verify_batched_range_proof_u128: self
-                    .verify_batched_range_proof_u128
-                    .to_opt_string(),
-                verify_batched_range_proof_u256: self
-                    .verify_batched_range_proof_u256
-                    .to_opt_string(),
-                verify_batched_grouped_cipher_text_2_handles_validity_proof_next: self
-                    .verify_batched_grouped_cipher_text_2_handles_validity_proof_next
-                    .to_opt_string(),
-                verify_fee_sigma_proof: self.verify_fee_sigma_proof.to_opt_string(),
-                destination_account_for_lamports: self
-                    .destination_account_for_lamports
-                    .to_opt_string(),
-                context_state_account_owner: self.context_state_account_owner.to_opt_string(),
-                zk_token_proof_program: self.zk_token_proof_program.to_opt_string(),
-                owner: self.owner.to_opt_string(),
             }
         }
     }
 
+    impl IntoProto<ConfigureAccountWithRegistryAccountsProto> for ConfigureAccountWithRegistryAccounts {
+        fn into_proto(self) -> ConfigureAccountWithRegistryAccountsProto {
+            ConfigureAccountWithRegistryAccountsProto {
+                account: self.account.to_string(),
+                mint: self.mint.to_string(),
+                registry: self.registry.to_string(),
+            }
+        }
+    }
     impl IntoProto<ConfidentialTransferExtIxProto> for ConfidentaltransferIx {
         fn into_proto(self) -> ConfidentialTransferExtIxProto {
             match self {
@@ -631,10 +534,16 @@ mod proto_parser {
                     }
                 },
 
-                ConfidentaltransferIx::TransferWithSplitProofs(acc) => {
+                ConfidentaltransferIx::TransferWithFee(acc) => ConfidentialTransferExtIxProto {
+                    ix_oneof: Some(IxOneof::TransferWithFeeIx(TransferWithFeeIxProto {
+                        accounts: Some(acc.into_proto()),
+                    })),
+                },
+
+                ConfidentaltransferIx::ConfigureAccountWithRegistry(acc) => {
                     ConfidentialTransferExtIxProto {
-                        ix_oneof: Some(IxOneof::TransferWithSplitProofsIx(
-                            TransferWithSplitProofsIxProto {
+                        ix_oneof: Some(IxOneof::ConfigureAccountWithRegistryIx(
+                            ConfigureAccountWithRegistryIxProto {
                                 accounts: Some(acc.into_proto()),
                             },
                         )),
