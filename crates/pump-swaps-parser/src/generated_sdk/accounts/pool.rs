@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -51,10 +52,13 @@ pub struct Pool {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub coin_creator: Pubkey,
+    pub is_mayhem_mode: bool,
 }
 
+pub const POOL_DISCRIMINATOR: [u8; 8] = [241, 154, 109, 4, 17, 177, 109, 188];
+
 impl Pool {
-    pub const LEN: usize = 243;
+    pub const LEN: usize = 244;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -154,7 +158,9 @@ impl anchor_lang::AccountSerialize for Pool {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Pool {
-    fn owner() -> Pubkey { crate::PUMP_AMM_ID }
+    fn owner() -> Pubkey {
+        crate::PUMP_AMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -162,5 +168,5 @@ impl anchor_lang::IdlBuild for Pool {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Pool {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

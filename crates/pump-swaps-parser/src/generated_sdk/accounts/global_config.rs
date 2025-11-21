@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -18,9 +19,7 @@ pub struct GlobalConfig {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub admin: Pubkey,
-    /// The lp fee in basis points (0.01%)
     pub lp_fee_basis_points: u64,
-    /// The protocol fee in basis points (0.01%)
     pub protocol_fee_basis_points: u64,
     /// Flags to disable certain functionality
     /// bit 0 - Disable create pool
@@ -31,12 +30,31 @@ pub struct GlobalConfig {
     pub disable_flags: u8,
     /// Addresses of the protocol fee recipients
     pub protocol_fee_recipients: [Pubkey; 8],
-    /// The coin creator fee in basis points (0.01%)
     pub coin_creator_fee_basis_points: u64,
+    /// The admin authority for setting coin creators
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub admin_set_coin_creator_authority: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub whitelist_pda: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub reserved_fee_recipient: Pubkey,
+    pub mayhem_mode_enabled: bool,
+    pub reserved_fee_recipients: [Pubkey; 7],
 }
 
+pub const GLOBAL_CONFIG_DISCRIMINATOR: [u8; 8] = [149, 8, 156, 202, 160, 252, 176, 217];
+
 impl GlobalConfig {
-    pub const LEN: usize = 321;
+    pub const LEN: usize = 642;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -136,7 +154,9 @@ impl anchor_lang::AccountSerialize for GlobalConfig {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for GlobalConfig {
-    fn owner() -> Pubkey { crate::PUMP_AMM_ID }
+    fn owner() -> Pubkey {
+        crate::PUMP_AMM_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -144,5 +164,5 @@ impl anchor_lang::IdlBuild for GlobalConfig {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for GlobalConfig {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

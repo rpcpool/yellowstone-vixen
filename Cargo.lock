@@ -9270,8 +9270,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-pump-fees-parser"
+version = "0.5.2"
+dependencies = [
+ "borsh 1.5.7",
+ "num-derive",
+ "num-traits",
+ "prost 0.13.5",
+ "prost-build 0.13.5",
+ "protobuf-src",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-pubkey",
+ "strum",
+ "strum_macros",
+ "thiserror 1.0.69",
+ "tonic 0.12.3",
+ "tracing",
+ "yellowstone-vixen-core",
+]
+
+[[package]]
 name = "yellowstone-vixen-pump-swaps-parser"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9297,7 +9323,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-pumpfun-parser"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
