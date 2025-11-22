@@ -386,24 +386,24 @@ message DisableNonConfidentialCreditsIxProto {
   CreditsAccountsProto accounts = 1;
 }
 
-message TransferWithSplitProofsAccountsProto {
+message TransferWithFeeAccountsProto {
   string source_account = 1;
   string mint = 2;
   string destination = 3;
-  string verify_ciphertext_commitment_equality_proof = 4;
-  string verify_batched_grouped_cipher_text_2_handles_validity_proof = 5;
-  optional string verify_batched_range_proof_u128 = 6;
-  optional string verify_batched_range_proof_u256 = 7;
-  optional string verify_batched_grouped_cipher_text_2_handles_validity_proof_next = 8;
-  optional string verify_fee_sigma_proof = 9;
-  optional string destination_account_for_lamports = 10;
-  optional string context_state_account_owner = 11;
-  optional string zk_token_proof_program = 12;
-  optional string owner = 13;
 }
 
-message TransferWithSplitProofsIxProto {
-  TransferWithSplitProofsAccountsProto accounts = 1;
+message TransferWithFeeIxProto {
+  TransferWithFeeAccountsProto accounts = 1;
+}
+
+message ConfigureAccountWithRegistryAccountsProto {
+  string account = 1;
+  string mint = 2;
+  string registry = 3;
+}
+
+message ConfigureAccountWithRegistryIxProto {
+  ConfigureAccountWithRegistryAccountsProto accounts = 1;
 }
 
 message ConfidentialTransferExtIxProto {
@@ -421,7 +421,8 @@ message ConfidentialTransferExtIxProto {
     DisableConfidentialCreditsIxProto disable_confidential_credits_ix = 11;
     EnableNonConfidentialCreditsIxProto enable_non_confidential_credits_ix = 12;
     DisableNonConfidentialCreditsIxProto disable_non_confidential_credits_ix = 13;
-    TransferWithSplitProofsIxProto transfer_with_split_proofs_ix = 14;
+    TransferWithFeeIxProto transfer_with_fee_ix = 14;
+    ConfigureAccountWithRegistryIxProto configure_account_with_registry_ix = 15;
   }
 }
 
@@ -859,8 +860,8 @@ message GroupPointerProto {
 message TokenGroupProto {
   string update_authority = 1;
   string mint = 2;
-  uint32 size = 3;
-  uint32 max_size = 4;
+  uint64 size = 3;
+  uint64 max_size = 4;
 }
 
 message GroupMemberPointerProto {
@@ -869,10 +870,31 @@ message GroupMemberPointerProto {
 }
 
 message TokenGroupMemberProto {
-  string mint = 2;
-  string group = 3;
-  uint64 member_number = 4;
+  string mint = 1;
+  string group = 2;
+  uint64 member_number = 3;
 }
+
+message ConfidentialMintBurnProto {
+  string confidential_supply = 1;
+  string decryptable_supply = 2;
+  string supply_elgamal_pubkey = 3;
+  string pending_burn = 4;
+}
+
+message ScaledUiAmountConfigProto {
+  optional string authority = 1;
+  double multiplier = 2;
+  int64 new_multiplier_effective_timestamp = 3;
+  double new_multiplier = 4;
+}
+
+message PausableConfigProto {
+  optional string authority = 1;
+  bool paused = 2;
+}
+
+message PausableAccountProto {}
 
 message ExtensionDataProto {
   oneof data {
@@ -899,6 +921,10 @@ message ExtensionDataProto {
     TokenGroupProto token_group = 21;
     GroupMemberPointerProto group_member_pointer = 22;
     TokenGroupMemberProto token_group_member = 23;
+    ConfidentialMintBurnProto confidential_mint_burn = 24;
+    ScaledUiAmountConfigProto scaled_ui_amount_config = 25;
+    PausableConfigProto pausable_config = 26;
+    PausableAccountProto pausable_account = 27;
   }
 }
 

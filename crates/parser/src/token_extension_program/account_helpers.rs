@@ -1,10 +1,12 @@
-use spl_pod::{bytemuck::pod_from_bytes, solana_program::program_pack::Pack};
+use bytemuck::Pod;
+use spl_pod::{
+    bytemuck::pod_from_bytes,
+    solana_program::{program_error::ProgramError, program_pack::Pack},
+};
 use spl_token_2022::{
     extension::{
         self, BaseState, BaseStateWithExtensions, Extension, ExtensionType, StateWithExtensions,
     },
-    solana_program::program_error::ProgramError,
-    solana_zk_token_sdk::instruction::Pod,
     state::{Account, Mint},
 };
 use spl_token_group_interface::state::{TokenGroup, TokenGroupMember};
@@ -39,6 +41,10 @@ fn get_extension_data_bytes<'data, T: BaseState + Pack>(
         ExtensionType::TokenGroup => state_with_ex.get_extension_bytes::<TokenGroup>()?,
         ExtensionType::GroupMemberPointer => state_with_ex.get_extension_bytes::<extension::group_member_pointer::GroupMemberPointer>()?,
         ExtensionType::TokenGroupMember => state_with_ex.get_extension_bytes::<TokenGroupMember>()?,
+        ExtensionType::ConfidentialMintBurn => state_with_ex.get_extension_bytes::<extension::confidential_mint_burn::ConfidentialMintBurn>()?,
+        ExtensionType::ScaledUiAmount => state_with_ex.get_extension_bytes::<extension::scaled_ui_amount::ScaledUiAmountConfig>()?,
+        ExtensionType::Pausable => state_with_ex.get_extension_bytes::<extension::pausable::PausableConfig>()?,
+        ExtensionType::PausableAccount => state_with_ex.get_extension_bytes::<extension::pausable::PausableAccount>()?,
         ExtensionType::Uninitialized => &[],
     };
 
@@ -98,6 +104,10 @@ pub enum ExtensionData {
     TokenGroup(TokenGroup),
     GroupMemberPointer(extension::group_member_pointer::GroupMemberPointer),
     TokenGroupMember(TokenGroupMember),
+    ConfidentialMintBurn(extension::confidential_mint_burn::ConfidentialMintBurn),
+    ScaledUiAmountConfig(extension::scaled_ui_amount::ScaledUiAmountConfig),
+    PausableConfig(extension::pausable::PausableConfig),
+    PausableAccount(extension::pausable::PausableAccount),
 }
 
 impl TryFrom<(ExtensionType, &[u8])> for ExtensionData {
@@ -175,6 +185,19 @@ impl TryFrom<(ExtensionType, &[u8])> for ExtensionData {
             ExtensionType::TokenGroupMember => Ok(ExtensionData::TokenGroupMember(
                 parse_extension_data(data_bytes)?,
             )),
+            ExtensionType::ConfidentialMintBurn => Ok(ExtensionData::ConfidentialMintBurn(
+                parse_extension_data(data_bytes)?,
+            )),
+            ExtensionType::ScaledUiAmount => Ok(ExtensionData::ScaledUiAmountConfig(
+                parse_extension_data(data_bytes)?,
+            )),
+            ExtensionType::Pausable => Ok(ExtensionData::PausableConfig(parse_extension_data(
+                data_bytes,
+            )?)),
+            ExtensionType::PausableAccount => Ok(ExtensionData::PausableAccount(
+                parse_extension_data(data_bytes)?,
+            )),
+
             ExtensionType::Uninitialized => Err(ProgramError::InvalidArgument),
         }
     }
@@ -186,8 +209,9 @@ pub mod token_extensions_proto_parser {
         group_member_pointer::GroupMemberPointer, group_pointer::GroupPointer,
         immutable_owner::ImmutableOwner, metadata_pointer::MetadataPointer,
     };
+    use spl_pod::solana_program::pubkey::Pubkey;
     use spl_token_2022::{
-        solana_zk_token_sdk::zk_token_elgamal::pod::ElGamalPubkey,
+        solana_zk_sdk::encryption::pod::elgamal::PodElGamalPubkey,
         state::{Account, Mint, Multisig},
     };
     use spl_token_group_interface::state::{TokenGroup, TokenGroupMember};
@@ -195,22 +219,20 @@ pub mod token_extensions_proto_parser {
     use yellowstone_vixen_proto::parser::token::{MintProto, MultisigProto, TokenAccountProto};
     #[allow(clippy::wildcard_imports)]
     use yellowstone_vixen_proto::parser::token_extensions::{
-        extension_data_proto::Data, ConfidentialTransferAccountProto,
+        extension_data_proto::Data, ConfidentialMintBurnProto, ConfidentialTransferAccountProto,
         ConfidentialTransferFeeAmountProto, ConfidentialTransferFeeConfigProto,
         ConfidentialTransferMintProto, CpiGuardProto, DefaultAccountStateProto, ExtensionDataProto,
         GroupMemberPointerProto, GroupPointerProto, ImmutableOwnerProto,
         InterestBearingConfigProto, KeyValue, MemoTransferProto, MetadataPointerProto,
         MintCloseAuthorityProto, NonTransferableAccountProto, NonTransferableProto,
-        PermanentDelegateProto, TokenGroupMemberProto, TokenGroupProto, TokenMetadataProto,
+        PausableAccountProto, PausableConfigProto, PermanentDelegateProto,
+        ScaledUiAmountConfigProto, TokenGroupMemberProto, TokenGroupProto, TokenMetadataProto,
         TransferFeeAmountProto, TransferFeeConfigProto, TransferFeeProto, TransferHookAccountProto,
         TransferHookProto,
     };
 
     use super::{extension, ExtensionData};
-    use crate::helpers::{
-        proto::{ElGamalPubkeyBytes, FromCOptionPubkeyToOptString},
-        IntoProto,
-    };
+    use crate::helpers::{proto::FromCOptionPubkeyToOptString, IntoProto};
 
     macro_rules! impl_into_proto {
         ($($variant:ident),*) => {
@@ -251,7 +273,11 @@ pub mod token_extensions_proto_parser {
         TokenGroup,
         GroupMemberPointer,
         TokenGroupMember,
-        ConfidentialTransferFeeConfig
+        ConfidentialTransferFeeConfig,
+        ConfidentialMintBurn,
+        ScaledUiAmountConfig,
+        PausableConfig,
+        PausableAccount
     );
 
     impl IntoProto<TokenAccountProto> for Account {
@@ -311,7 +337,7 @@ pub mod token_extensions_proto_parser {
         fn into_proto(self) -> ConfidentialTransferAccountProto {
             ConfidentialTransferAccountProto {
                 approved: self.approved.into(),
-                elgamal_pubkey: ElGamalPubkeyBytes::new(self.elgamal_pubkey.0).to_string(),
+                elgamal_pubkey: self.elgamal_pubkey.to_string(),
                 pending_balance: self.pending_balance_lo.to_string(),
                 pending_balance_lo: self.pending_balance_lo.to_string(),
                 pending_balance_hi: self.pending_balance_hi.to_string(),
@@ -413,10 +439,10 @@ pub mod token_extensions_proto_parser {
         fn into_proto(self) -> ConfidentialTransferMintProto {
             ConfidentialTransferMintProto {
                 authority: self.authority.0.to_string(),
-                auditor_elgamal_pubkey: Into::<Option<ElGamalPubkey>>::into(
+                auditor_elgamal_pubkey: Option::<PodElGamalPubkey>::from(
                     self.auditor_elgamal_pubkey,
                 )
-                .map(|x| ElGamalPubkeyBytes::new(x.0).to_string()),
+                .map(|x| x.to_string()),
                 auto_approve_new_accounts: self.auto_approve_new_accounts.into(),
             }
         }
@@ -472,10 +498,9 @@ pub mod token_extensions_proto_parser {
             ConfidentialTransferFeeConfigProto {
                 authority: self.authority.0.to_string(),
                 withheld_amount: self.withheld_amount.to_string(),
-                withdraw_withheld_authority_elgamal_pubkey: ElGamalPubkeyBytes::new(
-                    self.withdraw_withheld_authority_elgamal_pubkey.0,
-                )
-                .to_string(),
+                withdraw_withheld_authority_elgamal_pubkey: self
+                    .withdraw_withheld_authority_elgamal_pubkey
+                    .to_string(),
                 harvest_to_mint_enabled: self.harvest_to_mint_enabled.into(),
             }
         }
@@ -542,10 +567,47 @@ pub mod token_extensions_proto_parser {
     impl IntoProto<TokenGroupMemberProto> for TokenGroupMember {
         fn into_proto(self) -> TokenGroupMemberProto {
             TokenGroupMemberProto {
-                member_number: Into::<u32>::into(self.member_number).into(),
+                member_number: self.member_number.into(),
                 mint: self.mint.to_string(),
                 group: self.group.to_string(),
             }
         }
+    }
+
+    impl IntoProto<ConfidentialMintBurnProto>
+        for extension::confidential_mint_burn::ConfidentialMintBurn
+    {
+        fn into_proto(self) -> ConfidentialMintBurnProto {
+            ConfidentialMintBurnProto {
+                confidential_supply: self.confidential_supply.to_string(),
+                decryptable_supply: self.decryptable_supply.to_string(),
+                supply_elgamal_pubkey: self.supply_elgamal_pubkey.to_string(),
+                pending_burn: self.pending_burn.to_string(),
+            }
+        }
+    }
+
+    impl IntoProto<ScaledUiAmountConfigProto> for extension::scaled_ui_amount::ScaledUiAmountConfig {
+        fn into_proto(self) -> ScaledUiAmountConfigProto {
+            ScaledUiAmountConfigProto {
+                authority: Into::<Option<Pubkey>>::into(self.authority).map(|x| x.to_string()),
+                multiplier: self.multiplier.into(),
+                new_multiplier_effective_timestamp: self.new_multiplier_effective_timestamp.into(),
+                new_multiplier: self.new_multiplier.into(),
+            }
+        }
+    }
+
+    impl IntoProto<PausableConfigProto> for extension::pausable::PausableConfig {
+        fn into_proto(self) -> PausableConfigProto {
+            PausableConfigProto {
+                authority: Into::<Option<Pubkey>>::into(self.authority).map(|x| x.to_string()),
+                paused: self.paused.into(),
+            }
+        }
+    }
+
+    impl IntoProto<PausableAccountProto> for extension::pausable::PausableAccount {
+        fn into_proto(self) -> PausableAccountProto { PausableAccountProto {} }
     }
 }

@@ -60,7 +60,7 @@ pub enum ConfidentaltransferFeeIx {
 impl ExtensionIxParser for ConfidentaltransferFeeIx {
     fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
-        let ix_type = decode_extension_ix_type(&ix.data)?;
+        let ix_type = decode_extension_ix_type(&ix.data[1..])?;
 
         match ix_type {
             ConfidentialTransferFeeInstruction::InitializeConfidentialTransferFeeConfig => {

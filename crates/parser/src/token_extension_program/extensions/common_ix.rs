@@ -83,7 +83,7 @@ impl CommonExtensionIxs {
         extension: ExtensionWithCommonIxs,
         ix: &InstructionUpdate,
     ) -> Result<Self> {
-        let ix_type = decode_extension_ix_type(&ix.data)?;
+        let ix_type = decode_extension_ix_type(&ix.data[1..])?;
         let accounts_len = ix.accounts.len();
         match ExtensionWithCommonIxs::get_ixs_supported(&extension) {
             IxsSupported::InitAndUpdate => match ix_type {
