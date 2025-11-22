@@ -52,14 +52,23 @@ impl ProgramStreams for Service {
         &self,
         request: Request<SubscribeRequest>,
     ) -> Result<Response<Self::SubscribeStream>, Status> {
-        let pubkey: Pubkey = request.into_inner().program.parse().map_err(
-            |e: yellowstone_vixen_core::KeyFromStrError| {
-                Status::new(tonic::Code::InvalidArgument, e.to_string())
-            },
-        )?;
+        let pubkeys: Vec<Pubkey> = request
+            .into_inner()
+            .programs
+            .iter()
+            .map(|p| {
+                p.parse()
+                    .map_err(|e: yellowstone_vixen_core::KeyFromStrError| {
+                        Status::new(tonic::Code::InvalidArgument, e.to_string())
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
-        static NO_RX: [Receiver; 0] = [];
-        let rxs = self.0.get(&pubkey).map_or(NO_RX.as_slice(), AsRef::as_ref);
+        let rxs: Vec<_> = pubkeys
+            .iter()
+            .filter_map(|key| self.0.get(key))
+            .flatten()
+            .collect();
 
         // TODO: make max_tries configurable?
         let stream =

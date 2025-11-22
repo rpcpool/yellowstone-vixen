@@ -5,7 +5,7 @@ use std::{borrow::Cow, collections::HashMap, pin::Pin};
 
 use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
-use tracing::{warn, Instrument, Span};
+use tracing::{trace, Instrument, Span};
 use vixen_core::{
     AccountUpdate, BlockMetaUpdate, BlockUpdate, GetPrefilter, ParserId, SlotUpdate,
     TransactionUpdate,
@@ -21,14 +21,16 @@ pub type HandlerResult<T> = Result<T, BoxedError>;
 
 /// A handler callback for a parsed value and its corresponding raw event.
 pub trait Handler<T, R>
-where R: Sync
+where
+    R: Sync,
 {
     /// Consume the parsed value together with the raw event.
     fn handle(&self, value: &T, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send;
 }
 
 impl<T: Handler<U, R>, U, R> Handler<U, R> for &T
-where R: Sync
+where
+    R: Sync,
 {
     #[inline]
     fn handle(&self, value: &U, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send {
@@ -49,7 +51,9 @@ mod pipeline_error {
 
     impl Handled {
         #[inline]
-        pub fn as_unit(self) { let Self(()) = self; }
+        pub fn as_unit(self) {
+            let Self(()) = self;
+        }
     }
 
     #[derive(Debug)]
@@ -95,9 +99,9 @@ mod pipeline_error {
 
     #[derive(Debug, thiserror::Error)]
     pub enum Error {
-        #[error("Error parsing input value")]
+        #[error("Error parsing input value: ({0})")]
         Parser(#[source] BoxedError),
-        #[error("Handler returned an error on parsed value")]
+        #[error("Handler returned an error on parsed value: ({0})")]
         Handler(#[source] BoxedError),
     }
 
@@ -129,17 +133,23 @@ impl<P, H> Pipeline<P, H> {
     /// Create a new pipeline from a parser and a list of handlers.
     #[inline]
     #[must_use]
-    pub fn new(parser: P, handlers: H) -> Self { Self(parser, handlers) }
+    pub fn new(parser: P, handlers: H) -> Self {
+        Self(parser, handlers)
+    }
 }
 
 impl<P: ParserId, H> ParserId for Pipeline<P, H> {
     #[inline]
-    fn id(&self) -> Cow<'static, str> { self.0.id() }
+    fn id(&self) -> Cow<'static, str> {
+        self.0.id()
+    }
 }
 
 impl<P: GetPrefilter, H> GetPrefilter for Pipeline<P, H> {
     #[inline]
-    fn prefilter(&self) -> Prefilter { self.0.prefilter() }
+    fn prefilter(&self) -> Prefilter {
+        self.0.prefilter()
+    }
 }
 
 /// A boxed pipeline.
@@ -225,12 +235,16 @@ where
 }
 
 impl<T> ParserId for BoxPipeline<'_, T> {
-    fn id(&self) -> Cow<'static, str> { <dyn DynPipeline<T>>::id(&**self) }
+    fn id(&self) -> Cow<'static, str> {
+        <dyn DynPipeline<T>>::id(&**self)
+    }
 }
 
 impl<T> GetPrefilter for BoxPipeline<'_, T> {
     #[inline]
-    fn prefilter(&self) -> Prefilter { <dyn DynPipeline<T>>::prefilter(&**self) }
+    fn prefilter(&self) -> Prefilter {
+        <dyn DynPipeline<T>>::prefilter(&**self)
+    }
 }
 
 impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
@@ -275,14 +289,20 @@ pub(crate) struct PipelineSet<P>(HashMap<String, P>);
 impl<P> PipelineSet<P> {
     #[inline]
     #[must_use]
-    pub fn len(&self) -> usize { self.0.len() }
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 
     #[inline]
     #[must_use]
-    pub fn new() -> Self { Self(HashMap::new()) }
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
 
     #[inline]
-    pub fn insert(&mut self, key: String, value: P) -> Option<P> { self.0.insert(key, value) }
+    pub fn insert(&mut self, key: String, value: P) -> Option<P> {
+        self.0.insert(key, value)
+    }
 }
 
 impl<P: GetPrefilter> PipelineSet<P> {
@@ -298,7 +318,9 @@ impl<P: GetPrefilter> PipelineSet<P> {
 }
 
 impl<P> PipelineSet<P> {
-    pub(crate) fn get_handlers<I>(&'_ self, it: I) -> Pipelines<'_, P, I> { Pipelines(self, it) }
+    pub(crate) fn get_handlers<I>(&'_ self, it: I) -> Pipelines<'_, P, I> {
+        Pipelines(self, it)
+    }
 }
 
 impl<P: ParserId> FromIterator<P> for PipelineSet<P> {
@@ -311,7 +333,8 @@ impl<P: ParserId> FromIterator<P> for PipelineSet<P> {
 pub(crate) struct Pipelines<'m, H, I>(&'m PipelineSet<H>, I);
 
 impl<'m, H, I: IntoIterator> Pipelines<'m, H, I>
-where I::Item: AsRef<str> + Send + 'm
+where
+    I::Item: AsRef<str> + Send + 'm,
 {
     fn get_pipelines(self) -> impl Iterator<Item = (I::Item, &'m H)> {
         let Self(pipelines, it) = self;
@@ -320,7 +343,7 @@ where I::Item: AsRef<str> + Send + 'm
             let pipeline = pipelines.0.get(filter);
 
             if pipeline.is_none() {
-                warn!(filter, "No pipeline matched filter on incoming update");
+                trace!(filter, "No pipeline matched filter on incoming update");
             }
 
             pipeline.map(|p| (f, p))

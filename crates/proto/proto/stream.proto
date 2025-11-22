@@ -12,8 +12,8 @@ service ProgramStreams {
 
 // Request to subscribe to a stream of updates for a given program ID.
 message SubscribeRequest {
-  // The program ID to subscribe to.
-  string program = 1;
+  // The program IDs to subscribe to.
+  repeated string programs = 1;
 }
 
 // Update from the requested program containing a parsed value.
