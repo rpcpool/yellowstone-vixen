@@ -3472,9 +3472,9 @@ dependencies = [
 
 [[package]]
 name = "jetstreamer-firehose"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be8a98393788c60cc0f43a1646412c8ecad9db836355657ad04c73d87544e15b"
+checksum = "612cfeba0a1169b2eb9470b5a23750538d6421090001f0ad6359ce845b3fc970"
 dependencies = [
  "base64 0.22.1",
  "bincode",
@@ -3515,9 +3515,9 @@ dependencies = [
 
 [[package]]
 name = "jetstreamer-utils"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "acb29cbb9bc0474986d355a2cc6c36f6f3c377cfdc423ff41ad7622f4ec0ab01"
+checksum = "115a8ea9385ac7d0e8712ca95f2093285f143b3738b8166e02f8a4f269cf350c"
 dependencies = [
  "ctrlc",
  "libc",
@@ -14787,6 +14787,11 @@ dependencies = [
  "prometheus",
  "prost-types 0.13.5",
  "serde",
+ "solana-instruction 2.3.0",
+ "solana-msg 2.2.1",
+ "solana-pubkey 2.4.0",
+ "solana-transaction 2.2.3",
+ "solana-transaction-status 2.3.10",
  "thiserror 1.0.69",
  "tokio",
  "tokio-util 0.7.16",

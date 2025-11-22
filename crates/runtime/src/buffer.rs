@@ -5,7 +5,7 @@ use topograph::{
     executor::{self, Executor, Nonblock, Tokio},
     prelude::*,
 };
-use tracing::{warn, Instrument};
+use tracing::{debug, warn, Instrument};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdatePing},
     tonic::Status,
@@ -91,6 +91,11 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
                     .await;
             },
             UpdateOneof::Transaction(t) => {
+                debug!(
+                    filters = ?filters,
+                    "DEBUG: Processing transaction update with filters"
+                );
+
                 let transaction_fut = pipelines.transaction.get_handlers(&filters).run(
                     span.clone(),
                     &t,

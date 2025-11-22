@@ -23,9 +23,15 @@ thiserror = { workspace = true }
 tokio-util = { workspace = true }
 prost-types = { workspace = true }
 # Jetstreamer firehose for direct streaming without ClickHouse
-jetstreamer-firehose = "0.1.6"
-jetstreamer-utils = "0.1.6"
+jetstreamer-firehose = { workspace = true }
+jetstreamer-utils = { workspace = true }
 prometheus = { workspace = true, optional = true }
+# Solana crates for transaction parsing
+solana-transaction = { workspace = true }
+solana-msg = { workspace = true }
+solana-instruction = { workspace = true }
+solana-pubkey = { workspace = true }
+solana-transaction-status = { workspace = true }
 
 [features]
 default = []

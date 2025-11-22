@@ -73,6 +73,12 @@ tokio = "^1.37.0"
 tracing = "^0.1.40"
 zstd = "^0.13.0"
 bytemuck = "^1"
+anyhow = "^1.0"
+# Jetstreamer dependencies
+jetstreamer-firehose = "0.1"
+jetstreamer-utils = "0.1"
+# HTTP server for metrics
+warp = "0.3"
 
 yellowstone-fumarole-client = "^0.2.0"
 yellowstone-grpc-client = { version = "9" }

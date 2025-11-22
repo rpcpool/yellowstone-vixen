@@ -13,7 +13,7 @@ anyhow = { workspace = true }
 yellowstone-vixen = { workspace = true, features = ["prometheus"] }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
-yellowstone-vixen-jetstream-source = { path = "../../crates/jetstreamer-source", features = ["prometheus"] }
-yellowstone-vixen-parser = { path = "../../crates/parser", features = ["token-program"] }
+yellowstone-vixen-jetstream-source = { workspace = true, features = ["prometheus"] }
+yellowstone-vixen-parser = { workspace = true, features = ["token-program"] }
 prometheus = { workspace = true }
-warp = "0.3"
+warp = { workspace = true }

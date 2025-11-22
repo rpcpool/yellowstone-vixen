@@ -5,7 +5,7 @@ use std::{borrow::Cow, collections::HashMap, pin::Pin};
 
 use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
-use tracing::{warn, Instrument, Span};
+use tracing::{debug, warn, Instrument, Span};
 use vixen_core::{
     AccountUpdate, BlockMetaUpdate, BlockUpdate, GetPrefilter, ParserId, SlotUpdate,
     TransactionUpdate,
@@ -320,7 +320,16 @@ where I::Item: AsRef<str> + Send + 'm
             let pipeline = pipelines.0.get(filter);
 
             if pipeline.is_none() {
-                warn!(filter, "No pipeline matched filter on incoming update");
+                warn!(
+                    filter,
+                    available_pipelines = ?pipelines.0.keys().collect::<Vec<_>>(),
+                    "No pipeline matched filter on incoming update - DEBUG: available pipelines"
+                );
+            } else {
+                debug!(
+                    filter,
+                    "Pipeline matched filter on incoming update"
+                );
             }
 
             pipeline.map(|p| (f, p))

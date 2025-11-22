@@ -8,7 +8,7 @@ use yellowstone_vixen::{
     config::{BufferConfig, VixenConfig},
     Handler, HandlerResult, Pipeline, Runtime,
 };
-use yellowstone_vixen_core::instruction::InstructionUpdate;
+use yellowstone_vixen_core::{instruction::InstructionUpdate, ParserId};
 use yellowstone_vixen_jetstream_source::{JetstreamSource, JetstreamSourceConfig, SlotRangeConfig};
 use yellowstone_vixen_parser::token_program::InstructionParser as TokenProgramIxParser;
 
@@ -129,9 +129,6 @@ async fn main() -> Result<()> {
         network: "mainnet".to_string(),
         compact_index_base_url: "https://files.old-faithful.net".to_string(),
         network_capacity_mb: 100000,
-        reorder_buffer_size: 1000,
-        slot_timeout_secs: 30,
-        permissive_transaction_filtering: true,
     };
 
     //OPTION: if you want to play with different epochs or slot ranges, you can uncomment the following code
@@ -152,9 +149,6 @@ async fn main() -> Result<()> {
     //     network: "mainnet".to_string(),
     //     compact_index_base_url: "https://files.old-faithful.net".to_string(),
     //     network_capacity_mb: 100000,
-    //     reorder_buffer_size: 1000,
-    //     slot_timeout_secs: 30,
-    //     permissive_transaction_filtering: true,
     // };
 
     // Option 2: Use specific slot range instead of epoch
@@ -169,9 +163,6 @@ async fn main() -> Result<()> {
     //     network: "mainnet".to_string(),
     //     compact_index_base_url: "https://files.old-faithful.net".to_string(),
     //     network_capacity_mb: 100000,
-    //     reorder_buffer_size: 1000,
-    //     slot_timeout_secs: 30,
-    //     permissive_transaction_filtering: true,
     // };
 
     // Option 3: Use Solana RPC API for genesis/recent data instead of CAR files
@@ -217,30 +208,8 @@ async fn main() -> Result<()> {
         .map_err(|e| anyhow::anyhow!("Failed to resolve slot range: {}", e))?;
     info!(start_slot, end_slot, "Resolved slot range");
 
+    // Skip metrics server for testing
     let prometheus_registry = prometheus::Registry::new();
-    let prometheus_registry_clone = prometheus_registry.clone();
-
-    let metrics_route = warp::path!("metrics").map(move || {
-        use prometheus::Encoder;
-        let encoder = prometheus::TextEncoder::new();
-
-        let mut buffer = Vec::new();
-        if let Err(e) = encoder.encode(&prometheus_registry_clone.gather(), &mut buffer) {
-            error!("Could not encode metrics: {}", e);
-            return warp::reply::with_status(
-                "".to_string(),
-                warp::http::StatusCode::INTERNAL_SERVER_ERROR,
-            );
-        };
-
-        let response = String::from_utf8(buffer).unwrap_or_default();
-        warp::reply::with_status(response, warp::http::StatusCode::OK)
-    });
-
-    info!("Starting metrics server on http://localhost:9090/metrics");
-    tokio::spawn(async move {
-        warp::serve(metrics_route).run(([127, 0, 0, 1], 9090)).await;
-    });
 
     // Create Vixen configuration
     let vixen_config = VixenConfig {
@@ -249,10 +218,12 @@ async fn main() -> Result<()> {
     };
 
     info!("Building Vixen runtime with token program instruction parser");
+    let pipeline = Pipeline::new(TokenProgramIxParser, [
+        TokenInstructionLogger,
+    ]);
+    info!("Created pipeline with ID: {}", pipeline.id());
     let runtime = Runtime::<JetstreamSource>::builder()
-        .instruction(Pipeline::new(TokenProgramIxParser, [
-            TokenInstructionLogger,
-        ]))
+        .instruction(pipeline)
         .metrics(prometheus_registry)
         .build(vixen_config);
 

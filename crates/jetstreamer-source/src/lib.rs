@@ -16,20 +16,14 @@ use yellowstone_vixen_core::Filters;
 struct VixenStreamHandler {
     tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
     filters: Filters,
-    config: JetstreamSourceConfig,
 }
 
 impl VixenStreamHandler {
     fn new(
         tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
         filters: Filters,
-        config: JetstreamSourceConfig,
     ) -> Self {
-        Self {
-            tx,
-            filters,
-            config,
-        }
+        Self { tx, filters }
     }
 
     async fn process_block(&self, block: BlockData) -> Result<(), Error> {
@@ -47,37 +41,58 @@ impl VixenStreamHandler {
                 executed_transaction_count,
                 entry_count,
             } => {
-                let update = SubscribeUpdate {
-            filters: vec![],
-            update_oneof: Some(UpdateOneof::Block(
-                SubscribeUpdateBlock {
-                    slot,
-                    blockhash: blockhash.to_string(),
-                    rewards: Some(yellowstone_grpc_proto::solana::storage::confirmed_block::Rewards {
-                        rewards: vec![],
-                        num_partitions: rewards.num_partitions.map(|np| yellowstone_grpc_proto::solana::storage::confirmed_block::NumPartitions { num_partitions: np }),
-                    }),
-                    block_time: block_time.map(|bt| UnixTimestamp { timestamp: bt }),
-                    block_height: block_height.map(|bh| BlockHeight { block_height: bh }),
-                    executed_transaction_count,
-                    transactions: vec![],
-                    updated_account_count: 0,
-                    accounts: vec![],
-                    entries: vec![],
-                    entries_count: entry_count,
-                    parent_slot,
-                    parent_blockhash: parent_blockhash.to_string(),
-                }
-            )),
-            created_at: Some(yellowstone_grpc_proto::prost_types::Timestamp::from(std::time::SystemTime::now())),
-        };
+                // Get matching filters for this block
+                let matching_filters = self.get_block_matching_filters(slot);
 
-                info!(slot, "Sending block update");
-                if let Err(e) = self.tx.send(Ok(update)).await {
+                // Only send block if filters are interested
+                if matching_filters.is_empty() {
+                    debug!(slot, "No filters interested in block, skipping");
+                    return Ok(());
+                }
+
+                let update = SubscribeUpdate {
+                    filters: matching_filters.clone(),
+                    update_oneof: Some(UpdateOneof::Block(SubscribeUpdateBlock {
+                        slot,
+                        blockhash: blockhash.to_string(),
+                        rewards: Some(
+                            yellowstone_grpc_proto::solana::storage::confirmed_block::Rewards {
+                                rewards: vec![],
+                                num_partitions: rewards.num_partitions.map(|np| {
+                                    yellowstone_grpc_proto::solana::storage::confirmed_block::NumPartitions {
+                                        num_partitions: np,
+                                    }
+                                }),
+                            },
+                        ),
+                        block_time: block_time.map(|bt| UnixTimestamp { timestamp: bt }),
+                        block_height: block_height.map(|bh| BlockHeight { block_height: bh }),
+                        executed_transaction_count,
+                        transactions: vec![],
+                        updated_account_count: 0,
+                        accounts: vec![],
+                        entries: vec![],
+                        entries_count: entry_count,
+                        parent_slot,
+                        parent_blockhash: parent_blockhash.to_string(),
+                    })),
+                    created_at: Some(yellowstone_grpc_proto::prost_types::Timestamp::from(
+                        std::time::SystemTime::now(),
+                    )),
+                };
+
+                info!(
+                    slot,
+                    filters = ?matching_filters,
+                    "Sending block update with {} filter matches",
+                    matching_filters.len()
+                );
+
+                self.tx.send(Ok(update)).await.map_err(|e| {
                     let error_msg = format!("Failed to send block update: {}", e);
                     error!("{}", error_msg);
-                    return Err(Error::ChannelSend(error_msg));
-                }
+                    Error::ChannelSend(error_msg)
+                })?;
             },
             BlockData::LeaderSkipped { slot } => {
                 debug!(slot, "Skipping leader-skipped slot");
@@ -87,27 +102,90 @@ impl VixenStreamHandler {
         Ok(())
     }
 
-    async fn process_transaction(&self, tx: TransactionData) -> Result<(), Error> {
+    /// Get matching filters for blocks based on parser prefilters
+    fn get_block_matching_filters(&self, slot: u64) -> Vec<String> {
+        let mut matching_filters = Vec::new();
+
+        for (filter_id, prefilter) in &self.filters.parsers_filters {
+            // Include filters that have block-related requirements
+            let mut matches = false;
+
+            if let Some(block_filter) = &prefilter.block {
+                if block_filter.include_transactions
+                    || block_filter.include_accounts
+                    || block_filter.include_entries
+                {
+                    matches = true;
+                }
+            }
+
+            if prefilter.block_meta.is_some() {
+                matches = true;
+            }
+
+            if prefilter.slot.is_some() {
+                // Include all slots if slot filter is present
+                matches = true;
+            }
+
+            if matches {
+                debug!(
+                    filter_id = %filter_id,
+                    slot,
+                    "Block matches filter"
+                );
+                matching_filters.push(filter_id.clone());
+            }
+        }
+
+        if matching_filters.is_empty() {
+            debug!(slot, "No filters interested in blocks");
+        }
+
+        matching_filters
+    }
+
+    async fn process_transaction(&self, tx_data: TransactionData) -> Result<(), Error> {
         info!(
-            signature = ?tx.signature,
-            slot = tx.slot,
-            transaction_slot_index = tx.transaction_slot_index,
-            is_vote = tx.is_vote,
+            signature = ?tx_data.signature,
+            slot = tx_data.slot,
+            index = tx_data.transaction_slot_index,
+            is_vote = tx_data.is_vote,
             "Processing transaction"
         );
 
-        // Check if transaction should be filtered
-        if !self.should_process_transaction(&tx) {
-            debug!(signature = ?tx.signature, slot = tx.slot, "Transaction filtered out");
+        // Get matching filters
+        let matching_filters = self.get_matching_filters_for_transaction(&tx_data);
+
+        // If no filters match, don't send the transaction
+        if matching_filters.is_empty() {
+            debug!(
+                signature = ?tx_data.signature,
+                slot = tx_data.slot,
+                "No filters matched, skipping transaction"
+            );
             return Ok(());
         }
-        // TODO: Populate transaction field with protobuf-encoded transaction data
+
+        // Create transaction info structure
+        // TODO: Implement proper protobuf encoding of transaction data
+        // For now, provide minimal required fields to satisfy the parser
+        let transaction_info = Some(
+            yellowstone_grpc_proto::geyser::SubscribeUpdateTransactionInfo {
+                signature: tx_data.signature.as_ref().to_vec(),
+                is_vote: tx_data.is_vote,
+                transaction: None, // TODO: Encode actual transaction protobuf
+                meta: None,        // TODO: Encode transaction metadata protobuf
+                index: tx_data.transaction_slot_index as u64,
+            },
+        );
+
         let update = SubscribeUpdate {
-            filters: vec![],
+            filters: matching_filters.clone(),
             update_oneof: Some(UpdateOneof::Transaction(
                 yellowstone_grpc_proto::geyser::SubscribeUpdateTransaction {
-                    slot: tx.slot,
-                    transaction: None, //protobuf-encoded tx when available
+                    slot: tx_data.slot,
+                    transaction: transaction_info,
                 },
             )),
             created_at: Some(yellowstone_grpc_proto::prost_types::Timestamp::from(
@@ -115,57 +193,82 @@ impl VixenStreamHandler {
             )),
         };
 
-        info!(slot = tx.slot, "Sending transaction update");
-        if let Err(e) = self.tx.send(Ok(update)).await {
+        info!(
+            slot = tx_data.slot,
+            filters = ?matching_filters,
+            "Sending transaction update with {} filter matches",
+            matching_filters.len()
+        );
+
+        self.tx.send(Ok(update)).await.map_err(|e| {
             let error_msg = format!("Failed to send transaction update: {}", e);
             error!("{}", error_msg);
-            return Err(Error::ChannelSend(error_msg));
-        }
+            Error::ChannelSend(error_msg)
+        })?;
 
         Ok(())
     }
 
-    fn should_process_transaction(&self, tx: &TransactionData) -> bool {
-        // If no filters are configured, process all transactions
+    /// Extract matching filter IDs for a transaction based on parser prefilters
+    fn get_matching_filters_for_transaction(&self, tx: &TransactionData) -> Vec<String> {
+        // If no filters configured, don't process anything
         if self.filters.parsers_filters.is_empty() {
-            return true;
+            debug!("No filters configured, skipping transaction");
+            return vec![];
         }
 
-        // Check configured filters
+        let mut matching_filters = Vec::new();
+
+        // Check each filter to see if transaction matches
         for (filter_id, prefilter) in &self.filters.parsers_filters {
-            if let Some(_tx_filter) = &prefilter.transaction {
-                // NOTE: Full transaction data available via tx.transaction
-                // Parse VersionedTransaction.message.account_keys for filtering
+            let mut matches = false;
 
-                if self.config.permissive_transaction_filtering {
-                    info!(
-                        filter_id = %filter_id,
-                        signature = ?tx.signature,
-                        "Processing transaction (permissive mode)"
-                    );
-                    return true;
-                } else {
-                    // Strict mode: Account key extraction not implemented yet
-                    // TODO: Implement proper transaction parsing and account key extraction
-                    info!(
-                        filter_id = %filter_id,
-                        signature = ?tx.signature,
-                        "Strict filtering requires account key extraction - not yet implemented"
-                    );
-                    continue;
-                }
+            // Skip instruction parsers - they should not be included in transaction filters
+            // Instruction parsers are handled separately by extracting instructions from transactions
+            if filter_id.contains("::InstructionParser") {
+                continue;
             }
 
-            // Process if filter has account/slot requirements
-            if prefilter.account.is_some() || prefilter.slot.is_some() {
-                debug!(filter_id = %filter_id, "Filter has account/slot requirements - processing transaction");
-                return true;
+            // Check transaction filters
+            if let Some(_tx_filter) = &prefilter.transaction {
+                // Transaction filters are present, so include this transaction
+                // Note: We cannot check account keys with current jetstreamer-firehose API
+                // so we include all transactions when transaction filters are configured
+                matches = true;
+            }
+
+            // If any account filters exist, we should process this transaction
+            // as it might contain relevant accounts (we can't check keys yet)
+            if prefilter.account.is_some() {
+                matches = true;
+            }
+
+            if matches {
+                debug!(
+                    filter_id = %filter_id,
+                    signature = ?tx.signature,
+                    prefilter = ?prefilter,
+                    "Transaction matches filter - DEBUG: parser details"
+                );
+                matching_filters.push(filter_id.clone());
             }
         }
 
-        // If we have filters configured but none require transactions, don't process
-        debug!("No transaction-relevant filters configured");
-        false
+        if matching_filters.is_empty() {
+            debug!(
+                signature = ?tx.signature,
+                "No filters matched transaction"
+            );
+        }
+
+        debug!(
+            signature = ?tx.signature,
+            matching_filters = ?matching_filters,
+            total_filters = self.filters.parsers_filters.len(),
+            "DEBUG: Transaction filter matching results"
+        );
+
+        matching_filters
     }
 }
 
@@ -185,7 +288,7 @@ pub struct JetstreamSourceConfig {
     #[arg(long, env, default_value = "4")]
     pub threads: usize,
 
-    /// Network name (mainnet, etc.)
+    /// Network name (mainnet, testnet, devnet)
     #[arg(long, env, default_value = "mainnet")]
     pub network: String,
 
@@ -196,18 +299,6 @@ pub struct JetstreamSourceConfig {
     /// Network capacity in MB
     #[arg(long, env, default_value = "1000")]
     pub network_capacity_mb: usize,
-
-    /// Reorder buffer size
-    #[arg(long, env, default_value = "1000")]
-    pub reorder_buffer_size: usize,
-
-    /// Slot timeout in seconds
-    #[arg(long, env, default_value = "30")]
-    pub slot_timeout_secs: u64,
-
-    /// Control transaction filtering: true = permissive (all), false = strict (limited).
-    #[arg(long, env, default_value = "true")]
-    pub permissive_transaction_filtering: bool,
 }
 
 /// Configuration for slot ranges or epochs
@@ -228,6 +319,8 @@ pub struct SlotRangeConfig {
 }
 
 impl SlotRangeConfig {
+    /// Convert configuration to slot range
+    /// Returns (start_slot, end_slot)
     pub fn to_slot_range(&self) -> Result<(u64, u64), Error> {
         match (self.slot_start, self.slot_end, self.epoch) {
             (Some(start), Some(end), None) => {
@@ -239,9 +332,10 @@ impl SlotRangeConfig {
                 Ok((start, end))
             },
             (None, None, Some(epoch)) => {
-                let slots_per_epoch = 432_000u64;
-                let start = epoch * slots_per_epoch;
-                let end = (epoch + 1) * slots_per_epoch - 1;
+                // Mainnet/testnet use 432,000 slots per epoch
+                const SLOTS_PER_EPOCH: u64 = 432_000;
+                let start = epoch * SLOTS_PER_EPOCH;
+                let end = (epoch + 1) * SLOTS_PER_EPOCH - 1;
                 info!(
                     epoch,
                     start_slot = start,
@@ -268,7 +362,9 @@ pub struct JetstreamSource {
 impl SourceTrait for JetstreamSource {
     type Config = JetstreamSourceConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     async fn connect(
         &self,
@@ -303,34 +399,38 @@ impl JetstreamSource {
         _cancellation_token: CancellationToken,
     ) -> Result<(), Error> {
         let (start_slot, end_slot) = config.range.to_slot_range().map_err(|e| {
-            Error::SlotRangeResolution(format!("Failed to resolve slot range: {}", e))
+            Error::SlotRangeResolution(format!(
+                "Failed to resolve slot range from config {:?}: {}",
+                config.range, e
+            ))
         })?;
+
         info!(
             start_slot,
-            end_slot, "Starting Old Faithful streaming from {}", config.archive_url
+            end_slot,
+            archive_url = %config.archive_url,
+            threads = config.threads,
+            "Starting Jetstream historical replay"
         );
 
-        let handler = Arc::new(VixenStreamHandler::new(
-            tx.clone(),
-            filters.clone(),
-            config.clone(),
-        ));
+        let handler = Arc::new(VixenStreamHandler::new(tx.clone(), filters.clone()));
 
-        std::env::set_var("JETSTREAMER_NETWORK", config.network.clone());
+        // Set environment variables for jetstreamer
+        std::env::set_var("JETSTREAMER_NETWORK", &config.network);
         std::env::set_var(
             "JETSTREAMER_COMPACT_INDEX_BASE_URL",
-            config.compact_index_base_url.clone(),
+            &config.compact_index_base_url,
         );
         std::env::set_var(
             "JETSTREAMER_NETWORK_CAPACITY_MB",
             config.network_capacity_mb.to_string(),
         );
 
-        let handler_clone = handler.clone();
+        let handler_on_block = handler.clone();
         let on_block = Some(move |_thread_id: usize, block: BlockData| {
-            let handler = handler_clone.clone();
+            let handler_callback = handler_on_block.clone();
             async move {
-                handler
+                handler_callback
                     .process_block(block)
                     .await
                     .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send>)
@@ -374,10 +474,10 @@ impl JetstreamSource {
                 error!(
                     slot,
                     error = %error_msg,
-                    "Corrupted CAR file at slot {slot}. Try different epoch (e.g., 800)."
+                    "Corrupted CAR file detected"
                 );
                 return Err(Error::Jetstreamer(format!(
-                    "Corrupted data at slot {}: {}. Try epoch 800 or RPC API.",
+                    "Corrupted data at slot {}: {}. Try a different epoch or slot range.",
                     slot, error_msg
                 )));
             } else {
@@ -388,7 +488,10 @@ impl JetstreamSource {
             }
         }
 
-        info!("Jetstreamer historical data streaming completed successfully");
+        info!(
+            start_slot,
+            end_slot, "Jetstream historical replay completed successfully"
+        );
         Ok(())
     }
 }
@@ -397,26 +500,25 @@ impl JetstreamSource {
 pub enum Error {
     #[error("Plugin execution error: {0}")]
     PluginExecution(String),
+
     #[error("Data conversion error: {0}")]
     DataConversion(String),
+
     #[error("Channel send error: {0}")]
     ChannelSend(String),
+
     #[error("Thread join error: {0}")]
     ThreadJoin(String),
+
     #[error("Invalid configuration: {0}")]
     InvalidConfig(String),
+
     #[error("Slot range resolution error: {0}")]
     SlotRangeResolution(String),
-    #[error("Reorder buffer error: {0}")]
-    ReorderBuffer(String),
-    #[error("Timeout checker error: {0}")]
-    TimeoutChecker(String),
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("HTTP request error: {0}")]
-    HttpRequest(String),
-    #[error("JSON parsing error: {0}")]
-    JsonParse(String),
+
     #[error("Jetstreamer firehose error: {0}")]
     Jetstreamer(String),
 }
@@ -457,7 +559,7 @@ mod tests {
     }
 
     #[test]
-    fn test_invalid_config() {
+    fn test_invalid_config_both_epoch_and_slots() {
         let config = SlotRangeConfig {
             slot_start: Some(100),
             slot_end: Some(200),
@@ -479,87 +581,27 @@ mod tests {
             network: "mainnet".to_string(),
             compact_index_base_url: "https://files.old-faithful.net".to_string(),
             network_capacity_mb: 1000,
-            reorder_buffer_size: 1000,
-            slot_timeout_secs: 30,
-            permissive_transaction_filtering: true,
         };
 
         let filters = Filters::new(std::collections::HashMap::new());
         let source = JetstreamSource::new(config, filters);
 
-        // Verify config storage
         assert_eq!(source.config.archive_url, "https://api.old-faithful.net");
         assert_eq!(source.config.threads, 4);
         assert_eq!(source.config.network, "mainnet");
-        assert!(source.config.permissive_transaction_filtering);
     }
 
     #[test]
-    fn test_epoch_to_slot_conversion_mainnet() {
-        let config = JetstreamSourceConfig {
-            archive_url: "https://api.old-faithful.net".to_string(),
-            range: SlotRangeConfig {
+    fn test_multiple_epochs() {
+        for epoch in [800, 801, 802] {
+            let config = SlotRangeConfig {
                 slot_start: None,
                 slot_end: None,
-                epoch: Some(800),
-            },
-            threads: 4,
-            network: "mainnet".to_string(),
-            compact_index_base_url: "https://files.old-faithful.net".to_string(),
-            network_capacity_mb: 1000,
-            reorder_buffer_size: 1000,
-            slot_timeout_secs: 30,
-            permissive_transaction_filtering: true,
-        };
-
-        let filters = Filters::new(std::collections::HashMap::new());
-        let _source = JetstreamSource::new(config, filters);
-
-        // Verify epoch to slot conversion
-        let epoch = 800u64;
-        let slots_per_epoch = 432_000u64;
-        let expected_start = epoch * slots_per_epoch;
-        let expected_end = (epoch + 1) * slots_per_epoch - 1;
-
-        assert_eq!(expected_start, 345600000);
-        assert_eq!(expected_end, 346031999);
-    }
-
-    #[test]
-    fn test_network_epoch_slots() {
-        // Verify all networks use same slots per epoch
-        assert_eq!(432_000, 432_000);
-
-        // Test mainnet aliases
-        let mainnet_configs = ["mainnet", "mainnet-beta"];
-        for network in &mainnet_configs {
-            assert!(matches!(*network, "mainnet" | "mainnet-beta"));
+                epoch: Some(epoch),
+            };
+            let (start, end) = config.to_slot_range().unwrap();
+            assert_eq!(start, epoch * 432_000);
+            assert_eq!(end, (epoch + 1) * 432_000 - 1);
         }
-    }
-
-    #[test]
-    fn test_slot_range_config_validation() {
-        let config = JetstreamSourceConfig {
-            archive_url: "https://test.com".to_string(),
-            range: SlotRangeConfig {
-                slot_start: Some(2000),
-                slot_end: Some(1000), // Invalid: end < start
-                epoch: None,
-            },
-            threads: 4,
-            network: "mainnet".to_string(),
-            compact_index_base_url: "https://files.test.com".to_string(),
-            network_capacity_mb: 1000,
-            reorder_buffer_size: 1000,
-            slot_timeout_secs: 30,
-            permissive_transaction_filtering: true,
-        };
-
-        let filters = Filters::new(std::collections::HashMap::new());
-        let source = JetstreamSource::new(config, filters);
-
-        // Config creation allowed, validation happens during connect
-        assert_eq!(source.config.range.slot_start, Some(2000));
-        assert_eq!(source.config.range.slot_end, Some(1000));
     }
 }

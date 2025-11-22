@@ -31,7 +31,6 @@ slot-timeout-secs = 30
 network = "mainnet"
 compact-index-base-url = "https://files.old-faithful.net"
 network-capacity-mb = 1000
-permissive-transaction-filtering = true
 
 [filters]
 # Add filters for specific programs/accounts if needed
