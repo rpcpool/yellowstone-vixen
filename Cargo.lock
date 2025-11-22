@@ -379,7 +379,7 @@ dependencies = [
  "itertools 0.10.5",
  "proc-macro-error2",
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 2.0.106",
 ]
 
@@ -1760,7 +1760,7 @@ dependencies = [
  "ident_case",
  "proc-macro2",
  "quote",
- "strsim",
+ "strsim 0.11.1",
  "syn 2.0.106",
 ]
 
@@ -1874,7 +1874,7 @@ checksum = "6edb4b64a43d977b8e99788fe3a04d483834fba1215a7e02caa415b626497f7f"
 dependencies = [
  "convert_case",
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "rustc_version",
  "syn 2.0.106",
 ]
@@ -2174,7 +2174,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "685adfa4d6f3d765a26bc5dbc936577de9abf756c1feeb3089b01dd395034842"
 dependencies = [
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 2.0.106",
 ]
 
@@ -3306,7 +3306,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7cab85a7ed0bd5f0e76d93846e0147172bed2e2d3f859bcc33a8d9699cad1a75"
 dependencies = [
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
 ]
 
 [[package]]
@@ -3547,7 +3547,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03343451ff899767262ec32146f6d559dd759fdadf42ff0e227c7c48f72594b4"
 dependencies = [
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 2.0.106",
 ]
 
@@ -3653,7 +3653,7 @@ checksum = "5b939a78fa820cdfcb7ee7484466746a7377760970f6f9c6fe19f9edcc8a38d2"
 dependencies = [
  "proc-macro-crate 0.1.5",
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 1.0.109",
 ]
 
@@ -3967,7 +3967,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1265724d8cb29dbbc2b0f06fffb8bf1a8c0cf73a78eede9ba73a4a66c52a981e"
 dependencies = [
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 1.0.109",
 ]
 
@@ -4108,7 +4108,7 @@ checksum = "22ce75669015c4f47b289fd4d4f56e894e4c96003ffdf3ac51313126f94c6cbb"
 dependencies = [
  "cfg-if 1.0.3",
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 1.0.109",
 ]
 
@@ -4749,7 +4749,7 @@ dependencies = [
  "pest",
  "pest_meta",
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 2.0.106",
 ]
 
@@ -4963,7 +4963,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96de42df36bb9bba5542fe9f1a054b8cc87e172759a1868aa05c1f3acc89dfc5"
 dependencies = [
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
 ]
 
 [[package]]
@@ -4974,7 +4974,7 @@ checksum = "11ec05c52be0a07b08061f7dd003e7d7092e0472bc731b4af7bb1ef876109802"
 dependencies = [
  "proc-macro-error-attr2",
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
 ]
 
 [[package]]
@@ -5106,7 +5106,7 @@ dependencies = [
  "anyhow",
  "itertools 0.10.5",
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 1.0.109",
 ]
 
@@ -5228,7 +5228,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e2e25ee72f5b24d773cae88422baddefff7714f97aab68d96fe2b6fc4a28fb2"
 dependencies = [
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 2.0.106",
 ]
 
@@ -6449,7 +6449,7 @@ dependencies = [
  "spl-generic-token 1.0.1",
  "spl-token 8.0.0",
  "spl-token-2022 8.0.1",
- "spl-token-group-interface",
+ "spl-token-group-interface 0.6.0",
  "spl-token-metadata-interface 0.7.0",
  "thiserror 2.0.16",
  "zstd",
@@ -8374,7 +8374,7 @@ dependencies = [
  "solana-vote",
  "solana-vote-program",
  "static_assertions",
- "strum",
+ "strum 0.24.1",
  "strum_macros 0.24.3",
  "tar",
  "tempfile",
@@ -9928,7 +9928,7 @@ dependencies = [
  "solana-vote-program",
  "spl-generic-token 2.0.1",
  "static_assertions",
- "strum",
+ "strum 0.24.1",
  "strum_macros 0.24.3",
  "symlink",
  "tar",
@@ -10096,7 +10096,7 @@ checksum = "d6430000e97083460b71d9fbadc52a2ab2f88f53b3a4c5e58c5ae3640a0e8c00"
 dependencies = [
  "bs58",
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "syn 2.0.106",
 ]
 
@@ -11379,7 +11379,7 @@ dependencies = [
  "spl-memo",
  "spl-token 8.0.0",
  "spl-token-2022 8.0.1",
- "spl-token-group-interface",
+ "spl-token-group-interface 0.6.0",
  "spl-token-metadata-interface 0.7.0",
  "thiserror 2.0.16",
 ]
@@ -12294,8 +12294,8 @@ dependencies = [
  "spl-token 8.0.0",
  "spl-token-confidential-transfer-ciphertext-arithmetic",
  "spl-token-confidential-transfer-proof-extraction 0.3.0",
- "spl-token-confidential-transfer-proof-generation",
- "spl-token-group-interface",
+ "spl-token-confidential-transfer-proof-generation 0.4.1",
+ "spl-token-group-interface 0.6.0",
  "spl-token-metadata-interface 0.7.0",
  "spl-transfer-hook-interface",
  "spl-type-length-value 0.8.0",
@@ -12338,8 +12338,8 @@ dependencies = [
  "spl-token 8.0.0",
  "spl-token-confidential-transfer-ciphertext-arithmetic",
  "spl-token-confidential-transfer-proof-extraction 0.4.1",
- "spl-token-confidential-transfer-proof-generation",
- "spl-token-group-interface",
+ "spl-token-confidential-transfer-proof-generation 0.4.1",
+ "spl-token-group-interface 0.6.0",
  "spl-token-metadata-interface 0.7.0",
  "spl-transfer-hook-interface",
  "spl-type-length-value 0.8.0",
@@ -12690,21 +12690,18 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "strum"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
+dependencies = [
+ "strum_macros 0.24.3",
+]
+
+[[package]]
+name = "strum"
 version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
-
-[[package]]
-name = "strum_macros"
-version = "0.27.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7695ce3845ea4b33927c055a39dc438a45b059f7c1b3d91d38d10355fb8cbca7"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn 2.0.106",
-]
 
 [[package]]
 name = "strum_macros"
@@ -12714,9 +12711,21 @@ checksum = "1e385be0d24f186b4ce2f9982191e7101bb737312ad61c1f2f984f34bcf85d59"
 dependencies = [
  "heck 0.4.1",
  "proc-macro2",
- "quote 1.0.40",
+ "quote",
  "rustversion",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7695ce3845ea4b33927c055a39dc438a45b059f7c1b3d91d38d10355fb8cbca7"
+dependencies = [
+ "heck 0.5.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
@@ -13338,7 +13347,7 @@ dependencies = [
  "prettyplease 0.1.25",
  "proc-macro2",
  "prost-build 0.11.9",
- "quote 1.0.40",
+ "quote",
  "syn 1.0.109",
 ]
 
@@ -14679,8 +14688,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -14820,8 +14829,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -14846,8 +14855,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -14872,8 +14881,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -14898,8 +14907,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -14924,8 +14933,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -14950,8 +14959,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -14976,8 +14985,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -15018,8 +15027,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -15044,8 +15053,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -15062,11 +15071,11 @@ dependencies = [
  "spl-pod 0.3.1",
  "spl-token 6.0.0",
  "spl-token-2022 9.0.0",
- "spl-token-group-interface",
+ "spl-token-group-interface 0.6.0",
  "spl-token-metadata-interface 0.7.0",
  "spl-type-length-value 0.8.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
@@ -15107,8 +15116,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -15133,8 +15142,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -15159,8 +15168,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -15185,8 +15194,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -15211,8 +15220,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -15237,8 +15246,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
@@ -15296,7 +15305,7 @@ dependencies = [
  "spl-stake-pool",
  "spl-token 6.0.0",
  "spl-token-2022 9.0.0",
- "spl-token-group-interface",
+ "spl-token-group-interface 0.6.0",
  "spl-token-metadata-interface 0.4.0",
  "spl-type-length-value 0.8.0",
  "thiserror 1.0.69",
@@ -15349,8 +15358,8 @@ dependencies = [
  "solana-program-entrypoint 2.3.0",
  "solana-program-error 2.2.2",
  "solana-pubkey 2.4.0",
- "strum",
- "strum_macros 0.2.2",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
  "thiserror 1.0.69",
  "tonic 0.12.3",
  "tracing",
