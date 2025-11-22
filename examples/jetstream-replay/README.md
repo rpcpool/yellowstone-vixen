@@ -21,6 +21,55 @@ The Jetstream source enables streaming historical Solana ledger data at high thr
 - ✅ Configurable threading and buffering
 - ✅ Prometheus metrics via Vixen runtime (blocks, transactions, parsing stats)
 
+## Setup
+
+Jetstreamer requires **Clang 16** (not 17) due to RocksDB dependencies. Install dependencies and set environment variables:
+
+### Linux (Ubuntu/Debian)
+
+```bash
+# Install Clang 16
+wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 16
+sudo apt update && sudo apt install -y gcc-13 g++-13 zlib1g-dev libssl-dev libtool
+
+# Set as default
+sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-16 100
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-16 100
+
+# Environment variables (add to ~/.bashrc)
+export CC=clang
+export CXX=clang++
+export LIBCLANG_PATH=/usr/lib/llvm16/lib/libclang.so
+```
+
+### Linux (Arch)
+
+```bash
+sudo pacman -S clang16 llvm16 zlib openssl libtool
+yay -S gcc13  # or use system gcc
+
+# Environment variables (add to ~/.bashrc)
+export CC=clang-16
+export CXX=clang++-16
+export LIBCLANG_PATH=/usr/lib/llvm16/lib/libclang.so
+export LD_LIBRARY_PATH=/usr/lib/llvm16/lib:$LD_LIBRARY_PATH
+```
+
+### macOS
+
+```bash
+brew install llvm@16 zlib openssl libtool
+
+# Environment variables (add to ~/.zshrc)
+export CC=/opt/homebrew/opt/llvm@16/bin/clang
+export CXX=/opt/homebrew/opt/llvm@16/bin/clang++
+export LIBCLANG_PATH=/opt/homebrew/opt/llvm@16/lib/libclang.dylib
+export LDFLAGS="-L/opt/homebrew/opt/llvm@16/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/llvm@16/include"
+```
+
+**Troubleshooting**: If you get RocksDB compilation errors, ensure you're using Clang 16 (not 17) and `LIBCLANG_PATH` is correctly set.
+
 ## Usage
 
 ### Running the Example

@@ -218,9 +218,7 @@ async fn main() -> Result<()> {
     };
 
     info!("Building Vixen runtime with token program instruction parser");
-    let pipeline = Pipeline::new(TokenProgramIxParser, [
-        TokenInstructionLogger,
-    ]);
+    let pipeline = Pipeline::new(TokenProgramIxParser, [TokenInstructionLogger]);
     info!("Created pipeline with ID: {}", pipeline.id());
     let runtime = Runtime::<JetstreamSource>::builder()
         .instruction(pipeline)

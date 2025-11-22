@@ -86,6 +86,7 @@ impl InstructionParser {
                     },
                 ))
             },
+            #[allow(clippy::match_same_arms)]
             TokenInstruction::InitializeMint2 {
                 decimals,
                 mint_authority,

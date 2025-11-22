@@ -326,10 +326,7 @@ where I::Item: AsRef<str> + Send + 'm
                     "No pipeline matched filter on incoming update - DEBUG: available pipelines"
                 );
             } else {
-                debug!(
-                    filter,
-                    "Pipeline matched filter on incoming update"
-                );
+                debug!(filter, "Pipeline matched filter on incoming update");
             }
 
             pipeline.map(|p| (f, p))
