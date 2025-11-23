@@ -8,10 +8,17 @@ package vixen.stream;
 // updates for a given program ID.
 service ProgramStreams {
   rpc Subscribe(SubscribeRequest) returns (stream SubscribeUpdate) {}
+  rpc SubscribeMany(SubscribeManyRequest) returns (stream SubscribeUpdate) {}
 }
 
 // Request to subscribe to a stream of updates for a given program ID.
 message SubscribeRequest {
+  // The program ID to subscribe to.
+  string program = 1;
+}
+
+// Request to subscribe to a stream of updates for a given program IDs.
+message SubscribeManyRequest {
   // The program IDs to subscribe to.
   repeated string programs = 1;
 }

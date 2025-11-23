@@ -13,7 +13,7 @@ use yellowstone_vixen_proto::{
     stream::{
         self,
         program_streams_server::{ProgramStreams, ProgramStreamsServer},
-        SubscribeRequest, SubscribeUpdate,
+        SubscribeRequest, SubscribeManyRequest, SubscribeUpdate,
     },
     tonic::{self, transport, Request, Response, Status},
     tonic_reflection,
@@ -47,11 +47,32 @@ pub(super) struct Service(Channels);
 #[tonic::async_trait]
 impl ProgramStreams for Service {
     type SubscribeStream = futures_util::stream::SelectAll<ReceiverStream>;
+    type SubscribeManyStream = futures_util::stream::SelectAll<ReceiverStream>;
 
     async fn subscribe(
         &self,
         request: Request<SubscribeRequest>,
     ) -> Result<Response<Self::SubscribeStream>, Status> {
+        let pubkey: Pubkey = request.into_inner().program.parse().map_err(
+            |e: yellowstone_vixen_core::KeyFromStrError| {
+                Status::new(tonic::Code::InvalidArgument, e.to_string())
+            },
+        )?;
+
+        static NO_RX: [Receiver; 0] = [];
+        let rxs = self.0.get(&pubkey).map_or(NO_RX.as_slice(), AsRef::as_ref);
+
+        // TODO: make max_tries configurable?
+        let stream =
+            futures_util::stream::select_all(rxs.iter().map(|rx| ReceiverStream::new(rx, 8)));
+
+        Ok(Response::new(stream))
+    }
+
+    async fn subscribe_many(
+        &self,
+        request: Request<SubscribeManyRequest>,
+    ) -> Result<Response<Self::SubscribeManyStream>, Status> {
         let pubkeys: Vec<Pubkey> = request
             .into_inner()
             .programs
