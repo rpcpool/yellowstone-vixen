@@ -24,6 +24,7 @@ use std::{
     sync::Arc,
 };
 
+use borsh::{BorshDeserialize, BorshSerialize};
 use serde::Deserialize;
 use yellowstone_grpc_proto::geyser::{
     self, SubscribeRequest, SubscribeRequestFilterAccounts, SubscribeRequestFilterBlocks,
@@ -445,6 +446,19 @@ impl<const LEN: usize> KeyBytes<LEN> {
     /// slice
     pub fn equals_ref<T: AsRef<[u8]>>(&self, other: T) -> bool {
         self.as_slice().eq(other.as_ref())
+    }
+}
+
+impl<const LEN: usize> BorshSerialize for KeyBytes<LEN> {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.0.serialize(writer)
+    }
+}
+
+impl<const LEN: usize> BorshDeserialize for KeyBytes<LEN> {
+    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let bytes = <[u8; LEN]>::deserialize_reader(reader)?;
+        Ok(Self(bytes))
     }
 }
 

@@ -65,9 +65,9 @@ dependencies = [
 
 [[package]]
 name = "agave-feature-set"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98b7122392ed81e9b4569c3c960a557afb9f735719e0bcc9b2c19d0345568f5f"
+checksum = "d52a2c365c0245cbb8959de725fc2b44c754b673fdf34c9a7f9d4a25c35a7bf1"
 dependencies = [
  "ahash",
  "solana-epoch-schedule",
@@ -79,9 +79,9 @@ dependencies = [
 
 [[package]]
 name = "agave-io-uring"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e9a7a05ffb5fb07af5b5ce53c8206f881b118ac3d7aee52d6a3e0329b6d861a"
+checksum = "a10b918a355bc78764aceb688dbbb6af72425f62be9dbfb7beb00b6d3803a0bd"
 dependencies = [
  "io-uring",
  "libc",
@@ -92,9 +92,9 @@ dependencies = [
 
 [[package]]
 name = "agave-reserved-account-keys"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44941ddf7f11f385b8a10a95bdbe8026909938a4932f23ccd2c78fc2a480a8d7"
+checksum = "8289c8a8a2ef5aa10ce49a070f360f4e035ee3410b8d8f3580fb39d8cf042581"
 dependencies = [
  "agave-feature-set",
  "solana-pubkey",
@@ -885,6 +885,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo_toml"
+version = "0.20.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88da5a13c620b4ca0078845707ea9c3faf11edbc3ffd8497d11d686211cd1ac0"
+dependencies = [
+ "serde",
+ "toml 0.8.23",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1015,6 +1025,59 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7caa3f9de89ddbe2c607f4101924c5abec803763ae9534e4f4d7d8f84aa81f0"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "codama-errors"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69a7b7b16f9b57be0ca6ea44b40f5e6b4aeedcd30bfd33d2998721dd9c2d807f"
+dependencies = [
+ "cargo_toml",
+ "proc-macro2",
+ "serde_json",
+ "syn 2.0.106",
+ "thiserror 2.0.16",
+]
+
+[[package]]
+name = "codama-nodes"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf3194539453ecd51fb72c8440e3aa4a84352a41d61dea8f37d1d5f2428d0419"
+dependencies = [
+ "codama-errors",
+ "codama-nodes-derive",
+ "derive_more",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "codama-nodes-derive"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c138c3a7ed16bdcea33cb7b708a650b575464d86077a558c3b6ce091d4ec7455"
+dependencies = [
+ "codama-errors",
+ "codama-syn-helpers",
+ "derive_more",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+]
+
+[[package]]
+name = "codama-syn-helpers"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1ce2a27f09caf6476c857c809718fac9213ce4124ad0002f1f12f2964681ccc"
+dependencies = [
+ "codama-errors",
+ "derive_more",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
@@ -1371,6 +1434,26 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "derive_more"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
 ]
 
 [[package]]
@@ -4466,9 +4549,9 @@ dependencies = [
 
 [[package]]
 name = "solana-account-decoder"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "902c42492c67e2cb78e839b1af063ed672b3d1ff22311ce07aa073804ca40e53"
+checksum = "ba71c97fa4d85ce4a1e0e79044ad0406c419382be598c800202903a7688ce71a"
 dependencies = [
  "Inflector",
  "base64 0.22.1",
@@ -4509,9 +4592,9 @@ dependencies = [
 
 [[package]]
 name = "solana-account-decoder-client-types"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39260da5bed46e52afe17c8dc2fd41b7d23a946c18605154033631a334e882ec"
+checksum = "5519e8343325b707f17fbed54fcefb325131b692506d0af9e08a539d15e4f8cf"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -4538,9 +4621,9 @@ dependencies = [
 
 [[package]]
 name = "solana-accounts-db"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97bb9be7b256b2295c443e054229942a34b40a2c032631d6e1c5a063ee1ed9e5"
+checksum = "dbbe35141711500d113dfc7aa79eb250c4458f04e759a67ba4bffc3e6cddc402"
 dependencies = [
  "agave-io-uring",
  "ahash",
@@ -4688,9 +4771,9 @@ dependencies = [
 
 [[package]]
 name = "solana-bucket-map"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00b84bb788088bc23e48ae3edbaf22195d8affea8c1158ba4a8e716975e17ddf"
+checksum = "e067a30c43dc66f300584034ce1526da882d3100d45a10613a4e554b3e1e3937"
 dependencies = [
  "bv",
  "bytemuck",
@@ -4707,9 +4790,9 @@ dependencies = [
 
 [[package]]
 name = "solana-client"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a035d424d5a44a3c16506378fd1e6133c73bc5016ffc40f8983d5373e426522"
+checksum = "cc55d1f263e0be4127daf33378d313ea0977f9ffd3fba50fa544ca26722fc695"
 dependencies = [
  "async-trait",
  "bincode",
@@ -4834,9 +4917,9 @@ dependencies = [
 
 [[package]]
 name = "solana-connection-cache"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b46de0f0ec7ea94dfbc81268020c7af10999bab279d37b71f94a35f27c1c4af2"
+checksum = "45c1cff5ebb26aefff52f1a8e476de70ec1683f8cc6e4a8c86b615842d91f436"
 dependencies = [
  "async-trait",
  "bincode",
@@ -5198,9 +5281,9 @@ dependencies = [
 
 [[package]]
 name = "solana-lattice-hash"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eaefcdee3e943d6cf6499df8b988f49a525920fa520f5f5418f06ad4b0448ca1"
+checksum = "1c6effe24897d8e02484ad87272634028d096f0e061b66b298f8df5031ff7fc0"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -5267,9 +5350,9 @@ dependencies = [
 
 [[package]]
 name = "solana-measure"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "776bf2178d04969492949d3b1b8d0885160d2436b9e90b55fd22ab816d6b0539"
+checksum = "11dcd67cd2ae6065e494b64e861e0498d046d95a61cbbf1ae3d58be1ea0f42ed"
 
 [[package]]
 name = "solana-message"
@@ -5296,9 +5379,9 @@ dependencies = [
 
 [[package]]
 name = "solana-metrics"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e208835e05d7017d78619a441e30399c762fcce499d1d20577c553774680f66f"
+checksum = "0375159d8460f423d39e5103dcff6e07796a5ec1850ee1fcfacfd2482a8f34b5"
 dependencies = [
  "crossbeam-channel",
  "gethostname",
@@ -5327,9 +5410,9 @@ checksum = "61515b880c36974053dd499c0510066783f0cc6ac17def0c7ef2a244874cf4a9"
 
 [[package]]
 name = "solana-net-utils"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4f42a434c8bf97ed2ae5080f66016abf25023a7fd8a26fd8d88e808446c7500"
+checksum = "d7a9e831d0f09bd92135d48c5bc79071bb59c0537b9459f1b4dec17ecc0558fa"
 dependencies = [
  "anyhow",
  "bincode",
@@ -5410,9 +5493,9 @@ dependencies = [
 
 [[package]]
 name = "solana-perf"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aed1dfb7f2c51b6b948531fd0127f8c10c71a9640c9804f106b41e6435adc768"
+checksum = "37192c0be5c222ca49dbc5667288c5a8bb14837051dd98e541ee4dad160a5da9"
 dependencies = [
  "ahash",
  "bincode",
@@ -5649,9 +5732,9 @@ dependencies = [
 
 [[package]]
 name = "solana-pubsub-client"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df314b22923b112c7bd90629b42af3881222b8955e3a1d4cf2b21f5ab794a0bb"
+checksum = "d18a7476e1d2e8df5093816afd8fffee94fbb6e442d9be8e6bd3e85f88ce8d5c"
 dependencies = [
  "crossbeam-channel",
  "futures-util",
@@ -5676,9 +5759,9 @@ dependencies = [
 
 [[package]]
 name = "solana-quic-client"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "022865e50402d978b90cc3090d6d2a098ed9af549ce69a7deed92cf203f3a4a3"
+checksum = "44feb5f4a97494459c435aa56de810500cc24e22d0afc632990a8e54a07c05a4"
 dependencies = [
  "async-lock",
  "async-trait",
@@ -5715,9 +5798,9 @@ dependencies = [
 
 [[package]]
 name = "solana-rayon-threadlimit"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a99a753bb24fd7f697d92343a6f6b50cd1e9e1e5e6267b9224821ab3972939e8"
+checksum = "02cc2a4cae3ef7bb6346b35a60756d2622c297d5fa204f96731db9194c0dc75b"
 dependencies = [
  "num_cpus",
 ]
@@ -5786,9 +5869,9 @@ dependencies = [
 
 [[package]]
 name = "solana-rpc-client"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9238867c44e246ddd0427b8e8e21de1b98c6e63a243ae36c7d8429d2e0b29390"
+checksum = "b8d3161ac0918178e674c1f7f1bfac40de3e7ed0383bd65747d63113c156eaeb"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -5826,9 +5909,9 @@ dependencies = [
 
 [[package]]
 name = "solana-rpc-client-api"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "735b5dc6f2ec3cfb1a39f1327e5855c741edaa8aa7eb1613e6d918cda4cf3c29"
+checksum = "2dbc138685c79d88a766a8fd825057a74ea7a21e1dd7f8de275ada899540fff7"
 dependencies = [
  "anyhow",
  "jsonrpc-core",
@@ -5848,9 +5931,9 @@ dependencies = [
 
 [[package]]
 name = "solana-rpc-client-nonce-utils"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32cbcb994c698ffaea792ec0dba3ae84259c53e7dc464cc6b2321a3d593c7f61"
+checksum = "87f0ee41b9894ff36adebe546a110b899b0d0294b07845d8acdc73822e6af4b0"
 dependencies = [
  "solana-account",
  "solana-commitment-config",
@@ -5865,9 +5948,9 @@ dependencies = [
 
 [[package]]
 name = "solana-rpc-client-types"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b96eeec383718c1a4dbbebc4039029ae779d7e6ec5586b6a330803132d04f4f"
+checksum = "8ea428a81729255d895ea47fba9b30fd4dacbfe571a080448121bd0592751676"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -6203,9 +6286,9 @@ dependencies = [
 
 [[package]]
 name = "solana-streamer"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1faa9bfb0bc556b77d836cacf347c4e1754a0334e8b9946dbed49ead4e1c0eb2"
+checksum = "5643516e5206b89dd4bdf67c39815606d835a51a13260e43349abdb92d241b1d"
 dependencies = [
  "async-channel",
  "bytes",
@@ -6250,15 +6333,15 @@ dependencies = [
 
 [[package]]
 name = "solana-svm-feature-set"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c343731bf4a594a615c2aa32a63a0f42f39581e7975114ed825133e30ab68346"
+checksum = "3f24b836eb4d74ec255217bdbe0f24f64a07adeac31aca61f334f91cd4a3b1d5"
 
 [[package]]
 name = "solana-svm-transaction"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c423922c429cc1ec011f7c92c44ab540dc1dc769fb3361599498a55cfd9c7a8"
+checksum = "ab717b9539375ebb088872c6c87d1d8832d19f30f154ecc530154d23f60a6f0c"
 dependencies = [
  "solana-hash",
  "solana-message",
@@ -6348,9 +6431,9 @@ dependencies = [
 
 [[package]]
 name = "solana-thin-client"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cc60d1502f5eeb2e5f3286b34f567d3c076e6da5a753a002ef8889fda670ecf"
+checksum = "6c1025715a113e0e2e379b30a6bfe4455770dc0759dabf93f7dbd16646d5acbe"
 dependencies = [
  "bincode",
  "log",
@@ -6383,9 +6466,9 @@ checksum = "6af261afb0e8c39252a04d026e3ea9c405342b08c871a2ad8aa5448e068c784c"
 
 [[package]]
 name = "solana-tls-utils"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5629f315f8e64b7336e5c8e10ff48d350ca1ce321f4132238705f0acbeeaf843"
+checksum = "14494aa87a75a883d1abcfee00f1278a28ecc594a2f030084879eb40570728f6"
 dependencies = [
  "rustls 0.23.32",
  "solana-keypair",
@@ -6396,9 +6479,9 @@ dependencies = [
 
 [[package]]
 name = "solana-tpu-client"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "268c9aaf276cc863b1f683ab0e7d97aee2d52502ddf9fd02d8564fc8fb9f2ba8"
+checksum = "17895ce70fd1dd93add3fbac87d599954ded93c63fa1c66f702d278d96a6da14"
 dependencies = [
  "async-trait",
  "bincode",
@@ -6457,9 +6540,9 @@ dependencies = [
 
 [[package]]
 name = "solana-transaction-context"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a816015e792c953f755a333c1ae3a1c3b1e5cde52a5f98015ed26d5adea70e63"
+checksum = "54a312304361987a85b2ef2293920558e6612876a639dd1309daf6d0d59ef2fe"
 dependencies = [
  "bincode",
  "serde",
@@ -6486,9 +6569,9 @@ dependencies = [
 
 [[package]]
 name = "solana-transaction-metrics-tracker"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63e77b3b3f4790dcf6cb945cfce4210cb8a22ccf74cfdff84b726650b698bf62"
+checksum = "03fc4e1b6252dc724f5ee69db6229feb43070b7318651580d2174da8baefb993"
 dependencies = [
  "base64 0.22.1",
  "bincode",
@@ -6502,9 +6585,9 @@ dependencies = [
 
 [[package]]
 name = "solana-transaction-status"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e4b8faaef81300575139ce1ab8fd0fa0ad5f8adfbafb5bf0f684e32e9298e87"
+checksum = "135f92f4192cc68900c665becf97fc0a6500ae5a67ff347bf2cbc20ecfefa821"
 dependencies = [
  "Inflector",
  "agave-reserved-account-keys",
@@ -6546,9 +6629,9 @@ dependencies = [
 
 [[package]]
 name = "solana-transaction-status-client-types"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24dfa59c12442f2283eb07d3c2fefff5862d4200579093b0a990b0c262bc003e"
+checksum = "51f1d7c2387c35850848212244d2b225847666cb52d3bd59a5c409d2c300303d"
 dependencies = [
  "base64 0.22.1",
  "bincode",
@@ -6569,9 +6652,9 @@ dependencies = [
 
 [[package]]
 name = "solana-udp-client"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a11eb463af8c3de38b6452a51c885231188462647eb8e95ca8344c18aceaf47"
+checksum = "2dd36227dd3035ac09a89d4239551d2e3d7d9b177b61ccc7c6d393c3974d0efa"
 dependencies = [
  "async-trait",
  "solana-connection-cache",
@@ -6591,9 +6674,9 @@ checksum = "7bbf6d7a3c0b28dd5335c52c0e9eae49d0ae489a8f324917faf0ded65a812c1d"
 
 [[package]]
 name = "solana-version"
-version = "2.3.10"
+version = "2.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cadb7e1261069a748647abc07f611a5ced461390447aa1fe083eb733796e038b"
+checksum = "3324d46c7f7b7f5d34bf7dc71a2883bdc072c7b28ca81d0b2167ecec4cf8da9f"
 dependencies = [
  "agave-feature-set",
  "rand 0.8.5",
@@ -8849,7 +8932,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -8871,7 +8954,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-boop-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -8896,8 +8979,9 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-core"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
+ "borsh 1.5.7",
  "bs58",
  "clap",
  "serde",
@@ -8984,7 +9068,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-jupiter-swap-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9010,7 +9094,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-kamino-limit-orders-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9036,7 +9120,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-amm-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9062,7 +9146,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-dbc-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9088,7 +9172,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9114,7 +9198,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-pools-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9140,7 +9224,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-meteora-vault-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9166,7 +9250,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-mock"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "futures",
  "regex",
@@ -9182,7 +9266,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-moonshot-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9208,7 +9292,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-orca-whirlpool-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9234,11 +9318,12 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
- "borsh 1.5.7",
  "bs58",
  "bytemuck",
+ "solana-program-error",
+ "solana-pubkey",
  "spl-pod 0.3.1",
  "spl-token 6.0.0",
  "spl-token-2022 9.0.0",
@@ -9257,8 +9342,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-proc-macro"
+version = "0.6.0"
+dependencies = [
+ "base64 0.22.1",
+ "bs58",
+ "codama-nodes",
+ "hex",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn 2.0.106",
+]
+
+[[package]]
 name = "yellowstone-vixen-proto"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "prost 0.13.5",
  "prost-build 0.13.5",
@@ -9271,7 +9372,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-pump-swaps-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9297,7 +9398,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-pumpfun-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9323,7 +9424,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-raydium-amm-v4-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9349,7 +9450,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-raydium-clmm-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9375,7 +9476,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-raydium-cpmm-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9401,7 +9502,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-raydium-launchpad-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9427,7 +9528,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-rpc-source"
-version = "0.3.1"
+version = "0.6.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -9445,7 +9546,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-snapshot-source"
-version = "0.3.1"
+version = "0.6.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -9468,7 +9569,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stake-pool-parser"
-version = "0.2.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "bs58",
@@ -9489,7 +9590,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-stream"
-version = "0.1.1"
+version = "0.6.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -9514,7 +9615,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-virtuals-parser"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "borsh 1.5.7",
  "num-derive",
@@ -9539,7 +9640,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-fumarole-source"
-version = "0.3.1"
+version = "0.6.0"
 dependencies = [
  "async-trait",
  "bytesize",
@@ -9558,7 +9659,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-grpc-source"
-version = "0.3.1"
+version = "0.6.0"
 dependencies = [
  "async-trait",
  "clap",

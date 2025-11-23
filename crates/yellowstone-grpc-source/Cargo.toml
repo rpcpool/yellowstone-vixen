@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-yellowstone-grpc-source"
-version = "0.3.1"
+version.workspace = true
 edition.workspace = true
 description = "Yellowstone gRPC source for the Yellowstone Vixen"
 license.workspace = true

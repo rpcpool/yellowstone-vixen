@@ -7,16 +7,20 @@ resolver = "2"
 authors = ["Triton One", "ABK-Labs"]
 edition = "2021"
 license = "MIT"
+version = "0.6.0"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 publish = false
 
 
 [workspace.dependencies]
 async-trait = "^0.1"
-borsh = "^1.0.0"
+borsh = "1.5.5"
 bs58 = "^0.5.1"
+hex = "^0.4.3"
 bytesize = "^2.0.0"
+base64 = "^0.22.1"
 clap = "^4.5.4"
+codama-nodes = "^0.6"
 futures = "^0.3.31"
 futures-channel = "^0.3.31"
 futures-util = "^0.3.31"
@@ -24,6 +28,8 @@ num-derive = "^0.4.0"
 num-traits = "^0.2.0"
 opentelemetry = "^0.24.0"
 pin-project-lite = "^0.2.0"
+prettyplease = "^0.2"
+proc-macro2 = "^1"
 prometheus = "^0.14.0"
 prost = "^0.13.1"
 prost-build = "^0.13.1"
@@ -59,6 +65,7 @@ spl-token-group-interface = "^0.6.0"
 spl-token-metadata-interface = "^0.7.0"
 strum = "^0.27"
 strum_macros = "^0.27"
+syn = { version = "2", default-features = false }
 tar = "^0.4.0"
 tempfile = "^3.5.0"
 thiserror = "^1.0.64"
@@ -66,43 +73,44 @@ tonic = "^0.12.1"
 tonic-reflection = "^0.12.1"
 tonic-build = "^0.12.1"
 toml = "^0.8.0"
-topograph =  "^0.4.0"
+topograph = "^0.4.0"
 tokio = "^1.37.0"
 tracing = "^0.1.40"
+quote = "1"
 zstd = "^0.13.0"
 bytemuck = "^1"
 
 yellowstone-fumarole-client = "^0.2.0"
 yellowstone-grpc-client = { version = "9" }
 yellowstone-grpc-proto = { version = "9", default-features = false }
-yellowstone-vixen = { path = "crates/runtime", version = "0.5.1" }
-yellowstone-vixen-stream = { path = "crates/stream", version = "0.1.1" }
-yellowstone-vixen-core = { path = "crates/core", version = "0.5.1" }
-yellowstone-vixen-mock = { path = "crates/mock", version = "0.5.1" }
-yellowstone-vixen-parser = { path = "crates/parser", version = "0.5.1" }
-yellowstone-vixen-proto = { path = "crates/proto", version = "0.5.1" }
+yellowstone-vixen = { path = "crates/runtime", version = "0.6.0" }
+yellowstone-vixen-proc-macro = { path = "crates/proc-macro", version = "0.6.0" }
+yellowstone-vixen-stream = { path = "crates/stream", version = "0.6.0" }
+yellowstone-vixen-core = { path = "crates/core", version = "0.6.0" }
+yellowstone-vixen-mock = { path = "crates/mock", version = "0.6.0" }
+yellowstone-vixen-parser = { path = "crates/parser", version = "0.6.0" }
+yellowstone-vixen-proto = { path = "crates/proto", version = "0.6.0" }
 
-yellowstone-vixen-boop-parser = { path = "crates/boop-parser", version = "0.5.1" }
-yellowstone-vixen-meteora-parser = { path = "crates/meteora-parser", version = "0.5.1" }
-yellowstone-vixen-pumpfun-parser = { path = "crates/pumpfun-parser", version = "0.5.1" }
-yellowstone-vixen-jupiter-swap-parser = { path = "crates/jupiter-swap-parser", version = "0.5.1" }
-yellowstone-vixen-meteora-amm-parser = { path = "crates/meteora-amm-parser", version = "0.5.1" }
-yellowstone-vixen-meteora-dbc-parser = { path = "crates/meteora-dbc-parser", version = "0.5.1" }
-yellowstone-vixen-meteora-pools-parser = { path = "crates/meteora-pools-parser", version = "0.5.1" }
-yellowstone-vixen-meteora-vault-parser = { path = "crates/meteora-vault-parser", version = "0.5.1" }
-yellowstone-vixen-moonshot-parser = { path = "crates/moonshot-parser", version = "0.5.1" }
-yellowstone-vixen-orca-whirlpool-parser = { path = "crates/orca-whirlpool-parser", version = "0.5.1" }
-yellowstone-vixen-raydium-cpmm-parser = { path = "crates/raydium-cpmm-parser", version = "0.5.1" }
-yellowstone-vixen-pump-swaps-parser = { path = "crates/pump-swaps-parser", version = "0.5.1" }
-yellowstone-vixen-raydium-clmm-parser = { path = "crates/raydium-clmm-parser", version = "0.5.1" }
-yellowstone-vixen-raydium-amm-v4-parser = { path = "crates/raydium-amm-v4-parser", version = "0.5.1" }
-yellowstone-vixen-kamino-limit-orders-parser = { path = "crates/kamino-limit-orders-parser", version = "0.5.1" }
-yellowstone-vixen-raydium-launchpad-parser = { path = "crates/raydium-launchpad-parser", version = "0.5.1" }
-yellowstone-vixen-virtuals-parser = { path = "crates/virtuals-parser", version = "0.5.1" }
+yellowstone-vixen-boop-parser = { path = "crates/boop-parser", version = "0.6.0" }
+yellowstone-vixen-meteora-parser = { path = "crates/meteora-parser", version = "0.6.0" }
+yellowstone-vixen-pumpfun-parser = { path = "crates/pumpfun-parser", version = "0.6.0" }
+yellowstone-vixen-jupiter-swap-parser = { path = "crates/jupiter-swap-parser", version = "0.6.0" }
+yellowstone-vixen-meteora-amm-parser = { path = "crates/meteora-amm-parser", version = "0.6.0" }
+yellowstone-vixen-meteora-dbc-parser = { path = "crates/meteora-dbc-parser", version = "0.6.0" }
+yellowstone-vixen-meteora-pools-parser = { path = "crates/meteora-pools-parser", version = "0.6.0" }
+yellowstone-vixen-meteora-vault-parser = { path = "crates/meteora-vault-parser", version = "0.6.0" }
+yellowstone-vixen-moonshot-parser = { path = "crates/moonshot-parser", version = "0.6.0" }
+yellowstone-vixen-orca-whirlpool-parser = { path = "crates/orca-whirlpool-parser", version = "0.6.0" }
+yellowstone-vixen-raydium-cpmm-parser = { path = "crates/raydium-cpmm-parser", version = "0.6.0" }
+yellowstone-vixen-pump-swaps-parser = { path = "crates/pump-swaps-parser", version = "0.6.0" }
+yellowstone-vixen-raydium-clmm-parser = { path = "crates/raydium-clmm-parser", version = "0.6.0" }
+yellowstone-vixen-raydium-amm-v4-parser = { path = "crates/raydium-amm-v4-parser", version = "0.6.0" }
+yellowstone-vixen-kamino-limit-orders-parser = { path = "crates/kamino-limit-orders-parser", version = "0.6.0" }
+yellowstone-vixen-raydium-launchpad-parser = { path = "crates/raydium-launchpad-parser", version = "0.6.0" }
+yellowstone-vixen-virtuals-parser = { path = "crates/virtuals-parser", version = "0.6.0" }
 
 # Sources
-yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.3.1" }
-yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.3.1" }
-yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.3.1" }
-yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.3.1" }
-
+yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.6.0" }
+yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.6.0" }
+yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.6.0" }
+yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.6.0" }

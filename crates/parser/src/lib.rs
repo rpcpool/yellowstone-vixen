@@ -15,6 +15,8 @@ pub use error::*;
 
 mod helpers;
 
+pub mod prelude;
+
 #[cfg(feature = "block-meta")]
 pub mod block_meta;
 
