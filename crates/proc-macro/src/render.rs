@@ -20,9 +20,10 @@ pub fn render_vixen_parser(idl: &RootNode) -> TokenStream {
 
     quote! {
         mod #program_mod_ident {
+            use borsh::{BorshDeserialize, BorshSerialize};
             use yellowstone_vixen_parser::prelude::*;
 
-            const ID: Pubkey = pubkey!(#program_public_key);
+            const ID: solana_pubkey::Pubkey = solana_pubkey::pubkey!(#program_public_key);
 
             #defined_types
             #accounts
@@ -120,7 +121,7 @@ fn render_instructions(instructions: &[codama_nodes::InstructionNode]) -> TokenS
                 .iter()
                 .map(|account| {
                     let field_ident = format_ident!("{}", to_snake_case(&account.name));
-                    quote! { pub #field_ident: KeyBytes<32> }
+                    quote! { pub #field_ident: yellowstone_vixen_parser::prelude::Pubkey }
                 })
                 .collect();
 
@@ -284,26 +285,26 @@ fn render_account_parser(
         }
 
         impl #account_state_ident {
-            pub fn try_unpack(data: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
+            pub fn try_unpack(data: &[u8]) -> ParseResult<Self> {
                 #(#account_matches)*
 
-                Err(yellowstone_vixen_core::ParseError::from(#parser_error_msg.to_owned()))
+                Err(ParseError::from(#parser_error_msg.to_owned()))
             }
         }
 
         #[derive(Debug, Copy, Clone)]
         pub struct AccountParser;
 
-        impl yellowstone_vixen_core::Parser for AccountParser {
-            type Input = yellowstone_vixen_core::AccountUpdate;
+        impl Parser for AccountParser {
+            type Input = AccountUpdate;
             type Output = #account_state_ident;
 
             fn id(&self) -> std::borrow::Cow<'static, str> {
                 #parser_id.into()
             }
 
-            fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
-                yellowstone_vixen_core::Prefilter::builder()
+            fn prefilter(&self) -> Prefilter {
+                Prefilter::builder()
                     .account_owners([ID])
                     .build()
                     .unwrap()
@@ -311,12 +312,12 @@ fn render_account_parser(
 
             async fn parse(
                 &self,
-                acct: &yellowstone_vixen_core::AccountUpdate,
-            ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
+                acct: &AccountUpdate,
+            ) -> ParseResult<Self::Output> {
                 let inner = acct
                     .account
                     .as_ref()
-                    .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+                    .ok_or(ProgramError::InvalidArgument)?;
 
                 #account_state_ident::try_unpack(&inner.data)
             }
@@ -460,16 +461,16 @@ fn render_instruction_parser(
         #[derive(Debug, Copy, Clone)]
         pub struct InstructionParser;
 
-        impl yellowstone_vixen_core::Parser for InstructionParser {
-            type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+        impl Parser for InstructionParser {
+            type Input = instruction::InstructionUpdate;
             type Output = #program_instruction_ident;
 
             fn id(&self) -> std::borrow::Cow<'static, str> {
                 #program_instruction_id.into()
             }
 
-            fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
-                yellowstone_vixen_core::Prefilter::builder()
+            fn prefilter(&self) -> Prefilter {
+                Prefilter::builder()
                     .transaction_accounts([ID])
                     .build()
                     .unwrap()
@@ -477,14 +478,14 @@ fn render_instruction_parser(
 
             async fn parse(
                 &self,
-                ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
-            ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
+                ix_update: &instruction::InstructionUpdate,
+            ) -> ParseResult<Self::Output> {
                 let data = &ix_update.data;
                 let accounts = &ix_update.accounts;
 
                 #(#instruction_matches)*
 
-                Err(yellowstone_vixen_core::ParseError::from(
+                Err(ParseError::from(
                     "Invalid Instruction discriminator".to_owned(),
                 ))
             }
@@ -516,11 +517,11 @@ fn quoted_type_node(type_node: &codama_nodes::TypeNode) -> TokenStream {
         Map(node) => {
             let k = quoted_type_node(&node.key);
             let v = quoted_type_node(&node.value);
-            quote! { HashMap<#k, #v> }
+            quote! { std::collections::HashMap<#k, #v> }
         },
         Set(node) => {
             let ty = quoted_type_node(&node.item);
-            quote! { HashSet<#ty> }
+            quote! { std::collections::HashSet<#ty> }
         },
         Bytes(_) => {
             quote! { Vec<u8> }
@@ -695,9 +696,11 @@ mod tests {
 
         let expected_tokens: proc_macro2::TokenStream = quote::quote! {
             mod test {
+                use borsh::{BorshDeserialize, BorshSerialize};
                 use yellowstone_vixen_parser::prelude::*;
 
-                const ID: Pubkey = pubkey!("");
+                const ID: solana_pubkey::Pubkey = solana_pubkey::pubkey!("");
+
                 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
                 pub struct MyAccount {
                     pub name: String,
@@ -717,9 +720,9 @@ mod tests {
                     MyAccount(MyAccount),
                 }
                 impl TestAccount {
-                    pub fn try_unpack(data: &[u8]) -> yellowstone_vixen_core::ParseResult<Self> {
+                    pub fn try_unpack(data: &[u8]) -> ParseResult<Self> {
                         Err(
-                            yellowstone_vixen_core::ParseError::from(
+                            ParseError::from(
                                 "Unknown account for program test".to_owned(),
                             ),
                         )
@@ -727,26 +730,26 @@ mod tests {
                 }
                 #[derive(Debug, Copy, Clone)]
                 pub struct AccountParser;
-                impl yellowstone_vixen_core::Parser for AccountParser {
-                    type Input = yellowstone_vixen_core::AccountUpdate;
+                impl Parser for AccountParser {
+                    type Input = AccountUpdate;
                     type Output = TestAccount;
                     fn id(&self) -> std::borrow::Cow<'static, str> {
                         "Test::AccountParser".into()
                     }
-                    fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
-                        yellowstone_vixen_core::Prefilter::builder()
+                    fn prefilter(&self) -> Prefilter {
+                        Prefilter::builder()
                             .account_owners([ID])
                             .build()
                             .unwrap()
                     }
                     async fn parse(
                         &self,
-                        acct: &yellowstone_vixen_core::AccountUpdate,
-                    ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
+                        acct: &AccountUpdate,
+                    ) -> ParseResult<Self::Output> {
                         let inner = acct
                             .account
                             .as_ref()
-                            .ok_or(solana_program_error::ProgramError::InvalidArgument)?;
+                            .ok_or(ProgramError::InvalidArgument)?;
                         TestAccount::try_unpack(&inner.data)
                     }
                 }
@@ -754,26 +757,26 @@ mod tests {
                 pub enum TestInstruction {}
                 #[derive(Debug, Copy, Clone)]
                 pub struct InstructionParser;
-                impl yellowstone_vixen_core::Parser for InstructionParser {
-                    type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
+                impl Parser for InstructionParser {
+                    type Input = instruction::InstructionUpdate;
                     type Output = TestInstruction;
                     fn id(&self) -> std::borrow::Cow<'static, str> {
                         "Test::InstructionParser".into()
                     }
-                    fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
-                        yellowstone_vixen_core::Prefilter::builder()
+                    fn prefilter(&self) -> Prefilter {
+                        Prefilter::builder()
                             .transaction_accounts([ID])
                             .build()
                             .unwrap()
                     }
                     async fn parse(
                         &self,
-                        ix_update: &yellowstone_vixen_core::instruction::InstructionUpdate,
-                    ) -> yellowstone_vixen_core::ParseResult<Self::Output> {
+                        ix_update: &instruction::InstructionUpdate,
+                    ) -> ParseResult<Self::Output> {
                         let data = &ix_update.data;
                         let accounts = &ix_update.accounts;
                         Err(
-                            yellowstone_vixen_core::ParseError::from(
+                            ParseError::from(
                                 "Invalid Instruction discriminator".to_owned(),
                             ),
                         )
