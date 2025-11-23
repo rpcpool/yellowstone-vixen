@@ -1,7 +1,7 @@
 [package]
 name = "yellowstone-vixen-stream"
 description = "A gRPC server for subscribing to parsed Yellowstone events"
-version = "0.1.1"
+version.workspace = true
 # authors = ["TODO"]
 edition.workspace = true
 repository.workspace = true
