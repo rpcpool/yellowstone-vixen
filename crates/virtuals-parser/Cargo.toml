@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-virtuals-parser"
-version = "0.5.1"
+version.workspace = true
 edition.workspace = true
 description = "Vixen program parser for Virtuals program"
 license = "MIT"

@@ -1,0 +1,27 @@
+extern crate proc_macro;
+
+use proc_macro::TokenStream;
+use syn::{parse_macro_input, LitStr};
+
+mod parse;
+mod render;
+
+#[proc_macro]
+pub fn include_vixen_parser(input: TokenStream) -> TokenStream {
+    let idl_path_lit = parse_macro_input!(input as LitStr);
+    let idl_path = idl_path_lit.value();
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let full_path = std::path::Path::new(&manifest_dir).join(&idl_path);
+
+    match parse::load_codama_idl(&full_path) {
+        Ok(idl) => render::render_vixen_parser(&idl).into(),
+        Err(e) => {
+            let error_msg = format!("Failed to load/parse IDL from {:?}: {}", full_path, e);
+            quote::quote! {
+                compile_error!(#error_msg);
+            }
+            .into()
+        },
+    }
+}

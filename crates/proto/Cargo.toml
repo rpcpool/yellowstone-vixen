@@ -2,7 +2,7 @@
 name = "yellowstone-vixen-proto"
 edition.workspace = true
 description = "Protobuf definitions for Vixen"
-version = "0.5.1"
+version.workspace = true
 license.workspace = true
 repository.workspace = true
 authors.workspace = true
