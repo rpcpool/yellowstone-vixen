@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-pumpfun-parser"
-version = "0.5.2"
+version.workspace = true
 edition.workspace = true
 description = "Vixen program parser for Pumpfun program"
 license.workspace = true

@@ -20,8 +20,6 @@ pub mod proto {
 
     use spl_pod::solana_program::{program_option::COption, pubkey::Pubkey};
     use yellowstone_vixen_core::KeyBytes;
-    // `ELGAMAL_PUBKEY_LEN` is not publicly exported but is defined to be 32
-    pub type ElGamalPubkeyBytes = yellowstone_vixen_core::KeyBytes<32>;
 
     pub trait FromCOptionPubkeyToOptString {
         fn to_opt_string(self) -> Option<String>;

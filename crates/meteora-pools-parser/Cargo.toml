@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-meteora-pools-parser"
-version = "0.5.1"
+version.workspace = true
 edition.workspace = true
 description = "Vixen program parser for Meteora Pools program"
 license.workspace = true

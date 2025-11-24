@@ -1,4 +1,9 @@
-use std::{fs::File, path::PathBuf, sync::mpsc};
+use std::{
+    collections::HashMap,
+    fs::File,
+    path::PathBuf,
+    sync::{mpsc, Arc},
+};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -14,7 +19,7 @@ use yellowstone_grpc_proto::{
     tonic::Status,
 };
 use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
-use yellowstone_vixen_core::Filters;
+use yellowstone_vixen_core::{Filters, Pubkey};
 use zstd::Decoder;
 
 pub struct AccountFile(PathBuf, usize);
@@ -82,6 +87,27 @@ pub struct SolanaSnapshotSource {
     config: SolanaSnapshotConfig,
 }
 
+#[derive(Clone)]
+struct FilterOwnerKeyLookup(Arc<HashMap<Pubkey, Vec<String>>>);
+
+impl FilterOwnerKeyLookup {
+    fn new(filters: &Filters) -> Self {
+        let mut lookup: HashMap<Pubkey, Vec<String>> = HashMap::new();
+
+        for (key, parser_filter) in filters.parsers_filters.iter() {
+            if let Some(account_filter) = parser_filter.account.as_ref() {
+                for owner in &account_filter.owners {
+                    lookup.entry(*owner).or_default().push(key.clone());
+                }
+            }
+        }
+
+        Self(Arc::new(lookup))
+    }
+
+    fn lookup_by_owner(&self, owner: &Pubkey) -> Option<Vec<String>> { self.0.get(owner).cloned() }
+}
+
 #[async_trait]
 impl SourceTrait for SolanaSnapshotSource {
     type Config = SolanaSnapshotConfig;
@@ -95,23 +121,7 @@ impl SourceTrait for SolanaSnapshotSource {
         let filters = self.filters.clone();
         let config = self.config.clone();
 
-        let (owners, filter_keys): (Vec<_>, Vec<_>) = filters
-            .parsers_filters
-            .iter()
-            .filter_map(|(key, parser_filter)| {
-                parser_filter
-                    .account
-                    .as_ref()
-                    .map(|accounts| (accounts.owners.clone(), key.clone()))
-            })
-            .fold(
-                (Vec::new(), Vec::new()),
-                |(mut owners, mut keys), (account_owners, key)| {
-                    owners.extend(account_owners);
-                    keys.push(key);
-                    (owners, keys)
-                },
-            );
+        let filter_owner_key_lookup = FilterOwnerKeyLookup::new(&filters);
 
         let solana_snapshot = SolanaSnapshot::unpack_compressed(config.path.clone())?;
 
@@ -138,18 +148,18 @@ impl SourceTrait for SolanaSnapshotSource {
         let (sync_tx, sync_rx) = mpsc::channel::<Event>();
         let mut account_file_workers = JoinSet::new();
 
-        let filter_keys = filter_keys.clone();
         let sender_handle = tokio::spawn(async move {
             while let Ok(event) = sync_rx.recv() {
                 match event {
-                    Event::AccountUpdate(account) => {
-                        let filter_keys = filter_keys.clone();
-
+                    Event::AccountUpdate {
+                        account_update,
+                        filters,
+                    } => {
                         if let Err(err) = tx
                             .send(Ok(SubscribeUpdate {
-                                filters: filter_keys,
+                                filters,
                                 created_at: None,
-                                update_oneof: Some(UpdateOneof::Account(account)),
+                                update_oneof: Some(UpdateOneof::Account(account_update)),
                             }))
                             .await
                         {
@@ -164,7 +174,7 @@ impl SourceTrait for SolanaSnapshotSource {
         for AccountFile(path, current_len) in solana_snapshot.accounts {
             let sync_tx = sync_tx.clone();
             let slot = solana_snapshot.slot;
-            let owners = owners.clone();
+            let filter_owner_key_lookup = filter_owner_key_lookup.clone();
 
             account_file_workers.spawn(async move {
                 let (accounts, _usize) = AccountsFile::new_from_file(
@@ -176,24 +186,28 @@ impl SourceTrait for SolanaSnapshotSource {
 
                 accounts.scan_accounts(|_size, account| {
                     let account_owner =
-                        yellowstone_vixen_core::Pubkey::try_from(account.owner.as_ref())
-                            .expect("Owner address is Pubkey");
+                        Pubkey::try_from(account.owner.as_ref()).expect("Owner address is Pubkey");
 
-                    if owners.contains(&account_owner) {
-                        let _ = sync_tx.send(Event::AccountUpdate(SubscribeUpdateAccount {
-                            account: Some(SubscribeUpdateAccountInfo {
-                                pubkey: account.pubkey().to_bytes().to_vec(),
-                                lamports: account.lamports,
-                                owner: account.owner.to_bytes().to_vec(),
-                                executable: account.executable,
-                                rent_epoch: account.rent_epoch,
-                                data: account.data.to_vec(),
-                                write_version: 0,
-                                txn_signature: None,
-                            }),
-                            slot,
-                            is_startup: true,
-                        }));
+                    if let Some(filter_keys) =
+                        filter_owner_key_lookup.lookup_by_owner(&account_owner)
+                    {
+                        let _ = sync_tx.send(Event::AccountUpdate {
+                            account_update: SubscribeUpdateAccount {
+                                account: Some(SubscribeUpdateAccountInfo {
+                                    pubkey: account.pubkey().to_bytes().to_vec(),
+                                    lamports: account.lamports,
+                                    owner: account.owner.to_bytes().to_vec(),
+                                    executable: account.executable,
+                                    rent_epoch: account.rent_epoch,
+                                    data: account.data.to_vec(),
+                                    write_version: 0,
+                                    txn_signature: None,
+                                }),
+                                slot,
+                                is_startup: true,
+                            },
+                            filters: filter_keys,
+                        });
                     }
                 });
             });
@@ -213,6 +227,9 @@ impl SourceTrait for SolanaSnapshotSource {
 }
 
 enum Event {
-    AccountUpdate(SubscribeUpdateAccount),
+    AccountUpdate {
+        account_update: SubscribeUpdateAccount,
+        filters: Vec<String>,
+    },
     SnapshotFinished,
 }

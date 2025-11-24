@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-solana-snapshot-source"
-version = "0.3.1"
+version.workspace = true
 edition.workspace = true
 description = "Run a Solana snapshot through Yellowstone Vixen"
 license.workspace = true

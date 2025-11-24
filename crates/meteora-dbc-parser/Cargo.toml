@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-meteora-dbc-parser"
-version = "0.5.1"
+version.workspace = true
 edition.workspace = true
 description = "Vixen program parser for Meteora DBC program"
 license.workspace = true

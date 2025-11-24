@@ -1,6 +1,6 @@
 [package]
 name = "yellowstone-vixen-kamino-limit-orders-parser"
-version = "0.5.1"
+version.workspace = true
 edition.workspace = true
 description = "Vixen program parser for Kamino Limit Orders program"
 license.workspace = true

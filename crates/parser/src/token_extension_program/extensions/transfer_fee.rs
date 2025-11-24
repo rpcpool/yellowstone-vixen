@@ -101,7 +101,7 @@ impl ExtensionIxParser for TransferFeeIx {
     #[allow(clippy::too_many_lines)]
     fn try_parse_extension_ix(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
-        let ix_type = TransferFeeInstruction::unpack(&ix.data)
+        let ix_type = TransferFeeInstruction::unpack(&ix.data[1..])
             .parse_err("Error unpacking transfer fee instruction data")?;
         match ix_type {
             TransferFeeInstruction::TransferCheckedWithFee {
