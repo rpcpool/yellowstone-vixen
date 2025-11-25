@@ -1,16 +1,11 @@
-use std::{
-    collections::HashMap,
-    fs::File,
-    path::PathBuf,
-    sync::{mpsc, Arc},
-};
+use std::{collections::HashMap, fs::File, path::PathBuf, sync::Arc};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use solana_accounts_db::accounts_file::AccountsFile;
 use tar::Archive;
 use tempfile::{tempdir, TempDir};
-use tokio::task::JoinSet;
+use tokio::{sync::mpsc, task::JoinSet};
 use yellowstone_grpc_proto::{
     geyser::{
         subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateAccount,
@@ -78,6 +73,7 @@ impl SolanaSnapshot {
 pub struct SolanaSnapshotConfig {
     pub path: PathBuf,
     pub max_workers: usize,
+    pub channel_size: usize,
 }
 
 /// A `Source` implementation for the Solana Snapshot API.
@@ -145,11 +141,12 @@ impl SourceTrait for SolanaSnapshotSource {
         .map_err(|_| VixenError::ServerHangup)?;
 
         let max_workers = config.max_workers;
-        let (sync_tx, sync_rx) = mpsc::channel::<Event>();
+        let channel_size = config.channel_size;
+        let (sync_tx, mut sync_rx) = mpsc::channel::<Event>(channel_size);
         let mut account_file_workers = JoinSet::new();
 
         let sender_handle = tokio::spawn(async move {
-            while let Ok(event) = sync_rx.recv() {
+            while let Some(event) = sync_rx.recv().await {
                 match event {
                     Event::AccountUpdate {
                         account_update,
@@ -172,44 +169,55 @@ impl SourceTrait for SolanaSnapshotSource {
         });
 
         for AccountFile(path, current_len) in solana_snapshot.accounts {
-            let sync_tx = sync_tx.clone();
+            let worker_sync_tx = sync_tx.clone();
             let slot = solana_snapshot.slot;
             let filter_owner_key_lookup = filter_owner_key_lookup.clone();
 
             account_file_workers.spawn(async move {
-                let (accounts, _usize) = AccountsFile::new_from_file(
-                    path,
-                    current_len,
-                    solana_accounts_db::accounts_file::StorageAccess::default(),
-                )
-                .expect("Unpack account file");
+                let blocking_task = tokio::task::spawn_blocking(move || {
+                    let (accounts, _usize) = AccountsFile::new_from_file(
+                        path,
+                        current_len,
+                        solana_accounts_db::accounts_file::StorageAccess::default(),
+                    )
+                    .expect("Unpack account file");
 
-                accounts.scan_accounts(|_size, account| {
-                    let account_owner =
-                        Pubkey::try_from(account.owner.as_ref()).expect("Owner address is Pubkey");
+                    accounts.scan_accounts(|_size, account| {
+                        let account_owner = Pubkey::try_from(account.owner.as_ref())
+                            .expect("Owner address is Pubkey");
 
-                    if let Some(filter_keys) =
-                        filter_owner_key_lookup.lookup_by_owner(&account_owner)
-                    {
-                        let _ = sync_tx.send(Event::AccountUpdate {
-                            account_update: SubscribeUpdateAccount {
-                                account: Some(SubscribeUpdateAccountInfo {
-                                    pubkey: account.pubkey().to_bytes().to_vec(),
-                                    lamports: account.lamports,
-                                    owner: account.owner.to_bytes().to_vec(),
-                                    executable: account.executable,
-                                    rent_epoch: account.rent_epoch,
-                                    data: account.data.to_vec(),
-                                    write_version: 0,
-                                    txn_signature: None,
-                                }),
-                                slot,
-                                is_startup: true,
-                            },
-                            filters: filter_keys,
-                        });
-                    }
+                        if let Some(filter_keys) =
+                            filter_owner_key_lookup.lookup_by_owner(&account_owner)
+                        {
+                            if let Err(err) = worker_sync_tx.blocking_send(Event::AccountUpdate {
+                                account_update: SubscribeUpdateAccount {
+                                    account: Some(SubscribeUpdateAccountInfo {
+                                        pubkey: account.pubkey().to_bytes().to_vec(),
+                                        lamports: account.lamports,
+                                        owner: account.owner.to_bytes().to_vec(),
+                                        executable: account.executable,
+                                        rent_epoch: account.rent_epoch,
+                                        data: account.data.to_vec(),
+                                        write_version: 0,
+                                        txn_signature: None,
+                                    }),
+                                    slot,
+                                    is_startup: true,
+                                },
+                                filters: filter_keys,
+                            }) {
+                                tracing::error!(
+                                    "Channel closed while buffering snapshot account update: {}",
+                                    err
+                                );
+                            }
+                        }
+                    });
                 });
+
+                if let Err(join_err) = blocking_task.await {
+                    tracing::error!("Snapshot worker panicked: {:?}", join_err);
+                }
             });
 
             if account_file_workers.len() >= max_workers {
@@ -219,7 +227,11 @@ impl SourceTrait for SolanaSnapshotSource {
 
         while account_file_workers.join_next().await.is_some() {}
 
-        let _ = sync_tx.send(Event::SnapshotFinished);
+        sync_tx
+            .send(Event::SnapshotFinished)
+            .await
+            .map_err(|_| VixenError::ServerHangup)?;
+        drop(sync_tx);
         let _ = sender_handle.await;
 
         Ok(())
