@@ -13,7 +13,7 @@ use yellowstone_vixen_proto::{
     stream::{
         self,
         program_streams_server::{ProgramStreams, ProgramStreamsServer},
-        SubscribeRequest, SubscribeManyRequest, SubscribeUpdate,
+        SubscribeManyRequest, SubscribeRequest, SubscribeUpdate,
     },
     tonic::{self, transport, Request, Response, Status},
     tonic_reflection,
@@ -46,8 +46,8 @@ pub(super) struct Service(Channels);
 
 #[tonic::async_trait]
 impl ProgramStreams for Service {
-    type SubscribeStream = futures_util::stream::SelectAll<ReceiverStream>;
     type SubscribeManyStream = futures_util::stream::SelectAll<ReceiverStream>;
+    type SubscribeStream = futures_util::stream::SelectAll<ReceiverStream>;
 
     async fn subscribe(
         &self,
