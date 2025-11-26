@@ -174,58 +174,65 @@ impl SourceTrait for SolanaSnapshotSource {
             let filter_owner_key_lookup = filter_owner_key_lookup.clone();
 
             account_file_workers.spawn(async move {
-                let blocking_task = tokio::task::spawn_blocking(move || {
-                    let (accounts, _usize) = AccountsFile::new_from_file(
-                        path,
-                        current_len,
-                        solana_accounts_db::accounts_file::StorageAccess::default(),
-                    )
-                    .expect("Unpack account file");
+                let blocking_task =
+                    tokio::task::spawn_blocking(move || -> Result<(), VixenError> {
+                        let (accounts, _usize) = AccountsFile::new_from_file(
+                            path,
+                            current_len,
+                            solana_accounts_db::accounts_file::StorageAccess::default(),
+                        )
+                        .expect("Unpack account file");
 
-                    accounts.scan_accounts(|_size, account| {
-                        let account_owner = Pubkey::try_from(account.owner.as_ref())
-                            .expect("Owner address is Pubkey");
+                        accounts.scan_accounts(|_size, account| {
+                            let account_owner = Pubkey::try_from(account.owner.as_ref())
+                                .expect("Owner address is Pubkey");
 
-                        if let Some(filter_keys) =
-                            filter_owner_key_lookup.lookup_by_owner(&account_owner)
-                        {
-                            if let Err(err) = worker_sync_tx.blocking_send(Event::AccountUpdate {
-                                account_update: SubscribeUpdateAccount {
-                                    account: Some(SubscribeUpdateAccountInfo {
-                                        pubkey: account.pubkey().to_bytes().to_vec(),
-                                        lamports: account.lamports,
-                                        owner: account.owner.to_bytes().to_vec(),
-                                        executable: account.executable,
-                                        rent_epoch: account.rent_epoch,
-                                        data: account.data.to_vec(),
-                                        write_version: 0,
-                                        txn_signature: None,
-                                    }),
-                                    slot,
-                                    is_startup: true,
-                                },
-                                filters: filter_keys,
-                            }) {
-                                tracing::error!(
-                                    "Channel closed while buffering snapshot account update: {}",
-                                    err
-                                );
+                            if let Some(filter_keys) =
+                                filter_owner_key_lookup.lookup_by_owner(&account_owner)
+                            {
+                                worker_sync_tx
+                                    .blocking_send(Event::AccountUpdate {
+                                        account_update: SubscribeUpdateAccount {
+                                            account: Some(SubscribeUpdateAccountInfo {
+                                                pubkey: account.pubkey().to_bytes().to_vec(),
+                                                lamports: account.lamports,
+                                                owner: account.owner.to_bytes().to_vec(),
+                                                executable: account.executable,
+                                                rent_epoch: account.rent_epoch,
+                                                data: account.data.to_vec(),
+                                                write_version: 0,
+                                                txn_signature: None,
+                                            }),
+                                            slot,
+                                            is_startup: true,
+                                        },
+                                        filters: filter_keys,
+                                    })
+                                    .expect("Channel closed while sending account update");
                             }
-                        }
-                    });
-                });
+                        });
 
-                if let Err(join_err) = blocking_task.await {
-                    tracing::error!("Snapshot worker panicked: {:?}", join_err);
-                }
+                        Ok(())
+                    });
+
+                blocking_task.await.map_err(|err| {
+                    VixenError::Other(format!("Snapshot worker panicked: {err:?}").into())
+                })?
             });
 
             if account_file_workers.len() >= max_workers {
-                account_file_workers.join_next().await;
+                if let Some(join_res) = account_file_workers.join_next().await {
+                    join_res.map_err(|err| {
+                        VixenError::Other(format!("Snapshot worker panicked: {err:?}").into())
+                    })??;
+                }
             }
         }
 
-        while account_file_workers.join_next().await.is_some() {}
+        while let Some(join_res) = account_file_workers.join_next().await {
+            join_res
+                .map_err(|err| VixenError::Other(format!("Snapshot worker panicked: {err:?}").into()))??;
+        }
 
         sync_tx
             .send(Event::SnapshotFinished)
