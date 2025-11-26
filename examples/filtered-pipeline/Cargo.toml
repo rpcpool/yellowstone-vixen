@@ -11,10 +11,6 @@ clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
 toml = "0.8.12"
 tracing = "0.1.40"
 yellowstone-vixen = { workspace = true }
-yellowstone-vixen-raydium-amm-v4-parser = { workspace = true, features = [
-  "shared-data",
-] }
-yellowstone-vixen-meteora-amm-parser = { workspace = true }
 
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
 yellowstone-vixen-solana-rpc-source = { workspace = true }

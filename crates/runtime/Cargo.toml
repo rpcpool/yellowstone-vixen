@@ -11,11 +11,7 @@ readme = "./../../README.md"
 
 [dependencies]
 async-trait = { workspace = true }
-clap = { workspace = true, features = [
-  "env",
-  "derive",
-  "std",
-] }
+clap = { workspace = true, features = ["env", "derive", "std"] }
 futures-channel = { workspace = true, features = ["sink"] }
 futures-util = { workspace = true, features = ["sink"] }
 opentelemetry = { workspace = true, features = ["metrics"], optional = true }

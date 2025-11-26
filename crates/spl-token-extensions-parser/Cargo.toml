@@ -1,6 +1,6 @@
 [package]
-name = "yellowstone-vixen-parser"
-description = "Vixen program parser utilties."
+name = "yellowstone-vixen-spl-token-extensions-parser"
+description = "Vixen program parsers for spl token exetensions parser."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,14 +10,23 @@ authors.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+spl-pod = { workspace = true }
+spl-token-2022 = { workspace = true }
+spl-type-length-value = { workspace = true }
+spl-token-group-interface = { workspace = true }
+spl-token-metadata-interface = { workspace = true }
+solana-program-pack = { workspace = true }
+solana-program-error = { workspace = true }
+yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
-solana-program-option = { workspace = true, optional = true }
-solana-pubkey = { workspace = true }
+yellowstone-vixen-parser = { workspace = true }
+yellowstone-vixen-spl-token-parser = { workspace = true }
 yellowstone-vixen-proto = { workspace = true, features = [
   "parser",
 ], optional = true }
 thiserror.workspace = true
 bs58.workspace = true
+bytemuck = { workspace = true }
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
@@ -29,5 +38,4 @@ proto = [
   "dep:yellowstone-vixen-proto",
   "yellowstone-vixen-core/proto",
   "yellowstone-vixen-proto/parser",
-  "solana-program-option",
 ]

@@ -12,7 +12,7 @@ toml = "0.8.12"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 yellowstone-vixen = { workspace = true }
-yellowstone-vixen-parser = { workspace = true, features = ["token-program"] }
+yellowstone-vixen-parser = { workspace = true }
 
 # OTEL
 opentelemetry = "0.29.1"

@@ -9,6 +9,7 @@ authors.workspace = true
 readme = "./../../README.md"
 
 [dependencies]
+agave-snapshots = { workspace = true }
 async-trait = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
 tracing = { workspace = true }
@@ -21,10 +22,11 @@ toml = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 solana-pubkey = { workspace = true, features = ["curve25519", "borsh"] }
 solana-accounts-db = { workspace = true }
+solana-genesis-utils = { workspace = true, features = ["agave-unstable-api"] }
+solana-ledger = { workspace = true, features = ["agave-unstable-api"] }
 tempfile = { workspace = true }
 zstd = { workspace = true }
 tar = { workspace = true }
 solana-account = { workspace = true }
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
-solana-ledger = { workspace = true }
 solana-runtime = { workspace = true }

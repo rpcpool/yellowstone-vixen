@@ -13,7 +13,6 @@ use clap::Parser as _;
 use opentelemetry::trace::TracerProvider;
 use tracing_subscriber::layer::SubscriberExt;
 use yellowstone_vixen::{Handler, HandlerResult, Pipeline, Runtime};
-use yellowstone_vixen_parser::token_program::{AccountParser, InstructionParser};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -27,7 +26,9 @@ pub struct Opts {
 pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync, R: Sync> Handler<V, R> for Logger {
-    async fn handle(&self, _value: &V, _raw: &R) -> HandlerResult<()> { Ok(()) }
+    async fn handle(&self, _value: &V, _raw: &R) -> HandlerResult<()> {
+        Ok(())
+    }
 }
 
 #[rustfmt::skip]
@@ -81,8 +82,6 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     Runtime::<YellowstoneGrpcSource>::builder()
-        .instruction(Pipeline::new(InstructionParser, [Logger]))
-        .account(Pipeline::new(AccountParser, [Logger]))
         .build(config)
         .run();
 }

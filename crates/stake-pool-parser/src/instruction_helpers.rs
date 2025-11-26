@@ -1,9 +1,9 @@
 use borsh::BorshDeserialize;
 use spl_stake_pool::{
     instruction::{FundingType, PreferredValidatorType},
-    solana_program::pubkey::Pubkey,
     state::{Fee, FeeType},
 };
+use yellowstone_vixen_parser::Pubkey;
 
 ///   (Staker only) Adds stake account delegated to validator to the pool's
 ///   list of managed validators.
@@ -60,7 +60,7 @@ pub struct AddValidatorToPoolAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct AddValidatorToPoolData {
+pub struct AddValidatorToPoolArgs {
     pub raw_validator_seed: u32,
 }
 
@@ -104,7 +104,7 @@ pub struct CreateTokenMetadataAccounts {
 }
 
 #[derive(Debug, BorshDeserialize)]
-pub struct CreateTokenMetadataData {
+pub struct CreateTokenMetadataArgs {
     pub name: String,
     pub symbol: String,
     pub uri: String,
@@ -163,7 +163,7 @@ pub struct DecreaseValidatorStakeAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct DecreaseValidatorStakeData {
+pub struct DecreaseValidatorStakeArgs {
     /// amount of lamports to split into the transient stake account
     pub lamports: u64,
 
@@ -211,7 +211,7 @@ pub struct DepositSolAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct DepositSolData {
+pub struct DepositSolArgs {
     pub arg: u64,
 }
 
@@ -335,7 +335,7 @@ pub struct IncreaseValidatorStakeAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct IncreaseValidatorStakeData {
+pub struct IncreaseValidatorStakeArgs {
     /// amount of lamports to increase on the given validator
     pub lamports: u64,
 
@@ -383,7 +383,7 @@ pub struct InitializeAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct InitializeData {
+pub struct InitializeArgs {
     /// Fee assessed as percentage of perceived rewards
     pub fee: Fee,
 
@@ -444,7 +444,7 @@ pub struct SetFeeAccounts {
 }
 
 #[derive(Debug, BorshDeserialize)]
-pub struct SetFeeData {
+pub struct SetFeeArgs {
     /// Type of fee to update and value to update it to
     pub fee: FeeType,
 }
@@ -464,7 +464,7 @@ pub struct SetFundingAuthorityAccounts {
 }
 
 #[derive(Debug, BorshDeserialize)]
-pub struct SetFundingAuthorityData {
+pub struct SetFundingAuthorityArgs {
     pub arg: FundingType,
 }
 
@@ -506,7 +506,7 @@ pub struct SetPreferredValidatorAccounts {
 }
 
 #[derive(Debug, BorshDeserialize)]
-pub struct SetPreferredValidatorData {
+pub struct SetPreferredValidatorArgs {
     /// Affected operation (deposit or withdraw)
     pub validator_type: PreferredValidatorType,
 
@@ -575,7 +575,7 @@ pub struct UpdateTokenMetadataAccounts {
 }
 
 #[derive(Debug, BorshDeserialize)]
-pub struct UpdateTokenMetadataData {
+pub struct UpdateTokenMetadataArgs {
     pub name: String,
     pub symbol: String,
     pub uri: String,
@@ -614,7 +614,7 @@ pub struct UpdateValidatorListBalanceAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct UpdateValidatorListBalanceData {
+pub struct UpdateValidatorListBalanceArgs {
     /// Index to start updating on the validator list
     pub start_index: u32,
 
@@ -671,7 +671,7 @@ pub struct WithdrawSolAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct WithdrawSolData {
+pub struct WithdrawSolArgs {
     pub arg: u64,
 }
 
@@ -740,7 +740,7 @@ pub struct WithdrawStakeAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct WithdrawStakeData {
+pub struct WithdrawStakeArgs {
     /// amount of pool tokens to withdraw
     pub arg: u64,
 }
@@ -811,7 +811,7 @@ pub struct IncreaseAdditionalValidatorStakeAccounts {
 /// The rent-exemption of the stake account is withdrawn back to the
 /// reserve after it is merged.
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct IncreaseAdditionalValidatorStakeData {
+pub struct IncreaseAdditionalValidatorStakeArgs {
     /// amount of lamports to increase on the given validator
     pub lamports: u64,
 
@@ -878,7 +878,7 @@ pub struct DecreaseAdditionalValidatorStakeAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct DecreaseAdditionalValidatorStakeData {
+pub struct DecreaseAdditionalValidatorStakeArgs {
     /// amount of lamports to increase on the given validator
     pub lamports: u64,
 
@@ -944,7 +944,7 @@ pub struct DecreaseValidatorStakeWithReserveAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct DecreaseValidatorStakeWithReserveData {
+pub struct DecreaseValidatorStakeWithReserveArgs {
     /// amount of lamports to split into the transient stake account
     pub lamports: u64,
 
@@ -1028,7 +1028,7 @@ pub struct DepositStakeWithSlippageAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct DepositStakeWithSlippageData {
+pub struct DepositStakeWithSlippageArgs {
     /// Minimum amount of pool tokens that must be received
     pub minimum_pool_tokens_out: u64,
 }
@@ -1076,7 +1076,7 @@ pub struct WithdrawStakeWithSlippageAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct WithdrawStakeWithSlippageData {
+pub struct WithdrawStakeWithSlippageArgs {
     /// Pool tokens to burn in exchange for lamports
     pub pool_tokens_in: u64,
 
@@ -1125,7 +1125,7 @@ pub struct DepositSolWithSlippageAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct DepositSolWithSlippageData {
+pub struct DepositSolWithSlippageArgs {
     /// Amount of lamports to deposit into the reserve
     pub lamports_in: u64,
 
@@ -1180,7 +1180,7 @@ pub struct WithdrawSolWithSlippageAccounts {
 }
 
 #[derive(Clone, Copy, Debug, BorshDeserialize)]
-pub struct WithdrawSolWithSlippageData {
+pub struct WithdrawSolWithSlippageArgs {
     /// Pool tokens to burn in exchange for lamports
     pub pool_tokens_in: u64,
 
@@ -1189,49 +1189,103 @@ pub struct WithdrawSolWithSlippageData {
 }
 
 #[derive(Debug, BorshDeserialize)]
-pub enum StakePoolProgramIx {
-    Initialize(InitializeAccounts, InitializeData),
-    AddValidatorToPool(AddValidatorToPoolAccounts, AddValidatorToPoolData),
-    RemoveValidatorFromPool(RemoveValidatorFromPoolAccounts),
-    DecreaseValidatorStake(DecreaseValidatorStakeAccounts, DecreaseValidatorStakeData),
-    IncreaseValidatorStake(IncreaseValidatorStakeAccounts, IncreaseValidatorStakeData),
-    SetPreferredValidator(SetPreferredValidatorAccounts, SetPreferredValidatorData),
-    UpdateValidatorListBalance(
-        UpdateValidatorListBalanceAccounts,
-        UpdateValidatorListBalanceData,
-    ),
-    UpdateStakePoolBalance(UpdateStakePoolBalanceAccounts),
-    CleanupRemovedValidatorEntries(CleanupRemovedValidatorEntriesAccounts),
-    DepositStake(DepositStakeAccounts),
-    WithdrawStake(WithdrawStakeAccounts, WithdrawStakeData),
-    SetManager(SetManagerAccounts),
-    SetFee(SetFeeAccounts, SetFeeData),
-    SetStaker(SetStakerAccounts),
-    DepositSol(DepositSolAccounts, DepositSolData),
-    SetFundingAuthority(SetFundingAuthorityAccounts, SetFundingAuthorityData),
-    WithdrawSol(WithdrawSolAccounts, WithdrawSolData),
-    CreateTokenMetadata(CreateTokenMetadataAccounts, CreateTokenMetadataData),
-    UpdateTokenMetadata(UpdateTokenMetadataAccounts, UpdateTokenMetadataData),
-    IncreaseAdditionalValidatorStake(
-        IncreaseAdditionalValidatorStakeAccounts,
-        IncreaseAdditionalValidatorStakeData,
-    ),
-    DecreaseAdditionalValidatorStake(
-        DecreaseAdditionalValidatorStakeAccounts,
-        DecreaseAdditionalValidatorStakeData,
-    ),
-    DecreaseValidatorStakeWithReserve(
-        DecreaseValidatorStakeWithReserveAccounts,
-        DecreaseValidatorStakeWithReserveData,
-    ),
-    DepositStakeWithSlippage(
-        DepositStakeWithSlippageAccounts,
-        DepositStakeWithSlippageData,
-    ),
-    WithdrawStakeWithSlippage(
-        WithdrawStakeWithSlippageAccounts,
-        WithdrawStakeWithSlippageData,
-    ),
-    DepositSolWithSlippage(DepositSolWithSlippageAccounts, DepositSolWithSlippageData),
-    WithdrawSolWithSlippage(WithdrawSolWithSlippageAccounts, WithdrawSolWithSlippageData),
+pub enum StakePoolProgramInstruction {
+    Initialize {
+        accounts: InitializeAccounts,
+        args: InitializeArgs,
+    },
+    AddValidatorToPool {
+        accounts: AddValidatorToPoolAccounts,
+        args: AddValidatorToPoolArgs,
+    },
+    RemoveValidatorFromPool {
+        accounts: RemoveValidatorFromPoolAccounts,
+    },
+    DecreaseValidatorStake {
+        accounts: DecreaseValidatorStakeAccounts,
+        args: DecreaseValidatorStakeArgs,
+    },
+    IncreaseValidatorStake {
+        accounts: IncreaseValidatorStakeAccounts,
+        args: IncreaseValidatorStakeArgs,
+    },
+    SetPreferredValidator {
+        accounts: SetPreferredValidatorAccounts,
+        args: SetPreferredValidatorArgs,
+    },
+    UpdateValidatorListBalance {
+        accounts: UpdateValidatorListBalanceAccounts,
+        args: UpdateValidatorListBalanceArgs,
+    },
+    UpdateStakePoolBalance {
+        accounts: UpdateStakePoolBalanceAccounts,
+    },
+    CleanupRemovedValidatorEntries {
+        accounts: CleanupRemovedValidatorEntriesAccounts,
+    },
+    DepositStake {
+        accounts: DepositStakeAccounts,
+    },
+    WithdrawStake {
+        accounts: WithdrawStakeAccounts,
+        args: WithdrawStakeArgs,
+    },
+    SetManager {
+        accounts: SetManagerAccounts,
+    },
+    SetFee {
+        accounts: SetFeeAccounts,
+        args: SetFeeArgs,
+    },
+    SetStaker {
+        accounts: SetStakerAccounts,
+    },
+    DepositSol {
+        accounts: DepositSolAccounts,
+        args: DepositSolArgs,
+    },
+    SetFundingAuthority {
+        accounts: SetFundingAuthorityAccounts,
+        args: SetFundingAuthorityArgs,
+    },
+    WithdrawSol {
+        accounts: WithdrawSolAccounts,
+        args: WithdrawSolArgs,
+    },
+    CreateTokenMetadata {
+        accounts: CreateTokenMetadataAccounts,
+        args: CreateTokenMetadataArgs,
+    },
+    UpdateTokenMetadata {
+        accounts: UpdateTokenMetadataAccounts,
+        args: UpdateTokenMetadataArgs,
+    },
+    IncreaseAdditionalValidatorStake {
+        accounts: IncreaseAdditionalValidatorStakeAccounts,
+        args: IncreaseAdditionalValidatorStakeArgs,
+    },
+    DecreaseAdditionalValidatorStake {
+        accounts: DecreaseAdditionalValidatorStakeAccounts,
+        args: DecreaseAdditionalValidatorStakeArgs,
+    },
+    DecreaseValidatorStakeWithReserve {
+        accounts: DecreaseValidatorStakeWithReserveAccounts,
+        args: DecreaseValidatorStakeWithReserveArgs,
+    },
+    DepositStakeWithSlippage {
+        accounts: DepositStakeWithSlippageAccounts,
+        args: DepositStakeWithSlippageArgs,
+    },
+    WithdrawStakeWithSlippage {
+        accounts: WithdrawStakeWithSlippageAccounts,
+        args: WithdrawStakeWithSlippageArgs,
+    },
+    DepositSolWithSlippage {
+        accounts: DepositSolWithSlippageAccounts,
+        args: DepositSolWithSlippageArgs,
+    },
+    WithdrawSolWithSlippage {
+        accounts: WithdrawSolWithSlippageAccounts,
+        args: WithdrawSolWithSlippageArgs,
+    },
 }

@@ -1,24 +1,25 @@
 use borsh::BorshDeserialize;
 use spl_stake_pool::instruction::StakePoolInstruction;
+use yellowstone_vixen_parser::check_min_accounts_req;
 
-use super::instruction_helpers::{
-    AddValidatorToPoolAccounts, AddValidatorToPoolData, CleanupRemovedValidatorEntriesAccounts,
-    CreateTokenMetadataAccounts, CreateTokenMetadataData, DecreaseAdditionalValidatorStakeAccounts,
-    DecreaseAdditionalValidatorStakeData, DecreaseValidatorStakeAccounts,
-    DecreaseValidatorStakeData, DecreaseValidatorStakeWithReserveAccounts,
-    DecreaseValidatorStakeWithReserveData, DepositSolAccounts, DepositSolData,
-    DepositSolWithSlippageAccounts, DepositSolWithSlippageData, DepositStakeAccounts,
-    DepositStakeWithSlippageAccounts, DepositStakeWithSlippageData,
-    IncreaseAdditionalValidatorStakeAccounts, IncreaseAdditionalValidatorStakeData,
-    IncreaseValidatorStakeAccounts, IncreaseValidatorStakeData, InitializeAccounts, InitializeData,
-    RemoveValidatorFromPoolAccounts, SetFeeAccounts, SetFeeData, SetFundingAuthorityAccounts,
-    SetFundingAuthorityData, SetManagerAccounts, SetPreferredValidatorAccounts,
-    SetPreferredValidatorData, SetStakerAccounts, StakePoolProgramIx,
-    UpdateStakePoolBalanceAccounts, UpdateTokenMetadataAccounts, UpdateTokenMetadataData,
-    UpdateValidatorListBalanceAccounts, UpdateValidatorListBalanceData, WithdrawSolAccounts,
-    WithdrawSolData, WithdrawSolWithSlippageAccounts, WithdrawSolWithSlippageData,
-    WithdrawStakeAccounts, WithdrawStakeData, WithdrawStakeWithSlippageAccounts,
-    WithdrawStakeWithSlippageData,
+use crate::instruction_helpers::{
+    AddValidatorToPoolAccounts, AddValidatorToPoolArgs, CleanupRemovedValidatorEntriesAccounts,
+    CreateTokenMetadataAccounts, CreateTokenMetadataArgs, DecreaseAdditionalValidatorStakeAccounts,
+    DecreaseAdditionalValidatorStakeArgs, DecreaseValidatorStakeAccounts,
+    DecreaseValidatorStakeArgs, DecreaseValidatorStakeWithReserveAccounts,
+    DecreaseValidatorStakeWithReserveArgs, DepositSolAccounts, DepositSolArgs,
+    DepositSolWithSlippageAccounts, DepositSolWithSlippageArgs, DepositStakeAccounts,
+    DepositStakeWithSlippageAccounts, DepositStakeWithSlippageArgs,
+    IncreaseAdditionalValidatorStakeAccounts, IncreaseAdditionalValidatorStakeArgs,
+    IncreaseValidatorStakeAccounts, IncreaseValidatorStakeArgs, InitializeAccounts, InitializeArgs,
+    RemoveValidatorFromPoolAccounts, SetFeeAccounts, SetFeeArgs, SetFundingAuthorityAccounts,
+    SetFundingAuthorityArgs, SetManagerAccounts, SetPreferredValidatorAccounts,
+    SetPreferredValidatorArgs, SetStakerAccounts, StakePoolProgramInstruction,
+    UpdateStakePoolBalanceAccounts, UpdateTokenMetadataAccounts, UpdateTokenMetadataArgs,
+    UpdateValidatorListBalanceAccounts, UpdateValidatorListBalanceArgs, WithdrawSolAccounts,
+    WithdrawSolArgs, WithdrawSolWithSlippageAccounts, WithdrawSolWithSlippageArgs,
+    WithdrawStakeAccounts, WithdrawStakeArgs, WithdrawStakeWithSlippageAccounts,
+    WithdrawStakeWithSlippageArgs,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -26,9 +27,11 @@ pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-    type Output = StakePoolProgramIx;
+    type Output = StakePoolProgramInstruction;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "StakePool::InstructionParser".into() }
+    fn id(&self) -> std::borrow::Cow<'static, str> {
+        "StakePool::InstructionParser".into()
+    }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -59,7 +62,7 @@ impl yellowstone_vixen_core::ProgramParser for InstructionParser {
 impl InstructionParser {
     pub(crate) fn parse_impl(
         ix: &yellowstone_vixen_core::instruction::InstructionUpdate,
-    ) -> yellowstone_vixen_core::ParseResult<StakePoolProgramIx> {
+    ) -> yellowstone_vixen_core::ParseResult<StakePoolProgramInstruction> {
         let ix_type = StakePoolInstruction::try_from_slice(ix.data.as_slice())?;
         let accounts_len = ix.accounts.len();
 
@@ -74,23 +77,23 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 9)?;
 
                 let mut ix_accounts = InitializeAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    manager: ix.accounts[1].0.into(),
-                    staker: ix.accounts[2].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[3].0.into(),
-                    validator_list: ix.accounts[4].0.into(),
-                    reserve_stake: ix.accounts[5].0.into(),
-                    pool_mint: ix.accounts[6].0.into(),
-                    manager_pool_account: ix.accounts[7].0.into(),
-                    token_program: ix.accounts[8].0.into(),
+                    stake_pool: ix.accounts[0],
+                    manager: ix.accounts[1],
+                    staker: ix.accounts[2],
+                    stake_pool_withdraw_authority: ix.accounts[3],
+                    validator_list: ix.accounts[4],
+                    reserve_stake: ix.accounts[5],
+                    pool_mint: ix.accounts[6],
+                    manager_pool_account: ix.accounts[7],
+                    token_program: ix.accounts[8],
                     deposit_authority: None,
                 };
 
                 if let Some(deposit_authority) = ix.accounts.get(9) {
-                    ix_accounts.deposit_authority = Some(deposit_authority.0.into());
+                    ix_accounts.deposit_authority = Some(deposit_authority.to_owned());
                 }
 
-                let de_ix_data: InitializeData = InitializeData {
+                let args = InitializeArgs {
                     fee,
                     withdrawal_fee,
                     deposit_fee,
@@ -98,50 +101,54 @@ impl InstructionParser {
                     max_validators,
                 };
 
-                Ok(StakePoolProgramIx::Initialize(ix_accounts, de_ix_data))
+                Ok(StakePoolProgramInstruction::Initialize {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::AddValidatorToPool(raw_validator_seed) => {
                 check_min_accounts_req(accounts_len, 13)?;
 
                 let ix_accounts = AddValidatorToPoolAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    staker: ix.accounts[1].0.into(),
-                    funder: ix.accounts[2].0.into(),
-                    stake_pool_withdraw: ix.accounts[3].0.into(),
-                    validator_list: ix.accounts[4].0.into(),
-                    stake: ix.accounts[5].0.into(),
-                    validator: ix.accounts[6].0.into(),
-                    rent: ix.accounts[7].0.into(),
-                    clock: ix.accounts[8].0.into(),
-                    sysvar_stake_history: ix.accounts[9].0.into(),
-                    stake_config: ix.accounts[10].0.into(),
-                    system_program: ix.accounts[11].0.into(),
-                    stake_program: ix.accounts[12].0.into(),
+                    stake_pool: ix.accounts[0],
+                    staker: ix.accounts[1],
+                    funder: ix.accounts[2],
+                    stake_pool_withdraw: ix.accounts[3],
+                    validator_list: ix.accounts[4],
+                    stake: ix.accounts[5],
+                    validator: ix.accounts[6],
+                    rent: ix.accounts[7],
+                    clock: ix.accounts[8],
+                    sysvar_stake_history: ix.accounts[9],
+                    stake_config: ix.accounts[10],
+                    system_program: ix.accounts[11],
+                    stake_program: ix.accounts[12],
                 };
 
-                let de_ix_data: AddValidatorToPoolData =
-                    AddValidatorToPoolData { raw_validator_seed };
+                let args = AddValidatorToPoolArgs { raw_validator_seed };
 
-                Ok(StakePoolProgramIx::AddValidatorToPool(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::AddValidatorToPool {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::RemoveValidatorFromPool => {
                 check_min_accounts_req(accounts_len, 8)?;
 
                 let ix_accounts = RemoveValidatorFromPoolAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    staker: ix.accounts[1].0.into(),
-                    stake_pool_withdraw: ix.accounts[2].0.into(),
-                    validator_list: ix.accounts[3].0.into(),
-                    stake_account: ix.accounts[4].0.into(),
-                    transient_stake_account: ix.accounts[5].0.into(),
-                    clock: ix.accounts[6].0.into(),
-                    stake_program: ix.accounts[7].0.into(),
+                    stake_pool: ix.accounts[0],
+                    staker: ix.accounts[1],
+                    stake_pool_withdraw: ix.accounts[2],
+                    validator_list: ix.accounts[3],
+                    stake_account: ix.accounts[4],
+                    transient_stake_account: ix.accounts[5],
+                    clock: ix.accounts[6],
+                    stake_program: ix.accounts[7],
                 };
 
-                Ok(StakePoolProgramIx::RemoveValidatorFromPool(ix_accounts))
+                Ok(StakePoolProgramInstruction::RemoveValidatorFromPool {
+                    accounts: ix_accounts,
+                })
             },
             StakePoolInstruction::DecreaseValidatorStake {
                 lamports,
@@ -150,27 +157,27 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 10)?;
 
                 let ix_accounts = DecreaseValidatorStakeAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    staker: ix.accounts[1].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[2].0.into(),
-                    validator_list: ix.accounts[3].0.into(),
-                    validator_stake: ix.accounts[4].0.into(),
-                    transient_stake: ix.accounts[5].0.into(),
-                    clock: ix.accounts[6].0.into(),
-                    rent: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    stake_program: ix.accounts[9].0.into(),
+                    stake_pool: ix.accounts[0],
+                    staker: ix.accounts[1],
+                    stake_pool_withdraw_authority: ix.accounts[2],
+                    validator_list: ix.accounts[3],
+                    validator_stake: ix.accounts[4],
+                    transient_stake: ix.accounts[5],
+                    clock: ix.accounts[6],
+                    rent: ix.accounts[7],
+                    system_program: ix.accounts[8],
+                    stake_program: ix.accounts[9],
                 };
 
-                let de_ix_data: DecreaseValidatorStakeData = DecreaseValidatorStakeData {
+                let args = DecreaseValidatorStakeArgs {
                     lamports,
                     transient_stake_seed,
                 };
 
-                Ok(StakePoolProgramIx::DecreaseValidatorStake(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::DecreaseValidatorStake {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::IncreaseValidatorStake {
                 lamports,
@@ -179,31 +186,31 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 14)?;
 
                 let ix_accounts = IncreaseValidatorStakeAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    staker: ix.accounts[1].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[2].0.into(),
-                    validator_list: ix.accounts[3].0.into(),
-                    reserve_stake: ix.accounts[4].0.into(),
-                    transient_stake: ix.accounts[5].0.into(),
-                    validator_stake: ix.accounts[6].0.into(),
-                    validator: ix.accounts[7].0.into(),
-                    clock: ix.accounts[8].0.into(),
-                    rent: ix.accounts[9].0.into(),
-                    sysvar_stake_history: ix.accounts[10].0.into(),
-                    stake_config: ix.accounts[11].0.into(),
-                    system_program: ix.accounts[12].0.into(),
-                    stake_program: ix.accounts[13].0.into(),
+                    stake_pool: ix.accounts[0],
+                    staker: ix.accounts[1],
+                    stake_pool_withdraw_authority: ix.accounts[2],
+                    validator_list: ix.accounts[3],
+                    reserve_stake: ix.accounts[4],
+                    transient_stake: ix.accounts[5],
+                    validator_stake: ix.accounts[6],
+                    validator: ix.accounts[7],
+                    clock: ix.accounts[8],
+                    rent: ix.accounts[9],
+                    sysvar_stake_history: ix.accounts[10],
+                    stake_config: ix.accounts[11],
+                    system_program: ix.accounts[12],
+                    stake_program: ix.accounts[13],
                 };
 
-                let de_ix_data: IncreaseValidatorStakeData = IncreaseValidatorStakeData {
+                let args = IncreaseValidatorStakeArgs {
                     lamports,
                     transient_stake_seed,
                 };
 
-                Ok(StakePoolProgramIx::IncreaseValidatorStake(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::IncreaseValidatorStake {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::SetPreferredValidator {
                 validator_type,
@@ -212,20 +219,20 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 3)?;
 
                 let ix_accounts = SetPreferredValidatorAccounts {
-                    stake_pool_address: ix.accounts[0].0.into(),
-                    staker: ix.accounts[1].0.into(),
-                    validator_list_address: ix.accounts[2].0.into(),
+                    stake_pool_address: ix.accounts[0],
+                    staker: ix.accounts[1],
+                    validator_list_address: ix.accounts[2],
                 };
 
-                let de_ix_data: SetPreferredValidatorData = SetPreferredValidatorData {
+                let args = SetPreferredValidatorArgs {
                     validator_type,
-                    validator_vote_address,
+                    validator_vote_address: validator_vote_address.map(|p| p.to_bytes().into()),
                 };
 
-                Ok(StakePoolProgramIx::SetPreferredValidator(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::SetPreferredValidator {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::UpdateValidatorListBalance {
                 start_index,
@@ -234,244 +241,263 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 7)?;
 
                 let ix_accounts = UpdateValidatorListBalanceAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[1].0.into(),
-                    validator_list_address: ix.accounts[2].0.into(),
-                    reserve_stake: ix.accounts[3].0.into(),
-                    clock: ix.accounts[4].0.into(),
-                    sysvar_stake_history: ix.accounts[5].0.into(),
-                    stake_program: ix.accounts[6].0.into(),
+                    stake_pool: ix.accounts[0],
+                    stake_pool_withdraw_authority: ix.accounts[1],
+                    validator_list_address: ix.accounts[2],
+                    reserve_stake: ix.accounts[3],
+                    clock: ix.accounts[4],
+                    sysvar_stake_history: ix.accounts[5],
+                    stake_program: ix.accounts[6],
                 };
 
-                let de_ix_data: UpdateValidatorListBalanceData = UpdateValidatorListBalanceData {
+                let args = UpdateValidatorListBalanceArgs {
                     start_index,
                     no_merge,
                 };
 
-                Ok(StakePoolProgramIx::UpdateValidatorListBalance(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::UpdateValidatorListBalance {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::UpdateStakePoolBalance => {
                 check_min_accounts_req(accounts_len, 7)?;
 
                 let ix_accounts = UpdateStakePoolBalanceAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    withdraw_authority: ix.accounts[1].0.into(),
-                    validator_list_storage: ix.accounts[2].0.into(),
-                    reserve_stake: ix.accounts[3].0.into(),
-                    manager_fee_account: ix.accounts[4].0.into(),
-                    stake_pool_mint: ix.accounts[5].0.into(),
-                    token_program: ix.accounts[6].0.into(),
+                    stake_pool: ix.accounts[0],
+                    withdraw_authority: ix.accounts[1],
+                    validator_list_storage: ix.accounts[2],
+                    reserve_stake: ix.accounts[3],
+                    manager_fee_account: ix.accounts[4],
+                    stake_pool_mint: ix.accounts[5],
+                    token_program: ix.accounts[6],
                 };
 
-                Ok(StakePoolProgramIx::UpdateStakePoolBalance(ix_accounts))
+                Ok(StakePoolProgramInstruction::UpdateStakePoolBalance {
+                    accounts: ix_accounts,
+                })
             },
             StakePoolInstruction::CleanupRemovedValidatorEntries => {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 let ix_accounts = CleanupRemovedValidatorEntriesAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    validator_list_storage: ix.accounts[1].0.into(),
+                    stake_pool: ix.accounts[0],
+                    validator_list_storage: ix.accounts[1],
                 };
 
-                Ok(StakePoolProgramIx::CleanupRemovedValidatorEntries(
-                    ix_accounts,
-                ))
+                Ok(
+                    StakePoolProgramInstruction::CleanupRemovedValidatorEntries {
+                        accounts: ix_accounts,
+                    },
+                )
             },
             StakePoolInstruction::DepositStake => {
                 check_min_accounts_req(accounts_len, 15)?;
 
                 let ix_accounts = DepositStakeAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    validator_list_storage: ix.accounts[1].0.into(),
-                    stake_pool_deposit_authority: ix.accounts[2].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[3].0.into(),
-                    deposit_stake_address: ix.accounts[4].0.into(),
-                    validator_stake_account: ix.accounts[5].0.into(),
-                    reserve_stake_account: ix.accounts[6].0.into(),
-                    pool_tokens_to: ix.accounts[7].0.into(),
-                    manager_fee_account: ix.accounts[8].0.into(),
-                    referrer_pool_tokens_account: ix.accounts[9].0.into(),
-                    pool_mint: ix.accounts[10].0.into(),
-                    clock: ix.accounts[11].0.into(),
-                    sysvar_stake_history: ix.accounts[12].0.into(),
-                    token_program: ix.accounts[13].0.into(),
-                    stake_program: ix.accounts[14].0.into(),
+                    stake_pool: ix.accounts[0],
+                    validator_list_storage: ix.accounts[1],
+                    stake_pool_deposit_authority: ix.accounts[2],
+                    stake_pool_withdraw_authority: ix.accounts[3],
+                    deposit_stake_address: ix.accounts[4],
+                    validator_stake_account: ix.accounts[5],
+                    reserve_stake_account: ix.accounts[6],
+                    pool_tokens_to: ix.accounts[7],
+                    manager_fee_account: ix.accounts[8],
+                    referrer_pool_tokens_account: ix.accounts[9],
+                    pool_mint: ix.accounts[10],
+                    clock: ix.accounts[11],
+                    sysvar_stake_history: ix.accounts[12],
+                    token_program: ix.accounts[13],
+                    stake_program: ix.accounts[14],
                 };
 
-                Ok(StakePoolProgramIx::DepositStake(ix_accounts))
+                Ok(StakePoolProgramInstruction::DepositStake {
+                    accounts: ix_accounts,
+                })
             },
             StakePoolInstruction::WithdrawStake(amount) => {
                 check_min_accounts_req(accounts_len, 13)?;
 
                 let ix_accounts = WithdrawStakeAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    validator_list_storage: ix.accounts[1].0.into(),
-                    stake_pool_withdraw: ix.accounts[2].0.into(),
-                    stake_to_split: ix.accounts[3].0.into(),
-                    stake_to_receive: ix.accounts[4].0.into(),
-                    user_stake_authority: ix.accounts[5].0.into(),
-                    user_transfer_authority: ix.accounts[6].0.into(),
-                    user_pool_token_account: ix.accounts[7].0.into(),
-                    manager_fee_account: ix.accounts[8].0.into(),
-                    pool_mint: ix.accounts[9].0.into(),
-                    clock: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    stake_program: ix.accounts[12].0.into(),
+                    stake_pool: ix.accounts[0],
+                    validator_list_storage: ix.accounts[1],
+                    stake_pool_withdraw: ix.accounts[2],
+                    stake_to_split: ix.accounts[3],
+                    stake_to_receive: ix.accounts[4],
+                    user_stake_authority: ix.accounts[5],
+                    user_transfer_authority: ix.accounts[6],
+                    user_pool_token_account: ix.accounts[7],
+                    manager_fee_account: ix.accounts[8],
+                    pool_mint: ix.accounts[9],
+                    clock: ix.accounts[10],
+                    token_program: ix.accounts[11],
+                    stake_program: ix.accounts[12],
                 };
 
-                let de_ix_data: WithdrawStakeData = WithdrawStakeData { arg: amount };
+                let args = WithdrawStakeArgs { arg: amount };
 
-                Ok(StakePoolProgramIx::WithdrawStake(ix_accounts, de_ix_data))
+                Ok(StakePoolProgramInstruction::WithdrawStake {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::SetManager => {
                 check_min_accounts_req(accounts_len, 4)?;
 
                 let ix_accounts = SetManagerAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    manager: ix.accounts[1].0.into(),
-                    new_manager: ix.accounts[2].0.into(),
-                    new_fee_receiver: ix.accounts[3].0.into(),
+                    stake_pool: ix.accounts[0],
+                    manager: ix.accounts[1],
+                    new_manager: ix.accounts[2],
+                    new_fee_receiver: ix.accounts[3],
                 };
 
-                Ok(StakePoolProgramIx::SetManager(ix_accounts))
+                Ok(StakePoolProgramInstruction::SetManager {
+                    accounts: ix_accounts,
+                })
             },
             StakePoolInstruction::SetFee { fee } => {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 let ix_accounts = SetFeeAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    manager: ix.accounts[1].0.into(),
+                    stake_pool: ix.accounts[0],
+                    manager: ix.accounts[1],
                 };
 
-                let de_ix_data: SetFeeData = SetFeeData { fee };
+                let args = SetFeeArgs { fee };
 
-                Ok(StakePoolProgramIx::SetFee(ix_accounts, de_ix_data))
+                Ok(StakePoolProgramInstruction::SetFee {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::SetStaker => {
                 check_min_accounts_req(accounts_len, 3)?;
 
                 let ix_accounts = SetStakerAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    set_staker_authority: ix.accounts[1].0.into(),
-                    new_staker: ix.accounts[2].0.into(),
+                    stake_pool: ix.accounts[0],
+                    set_staker_authority: ix.accounts[1],
+                    new_staker: ix.accounts[2],
                 };
 
-                Ok(StakePoolProgramIx::SetStaker(ix_accounts))
+                Ok(StakePoolProgramInstruction::SetStaker {
+                    accounts: ix_accounts,
+                })
             },
             StakePoolInstruction::DepositSol(amount) => {
                 check_min_accounts_req(accounts_len, 10)?;
 
                 let ix_accounts = DepositSolAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[1].0.into(),
-                    reserve_stake_account: ix.accounts[2].0.into(),
-                    lamports_from: ix.accounts[3].0.into(),
-                    pool_tokens_to: ix.accounts[4].0.into(),
-                    manager_fee_account: ix.accounts[5].0.into(),
-                    referrer_pool_tokens_account: ix.accounts[6].0.into(),
-                    pool_mint: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
+                    stake_pool: ix.accounts[0],
+                    stake_pool_withdraw_authority: ix.accounts[1],
+                    reserve_stake_account: ix.accounts[2],
+                    lamports_from: ix.accounts[3],
+                    pool_tokens_to: ix.accounts[4],
+                    manager_fee_account: ix.accounts[5],
+                    referrer_pool_tokens_account: ix.accounts[6],
+                    pool_mint: ix.accounts[7],
+                    system_program: ix.accounts[8],
+                    token_program: ix.accounts[9],
                     deposit_authority: ix
                         .accounts
                         .get(10)
-                        .map(|account| Some(account.0.into()))
+                        .map(|account| Some(account.to_owned()))
                         .unwrap_or(None),
                 };
 
-                let de_ix_data: DepositSolData = DepositSolData { arg: amount };
+                let args = DepositSolArgs { arg: amount };
 
-                Ok(StakePoolProgramIx::DepositSol(ix_accounts, de_ix_data))
+                Ok(StakePoolProgramInstruction::DepositSol {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::SetFundingAuthority(funding_type) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 let ix_accounts = SetFundingAuthorityAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    manager: ix.accounts[1].0.into(),
+                    stake_pool: ix.accounts[0],
+                    manager: ix.accounts[1],
                     auth: ix
                         .accounts
-                        .get(12)
-                        .map(|account| Some(account.0.into()))
+                        .get(2)
+                        .map(|account| Some(account.to_owned()))
                         .unwrap_or(None),
                 };
 
-                let de_ix_data: SetFundingAuthorityData =
-                    SetFundingAuthorityData { arg: funding_type };
+                let args = SetFundingAuthorityArgs { arg: funding_type };
 
-                Ok(StakePoolProgramIx::SetFundingAuthority(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::SetFundingAuthority {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::WithdrawSol(amount) => {
                 check_min_accounts_req(accounts_len, 12)?;
 
                 let ix_accounts = WithdrawSolAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[1].0.into(),
-                    user_transfer_authority: ix.accounts[2].0.into(),
-                    pool_tokens_from: ix.accounts[3].0.into(),
-                    reserve_stake_account: ix.accounts[4].0.into(),
-                    lamports_to: ix.accounts[5].0.into(),
-                    manager_fee_account: ix.accounts[6].0.into(),
-                    pool_mint: ix.accounts[7].0.into(),
-                    clock: ix.accounts[8].0.into(),
-                    sysvar_stake_history: ix.accounts[9].0.into(),
-                    stake_program: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
+                    stake_pool: ix.accounts[0],
+                    stake_pool_withdraw_authority: ix.accounts[1],
+                    user_transfer_authority: ix.accounts[2],
+                    pool_tokens_from: ix.accounts[3],
+                    reserve_stake_account: ix.accounts[4],
+                    lamports_to: ix.accounts[5],
+                    manager_fee_account: ix.accounts[6],
+                    pool_mint: ix.accounts[7],
+                    clock: ix.accounts[8],
+                    sysvar_stake_history: ix.accounts[9],
+                    stake_program: ix.accounts[10],
+                    token_program: ix.accounts[11],
                     sol_withdraw_authority: ix
                         .accounts
                         .get(12)
-                        .map(|account| Some(account.0.into()))
+                        .map(|account| Some(account.to_owned()))
                         .unwrap_or(None),
                 };
 
-                let de_ix_data: WithdrawSolData = WithdrawSolData { arg: amount };
-                Ok(StakePoolProgramIx::WithdrawSol(ix_accounts, de_ix_data))
+                let args = WithdrawSolArgs { arg: amount };
+                Ok(StakePoolProgramInstruction::WithdrawSol {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::CreateTokenMetadata { name, symbol, uri } => {
                 check_min_accounts_req(accounts_len, 9)?;
 
                 let ix_accounts = CreateTokenMetadataAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    manager: ix.accounts[1].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[2].0.into(),
-                    pool_mint: ix.accounts[3].0.into(),
-                    payer: ix.accounts[4].0.into(),
-                    token_metadata: ix.accounts[5].0.into(),
-                    mpl_token_metadata: ix.accounts[6].0.into(),
-                    system_program: ix.accounts[7].0.into(),
+                    stake_pool: ix.accounts[0],
+                    manager: ix.accounts[1],
+                    stake_pool_withdraw_authority: ix.accounts[2],
+                    pool_mint: ix.accounts[3],
+                    payer: ix.accounts[4],
+                    token_metadata: ix.accounts[5],
+                    mpl_token_metadata: ix.accounts[6],
+                    system_program: ix.accounts[7],
                 };
 
-                let de_ix_data: CreateTokenMetadataData =
-                    CreateTokenMetadataData { name, symbol, uri };
-                Ok(StakePoolProgramIx::CreateTokenMetadata(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                let args = CreateTokenMetadataArgs { name, symbol, uri };
+                Ok(StakePoolProgramInstruction::CreateTokenMetadata {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::UpdateTokenMetadata { name, symbol, uri } => {
                 check_min_accounts_req(accounts_len, 5)?;
 
                 let ix_accounts = UpdateTokenMetadataAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    manager: ix.accounts[1].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[2].0.into(),
-                    token_metadata: ix.accounts[3].0.into(),
-                    mpl_token_metadata: ix.accounts[4].0.into(),
+                    stake_pool: ix.accounts[0],
+                    manager: ix.accounts[1],
+                    stake_pool_withdraw_authority: ix.accounts[2],
+                    token_metadata: ix.accounts[3],
+                    mpl_token_metadata: ix.accounts[4],
                 };
 
-                let de_ix_data: UpdateTokenMetadataData =
-                    UpdateTokenMetadataData { name, symbol, uri };
+                let args = UpdateTokenMetadataArgs { name, symbol, uri };
 
-                Ok(StakePoolProgramIx::UpdateTokenMetadata(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::UpdateTokenMetadata {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::IncreaseAdditionalValidatorStake {
                 lamports,
@@ -481,33 +507,34 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 14)?;
 
                 let ix_accounts = IncreaseAdditionalValidatorStakeAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    staker: ix.accounts[1].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[2].0.into(),
-                    validator_list: ix.accounts[3].0.into(),
-                    reserve_stake: ix.accounts[4].0.into(),
-                    ephemeral_stake: ix.accounts[5].0.into(),
-                    transient_stake: ix.accounts[6].0.into(),
-                    validator_stake: ix.accounts[7].0.into(),
-                    validator: ix.accounts[8].0.into(),
-                    clock: ix.accounts[9].0.into(),
-                    stake_history: ix.accounts[10].0.into(),
-                    stake_config: ix.accounts[11].0.into(),
-                    system_program: ix.accounts[12].0.into(),
-                    stake_program: ix.accounts[13].0.into(),
+                    stake_pool: ix.accounts[0],
+                    staker: ix.accounts[1],
+                    stake_pool_withdraw_authority: ix.accounts[2],
+                    validator_list: ix.accounts[3],
+                    reserve_stake: ix.accounts[4],
+                    ephemeral_stake: ix.accounts[5],
+                    transient_stake: ix.accounts[6],
+                    validator_stake: ix.accounts[7],
+                    validator: ix.accounts[8],
+                    clock: ix.accounts[9],
+                    stake_history: ix.accounts[10],
+                    stake_config: ix.accounts[11],
+                    system_program: ix.accounts[12],
+                    stake_program: ix.accounts[13],
                 };
 
-                let de_ix_data: IncreaseAdditionalValidatorStakeData =
-                    IncreaseAdditionalValidatorStakeData {
-                        lamports,
-                        transient_stake_seed,
-                        ephemeral_stake_seed,
-                    };
+                let args = IncreaseAdditionalValidatorStakeArgs {
+                    lamports,
+                    transient_stake_seed,
+                    ephemeral_stake_seed,
+                };
 
-                Ok(StakePoolProgramIx::IncreaseAdditionalValidatorStake(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(
+                    StakePoolProgramInstruction::IncreaseAdditionalValidatorStake {
+                        accounts: ix_accounts,
+                        args,
+                    },
+                )
             },
             StakePoolInstruction::DecreaseAdditionalValidatorStake {
                 lamports,
@@ -517,30 +544,32 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 12)?;
 
                 let ix_accounts = DecreaseAdditionalValidatorStakeAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    staker: ix.accounts[1].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[2].0.into(),
-                    validator_list: ix.accounts[3].0.into(),
-                    reserve_stake: ix.accounts[4].0.into(),
-                    validator_stake: ix.accounts[5].0.into(),
-                    ephemeral_stake: ix.accounts[6].0.into(),
-                    transient_stake: ix.accounts[7].0.into(),
-                    clock: ix.accounts[8].0.into(),
-                    stake_history: ix.accounts[9].0.into(),
-                    system_program: ix.accounts[10].0.into(),
-                    stake_program: ix.accounts[11].0.into(),
+                    stake_pool: ix.accounts[0],
+                    staker: ix.accounts[1],
+                    stake_pool_withdraw_authority: ix.accounts[2],
+                    validator_list: ix.accounts[3],
+                    reserve_stake: ix.accounts[4],
+                    validator_stake: ix.accounts[5],
+                    ephemeral_stake: ix.accounts[6],
+                    transient_stake: ix.accounts[7],
+                    clock: ix.accounts[8],
+                    stake_history: ix.accounts[9],
+                    system_program: ix.accounts[10],
+                    stake_program: ix.accounts[11],
                 };
 
-                let de_ix_data = DecreaseAdditionalValidatorStakeData {
+                let args = DecreaseAdditionalValidatorStakeArgs {
                     lamports,
                     transient_stake_seed,
                     ephemeral_stake_seed,
                 };
 
-                Ok(StakePoolProgramIx::DecreaseAdditionalValidatorStake(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(
+                    StakePoolProgramInstruction::DecreaseAdditionalValidatorStake {
+                        accounts: ix_accounts,
+                        args,
+                    },
+                )
             },
             StakePoolInstruction::DecreaseValidatorStakeWithReserve {
                 lamports,
@@ -549,28 +578,30 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 11)?;
 
                 let ix_accounts = DecreaseValidatorStakeWithReserveAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    staker: ix.accounts[1].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[2].0.into(),
-                    validator_list: ix.accounts[3].0.into(),
-                    reserve_stake: ix.accounts[4].0.into(),
-                    validator_stake: ix.accounts[5].0.into(),
-                    transient_stake: ix.accounts[6].0.into(),
-                    clock: ix.accounts[7].0.into(),
-                    stake_history: ix.accounts[8].0.into(),
-                    system_program: ix.accounts[9].0.into(),
-                    stake_program: ix.accounts[10].0.into(),
+                    stake_pool: ix.accounts[0],
+                    staker: ix.accounts[1],
+                    stake_pool_withdraw_authority: ix.accounts[2],
+                    validator_list: ix.accounts[3],
+                    reserve_stake: ix.accounts[4],
+                    validator_stake: ix.accounts[5],
+                    transient_stake: ix.accounts[6],
+                    clock: ix.accounts[7],
+                    stake_history: ix.accounts[8],
+                    system_program: ix.accounts[9],
+                    stake_program: ix.accounts[10],
                 };
 
-                let de_ix_data = DecreaseValidatorStakeWithReserveData {
+                let args = DecreaseValidatorStakeWithReserveArgs {
                     lamports,
                     transient_stake_seed,
                 };
 
-                Ok(StakePoolProgramIx::DecreaseValidatorStakeWithReserve(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(
+                    StakePoolProgramInstruction::DecreaseValidatorStakeWithReserve {
+                        accounts: ix_accounts,
+                        args,
+                    },
+                )
             },
             StakePoolInstruction::DepositStakeWithSlippage {
                 minimum_pool_tokens_out,
@@ -578,31 +609,31 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 15)?;
 
                 let ix_accounts = DepositStakeWithSlippageAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    validator_list_storage: ix.accounts[1].0.into(),
-                    stake_pool_deposit_authority: ix.accounts[2].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[3].0.into(),
-                    deposit_stake_address: ix.accounts[4].0.into(),
-                    validator_stake_account: ix.accounts[5].0.into(),
-                    reserve_stake_account: ix.accounts[6].0.into(),
-                    pool_tokens_to: ix.accounts[7].0.into(),
-                    manager_fee_account: ix.accounts[8].0.into(),
-                    referrer_pool_tokens_account: ix.accounts[9].0.into(),
-                    pool_mint: ix.accounts[10].0.into(),
-                    clock: ix.accounts[11].0.into(),
-                    sysvar_stake_history: ix.accounts[12].0.into(),
-                    token_program: ix.accounts[13].0.into(),
-                    stake_program: ix.accounts[14].0.into(),
+                    stake_pool: ix.accounts[0],
+                    validator_list_storage: ix.accounts[1],
+                    stake_pool_deposit_authority: ix.accounts[2],
+                    stake_pool_withdraw_authority: ix.accounts[3],
+                    deposit_stake_address: ix.accounts[4],
+                    validator_stake_account: ix.accounts[5],
+                    reserve_stake_account: ix.accounts[6],
+                    pool_tokens_to: ix.accounts[7],
+                    manager_fee_account: ix.accounts[8],
+                    referrer_pool_tokens_account: ix.accounts[9],
+                    pool_mint: ix.accounts[10],
+                    clock: ix.accounts[11],
+                    sysvar_stake_history: ix.accounts[12],
+                    token_program: ix.accounts[13],
+                    stake_program: ix.accounts[14],
                 };
 
-                let de_ix_data = DepositStakeWithSlippageData {
+                let args = DepositStakeWithSlippageArgs {
                     minimum_pool_tokens_out,
                 };
 
-                Ok(StakePoolProgramIx::DepositStakeWithSlippage(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::DepositStakeWithSlippage {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::WithdrawStakeWithSlippage {
                 pool_tokens_in,
@@ -611,30 +642,30 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 13)?;
 
                 let ix_accounts = WithdrawStakeWithSlippageAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    validator_list_storage: ix.accounts[1].0.into(),
-                    stake_pool_withdraw: ix.accounts[2].0.into(),
-                    stake_to_split: ix.accounts[3].0.into(),
-                    stake_to_receive: ix.accounts[4].0.into(),
-                    user_stake_authority: ix.accounts[5].0.into(),
-                    user_transfer_authority: ix.accounts[6].0.into(),
-                    user_pool_token_account: ix.accounts[7].0.into(),
-                    manager_fee_account: ix.accounts[8].0.into(),
-                    pool_mint: ix.accounts[9].0.into(),
-                    clock: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
-                    stake_program: ix.accounts[12].0.into(),
+                    stake_pool: ix.accounts[0],
+                    validator_list_storage: ix.accounts[1],
+                    stake_pool_withdraw: ix.accounts[2],
+                    stake_to_split: ix.accounts[3],
+                    stake_to_receive: ix.accounts[4],
+                    user_stake_authority: ix.accounts[5],
+                    user_transfer_authority: ix.accounts[6],
+                    user_pool_token_account: ix.accounts[7],
+                    manager_fee_account: ix.accounts[8],
+                    pool_mint: ix.accounts[9],
+                    clock: ix.accounts[10],
+                    token_program: ix.accounts[11],
+                    stake_program: ix.accounts[12],
                 };
 
-                let de_ix_data = WithdrawStakeWithSlippageData {
+                let args = WithdrawStakeWithSlippageArgs {
                     pool_tokens_in,
                     minimum_lamports_out,
                 };
 
-                Ok(StakePoolProgramIx::WithdrawStakeWithSlippage(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::WithdrawStakeWithSlippage {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::DepositSolWithSlippage {
                 lamports_in,
@@ -643,32 +674,32 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 13)?;
 
                 let ix_accounts = DepositSolWithSlippageAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[1].0.into(),
-                    reserve_stake_account: ix.accounts[2].0.into(),
-                    lamports_from: ix.accounts[3].0.into(),
-                    pool_tokens_to: ix.accounts[4].0.into(),
-                    manager_fee_account: ix.accounts[5].0.into(),
-                    referrer_pool_tokens_account: ix.accounts[6].0.into(),
-                    pool_mint: ix.accounts[7].0.into(),
-                    system_program: ix.accounts[8].0.into(),
-                    token_program: ix.accounts[9].0.into(),
+                    stake_pool: ix.accounts[0],
+                    stake_pool_withdraw_authority: ix.accounts[1],
+                    reserve_stake_account: ix.accounts[2],
+                    lamports_from: ix.accounts[3],
+                    pool_tokens_to: ix.accounts[4],
+                    manager_fee_account: ix.accounts[5],
+                    referrer_pool_tokens_account: ix.accounts[6],
+                    pool_mint: ix.accounts[7],
+                    system_program: ix.accounts[8],
+                    token_program: ix.accounts[9],
                     deposit_authority: ix
                         .accounts
                         .get(10)
-                        .map(|account| Some(account.0.into()))
+                        .map(|account| Some(account.to_owned()))
                         .unwrap_or(None),
                 };
 
-                let de_ix_data = DepositSolWithSlippageData {
+                let args = DepositSolWithSlippageArgs {
                     lamports_in,
                     minimum_pool_tokens_out,
                 };
 
-                Ok(StakePoolProgramIx::DepositSolWithSlippage(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::DepositSolWithSlippage {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             StakePoolInstruction::WithdrawSolWithSlippage {
                 pool_tokens_in,
@@ -677,51 +708,38 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 13)?;
 
                 let ix_accounts = WithdrawSolWithSlippageAccounts {
-                    stake_pool: ix.accounts[0].0.into(),
-                    stake_pool_withdraw_authority: ix.accounts[1].0.into(),
-                    user_transfer_authority: ix.accounts[2].0.into(),
-                    pool_tokens_from: ix.accounts[3].0.into(),
-                    reserve_stake_account: ix.accounts[4].0.into(),
-                    lamports_to: ix.accounts[5].0.into(),
-                    manager_fee_account: ix.accounts[6].0.into(),
-                    pool_mint: ix.accounts[7].0.into(),
-                    clock: ix.accounts[8].0.into(),
-                    sysvar_stake_history: ix.accounts[9].0.into(),
-                    stake_program: ix.accounts[10].0.into(),
-                    token_program: ix.accounts[11].0.into(),
+                    stake_pool: ix.accounts[0],
+                    stake_pool_withdraw_authority: ix.accounts[1],
+                    user_transfer_authority: ix.accounts[2],
+                    pool_tokens_from: ix.accounts[3],
+                    reserve_stake_account: ix.accounts[4],
+                    lamports_to: ix.accounts[5],
+                    manager_fee_account: ix.accounts[6],
+                    pool_mint: ix.accounts[7],
+                    clock: ix.accounts[8],
+                    sysvar_stake_history: ix.accounts[9],
+                    stake_program: ix.accounts[10],
+                    token_program: ix.accounts[11],
                     sol_withdraw_authority: ix
                         .accounts
                         .get(12)
-                        .map(|account| Some(account.0.into()))
+                        .map(|account| Some(account.to_owned()))
                         .unwrap_or(None),
                 };
 
-                let de_ix_data = WithdrawSolWithSlippageData {
+                let args = WithdrawSolWithSlippageArgs {
                     pool_tokens_in,
                     minimum_lamports_out,
                 };
 
-                Ok(StakePoolProgramIx::WithdrawSolWithSlippage(
-                    ix_accounts,
-                    de_ix_data,
-                ))
+                Ok(StakePoolProgramInstruction::WithdrawSolWithSlippage {
+                    accounts: ix_accounts,
+                    args,
+                })
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
             )),
         }
-    }
-}
-
-pub fn check_min_accounts_req(
-    actual: usize,
-    expected: usize,
-) -> yellowstone_vixen_core::ParseResult<()> {
-    if actual < expected {
-        Err(yellowstone_vixen_core::ParseError::from(format!(
-            "Too few accounts provided: expected {expected}, got {actual}"
-        )))
-    } else {
-        Ok(())
     }
 }

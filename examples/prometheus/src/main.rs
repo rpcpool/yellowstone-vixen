@@ -11,8 +11,10 @@ use std::{path::PathBuf, time::Duration};
 
 use clap::Parser;
 use yellowstone_vixen::Pipeline;
-use yellowstone_vixen_parser::token_program::{AccountParser, InstructionParser};
+use yellowstone_vixen_proc_macro::include_vixen_parser;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
+
+include_vixen_parser!("pump-swaps.json");
 
 #[derive(clap::Parser)]
 #[command(version, author, about)]
@@ -25,7 +27,10 @@ pub struct Opts {
 pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync, R: Sync> yellowstone_vixen::Handler<V, R> for Logger {
-    async fn handle(&self, _value: &V, _raw: &R) -> yellowstone_vixen::HandlerResult<()> { Ok(()) }
+    async fn handle(&self, value: &V, _raw: &R) -> yellowstone_vixen::HandlerResult<()> {
+        println!("{:?}", value);
+        Ok(())
+    }
 }
 
 #[tokio::main]
@@ -61,8 +66,8 @@ async fn main() {
     });
 
     yellowstone_vixen::Runtime::<YellowstoneGrpcSource>::builder()
-        .instruction(Pipeline::new(InstructionParser, [Logger]))
-        .account(Pipeline::new(AccountParser, [Logger]))
+        .instruction(Pipeline::new(pump_amm::InstructionParser, [Logger]))
+        .account(Pipeline::new(pump_amm::AccountParser, [Logger]))
         .metrics(prometheus_registry)
         .build(config)
         .run_async()

@@ -8,70 +8,23 @@
 )]
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
-// TODO: document everything
 #![allow(missing_docs, clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
+mod error;
 
 pub use error::*;
 
-mod helpers;
-
 pub mod prelude;
 
-#[cfg(feature = "block-meta")]
-pub mod block_meta;
+pub use yellowstone_vixen_core::Pubkey;
+yellowstone_vixen_core::pubkey_convert_helpers!(solana_pubkey::Pubkey);
 
-#[cfg(feature = "slot")]
-pub mod slot;
-
-#[cfg(feature = "token-extensions")]
-pub mod token_extension_program;
-#[cfg(feature = "token-program")]
-pub mod token_program;
-
-mod error {
-    use std::{borrow::Cow, error::Error as StdError};
-
-    pub type Result<T, E = Error> = std::result::Result<T, E>;
-
-    #[derive(Debug, thiserror::Error)]
-    #[error("{message}")]
-    pub struct Error {
-        message: Cow<'static, str>,
-        #[source]
-        inner: Option<Box<dyn StdError + Send + Sync + 'static>>,
-    }
-
-    impl Error {
-        pub(crate) fn new<M: Into<Cow<'static, str>>>(message: M) -> Self {
-            Self {
-                message: message.into(),
-                inner: None,
-            }
-        }
-
-        pub(crate) fn from_inner<
-            M: Into<Cow<'static, str>>,
-            T: Into<Box<dyn StdError + Send + Sync + 'static>>,
-        >(
-            message: M,
-            inner: T,
-        ) -> Self {
-            Self {
-                message: message.into(),
-                inner: Some(inner.into()),
-            }
-        }
-    }
-
-    pub(crate) trait ResultExt<T, E: StdError + Sized + Send + Sync + 'static>:
-        Sized
-    {
-        fn parse_err(self, message: &'static str) -> Result<T, Error>;
-    }
-
-    impl<T, E: StdError + Sized + Send + Sync + 'static> ResultExt<T, E> for Result<T, E> {
-        fn parse_err(self, message: &'static str) -> Result<T, Error> {
-            self.map_err(|e| Error::from_inner(message, e))
-        }
+pub fn check_min_accounts_req(actual: usize, expected: usize) -> Result<()> {
+    if actual < expected {
+        Err(Error::new(format!(
+            "Too few accounts provided: expected {expected}, got {actual}"
+        )))
+    } else {
+        Ok(())
     }
 }
