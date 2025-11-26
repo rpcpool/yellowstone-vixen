@@ -230,8 +230,9 @@ impl SourceTrait for SolanaSnapshotSource {
         }
 
         while let Some(join_res) = account_file_workers.join_next().await {
-            join_res
-                .map_err(|err| VixenError::Other(format!("Snapshot worker panicked: {err:?}").into()))??;
+            join_res.map_err(|err| {
+                VixenError::Other(format!("Snapshot worker panicked: {err:?}").into())
+            })??;
         }
 
         sync_tx
