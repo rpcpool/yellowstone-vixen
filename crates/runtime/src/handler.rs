@@ -5,7 +5,7 @@ use std::{borrow::Cow, collections::HashMap, pin::Pin};
 
 use futures_util::{Future, FutureExt, StreamExt};
 use smallvec::SmallVec;
-use tracing::{warn, Instrument, Span};
+use tracing::{trace, Instrument, Span};
 use vixen_core::{
     AccountUpdate, BlockMetaUpdate, BlockUpdate, GetPrefilter, ParserId, SlotUpdate,
     TransactionUpdate,
@@ -95,9 +95,9 @@ mod pipeline_error {
 
     #[derive(Debug, thiserror::Error)]
     pub enum Error {
-        #[error("Error parsing input value")]
+        #[error("Error parsing input value: ({0})")]
         Parser(#[source] BoxedError),
-        #[error("Handler returned an error on parsed value")]
+        #[error("Handler returned an error on parsed value: ({0})")]
         Handler(#[source] BoxedError),
     }
 
@@ -320,7 +320,7 @@ where I::Item: AsRef<str> + Send + 'm
             let pipeline = pipelines.0.get(filter);
 
             if pipeline.is_none() {
-                warn!(filter, "No pipeline matched filter on incoming update");
+                trace!(filter, "No pipeline matched filter on incoming update");
             }
 
             pipeline.map(|p| (f, p))

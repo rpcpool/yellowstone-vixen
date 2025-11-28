@@ -1,4 +1,6 @@
 target/
 crates/mock/fixtures
 *.env*
+.DS_Store
+**/.DS_Store
 Vixen.toml
