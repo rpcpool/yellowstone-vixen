@@ -249,58 +249,60 @@ impl SourceTrait for SolanaSnapshotSource {
                 let scan_config = ScanConfig::new(ScanOrder::Sorted);
                 let mut is_closed = false;
                 let mut error: Option<VixenError> = None;
-    
+
                 bank.rc
-                .accounts
-                .accounts_db
-                .scan_accounts(
-                    &bank.ancestors,
-                    bank.bank_id(),
-                    |option| {
-                        if is_closed {
-                            return;
-                        }
-                        if let Some((pubkey, account, _slot)) = option {
-                            if !account.is_loadable() {
+                    .accounts
+                    .accounts_db
+                    .scan_accounts(
+                        &bank.ancestors,
+                        bank.bank_id(),
+                        |option| {
+                            if is_closed {
                                 return;
                             }
+                            if let Some((pubkey, account, _slot)) = option {
+                                if !account.is_loadable() {
+                                    return;
+                                }
 
-                            let owner = account.owner();
-                            if !program_ids.contains(owner) {
-                                return;
+                                let owner = account.owner();
+                                if !program_ids.contains(owner) {
+                                    return;
+                                }
+
+                                let event = Event::AccountUpdate {
+                                    account_update: SubscribeUpdateAccount {
+                                        account: Some(SubscribeUpdateAccountInfo {
+                                            pubkey: pubkey.to_bytes().to_vec(),
+                                            lamports: account.lamports(),
+                                            owner: account.owner().to_bytes().to_vec(),
+                                            executable: account.executable(),
+                                            rent_epoch: account.rent_epoch(),
+                                            data: account.data().to_vec(),
+                                            write_version: 0,
+                                            txn_signature: None,
+                                        }),
+                                        slot: snapshot_slot,
+                                        is_startup: true,
+                                    },
+                                    filters: filter_owner_key_lookup
+                                        .lookup_by_owner(&Pubkey::from(owner.to_bytes()))
+                                        .unwrap_or_default(),
+                                };
+
+                                if let Err(err) = scan_sync_tx.blocking_send(event) {
+                                    is_closed = true;
+                                    error = Some(VixenError::Io(std::io::Error::other(format!(
+                                        "Error sending account update: {err:?}"
+                                    ))));
+                                }
                             }
-
-                            let event = Event::AccountUpdate {
-                                account_update: SubscribeUpdateAccount {
-                                    account: Some(SubscribeUpdateAccountInfo {
-                                        pubkey: pubkey.to_bytes().to_vec(),
-                                        lamports: account.lamports(),
-                                        owner: account.owner().to_bytes().to_vec(),
-                                        executable: account.executable(),
-                                        rent_epoch: account.rent_epoch(),
-                                        data: account.data().to_vec(),
-                                        write_version: 0,
-                                        txn_signature: None,
-                                    }),
-                                    slot: snapshot_slot,
-                                    is_startup: true,
-                                },
-                                filters: filter_owner_key_lookup
-                                    .lookup_by_owner(&Pubkey::from(owner.to_bytes()))
-                                    .unwrap_or_default(),
-                            };
-
-                            if let Err(err) = scan_sync_tx.blocking_send(event) {
-                                is_closed = true;
-                                error = Some(VixenError::Io(std::io::Error::other(format!(
-                                    "Error sending account update: {err:?}"
-                                ))));
-                            }
-                        }
-                    },
-                    &scan_config,
-                )
-                .map_err(|e| VixenError::Io(std::io::Error::other(format!("Scan failed: {e}"))))?;
+                        },
+                        &scan_config,
+                    )
+                    .map_err(|e| {
+                        VixenError::Io(std::io::Error::other(format!("Scan failed: {e}")))
+                    })?;
 
                 if let Some(error) = error {
                     Err(error)
