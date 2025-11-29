@@ -70,6 +70,9 @@ pub enum Error {
     /// An error occurring when a datasource is not configured correctly.
     #[error("Yellowstone stream config error")]
     ConfigError,
+    /// An error occurring when a runtime error occurs.
+    #[error("Other error")]
+    Other(#[from] Box<dyn std::error::Error + Send + Sync>),
 }
 
 /// The main runtime for Vixen.
