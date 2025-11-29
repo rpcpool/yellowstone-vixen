@@ -16,10 +16,19 @@ x-token = "<X-TOKEN>"
 timeout = 60
 
 # # Only needed if you are using Fumarole as a source.
-# [source]
-# endpoint = "https://index.rpcpool.com"
-# x-token = "<X-TOKEN>"
-# subscriber-name = "my_subscribe_group"
+# # [source]
+# # endpoint = "https://index.rpcpool.com"
+# # x-token = "<X-TOKEN>"
+# # subscriber-name = "my_subscribe_group"
+
+# # Only needed if you are using Jetstream as a source.
+# # [source]
+# # archive-url = "https://api.old-faithful.net"
+# # epoch = 800
+# # threads = 4
+# # network = "mainnet"
+# # compact-index-base-url = "https://files.old-faithful.net"
+# # network-capacity-mb = 1000
 
 # Metrics configuration section.
 # Uncomment the following lines if you are running Prometheus 
