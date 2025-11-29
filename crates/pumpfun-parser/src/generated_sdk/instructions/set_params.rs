@@ -5,8 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
+
+pub const SET_PARAMS_DISCRIMINATOR: [u8; 8] = [27, 234, 178, 52, 147, 2, 187, 141];
 
 /// Accounts.
 #[derive(Debug)]
@@ -24,7 +27,6 @@ impl SetParams {
     pub fn instruction(&self, args: SetParamsInstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -44,8 +46,8 @@ impl SetParams {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&SetParamsInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = SetParamsInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -68,10 +70,16 @@ impl SetParamsInstructionData {
             discriminator: [27, 234, 178, 52, 147, 2, 187, 141],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for SetParamsInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -87,6 +95,13 @@ pub struct SetParamsInstructionArgs {
     pub pool_migration_fee: u64,
     pub creator_fee_basis_points: u64,
     pub set_creator_authority: Pubkey,
+    pub admin_set_creator_authority: Pubkey,
+}
+
+impl SetParamsInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 /// Instruction builder for `SetParams`.
@@ -113,36 +128,34 @@ pub struct SetParamsBuilder {
     pool_migration_fee: Option<u64>,
     creator_fee_basis_points: Option<u64>,
     set_creator_authority: Option<Pubkey>,
+    admin_set_creator_authority: Option<Pubkey>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl SetParamsBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     #[inline(always)]
     pub fn global(&mut self, global: solana_pubkey::Pubkey) -> &mut Self {
         self.global = Some(global);
         self
     }
-
     #[inline(always)]
     pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn initial_virtual_token_reserves(
         &mut self,
@@ -151,68 +164,65 @@ impl SetParamsBuilder {
         self.initial_virtual_token_reserves = Some(initial_virtual_token_reserves);
         self
     }
-
     #[inline(always)]
     pub fn initial_virtual_sol_reserves(&mut self, initial_virtual_sol_reserves: u64) -> &mut Self {
         self.initial_virtual_sol_reserves = Some(initial_virtual_sol_reserves);
         self
     }
-
     #[inline(always)]
     pub fn initial_real_token_reserves(&mut self, initial_real_token_reserves: u64) -> &mut Self {
         self.initial_real_token_reserves = Some(initial_real_token_reserves);
         self
     }
-
     #[inline(always)]
     pub fn token_total_supply(&mut self, token_total_supply: u64) -> &mut Self {
         self.token_total_supply = Some(token_total_supply);
         self
     }
-
     #[inline(always)]
     pub fn fee_basis_points(&mut self, fee_basis_points: u64) -> &mut Self {
         self.fee_basis_points = Some(fee_basis_points);
         self
     }
-
     #[inline(always)]
     pub fn withdraw_authority(&mut self, withdraw_authority: Pubkey) -> &mut Self {
         self.withdraw_authority = Some(withdraw_authority);
         self
     }
-
     #[inline(always)]
     pub fn enable_migrate(&mut self, enable_migrate: bool) -> &mut Self {
         self.enable_migrate = Some(enable_migrate);
         self
     }
-
     #[inline(always)]
     pub fn pool_migration_fee(&mut self, pool_migration_fee: u64) -> &mut Self {
         self.pool_migration_fee = Some(pool_migration_fee);
         self
     }
-
     #[inline(always)]
     pub fn creator_fee_basis_points(&mut self, creator_fee_basis_points: u64) -> &mut Self {
         self.creator_fee_basis_points = Some(creator_fee_basis_points);
         self
     }
-
     #[inline(always)]
     pub fn set_creator_authority(&mut self, set_creator_authority: Pubkey) -> &mut Self {
         self.set_creator_authority = Some(set_creator_authority);
         self
     }
-
+    #[inline(always)]
+    pub fn admin_set_creator_authority(
+        &mut self,
+        admin_set_creator_authority: Pubkey,
+    ) -> &mut Self {
+        self.admin_set_creator_authority = Some(admin_set_creator_authority);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -222,7 +232,6 @@ impl SetParamsBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = SetParams {
@@ -272,6 +281,10 @@ impl SetParamsBuilder {
                 .set_creator_authority
                 .clone()
                 .expect("set_creator_authority is not set"),
+            admin_set_creator_authority: self
+                .admin_set_creator_authority
+                .clone()
+                .expect("admin_set_creator_authority is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -320,28 +333,21 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -349,7 +355,7 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(4 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(
             *self.global.key,
@@ -374,8 +380,8 @@ impl<'a, 'b> SetParamsCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&SetParamsInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = SetParamsInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -432,23 +438,21 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
             pool_migration_fee: None,
             creator_fee_basis_points: None,
             set_creator_authority: None,
+            admin_set_creator_authority: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn global(&mut self, global: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.global = Some(global);
         self
     }
-
     #[inline(always)]
     pub fn authority(&mut self, authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.authority = Some(authority);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -457,13 +461,11 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn initial_virtual_token_reserves(
         &mut self,
@@ -472,61 +474,59 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
         self.instruction.initial_virtual_token_reserves = Some(initial_virtual_token_reserves);
         self
     }
-
     #[inline(always)]
     pub fn initial_virtual_sol_reserves(&mut self, initial_virtual_sol_reserves: u64) -> &mut Self {
         self.instruction.initial_virtual_sol_reserves = Some(initial_virtual_sol_reserves);
         self
     }
-
     #[inline(always)]
     pub fn initial_real_token_reserves(&mut self, initial_real_token_reserves: u64) -> &mut Self {
         self.instruction.initial_real_token_reserves = Some(initial_real_token_reserves);
         self
     }
-
     #[inline(always)]
     pub fn token_total_supply(&mut self, token_total_supply: u64) -> &mut Self {
         self.instruction.token_total_supply = Some(token_total_supply);
         self
     }
-
     #[inline(always)]
     pub fn fee_basis_points(&mut self, fee_basis_points: u64) -> &mut Self {
         self.instruction.fee_basis_points = Some(fee_basis_points);
         self
     }
-
     #[inline(always)]
     pub fn withdraw_authority(&mut self, withdraw_authority: Pubkey) -> &mut Self {
         self.instruction.withdraw_authority = Some(withdraw_authority);
         self
     }
-
     #[inline(always)]
     pub fn enable_migrate(&mut self, enable_migrate: bool) -> &mut Self {
         self.instruction.enable_migrate = Some(enable_migrate);
         self
     }
-
     #[inline(always)]
     pub fn pool_migration_fee(&mut self, pool_migration_fee: u64) -> &mut Self {
         self.instruction.pool_migration_fee = Some(pool_migration_fee);
         self
     }
-
     #[inline(always)]
     pub fn creator_fee_basis_points(&mut self, creator_fee_basis_points: u64) -> &mut Self {
         self.instruction.creator_fee_basis_points = Some(creator_fee_basis_points);
         self
     }
-
     #[inline(always)]
     pub fn set_creator_authority(&mut self, set_creator_authority: Pubkey) -> &mut Self {
         self.instruction.set_creator_authority = Some(set_creator_authority);
         self
     }
-
+    #[inline(always)]
+    pub fn admin_set_creator_authority(
+        &mut self,
+        admin_set_creator_authority: Pubkey,
+    ) -> &mut Self {
+        self.instruction.admin_set_creator_authority = Some(admin_set_creator_authority);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -540,7 +540,6 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -555,16 +554,13 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = SetParamsInstructionArgs {
             initial_virtual_token_reserves: self
                 .instruction
@@ -616,6 +612,11 @@ impl<'a, 'b> SetParamsCpiBuilder<'a, 'b> {
                 .set_creator_authority
                 .clone()
                 .expect("set_creator_authority is not set"),
+            admin_set_creator_authority: self
+                .instruction
+                .admin_set_creator_authority
+                .clone()
+                .expect("admin_set_creator_authority is not set"),
         };
         let instruction = SetParamsCpi {
             __program: self.instruction.__program,
@@ -656,6 +657,7 @@ struct SetParamsCpiBuilderInstruction<'a, 'b> {
     pool_migration_fee: Option<u64>,
     creator_fee_basis_points: Option<u64>,
     set_creator_authority: Option<Pubkey>,
+    admin_set_creator_authority: Option<Pubkey>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }
