@@ -26,3 +26,5 @@ zstd = { workspace = true }
 tar = { workspace = true }
 solana-account = { workspace = true }
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
+solana-ledger = { workspace = true }
+solana-runtime = { workspace = true }
