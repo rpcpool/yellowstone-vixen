@@ -1,11 +1,31 @@
-use std::{collections::HashMap, fs::File, path::PathBuf, sync::Arc};
+use std::{
+    collections::HashMap,
+    path::PathBuf,
+    sync::{atomic::AtomicBool, Arc},
+};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use solana_accounts_db::accounts_file::AccountsFile;
-use tar::Archive;
-use tempfile::{tempdir, TempDir};
-use tokio::{sync::mpsc, task::JoinSet};
+use solana_account::ReadableAccount;
+use solana_accounts_db::{
+    accounts_db::AccountsDbConfig,
+    accounts_index::{ScanConfig, ScanOrder},
+    hardened_unpack::open_genesis_config,
+    is_loadable::IsLoadable,
+    utils::create_all_accounts_run_and_snapshot_dirs,
+};
+use solana_ledger::{
+    bank_forks_utils,
+    blockstore::Blockstore,
+    blockstore_options::{AccessType, BlockstoreOptions},
+    blockstore_processor::ProcessOptions,
+};
+use solana_pubkey::Pubkey as SolanaPubkey;
+use solana_runtime::{
+    bank::Bank,
+    snapshot_config::{SnapshotConfig, SnapshotUsage},
+};
+use tokio::sync::mpsc;
 use yellowstone_grpc_proto::{
     geyser::{
         subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateAccount,
@@ -15,64 +35,111 @@ use yellowstone_grpc_proto::{
 };
 use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::{Filters, Pubkey};
-use zstd::Decoder;
 
-pub struct AccountFile(PathBuf, usize);
+const MAX_GENESIS_ARCHIVE_UNPACKED_SIZE: u64 = 10485760;
 
 pub struct SolanaSnapshot {
-    pub accounts: Vec<AccountFile>,
-    pub version: String,
+    pub bank: Arc<Bank>,
     pub slot: u64,
-    _temp_dir: TempDir,
 }
 
 impl SolanaSnapshot {
-    pub fn unpack_compressed<P: Into<PathBuf>>(path: P) -> Result<Self, VixenError> {
-        let path_buf: PathBuf = path.into();
+    pub fn load_ledger<P: Into<PathBuf>>(ledger_path: P) -> Result<Self, VixenError> {
+        let ledger_path = ledger_path.into();
 
-        let temp_dir = tempdir()?;
+        tracing::info!("Opening genesis config from {:?}", ledger_path);
+        let genesis_config = open_genesis_config(&ledger_path, MAX_GENESIS_ARCHIVE_UNPACKED_SIZE)
+            .map_err(|e| {
+            VixenError::Io(std::io::Error::other(format!(
+                "Failed to open genesis config: {e}"
+            )))
+        })?;
 
-        let file = File::open(path_buf)?;
+        let accounts_db_config = AccountsDbConfig {
+            base_working_path: Some(ledger_path.clone()),
+            skip_initial_hash_calc: true,
+            ..AccountsDbConfig::default()
+        };
 
-        let decoder = Decoder::new(file)?;
+        let process_options = ProcessOptions {
+            accounts_db_skip_shrink: true,
+            accounts_db_config: Some(accounts_db_config),
+            ..Default::default()
+        };
 
-        let mut archive = Archive::new(decoder);
-        archive.unpack(temp_dir.path())?;
+        let snapshot_path = ledger_path.join("snapshots");
+        let account_path = ledger_path.join("accounts");
+        let snapshot_config = SnapshotConfig {
+            usage: SnapshotUsage::LoadOnly,
+            full_snapshot_archives_dir: snapshot_path.clone(),
+            incremental_snapshot_archives_dir: snapshot_path.clone(),
+            bank_snapshots_dir: snapshot_path,
+            ..SnapshotConfig::default()
+        };
 
-        let version_path = temp_dir.path().join("version");
-        let version = std::fs::read_to_string(version_path)?.trim().to_string();
+        let (account_run_paths, _account_snapshot_paths) =
+            create_all_accounts_run_and_snapshot_dirs(&[account_path]).map_err(|e| {
+                VixenError::Io(std::io::Error::other(format!(
+                    "Failed to create account paths: {e}"
+                )))
+            })?;
+        let account_paths = account_run_paths;
 
-        let snapshots_dir = temp_dir.path().join("snapshots");
-        let slot = std::fs::read_dir(snapshots_dir)?
-            .filter_map(|entry| entry.ok())
-            .filter_map(|entry| entry.file_name().to_str().map(|s| s.to_string()))
-            .filter_map(|name| name.parse::<u64>().ok())
-            .max()
-            .ok_or_else(|| VixenError::ConfigError)?;
-
-        let accounts_dir = temp_dir.path().join("accounts");
-        let accounts = std::fs::read_dir(accounts_dir)?
-            .filter_map(|entry| entry.ok())
-            .map(|entry| {
-                let path = entry.path();
-                let size = std::fs::metadata(&path)?.len() as usize;
-                Ok(AccountFile(path, size))
-            })
-            .collect::<Result<Vec<_>, std::io::Error>>()?;
-
-        Ok(Self {
-            accounts,
-            version,
-            slot,
-            _temp_dir: temp_dir,
+        tracing::info!("Opening blockstore at {:?}", ledger_path);
+        let blockstore = Blockstore::open_with_options(&ledger_path, BlockstoreOptions {
+            access_type: AccessType::PrimaryForMaintenance,
+            ..BlockstoreOptions::default()
         })
+        .map_err(|e| {
+            VixenError::Io(std::io::Error::other(format!(
+                "Failed to open blockstore: {e}"
+            )))
+        })?;
+
+        tracing::info!("Loading bank forks");
+        let (bank_forks, _leader_schedule_cache, _starting_snapshot_hashes, ..) =
+            bank_forks_utils::load_bank_forks(
+                &genesis_config,
+                &blockstore,
+                account_paths,
+                &snapshot_config,
+                &process_options,
+                None,
+                None,
+                None,
+                Arc::new(AtomicBool::new(false)),
+            )
+            .map_err(|e| {
+                VixenError::Io(std::io::Error::other(format!(
+                    "Failed to load bank forks: {e}"
+                )))
+            })?;
+
+        let bank = bank_forks.read().unwrap().working_bank();
+        let slot = bank.slot();
+
+        Ok(Self { bank, slot })
     }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, clap::Args)]
 pub struct SolanaSnapshotConfig {
-    pub path: PathBuf,
-    pub max_workers: usize,
+    /// The path to the ledger directory.
+    ///
+    /// The directory should have the following structure:
+    ///
+    /// ```text
+    /// ~/ledger$ tree
+    /// .
+    /// ├── genesis.bin
+    /// ├── genesis.tar.bz2
+    /// └── snapshots
+    ///     ├── snapshot-[...].tar.zst
+    ///     └── incremental-snapshot-[...].tar.zst
+    /// ```
+    ///
+    /// Note: Require a manual clean after with `rm -rf rocksdb/ accounts accounts_hash_cache/`
+    pub ledger_path: PathBuf,
     pub channel_size: usize,
 }
 
@@ -102,6 +169,8 @@ impl FilterOwnerKeyLookup {
     }
 
     fn lookup_by_owner(&self, owner: &Pubkey) -> Option<Vec<String>> { self.0.get(owner).cloned() }
+
+    fn owners(&self) -> Vec<Pubkey> { self.0.keys().copied().collect() }
 }
 
 #[async_trait]
@@ -114,14 +183,12 @@ impl SourceTrait for SolanaSnapshotSource {
         &self,
         tx: tokio::sync::mpsc::Sender<Result<SubscribeUpdate, Status>>,
     ) -> Result<(), VixenError> {
-        let filters = self.filters.clone();
-        let config = self.config.clone();
+        let filter_owner_key_lookup = FilterOwnerKeyLookup::new(&self.filters);
+        let solana_snapshot = SolanaSnapshot::load_ledger(self.config.ledger_path.clone())?;
+        let snapshot_slot = solana_snapshot.slot;
 
-        let filter_owner_key_lookup = FilterOwnerKeyLookup::new(&filters);
-
-        let solana_snapshot = SolanaSnapshot::unpack_compressed(config.path.clone())?;
-
-        let filters = filters
+        let filters = self
+            .filters
             .parsers_filters
             .iter()
             .filter_map(|(key, parser_filter)| parser_filter.slot.map(|_| key.to_string()))
@@ -131,7 +198,7 @@ impl SourceTrait for SolanaSnapshotSource {
             filters,
             created_at: None,
             update_oneof: Some(UpdateOneof::Slot(SubscribeUpdateSlot {
-                slot: solana_snapshot.slot,
+                slot: snapshot_slot,
                 parent: None,
                 status: SlotStatus::SlotFinalized.into(),
                 dead_error: None,
@@ -140,11 +207,10 @@ impl SourceTrait for SolanaSnapshotSource {
         .await
         .map_err(|_| VixenError::ServerHangup)?;
 
-        let max_workers = config.max_workers;
-        let channel_size = config.channel_size;
+        let channel_size = self.config.channel_size;
         let (sync_tx, mut sync_rx) = mpsc::channel::<Event>(channel_size);
-        let mut account_file_workers = JoinSet::new();
 
+        let tx_sender = tx.clone();
         let sender_handle = tokio::spawn(async move {
             while let Some(event) = sync_rx.recv().await {
                 match event {
@@ -152,7 +218,7 @@ impl SourceTrait for SolanaSnapshotSource {
                         account_update,
                         filters,
                     } => {
-                        if let Err(err) = tx
+                        if let Err(err) = tx_sender
                             .send(Ok(SubscribeUpdate {
                                 filters,
                                 created_at: None,
@@ -168,72 +234,89 @@ impl SourceTrait for SolanaSnapshotSource {
             }
         });
 
-        for AccountFile(path, current_len) in solana_snapshot.accounts {
-            let worker_sync_tx = sync_tx.clone();
-            let slot = solana_snapshot.slot;
-            let filter_owner_key_lookup = filter_owner_key_lookup.clone();
+        tracing::info!("Scanning accounts for accounts owned by program ids");
+        let scan_sync_tx = sync_tx.clone();
+        let filter_owner_key_lookup = filter_owner_key_lookup.clone();
+        let bank = solana_snapshot.bank.clone();
 
-            account_file_workers.spawn(async move {
-                let blocking_task =
-                    tokio::task::spawn_blocking(move || -> Result<(), VixenError> {
-                        let (accounts, _usize) = AccountsFile::new_from_file(
-                            path,
-                            current_len,
-                            solana_accounts_db::accounts_file::StorageAccess::default(),
-                        )
-                        .expect("Unpack account file");
+        let scan_handle = tokio::spawn(async move {
+            tokio::task::spawn_blocking(move || {
+                let owners = filter_owner_key_lookup.owners();
+                let program_ids = owners
+                    .iter()
+                    .map(|owner| SolanaPubkey::new_from_array(**owner))
+                    .collect::<Vec<_>>();
+                let scan_config = ScanConfig::new(ScanOrder::Sorted);
+                let mut is_closed = false;
+                let mut error: Option<VixenError> = None;
 
-                        accounts.scan_accounts(|_size, account| {
-                            let account_owner = Pubkey::try_from(account.owner.as_ref())
-                                .expect("Owner address is Pubkey");
-
-                            if let Some(filter_keys) =
-                                filter_owner_key_lookup.lookup_by_owner(&account_owner)
-                            {
-                                worker_sync_tx
-                                    .blocking_send(Event::AccountUpdate {
-                                        account_update: SubscribeUpdateAccount {
-                                            account: Some(SubscribeUpdateAccountInfo {
-                                                pubkey: account.pubkey().to_bytes().to_vec(),
-                                                lamports: account.lamports,
-                                                owner: account.owner.to_bytes().to_vec(),
-                                                executable: account.executable,
-                                                rent_epoch: account.rent_epoch,
-                                                data: account.data.to_vec(),
-                                                write_version: 0,
-                                                txn_signature: None,
-                                            }),
-                                            slot,
-                                            is_startup: true,
-                                        },
-                                        filters: filter_keys,
-                                    })
-                                    .expect("Channel closed while sending account update");
+                bank.rc
+                    .accounts
+                    .accounts_db
+                    .scan_accounts(
+                        &bank.ancestors,
+                        bank.bank_id(),
+                        |option| {
+                            if is_closed {
+                                return;
                             }
-                        });
+                            if let Some((pubkey, account, _slot)) = option {
+                                if !account.is_loadable() {
+                                    return;
+                                }
 
-                        Ok(())
-                    });
+                                let owner = account.owner();
+                                if !program_ids.contains(owner) {
+                                    return;
+                                }
 
-                blocking_task.await.map_err(|err| {
-                    VixenError::Other(format!("Snapshot worker panicked: {err:?}").into())
-                })?
-            });
+                                let event = Event::AccountUpdate {
+                                    account_update: SubscribeUpdateAccount {
+                                        account: Some(SubscribeUpdateAccountInfo {
+                                            pubkey: pubkey.to_bytes().to_vec(),
+                                            lamports: account.lamports(),
+                                            owner: account.owner().to_bytes().to_vec(),
+                                            executable: account.executable(),
+                                            rent_epoch: account.rent_epoch(),
+                                            data: account.data().to_vec(),
+                                            write_version: 0,
+                                            txn_signature: None,
+                                        }),
+                                        slot: snapshot_slot,
+                                        is_startup: true,
+                                    },
+                                    filters: filter_owner_key_lookup
+                                        .lookup_by_owner(&Pubkey::from(owner.to_bytes()))
+                                        .unwrap_or_default(),
+                                };
 
-            if account_file_workers.len() >= max_workers {
-                if let Some(join_res) = account_file_workers.join_next().await {
-                    join_res.map_err(|err| {
-                        VixenError::Other(format!("Snapshot worker panicked: {err:?}").into())
-                    })??;
+                                if let Err(err) = scan_sync_tx.blocking_send(event) {
+                                    is_closed = true;
+                                    error = Some(VixenError::Io(std::io::Error::other(format!(
+                                        "Error sending account update: {err:?}"
+                                    ))));
+                                }
+                            }
+                        },
+                        &scan_config,
+                    )
+                    .map_err(|e| {
+                        VixenError::Io(std::io::Error::other(format!("Scan failed: {e}")))
+                    })?;
+
+                if let Some(error) = error {
+                    Err(error)
+                } else {
+                    Ok(())
                 }
-            }
-        }
+            })
+            .await
+            .map_err(|_| VixenError::Io(std::io::Error::other("Scan thread panicked")))
+        });
 
-        while let Some(join_res) = account_file_workers.join_next().await {
-            join_res.map_err(|err| {
-                VixenError::Other(format!("Snapshot worker panicked: {err:?}").into())
-            })??;
-        }
+        let _ = scan_handle.await;
+
+        tracing::info!("Snapshot source finished");
 
         sync_tx
             .send(Event::SnapshotFinished)
@@ -245,7 +328,6 @@ impl SourceTrait for SolanaSnapshotSource {
         Ok(())
     }
 }
-
 enum Event {
     AccountUpdate {
         account_update: SubscribeUpdateAccount,
