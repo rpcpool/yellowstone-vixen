@@ -1,5 +1,7 @@
-use spl_stake_pool::solana_program::{borsh1::try_from_slice_unchecked, program_error};
-use spl_stake_pool::state::{StakePool, ValidatorList};
+use spl_stake_pool::{
+    solana_program::{borsh1::try_from_slice_unchecked, program_error},
+    state::{StakePool, ValidatorList},
+};
 
 /// SplStakePool Program State
 #[allow(clippy::large_enum_variant)]
@@ -39,9 +41,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
     type Input = yellowstone_vixen_core::AccountUpdate;
     type Output = SplStakePoolProgramState;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "spl_stake_pool::AccountParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "spl_stake_pool::AccountParser".into() }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -64,7 +64,5 @@ impl yellowstone_vixen_core::Parser for AccountParser {
 
 impl yellowstone_vixen_core::ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_stake_pool::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_stake_pool::ID.to_bytes().into() }
 }

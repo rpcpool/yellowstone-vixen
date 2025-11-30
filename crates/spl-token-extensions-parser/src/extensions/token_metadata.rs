@@ -3,9 +3,9 @@ use spl_token_metadata_interface::instruction::{
     UpdateAuthority, UpdateField,
 };
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
+use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
 
 use super::extension::ExtensionInstructionParser;
-use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
 
 #[derive(Debug, Clone, Copy)]
 pub struct InitializeAccounts {

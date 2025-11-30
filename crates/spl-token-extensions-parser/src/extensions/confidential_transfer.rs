@@ -1,8 +1,9 @@
-use crate::{decode_extension_ix_type, ExtensionInstructionParser};
 use spl_token_2022::extension::confidential_transfer::instruction::ConfidentialTransferInstruction as SplConfidentialTransferInstruction;
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 use yellowstone_vixen_parser::{check_min_accounts_req, Result};
 use yellowstone_vixen_spl_token_parser::InitializeMintAccounts;
+
+use crate::{decode_extension_ix_type, ExtensionInstructionParser};
 
 #[derive(Debug, Clone, Copy)]
 pub struct UpdateMintAccounts {

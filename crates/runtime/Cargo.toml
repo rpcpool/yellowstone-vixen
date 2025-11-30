@@ -25,7 +25,6 @@ tracing = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
-rustls = { workspace = true, features = ["aws-lc-rs"] }
 
 [features]
 default = []

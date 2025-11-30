@@ -104,24 +104,14 @@ impl<S: SourceTrait> Runtime<S> {
     ///
     /// ```ignore
     /// use yellowstone_vixen::Pipeline;
-    /// use yellowstone_vixen_parser::{
-    ///     token_extension_program::{
-    ///         AccountParser as TokenExtensionProgramAccParser,
-    ///         InstructionParser as TokenExtensionProgramIxParser,
-    ///     },
-    ///     token_program::{
-    ///         AccountParser as TokenProgramAccParser, InstructionParser as TokenProgramIxParser,
-    ///     },
-    /// };
+    /// use yellowstone_vixen_spl_token_parser::{AccountParser, InstructionParser};
     ///
     /// // MyHandler is a handler that implements the Handler trait
     /// // NOTE: The main function is not async
     /// fn main() {
     ///     Runtime::builder::<YellowstoneGrpcSource>()
-    ///         .account(Pipeline::new(TokenProgramAccParser, [MyHandler]))
-    ///         .account(Pipeline::new(TokenExtensionProgramAccParser, [MyHandler]))
-    ///         .instruction(Pipeline::new(TokenExtensionProgramIxParser, [MyHandler]))
-    ///         .instruction(Pipeline::new(TokenProgramIxParser, [MyHandler]))
+    ///         .account(Pipeline::new(AccountParser, [MyHandler]))
+    ///         .instruction(Pipeline::new(InstructionParser, [MyHandler]))
     ///         .build(config)
     ///         .run(); // Process will exit if an error occurs
     /// }

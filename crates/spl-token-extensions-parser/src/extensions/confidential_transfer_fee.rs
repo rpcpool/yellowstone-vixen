@@ -1,8 +1,8 @@
 use spl_token_2022::extension::confidential_transfer_fee::instruction::ConfidentialTransferFeeInstruction as SplConfidentialTransferFeeInstruction;
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
+use yellowstone_vixen_parser::{check_min_accounts_req, Result};
 
 use super::extension::{decode_extension_ix_type, ExtensionInstructionParser};
-use yellowstone_vixen_parser::{check_min_accounts_req, Result};
 
 #[derive(Debug, Clone, Copy)]
 pub struct InitializeConfidentialTransferFeeConfigAccounts {

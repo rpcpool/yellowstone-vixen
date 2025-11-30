@@ -1,7 +1,7 @@
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
+use yellowstone_vixen_parser::{check_min_accounts_req, Error, Result};
 
 use super::extension::decode_extension_ix_type;
-use yellowstone_vixen_parser::{check_min_accounts_req, Error, Result};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ExtensionWithCommonInstruction {

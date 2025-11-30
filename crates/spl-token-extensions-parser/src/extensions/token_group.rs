@@ -1,10 +1,11 @@
-use crate::ExtensionInstructionParser;
 use spl_token_group_interface::instruction::{
     InitializeGroup, InitializeMember, TokenGroupInstruction as SplTokenGroupInstruction,
     UpdateGroupAuthority, UpdateGroupMaxSize,
 };
 use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
 use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
+
+use crate::ExtensionInstructionParser;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InitializeGroupAccounts {

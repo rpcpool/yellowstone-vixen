@@ -12746,7 +12746,6 @@ dependencies = [
  "futures-util",
  "opentelemetry 0.24.0",
  "prometheus",
- "rustls 0.23.35",
  "serde",
  "smallvec",
  "thiserror 1.0.69",
@@ -12786,10 +12785,12 @@ name = "yellowstone-vixen-example-filtered-pipeline"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "rustls 0.23.35",
  "toml 0.8.23",
  "tracing",
  "yellowstone-vixen",
  "yellowstone-vixen-solana-rpc-source",
+ "yellowstone-vixen-spl-token-parser",
  "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
@@ -12801,12 +12802,15 @@ dependencies = [
  "clap",
  "prometheus",
  "prost 0.13.5",
+ "rustls 0.23.35",
  "tokio",
  "toml 0.8.23",
  "tracing",
  "yellowstone-vixen",
  "yellowstone-vixen-parser",
  "yellowstone-vixen-proc-macro",
+ "yellowstone-vixen-spl-token-extensions-parser",
+ "yellowstone-vixen-spl-token-parser",
  "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
@@ -12821,13 +12825,14 @@ dependencies = [
  "opentelemetry-stdout",
  "opentelemetry_sdk",
  "prost-build 0.13.5",
+ "rustls 0.23.35",
  "tokio",
  "toml 0.8.23",
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
  "yellowstone-vixen",
- "yellowstone-vixen-parser",
+ "yellowstone-vixen-spl-token-parser",
  "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
@@ -12963,7 +12968,6 @@ dependencies = [
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-parser",
- "yellowstone-vixen-proto",
  "yellowstone-vixen-spl-token-parser",
 ]
 

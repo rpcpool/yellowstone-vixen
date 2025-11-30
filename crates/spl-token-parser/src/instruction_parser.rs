@@ -2,10 +2,10 @@ use spl_token::instruction::TokenInstruction as SplTokenInstruction;
 use yellowstone_vixen_core::{
     instruction::InstructionUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
+use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
 
 #[allow(clippy::wildcard_imports)]
 use crate::instructions::*;
-use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
 
 #[derive(Debug, Clone, Copy)]
 pub struct InstructionParser;
@@ -14,9 +14,7 @@ impl Parser for InstructionParser {
     type Input = InstructionUpdate;
     type Output = TokenProgramInstruction;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> {
-        "token_program::InstructionParser".into()
-    }
+    fn id(&self) -> std::borrow::Cow<'static, str> { "token_program::InstructionParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -36,9 +34,7 @@ impl Parser for InstructionParser {
 
 impl ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token::ID.to_bytes().into() }
 }
 
 impl InstructionParser {

@@ -94,7 +94,7 @@ impl TokenExtensionState {
     pub fn try_unpack(data_bytes: &[u8]) -> ParseResult<Self> {
         let account_type = extension_account_type(data_bytes)?;
 
-        let acc = match account_type {
+        match account_type {
             TokenExtensionAccountType::Mint => Ok(TokenExtensionState::ExtendedMint(
                 ExtendedMint::try_from_data(data_bytes)?,
             )),
@@ -106,9 +106,7 @@ impl TokenExtensionState {
             TokenExtensionAccountType::Multisig => {
                 Ok(TokenExtensionState::Multisig(Multisig::unpack(data_bytes)?))
             },
-        };
-
-        acc
+        }
     }
 }
 
@@ -119,9 +117,7 @@ impl Parser for AccountParser {
     type Input = AccountUpdate;
     type Output = TokenExtensionState;
 
-    fn id(&self) -> Cow<'static, str> {
-        "token_extensions::AccountParser".into()
-    }
+    fn id(&self) -> Cow<'static, str> { "token_extensions::AccountParser".into() }
 
     fn prefilter(&self) -> Prefilter {
         Prefilter::builder()
@@ -138,9 +134,7 @@ impl Parser for AccountParser {
 
 impl ProgramParser for AccountParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
-        spl_token_2022::ID.to_bytes().into()
-    }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { spl_token_2022::ID.to_bytes().into() }
 }
 
 #[cfg(test)]

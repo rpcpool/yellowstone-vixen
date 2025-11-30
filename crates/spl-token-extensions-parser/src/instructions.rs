@@ -1,12 +1,12 @@
 use spl_token_2022::{extension::ExtensionType, instruction::AuthorityType};
 use yellowstone_vixen_core::Pubkey;
+use yellowstone_vixen_spl_token_parser::{SetAuthorityAccounts, TokenProgramInstruction};
 
 use super::{
     CommonExtensionInstructions, ConfidentialTransferFeeInstruction,
     ConfidentialTransferInstruction, TokenGroupInstruction, TokenMetadataInstruction,
     TransferFeeInstruction,
 };
-use yellowstone_vixen_spl_token_parser::{SetAuthorityAccounts, TokenProgramInstruction};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]

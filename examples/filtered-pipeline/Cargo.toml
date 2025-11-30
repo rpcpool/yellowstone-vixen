@@ -7,10 +7,12 @@ license = "MIT"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
-clap = { version = "4.5.4", features = ["derive", "cargo", "wrap_help"] }
-toml = "0.8.12"
-tracing = "0.1.40"
+clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
+toml = { workspace = true }
+tracing = { workspace = true }
+rustls = { workspace = true }
 yellowstone-vixen = { workspace = true }
+yellowstone-vixen-spl-token-parser = { workspace = true }
 
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
 yellowstone-vixen-solana-rpc-source = { workspace = true }

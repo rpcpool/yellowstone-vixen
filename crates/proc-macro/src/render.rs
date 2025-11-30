@@ -83,7 +83,7 @@ fn render_defined_types(defined_types: &[codama_nodes::DefinedTypeNode]) -> Toke
                 let ty = quoted_type_node(&defined_type.r#type);
                 quote! {
                     #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-                    pub enum #ident #ty
+                    pub enum #ident { #ty }
                 }
             },
             _ => {
@@ -568,6 +568,7 @@ fn quoted_enum_type(node: &codama_nodes::EnumTypeNode) -> TokenStream {
             match &v.tuple {
                 codama_nodes::NestedTypeNode::Value(tuple_type) => {
                     let inner_types = tuple_type.items.iter().map(quoted_type_node);
+
                     quote! { #ident( #(#inner_types),* ), }
                 },
                 _ => panic!("Expected TupleTypeNode::Value in EnumTupleVariantTypeNode.tuple"),

@@ -5,7 +5,7 @@ resolver = "2"
 
 [workspace.package]
 authors = ["Triton One", "ABK-Labs"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 version = "0.6.0"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
@@ -37,7 +37,6 @@ prost-build = "^0.13.1"
 prost-types = "^0.13.1"
 protobuf-src = "^1.0.0"
 regex = "^1.11.0"
-rustls = "^0.23.0"
 serde = "^1.0.198"
 serde_json = "^1.0.0"
 smallvec = "^1.14.0"
@@ -69,6 +68,7 @@ spl-token-2022 = "^10.0.0"
 spl-type-length-value = "^0.9.0"
 spl-token-group-interface = "^0.7.0"
 spl-token-metadata-interface = "^0.8.0"
+rustls = "^0.23"
 strum = "^0.27"
 strum_macros = "^0.27"
 syn = { version = "2", default-features = false }
@@ -80,7 +80,7 @@ tonic-reflection = "^0.12.1"
 tonic-build = "^0.12.1"
 toml = "^0.8.0"
 topograph = "^0.4.0"
-tokio = "^1.37.0"
+tokio = "^1.48.0"
 tracing = "^0.1.40"
 quote = "1"
 zstd = "^0.13.0"
@@ -99,7 +99,7 @@ yellowstone-vixen-parser = { path = "crates/parser", version = "0.6.0" }
 yellowstone-vixen-proto = { path = "crates/proto", version = "0.6.0" }
 
 # Parsers
-yellowstone-vixen-spl-token-exetensions-parser = { path = "crates/spl-token-extensions-parser", version = "0.6.0" }
+yellowstone-vixen-spl-token-extensions-parser = { path = "crates/spl-token-extensions-parser", version = "0.6.0" }
 yellowstone-vixen-spl-token-parser = { path = "crates/spl-token-parser", version = "0.6.0" }
 yellowstone-vixen-block-meta-parser = { path = "crates/block-meta-parser", version = "0.6.0" }
 yellowstone-vixen-slot-parser = { path = "crates/slot-parser", version = "0.6.0" }
