@@ -14,6 +14,7 @@ publish = false
 
 [workspace.dependencies]
 async-trait = "^0.1"
+anyhow = "1.0"
 borsh = "1.5.5"
 bs58 = "^0.5.1"
 hex = "^0.4.3"
@@ -51,9 +52,12 @@ solana-account-info = "^2.2.0"
 solana-cpi = "^2.2.0"
 solana-decode-error = "^2.2.0"
 solana-pubkey = "^2.2.0"
+solana-sysvar = { version = "=3.0.0", features = ["serde"] }
+solana-hash = { version = "=3.0.0", features = ["serde"] }
 solana-instruction = "^2.2.0"
 solana-msg = "^2.2.0"
 solana-program-entrypoint = "^2.2.0"
+solana-transaction = "2.2.0"
 solana-program-error = "^2.2.0"
 solana-transaction-status = "^2.2.0"
 solana-ledger = "^2.2.0"
@@ -77,10 +81,14 @@ tonic-build = "^0.12.1"
 toml = "^0.8.0"
 topograph = "^0.4.0"
 tokio = "^1.37.0"
+tokio-util="0.7.17"
 tracing = "^0.1.40"
 quote = "1"
 zstd = "^0.13.0"
 bytemuck = "^1"
+jetstreamer-firehose = "0.1"
+jetstreamer-utils = "0.1"
+warp = "0.3"
 
 yellowstone-fumarole-client = "^0.2.0"
 yellowstone-grpc-client = { version = "9" }
@@ -116,3 +124,6 @@ yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", versi
 yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.6.0" }
 yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.6.0" }
 yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.6.0" }
+yellowstone-vixen-jetstream-source = { path = "crates/jetstreamer-source", version = "0.3.1" }
+
+
