@@ -16285,7 +16285,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-jetstream-source"
-version = "0.3.1"
+version = "0.6.0"
 dependencies = [
  "async-trait",
  "clap 4.5.48",

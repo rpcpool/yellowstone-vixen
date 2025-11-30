@@ -1,4 +1,7 @@
-use std::sync::{atomic::{AtomicU64, Ordering}, Arc};
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Arc,
+};
 
 use async_trait::async_trait;
 use futures_util::FutureExt;
@@ -109,13 +112,13 @@ impl VixenStreamHandler {
                 // Use cached matches
                 if self.block_matches.is_empty() {
                     debug!(slot, "No filters interested in block, skipping");
-                    
+
                     // Log progress every 10,000 blocks even if skipped
                     let count = self.blocks_processed.fetch_add(1, Ordering::Relaxed);
                     if count % 10_000 == 0 && count > 0 {
                         info!(slot, count, "Processed blocks (skipping non-matching)");
                     }
-                    
+
                     return Ok(());
                 }
 

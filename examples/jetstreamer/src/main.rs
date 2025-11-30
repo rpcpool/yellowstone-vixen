@@ -2,7 +2,6 @@ use std::time::Instant;
 
 use anyhow::Result;
 use tracing::info;
-
 use yellowstone_vixen::{
     config::{BufferConfig, VixenConfig},
     Handler, HandlerResult, Pipeline, Runtime,
