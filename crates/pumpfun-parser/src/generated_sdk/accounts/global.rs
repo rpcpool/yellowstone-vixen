@@ -5,7 +5,8 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -44,10 +45,30 @@ pub struct Global {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub set_creator_authority: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub admin_set_creator_authority: Pubkey,
+    pub create_v2_enabled: bool,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub whitelist_pda: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub reserved_fee_recipient: Pubkey,
+    pub mayhem_mode_enabled: bool,
+    pub reserved_fee_recipients: [Pubkey; 7],
 }
 
+pub const GLOBAL_DISCRIMINATOR: [u8; 8] = [167, 232, 232, 177, 200, 108, 114, 127];
+
 impl Global {
-    pub const LEN: usize = 418;
+    pub const LEN: usize = 740;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
@@ -147,7 +168,9 @@ impl anchor_lang::AccountSerialize for Global {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for Global {
-    fn owner() -> Pubkey { crate::PUMP_ID }
+    fn owner() -> Pubkey {
+        crate::PUMP_ID
+    }
 }
 
 #[cfg(feature = "anchor-idl-build")]
@@ -155,5 +178,5 @@ impl anchor_lang::IdlBuild for Global {}
 
 #[cfg(feature = "anchor-idl-build")]
 impl anchor_lang::Discriminator for Global {
-    const DISCRIMINATOR: [u8; 8] = [0; 8];
+    const DISCRIMINATOR: &[u8] = &[0; 8];
 }

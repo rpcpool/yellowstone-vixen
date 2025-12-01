@@ -5,8 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
+
+pub const CREATE_CONFIG_DISCRIMINATOR: [u8; 8] = [201, 207, 243, 114, 75, 111, 47, 189];
 
 /// Accounts.
 #[derive(Debug)]
@@ -29,7 +32,6 @@ impl CreateConfig {
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
@@ -56,8 +58,8 @@ impl CreateConfig {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&CreateConfigInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&args).unwrap();
+        let mut data = CreateConfigInstructionData::new().try_to_vec().unwrap();
+        let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
         solana_instruction::Instruction {
@@ -80,10 +82,16 @@ impl CreateConfigInstructionData {
             discriminator: [201, 207, 243, 114, 75, 111, 47, 189],
         }
     }
+
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 impl Default for CreateConfigInstructionData {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
@@ -93,6 +101,13 @@ pub struct CreateConfigInstructionArgs {
     pub protocol_fee_basis_points: u64,
     pub protocol_fee_recipients: [Pubkey; 8],
     pub coin_creator_fee_basis_points: u64,
+    pub admin_set_coin_creator_authority: Pubkey,
+}
+
+impl CreateConfigInstructionArgs {
+    pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
+        borsh::to_vec(self)
+    }
 }
 
 /// Instruction builder for `CreateConfig`.
@@ -115,62 +130,56 @@ pub struct CreateConfigBuilder {
     protocol_fee_basis_points: Option<u64>,
     protocol_fee_recipients: Option<[Pubkey; 8]>,
     coin_creator_fee_basis_points: Option<u64>,
+    admin_set_coin_creator_authority: Option<Pubkey>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl CreateConfigBuilder {
-    pub fn new() -> Self { Self::default() }
-
+    pub fn new() -> Self {
+        Self::default()
+    }
     /// `[optional account, default to '8LWu7QM2dGR1G8nKDHthckea57bkCzXyBTAKPJUBDHo8']`
     #[inline(always)]
     pub fn admin(&mut self, admin: solana_pubkey::Pubkey) -> &mut Self {
         self.admin = Some(admin);
         self
     }
-
     #[inline(always)]
     pub fn global_config(&mut self, global_config: solana_pubkey::Pubkey) -> &mut Self {
         self.global_config = Some(global_config);
         self
     }
-
     /// `[optional account, default to '11111111111111111111111111111111']`
     #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
         self.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn lp_fee_basis_points(&mut self, lp_fee_basis_points: u64) -> &mut Self {
         self.lp_fee_basis_points = Some(lp_fee_basis_points);
         self
     }
-
     #[inline(always)]
     pub fn protocol_fee_basis_points(&mut self, protocol_fee_basis_points: u64) -> &mut Self {
         self.protocol_fee_basis_points = Some(protocol_fee_basis_points);
         self
     }
-
     #[inline(always)]
     pub fn protocol_fee_recipients(&mut self, protocol_fee_recipients: [Pubkey; 8]) -> &mut Self {
         self.protocol_fee_recipients = Some(protocol_fee_recipients);
         self
     }
-
     #[inline(always)]
     pub fn coin_creator_fee_basis_points(
         &mut self,
@@ -179,14 +188,20 @@ impl CreateConfigBuilder {
         self.coin_creator_fee_basis_points = Some(coin_creator_fee_basis_points);
         self
     }
-
+    #[inline(always)]
+    pub fn admin_set_coin_creator_authority(
+        &mut self,
+        admin_set_coin_creator_authority: Pubkey,
+    ) -> &mut Self {
+        self.admin_set_coin_creator_authority = Some(admin_set_coin_creator_authority);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
         self.__remaining_accounts.push(account);
         self
     }
-
     /// Add additional accounts to the instruction.
     #[inline(always)]
     pub fn add_remaining_accounts(
@@ -196,7 +211,6 @@ impl CreateConfigBuilder {
         self.__remaining_accounts.extend_from_slice(accounts);
         self
     }
-
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
         let accounts = CreateConfig {
@@ -227,6 +241,10 @@ impl CreateConfigBuilder {
                 .coin_creator_fee_basis_points
                 .clone()
                 .expect("coin_creator_fee_basis_points is not set"),
+            admin_set_coin_creator_authority: self
+                .admin_set_coin_creator_authority
+                .clone()
+                .expect("admin_set_coin_creator_authority is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -280,28 +298,21 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
             __args: args,
         }
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], &[])
     }
-
     #[inline(always)]
     pub fn invoke_with_remaining_accounts(
         &self,
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
     }
-
     #[inline(always)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
     }
-
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
@@ -309,7 +320,7 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
-    ) -> solana_program_entrypoint::ProgramResult {
+    ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(*self.admin.key, true));
         accounts.push(solana_instruction::AccountMeta::new(
@@ -335,8 +346,8 @@ impl<'a, 'b> CreateConfigCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&CreateConfigInstructionData::new()).unwrap();
-        let mut args = borsh::to_vec(&self.__args).unwrap();
+        let mut data = CreateConfigInstructionData::new().try_to_vec().unwrap();
+        let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
         let instruction = solana_instruction::Instruction {
@@ -390,17 +401,16 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             protocol_fee_basis_points: None,
             protocol_fee_recipients: None,
             coin_creator_fee_basis_points: None,
+            admin_set_coin_creator_authority: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
-
     #[inline(always)]
     pub fn admin(&mut self, admin: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.admin = Some(admin);
         self
     }
-
     #[inline(always)]
     pub fn global_config(
         &mut self,
@@ -409,7 +419,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.global_config = Some(global_config);
         self
     }
-
     #[inline(always)]
     pub fn system_program(
         &mut self,
@@ -418,7 +427,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
-
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -427,31 +435,26 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.event_authority = Some(event_authority);
         self
     }
-
     #[inline(always)]
     pub fn program(&mut self, program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.program = Some(program);
         self
     }
-
     #[inline(always)]
     pub fn lp_fee_basis_points(&mut self, lp_fee_basis_points: u64) -> &mut Self {
         self.instruction.lp_fee_basis_points = Some(lp_fee_basis_points);
         self
     }
-
     #[inline(always)]
     pub fn protocol_fee_basis_points(&mut self, protocol_fee_basis_points: u64) -> &mut Self {
         self.instruction.protocol_fee_basis_points = Some(protocol_fee_basis_points);
         self
     }
-
     #[inline(always)]
     pub fn protocol_fee_recipients(&mut self, protocol_fee_recipients: [Pubkey; 8]) -> &mut Self {
         self.instruction.protocol_fee_recipients = Some(protocol_fee_recipients);
         self
     }
-
     #[inline(always)]
     pub fn coin_creator_fee_basis_points(
         &mut self,
@@ -460,7 +463,14 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
         self.instruction.coin_creator_fee_basis_points = Some(coin_creator_fee_basis_points);
         self
     }
-
+    #[inline(always)]
+    pub fn admin_set_coin_creator_authority(
+        &mut self,
+        admin_set_coin_creator_authority: Pubkey,
+    ) -> &mut Self {
+        self.instruction.admin_set_coin_creator_authority = Some(admin_set_coin_creator_authority);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -474,7 +484,6 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             .push((account, is_writable, is_signer));
         self
     }
-
     /// Add additional accounts to the instruction.
     ///
     /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
@@ -489,16 +498,13 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
             .extend_from_slice(accounts);
         self
     }
-
     #[inline(always)]
-    pub fn invoke(&self) -> solana_program_entrypoint::ProgramResult { self.invoke_signed(&[]) }
-
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
-    pub fn invoke_signed(
-        &self,
-        signers_seeds: &[&[&[u8]]],
-    ) -> solana_program_entrypoint::ProgramResult {
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let args = CreateConfigInstructionArgs {
             lp_fee_basis_points: self
                 .instruction
@@ -520,6 +526,11 @@ impl<'a, 'b> CreateConfigCpiBuilder<'a, 'b> {
                 .coin_creator_fee_basis_points
                 .clone()
                 .expect("coin_creator_fee_basis_points is not set"),
+            admin_set_coin_creator_authority: self
+                .instruction
+                .admin_set_coin_creator_authority
+                .clone()
+                .expect("admin_set_coin_creator_authority is not set"),
         };
         let instruction = CreateConfigCpi {
             __program: self.instruction.__program,
@@ -563,6 +574,7 @@ struct CreateConfigCpiBuilderInstruction<'a, 'b> {
     protocol_fee_basis_points: Option<u64>,
     protocol_fee_recipients: Option<[Pubkey; 8]>,
     coin_creator_fee_basis_points: Option<u64>,
+    admin_set_coin_creator_authority: Option<Pubkey>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

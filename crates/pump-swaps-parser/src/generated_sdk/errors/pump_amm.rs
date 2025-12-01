@@ -42,22 +42,22 @@ pub enum PumpAmmError {
     InvalidQuoteMint = 0x1779,
     /// 6010 -
     #[error("")]
-    InvalidLpMint = 0x177a,
+    InvalidLpMint = 0x177A,
     /// 6011 -
     #[error("")]
-    AllProtocolFeeRecipientsShouldBeNonZero = 0x177b,
+    AllProtocolFeeRecipientsShouldBeNonZero = 0x177B,
     /// 6012 -
     #[error("")]
-    UnsortedNotUniqueProtocolFeeRecipients = 0x177c,
+    UnsortedNotUniqueProtocolFeeRecipients = 0x177C,
     /// 6013 -
     #[error("")]
-    InvalidProtocolFeeRecipient = 0x177d,
+    InvalidProtocolFeeRecipient = 0x177D,
     /// 6014 -
     #[error("")]
-    InvalidPoolBaseTokenAccount = 0x177e,
+    InvalidPoolBaseTokenAccount = 0x177E,
     /// 6015 -
     #[error("")]
-    InvalidPoolQuoteTokenAccount = 0x177f,
+    InvalidPoolQuoteTokenAccount = 0x177F,
     /// 6016 -
     #[error("")]
     BuyMoreBaseAmountThanPoolReserves = 0x1780,
@@ -90,23 +90,65 @@ pub enum PumpAmmError {
     DivisionByZero = 0x1789,
     /// 6026 -
     #[error("")]
-    NewSizeLessThanCurrentSize = 0x178a,
+    NewSizeLessThanCurrentSize = 0x178A,
     /// 6027 -
     #[error("")]
-    AccountTypeNotSupported = 0x178b,
+    AccountTypeNotSupported = 0x178B,
     /// 6028 -
     #[error("")]
-    OnlyCanonicalPumpPoolsCanHaveCoinCreator = 0x178c,
+    OnlyCanonicalPumpPoolsCanHaveCoinCreator = 0x178C,
+    /// 6029 -
+    #[error("")]
+    InvalidAdminSetCoinCreatorAuthority = 0x178D,
+    /// 6030 -
+    #[error("")]
+    StartTimeInThePast = 0x178E,
+    /// 6031 -
+    #[error("")]
+    EndTimeInThePast = 0x178F,
+    /// 6032 -
+    #[error("")]
+    EndTimeBeforeStartTime = 0x1790,
+    /// 6033 -
+    #[error("")]
+    TimeRangeTooLarge = 0x1791,
+    /// 6034 -
+    #[error("")]
+    EndTimeBeforeCurrentDay = 0x1792,
+    /// 6035 -
+    #[error("")]
+    SupplyUpdateForFinishedRange = 0x1793,
+    /// 6036 -
+    #[error("")]
+    DayIndexAfterEndIndex = 0x1794,
+    /// 6037 -
+    #[error("")]
+    DayInActiveRange = 0x1795,
+    /// 6038 -
+    #[error("")]
+    InvalidIncentiveMint = 0x1796,
+    /// 6039 - buy: Not enough quote tokens to cover for fees.
+    #[error("buy: Not enough quote tokens to cover for fees.")]
+    BuyNotEnoughQuoteTokensToCoverFees = 0x1797,
+    /// 6040 - buy: slippage - would buy less tokens than expected min_base_amount_out
+    #[error("buy: slippage - would buy less tokens than expected min_base_amount_out")]
+    BuySlippageBelowMinBaseAmountOut = 0x1798,
+    /// 6041 -
+    #[error("")]
+    MayhemModeDisabled = 0x1799,
+    /// 6042 -
+    #[error("")]
+    OnlyPumpPoolsMayhemMode = 0x179A,
+    /// 6043 -
+    #[error("")]
+    MayhemModeInDesiredState = 0x179B,
+    /// 6044 -
+    #[error("")]
+    NotEnoughRemainingAccounts = 0x179C,
 }
 
-#[allow(deprecated)]
-impl solana_program_error::PrintProgramError for PumpAmmError {
-    fn print<E>(&self) {
-        solana_msg::msg!(&self.to_string());
+impl From<PumpAmmError> for solana_program_error::ProgramError {
+    fn from(e: PumpAmmError) -> Self {
+        solana_program_error::ProgramError::Custom(e as u32)
     }
-}
-
-#[allow(deprecated)]
-impl<T> solana_decode_error::DecodeError<T> for PumpAmmError {
-    fn type_of() -> &'static str { "PumpAmmError" }
 }
