@@ -35,10 +35,12 @@ use yellowstone_grpc_proto::geyser::{
 };
 
 pub extern crate bs58;
+
 #[cfg(feature = "proto")]
 pub extern crate yellowstone_vixen_proto;
 
 pub mod instruction;
+
 #[cfg(feature = "proto")]
 pub mod proto;
 

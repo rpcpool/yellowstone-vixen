@@ -13,7 +13,7 @@ use clap::Parser as _;
 use opentelemetry::trace::TracerProvider;
 use tracing_subscriber::layer::SubscriberExt;
 use yellowstone_vixen::{Handler, HandlerResult, Pipeline, Runtime};
-use yellowstone_vixen_parser::token_program::{AccountParser, InstructionParser};
+use yellowstone_vixen_spl_token_parser::{AccountParser, InstructionParser};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -27,12 +27,19 @@ pub struct Opts {
 pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync, R: Sync> Handler<V, R> for Logger {
-    async fn handle(&self, _value: &V, _raw: &R) -> HandlerResult<()> { Ok(()) }
+    async fn handle(&self, value: &V, _raw: &R) -> HandlerResult<()> {
+        println!("{value:?}");
+        Ok(())
+    }
 }
 
 #[rustfmt::skip]
 #[allow(clippy::too_many_lines)]
 fn main() {
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("Fialed to install rustls crypto provider");
+
     let span_exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()
         .build()
@@ -81,8 +88,8 @@ fn main() {
     let config = toml::from_str(&config).expect("Error parsing config");
 
     Runtime::<YellowstoneGrpcSource>::builder()
-        .instruction(Pipeline::new(InstructionParser, [Logger]))
         .account(Pipeline::new(AccountParser, [Logger]))
+        .instruction(Pipeline::new(InstructionParser, [Logger]))
         .build(config)
         .run();
 }

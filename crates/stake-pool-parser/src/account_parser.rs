@@ -1,5 +1,7 @@
-use spl_pod::solana_program::{self, borsh1::try_from_slice_unchecked};
-use spl_stake_pool::state::{StakePool, ValidatorList};
+use spl_stake_pool::{
+    solana_program::{borsh1::try_from_slice_unchecked, program_error},
+    state::{StakePool, ValidatorList},
+};
 
 /// SplStakePool Program State
 #[allow(clippy::large_enum_variant)]
@@ -55,7 +57,7 @@ impl yellowstone_vixen_core::Parser for AccountParser {
         let inner = acct
             .account
             .as_ref()
-            .ok_or(solana_program::program_error::ProgramError::InvalidArgument)?;
+            .ok_or(program_error::ProgramError::InvalidArgument)?;
         SplStakePoolProgramState::try_unpack(&inner.data)
     }
 }

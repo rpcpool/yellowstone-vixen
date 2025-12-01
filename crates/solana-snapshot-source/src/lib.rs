@@ -4,16 +4,17 @@ use std::{
     sync::{atomic::AtomicBool, Arc},
 };
 
+use agave_snapshots::snapshot_config::{SnapshotConfig, SnapshotUsage};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use solana_account::ReadableAccount;
 use solana_accounts_db::{
     accounts_db::AccountsDbConfig,
     accounts_index::{ScanConfig, ScanOrder},
-    hardened_unpack::open_genesis_config,
     is_loadable::IsLoadable,
     utils::create_all_accounts_run_and_snapshot_dirs,
 };
+use solana_genesis_utils::open_genesis_config;
 use solana_ledger::{
     bank_forks_utils,
     blockstore::Blockstore,
@@ -21,10 +22,7 @@ use solana_ledger::{
     blockstore_processor::ProcessOptions,
 };
 use solana_pubkey::Pubkey as SolanaPubkey;
-use solana_runtime::{
-    bank::Bank,
-    snapshot_config::{SnapshotConfig, SnapshotUsage},
-};
+use solana_runtime::bank::Bank;
 use tokio::sync::mpsc;
 use yellowstone_grpc_proto::{
     geyser::{
@@ -63,7 +61,7 @@ impl SolanaSnapshot {
 
         let process_options = ProcessOptions {
             accounts_db_skip_shrink: true,
-            accounts_db_config: Some(accounts_db_config),
+            accounts_db_config,
             ..Default::default()
         };
 

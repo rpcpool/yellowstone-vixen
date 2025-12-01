@@ -11,7 +11,7 @@ Solana change events, following the Yellowstone gRPC specification, are received
   - [Problem Solving](#problem-solving)
   - [Features](#features)
   - [Quick Start](#quick-start)
-  - [Official Parsers](#official-parsers)
+  - [Parsers](#parsers)
   - [Official Sources](#official-sources)
   - [Developer Resources](#developer-resources)
   - [Maintainers](#maintainers)
@@ -29,7 +29,8 @@ Yellowstone Vixen solves core challenges for Solana dApp developers:
 
 - **🛠 Parser + Handler Architecture**: Build pipelines that transform raw Solana events into structured models and trigger custom logic.
 - **🔥 Flexible Source Integration**: Register custom data sources or use existing ones like Dragon's Mouth for Solana Geyser streams.
-- **📈 Metrics Support**: Prometheus /metrics endpoint available out-of-the-box.
+- **✨ IDL-Based Code Generation**: Generate type-safe parsers directly from your Solana program's IDL using a procedural macro, eliminating manual deserialization and improving maintainability.
+- **📈 Metrics Support**: Register your own Prometheus registry for unified metrics reporting.
 - **🧪 Offline Testing with Fixtures**: Test parsers without connecting to live Solana nodes using devnet fixtures.
 - **🔄 gRPC Streaming API**: Serve parsed program events directly to external systems or clients.
 
@@ -43,7 +44,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use yellowstone_vixen::Pipeline;
-use yellowstone_vixen_parser::token_program::{AccountParser, InstructionParser};
+use yellowstone_vixen_spl_token_parser::{AccountParser, InstructionParser};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -57,13 +58,17 @@ pub struct Opts {
 pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync, R: Sync> vixen::Handler<V, R> for Logger {
-    async fn handle(&self, _value: &V, _raw: &R) -> vixen::HandlerResult<()> {
+    async fn handle(&self, value: &V, _raw: &R) -> vixen::HandlerResult<()> {
         tracing::info!(?value);
         Ok(())
     }
 }
 
 fn main() {
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("Fialed to install rustls crypto provider");
+
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
@@ -93,27 +98,37 @@ To run prometheus, you need to have docker and docker-compose installed on your 
 sudo docker-compose up
 ```
 
-## Supported Programs
+## Parsers
 
-| Address                                        | Public Name                        | Parser                                                                                                                                   |
-| ---------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `boop8hVGQGqehUK2iVEMEnMrL5RbjywRzHKBmBE7ry4`  | **Boop.fun**                       | [yellowstone-vixen-boop-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/boop-parser)                               |
-| `JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4`  | **Jupiter Aggregator v6**          | [yellowstone-vixen-jupiter-swap-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/jupiter-swap-parser)               |
-| `LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF`  | **Kamino Limit Order**             | [yellowstone-vixen-kamino-limit-orders-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/kamino-limit-orders-parser) |
-| `cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG`  | **Meteora DAMM v2**                | [yellowstone-vixen-meteora-amm-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/meteora-amm-parser)                 |
-| `dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN`  | **Meteora Dynamic Bonding Curve**  | [yellowstone-vixen-meteora-dbc-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/meteora-dbc-parser)                 |
-| `LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo`  | **Meteora DLMM**                   | [yellowstone-vixen-meteora-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/meteora-parser)                         |
-| `Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB` | **Meteora Pools**                  | [yellowstone-vixen-meteora-pools-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/meteora-pools-parser)             |
-| `24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi` | **Meteora Vault**                  | [yellowstone-vixen-meteora-vault-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/meteora-vault-parser)             |
-| `MoonCVVNZFSYkqNXP6bxHLPL6QQJiMagDL3qcqUQTrG`  | **Moonshot**                       | [yellowstone-vixen-moonshot-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/moonshot-parser)                       |
-| `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc`  | **Whirlpools**                     | [yellowstone-vixen-orca-whirlpool-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/orca-whirlpool-parser)           |
-| `pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA`  | **Pump.fun AMM**                   | [yellowstone-vixen-pump-swaps-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/pump-swaps-parser)                   |
-| `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P`  | **Pump.fun**                       | [yellowstone-vixen-pumpfun-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/pumpfun-parser)                         |
-| `675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8` | **Raydium Liquidity Pool V4**      | [yellowstone-vixen-raydium-amm-v4-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/raydium-amm-v4-parser)           |
-| `CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK` | **Raydium Concentrated Liquidity** | [yellowstone-vixen-raydium-clmm-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/raydium-clmm-parser)               |
-| `CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C` | **Raydium CPMM**                   | [yellowstone-vixen-raydium-cpmm-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/raydium-cpmm-parser)               |
-| `LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj`  | **Raydium Launchpad**              | [yellowstone-vixen-raydium-launchpad-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/raydium-launchpad-parser)     |
-| `5U3EU2ubXtK84QcRjWVmYt9RaDyA8gKxdUrPFXmZyaki` | **Virtuals**                       | [yellowstone-vixen-virtuals-parser](https://github.com/rpcpool/yellowstone-vixen/blob/main/crates/virtuals-parser)                       |
+### Built-in
+
+| Address                                       | Public Name          | Parser                                                                                                                                      |
+| --------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA` | **Token Program**    | [yellowstone-vixen-spl-token-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/spl-token-parser)                        |
+| `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb` | **Token Extensions** | [yellowstone-vixen-spl-token-extensions-parser](https://github.com/rpcpool/yellowstone-vixen/tree/main/crates/spl-token-extensions-program) |
+
+### Codegen Macro
+
+The `yellowstone-vixen-proc-macro` crate provides the `include_vixen_parser!` procedural macro, which generates a Vixen parser from a Codama JSON IDL file.
+
+To use it, add the following dependencies to your `Cargo.toml`:
+
+```toml
+[dependencies]
+borsh = "^1.0.0"
+yellowstone-vixen-parser = { version = "0.6.0" }
+yellowstone-vixen-proc-macro = { version = "0.6.0" }
+```
+
+Then, import and invoke the macro in your code. Specify the path to your Codama JSON IDL file relative to your crate root:
+
+```rust
+use yellowstone_vixen_proc_macro::include_vixen_parser;
+
+include_vixen_parser!("path/to/idl.json");
+```
+
+The generated account and instruction parsers will be available under a module named after the program.
 
 ## Official Sources
 

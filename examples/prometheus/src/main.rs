@@ -11,7 +11,7 @@ use std::{path::PathBuf, time::Duration};
 
 use clap::Parser;
 use yellowstone_vixen::Pipeline;
-use yellowstone_vixen_parser::token_program::{AccountParser, InstructionParser};
+use yellowstone_vixen_spl_token_parser::{AccountParser, InstructionParser};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
 #[derive(clap::Parser)]
@@ -25,11 +25,18 @@ pub struct Opts {
 pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync, R: Sync> yellowstone_vixen::Handler<V, R> for Logger {
-    async fn handle(&self, _value: &V, _raw: &R) -> yellowstone_vixen::HandlerResult<()> { Ok(()) }
+    async fn handle(&self, value: &V, _raw: &R) -> yellowstone_vixen::HandlerResult<()> {
+        println!("{value:?}");
+        Ok(())
+    }
 }
 
 #[tokio::main]
 async fn main() {
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("Fialed to install rustls crypto provider");
+
     let Opts { config } = Opts::parse();
     let config = std::fs::read_to_string(config).expect("Error reading config file");
     let config = toml::from_str(&config).expect("Error parsing config");
