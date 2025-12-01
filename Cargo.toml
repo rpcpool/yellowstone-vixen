@@ -7,7 +7,7 @@ resolver = "2"
 authors = ["Triton One", "ABK-Labs"]
 edition = "2024"
 license = "MIT"
-version = "0.6.0"
+version = "0.6.0-alpha.0"
 repository = "https://github.com/rpcpool/yellowstone-vixen"
 publish = false
 
@@ -90,22 +90,22 @@ yellowstone-fumarole-client = "^0.2.0"
 yellowstone-grpc-client = { version = "9" }
 yellowstone-grpc-proto = { version = "9", default-features = false }
 
-yellowstone-vixen = { path = "crates/runtime", version = "0.6.0" }
-yellowstone-vixen-proc-macro = { path = "crates/proc-macro", version = "0.6.0" }
-yellowstone-vixen-stream = { path = "crates/stream", version = "0.6.0" }
-yellowstone-vixen-core = { path = "crates/core", version = "0.6.0" }
-yellowstone-vixen-mock = { path = "crates/mock", version = "0.6.0" }
-yellowstone-vixen-parser = { path = "crates/parser", version = "0.6.0" }
-yellowstone-vixen-proto = { path = "crates/proto", version = "0.6.0" }
+yellowstone-vixen = { path = "crates/runtime", version = "0.6.0-alpha.0" }
+yellowstone-vixen-proc-macro = { path = "crates/proc-macro", version = "0.6.0-alpha.0" }
+yellowstone-vixen-stream = { path = "crates/stream", version = "0.6.0-alpha.0" }
+yellowstone-vixen-core = { path = "crates/core", version = "0.6.0-alpha.0" }
+yellowstone-vixen-mock = { path = "crates/mock", version = "0.6.0-alpha.0" }
+yellowstone-vixen-parser = { path = "crates/parser", version = "0.6.0-alpha.0" }
+yellowstone-vixen-proto = { path = "crates/proto", version = "0.6.0-alpha.0" }
 
 # Parsers
-yellowstone-vixen-spl-token-extensions-parser = { path = "crates/spl-token-extensions-parser", version = "0.6.0" }
-yellowstone-vixen-spl-token-parser = { path = "crates/spl-token-parser", version = "0.6.0" }
-yellowstone-vixen-block-meta-parser = { path = "crates/block-meta-parser", version = "0.6.0" }
-yellowstone-vixen-slot-parser = { path = "crates/slot-parser", version = "0.6.0" }
+yellowstone-vixen-spl-token-extensions-parser = { path = "crates/spl-token-extensions-parser", version = "0.6.0-alpha.0" }
+yellowstone-vixen-spl-token-parser = { path = "crates/spl-token-parser", version = "0.6.0-alpha.0" }
+yellowstone-vixen-block-meta-parser = { path = "crates/block-meta-parser", version = "0.6.0-alpha.0" }
+yellowstone-vixen-slot-parser = { path = "crates/slot-parser", version = "0.6.0-alpha.0" }
 
 # Sources
-yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.6.0" }
-yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.6.0" }
-yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.6.0" }
-yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.6.0" }
+yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.6.0-alpha.0" }
+yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-source", version = "0.6.0-alpha.0" }
+yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.6.0-alpha.0" }
+yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.6.0-alpha.0" }
