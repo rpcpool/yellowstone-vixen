@@ -356,7 +356,7 @@ fn render_instruction_parser(
                 .map(|(idx, account)| {
                     let field = format_ident!("{}", to_snake_case(&account.name));
 
-                    quote! { #field: accounts.get(#idx).ok_or(vixen::vixen_core::ParseError::from("idx error"))? }
+                    quote! { #field: accounts.get(#idx).ok_or(ParseError::from("idx error"))? }
                 });
 
         let instr_accounts = quote! {
