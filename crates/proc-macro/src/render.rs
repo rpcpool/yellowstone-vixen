@@ -356,7 +356,7 @@ fn render_instruction_parser(
                 .map(|(idx, account)| {
                     let field = format_ident!("{}", to_snake_case(&account.name));
 
-                    quote! { #field: accounts[#idx] }
+                    quote! { #field: accounts.get(#idx)? }
                 });
 
         let instr_accounts = quote! {
