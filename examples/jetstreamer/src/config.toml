@@ -1,0 +1,14 @@
+[source]
+archive-url = "https://api.old-faithful.net"
+epoch = 885
+threads = 4
+reorder-buffer-size = 1000
+slot-timeout-secs = 30
+network = "mainnet"
+compact-index-base-url = "https://files.old-faithful.net"
+network-capacity-mb = 1000
+
+[filters]
+# Add any filters needed for parsing specific programs or accounts
+# For example, to filter for specific programs:
+# programs = ["11111111111111111111111111111112"]
