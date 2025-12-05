@@ -355,8 +355,9 @@ fn render_instruction_parser(
                 .enumerate()
                 .map(|(idx, account)| {
                     let field = format_ident!("{}", to_snake_case(&account.name));
+                    let error_msg = format!("Account does not exist at index {idx}");
 
-                    quote! { #field: *accounts.get(#idx).ok_or(ParseError::from("idx error"))? }
+                    quote! { #field: *accounts.get(#idx).ok_or(ParseError::from(#error_msg))? }
                 });
 
         let instr_accounts = quote! {
