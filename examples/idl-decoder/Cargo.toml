@@ -1,6 +1,6 @@
 [package]
-name = "yellowstone-vixen-example-filtered-pipeline"
-description = "Example of filtered pipeline"
+name = "yellowstone-vixen-example-idl-decoder"
+description = "Example of generating decoder from IDL"
 publish = false
 edition.workspace = true
 license = "MIT"
@@ -11,8 +11,8 @@ clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
 toml = { workspace = true }
 tracing = { workspace = true }
 rustls = { workspace = true }
+borsh = { workspace = true, features = ["derive"] }
 yellowstone-vixen = { workspace = true }
-yellowstone-vixen-spl-token-parser = { workspace = true }
-
+yellowstone-vixen-parser = { workspace = true }
+yellowstone-vixen-proc-macro = { workspace = true }
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
-yellowstone-vixen-solana-rpc-source = { workspace = true }
