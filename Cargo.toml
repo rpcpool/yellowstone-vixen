@@ -75,6 +75,7 @@ rustls = "^0.23"
 strum = "^0.27"
 strum_macros = "^0.27"
 syn = { version = "2", default-features = false }
+url = "2"
 tar = "^0.4.0"
 tempfile = "^3.5.0"
 thiserror = "^1.0.64"
