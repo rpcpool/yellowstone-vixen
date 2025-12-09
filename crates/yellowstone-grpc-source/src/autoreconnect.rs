@@ -1,16 +1,13 @@
 use std::{collections::HashMap, time::Duration};
 
 use async_trait::async_trait;
-use clap::ValueEnum;
-use futures_util::StreamExt;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use tokio_util::sync::CancellationToken;
-use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
-    tonic::{codec::CompressionEncoding, transport::ClientTlsConfig, Status},
+    tonic::{transport::ClientTlsConfig, Status},
 };
-use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
+use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 use crate::{grpc_autoreconnect_task, YellowstoneGrpcConfig};
 use crate::grpc_autoreconnect_task::{GrpcConnectionTimeouts, GrpcSourceConfig};
@@ -69,20 +66,6 @@ impl SourceTrait for YellowstoneGrpcAutoconnectSource {
                 tx, shutdown_token.clone());
             tasks_set.spawn(connect_task);
 
-            // let (_sub_tx, stream) = client
-            //     .subscribe_with_request(Some(subscribe_request))
-            //     .await?;
-
-            // tasks_set.spawn(async move {
-            //     let mut stream = std::pin::pin!(stream);
-            //
-            //     while let Some(update) = stream.next().await {
-            //         let res = tx.send(update).await;
-            //         if res.is_err() {
-            //             tracing::error!("Failed to send update to buffer");
-            //         }
-            //     }
-            // });
         }
 
         tasks_set.join_all().await;
