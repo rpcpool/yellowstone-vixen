@@ -1,6 +1,6 @@
 [package]
-name = "yellowstone-vixen-example-idl-decoder"
-description = "Example of generating decoder from IDL"
+name = "yellowstone-vixen-example-idl-parser"
+description = "Example of generating parser from IDL"
 publish = false
 edition.workspace = true
 license = "MIT"
