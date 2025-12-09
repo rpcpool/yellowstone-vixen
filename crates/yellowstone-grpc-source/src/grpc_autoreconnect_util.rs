@@ -91,6 +91,7 @@ pub async fn connect_with_timeout_with_buffers<E, T>(
     request_timeout: Option<Duration>,
     buffer_config: GeyserGrpcClientBufferConfig,
     compression: Option<CompressionEncoding>,
+    max_decoding_message_size: usize,
 ) -> GeyserGrpcBuilderResult<GeyserGrpcClient<impl Interceptor>>
 where
     E: Into<Bytes>,
@@ -130,7 +131,7 @@ where
     let health_client = HealthClient::with_interceptor(channel.clone(), interceptor.clone());
 
     let geyser_client = GeyserClient::with_interceptor(channel.clone(), interceptor.clone())
-        .max_decoding_message_size(usize::MAX);
+        .max_decoding_message_size(max_decoding_message_size);
     let geyser_client = if let Some(compression_encoding) = compression {
         geyser_client.accept_compressed(compression_encoding)
     } else {

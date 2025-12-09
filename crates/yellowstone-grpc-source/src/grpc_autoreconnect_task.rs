@@ -15,7 +15,7 @@ use tokio::sync::mpsc::{self};
 use tokio::task::JoinHandle;
 use tokio::time::{sleep, timeout, Instant};
 use tokio_util::sync::CancellationToken;
-use yellowstone_grpc_client::{GeyserGrpcBuilderError, GeyserGrpcClient, GeyserGrpcClientError};
+use yellowstone_grpc_client::{GeyserGrpcBuilderError, GeyserGrpcBuilderResult, GeyserGrpcClient, GeyserGrpcClientError};
 use yellowstone_grpc_proto::geyser::{SubscribeRequest, SubscribeUpdate};
 use yellowstone_grpc_proto::tonic::codec::CompressionEncoding;
 use yellowstone_grpc_proto::tonic::service::Interceptor;
@@ -52,6 +52,7 @@ pub struct GrpcSourceConfig {
     pub grpc_addr: String,
     pub grpc_x_token: Option<String>,
     pub tls_config: Option<ClientTlsConfig>,
+    pub max_decoding_message_size: usize,
     pub timeouts: Option<GrpcConnectionTimeouts>,
     pub compression: Option<CompressionEncoding>,
 }
@@ -80,47 +81,6 @@ impl Display for GrpcSourceConfig {
 impl Debug for GrpcSourceConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(&self, f)
-    }
-}
-
-impl GrpcSourceConfig {
-    pub fn new(
-        grpc_addr: String,
-        grpc_x_token: Option<String>,
-        tls_config: Option<ClientTlsConfig>,
-        timeouts: GrpcConnectionTimeouts,
-        compression: Option<CompressionEncoding>,
-    ) -> Self {
-        Self {
-            grpc_addr,
-            grpc_x_token,
-            tls_config,
-            timeouts: Some(timeouts),
-            compression,
-        }
-    }
-    pub fn new_simple(grpc_addr: String) -> Self {
-        Self {
-            grpc_addr,
-            grpc_x_token: None,
-            tls_config: None,
-            timeouts: None,
-            compression: None,
-        }
-    }
-    pub fn new_compressed(
-        grpc_addr: String,
-        grpc_x_token: Option<String>,
-        tls_config: Option<ClientTlsConfig>,
-        timeouts: GrpcConnectionTimeouts,
-    ) -> Self {
-        Self {
-            grpc_addr,
-            grpc_x_token,
-            tls_config,
-            timeouts: Some(timeouts),
-            compression: Some(CompressionEncoding::Zstd),
-        }
     }
 }
 
@@ -154,7 +114,7 @@ pub fn create_geyser_autoconnection_task_with_mpsc(
     grpc_source: GrpcSourceConfig,
     source_tag: SourceTag,
     subscribe_filter: SubscribeRequest,
-    mpsc_downstream: mpsc::Sender<(SourceTag, Message)>,
+    mpsc_downstream: mpsc::Sender<Result<SubscribeUpdate, Status>>,
     shutdown_token: CancellationToken,
 ) -> JoinHandle<()> {
     create_geyser_autoconnection_task_with_updater(
@@ -176,7 +136,7 @@ pub fn create_geyser_autoconnection_task_with_updater(
     grpc_source: GrpcSourceConfig,
     source_tag: SourceTag,
     subscribe_filter: SubscribeRequest,
-    mpsc_downstream: mpsc::Sender<(SourceTag, Message)>,
+    mpsc_downstream: mpsc::Sender<Result<SubscribeUpdate, Status>>,
     shutdown_token: CancellationToken,
     mut subscribe_filter_update_rx: Option<mpsc::Receiver<SubscribeRequest>>,
 ) -> JoinHandle<()> {
@@ -201,6 +161,7 @@ pub fn create_geyser_autoconnection_task_with_updater(
                     let connect_timeout = grpc_source.timeouts.as_ref().map(|t| t.connect_timeout);
                     let request_timeout = grpc_source.timeouts.as_ref().map(|t| t.request_timeout);
                     let compression = grpc_source.compression;
+                    let max_decoding_message_size = grpc_source.max_decoding_message_size;
                     if attempt > 1 {
                         warn!("Connecting attempt {} to {}",
                             attempt,
@@ -225,7 +186,7 @@ pub fn create_geyser_autoconnection_task_with_updater(
                         }
                         Err(GeyserGrpcBuilderError::TonicError(tonic_error)) => {
                             warn!(
-                                "connect failed on {} - aborting: {:?}",
+                                "connect failed on {} with tonic error - aborting: {:?}",
                                 grpc_source, tonic_error
                             );
                             ConnectionState::FatalError(attempt + 1, FatalErrorReason::NetworkError)
@@ -241,6 +202,7 @@ pub fn create_geyser_autoconnection_task_with_updater(
                         buffer_config,
                         // zstd vs None reduces bandwitdh usage from 70MB/s to 17MB/s
                         compression,
+                        max_decoding_message_size,
                     );
 
                     match await_or_exit(fut_connector, shutdown_token.clone()).await {
@@ -406,7 +368,7 @@ pub fn create_geyser_autoconnection_task_with_updater(
                                         let started_at = Instant::now();
 
                                         let fut_send = mpsc_downstream.send_timeout(
-                                            (source_tag, Message::GeyserSubscribeUpdate(Box::new(update_message))),
+                                            Ok(update_message),
                                             warning_threshold,
                                         );
 
