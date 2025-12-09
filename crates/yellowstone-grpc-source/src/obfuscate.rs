@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use url::Url;
 
 /// obfuscate urls with api token like http://mango.rpcpool.com/a991fba00fagbad
-pub fn url_obfuscate_api_token(url: &str) -> Cow<str> {
+pub fn url_obfuscate_api_token(url: &str) -> Cow<'_, str> {
     if let Ok(mut parsed) = Url::parse(url) {
         if parsed.path() == "/" {
             Cow::Borrowed(url)

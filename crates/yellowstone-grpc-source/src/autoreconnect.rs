@@ -43,17 +43,6 @@ impl SourceTrait for YellowstoneGrpcAutoconnectSource {
 
             let tx = tx.clone();
 
-            let tls_config = ClientTlsConfig::new().with_native_roots();
-            // let mut client = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
-            //     .x_token(config.x_token.clone())?
-            //     .max_decoding_message_size(config.max_decoding_message_size.unwrap_or(usize::MAX))
-            //     .accept_compressed(config.accept_compression.unwrap_or_default().into())
-            //     .connect_timeout(timeout)
-            //     .timeout(timeout)
-            //     .tls_config(tls_config)?
-            //     .connect()
-            //     .await?;
-
             let mut subscribe_request: SubscribeRequest = filter.into();
             if let Some(from_slot) = config.from_slot {
                 subscribe_request.from_slot = Some(from_slot);
@@ -62,11 +51,10 @@ impl SourceTrait for YellowstoneGrpcAutoconnectSource {
                 subscribe_request.commitment = Some(commitment_level as i32);
             }
 
-            let timeout = Duration::from_secs(config.timeout);
             let grpc_source = GrpcSourceConfig {
                 grpc_addr: config.endpoint.clone(),
                 grpc_x_token: config.x_token.clone(),
-                tls_config: Some(tls_config),
+                tls_config: Some(ClientTlsConfig::new().with_native_roots()),
                 max_decoding_message_size: config.max_decoding_message_size.unwrap_or(usize::MAX),
                 timeouts: Some(GrpcConnectionTimeouts {
                     connect_timeout: timeout,
