@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::grpc_autoreconnect_util::{buffer_config_from_env, connect_with_timeout_with_buffers};
+use crate::grpc_autoreconnect_util::{connect_with_timeout_with_buffers, GeyserGrpcClientBufferConfig};
 use crate::obfuscate::url_obfuscate_api_token;
 use futures::{Sink, SinkExt, Stream, StreamExt};
 use tracing::{debug, error, info, trace, warn, Level};
@@ -166,9 +166,8 @@ pub fn create_geyser_autoconnection_task_with_updater(
                             addr);
                     }
 
-                    // let buffer_config = yellowstone_grpc_util::GeyserGrpcClientBufferConfig::optimize_for_subscription(&subscribe_filter);
-                    let buffer_config = buffer_config_from_env();
-                    debug!("Using Grpc Buffer config {:?}", buffer_config);
+                    let buffer_config = GeyserGrpcClientBufferConfig::default();
+                    trace!("Using Grpc Buffer config {:?}", buffer_config);
 
                     let connection_handler = |connect_result| match connect_result {
                         Ok(client) => ConnectionState::Connecting(attempt, client),

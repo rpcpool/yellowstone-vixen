@@ -53,36 +53,6 @@ impl GeyserGrpcClientBufferConfig {
     }
 }
 
-pub fn buffer_config_from_env() -> GeyserGrpcClientBufferConfig {
-    if env::var("BUFFER_SIZE").is_err()
-        || env::var("CONN_WINDOW").is_err()
-        || env::var("STREAM_WINDOW").is_err()
-    {
-        warn!("BUFFER_SIZE, CONN_WINDOW, STREAM_WINDOW not set; using default buffer config");
-        return GeyserGrpcClientBufferConfig::default();
-    }
-
-    let buffer_size = env::var("BUFFER_SIZE")
-        .expect("buffer_size")
-        .parse::<usize>()
-        .expect("integer(bytes)");
-    let conn_window = env::var("CONN_WINDOW")
-        .expect("conn_window")
-        .parse::<u32>()
-        .expect("integer(bytes)");
-    let stream_window = env::var("STREAM_WINDOW")
-        .expect("stream_window")
-        .parse::<u32>()
-        .expect("integer(bytes)");
-
-    // conn_window should be larger than stream_window
-    GeyserGrpcClientBufferConfig {
-        buffer_size: Some(buffer_size),
-        conn_window: Some(conn_window),
-        stream_window: Some(stream_window),
-    }
-}
-
 pub async fn connect_with_timeout_with_buffers<E, T>(
     endpoint: E,
     x_token: Option<T>,
