@@ -12,6 +12,10 @@ use yellowstone_grpc_proto::{
 use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 
+mod grpc_autoreconnect_util;
+mod grpc_autoreconnect_task;
+mod obfuscate;
+
 #[derive(Default, Copy, Debug, serde::Deserialize, Clone, ValueEnum)]
 #[serde(rename_all = "kebab-case")]
 pub enum VixenCompressionEncoding {
