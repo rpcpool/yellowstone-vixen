@@ -24,9 +24,6 @@ use yellowstone_grpc_proto::tonic::Status;
 
 pub type AtomicSlot = Arc<AtomicU64>;
 
-// 1-based source index
-pub type SourceTag = u32;
-
 // 1-based attempt counter
 type Attempt = u32;
 
@@ -112,14 +109,12 @@ enum FatalErrorReason {
 // compat
 pub fn create_geyser_autoconnection_task_with_mpsc(
     grpc_source: GrpcSourceConfig,
-    source_tag: SourceTag,
     subscribe_filter: SubscribeRequest,
     mpsc_downstream: mpsc::Sender<Result<SubscribeUpdate, Status>>,
     shutdown_token: CancellationToken,
 ) -> JoinHandle<()> {
     create_geyser_autoconnection_task_with_updater(
         grpc_source,
-        source_tag,
         subscribe_filter,
         mpsc_downstream,
         shutdown_token,
@@ -134,7 +129,6 @@ pub fn create_geyser_autoconnection_task_with_mpsc(
 /// read this for argument: http://www.randomhacks.net/2019/03/08/should-rust-channels-panic-on-send/
 pub fn create_geyser_autoconnection_task_with_updater(
     grpc_source: GrpcSourceConfig,
-    source_tag: SourceTag,
     subscribe_filter: SubscribeRequest,
     mpsc_downstream: mpsc::Sender<Result<SubscribeUpdate, Status>>,
     shutdown_token: CancellationToken,

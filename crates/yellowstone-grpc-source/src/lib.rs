@@ -12,7 +12,7 @@ use yellowstone_grpc_proto::{
 };
 use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
 use yellowstone_vixen_core::Filters;
-use crate::grpc_autoreconnect_task::{GrpcConnectionTimeouts, GrpcSourceConfig, SourceTag};
+use crate::grpc_autoreconnect_task::{GrpcConnectionTimeouts, GrpcSourceConfig};
 
 mod grpc_autoreconnect_util;
 mod grpc_autoreconnect_task;
@@ -123,9 +123,8 @@ impl SourceTrait for YellowstoneGrpcSource {
                 }),
                 compression: Some(config.accept_compression.unwrap_or_default().into()),
             };
-            // TOOD remove sourcetag
             let connect_task = grpc_autoreconnect_task::create_geyser_autoconnection_task_with_mpsc(
-                grpc_source, 1 as SourceTag, subscribe_request,
+                grpc_source, subscribe_request,
                 tx, shutdown_token.clone());
             tasks_set.spawn(connect_task);
 
