@@ -1,10 +1,7 @@
 #![allow(dead_code)]
 
-use tracing::warn;
-use std::env;
 use std::time::Duration;
 use tonic_health::pb::health_client::HealthClient;
-// use tonic_health::pb::health_client::HealthClient;
 use yellowstone_grpc_client::{GeyserGrpcBuilderResult, GeyserGrpcClient, InterceptorXToken};
 use yellowstone_grpc_proto::geyser::geyser_client::GeyserClient;
 use yellowstone_grpc_proto::geyser::{CommitmentLevel, SubscribeRequest};

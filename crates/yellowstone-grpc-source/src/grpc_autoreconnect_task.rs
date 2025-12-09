@@ -464,7 +464,7 @@ async fn await_or_exit<F>(future: F, shutdown_token: CancellationToken) -> Maybe
 where
     F: Future,
 {
-    tokio::select! {
+    select! {
         res = future => {
             MaybeExit::Continue(res)
         },
