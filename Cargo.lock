@@ -14095,6 +14095,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "yellowstone-vixen-example-idl-decoder"
+version = "0.0.0"
+dependencies = [
+ "borsh 1.6.0",
+ "clap 4.5.53",
+ "rustls 0.23.35",
+ "toml 0.8.23",
+ "tracing",
+ "yellowstone-vixen",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
+ "yellowstone-vixen-yellowstone-grpc-source",
+]
+
+[[package]]
 name = "yellowstone-vixen-example-jetstreamer"
 version = "0.0.0"
 dependencies = [
