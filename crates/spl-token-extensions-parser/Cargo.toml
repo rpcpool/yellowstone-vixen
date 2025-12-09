@@ -12,7 +12,7 @@ readme = "./../../README.md"
 
 [dependencies]
 spl-pod = { workspace = true }
-spl-token-2022 = { workspace = true }
+spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
 spl-type-length-value = { workspace = true }
 spl-token-group-interface = { workspace = true }
 spl-token-metadata-interface = { workspace = true }
