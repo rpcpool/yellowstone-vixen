@@ -520,7 +520,16 @@ fn quoted_type_node(type_node: &codama_nodes::TypeNode) -> TokenStream {
             quote! { std::collections::HashSet<#ty> }
         },
         Bytes(_) => quote! { Vec<u8> },
-        FixedSize(node) => quoted_type_node(&node.r#type),
+        FixedSize(node) => {
+            let size = node.size;
+
+            match *node.r#type {
+                Bytes(_) | String(_) => quote! { [u8; #size] },
+                _ => {
+                    todo!("Implement fixed node size: {:?}", node)
+                },
+            }
+        },
         RemainderOption(_) | ZeroableOption(_) => quote! { Option<()> },
         Struct(struct_type) => {
             let fields = quoted_fields(&struct_type.fields);
