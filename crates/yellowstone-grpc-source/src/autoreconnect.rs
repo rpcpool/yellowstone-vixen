@@ -14,7 +14,7 @@ use crate::grpc_autoreconnect_task::{GrpcConnectionTimeouts, GrpcSourceConfig};
 
 /// A `Source` implementation for the Yellowstone gRPC API.
 #[derive(Debug)]
-pub struct YellowstoneGrpcAutoconnectSource {
+pub(crate) struct YellowstoneGrpcAutoconnectSource {
     filters: Filters,
     config: YellowstoneGrpcConfig,
 }

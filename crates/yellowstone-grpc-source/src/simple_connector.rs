@@ -1,27 +1,26 @@
 use std::{collections::HashMap, time::Duration};
 
 use async_trait::async_trait;
-use clap::ValueEnum;
 use futures_util::StreamExt;
 use tokio::{sync::mpsc::Sender, task::JoinSet};
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
-    tonic::{codec::CompressionEncoding, transport::ClientTlsConfig, Status},
+    tonic::{transport::ClientTlsConfig, Status},
 };
-use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
+use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::Filters;
 use crate::{YellowstoneGrpcConfig};
 
 /// A `Source` implementation for the Yellowstone gRPC API.
 #[derive(Debug)]
-pub struct YellowstoneGrpcSource {
+pub(crate) struct YellowstoneGrpcSimpleSource {
     filters: Filters,
     config: YellowstoneGrpcConfig,
 }
 
 #[async_trait]
-impl SourceTrait for YellowstoneGrpcSource {
+impl SourceTrait for YellowstoneGrpcSimpleSource {
     type Config = YellowstoneGrpcConfig;
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }

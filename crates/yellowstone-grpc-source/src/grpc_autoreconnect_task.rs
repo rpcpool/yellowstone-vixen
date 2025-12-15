@@ -15,7 +15,7 @@ use tokio::sync::mpsc::{self};
 use tokio::task::JoinHandle;
 use tokio::time::{sleep, timeout, Instant};
 use tokio_util::sync::CancellationToken;
-use yellowstone_grpc_client::{GeyserGrpcBuilderError, GeyserGrpcBuilderResult, GeyserGrpcClient, GeyserGrpcClientError};
+use yellowstone_grpc_client::{GeyserGrpcBuilderError, GeyserGrpcClient, GeyserGrpcClientError};
 use yellowstone_grpc_proto::geyser::{SubscribeRequest, SubscribeUpdate};
 use yellowstone_grpc_proto::tonic::codec::CompressionEncoding;
 use yellowstone_grpc_proto::tonic::service::Interceptor;
