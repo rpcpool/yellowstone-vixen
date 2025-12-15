@@ -9,8 +9,9 @@ use yellowstone_grpc_proto::{
 };
 use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
 use yellowstone_vixen_core::Filters;
-use crate::{grpc_autoreconnect_task, YellowstoneGrpcConfig};
-use crate::grpc_autoreconnect_task::{GrpcConnectionTimeouts, GrpcSourceConfig};
+use crate::autoreconnect::grpc_autoreconnect_task;
+use crate::autoreconnect::grpc_autoreconnect_task::{GrpcConnectionTimeouts, GrpcSourceConfig};
+use crate::YellowstoneGrpcConfig;
 
 /// A `Source` implementation for the Yellowstone gRPC API.
 #[derive(Debug)]

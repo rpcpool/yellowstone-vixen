@@ -1,9 +1,7 @@
 #![allow(dead_code)]
 
-use crate::grpc_autoreconnect_util::{connect_with_timeout_with_buffers, GeyserGrpcClientBufferConfig};
-use crate::obfuscate::url_obfuscate_api_token;
 use futures::{Sink, SinkExt, Stream, StreamExt};
-use tracing::{debug, error, info, trace, warn, Level};
+use tracing::{debug, error, info, trace, warn};
 use std::fmt::{Debug, Display};
 use std::future::Future;
 use std::sync::atomic::AtomicU64;
@@ -21,6 +19,8 @@ use yellowstone_grpc_proto::tonic::codec::CompressionEncoding;
 use yellowstone_grpc_proto::tonic::service::Interceptor;
 use yellowstone_grpc_proto::tonic::transport::ClientTlsConfig;
 use yellowstone_grpc_proto::tonic::Status;
+use crate::autoreconnect::grpc_autoreconnect_util::{connect_with_timeout_with_buffers, GeyserGrpcClientBufferConfig};
+use crate::autoreconnect::obfuscate::url_obfuscate_api_token;
 
 pub type AtomicSlot = Arc<AtomicU64>;
 

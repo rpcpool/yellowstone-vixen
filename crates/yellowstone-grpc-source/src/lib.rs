@@ -1,8 +1,5 @@
-mod grpc_autoreconnect_util;
-mod grpc_autoreconnect_task;
-mod obfuscate;
-mod simple_connector;
 mod autoreconnect;
+mod simple;
 
 use async_trait::async_trait;
 
@@ -11,9 +8,11 @@ use tokio::sync::mpsc::Sender;
 use yellowstone_grpc_proto::geyser::SubscribeUpdate;
 use yellowstone_grpc_proto::tonic::codec::CompressionEncoding;
 use yellowstone_grpc_proto::tonic::Status;
+use simple::simple_connector;
 use yellowstone_vixen::Error;
 use yellowstone_vixen::sources::SourceTrait;
 use yellowstone_vixen_core::{CommitmentLevel, Filters};
+use crate::autoreconnect::grpc_autoreconnect;
 
 #[derive(Default, Copy, Debug, serde::Deserialize, Clone, ValueEnum)]
 #[serde(rename_all = "kebab-case")]
@@ -101,7 +100,7 @@ impl SourceTrait for YellowstoneGrpcSource {
                 simple_source.connect(tx).await
             }
             YellowstoneGrpcStrategy::Autoreconnect => {
-                let autoreconnect_source = autoreconnect::YellowstoneGrpcAutoconnectSource::new(
+                let autoreconnect_source = grpc_autoreconnect::YellowstoneGrpcAutoconnectSource::new(
                     self.config.clone(),
                     self.filters.clone(),
                 );
