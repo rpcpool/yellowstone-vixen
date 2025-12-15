@@ -12,7 +12,8 @@ readme = "./README.md"
 async-trait = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
 tokio-util = { workspace = true }
-tonic-health = "0.14.2"
+# align version with yellowstone-grpc-client -> cargo tree -i tonic-health
+tonic-health = "0.14"
 tracing = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
