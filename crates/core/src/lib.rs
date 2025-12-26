@@ -44,6 +44,8 @@ pub mod instruction;
 #[cfg(feature = "proto")]
 pub mod proto;
 
+pub mod parser_wrapper;
+
 type BoxedError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 /// An error returned by a Vixen parser
