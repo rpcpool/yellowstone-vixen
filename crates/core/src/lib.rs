@@ -934,10 +934,7 @@ mod tests {
         let mut b = b_orig.clone();
         b.merge(a_orig.clone());
 
-        assert_eq!(
-            a, b,
-            "merge(A, B) should equal merge(B, A) (commutativity)"
-        );
+        assert_eq!(a, b, "merge(A, B) should equal merge(B, A) (commutativity)");
     }
 
     #[test]
