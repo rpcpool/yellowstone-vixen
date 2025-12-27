@@ -296,9 +296,9 @@ impl BlockPrefilter {
         } = self;
 
         accounts_include.extend(other.accounts_include);
-        *include_accounts = other.include_accounts;
-        *include_transactions = other.include_transactions;
-        *include_entries = other.include_entries;
+        *include_accounts |= other.include_accounts;
+        *include_transactions |= other.include_transactions;
+        *include_entries |= other.include_entries;
     }
 }
 
@@ -872,5 +872,255 @@ impl From<Filters> for SubscribeRequest {
             ping: None,
             from_slot: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn block_prefilter(
+        include_accounts: bool,
+        include_transactions: bool,
+        include_entries: bool,
+    ) -> BlockPrefilter {
+        BlockPrefilter {
+            accounts_include: HashSet::new(),
+            include_accounts,
+            include_transactions,
+            include_entries,
+        }
+    }
+
+    #[test]
+    fn test_block_prefilter_merge_basic_union() {
+        let mut a = block_prefilter(true, false, false);
+        let b = block_prefilter(false, true, false);
+
+        a.merge(b);
+
+        assert!(
+            a.include_accounts,
+            "BUG: include_accounts was true, should remain true after merge with false"
+        );
+        assert!(
+            a.include_transactions,
+            "include_transactions should be true after merge"
+        );
+        assert!(
+            !a.include_entries,
+            "include_entries should remain false (neither requested)"
+        );
+    }
+
+    #[test]
+    fn test_block_prefilter_merge_idempotence() {
+        let original = block_prefilter(true, false, true);
+        let mut a = original.clone();
+        let b = original.clone();
+
+        a.merge(b);
+
+        assert_eq!(a, original, "merge(A, A) should equal A (idempotence)");
+    }
+
+    #[test]
+    fn test_block_prefilter_merge_commutativity() {
+        let a_orig = block_prefilter(true, false, true);
+        let b_orig = block_prefilter(false, true, false);
+
+        let mut a = a_orig.clone();
+        a.merge(b_orig.clone());
+
+        let mut b = b_orig.clone();
+        b.merge(a_orig.clone());
+
+        assert_eq!(a, b, "merge(A, B) should equal merge(B, A) (commutativity)");
+    }
+
+    #[test]
+    fn test_block_prefilter_merge_associativity() {
+        let a_orig = block_prefilter(true, false, false);
+        let b_orig = block_prefilter(false, true, false);
+        let c_orig = block_prefilter(false, false, true);
+
+        let mut ab = a_orig.clone();
+        ab.merge(b_orig.clone());
+        let mut abc_left = ab;
+        abc_left.merge(c_orig.clone());
+
+        let mut bc = b_orig.clone();
+        bc.merge(c_orig.clone());
+        let mut abc_right = a_orig.clone();
+        abc_right.merge(bc);
+
+        assert_eq!(
+            abc_left, abc_right,
+            "merge(merge(A, B), C) should equal merge(A, merge(B, C)) (associativity)"
+        );
+    }
+
+    #[test]
+    fn test_block_prefilter_merge_identity() {
+        let original = block_prefilter(true, true, false);
+        let mut a = original.clone();
+        let default = BlockPrefilter::default();
+
+        a.merge(default);
+
+        assert_eq!(
+            a, original,
+            "merge(A, default) should equal A (identity element)"
+        );
+    }
+
+    #[test]
+    fn test_block_prefilter_merge_monotonicity() {
+        let mut a = block_prefilter(true, true, true);
+        let b = block_prefilter(false, false, false);
+
+        a.merge(b);
+
+        assert!(
+            a.include_accounts,
+            "BUG: include_accounts was true, must remain true after merge"
+        );
+        assert!(
+            a.include_transactions,
+            "BUG: include_transactions was true, must remain true after merge"
+        );
+        assert!(
+            a.include_entries,
+            "BUG: include_entries was true, must remain true after merge"
+        );
+    }
+
+    #[test]
+    fn test_block_prefilter_merge_truth_table() {
+        for lhs in [false, true] {
+            for rhs in [false, true] {
+                let expected = lhs || rhs;
+
+                {
+                    let mut a = block_prefilter(lhs, false, false);
+                    let b = block_prefilter(rhs, false, false);
+                    a.merge(b);
+                    assert_eq!(
+                        a.include_accounts, expected,
+                        "include_accounts: {lhs} OR {rhs} should be {expected}"
+                    );
+                }
+
+                {
+                    let mut a = block_prefilter(false, lhs, false);
+                    let b = block_prefilter(false, rhs, false);
+                    a.merge(b);
+                    assert_eq!(
+                        a.include_transactions, expected,
+                        "include_transactions: {lhs} OR {rhs} should be {expected}"
+                    );
+                }
+
+                {
+                    let mut a = block_prefilter(false, false, lhs);
+                    let b = block_prefilter(false, false, rhs);
+                    a.merge(b);
+                    assert_eq!(
+                        a.include_entries, expected,
+                        "include_entries: {lhs} OR {rhs} should be {expected}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_block_prefilter_merge_hashset_union() {
+        let key1: Pubkey = [1u8; 32].into();
+        let key2: Pubkey = [2u8; 32].into();
+
+        let mut a = BlockPrefilter {
+            accounts_include: [key1].into_iter().collect(),
+            include_accounts: false,
+            include_transactions: false,
+            include_entries: false,
+        };
+
+        let b = BlockPrefilter {
+            accounts_include: [key2].into_iter().collect(),
+            include_accounts: false,
+            include_transactions: false,
+            include_entries: false,
+        };
+
+        a.merge(b);
+
+        assert!(
+            a.accounts_include.contains(&key1),
+            "key1 should be in merged set"
+        );
+        assert!(
+            a.accounts_include.contains(&key2),
+            "key2 should be in merged set"
+        );
+        assert_eq!(a.accounts_include.len(), 2, "merged set should have 2 keys");
+    }
+
+    #[test]
+    fn test_prefilter_merge_block_or_semantics() {
+        let mut p1 = Prefilter {
+            block: Some(block_prefilter(true, false, false)),
+            ..Default::default()
+        };
+
+        let p2 = Prefilter {
+            block: Some(block_prefilter(false, true, false)),
+            ..Default::default()
+        };
+
+        p1.merge(p2);
+
+        let block = p1.block.expect("block prefilter should exist after merge");
+        assert!(
+            block.include_accounts,
+            "Prefilter merge: include_accounts should be true"
+        );
+        assert!(
+            block.include_transactions,
+            "Prefilter merge: include_transactions should be true"
+        );
+    }
+
+    #[test]
+    fn test_prefilter_from_iterator_block_or_semantics() {
+        let p1 = Prefilter {
+            block: Some(block_prefilter(true, false, false)),
+            ..Default::default()
+        };
+        let p2 = Prefilter {
+            block: Some(block_prefilter(false, true, false)),
+            ..Default::default()
+        };
+        let p3 = Prefilter {
+            block: Some(block_prefilter(false, false, true)),
+            ..Default::default()
+        };
+
+        let combined: Prefilter = [p1, p2, p3].into_iter().collect();
+
+        let block = combined
+            .block
+            .expect("block prefilter should exist after collect");
+        assert!(
+            block.include_accounts,
+            "FromIterator: include_accounts should be true"
+        );
+        assert!(
+            block.include_transactions,
+            "FromIterator: include_transactions should be true"
+        );
+        assert!(
+            block.include_entries,
+            "FromIterator: include_entries should be true"
+        );
     }
 }
