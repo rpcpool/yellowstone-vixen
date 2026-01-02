@@ -2,11 +2,11 @@ use std::{collections::HashMap, time::Duration};
 
 use async_trait::async_trait;
 use clap::ValueEnum;
-use futures_util::StreamExt;
-use tokio::{sync::mpsc::Sender, task::JoinSet};
+use futures_util::{SinkExt, StreamExt};
+use tokio::{sync::mpsc::Sender, task::JoinSet, time::interval};
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
-    geyser::{SubscribeRequest, SubscribeUpdate},
+    geyser::{SubscribeRequest, SubscribeRequestPing, SubscribeUpdate},
     tonic::{codec::CompressionEncoding, transport::ClientTlsConfig, Status},
 };
 use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
@@ -100,10 +100,11 @@ impl SourceTrait for YellowstoneGrpcSource {
                 subscribe_request.commitment = Some(commitment_level as i32);
             }
 
-            let (_sub_tx, stream) = client
+            let (mut sub_tx, stream) = client
                 .subscribe_with_request(Some(subscribe_request))
                 .await?;
 
+            // Spawn a task to receive updates
             tasks_set.spawn(async move {
                 let mut stream = std::pin::pin!(stream);
 
@@ -111,6 +112,27 @@ impl SourceTrait for YellowstoneGrpcSource {
                     let res = tx.send(update).await;
                     if res.is_err() {
                         tracing::error!("Failed to send update to buffer");
+                    }
+                }
+            });
+
+            // Spawn a task to send periodic pings every 10 seconds
+            tasks_set.spawn(async move {
+                let mut ping_timer = interval(Duration::from_secs(10));
+                let mut ping_id = 0i32;
+
+                loop {
+                    ping_timer.tick().await;
+                    ping_id = ping_id.wrapping_add(1);
+
+                    let ping_request = SubscribeRequest {
+                        ping: Some(SubscribeRequestPing { id: ping_id }),
+                        ..Default::default()
+                    };
+
+                    if let Err(e) = sub_tx.send(ping_request).await {
+                        tracing::warn!("Failed to send ping to server: {}", e);
+                        break;
                     }
                 }
             });
