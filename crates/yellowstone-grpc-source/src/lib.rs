@@ -1,12 +1,18 @@
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 use clap::ValueEnum;
 use futures_util::{SinkExt, StreamExt};
-use tokio::{sync::mpsc::Sender, task::JoinSet, time::interval};
+use tokio::{
+    sync::{mpsc::Sender, Mutex},
+    task::JoinSet,
+    time::interval,
+};
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
-    geyser::{SubscribeRequest, SubscribeRequestPing, SubscribeUpdate},
+    geyser::{
+        subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestPing, SubscribeUpdate,
+    },
     tonic::{codec::CompressionEncoding, transport::ClientTlsConfig, Status},
 };
 use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
@@ -100,18 +106,38 @@ impl SourceTrait for YellowstoneGrpcSource {
                 subscribe_request.commitment = Some(commitment_level as i32);
             }
 
-            let (mut sub_tx, stream) = client
+            let (sub_tx, stream) = client
                 .subscribe_with_request(Some(subscribe_request))
                 .await?;
 
-            // Spawn a task to receive updates
+            // Wrap the subscription sender in Arc<Mutex<>> to share between tasks
+            let sub_tx = Arc::new(Mutex::new(sub_tx));
+            let ping_sub_tx = Arc::clone(&sub_tx);
+
+            // Spawn a task to receive updates and respond to server pings
             tasks_set.spawn(async move {
                 let mut stream = std::pin::pin!(stream);
 
-                while let Some(update) = stream.next().await {
-                    let res = tx.send(update).await;
+                while let Some(update_result) = stream.next().await {
+                    // Handle server pings by responding with a ping
+                    if let Ok(update) = &update_result
+                        && let Some(UpdateOneof::Ping(_)) = update.update_oneof {
+                            tracing::debug!("Received ping from server, responding...");
+                            let ping_response = SubscribeRequest {
+                                ping: Some(SubscribeRequestPing { id: 1 }),
+                                ..Default::default()
+                            };
+                            if let Err(e) = sub_tx.lock().await.send(ping_response).await {
+                                tracing::warn!("Failed to send ping response to server: {}", e);
+                                break;
+                            }
+                        }
+
+                    // Forward all updates to the buffer
+                    let res = tx.send(update_result).await;
                     if res.is_err() {
                         tracing::error!("Failed to send update to buffer");
+                        break;
                     }
                 }
             });
@@ -130,7 +156,7 @@ impl SourceTrait for YellowstoneGrpcSource {
                         ..Default::default()
                     };
 
-                    if let Err(e) = sub_tx.send(ping_request).await {
+                    if let Err(e) = ping_sub_tx.lock().await.send(ping_request).await {
                         tracing::warn!("Failed to send ping to server: {}", e);
                         break;
                     }

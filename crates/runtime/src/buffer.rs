@@ -7,7 +7,9 @@ use topograph::{
 };
 use tracing::warn;
 use yellowstone_grpc_proto::{
-    geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdatePing},
+    geyser::{
+        subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdatePing, SubscribeUpdatePong,
+    },
     tonic::Status,
 };
 
@@ -143,6 +145,7 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
                     .await;
             },
             UpdateOneof::Ping(SubscribeUpdatePing {}) => (),
+            UpdateOneof::Pong(SubscribeUpdatePong { .. }) => (),
             var => warn!(?var, "Unknown update variant"),
         }
     }
