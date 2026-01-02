@@ -121,22 +121,23 @@ impl SourceTrait for YellowstoneGrpcSource {
                 while let Some(update_result) = stream.next().await {
                     // Handle server pings by responding with a ping
                     if let Ok(update) = &update_result
-                        && let Some(UpdateOneof::Ping(_)) = update.update_oneof {
-                            tracing::debug!("Received ping from server, responding...");
-                            let ping_response = SubscribeRequest {
-                                ping: Some(SubscribeRequestPing { id: 1 }),
-                                ..Default::default()
-                            };
-                            if let Err(e) = sub_tx.lock().await.send(ping_response).await {
-                                tracing::warn!("Failed to send ping response to server: {}", e);
-                                break;
-                            }
+                        && let Some(UpdateOneof::Ping(_)) = update.update_oneof
+                    {
+                        tracing::debug!("Received ping from server, responding...");
+                        let ping_response = SubscribeRequest {
+                            ping: Some(SubscribeRequestPing { id: 1 }),
+                            ..Default::default()
+                        };
+                        if let Err(e) = sub_tx.lock().await.send(ping_response).await {
+                            tracing::warn!("Failed to send ping response to server: {}", e);
+                            break;
                         }
+                    }
 
                     // Forward all updates to the buffer
-                    let res = tx.send(update_result).await;
-                    if res.is_err() {
-                        tracing::error!("Failed to send update to buffer");
+                    if let Err(_) = tx.send(update_result).await {
+                        // Channel closed, likely due to shutdown - exit gracefully
+                        tracing::debug!("Update channel closed, shutting down receiver task");
                         break;
                     }
                 }
