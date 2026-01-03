@@ -10,5 +10,29 @@
     ],
     "deny": [],
     "ask": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$FILE_PATH\" | grep -q '\\.rs$'; then cargo +nightly fmt --all && cargo clippy --fix --allow-dirty --allow-staged; fi",
+            "statusMessage": "Running cargo fmt and clippy..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$FILE_PATH\" | grep -q '\\.rs$'; then cargo +nightly fmt --all && cargo clippy --fix --allow-dirty --allow-staged; fi",
+            "statusMessage": "Running cargo fmt and clippy..."
+          }
+        ]
+      }
+    ]
   }
 }

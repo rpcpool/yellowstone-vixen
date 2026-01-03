@@ -81,7 +81,8 @@ mod pipeline_error {
                         let is_benign_parse_error = !is_swap_error
                             && (err_msg.contains("Invalid Instruction discriminator")
                                 || err_msg.contains("Instruction data too short")
-                                || err_msg.contains("Unexpected length of input"));
+                                || err_msg.contains("Unexpected length of input")
+                                || err_msg.contains("Invalid Account data length"));
 
                         if is_benign_parse_error {
                             // Log benign errors at debug level for troubleshooting
