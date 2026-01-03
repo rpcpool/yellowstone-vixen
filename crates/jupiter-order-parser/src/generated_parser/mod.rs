@@ -10,7 +10,7 @@ pub mod instructions_parser;
 /// Deserialize a Borsh-encoded account, checking that all significant bytes are read.
 pub fn deserialize_checked<T: borsh::BorshDeserialize>(
     data: &[u8],
-    discriminator: &[u8],
+    _discriminator: &[u8],
 ) -> Result<T, std::io::Error> {
     let mut data_bytes = data;
     let account = T::deserialize(&mut data_bytes)?;

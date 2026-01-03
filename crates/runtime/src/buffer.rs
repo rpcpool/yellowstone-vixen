@@ -144,8 +144,8 @@ impl<H: Send> topograph::AsyncHandler<Job, H> for Handler {
                     )
                     .await;
             },
-            UpdateOneof::Ping(SubscribeUpdatePing {}) => (),
-            UpdateOneof::Pong(SubscribeUpdatePong { .. }) => (),
+            UpdateOneof::Ping(SubscribeUpdatePing {})
+            | UpdateOneof::Pong(SubscribeUpdatePong { .. }) => (),
             var => warn!(?var, "Unknown update variant"),
         }
     }
