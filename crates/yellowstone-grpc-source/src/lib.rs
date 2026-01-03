@@ -73,7 +73,9 @@ pub struct YellowstoneGrpcSource {
 impl SourceTrait for YellowstoneGrpcSource {
     type Config = YellowstoneGrpcConfig;
 
-    fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
+    fn new(config: Self::Config, filters: Filters) -> Self {
+        Self { config, filters }
+    }
 
     async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
         let filters = self.filters.clone();
@@ -105,6 +107,13 @@ impl SourceTrait for YellowstoneGrpcSource {
             if let Some(commitment_level) = config.commitment_level {
                 subscribe_request.commitment = Some(commitment_level as i32);
             }
+
+            // Log the raw GRPC SubscribeRequest for debugging with 3rd party provider
+            tracing::debug!(
+                "=== GRPC SubscribeRequest to {} ===\n{:#?}\n=== END ===",
+                config.endpoint,
+                subscribe_request
+            );
 
             let (sub_tx, stream) = client
                 .subscribe_with_request(Some(subscribe_request))
