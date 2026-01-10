@@ -3,15 +3,14 @@ use std::{collections::BTreeMap, num::NonZero};
 use async_trait::async_trait;
 use bytesize::ByteSize;
 use clap::ValueEnum;
-use tokio::{sync::mpsc::Sender, task::JoinSet};
+use tokio::sync::mpsc::Sender;
 use yellowstone_fumarole_client::{
-    proto::{CreateConsumerGroupRequest, InitialOffsetPolicy},
-    DragonsmouthAdapterSession, FumaroleClient, FumaroleSubscribeConfig,
+    DragonsmouthAdapterSession, FumaroleClient, FumaroleSubscribeConfig, DEFAULT_PARA_DATA_STREAMS,
 };
 pub use yellowstone_grpc_proto::tonic::codec::CompressionEncoding;
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
-    tonic::{Code, Status},
+    tonic::Status,
 };
 use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
 use yellowstone_vixen_core::Filters;
@@ -49,15 +48,8 @@ pub struct FumaroleConfig {
     pub x_token: Option<String>,
     /// Name of the persistent subscriber to use
     pub subscriber_name: String,
-    /// Prometheus metrics configuration (only available with 'prometheus' feature)
-    #[cfg(feature = "prometheus")]
-    pub metrics_endpoint: String,
-    #[cfg(feature = "prometheus")]
-    pub metrics_job_name: String,
-    #[cfg(feature = "prometheus")]
-    pub metrics_interval: u64,
+    /// Slot commitment level
     pub commitment_level: Option<CommitmentLevel>,
-    pub from_slot: Option<u64>,
     /// max incoming decoded message size in bytes
     pub max_decoding_message_size: Option<usize>,
     /// accepted compression encoding
@@ -90,52 +82,17 @@ impl SourceTrait for YellowstoneFumaroleSource {
         let filters = self.filters.clone();
         let subscriber_name = self.config.subscriber_name.clone();
 
-        // TODO: add tasks pool concurrency limit through config
-        let mut tasks_set = JoinSet::new();
-
-        const MAX_PARA_DATA_STREAMS: u8 = 4; //Fumarole const
-
         let fumarole_subscribe_config = FumaroleSubscribeConfig {
-            num_data_plane_tcp_connections: NonZero::new(MAX_PARA_DATA_STREAMS).unwrap(),
+            num_data_plane_tcp_connections: NonZero::new(DEFAULT_PARA_DATA_STREAMS).unwrap(),
             ..Default::default()
-        };
-
-        let (initial_offset_policy, from_slot) = match self.config.from_slot {
-            Some(slot) => (InitialOffsetPolicy::FromSlot, Some(slot)),
-            None => (InitialOffsetPolicy::Latest, None),
         };
 
         let mut fumarole_client = FumaroleClient::connect(self.config.clone().into())
             .await
             .expect("failing to connect to fumarole");
 
-        let group_result = fumarole_client
-            .create_consumer_group(CreateConsumerGroupRequest {
-                consumer_group_name: subscriber_name.clone(),
-                initial_offset_policy: initial_offset_policy.into(),
-                // If the initial offset policy is "from-slot", this is the slot to start from.
-                // If not specified, the subscriber will start from the latest slot.
-                from_slot,
-            })
-            .await;
-
-        match group_result {
-            Ok(_) => (),
-            Err(status) => {
-                let code = status.code();
-                match code {
-                    Code::AlreadyExists => {
-                        tracing::warn!(
-                            "Fumarole consumer group: '{:?}' already existent",
-                            subscriber_name
-                        )
-                    },
-                    _ => panic!("Failed to create consumer group: {status:?}"),
-                }
-            },
-        }
-
         let mut subscribe_request = SubscribeRequest::from(filters);
+
         if let Some(commitment_level) = self.config.commitment_level {
             subscribe_request.commitment = Some(commitment_level as i32);
         }
@@ -152,19 +109,29 @@ impl SourceTrait for YellowstoneFumaroleSource {
         let DragonsmouthAdapterSession {
             sink: _,
             mut source,
-            fumarole_handle: _,
+            mut fumarole_handle,
         } = dragonsmouth_session;
 
-        tasks_set.spawn(async move {
-            while let Some(update) = source.recv().await {
-                let res = tx.send(update).await;
-                if res.is_err() {
-                    tracing::error!("Failed to send update to buffer");
+        loop {
+            tokio::select! {
+                result = &mut fumarole_handle => {
+                    tracing::info!("Fumarole handle closed: {:?}", result);
+                    break;
+                }
+                maybe_update = source.recv() => match maybe_update {
+                    Some(update) => {
+                        if tx.send(update).await.is_err() {
+                            tracing::error!("Failed to send update to buffer");
+                            break;
+                        }
+                    }
+                    None => {
+                        tracing::info!("Source returned None, exiting");
+                        break;
+                    }
                 }
             }
-        });
-
-        tasks_set.join_all().await;
+        }
 
         Ok(())
     }
