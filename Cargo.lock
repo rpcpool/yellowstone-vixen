@@ -14095,7 +14095,26 @@ dependencies = [
 ]
 
 [[package]]
-name = "yellowstone-vixen-example-idl-decoder"
+name = "yellowstone-vixen-example-fumarole"
+version = "0.0.0"
+dependencies = [
+ "borsh 1.6.0",
+ "clap 4.5.53",
+ "prometheus",
+ "prost 0.13.5",
+ "rustls 0.23.35",
+ "tokio",
+ "toml 0.8.23",
+ "tracing",
+ "yellowstone-vixen",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-spl-token-extensions-parser",
+ "yellowstone-vixen-spl-token-parser",
+ "yellowstone-vixen-yellowstone-fumarole-source",
+]
+
+[[package]]
+name = "yellowstone-vixen-example-idl-parser"
 version = "0.0.0"
 dependencies = [
  "borsh 1.6.0",
