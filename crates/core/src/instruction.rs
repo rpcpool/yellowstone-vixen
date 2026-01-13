@@ -1,7 +1,7 @@
 //! Helpers for parsing transaction updates into instructions.
 
 use std::{collections::VecDeque, sync::Arc};
-
+use std::fmt::{Debug, Pointer, Write};
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     prelude::MessageHeader,
@@ -98,7 +98,7 @@ pub struct InstructionShared {
 }
 
 /// A parsed instruction from a transaction update.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InstructionUpdate {
     /// The program ID of the instruction.
     pub program: Pubkey,
@@ -110,6 +110,9 @@ pub struct InstructionUpdate {
     pub shared: Arc<InstructionShared>,
     /// Inner instructions invoked by this instruction.
     pub inner: Vec<InstructionUpdate>,
+    /// The index of this instruction within the transaction.
+    /// always set after parsing.
+    pub ix_path: Option<IxPath>,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -121,6 +124,46 @@ pub struct AccountKeys {
     pub dynamic_rw: Vec<Vec<u8>>,
     /// Resolved readonly account keys.
     pub dynamic_ro: Vec<Vec<u8>>,
+}
+
+#[derive(Clone)]
+pub struct IxPath {
+    // 0-based indices representing the path to the instruction
+    path_idx: Vec<u32>,
+}
+
+impl IxPath {
+    /// Create a new empty instruction path.
+    pub fn new_one(idx: u32) -> Self {
+        let mut path_idx = Vec::with_capacity(4);
+        path_idx.push(idx);
+        Self { path_idx }
+    }
+
+    /// Push a new index onto the instruction path.
+    pub fn push_clone(&self, idx: u32) -> Self {
+        let mut path_idx = self.path_idx.clone();
+        path_idx.push(idx);
+        Self { path_idx }
+    }
+
+    /// Get the current instruction path as a slice.
+    pub fn as_slice(&self) -> &[u32] { &self.path_idx }
+
+    /// Get the length of the instruction path.
+    pub fn len(&self) -> usize { self.path_idx.len() }
+}
+
+impl Debug for IxPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // 1.7
+        let formatted = self.path_idx.iter()
+            .map(|i| (i + 1).to_string())
+            .collect::<Vec<_>>()
+            .join(".");
+
+        f.write_str(&formatted)
+    }
 }
 
 /// Errors that can occur when parsing an account key.
@@ -239,24 +282,40 @@ impl InstructionUpdate {
             .map(|i| Self::parse_one(Arc::clone(&shared), i))
             .collect::<Result<Vec<_>, _>>()?;
 
+        for (index_outer, outer_instr) in outer.iter_mut().enumerate() {
+            let outer_ix_path = IxPath::new_one(index_outer as u32);
+            outer_instr.ix_path = Some(outer_ix_path.clone());
+        }
+
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
+
+        for outer_instr in &outer {
+            outer_instr.visit_all().for_each(|i| {
+                debug_assert!(
+                    i.ix_path.is_some(),
+                    "All inner instructions must have ix_path assigned"
+                );
+            });
+        }
 
         Ok(outer)
     }
 
+    // called once per tx
     fn parse_inner(
         shared: &Arc<InstructionShared>,
         inner_instructions: Vec<InnerInstructions>,
         outer: &mut [Self],
     ) -> Result<(), ParseError> {
+
         for insn in inner_instructions {
             let InnerInstructions {
-                index,
+                index: index_outer,
                 instructions,
             } = insn;
 
-            let Some(outer) = index.try_into().ok().and_then(|i: usize| outer.get_mut(i)) else {
-                return Err(ParseError::InvalidInnerInstructionIndex(index));
+            let Some(outer) = index_outer.try_into().ok().and_then(|i: usize| outer.get_mut(i)) else {
+                return Err(ParseError::InvalidInnerInstructionIndex(index_outer));
             };
 
             let mut inner = instructions
@@ -268,12 +327,13 @@ impl InstructionUpdate {
                 while i > 0 {
                     let parent_idx = i - 1;
                     let Some(height) = inner[parent_idx].1 else {
+                        // stack_height missing for old data
                         continue;
                     };
                     while inner
                         .get(i)
                         .and_then(|&(_, h)| h)
-                        .is_some_and(|h| h > height)
+                        .is_some_and(|h| h > height )
                     {
                         let (child, _) = inner.remove(i);
                         inner[parent_idx].0.inner.push(child);
@@ -282,12 +342,39 @@ impl InstructionUpdate {
                 }
             }
 
-            let inner: Vec<_> = inner.into_iter().map(|(i, _)| i).collect();
+            // put inner instructions under outer instruction and nest deeper stack height suggests that
+            let mut inner: Vec<_> = inner.into_iter().map(|(i, _)| i).collect();
+
+            {
+                // depth-first traversal without recursion
+                let mut dq: VecDeque<(&mut InstructionUpdate, IxPath)> = VecDeque::new();
+
+                let outer_ix_path = IxPath::new_one(index_outer);
+
+                for (idx_inner, ins_inner) in inner.iter_mut().enumerate() {
+                    let path_inner = outer_ix_path.push_clone(idx_inner as u32);
+                    dq.push_back((ins_inner, path_inner));
+                }
+
+                loop {
+                    let Some((cur, cur_ix_path)) = dq.pop_front() else {
+                        break;
+                    };
+                    for (ix, inner) in cur.inner.iter_mut().enumerate().rev() {
+                        let nested = cur_ix_path.push_clone(ix as u32);
+                        dq.push_front((inner, nested));
+                    }
+                    cur.ix_path = Some(cur_ix_path);
+                }
+
+            }
+
             if outer.inner.is_empty() {
                 outer.inner = inner;
             } else {
                 outer.inner.extend(inner);
             }
+
         }
 
         Ok(())
@@ -334,6 +421,8 @@ impl InstructionUpdate {
             data,
             shared,
             inner: vec![],
+            // needs to be assigned later
+            ix_path: None,
         })
     }
 
