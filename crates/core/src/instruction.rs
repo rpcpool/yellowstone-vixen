@@ -110,9 +110,8 @@ pub struct InstructionUpdate {
     pub shared: Arc<InstructionShared>,
     /// Inner instructions invoked by this instruction.
     pub inner: Vec<InstructionUpdate>,
-    /// The index of this instruction within the transaction.
-    /// always set after parsing.
-    pub ix_index: Option<IxIndex>,
+    /// The path of this instruction within the transaction.
+    pub path: Option<IxIndex>,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -283,7 +282,7 @@ impl InstructionUpdate {
 
         for (index_outer, outer_ix) in outer.iter_mut().enumerate() {
             let outer_ix_path = IxIndex::new_single(index_outer as u32);
-            outer_ix.ix_index = Some(outer_ix_path.clone());
+            outer_ix.path = Some(outer_ix_path.clone());
         }
 
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
@@ -291,7 +290,7 @@ impl InstructionUpdate {
         for outer_ix in &outer {
             outer_ix.visit_all().for_each(|i| {
                 debug_assert!(
-                    i.ix_index.is_some(),
+                    i.path.is_some(),
                     "All inner instructions must have ix_path assigned"
                 );
             });
@@ -363,7 +362,7 @@ impl InstructionUpdate {
                         let nested = cur_ix_path.push_clone(ix as u32);
                         dq.push_front((inner, nested));
                     }
-                    cur.ix_index = Some(cur_ix_path);
+                    cur.path = Some(cur_ix_path);
                 }
 
             }
@@ -421,7 +420,7 @@ impl InstructionUpdate {
             shared,
             inner: vec![],
             // needs to be assigned later
-            ix_index: None,
+            path: None,
         })
     }
 
