@@ -281,15 +281,15 @@ impl InstructionUpdate {
             .map(|i| Self::parse_one(Arc::clone(&shared), i))
             .collect::<Result<Vec<_>, _>>()?;
 
-        for (index_outer, outer_instr) in outer.iter_mut().enumerate() {
+        for (index_outer, outer_ix) in outer.iter_mut().enumerate() {
             let outer_ix_path = IxIndex::new_single(index_outer as u32);
-            outer_instr.ix_index = Some(outer_ix_path.clone());
+            outer_ix.ix_index = Some(outer_ix_path.clone());
         }
 
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
 
-        for outer_instr in &outer {
-            outer_instr.visit_all().for_each(|i| {
+        for outer_ix in &outer {
+            outer_ix.visit_all().for_each(|i| {
                 debug_assert!(
                     i.ix_index.is_some(),
                     "All inner instructions must have ix_path assigned"
