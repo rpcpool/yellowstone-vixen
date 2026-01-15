@@ -303,20 +303,16 @@ impl InstructionUpdate {
             };
 
             let heights: Vec<Option<u32>> = instructions.iter().map(|ins| ins.stack_height.clone()).collect();
-            let newalgo = derive_paths_from_stackheights(&heights, index_outer);
+            let paths_at_index = derive_paths_from_stackheights(&heights, index_outer);
 
             let mut inner = instructions
                 .into_iter().enumerate()
-                .map(|(idx, i)| Self::parse_one_inner(Arc::clone(shared), i, newalgo[idx].clone()))
+                .map(|(idx, i)| Self::parse_one_inner(Arc::clone(shared), i, paths_at_index[idx].clone()))
                 .collect::<Result<Vec<_>, _>>()?;
 
 
             if let Some(mut i) = inner.len().checked_sub(1) {
                 while i > 0 {
-
-                    // assert!(inner[i].0.path.is_none(), "path must not be assigned yet");
-                    // inner[i].0.path = Some(newalgo[i].clone());
-
                     let parent_idx = i - 1;
                     let Some(height) = inner[parent_idx].1 else {
                         // stack_height missing for old data
@@ -332,42 +328,9 @@ impl InstructionUpdate {
                     }
                     i -= 1;
                 }
-                // inner[0].0.path = Some(newalgo[0].clone());
             }
 
-            // put inner instructions under outer instruction and nest deeper stack height suggests that
-            let mut inner: Vec<_> = inner.into_iter().map(|(i, _)| i).collect();
-
-            {
-                // depth-first traversal without recursion
-                let mut dq: VecDeque<(&mut InstructionUpdate, IxIndex)> = VecDeque::new();
-
-                let outer_ix_path = IxIndex::new_single(index_outer);
-
-                for (idx_inner, ins_inner) in inner.iter_mut().enumerate() {
-                    let path_inner = outer_ix_path.push_clone(idx_inner as u32);
-                    dq.push_back((ins_inner, path_inner));
-                }
-
-                loop {
-                    let Some((cur, cur_ix_path)) = dq.pop_front() else {
-                        break;
-                    };
-                    for (ix, inner) in cur.inner.iter_mut().enumerate().rev() {
-                        let nested = cur_ix_path.push_clone(ix as u32);
-                        dq.push_front((inner, nested));
-                    }
-                    // cur.path = Some(cur_ix_path);
-                    assert_eq!(cur.path, cur_ix_path);
-                }
-
-            }
-
-            let oldago_paths = print_tree(&inner);
-
-            assert_eq!(newalgo, oldago_paths, "Path derivation algorithms must match");
-
-
+            let inner: Vec<_> = inner.into_iter().map(|(i, _)| i).collect();
 
             if outer.inner.is_empty() {
                 outer.inner = inner;
