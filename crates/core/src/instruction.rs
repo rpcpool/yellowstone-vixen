@@ -447,9 +447,16 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
     stack.push(outer_index);
     stack.push(0);
     paths.push(IxIndex(stack.clone()));
-    for pos in 1..stack_heights.len() {
-        let sh_this = stack_heights[pos].unwrap();
-        let sh_parent = stack_heights[pos - 1].unwrap();
+    for (pos, ref sh_this) in stack_heights.iter().enumerate().skip(1) {
+        let (Some(sh_this), Some(sh_parent)) = (sh_this, stack_heights[pos - 1]) else {
+            // catch exceptional cases where stack height is missing
+            // assume same level
+            if let Some(top) = stack.last_mut() {
+                *top += 1;
+            }
+            paths.push(IxIndex(stack.clone()));
+            continue;
+        };
         match sh_this.cmp(&sh_parent) {
             std::cmp::Ordering::Greater => {
                 // descend in tree to child node
@@ -464,7 +471,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
             }
             std::cmp::Ordering::Less => {
                 // ascend in tree to parent node
-                stack.truncate(sh_this as usize);
+                stack.truncate(*sh_this as usize);
                 // stack is actually never empty here
                 if let Some(top) = stack.last_mut() {
                     *top += 1;
@@ -475,5 +482,6 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
         paths.push(IxIndex(stack.clone()));
     }
 
+    debug_assert_eq!(paths.len(), stack_heights.len(), "derived paths failed for {:?}", stack_heights);
     paths
 }
