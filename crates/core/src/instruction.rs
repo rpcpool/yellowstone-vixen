@@ -125,7 +125,7 @@ pub struct AccountKeys {
     pub dynamic_ro: Vec<Vec<u8>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 /// 0-based indices representing the path to the instruction
 // typically one or two elements long, but can be 3+ levels deep
 pub struct IxIndex(Vec<u32>);
@@ -321,8 +321,17 @@ impl InstructionUpdate {
                 .map(|i| Self::parse_one_inner(Arc::clone(shared), i))
                 .collect::<Result<Vec<_>, _>>()?;
 
+            let stackheights = inner.iter().map(|(a, b)| b.unwrap()).collect::<Vec<_>>();
+
+            let heights: Vec<Option<u32>> = inner.iter().map(|(a, b)| b.clone()).collect();
+            let newalgo = derive_paths_from_stackheights(&heights, index_outer);
+
             if let Some(mut i) = inner.len().checked_sub(1) {
                 while i > 0 {
+
+                    assert!(inner[i].0.path.is_none(), "path must not be assigned yet");
+                    inner[i].0.path = Some(newalgo[i].clone());
+
                     let parent_idx = i - 1;
                     let Some(height) = inner[parent_idx].1 else {
                         // stack_height missing for old data
@@ -338,6 +347,7 @@ impl InstructionUpdate {
                     }
                     i -= 1;
                 }
+                inner[0].0.path = Some(newalgo[0].clone());
             }
 
             // put inner instructions under outer instruction and nest deeper stack height suggests that
@@ -362,10 +372,17 @@ impl InstructionUpdate {
                         let nested = cur_ix_path.push_clone(ix as u32);
                         dq.push_front((inner, nested));
                     }
-                    cur.path = Some(cur_ix_path);
+                    // cur.path = Some(cur_ix_path);
+                    assert_eq!(cur.path, Some(cur_ix_path));
                 }
 
             }
+
+            let oldago_paths = print_tree(&inner);
+
+            assert_eq!(newalgo, oldago_paths, "Path derivation algorithms must match");
+
+
 
             if outer.inner.is_empty() {
                 outer.inner = inner;
@@ -467,3 +484,72 @@ impl<'a> Iterator for VisitAll<'a> {
         }
     }
 }
+
+
+fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u32) -> Vec<IxIndex> {
+    if stack_heights.is_empty() {
+        return Vec::new();
+    }
+
+    let mut paths: Vec<IxIndex> = Vec::with_capacity(stack_heights.len());
+
+    let mut stack: Vec<u32> = Vec::new();
+    stack.push(outer_index);
+    stack.push(0);
+    // println!("stack pos {} {:?}", 0, stack.iter().map(|v| v + 1).collect_vec());
+    paths.push(IxIndex(stack.clone()));
+    // let sh_base = stack_heights[0].unwrap(); // 2
+    for pos in 1..stack_heights.len() {
+        // pos is nested under pos - 1
+        let sh_this = stack_heights[pos].unwrap();
+        let sh_parent = stack_heights[pos - 1].unwrap();
+        // println!("sh this {} parent {}", sh_this, sh_parent);
+        match sh_this.cmp(&sh_parent) {
+            std::cmp::Ordering::Greater => {
+                // ascending
+                stack.push(0);
+            }
+            std::cmp::Ordering::Equal => {
+                // same level
+                // TODO must always exist
+                assert!(!stack.is_empty());
+                if let Some(top) = stack.last_mut() {
+                    *top += 1;
+                }
+            }
+            std::cmp::Ordering::Less => {
+                // descending
+                stack.truncate(sh_this as usize);
+                // TODO must always exist
+                assert!(!stack.is_empty());
+                if let Some(top) = stack.last_mut() {
+                    *top += 1;
+                }
+            }
+        }
+
+        // println!("stack pos {} {:?}", pos, stack.iter().map(|v| v + 1).collect_vec());
+        paths.push(IxIndex(stack.clone()));
+    }
+
+    paths
+}
+
+
+fn print_tree(insns: &[InstructionUpdate]) -> Vec<IxIndex> {
+    fn visit_children(ix: &InstructionUpdate, out: &mut Vec<IxIndex>) {
+        // println!("P {:?}", ix.path.as_ref().unwrap());
+        out.push(ix.path.as_ref().unwrap().clone());
+        for child in ix.inner.iter() {
+            visit_children(child,out);
+        }
+    }
+
+    let mut out: Vec<IxIndex> = Vec::new();
+    for ix in insns.iter() {
+        visit_children(&ix, &mut out);
+    }
+
+    out
+}
+
