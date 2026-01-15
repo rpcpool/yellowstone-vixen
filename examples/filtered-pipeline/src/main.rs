@@ -31,8 +31,7 @@ pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger {
     async fn handle(&self, value: &V, input: &InstructionUpdate) -> vixen::HandlerResult<()> {
-        // println!("{value:?}");
-        println!("input: {:?}", input.path);
+        println!("ix {:?} - {value:?}", input.path);
         Ok(())
     }
 }
