@@ -111,7 +111,7 @@ pub struct InstructionUpdate {
     /// Inner instructions invoked by this instruction.
     pub inner: Vec<InstructionUpdate>,
     /// The path of this instruction within the transaction.
-    pub path: Option<IxIndex>,
+    pub path: IxIndex,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -276,25 +276,11 @@ impl InstructionUpdate {
         });
 
         let mut outer = instructions
-            .into_iter()
-            .map(|i| Self::parse_one(Arc::clone(&shared), i))
+            .into_iter().enumerate()
+            .map(|(idx, i)| Self::parse_one(Arc::clone(&shared), i, IxIndex::new_single(idx as u32)))
             .collect::<Result<Vec<_>, _>>()?;
 
-        for (index_outer, outer_ix) in outer.iter_mut().enumerate() {
-            let outer_ix_path = IxIndex::new_single(index_outer as u32);
-            outer_ix.path = Some(outer_ix_path.clone());
-        }
-
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
-
-        for outer_ix in &outer {
-            outer_ix.visit_all().for_each(|i| {
-                debug_assert!(
-                    i.path.is_some(),
-                    "All inner instructions must have ix_path assigned"
-                );
-            });
-        }
 
         Ok(outer)
     }
@@ -316,21 +302,20 @@ impl InstructionUpdate {
                 return Err(ParseError::InvalidInnerInstructionIndex(index_outer));
             };
 
+            let heights: Vec<Option<u32>> = instructions.iter().map(|ins| ins.stack_height.clone()).collect();
+            let newalgo = derive_paths_from_stackheights(&heights, index_outer);
+
             let mut inner = instructions
-                .into_iter()
-                .map(|i| Self::parse_one_inner(Arc::clone(shared), i))
+                .into_iter().enumerate()
+                .map(|(idx, i)| Self::parse_one_inner(Arc::clone(shared), i, newalgo[idx].clone()))
                 .collect::<Result<Vec<_>, _>>()?;
 
-            let stackheights = inner.iter().map(|(a, b)| b.unwrap()).collect::<Vec<_>>();
-
-            let heights: Vec<Option<u32>> = inner.iter().map(|(a, b)| b.clone()).collect();
-            let newalgo = derive_paths_from_stackheights(&heights, index_outer);
 
             if let Some(mut i) = inner.len().checked_sub(1) {
                 while i > 0 {
 
-                    assert!(inner[i].0.path.is_none(), "path must not be assigned yet");
-                    inner[i].0.path = Some(newalgo[i].clone());
+                    // assert!(inner[i].0.path.is_none(), "path must not be assigned yet");
+                    // inner[i].0.path = Some(newalgo[i].clone());
 
                     let parent_idx = i - 1;
                     let Some(height) = inner[parent_idx].1 else {
@@ -347,7 +332,7 @@ impl InstructionUpdate {
                     }
                     i -= 1;
                 }
-                inner[0].0.path = Some(newalgo[0].clone());
+                // inner[0].0.path = Some(newalgo[0].clone());
             }
 
             // put inner instructions under outer instruction and nest deeper stack height suggests that
@@ -373,7 +358,7 @@ impl InstructionUpdate {
                         dq.push_front((inner, nested));
                     }
                     // cur.path = Some(cur_ix_path);
-                    assert_eq!(cur.path, Some(cur_ix_path));
+                    assert_eq!(cur.path, cur_ix_path);
                 }
 
             }
@@ -399,18 +384,20 @@ impl InstructionUpdate {
     fn parse_one(
         shared: Arc<InstructionShared>,
         ins: CompiledInstruction,
+        ix_index: IxIndex,
     ) -> Result<Self, ParseError> {
         let CompiledInstruction {
             program_id_index,
             ref accounts,
             data,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data)
+        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index)
     }
 
     fn parse_one_inner(
         shared: Arc<InstructionShared>,
         ins: InnerInstruction,
+        ix_index: IxIndex,
     ) -> Result<(Self, Option<u32>), ParseError> {
         let InnerInstruction {
             program_id_index,
@@ -418,7 +405,7 @@ impl InstructionUpdate {
             data,
             stack_height,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data).map(|i| (i, stack_height))
+        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index).map(|i| (i, stack_height))
     }
 
     fn parse_from_parts(
@@ -426,6 +413,7 @@ impl InstructionUpdate {
         program_id_index: u32,
         accounts: &[u8],
         data: Vec<u8>,
+        ix_index: IxIndex,
     ) -> Result<Self, ParseError> {
         Ok(Self {
             program: shared.accounts.get(program_id_index)?,
@@ -436,8 +424,7 @@ impl InstructionUpdate {
             data,
             shared,
             inner: vec![],
-            // needs to be assigned later
-            path: None,
+            path: ix_index,
         })
     }
 
@@ -539,7 +526,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
 fn print_tree(insns: &[InstructionUpdate]) -> Vec<IxIndex> {
     fn visit_children(ix: &InstructionUpdate, out: &mut Vec<IxIndex>) {
         // println!("P {:?}", ix.path.as_ref().unwrap());
-        out.push(ix.path.as_ref().unwrap().clone());
+        out.push(ix.path.clone());
         for child in ix.inner.iter() {
             visit_children(child,out);
         }
