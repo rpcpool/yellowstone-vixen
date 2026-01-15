@@ -11,7 +11,7 @@ use solana_pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SwapWithFeesCpiEvent {
+pub struct SwapWithFeesCpiEventEnhanced {
     pub order_id: u64,
     #[cfg_attr(
         feature = "serde",
@@ -57,14 +57,21 @@ pub struct SwapWithFeesCpiEvent {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub trim_account: Pubkey,
+    pub charge_rate: u16,
+    pub charge_amount: u64,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub charge_account: Pubkey,
 }
 
-impl SwapWithFeesCpiEvent {
+impl SwapWithFeesCpiEventEnhanced {
     /// CPI log prefix for self CPI events (Anchor standard)
     pub const CPI_LOG_PREFIX: [u8; 8] = [0xe4, 0x45, 0xa5, 0x2e, 0x51, 0xcb, 0x9a, 0x1d];
 
-    /// SwapWithFeesCpiEvent discriminator bytes (from IDL)
-    pub const DISCRIMINATOR: [u8; 8] = [0xbd, 0x61, 0x43, 0x0c, 0x25, 0xd1, 0xf7, 0x1d];
+    /// SwapWithFeesCpiEventEnhanced discriminator bytes (from IDL)
+    pub const DISCRIMINATOR: [u8; 8] = [0x25, 0x48, 0xdb, 0x43, 0x32, 0xf4, 0x01, 0xd5];
 
     /// Parse from inner instruction data with CPI log prefix
     pub fn from_inner_instruction_data(data: &[u8]) -> Option<Self> {
@@ -85,27 +92,54 @@ impl SwapWithFeesCpiEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use borsh::BorshSerialize;
 
     #[test]
     fn test_discriminator_constant() {
-        assert_eq!(SwapWithFeesCpiEvent::DISCRIMINATOR, [
-            0xbd, 0x61, 0x43, 0x0c, 0x25, 0xd1, 0xf7, 0x1d
+        assert_eq!(SwapWithFeesCpiEventEnhanced::DISCRIMINATOR, [
+            0x25, 0x48, 0xdb, 0x43, 0x32, 0xf4, 0x01, 0xd5
         ]);
     }
 
     #[test]
-    fn test_parse_real_inner_instruction_data() {
-        // Real inner instruction data from OKX DEX V2 swap transaction
-        // Transaction: 2dPSizLSx2753FjAbKybupodyUBXEu9ksZMdqEW2iNRVWE3CXqWzFfCbawqjHaL78fa4wSHseQyhFWLMkxNd1zVD
-        let hex_data = "e445a52e51cb9a1dbd61430c25d1f71dfd9a010000000000c6fa7af3bedbad3a3d65f36aabc97431b1bbe4c2d2f6e0e47ca60203452f5d610876fea7f49823fc141c8b34aa050b4e93cec310d592102bc0842e53ad6ee2ff5c0a9c0f8cef36986a49152d89e0e79b466817a8dfe964d85f9b473c0bf42a425c0a9c0f8cef36986a49152d89e0e79b466817a8dfe964d85f9b473c0bf42a4200c2eb0b00000000c145ae35230000000120b38100a0f0190000000000fe8ed5ee9a4ec57c494ec596d476c2291996450f16f435a939dc47c7170bd5cc00000000000000000000000000000000000000000000000000000000000000000000000000000000000032000000000000000022d88985f7fd6122556cb7781034be64650e8b956b047a7a92b607d37fc4baa0";
+    fn test_parse_serialized_event() {
+        let mock_event = SwapWithFeesCpiEventEnhanced {
+            order_id: 12345,
+            source_mint: Pubkey::new_from_array([1u8; 32]),
+            destination_mint: Pubkey::new_from_array([2u8; 32]),
+            source_token_account_owner: Pubkey::new_from_array([3u8; 32]),
+            destination_token_account_owner: Pubkey::new_from_array([4u8; 32]),
+            source_token_change: 1000000,
+            destination_token_change: 500000,
+            commission_direction: false,
+            commission_rate: 100,
+            commission_amount: 500,
+            commission_account: Pubkey::new_from_array([5u8; 32]),
+            platform_fee_rate: 10,
+            platform_fee_amount: 100,
+            platform_fee_account: Pubkey::new_from_array([6u8; 32]),
+            trim_rate: 5,
+            trim_amount: 50,
+            trim_account: Pubkey::new_from_array([7u8; 32]),
+            charge_rate: 2,
+            charge_amount: 20,
+            charge_account: Pubkey::new_from_array([8u8; 32]),
+        };
 
-        let data = hex::decode(hex_data).expect("Failed to decode hex");
-        let result = SwapWithFeesCpiEvent::from_inner_instruction_data(&data);
+        let mut event_data = Vec::new();
+        mock_event.serialize(&mut event_data).expect("Failed to serialize");
+
+        let mut data = Vec::new();
+        data.extend_from_slice(&SwapWithFeesCpiEventEnhanced::CPI_LOG_PREFIX);
+        data.extend_from_slice(&SwapWithFeesCpiEventEnhanced::DISCRIMINATOR);
+        data.extend_from_slice(&event_data);
+
+        let result = SwapWithFeesCpiEventEnhanced::from_inner_instruction_data(&data);
         assert!(result.is_some());
 
-        let event = result.unwrap();
-        assert_eq!(event.order_id, 105213);
-        assert_eq!(event.source_token_change, 200000000); // 200 USDC
-        assert_eq!(event.destination_token_change, 151224468929);
+        let parsed_event = result.unwrap();
+        assert_eq!(parsed_event.order_id, 12345);
+        assert_eq!(parsed_event.source_token_change, 1000000);
+        assert_eq!(parsed_event.destination_token_change, 500000);
     }
 }

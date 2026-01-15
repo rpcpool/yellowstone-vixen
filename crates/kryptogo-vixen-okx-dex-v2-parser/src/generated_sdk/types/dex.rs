@@ -5,21 +5,10 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::{BorshDeserialize, BorshSerialize};
-use num_derive::FromPrimitive;
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 
-#[derive(
-    BorshSerialize,
-    BorshDeserialize,
-    Clone,
-    Debug,
-    Eq,
-    PartialEq,
-    Copy,
-    PartialOrd,
-    Hash,
-    FromPrimitive,
-)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Dex {
     SplTokenSwap,
@@ -86,7 +75,16 @@ pub enum Dex {
     PancakeSwapV3Swap,
     PancakeSwapV3SwapV2,
     Tessera,
-    SolRfq,
+    SolRfq {
+        rfq_id: u64,
+        expected_maker_amount: u64,
+        expected_taker_amount: u64,
+        maker_send_amount: u64,
+        taker_send_amount: u64,
+        expiry: u64,
+        maker_use_native_sol: bool,
+        taker_use_native_sol: bool,
+    },
     Humidifi,
     HeavenBuy,
     HeavenSell,
@@ -95,4 +93,27 @@ pub enum Dex {
     MoonitBuy,
     MoonitSell,
     RaydiumSwapV2,
+    Whalestreet,
+    SugarMoneyBuy {
+        bonding_curve_bump: u8,
+        bonding_curve_sol_associated_account_bump: u8,
+    },
+    SugarMoneySell {
+        bonding_curve_bump: u8,
+        bonding_curve_sol_associated_account_bump: u8,
+    },
+    MeteoraDAMMV2Swap2,
+    AlphaQ,
+    FutarchyAmm,
+    PumpfunBuy2,
+    PumpfunSell2,
+    HumidifiSwap2 {
+        swap_id: u64,
+    },
+    Scorch {
+        id: u128,
+    },
+    JupiterLendDeposit,
+    JupiterLendRedeem,
+    TaurusFi,
 }

@@ -9267,6 +9267,7 @@ dependencies = [
  "yellowstone-vixen-meteora-pools-parser",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-moonshot-parser",
+ "yellowstone-vixen-okx-dex-v2-parser",
  "yellowstone-vixen-orca-whirlpool-parser",
  "yellowstone-vixen-pancake-parser",
  "yellowstone-vixen-pump-swaps-parser",
@@ -9606,6 +9607,7 @@ name = "yellowstone-vixen-okx-dex-v2-parser"
 version = "0.1.0"
 dependencies = [
  "borsh 0.10.4",
+ "hex",
  "num-derive",
  "num-traits",
  "prost 0.13.5",

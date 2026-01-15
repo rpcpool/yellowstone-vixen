@@ -8,6 +8,197 @@ syntax = "proto3";
 
 package vixen.parser.okx_dex_v2;
 
+message DexSplTokenSwap { }
+
+message DexStableSwap { }
+
+message DexWhirlpool { }
+
+message DexMeteoraDynamicpool { }
+
+message DexRaydiumSwap { }
+
+message DexRaydiumStableSwap { }
+
+message DexRaydiumClmmSwap { }
+
+message DexAldrinExchangeV1 { }
+
+message DexAldrinExchangeV2 { }
+
+message DexLifinityV1 { }
+
+message DexLifinityV2 { }
+
+message DexRaydiumClmmSwapV2 { }
+
+message DexFluxBeam { }
+
+message DexMeteoraDlmm { }
+
+message DexRaydiumCpmmSwap { }
+
+message DexOpenBookV2 { }
+
+message DexWhirlpoolV2 { }
+
+message DexPhoenix { }
+
+message DexObricV2 { }
+
+message DexSanctumAddLiq { }
+
+message DexSanctumRemoveLiq { }
+
+message DexSanctumNonWsolSwap { }
+
+message DexSanctumWsolSwap { }
+
+message DexPumpfunBuy { }
+
+message DexPumpfunSell { }
+
+message DexStabbleSwap { }
+
+message DexSanctumRouter { }
+
+message DexMeteoraVaultDeposit { }
+
+message DexMeteoraVaultWithdraw { }
+
+message DexSaros { }
+
+message DexMeteoraLst { }
+
+message DexSolfi { }
+
+message DexQualiaSwap { }
+
+message DexZerofi { }
+
+message DexPumpfunammBuy { }
+
+message DexPumpfunammSell { }
+
+message DexVirtuals { }
+
+message DexVertigoBuy { }
+
+message DexVertigoSell { }
+
+message DexPerpetualsAddLiq { }
+
+message DexPerpetualsRemoveLiq { }
+
+message DexPerpetualsSwap { }
+
+message DexRaydiumLaunchpad { }
+
+message DexLetsBonkFun { }
+
+message DexWoofi { }
+
+message DexMeteoraDbc { }
+
+message DexMeteoraDlmmSwap2 { }
+
+message DexMeteoraDAMMV2 { }
+
+message DexGavel { }
+
+message DexBoopfunBuy { }
+
+message DexBoopfunSell { }
+
+message DexMeteoraDbc2 { }
+
+message DexGooseFX { }
+
+message DexDooar { }
+
+message DexNumeraire { }
+
+message DexSaberDecimalWrapperDeposit { }
+
+message DexSaberDecimalWrapperWithdraw { }
+
+message DexSarosDlmm { }
+
+message DexOneDexSwap { }
+
+message DexManifest { }
+
+message DexByrealClmm { }
+
+message DexPancakeSwapV3Swap { }
+
+message DexPancakeSwapV3SwapV2 { }
+
+message DexTessera { }
+
+message DexSolRfq {
+	uint64 rfq_id = 1;
+	uint64 expected_maker_amount = 2;
+	uint64 expected_taker_amount = 3;
+	uint64 maker_send_amount = 4;
+	uint64 taker_send_amount = 5;
+	uint64 expiry = 6;
+	bool maker_use_native_sol = 7;
+	bool taker_use_native_sol = 8;
+}
+
+message DexHumidifi { }
+
+message DexHeavenBuy { }
+
+message DexHeavenSell { }
+
+message DexSolfiV2 { }
+
+message DexGoonfi { }
+
+message DexMoonitBuy { }
+
+message DexMoonitSell { }
+
+message DexRaydiumSwapV2 { }
+
+message DexWhalestreet { }
+
+message DexSugarMoneyBuy {
+	uint32 bonding_curve_bump = 1;
+	uint32 bonding_curve_sol_associated_account_bump = 2;
+}
+
+message DexSugarMoneySell {
+	uint32 bonding_curve_bump = 1;
+	uint32 bonding_curve_sol_associated_account_bump = 2;
+}
+
+message DexMeteoraDAMMV2Swap2 { }
+
+message DexAlphaQ { }
+
+message DexFutarchyAmm { }
+
+message DexPumpfunBuy2 { }
+
+message DexPumpfunSell2 { }
+
+message DexHumidifiSwap2 {
+	uint64 swap_id = 1;
+}
+
+message DexScorch {
+	string id = 1;
+}
+
+message DexJupiterLendDeposit { }
+
+message DexJupiterLendRedeem { }
+
+message DexTaurusFi { }
+
 message ClaimIx {
 	ClaimIxAccounts accounts = 1;
 }
@@ -37,6 +228,16 @@ message SwapTobIx {
 	SwapTobIxData data = 2;
 }
 
+message SwapTobEnhancedIx {
+	SwapTobEnhancedIxAccounts accounts = 1;
+	SwapTobEnhancedIxData data = 2;
+}
+
+message SwapTobV2Ix {
+	SwapTobV2IxAccounts accounts = 1;
+	SwapTobV2IxData data = 2;
+}
+
 message SwapTobWithReceiverIx {
 	SwapTobWithReceiverIxAccounts accounts = 1;
 	SwapTobWithReceiverIxData data = 2;
@@ -47,86 +248,119 @@ message SwapTocIx {
 	SwapTocIxData data = 2;
 }
 
+message SwapTocV2Ix {
+	SwapTocV2IxAccounts accounts = 1;
+	SwapTocV2IxData data = 2;
+}
+
 message WrapUnwrapIx {
 	WrapUnwrapIxAccounts accounts = 1;
 	WrapUnwrapIxData data = 2;
 }
 
+message WrapUnwrapWithReceiverIx {
+	WrapUnwrapWithReceiverIxAccounts accounts = 1;
+	WrapUnwrapWithReceiverIxData data = 2;
+}
 
-enum Dex {
-	DexSplTokenSwap = 0;
-	DexStableSwap = 1;
-	DexWhirlpool = 2;
-	DexMeteoraDynamicpool = 3;
-	DexRaydiumSwap = 4;
-	DexRaydiumStableSwap = 5;
-	DexRaydiumClmmSwap = 6;
-	DexAldrinExchangeV1 = 7;
-	DexAldrinExchangeV2 = 8;
-	DexLifinityV1 = 9;
-	DexLifinityV2 = 10;
-	DexRaydiumClmmSwapV2 = 11;
-	DexFluxBeam = 12;
-	DexMeteoraDlmm = 13;
-	DexRaydiumCpmmSwap = 14;
-	DexOpenBookV2 = 15;
-	DexWhirlpoolV2 = 16;
-	DexPhoenix = 17;
-	DexObricV2 = 18;
-	DexSanctumAddLiq = 19;
-	DexSanctumRemoveLiq = 20;
-	DexSanctumNonWsolSwap = 21;
-	DexSanctumWsolSwap = 22;
-	DexPumpfunBuy = 23;
-	DexPumpfunSell = 24;
-	DexStabbleSwap = 25;
-	DexSanctumRouter = 26;
-	DexMeteoraVaultDeposit = 27;
-	DexMeteoraVaultWithdraw = 28;
-	DexSaros = 29;
-	DexMeteoraLst = 30;
-	DexSolfi = 31;
-	DexQualiaSwap = 32;
-	DexZerofi = 33;
-	DexPumpfunammBuy = 34;
-	DexPumpfunammSell = 35;
-	DexVirtuals = 36;
-	DexVertigoBuy = 37;
-	DexVertigoSell = 38;
-	DexPerpetualsAddLiq = 39;
-	DexPerpetualsRemoveLiq = 40;
-	DexPerpetualsSwap = 41;
-	DexRaydiumLaunchpad = 42;
-	DexLetsBonkFun = 43;
-	DexWoofi = 44;
-	DexMeteoraDbc = 45;
-	DexMeteoraDlmmSwap2 = 46;
-	DexMeteoraDAMMV2 = 47;
-	DexGavel = 48;
-	DexBoopfunBuy = 49;
-	DexBoopfunSell = 50;
-	DexMeteoraDbc2 = 51;
-	DexGooseFX = 52;
-	DexDooar = 53;
-	DexNumeraire = 54;
-	DexSaberDecimalWrapperDeposit = 55;
-	DexSaberDecimalWrapperWithdraw = 56;
-	DexSarosDlmm = 57;
-	DexOneDexSwap = 58;
-	DexManifest = 59;
-	DexByrealClmm = 60;
-	DexPancakeSwapV3Swap = 61;
-	DexPancakeSwapV3SwapV2 = 62;
-	DexTessera = 63;
-	DexSolRfq = 64;
-	DexHumidifi = 65;
-	DexHeavenBuy = 66;
-	DexHeavenSell = 67;
-	DexSolfiV2 = 68;
-	DexGoonfi = 69;
-	DexMoonitBuy = 70;
-	DexMoonitSell = 71;
-	DexRaydiumSwapV2 = 72;
+
+message Dex {
+	oneof variant{
+		DexSplTokenSwap spl_token_swap = 1;
+		DexStableSwap stable_swap = 2;
+		DexWhirlpool whirlpool = 3;
+		DexMeteoraDynamicpool meteora_dynamicpool = 4;
+		DexRaydiumSwap raydium_swap = 5;
+		DexRaydiumStableSwap raydium_stable_swap = 6;
+		DexRaydiumClmmSwap raydium_clmm_swap = 7;
+		DexAldrinExchangeV1 aldrin_exchange_v1 = 8;
+		DexAldrinExchangeV2 aldrin_exchange_v2 = 9;
+		DexLifinityV1 lifinity_v1 = 10;
+		DexLifinityV2 lifinity_v2 = 11;
+		DexRaydiumClmmSwapV2 raydium_clmm_swap_v2 = 12;
+		DexFluxBeam flux_beam = 13;
+		DexMeteoraDlmm meteora_dlmm = 14;
+		DexRaydiumCpmmSwap raydium_cpmm_swap = 15;
+		DexOpenBookV2 open_book_v2 = 16;
+		DexWhirlpoolV2 whirlpool_v2 = 17;
+		DexPhoenix phoenix = 18;
+		DexObricV2 obric_v2 = 19;
+		DexSanctumAddLiq sanctum_add_liq = 20;
+		DexSanctumRemoveLiq sanctum_remove_liq = 21;
+		DexSanctumNonWsolSwap sanctum_non_wsol_swap = 22;
+		DexSanctumWsolSwap sanctum_wsol_swap = 23;
+		DexPumpfunBuy pumpfun_buy = 24;
+		DexPumpfunSell pumpfun_sell = 25;
+		DexStabbleSwap stabble_swap = 26;
+		DexSanctumRouter sanctum_router = 27;
+		DexMeteoraVaultDeposit meteora_vault_deposit = 28;
+		DexMeteoraVaultWithdraw meteora_vault_withdraw = 29;
+		DexSaros saros = 30;
+		DexMeteoraLst meteora_lst = 31;
+		DexSolfi solfi = 32;
+		DexQualiaSwap qualia_swap = 33;
+		DexZerofi zerofi = 34;
+		DexPumpfunammBuy pumpfunamm_buy = 35;
+		DexPumpfunammSell pumpfunamm_sell = 36;
+		DexVirtuals virtuals = 37;
+		DexVertigoBuy vertigo_buy = 38;
+		DexVertigoSell vertigo_sell = 39;
+		DexPerpetualsAddLiq perpetuals_add_liq = 40;
+		DexPerpetualsRemoveLiq perpetuals_remove_liq = 41;
+		DexPerpetualsSwap perpetuals_swap = 42;
+		DexRaydiumLaunchpad raydium_launchpad = 43;
+		DexLetsBonkFun lets_bonk_fun = 44;
+		DexWoofi woofi = 45;
+		DexMeteoraDbc meteora_dbc = 46;
+		DexMeteoraDlmmSwap2 meteora_dlmm_swap2 = 47;
+		DexMeteoraDAMMV2 meteora_d_a_m_m_v2 = 48;
+		DexGavel gavel = 49;
+		DexBoopfunBuy boopfun_buy = 50;
+		DexBoopfunSell boopfun_sell = 51;
+		DexMeteoraDbc2 meteora_dbc2 = 52;
+		DexGooseFX goose_f_x = 53;
+		DexDooar dooar = 54;
+		DexNumeraire numeraire = 55;
+		DexSaberDecimalWrapperDeposit saber_decimal_wrapper_deposit = 56;
+		DexSaberDecimalWrapperWithdraw saber_decimal_wrapper_withdraw = 57;
+		DexSarosDlmm saros_dlmm = 58;
+		DexOneDexSwap one_dex_swap = 59;
+		DexManifest manifest = 60;
+		DexByrealClmm byreal_clmm = 61;
+		DexPancakeSwapV3Swap pancake_swap_v3_swap = 62;
+		DexPancakeSwapV3SwapV2 pancake_swap_v3_swap_v2 = 63;
+		DexTessera tessera = 64;
+		DexSolRfq sol_rfq = 65;
+		DexHumidifi humidifi = 66;
+		DexHeavenBuy heaven_buy = 67;
+		DexHeavenSell heaven_sell = 68;
+		DexSolfiV2 solfi_v2 = 69;
+		DexGoonfi goonfi = 70;
+		DexMoonitBuy moonit_buy = 71;
+		DexMoonitSell moonit_sell = 72;
+		DexRaydiumSwapV2 raydium_swap_v2 = 73;
+		DexWhalestreet whalestreet = 74;
+		DexSugarMoneyBuy sugar_money_buy = 75;
+		DexSugarMoneySell sugar_money_sell = 76;
+		DexMeteoraDAMMV2Swap2 meteora_d_a_m_m_v2_swap2 = 77;
+		DexAlphaQ alpha_q = 78;
+		DexFutarchyAmm futarchy_amm = 79;
+		DexPumpfunBuy2 pumpfun_buy2 = 80;
+		DexPumpfunSell2 pumpfun_sell2 = 81;
+		DexHumidifiSwap2 humidifi_swap2 = 82;
+		DexScorch scorch = 83;
+		DexJupiterLendDeposit jupiter_lend_deposit = 84;
+		DexJupiterLendRedeem jupiter_lend_redeem = 85;
+		DexTaurusFi taurus_fi = 86;
+	}
+}
+
+message PlatformFeeWrapUnwrapArgs {
+	uint64 order_id = 1;
+	uint64 amount_in = 2;
+	uint32 commission_info = 3;
+	uint32 platform_fee_rate = 4;
+	bool tob = 5;
 }
 
 message Route {
@@ -153,10 +387,113 @@ message SwapCpiEvent {
 	uint64 destination_token_change = 7;
 }
 
+message SwapCpiEvent2 {
+	uint64 order_id = 1;
+	string source_mint = 2;
+	string destination_mint = 3;
+	string source_token_account_owner = 4;
+	string destination_token_account_owner = 5;
+	uint64 amount_in = 6;
+	uint64 source_token_change = 7;
+	uint64 destination_token_change = 8;
+}
+
 message SwapEvent {
 	Dex dex = 1;
 	uint64 amount_in = 2;
 	uint64 amount_out = 3;
+}
+
+message SwapToBWithFeesCpiEventV2 {
+	uint64 order_id = 1;
+	string source_mint = 2;
+	string destination_mint = 3;
+	string source_token_account_owner = 4;
+	string destination_token_account_owner = 5;
+	uint64 source_token_change = 6;
+	uint64 destination_token_change = 7;
+	bool commission_direction = 8;
+	uint32 total_commission_rate = 9;
+	uint32 parent_commission_rate = 10;
+	uint64 parent_commission_amount = 11;
+	string parent_commission_account = 12;
+	uint32 child_commission_rate = 13;
+	uint64 child_commission_amount = 14;
+	string child_commission_account = 15;
+	uint32 platform_fee_rate = 16;
+	uint64 platform_fee_amount = 17;
+	string platform_fee_account = 18;
+	uint32 trim_rate = 19;
+	uint64 trim_amount = 20;
+	string trim_account = 21;
+}
+
+message SwapToCWithFeesCpiEventV2 {
+	uint64 order_id = 1;
+	string source_mint = 2;
+	string destination_mint = 3;
+	string source_token_account_owner = 4;
+	string destination_token_account_owner = 5;
+	uint64 source_token_change = 6;
+	uint64 destination_token_change = 7;
+	bool commission_direction = 8;
+	uint32 total_commission_rate = 9;
+	uint32 parent_commission_rate = 10;
+	uint64 parent_commission_amount = 11;
+	string parent_commission_account = 12;
+	uint32 child_commission_rate = 13;
+	uint64 child_commission_amount = 14;
+	string child_commission_account = 15;
+	uint32 platform_fee_rate = 16;
+	uint64 platform_fee_amount = 17;
+	string platform_fee_account = 18;
+}
+
+message SwapTobV2CpiEvent2 {
+	uint64 order_id = 1;
+	string source_mint = 2;
+	string destination_mint = 3;
+	string source_token_account_owner = 4;
+	string destination_token_account_owner = 5;
+	uint64 amount_in = 6;
+	uint64 source_token_change = 7;
+	uint64 destination_token_change = 8;
+	bool commission_direction = 9;
+	uint32 total_commission_rate = 10;
+	uint32 parent_commission_rate = 11;
+	uint64 parent_commission_amount = 12;
+	string parent_commission_account = 13;
+	uint32 child_commission_rate = 14;
+	uint64 child_commission_amount = 15;
+	string child_commission_account = 16;
+	uint32 platform_fee_rate = 17;
+	uint64 platform_fee_amount = 18;
+	string platform_fee_account = 19;
+	uint32 trim_rate = 20;
+	uint64 trim_amount = 21;
+	string trim_account = 22;
+}
+
+message SwapTocV2CpiEvent2 {
+	uint64 order_id = 1;
+	string source_mint = 2;
+	string destination_mint = 3;
+	string source_token_account_owner = 4;
+	string destination_token_account_owner = 5;
+	uint64 amount_in = 6;
+	uint64 source_token_change = 7;
+	uint64 destination_token_change = 8;
+	bool commission_direction = 9;
+	uint32 total_commission_rate = 10;
+	uint32 parent_commission_rate = 11;
+	uint64 parent_commission_amount = 12;
+	string parent_commission_account = 13;
+	uint32 child_commission_rate = 14;
+	uint64 child_commission_amount = 15;
+	string child_commission_account = 16;
+	uint32 platform_fee_rate = 17;
+	uint64 platform_fee_amount = 18;
+	string platform_fee_account = 19;
 }
 
 message SwapWithFeesCpiEvent {
@@ -177,6 +514,74 @@ message SwapWithFeesCpiEvent {
 	uint32 trim_rate = 15;
 	uint64 trim_amount = 16;
 	string trim_account = 17;
+}
+
+message SwapWithFeesCpiEvent2 {
+	uint64 order_id = 1;
+	string source_mint = 2;
+	string destination_mint = 3;
+	string source_token_account_owner = 4;
+	string destination_token_account_owner = 5;
+	uint64 amount_in = 6;
+	uint64 source_token_change = 7;
+	uint64 destination_token_change = 8;
+	bool commission_direction = 9;
+	uint32 commission_rate = 10;
+	uint64 commission_amount = 11;
+	string commission_account = 12;
+	uint32 platform_fee_rate = 13;
+	uint64 platform_fee_amount = 14;
+	string platform_fee_account = 15;
+	uint32 trim_rate = 16;
+	uint64 trim_amount = 17;
+	string trim_account = 18;
+}
+
+message SwapWithFeesCpiEventEnhanced {
+	uint64 order_id = 1;
+	string source_mint = 2;
+	string destination_mint = 3;
+	string source_token_account_owner = 4;
+	string destination_token_account_owner = 5;
+	uint64 source_token_change = 6;
+	uint64 destination_token_change = 7;
+	bool commission_direction = 8;
+	uint32 commission_rate = 9;
+	uint64 commission_amount = 10;
+	string commission_account = 11;
+	uint32 platform_fee_rate = 12;
+	uint64 platform_fee_amount = 13;
+	string platform_fee_account = 14;
+	uint32 trim_rate = 15;
+	uint64 trim_amount = 16;
+	string trim_account = 17;
+	uint32 charge_rate = 18;
+	uint64 charge_amount = 19;
+	string charge_account = 20;
+}
+
+message SwapWithFeesCpiEventEnhanced2 {
+	uint64 order_id = 1;
+	string source_mint = 2;
+	string destination_mint = 3;
+	string source_token_account_owner = 4;
+	string destination_token_account_owner = 5;
+	uint64 amount_in = 6;
+	uint64 source_token_change = 7;
+	uint64 destination_token_change = 8;
+	bool commission_direction = 9;
+	uint32 commission_rate = 10;
+	uint64 commission_amount = 11;
+	string commission_account = 12;
+	uint32 platform_fee_rate = 13;
+	uint64 platform_fee_amount = 14;
+	string platform_fee_account = 15;
+	uint32 trim_rate = 16;
+	uint64 trim_amount = 17;
+	string trim_account = 18;
+	uint32 charge_rate = 19;
+	uint64 charge_amount = 20;
+	string charge_account = 21;
 }
 
 
@@ -282,6 +687,61 @@ message SwapTobIxData {
 	uint32 trim_rate = 4;
 }
 
+message SwapTobEnhancedIxAccounts {
+	string payer = 1;
+	string source_token_account = 2;
+	string destination_token_account = 3;
+	string source_mint = 4;
+	string destination_mint = 5;
+	optional string commission_account = 6;
+	optional string platform_fee_account = 7;
+	optional string sa_authority = 8;
+	optional string source_token_sa = 9;
+	optional string destination_token_sa = 10;
+	optional string source_token_program = 11;
+	optional string destination_token_program = 12;
+	optional string associated_token_program = 13;
+	optional string system_program = 14;
+	string event_authority = 15;
+	string program = 16;
+}
+
+message SwapTobEnhancedIxData {
+	SwapArgs args = 1;
+	uint32 commission_info = 2;
+	uint32 platform_fee_rate = 3;
+	uint32 trim_rate = 4;
+	uint32 charge_rate = 5;
+}
+
+message SwapTobV2IxAccounts {
+	string payer = 1;
+	string source_token_account = 2;
+	string destination_token_account = 3;
+	string source_mint = 4;
+	string destination_mint = 5;
+	string parent_commission_account = 6;
+	string child_commission_account = 7;
+	optional string platform_fee_account = 8;
+	optional string sa_authority = 9;
+	optional string source_token_sa = 10;
+	optional string destination_token_sa = 11;
+	optional string source_token_program = 12;
+	optional string destination_token_program = 13;
+	optional string associated_token_program = 14;
+	optional string system_program = 15;
+	string event_authority = 16;
+	string program = 17;
+}
+
+message SwapTobV2IxData {
+	SwapArgs args = 1;
+	uint32 total_commission_info = 2;
+	uint32 parent_commission_rate = 3;
+	uint32 platform_fee_rate = 4;
+	uint32 trim_rate = 5;
+}
+
 message SwapTobWithReceiverIxAccounts {
 	string payer = 1;
 	string source_token_account = 2;
@@ -334,6 +794,33 @@ message SwapTocIxData {
 	uint32 platform_fee_rate = 3;
 }
 
+message SwapTocV2IxAccounts {
+	string payer = 1;
+	string source_token_account = 2;
+	string destination_token_account = 3;
+	string source_mint = 4;
+	string destination_mint = 5;
+	string parent_commission_account = 6;
+	string child_commission_account = 7;
+	optional string platform_fee_account = 8;
+	optional string sa_authority = 9;
+	optional string source_token_sa = 10;
+	optional string destination_token_sa = 11;
+	optional string source_token_program = 12;
+	optional string destination_token_program = 13;
+	optional string associated_token_program = 14;
+	optional string system_program = 15;
+	string event_authority = 16;
+	string program = 17;
+}
+
+message SwapTocV2IxData {
+	SwapArgs args = 1;
+	uint32 total_commission_info = 2;
+	uint32 parent_commission_rate = 3;
+	uint32 platform_fee_rate = 4;
+}
+
 message WrapUnwrapIxAccounts {
 	string payer = 1;
 	string payer_wsol_account = 2;
@@ -350,16 +837,32 @@ message WrapUnwrapIxAccounts {
 }
 
 message WrapUnwrapIxData {
-	uint64 order_id = 1;
-	uint64 amount_in = 2;
-	uint32 commission_info = 3;
-	uint32 platform_fee_rate = 4;
-	bool tob = 5;
+	PlatformFeeWrapUnwrapArgs args = 1;
+}
+
+message WrapUnwrapWithReceiverIxAccounts {
+	string payer = 1;
+	string payer_wsol_account = 2;
+	string wsol_mint = 3;
+	optional string temp_wsol_account = 4;
+	optional string commission_account = 5;
+	optional string platform_fee_account = 6;
+	optional string authority_pda = 7;
+	optional string wsol_sa = 8;
+	string token_program = 9;
+	string system_program = 10;
+	string receiver = 11;
+	string event_authority = 12;
+	string program = 13;
+}
+
+message WrapUnwrapWithReceiverIxData {
+	PlatformFeeWrapUnwrapArgs args = 1;
 }
 
 
 message ProgramState {
-    // No state accounts defined in this program
+    // No account states defined for this program
 }
 
 message ProgramIxs {
@@ -370,9 +873,13 @@ message ProgramIxs {
         	ProxySwapIx proxy_swap = 4;
         	SwapIx swap = 5;
         	SwapTobIx swap_tob = 6;
-        	SwapTobWithReceiverIx swap_tob_with_receiver = 7;
-        	SwapTocIx swap_toc = 8;
-        	WrapUnwrapIx wrap_unwrap = 9;
+        	SwapTobEnhancedIx swap_tob_enhanced = 7;
+        	SwapTobV2Ix swap_tob_v2 = 8;
+        	SwapTobWithReceiverIx swap_tob_with_receiver = 9;
+        	SwapTocIx swap_toc = 10;
+        	SwapTocV2Ix swap_toc_v2 = 11;
+        	WrapUnwrapIx wrap_unwrap = 12;
+        	WrapUnwrapWithReceiverIx wrap_unwrap_with_receiver = 13;
         }
 }
 

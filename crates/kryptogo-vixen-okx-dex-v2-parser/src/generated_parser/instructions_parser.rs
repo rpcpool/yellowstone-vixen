@@ -11,62 +11,86 @@ use std::sync::Arc;
 #[cfg(feature = "shared-data")]
 use yellowstone_vixen_core::InstructionUpdateOutput;
 
-use crate::{
-    deserialize_checked,
-    generated::types::AggregationEvent,
-    instructions::{
-        Claim as ClaimIxAccounts, CreateTokenAccount as CreateTokenAccountIxAccounts,
-        CreateTokenAccountInstructionArgs as CreateTokenAccountIxData,
-        CreateTokenAccountWithSeed as CreateTokenAccountWithSeedIxAccounts,
-        CreateTokenAccountWithSeedInstructionArgs as CreateTokenAccountWithSeedIxData,
-        ProxySwap as ProxySwapIxAccounts, ProxySwapInstructionArgs as ProxySwapIxData,
-        Swap as SwapIxAccounts, SwapInstructionArgs as SwapIxData, SwapTob as SwapTobIxAccounts,
-        SwapTobInstructionArgs as SwapTobIxData,
-        SwapTobWithReceiver as SwapTobWithReceiverIxAccounts,
-        SwapTobWithReceiverInstructionArgs as SwapTobWithReceiverIxData,
-        SwapToc as SwapTocIxAccounts, SwapTocInstructionArgs as SwapTocIxData,
-        WrapUnwrap as WrapUnwrapIxAccounts, WrapUnwrapInstructionArgs as WrapUnwrapIxData,
-    },
-    ID,
+use crate::deserialize_checked;
+use crate::generated::types::{
+    CpiEventWithFallback, SwapCpiEvent2, SwapToBWithFeesCpiEventV2, SwapToCWithFeesCpiEventV2,
+    SwapTobV2CpiEvent2, SwapTocV2CpiEvent2, SwapWithFeesCpiEvent, SwapWithFeesCpiEvent2,
+    SwapWithFeesCpiEventEnhanced, SwapWithFeesCpiEventEnhanced2,
 };
+use yellowstone_vixen_core::deserialize_checked_swap;
 
-/// DexSolanaV2 Instructions
+use crate::instructions::{
+    Claim as ClaimIxAccounts, CreateTokenAccount as CreateTokenAccountIxAccounts,
+    CreateTokenAccountInstructionArgs as CreateTokenAccountIxData,
+    CreateTokenAccountWithSeed as CreateTokenAccountWithSeedIxAccounts,
+    CreateTokenAccountWithSeedInstructionArgs as CreateTokenAccountWithSeedIxData,
+    ProxySwap as ProxySwapIxAccounts, ProxySwapInstructionArgs as ProxySwapIxData,
+    Swap as SwapIxAccounts, SwapInstructionArgs as SwapIxData, SwapTob as SwapTobIxAccounts,
+    SwapTobEnhanced as SwapTobEnhancedIxAccounts,
+    SwapTobEnhancedInstructionArgs as SwapTobEnhancedIxData,
+    SwapTobInstructionArgs as SwapTobIxData, SwapTobV2 as SwapTobV2IxAccounts,
+    SwapTobV2InstructionArgs as SwapTobV2IxData,
+    SwapTobWithReceiver as SwapTobWithReceiverIxAccounts,
+    SwapTobWithReceiverInstructionArgs as SwapTobWithReceiverIxData, SwapToc as SwapTocIxAccounts,
+    SwapTocInstructionArgs as SwapTocIxData, SwapTocV2 as SwapTocV2IxAccounts,
+    SwapTocV2InstructionArgs as SwapTocV2IxData, WrapUnwrap as WrapUnwrapIxAccounts,
+    WrapUnwrapInstructionArgs as WrapUnwrapIxData,
+    WrapUnwrapWithReceiver as WrapUnwrapWithReceiverIxAccounts,
+    WrapUnwrapWithReceiverInstructionArgs as WrapUnwrapWithReceiverIxData,
+};
+use crate::ID;
+
+/// OnChainLabsDexRouter2 Instructions
 #[derive(Debug)]
 #[cfg_attr(feature = "tracing", derive(strum_macros::Display))]
-pub enum DexSolanaV2ProgramIx {
+pub enum OnChainLabsDexRouter2ProgramIx {
     Claim(ClaimIxAccounts),
     CreateTokenAccount(CreateTokenAccountIxAccounts, CreateTokenAccountIxData),
     CreateTokenAccountWithSeed(
         CreateTokenAccountWithSeedIxAccounts,
         CreateTokenAccountWithSeedIxData,
     ),
-    ProxySwap(
-        ProxySwapIxAccounts,
-        ProxySwapIxData,
-        Option<AggregationEvent>,
+    ProxySwap(ProxySwapIxAccounts, ProxySwapIxData, Option<CpiEventWithFallback>),
+    Swap(SwapIxAccounts, SwapIxData, Option<CpiEventWithFallback>),
+    SwapTob(SwapTobIxAccounts, SwapTobIxData, Option<CpiEventWithFallback>),
+    SwapTobEnhanced(
+        SwapTobEnhancedIxAccounts,
+        SwapTobEnhancedIxData,
+        Option<CpiEventWithFallback>,
     ),
-    Swap(SwapIxAccounts, SwapIxData, Option<AggregationEvent>),
-    SwapTob(SwapTobIxAccounts, SwapTobIxData, Option<AggregationEvent>),
+    SwapTobV2(SwapTobV2IxAccounts, SwapTobV2IxData, Option<CpiEventWithFallback>),
     SwapTobWithReceiver(
         SwapTobWithReceiverIxAccounts,
         SwapTobWithReceiverIxData,
-        Option<AggregationEvent>,
+        Option<CpiEventWithFallback>,
     ),
-    SwapToc(SwapTocIxAccounts, SwapTocIxData, Option<AggregationEvent>),
+    SwapToc(SwapTocIxAccounts, SwapTocIxData, Option<CpiEventWithFallback>),
+    SwapTocV2(SwapTocV2IxAccounts, SwapTocV2IxData, Option<CpiEventWithFallback>),
     WrapUnwrap(WrapUnwrapIxAccounts, WrapUnwrapIxData),
+    WrapUnwrapWithReceiver(
+        WrapUnwrapWithReceiverIxAccounts,
+        WrapUnwrapWithReceiverIxData,
+    ),
 }
+
+/// Type alias for compatibility with downstream consumers
+pub type DexSolanaV2ProgramIx = OnChainLabsDexRouter2ProgramIx;
 
 #[derive(Debug, Copy, Clone)]
 pub struct InstructionParser;
 
 impl yellowstone_vixen_core::Parser for InstructionParser {
     type Input = yellowstone_vixen_core::instruction::InstructionUpdate;
-    #[cfg(not(feature = "shared-data"))]
-    type Output = DexSolanaV2ProgramIx;
-    #[cfg(feature = "shared-data")]
-    type Output = InstructionUpdateOutput<DexSolanaV2ProgramIx>;
 
-    fn id(&self) -> std::borrow::Cow<'static, str> { "DexSolanaV2::InstructionParser".into() }
+    #[cfg(not(feature = "shared-data"))]
+    type Output = OnChainLabsDexRouter2ProgramIx;
+
+    #[cfg(feature = "shared-data")]
+    type Output = InstructionUpdateOutput<OnChainLabsDexRouter2ProgramIx>;
+
+    fn id(&self) -> std::borrow::Cow<'static, str> {
+        "OnChainLabsDexRouter2::InstructionParser".into()
+    }
 
     fn prefilter(&self) -> yellowstone_vixen_core::Prefilter {
         yellowstone_vixen_core::Prefilter::builder()
@@ -105,7 +129,9 @@ impl yellowstone_vixen_core::Parser for InstructionParser {
 
 impl yellowstone_vixen_core::ProgramParser for InstructionParser {
     #[inline]
-    fn program_id(&self) -> yellowstone_vixen_core::Pubkey { ID.to_bytes().into() }
+    fn program_id(&self) -> yellowstone_vixen_core::Pubkey {
+        ID.to_bytes().into()
+    }
 }
 
 impl InstructionParser {
@@ -117,9 +143,27 @@ impl InstructionParser {
 
         #[cfg(feature = "shared-data")]
         let shared_data = Arc::clone(&ix.shared);
-
         #[cfg(feature = "shared-data")]
         let ix_index = ix.ix_index;
+
+        /// Helper macro for parsing swap CPI events with fallback support.
+        /// Tries the primary event type first, then falls back to alternative types.
+        macro_rules! parse_swap_event_with_fallbacks {
+            ($inner:expr, $primary:ty => $variant:ident $(, $fallback:ty => $fallback_variant:ident)*) => {{
+                $inner.iter().find_map(|inner_ix| {
+                    <$primary>::from_inner_instruction_data(&inner_ix.data)
+                        .map(CpiEventWithFallback::$variant)
+                })
+                $(
+                    .or_else(|| {
+                        $inner.iter().find_map(|inner_ix| {
+                            <$fallback>::from_inner_instruction_data(&inner_ix.data)
+                                .map(CpiEventWithFallback::$fallback_variant)
+                        })
+                    })
+                )*
+            }};
+        }
 
         let ix_discriminator: [u8; 8] = ix.data[0..8].try_into()?;
         let ix_data = &ix.data[8..];
@@ -138,7 +182,7 @@ impl InstructionParser {
                     system_program: next_account(accounts)?,
                     associated_token_program: next_program_id_optional_account(accounts)?,
                 };
-                Ok(DexSolanaV2ProgramIx::Claim(ix_accounts))
+                Ok(OnChainLabsDexRouter2ProgramIx::Claim(ix_accounts))
             },
             [147, 241, 123, 100, 244, 132, 174, 118] => {
                 let expected_accounts_len = 6;
@@ -153,7 +197,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: CreateTokenAccountIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(DexSolanaV2ProgramIx::CreateTokenAccount(
+                Ok(OnChainLabsDexRouter2ProgramIx::CreateTokenAccount(
                     ix_accounts,
                     de_ix_data,
                 ))
@@ -171,7 +215,7 @@ impl InstructionParser {
                 };
                 let de_ix_data: CreateTokenAccountWithSeedIxData =
                     deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(DexSolanaV2ProgramIx::CreateTokenAccountWithSeed(
+                Ok(OnChainLabsDexRouter2ProgramIx::CreateTokenAccountWithSeed(
                     ix_accounts,
                     de_ix_data,
                 ))
@@ -195,23 +239,23 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: ProxySwapIxData = yellowstone_vixen_core::deserialize_checked_swap(
+                let de_ix_data: ProxySwapIxData = deserialize_checked_swap(
                     ix_data,
                     &ix_discriminator,
                     "ProxySwap",
                     deserialize_checked,
                 )?;
-                let aggregation_event = AggregationEvent::from_logs(
-                    &ix.shared
-                        .log_messages
-                        .iter()
-                        .map(|s| s.as_str())
-                        .collect::<Vec<_>>(),
+                // Search for swap CPI event in inner instructions with fallback support
+                let swap_cpi_event = parse_swap_event_with_fallbacks!(
+                    ix.inner,
+                    SwapWithFeesCpiEvent => SwapWithFeesCpiEvent,
+                    SwapToBWithFeesCpiEventV2 => SwapToBWithFeesCpiEventV2,
+                    SwapWithFeesCpiEventEnhanced2 => SwapWithFeesCpiEventEnhanced2
                 );
-                Ok(DexSolanaV2ProgramIx::ProxySwap(
+                Ok(OnChainLabsDexRouter2ProgramIx::ProxySwap(
                     ix_accounts,
                     de_ix_data,
-                    aggregation_event,
+                    swap_cpi_event,
                 ))
             },
             [248, 198, 158, 145, 225, 117, 135, 200] => {
@@ -226,23 +270,23 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapIxData = yellowstone_vixen_core::deserialize_checked_swap(
+                let de_ix_data: SwapIxData = deserialize_checked_swap(
                     ix_data,
                     &ix_discriminator,
                     "Swap",
                     deserialize_checked,
                 )?;
-                let aggregation_event = AggregationEvent::from_logs(
-                    &ix.shared
-                        .log_messages
-                        .iter()
-                        .map(|s| s.as_str())
-                        .collect::<Vec<_>>(),
+                // Search for swap CPI event in inner instructions with fallback support
+                let swap_cpi_event = parse_swap_event_with_fallbacks!(
+                    ix.inner,
+                    SwapCpiEvent2 => SwapCpiEvent2,
+                    SwapWithFeesCpiEvent => SwapWithFeesCpiEvent,
+                    SwapWithFeesCpiEvent2 => SwapWithFeesCpiEvent2
                 );
-                Ok(DexSolanaV2ProgramIx::Swap(
+                Ok(OnChainLabsDexRouter2ProgramIx::Swap(
                     ix_accounts,
                     de_ix_data,
-                    aggregation_event,
+                    swap_cpi_event,
                 ))
             },
             [170, 41, 85, 177, 132, 80, 31, 53] => {
@@ -266,23 +310,104 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapTobIxData = yellowstone_vixen_core::deserialize_checked_swap(
+                let de_ix_data: SwapTobIxData = deserialize_checked_swap(
                     ix_data,
                     &ix_discriminator,
                     "SwapTob",
                     deserialize_checked,
                 )?;
-                let aggregation_event = AggregationEvent::from_logs(
-                    &ix.shared
-                        .log_messages
-                        .iter()
-                        .map(|s| s.as_str())
-                        .collect::<Vec<_>>(),
+                // Search for swap CPI event in inner instructions with fallback support
+                let swap_cpi_event = parse_swap_event_with_fallbacks!(
+                    ix.inner,
+                    SwapWithFeesCpiEvent => SwapWithFeesCpiEvent,
+                    SwapToBWithFeesCpiEventV2 => SwapToBWithFeesCpiEventV2,
+                    SwapWithFeesCpiEventEnhanced2 => SwapWithFeesCpiEventEnhanced2
                 );
-                Ok(DexSolanaV2ProgramIx::SwapTob(
+                Ok(OnChainLabsDexRouter2ProgramIx::SwapTob(
                     ix_accounts,
                     de_ix_data,
-                    aggregation_event,
+                    swap_cpi_event,
+                ))
+            },
+            [190, 156, 169, 176, 149, 154, 161, 108] => {
+                let expected_accounts_len = 16;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SwapTobEnhancedIxAccounts {
+                    payer: next_account(accounts)?,
+                    source_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    commission_account: next_program_id_optional_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    sa_authority: next_program_id_optional_account(accounts)?,
+                    source_token_sa: next_program_id_optional_account(accounts)?,
+                    destination_token_sa: next_program_id_optional_account(accounts)?,
+                    source_token_program: next_program_id_optional_account(accounts)?,
+                    destination_token_program: next_program_id_optional_account(accounts)?,
+                    associated_token_program: next_program_id_optional_account(accounts)?,
+                    system_program: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: SwapTobEnhancedIxData = deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "SwapTobEnhanced",
+                    deserialize_checked,
+                )?;
+                // Search for swap CPI event in inner instructions with fallback support
+                let swap_cpi_event = parse_swap_event_with_fallbacks!(
+                    ix.inner,
+                    SwapWithFeesCpiEventEnhanced => SwapWithFeesCpiEventEnhanced,
+                    SwapToBWithFeesCpiEventV2 => SwapToBWithFeesCpiEventV2,
+                    SwapWithFeesCpiEventEnhanced2 => SwapWithFeesCpiEventEnhanced2
+                );
+                Ok(OnChainLabsDexRouter2ProgramIx::SwapTobEnhanced(
+                    ix_accounts,
+                    de_ix_data,
+                    swap_cpi_event,
+                ))
+            },
+            [72, 1, 215, 242, 8, 75, 54, 216] => {
+                let expected_accounts_len = 17;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SwapTobV2IxAccounts {
+                    payer: next_account(accounts)?,
+                    source_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    parent_commission_account: next_account(accounts)?,
+                    child_commission_account: next_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    sa_authority: next_program_id_optional_account(accounts)?,
+                    source_token_sa: next_program_id_optional_account(accounts)?,
+                    destination_token_sa: next_program_id_optional_account(accounts)?,
+                    source_token_program: next_program_id_optional_account(accounts)?,
+                    destination_token_program: next_program_id_optional_account(accounts)?,
+                    associated_token_program: next_program_id_optional_account(accounts)?,
+                    system_program: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: SwapTobV2IxData = deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "SwapTobV2",
+                    deserialize_checked,
+                )?;
+                // Search for swap CPI event in inner instructions with fallback support
+                let swap_cpi_event = parse_swap_event_with_fallbacks!(
+                    ix.inner,
+                    SwapWithFeesCpiEvent => SwapWithFeesCpiEvent,
+                    SwapTobV2CpiEvent2 => SwapTobV2CpiEvent2,
+                    SwapToBWithFeesCpiEventV2 => SwapToBWithFeesCpiEventV2
+                );
+                Ok(OnChainLabsDexRouter2ProgramIx::SwapTobV2(
+                    ix_accounts,
+                    de_ix_data,
+                    swap_cpi_event,
                 ))
             },
             [223, 170, 216, 234, 204, 6, 241, 25] => {
@@ -307,24 +432,23 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapTobWithReceiverIxData =
-                    yellowstone_vixen_core::deserialize_checked_swap(
-                        ix_data,
-                        &ix_discriminator,
-                        "SwapTobWithReceiver",
-                        deserialize_checked,
-                    )?;
-                let aggregation_event = AggregationEvent::from_logs(
-                    &ix.shared
-                        .log_messages
-                        .iter()
-                        .map(|s| s.as_str())
-                        .collect::<Vec<_>>(),
+                let de_ix_data: SwapTobWithReceiverIxData = deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "SwapTobWithReceiver",
+                    deserialize_checked,
+                )?;
+                // Search for swap CPI event in inner instructions with fallback support
+                let swap_cpi_event = parse_swap_event_with_fallbacks!(
+                    ix.inner,
+                    SwapWithFeesCpiEvent2 => SwapWithFeesCpiEvent2,
+                    SwapToBWithFeesCpiEventV2 => SwapToBWithFeesCpiEventV2,
+                    SwapWithFeesCpiEventEnhanced2 => SwapWithFeesCpiEventEnhanced2
                 );
-                Ok(DexSolanaV2ProgramIx::SwapTobWithReceiver(
+                Ok(OnChainLabsDexRouter2ProgramIx::SwapTobWithReceiver(
                     ix_accounts,
                     de_ix_data,
-                    aggregation_event,
+                    swap_cpi_event,
                 ))
             },
             [187, 201, 212, 51, 16, 155, 236, 60] => {
@@ -348,23 +472,64 @@ impl InstructionParser {
                     event_authority: next_account(accounts)?,
                     program: next_account(accounts)?,
                 };
-                let de_ix_data: SwapTocIxData = yellowstone_vixen_core::deserialize_checked_swap(
+                let de_ix_data: SwapTocIxData = deserialize_checked_swap(
                     ix_data,
                     &ix_discriminator,
                     "SwapToc",
                     deserialize_checked,
                 )?;
-                let aggregation_event = AggregationEvent::from_logs(
-                    &ix.shared
-                        .log_messages
-                        .iter()
-                        .map(|s| s.as_str())
-                        .collect::<Vec<_>>(),
+                // Search for swap CPI event in inner instructions with fallback support
+                let swap_cpi_event = parse_swap_event_with_fallbacks!(
+                    ix.inner,
+                    SwapWithFeesCpiEvent2 => SwapWithFeesCpiEvent2,
+                    SwapToCWithFeesCpiEventV2 => SwapToCWithFeesCpiEventV2,
+                    SwapWithFeesCpiEventEnhanced2 => SwapWithFeesCpiEventEnhanced2
                 );
-                Ok(DexSolanaV2ProgramIx::SwapToc(
+                Ok(OnChainLabsDexRouter2ProgramIx::SwapToc(
                     ix_accounts,
                     de_ix_data,
-                    aggregation_event,
+                    swap_cpi_event,
+                ))
+            },
+            [127, 214, 107, 189, 23, 90, 47, 104] => {
+                let expected_accounts_len = 17;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = SwapTocV2IxAccounts {
+                    payer: next_account(accounts)?,
+                    source_token_account: next_account(accounts)?,
+                    destination_token_account: next_account(accounts)?,
+                    source_mint: next_account(accounts)?,
+                    destination_mint: next_account(accounts)?,
+                    parent_commission_account: next_account(accounts)?,
+                    child_commission_account: next_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    sa_authority: next_program_id_optional_account(accounts)?,
+                    source_token_sa: next_program_id_optional_account(accounts)?,
+                    destination_token_sa: next_program_id_optional_account(accounts)?,
+                    source_token_program: next_program_id_optional_account(accounts)?,
+                    destination_token_program: next_program_id_optional_account(accounts)?,
+                    associated_token_program: next_program_id_optional_account(accounts)?,
+                    system_program: next_program_id_optional_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: SwapTocV2IxData = deserialize_checked_swap(
+                    ix_data,
+                    &ix_discriminator,
+                    "SwapTocV2",
+                    deserialize_checked,
+                )?;
+                // Search for swap CPI event in inner instructions with fallback support
+                let swap_cpi_event = parse_swap_event_with_fallbacks!(
+                    ix.inner,
+                    SwapTocV2CpiEvent2 => SwapTocV2CpiEvent2,
+                    SwapToCWithFeesCpiEventV2 => SwapToCWithFeesCpiEventV2,
+                    SwapWithFeesCpiEventEnhanced2 => SwapWithFeesCpiEventEnhanced2
+                );
+                Ok(OnChainLabsDexRouter2ProgramIx::SwapTocV2(
+                    ix_accounts,
+                    de_ix_data,
+                    swap_cpi_event,
                 ))
             },
             [220, 101, 139, 249, 41, 190, 118, 199] => {
@@ -385,7 +550,35 @@ impl InstructionParser {
                     program: next_account(accounts)?,
                 };
                 let de_ix_data: WrapUnwrapIxData = deserialize_checked(ix_data, &ix_discriminator)?;
-                Ok(DexSolanaV2ProgramIx::WrapUnwrap(ix_accounts, de_ix_data))
+                Ok(OnChainLabsDexRouter2ProgramIx::WrapUnwrap(
+                    ix_accounts,
+                    de_ix_data,
+                ))
+            },
+            [123, 25, 47, 134, 233, 167, 171, 170] => {
+                let expected_accounts_len = 13;
+                check_min_accounts_req(accounts_len, expected_accounts_len)?;
+                let ix_accounts = WrapUnwrapWithReceiverIxAccounts {
+                    payer: next_account(accounts)?,
+                    payer_wsol_account: next_account(accounts)?,
+                    wsol_mint: next_account(accounts)?,
+                    temp_wsol_account: next_program_id_optional_account(accounts)?,
+                    commission_account: next_program_id_optional_account(accounts)?,
+                    platform_fee_account: next_program_id_optional_account(accounts)?,
+                    authority_pda: next_program_id_optional_account(accounts)?,
+                    wsol_sa: next_program_id_optional_account(accounts)?,
+                    token_program: next_account(accounts)?,
+                    system_program: next_account(accounts)?,
+                    receiver: next_account(accounts)?,
+                    event_authority: next_account(accounts)?,
+                    program: next_account(accounts)?,
+                };
+                let de_ix_data: WrapUnwrapWithReceiverIxData =
+                    deserialize_checked(ix_data, &ix_discriminator)?;
+                Ok(OnChainLabsDexRouter2ProgramIx::WrapUnwrapWithReceiver(
+                    ix_accounts,
+                    de_ix_data,
+                ))
             },
             _ => Err(yellowstone_vixen_core::ParseError::from(
                 "Invalid Instruction discriminator".to_owned(),
@@ -484,10 +677,11 @@ pub fn next_program_id_optional_account<
 
 // #[cfg(feature = "proto")]
 mod proto_parser {
+    use super::{InstructionParser, OnChainLabsDexRouter2ProgramIx};
+    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
     use yellowstone_vixen_core::proto::ParseProto;
 
-    use super::{ClaimIxAccounts, DexSolanaV2ProgramIx, InstructionParser};
-    use crate::{proto_def, proto_helpers::proto_types_parsers::IntoProto};
+    use super::ClaimIxAccounts;
     impl IntoProto<proto_def::ClaimIxAccounts> for ClaimIxAccounts {
         fn into_proto(self) -> proto_def::ClaimIxAccounts {
             proto_def::ClaimIxAccounts {
@@ -633,6 +827,77 @@ mod proto_parser {
             }
         }
     }
+    use super::SwapTobEnhancedIxAccounts;
+    impl IntoProto<proto_def::SwapTobEnhancedIxAccounts> for SwapTobEnhancedIxAccounts {
+        fn into_proto(self) -> proto_def::SwapTobEnhancedIxAccounts {
+            proto_def::SwapTobEnhancedIxAccounts {
+                payer: self.payer.to_string(),
+                source_token_account: self.source_token_account.to_string(),
+                destination_token_account: self.destination_token_account.to_string(),
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                commission_account: self.commission_account.map(|p| p.to_string()),
+                platform_fee_account: self.platform_fee_account.map(|p| p.to_string()),
+                sa_authority: self.sa_authority.map(|p| p.to_string()),
+                source_token_sa: self.source_token_sa.map(|p| p.to_string()),
+                destination_token_sa: self.destination_token_sa.map(|p| p.to_string()),
+                source_token_program: self.source_token_program.map(|p| p.to_string()),
+                destination_token_program: self.destination_token_program.map(|p| p.to_string()),
+                associated_token_program: self.associated_token_program.map(|p| p.to_string()),
+                system_program: self.system_program.map(|p| p.to_string()),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SwapTobEnhancedIxData;
+    impl IntoProto<proto_def::SwapTobEnhancedIxData> for SwapTobEnhancedIxData {
+        fn into_proto(self) -> proto_def::SwapTobEnhancedIxData {
+            proto_def::SwapTobEnhancedIxData {
+                args: Some(self.args.into_proto()),
+                commission_info: self.commission_info,
+                platform_fee_rate: self.platform_fee_rate.into(),
+                trim_rate: self.trim_rate.into(),
+                charge_rate: self.charge_rate.into(),
+            }
+        }
+    }
+    use super::SwapTobV2IxAccounts;
+    impl IntoProto<proto_def::SwapTobV2IxAccounts> for SwapTobV2IxAccounts {
+        fn into_proto(self) -> proto_def::SwapTobV2IxAccounts {
+            proto_def::SwapTobV2IxAccounts {
+                payer: self.payer.to_string(),
+                source_token_account: self.source_token_account.to_string(),
+                destination_token_account: self.destination_token_account.to_string(),
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                parent_commission_account: self.parent_commission_account.to_string(),
+                child_commission_account: self.child_commission_account.to_string(),
+                platform_fee_account: self.platform_fee_account.map(|p| p.to_string()),
+                sa_authority: self.sa_authority.map(|p| p.to_string()),
+                source_token_sa: self.source_token_sa.map(|p| p.to_string()),
+                destination_token_sa: self.destination_token_sa.map(|p| p.to_string()),
+                source_token_program: self.source_token_program.map(|p| p.to_string()),
+                destination_token_program: self.destination_token_program.map(|p| p.to_string()),
+                associated_token_program: self.associated_token_program.map(|p| p.to_string()),
+                system_program: self.system_program.map(|p| p.to_string()),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SwapTobV2IxData;
+    impl IntoProto<proto_def::SwapTobV2IxData> for SwapTobV2IxData {
+        fn into_proto(self) -> proto_def::SwapTobV2IxData {
+            proto_def::SwapTobV2IxData {
+                args: Some(self.args.into_proto()),
+                total_commission_info: self.total_commission_info,
+                parent_commission_rate: self.parent_commission_rate,
+                platform_fee_rate: self.platform_fee_rate.into(),
+                trim_rate: self.trim_rate.into(),
+            }
+        }
+    }
     use super::SwapTobWithReceiverIxAccounts;
     impl IntoProto<proto_def::SwapTobWithReceiverIxAccounts> for SwapTobWithReceiverIxAccounts {
         fn into_proto(self) -> proto_def::SwapTobWithReceiverIxAccounts {
@@ -701,6 +966,41 @@ mod proto_parser {
             }
         }
     }
+    use super::SwapTocV2IxAccounts;
+    impl IntoProto<proto_def::SwapTocV2IxAccounts> for SwapTocV2IxAccounts {
+        fn into_proto(self) -> proto_def::SwapTocV2IxAccounts {
+            proto_def::SwapTocV2IxAccounts {
+                payer: self.payer.to_string(),
+                source_token_account: self.source_token_account.to_string(),
+                destination_token_account: self.destination_token_account.to_string(),
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                parent_commission_account: self.parent_commission_account.to_string(),
+                child_commission_account: self.child_commission_account.to_string(),
+                platform_fee_account: self.platform_fee_account.map(|p| p.to_string()),
+                sa_authority: self.sa_authority.map(|p| p.to_string()),
+                source_token_sa: self.source_token_sa.map(|p| p.to_string()),
+                destination_token_sa: self.destination_token_sa.map(|p| p.to_string()),
+                source_token_program: self.source_token_program.map(|p| p.to_string()),
+                destination_token_program: self.destination_token_program.map(|p| p.to_string()),
+                associated_token_program: self.associated_token_program.map(|p| p.to_string()),
+                system_program: self.system_program.map(|p| p.to_string()),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::SwapTocV2IxData;
+    impl IntoProto<proto_def::SwapTocV2IxData> for SwapTocV2IxData {
+        fn into_proto(self) -> proto_def::SwapTocV2IxData {
+            proto_def::SwapTocV2IxData {
+                args: Some(self.args.into_proto()),
+                total_commission_info: self.total_commission_info,
+                parent_commission_rate: self.parent_commission_rate,
+                platform_fee_rate: self.platform_fee_rate.into(),
+            }
+        }
+    }
     use super::WrapUnwrapIxAccounts;
     impl IntoProto<proto_def::WrapUnwrapIxAccounts> for WrapUnwrapIxAccounts {
         fn into_proto(self) -> proto_def::WrapUnwrapIxAccounts {
@@ -724,32 +1024,58 @@ mod proto_parser {
     impl IntoProto<proto_def::WrapUnwrapIxData> for WrapUnwrapIxData {
         fn into_proto(self) -> proto_def::WrapUnwrapIxData {
             proto_def::WrapUnwrapIxData {
-                order_id: self.order_id,
-                amount_in: self.amount_in,
-                commission_info: self.commission_info,
-                platform_fee_rate: self.platform_fee_rate.into(),
-                tob: self.tob,
+                args: Some(self.args.into_proto()),
+            }
+        }
+    }
+    use super::WrapUnwrapWithReceiverIxAccounts;
+    impl IntoProto<proto_def::WrapUnwrapWithReceiverIxAccounts> for WrapUnwrapWithReceiverIxAccounts {
+        fn into_proto(self) -> proto_def::WrapUnwrapWithReceiverIxAccounts {
+            proto_def::WrapUnwrapWithReceiverIxAccounts {
+                payer: self.payer.to_string(),
+                payer_wsol_account: self.payer_wsol_account.to_string(),
+                wsol_mint: self.wsol_mint.to_string(),
+                temp_wsol_account: self.temp_wsol_account.map(|p| p.to_string()),
+                commission_account: self.commission_account.map(|p| p.to_string()),
+                platform_fee_account: self.platform_fee_account.map(|p| p.to_string()),
+                authority_pda: self.authority_pda.map(|p| p.to_string()),
+                wsol_sa: self.wsol_sa.map(|p| p.to_string()),
+                token_program: self.token_program.to_string(),
+                system_program: self.system_program.to_string(),
+                receiver: self.receiver.to_string(),
+                event_authority: self.event_authority.to_string(),
+                program: self.program.to_string(),
+            }
+        }
+    }
+    use super::WrapUnwrapWithReceiverIxData;
+    impl IntoProto<proto_def::WrapUnwrapWithReceiverIxData> for WrapUnwrapWithReceiverIxData {
+        fn into_proto(self) -> proto_def::WrapUnwrapWithReceiverIxData {
+            proto_def::WrapUnwrapWithReceiverIxData {
+                args: Some(self.args.into_proto()),
             }
         }
     }
 
-    impl IntoProto<proto_def::ProgramIxs> for DexSolanaV2ProgramIx {
+    impl IntoProto<proto_def::ProgramIxs> for OnChainLabsDexRouter2ProgramIx {
         fn into_proto(self) -> proto_def::ProgramIxs {
             match self {
-                DexSolanaV2ProgramIx::Claim(acc) => proto_def::ProgramIxs {
+                OnChainLabsDexRouter2ProgramIx::Claim(acc) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Claim(proto_def::ClaimIx {
                         accounts: Some(acc.into_proto()),
                     })),
                 },
-                DexSolanaV2ProgramIx::CreateTokenAccount(acc, data) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateTokenAccount(
-                        proto_def::CreateTokenAccountIx {
-                            accounts: Some(acc.into_proto()),
-                            data: Some(data.into_proto()),
-                        },
-                    )),
+                OnChainLabsDexRouter2ProgramIx::CreateTokenAccount(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::CreateTokenAccount(
+                            proto_def::CreateTokenAccountIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
                 },
-                DexSolanaV2ProgramIx::CreateTokenAccountWithSeed(acc, data) => {
+                OnChainLabsDexRouter2ProgramIx::CreateTokenAccountWithSeed(acc, data) => {
                     proto_def::ProgramIxs {
                         ix_oneof: Some(
                             proto_def::program_ixs::IxOneof::CreateTokenAccountWithSeed(
@@ -761,7 +1087,7 @@ mod proto_parser {
                         ),
                     }
                 },
-                DexSolanaV2ProgramIx::ProxySwap(acc, data, _) => proto_def::ProgramIxs {
+                OnChainLabsDexRouter2ProgramIx::ProxySwap(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::ProxySwap(
                         proto_def::ProxySwapIx {
                             accounts: Some(acc.into_proto()),
@@ -769,13 +1095,13 @@ mod proto_parser {
                         },
                     )),
                 },
-                DexSolanaV2ProgramIx::Swap(acc, data, _) => proto_def::ProgramIxs {
+                OnChainLabsDexRouter2ProgramIx::Swap(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::Swap(proto_def::SwapIx {
                         accounts: Some(acc.into_proto()),
                         data: Some(data.into_proto()),
                     })),
                 },
-                DexSolanaV2ProgramIx::SwapTob(acc, data, _) => proto_def::ProgramIxs {
+                OnChainLabsDexRouter2ProgramIx::SwapTob(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapTob(
                         proto_def::SwapTobIx {
                             accounts: Some(acc.into_proto()),
@@ -783,15 +1109,35 @@ mod proto_parser {
                         },
                     )),
                 },
-                DexSolanaV2ProgramIx::SwapTobWithReceiver(acc, data, _) => proto_def::ProgramIxs {
-                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapTobWithReceiver(
-                        proto_def::SwapTobWithReceiverIx {
+                OnChainLabsDexRouter2ProgramIx::SwapTobEnhanced(acc, data, _) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapTobEnhanced(
+                            proto_def::SwapTobEnhancedIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
+                },
+                OnChainLabsDexRouter2ProgramIx::SwapTobV2(acc, data, _) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapTobV2(
+                        proto_def::SwapTobV2Ix {
                             accounts: Some(acc.into_proto()),
                             data: Some(data.into_proto()),
                         },
                     )),
                 },
-                DexSolanaV2ProgramIx::SwapToc(acc, data, _) => proto_def::ProgramIxs {
+                OnChainLabsDexRouter2ProgramIx::SwapTobWithReceiver(acc, data, _) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapTobWithReceiver(
+                            proto_def::SwapTobWithReceiverIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
+                },
+                OnChainLabsDexRouter2ProgramIx::SwapToc(acc, data, _) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapToc(
                         proto_def::SwapTocIx {
                             accounts: Some(acc.into_proto()),
@@ -799,13 +1145,31 @@ mod proto_parser {
                         },
                     )),
                 },
-                DexSolanaV2ProgramIx::WrapUnwrap(acc, data) => proto_def::ProgramIxs {
+                OnChainLabsDexRouter2ProgramIx::SwapTocV2(acc, data, _) => proto_def::ProgramIxs {
+                    ix_oneof: Some(proto_def::program_ixs::IxOneof::SwapTocV2(
+                        proto_def::SwapTocV2Ix {
+                            accounts: Some(acc.into_proto()),
+                            data: Some(data.into_proto()),
+                        },
+                    )),
+                },
+                OnChainLabsDexRouter2ProgramIx::WrapUnwrap(acc, data) => proto_def::ProgramIxs {
                     ix_oneof: Some(proto_def::program_ixs::IxOneof::WrapUnwrap(
                         proto_def::WrapUnwrapIx {
                             accounts: Some(acc.into_proto()),
                             data: Some(data.into_proto()),
                         },
                     )),
+                },
+                OnChainLabsDexRouter2ProgramIx::WrapUnwrapWithReceiver(acc, data) => {
+                    proto_def::ProgramIxs {
+                        ix_oneof: Some(proto_def::program_ixs::IxOneof::WrapUnwrapWithReceiver(
+                            proto_def::WrapUnwrapWithReceiverIx {
+                                accounts: Some(acc.into_proto()),
+                                data: Some(data.into_proto()),
+                            },
+                        )),
+                    }
                 },
             }
         }

@@ -9,11 +9,11 @@ use crate::generated::types::SwapArgs;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
-pub const SWAP_TOB_WITH_RECEIVER_DISCRIMINATOR: [u8; 8] = [223, 170, 216, 234, 204, 6, 241, 25];
+pub const SWAP_TOB_ENHANCED_DISCRIMINATOR: [u8; 8] = [190, 156, 169, 176, 149, 154, 161, 108];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct SwapTobWithReceiver {
+pub struct SwapTobEnhanced {
     pub payer: solana_pubkey::Pubkey,
 
     pub source_token_account: solana_pubkey::Pubkey,
@@ -41,20 +41,16 @@ pub struct SwapTobWithReceiver {
     pub associated_token_program: Option<solana_pubkey::Pubkey>,
 
     pub system_program: Option<solana_pubkey::Pubkey>,
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    pub sol_receiver: Option<solana_pubkey::Pubkey>,
 
     pub event_authority: solana_pubkey::Pubkey,
 
     pub program: solana_pubkey::Pubkey,
 }
 
-impl SwapTobWithReceiver {
+impl SwapTobEnhanced {
     pub fn instruction(
         &self,
-        args: SwapTobWithReceiverInstructionArgs,
+        args: SwapTobEnhancedInstructionArgs,
     ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
@@ -62,10 +58,10 @@ impl SwapTobWithReceiver {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: SwapTobWithReceiverInstructionArgs,
+        args: SwapTobEnhancedInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(17 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
         accounts.push(solana_instruction::AccountMeta::new(
             self.source_token_account,
@@ -176,14 +172,6 @@ impl SwapTobWithReceiver {
                 false,
             ));
         }
-        if let Some(sol_receiver) = self.sol_receiver {
-            accounts.push(solana_instruction::AccountMeta::new(sol_receiver, false));
-        } else {
-            accounts.push(solana_instruction::AccountMeta::new_readonly(
-                crate::ON_CHAIN_LABS_DEX_ROUTER2_ID,
-                false,
-            ));
-        }
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
@@ -193,9 +181,7 @@ impl SwapTobWithReceiver {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = SwapTobWithReceiverInstructionData::new()
-            .try_to_vec()
-            .unwrap();
+        let mut data = SwapTobEnhancedInstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -209,14 +195,14 @@ impl SwapTobWithReceiver {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SwapTobWithReceiverInstructionData {
+pub struct SwapTobEnhancedInstructionData {
     discriminator: [u8; 8],
 }
 
-impl SwapTobWithReceiverInstructionData {
+impl SwapTobEnhancedInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [223, 170, 216, 234, 204, 6, 241, 25],
+            discriminator: [190, 156, 169, 176, 149, 154, 161, 108],
         }
     }
 
@@ -225,7 +211,7 @@ impl SwapTobWithReceiverInstructionData {
     }
 }
 
-impl Default for SwapTobWithReceiverInstructionData {
+impl Default for SwapTobEnhancedInstructionData {
     fn default() -> Self {
         Self::new()
     }
@@ -233,20 +219,21 @@ impl Default for SwapTobWithReceiverInstructionData {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SwapTobWithReceiverInstructionArgs {
+pub struct SwapTobEnhancedInstructionArgs {
     pub args: SwapArgs,
     pub commission_info: u32,
     pub platform_fee_rate: u16,
     pub trim_rate: u8,
+    pub charge_rate: u16,
 }
 
-impl SwapTobWithReceiverInstructionArgs {
+impl SwapTobEnhancedInstructionArgs {
     pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
         borsh::to_vec(self)
     }
 }
 
-/// Instruction builder for `SwapTobWithReceiver`.
+/// Instruction builder for `SwapTobEnhanced`.
 ///
 /// ### Accounts:
 ///
@@ -264,11 +251,10 @@ impl SwapTobWithReceiverInstructionArgs {
 ///   11. `[optional]` destination_token_program
 ///   12. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
 ///   13. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   14. `[writable, optional]` sol_receiver
-///   15. `[]` event_authority
-///   16. `[]` program
+///   14. `[]` event_authority
+///   15. `[]` program
 #[derive(Clone, Debug, Default)]
-pub struct SwapTobWithReceiverBuilder {
+pub struct SwapTobEnhancedBuilder {
     payer: Option<solana_pubkey::Pubkey>,
     source_token_account: Option<solana_pubkey::Pubkey>,
     destination_token_account: Option<solana_pubkey::Pubkey>,
@@ -283,17 +269,17 @@ pub struct SwapTobWithReceiverBuilder {
     destination_token_program: Option<solana_pubkey::Pubkey>,
     associated_token_program: Option<solana_pubkey::Pubkey>,
     system_program: Option<solana_pubkey::Pubkey>,
-    sol_receiver: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
     args: Option<SwapArgs>,
     commission_info: Option<u32>,
     platform_fee_rate: Option<u16>,
     trim_rate: Option<u8>,
+    charge_rate: Option<u16>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl SwapTobWithReceiverBuilder {
+impl SwapTobEnhancedBuilder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -400,15 +386,6 @@ impl SwapTobWithReceiverBuilder {
         self.system_program = system_program;
         self
     }
-    /// `[optional account]`
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    #[inline(always)]
-    pub fn sol_receiver(&mut self, sol_receiver: Option<solana_pubkey::Pubkey>) -> &mut Self {
-        self.sol_receiver = sol_receiver;
-        self
-    }
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
@@ -439,6 +416,11 @@ impl SwapTobWithReceiverBuilder {
         self.trim_rate = Some(trim_rate);
         self
     }
+    #[inline(always)]
+    pub fn charge_rate(&mut self, charge_rate: u16) -> &mut Self {
+        self.charge_rate = Some(charge_rate);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
@@ -456,7 +438,7 @@ impl SwapTobWithReceiverBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = SwapTobWithReceiver {
+        let accounts = SwapTobEnhanced {
             payer: self.payer.expect("payer is not set"),
             source_token_account: self
                 .source_token_account
@@ -475,11 +457,10 @@ impl SwapTobWithReceiverBuilder {
             destination_token_program: self.destination_token_program,
             associated_token_program: self.associated_token_program,
             system_program: self.system_program,
-            sol_receiver: self.sol_receiver,
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
-        let args = SwapTobWithReceiverInstructionArgs {
+        let args = SwapTobEnhancedInstructionArgs {
             args: self.args.clone().expect("args is not set"),
             commission_info: self
                 .commission_info
@@ -490,14 +471,15 @@ impl SwapTobWithReceiverBuilder {
                 .clone()
                 .expect("platform_fee_rate is not set"),
             trim_rate: self.trim_rate.clone().expect("trim_rate is not set"),
+            charge_rate: self.charge_rate.clone().expect("charge_rate is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `swap_tob_with_receiver` CPI accounts.
-pub struct SwapTobWithReceiverCpiAccounts<'a, 'b> {
+/// `swap_tob_enhanced` CPI accounts.
+pub struct SwapTobEnhancedCpiAccounts<'a, 'b> {
     pub payer: &'b solana_account_info::AccountInfo<'a>,
 
     pub source_token_account: &'b solana_account_info::AccountInfo<'a>,
@@ -525,18 +507,14 @@ pub struct SwapTobWithReceiverCpiAccounts<'a, 'b> {
     pub associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    pub sol_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `swap_tob_with_receiver` CPI instruction.
-pub struct SwapTobWithReceiverCpi<'a, 'b> {
+/// `swap_tob_enhanced` CPI instruction.
+pub struct SwapTobEnhancedCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
 
@@ -567,23 +545,19 @@ pub struct SwapTobWithReceiverCpi<'a, 'b> {
     pub associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    pub sol_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: SwapTobWithReceiverInstructionArgs,
+    pub __args: SwapTobEnhancedInstructionArgs,
 }
 
-impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
+impl<'a, 'b> SwapTobEnhancedCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: SwapTobWithReceiverCpiAccounts<'a, 'b>,
-        args: SwapTobWithReceiverInstructionArgs,
+        accounts: SwapTobEnhancedCpiAccounts<'a, 'b>,
+        args: SwapTobEnhancedInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -601,7 +575,6 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
             destination_token_program: accounts.destination_token_program,
             associated_token_program: accounts.associated_token_program,
             system_program: accounts.system_program,
-            sol_receiver: accounts.sol_receiver,
             event_authority: accounts.event_authority,
             program: accounts.program,
             __args: args,
@@ -630,7 +603,7 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_error::ProgramResult {
-        let mut accounts = Vec::with_capacity(17 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(16 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
         accounts.push(solana_instruction::AccountMeta::new(
             *self.source_token_account.key,
@@ -747,17 +720,6 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
                 false,
             ));
         }
-        if let Some(sol_receiver) = self.sol_receiver {
-            accounts.push(solana_instruction::AccountMeta::new(
-                *sol_receiver.key,
-                false,
-            ));
-        } else {
-            accounts.push(solana_instruction::AccountMeta::new_readonly(
-                crate::ON_CHAIN_LABS_DEX_ROUTER2_ID,
-                false,
-            ));
-        }
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
@@ -773,9 +735,7 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = SwapTobWithReceiverInstructionData::new()
-            .try_to_vec()
-            .unwrap();
+        let mut data = SwapTobEnhancedInstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -784,7 +744,7 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(18 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(17 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.payer.clone());
         account_infos.push(self.source_token_account.clone());
@@ -818,9 +778,6 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
         if let Some(system_program) = self.system_program {
             account_infos.push(system_program.clone());
         }
-        if let Some(sol_receiver) = self.sol_receiver {
-            account_infos.push(sol_receiver.clone());
-        }
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
         remaining_accounts
@@ -835,7 +792,7 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `SwapTobWithReceiver` via CPI.
+/// Instruction builder for `SwapTobEnhanced` via CPI.
 ///
 /// ### Accounts:
 ///
@@ -853,17 +810,16 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
 ///   11. `[optional]` destination_token_program
 ///   12. `[optional]` associated_token_program
 ///   13. `[optional]` system_program
-///   14. `[writable, optional]` sol_receiver
-///   15. `[]` event_authority
-///   16. `[]` program
+///   14. `[]` event_authority
+///   15. `[]` program
 #[derive(Clone, Debug)]
-pub struct SwapTobWithReceiverCpiBuilder<'a, 'b> {
-    instruction: Box<SwapTobWithReceiverCpiBuilderInstruction<'a, 'b>>,
+pub struct SwapTobEnhancedCpiBuilder<'a, 'b> {
+    instruction: Box<SwapTobEnhancedCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
+impl<'a, 'b> SwapTobEnhancedCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(SwapTobWithReceiverCpiBuilderInstruction {
+        let instruction = Box::new(SwapTobEnhancedCpiBuilderInstruction {
             __program: program,
             payer: None,
             source_token_account: None,
@@ -879,13 +835,13 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
             destination_token_program: None,
             associated_token_program: None,
             system_program: None,
-            sol_receiver: None,
             event_authority: None,
             program: None,
             args: None,
             commission_info: None,
             platform_fee_rate: None,
             trim_rate: None,
+            charge_rate: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -1008,18 +964,6 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
         self.instruction.system_program = system_program;
         self
     }
-    /// `[optional account]`
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    #[inline(always)]
-    pub fn sol_receiver(
-        &mut self,
-        sol_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
-    ) -> &mut Self {
-        self.instruction.sol_receiver = sol_receiver;
-        self
-    }
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -1051,6 +995,11 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn trim_rate(&mut self, trim_rate: u8) -> &mut Self {
         self.instruction.trim_rate = Some(trim_rate);
+        self
+    }
+    #[inline(always)]
+    pub fn charge_rate(&mut self, charge_rate: u16) -> &mut Self {
+        self.instruction.charge_rate = Some(charge_rate);
         self
     }
     /// Add an additional account to the instruction.
@@ -1087,7 +1036,7 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
-        let args = SwapTobWithReceiverInstructionArgs {
+        let args = SwapTobEnhancedInstructionArgs {
             args: self.instruction.args.clone().expect("args is not set"),
             commission_info: self
                 .instruction
@@ -1104,8 +1053,13 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
                 .trim_rate
                 .clone()
                 .expect("trim_rate is not set"),
+            charge_rate: self
+                .instruction
+                .charge_rate
+                .clone()
+                .expect("charge_rate is not set"),
         };
-        let instruction = SwapTobWithReceiverCpi {
+        let instruction = SwapTobEnhancedCpi {
             __program: self.instruction.__program,
 
             payer: self.instruction.payer.expect("payer is not set"),
@@ -1148,8 +1102,6 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
 
             system_program: self.instruction.system_program,
 
-            sol_receiver: self.instruction.sol_receiver,
-
             event_authority: self
                 .instruction
                 .event_authority
@@ -1166,7 +1118,7 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct SwapTobWithReceiverCpiBuilderInstruction<'a, 'b> {
+struct SwapTobEnhancedCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     payer: Option<&'b solana_account_info::AccountInfo<'a>>,
     source_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
@@ -1182,13 +1134,13 @@ struct SwapTobWithReceiverCpiBuilderInstruction<'a, 'b> {
     destination_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    sol_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
     args: Option<SwapArgs>,
     commission_info: Option<u32>,
     platform_fee_rate: Option<u16>,
     trim_rate: Option<u8>,
+    charge_rate: Option<u16>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }

@@ -7,5 +7,6 @@
 
 use solana_pubkey::{pubkey, Pubkey};
 
-/// `dex_solana_v2` program ID.
-pub const DEX_SOLANA_V2_ID: Pubkey = pubkey!("proVF4pMXVaYqmy4NjniPh4pqKNfMmsihgd4wdkCX3u");
+/// `on_chain_labs_dex_router2` program ID.
+pub const ON_CHAIN_LABS_DEX_ROUTER2_ID: Pubkey =
+    pubkey!("proVF4pMXVaYqmy4NjniPh4pqKNfMmsihgd4wdkCX3u");

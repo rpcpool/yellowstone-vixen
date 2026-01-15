@@ -13,6 +13,7 @@ yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
 yellowstone-vixen-jupiter-swap-parser = { workspace = true }
 yellowstone-vixen-mock = { workspace = true }
 kryptogo-vixen-okx-dex-parser = { workspace = true }
+yellowstone-vixen-okx-dex-v2-parser = { workspace = true }
 yellowstone-vixen-boop-parser = { workspace = true }
 yellowstone-vixen-meteora-amm-parser = { workspace = true }
 yellowstone-vixen-meteora-dbc-parser = { workspace = true }

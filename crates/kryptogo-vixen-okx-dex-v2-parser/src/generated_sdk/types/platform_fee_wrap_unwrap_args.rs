@@ -5,14 +5,15 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::Dex;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Route {
-    pub dex: Dex,
-    pub weight: u16,
-    pub index: u8,
+pub struct PlatformFeeWrapUnwrapArgs {
+    pub order_id: u64,
+    pub amount_in: u64,
+    pub commission_info: u32,
+    pub platform_fee_rate: u16,
+    pub tob: bool,
 }

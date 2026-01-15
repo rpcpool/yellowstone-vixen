@@ -11,11 +11,24 @@ pub(crate) mod r#create_token_account_with_seed;
 pub(crate) mod r#proxy_swap;
 pub(crate) mod r#swap;
 pub(crate) mod r#swap_tob;
+pub(crate) mod r#swap_tob_enhanced;
+pub(crate) mod r#swap_tob_v2;
 pub(crate) mod r#swap_tob_with_receiver;
 pub(crate) mod r#swap_toc;
+pub(crate) mod r#swap_toc_v2;
 pub(crate) mod r#wrap_unwrap;
+pub(crate) mod r#wrap_unwrap_with_receiver;
 
-pub use self::{
-    r#claim::*, r#create_token_account::*, r#create_token_account_with_seed::*, r#proxy_swap::*,
-    r#swap::*, r#swap_tob::*, r#swap_tob_with_receiver::*, r#swap_toc::*, r#wrap_unwrap::*,
-};
+pub use self::r#claim::*;
+pub use self::r#create_token_account::*;
+pub use self::r#create_token_account_with_seed::*;
+pub use self::r#proxy_swap::*;
+pub use self::r#swap::*;
+pub use self::r#swap_tob::*;
+pub use self::r#swap_tob_enhanced::*;
+pub use self::r#swap_tob_v2::*;
+pub use self::r#swap_tob_with_receiver::*;
+pub use self::r#swap_toc::*;
+pub use self::r#swap_toc_v2::*;
+pub use self::r#wrap_unwrap::*;
+pub use self::r#wrap_unwrap_with_receiver::*;

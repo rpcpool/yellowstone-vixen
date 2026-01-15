@@ -9,11 +9,25 @@
 pub mod proto_types_parsers {
     use yellowstone_vixen_core::proto_helper_traits;
     proto_helper_traits!();
-    use crate::{proto_def, types::Route};
+    use crate::proto_def;
+
+    use crate::types::PlatformFeeWrapUnwrapArgs;
+    impl IntoProto<proto_def::PlatformFeeWrapUnwrapArgs> for PlatformFeeWrapUnwrapArgs {
+        fn into_proto(self) -> proto_def::PlatformFeeWrapUnwrapArgs {
+            proto_def::PlatformFeeWrapUnwrapArgs {
+                order_id: self.order_id,
+                amount_in: self.amount_in,
+                commission_info: self.commission_info,
+                platform_fee_rate: self.platform_fee_rate.into(),
+                tob: self.tob,
+            }
+        }
+    }
+    use crate::types::Route;
     impl IntoProto<proto_def::Route> for Route {
         fn into_proto(self) -> proto_def::Route {
             proto_def::Route {
-                dex: self.dex as i32,
+                dex: Some(self.dex.into_proto()),
                 weight: self.weight.into(),
                 index: self.index.into(),
             }
@@ -45,13 +59,136 @@ pub mod proto_types_parsers {
             }
         }
     }
+    use crate::types::SwapCpiEvent2;
+    impl IntoProto<proto_def::SwapCpiEvent2> for SwapCpiEvent2 {
+        fn into_proto(self) -> proto_def::SwapCpiEvent2 {
+            proto_def::SwapCpiEvent2 {
+                order_id: self.order_id,
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_account_owner: self.source_token_account_owner.to_string(),
+                destination_token_account_owner: self.destination_token_account_owner.to_string(),
+                amount_in: self.amount_in,
+                source_token_change: self.source_token_change,
+                destination_token_change: self.destination_token_change,
+            }
+        }
+    }
     use crate::types::SwapEvent;
     impl IntoProto<proto_def::SwapEvent> for SwapEvent {
         fn into_proto(self) -> proto_def::SwapEvent {
             proto_def::SwapEvent {
-                dex: self.dex as i32,
+                dex: Some(self.dex.into_proto()),
                 amount_in: self.amount_in,
                 amount_out: self.amount_out,
+            }
+        }
+    }
+    use crate::types::SwapToBWithFeesCpiEventV2;
+    impl IntoProto<proto_def::SwapToBWithFeesCpiEventV2> for SwapToBWithFeesCpiEventV2 {
+        fn into_proto(self) -> proto_def::SwapToBWithFeesCpiEventV2 {
+            proto_def::SwapToBWithFeesCpiEventV2 {
+                order_id: self.order_id,
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_account_owner: self.source_token_account_owner.to_string(),
+                destination_token_account_owner: self.destination_token_account_owner.to_string(),
+                source_token_change: self.source_token_change,
+                destination_token_change: self.destination_token_change,
+                commission_direction: self.commission_direction,
+                total_commission_rate: self.total_commission_rate,
+                parent_commission_rate: self.parent_commission_rate,
+                parent_commission_amount: self.parent_commission_amount,
+                parent_commission_account: self.parent_commission_account.to_string(),
+                child_commission_rate: self.child_commission_rate,
+                child_commission_amount: self.child_commission_amount,
+                child_commission_account: self.child_commission_account.to_string(),
+                platform_fee_rate: self.platform_fee_rate.into(),
+                platform_fee_amount: self.platform_fee_amount,
+                platform_fee_account: self.platform_fee_account.to_string(),
+                trim_rate: self.trim_rate.into(),
+                trim_amount: self.trim_amount,
+                trim_account: self.trim_account.to_string(),
+            }
+        }
+    }
+    use crate::types::SwapToCWithFeesCpiEventV2;
+    impl IntoProto<proto_def::SwapToCWithFeesCpiEventV2> for SwapToCWithFeesCpiEventV2 {
+        fn into_proto(self) -> proto_def::SwapToCWithFeesCpiEventV2 {
+            proto_def::SwapToCWithFeesCpiEventV2 {
+                order_id: self.order_id,
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_account_owner: self.source_token_account_owner.to_string(),
+                destination_token_account_owner: self.destination_token_account_owner.to_string(),
+                source_token_change: self.source_token_change,
+                destination_token_change: self.destination_token_change,
+                commission_direction: self.commission_direction,
+                total_commission_rate: self.total_commission_rate,
+                parent_commission_rate: self.parent_commission_rate,
+                parent_commission_amount: self.parent_commission_amount,
+                parent_commission_account: self.parent_commission_account.to_string(),
+                child_commission_rate: self.child_commission_rate,
+                child_commission_amount: self.child_commission_amount,
+                child_commission_account: self.child_commission_account.to_string(),
+                platform_fee_rate: self.platform_fee_rate.into(),
+                platform_fee_amount: self.platform_fee_amount,
+                platform_fee_account: self.platform_fee_account.to_string(),
+            }
+        }
+    }
+    use crate::types::SwapTobV2CpiEvent2;
+    impl IntoProto<proto_def::SwapTobV2CpiEvent2> for SwapTobV2CpiEvent2 {
+        fn into_proto(self) -> proto_def::SwapTobV2CpiEvent2 {
+            proto_def::SwapTobV2CpiEvent2 {
+                order_id: self.order_id,
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_account_owner: self.source_token_account_owner.to_string(),
+                destination_token_account_owner: self.destination_token_account_owner.to_string(),
+                amount_in: self.amount_in,
+                source_token_change: self.source_token_change,
+                destination_token_change: self.destination_token_change,
+                commission_direction: self.commission_direction,
+                total_commission_rate: self.total_commission_rate,
+                parent_commission_rate: self.parent_commission_rate,
+                parent_commission_amount: self.parent_commission_amount,
+                parent_commission_account: self.parent_commission_account.to_string(),
+                child_commission_rate: self.child_commission_rate,
+                child_commission_amount: self.child_commission_amount,
+                child_commission_account: self.child_commission_account.to_string(),
+                platform_fee_rate: self.platform_fee_rate.into(),
+                platform_fee_amount: self.platform_fee_amount,
+                platform_fee_account: self.platform_fee_account.to_string(),
+                trim_rate: self.trim_rate.into(),
+                trim_amount: self.trim_amount,
+                trim_account: self.trim_account.to_string(),
+            }
+        }
+    }
+    use crate::types::SwapTocV2CpiEvent2;
+    impl IntoProto<proto_def::SwapTocV2CpiEvent2> for SwapTocV2CpiEvent2 {
+        fn into_proto(self) -> proto_def::SwapTocV2CpiEvent2 {
+            proto_def::SwapTocV2CpiEvent2 {
+                order_id: self.order_id,
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_account_owner: self.source_token_account_owner.to_string(),
+                destination_token_account_owner: self.destination_token_account_owner.to_string(),
+                amount_in: self.amount_in,
+                source_token_change: self.source_token_change,
+                destination_token_change: self.destination_token_change,
+                commission_direction: self.commission_direction,
+                total_commission_rate: self.total_commission_rate,
+                parent_commission_rate: self.parent_commission_rate,
+                parent_commission_amount: self.parent_commission_amount,
+                parent_commission_account: self.parent_commission_account.to_string(),
+                child_commission_rate: self.child_commission_rate,
+                child_commission_amount: self.child_commission_amount,
+                child_commission_account: self.child_commission_account.to_string(),
+                platform_fee_rate: self.platform_fee_rate.into(),
+                platform_fee_amount: self.platform_fee_amount,
+                platform_fee_account: self.platform_fee_account.to_string(),
             }
         }
     }
@@ -76,6 +213,271 @@ pub mod proto_types_parsers {
                 trim_rate: self.trim_rate.into(),
                 trim_amount: self.trim_amount,
                 trim_account: self.trim_account.to_string(),
+            }
+        }
+    }
+    use crate::types::SwapWithFeesCpiEvent2;
+    impl IntoProto<proto_def::SwapWithFeesCpiEvent2> for SwapWithFeesCpiEvent2 {
+        fn into_proto(self) -> proto_def::SwapWithFeesCpiEvent2 {
+            proto_def::SwapWithFeesCpiEvent2 {
+                order_id: self.order_id,
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_account_owner: self.source_token_account_owner.to_string(),
+                destination_token_account_owner: self.destination_token_account_owner.to_string(),
+                amount_in: self.amount_in,
+                source_token_change: self.source_token_change,
+                destination_token_change: self.destination_token_change,
+                commission_direction: self.commission_direction,
+                commission_rate: self.commission_rate,
+                commission_amount: self.commission_amount,
+                commission_account: self.commission_account.to_string(),
+                platform_fee_rate: self.platform_fee_rate.into(),
+                platform_fee_amount: self.platform_fee_amount,
+                platform_fee_account: self.platform_fee_account.to_string(),
+                trim_rate: self.trim_rate.into(),
+                trim_amount: self.trim_amount,
+                trim_account: self.trim_account.to_string(),
+            }
+        }
+    }
+    use crate::types::SwapWithFeesCpiEventEnhanced;
+    impl IntoProto<proto_def::SwapWithFeesCpiEventEnhanced> for SwapWithFeesCpiEventEnhanced {
+        fn into_proto(self) -> proto_def::SwapWithFeesCpiEventEnhanced {
+            proto_def::SwapWithFeesCpiEventEnhanced {
+                order_id: self.order_id,
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_account_owner: self.source_token_account_owner.to_string(),
+                destination_token_account_owner: self.destination_token_account_owner.to_string(),
+                source_token_change: self.source_token_change,
+                destination_token_change: self.destination_token_change,
+                commission_direction: self.commission_direction,
+                commission_rate: self.commission_rate,
+                commission_amount: self.commission_amount,
+                commission_account: self.commission_account.to_string(),
+                platform_fee_rate: self.platform_fee_rate.into(),
+                platform_fee_amount: self.platform_fee_amount,
+                platform_fee_account: self.platform_fee_account.to_string(),
+                trim_rate: self.trim_rate.into(),
+                trim_amount: self.trim_amount,
+                trim_account: self.trim_account.to_string(),
+                charge_rate: self.charge_rate.into(),
+                charge_amount: self.charge_amount,
+                charge_account: self.charge_account.to_string(),
+            }
+        }
+    }
+    use crate::types::SwapWithFeesCpiEventEnhanced2;
+    impl IntoProto<proto_def::SwapWithFeesCpiEventEnhanced2> for SwapWithFeesCpiEventEnhanced2 {
+        fn into_proto(self) -> proto_def::SwapWithFeesCpiEventEnhanced2 {
+            proto_def::SwapWithFeesCpiEventEnhanced2 {
+                order_id: self.order_id,
+                source_mint: self.source_mint.to_string(),
+                destination_mint: self.destination_mint.to_string(),
+                source_token_account_owner: self.source_token_account_owner.to_string(),
+                destination_token_account_owner: self.destination_token_account_owner.to_string(),
+                amount_in: self.amount_in,
+                source_token_change: self.source_token_change,
+                destination_token_change: self.destination_token_change,
+                commission_direction: self.commission_direction,
+                commission_rate: self.commission_rate,
+                commission_amount: self.commission_amount,
+                commission_account: self.commission_account.to_string(),
+                platform_fee_rate: self.platform_fee_rate.into(),
+                platform_fee_amount: self.platform_fee_amount,
+                platform_fee_account: self.platform_fee_account.to_string(),
+                trim_rate: self.trim_rate.into(),
+                trim_amount: self.trim_amount,
+                trim_account: self.trim_account.to_string(),
+                charge_rate: self.charge_rate.into(),
+                charge_amount: self.charge_amount,
+                charge_account: self.charge_account.to_string(),
+            }
+        }
+    }
+
+    use crate::types::Dex;
+    use proto_def::dex;
+    impl IntoProto<proto_def::Dex> for Dex {
+        fn into_proto(self) -> proto_def::Dex {
+            let variant = match self {
+                Dex::SplTokenSwap => dex::Variant::SplTokenSwap(proto_def::DexSplTokenSwap {}),
+                Dex::StableSwap => dex::Variant::StableSwap(proto_def::DexStableSwap {}),
+                Dex::Whirlpool => dex::Variant::Whirlpool(proto_def::DexWhirlpool {}),
+                Dex::MeteoraDynamicpool => {
+                    dex::Variant::MeteoraDynamicpool(proto_def::DexMeteoraDynamicpool {})
+                },
+                Dex::RaydiumSwap => dex::Variant::RaydiumSwap(proto_def::DexRaydiumSwap {}),
+                Dex::RaydiumStableSwap => {
+                    dex::Variant::RaydiumStableSwap(proto_def::DexRaydiumStableSwap {})
+                },
+                Dex::RaydiumClmmSwap => {
+                    dex::Variant::RaydiumClmmSwap(proto_def::DexRaydiumClmmSwap {})
+                },
+                Dex::AldrinExchangeV1 => {
+                    dex::Variant::AldrinExchangeV1(proto_def::DexAldrinExchangeV1 {})
+                },
+                Dex::AldrinExchangeV2 => {
+                    dex::Variant::AldrinExchangeV2(proto_def::DexAldrinExchangeV2 {})
+                },
+                Dex::LifinityV1 => dex::Variant::LifinityV1(proto_def::DexLifinityV1 {}),
+                Dex::LifinityV2 => dex::Variant::LifinityV2(proto_def::DexLifinityV2 {}),
+                Dex::RaydiumClmmSwapV2 => {
+                    dex::Variant::RaydiumClmmSwapV2(proto_def::DexRaydiumClmmSwapV2 {})
+                },
+                Dex::FluxBeam => dex::Variant::FluxBeam(proto_def::DexFluxBeam {}),
+                Dex::MeteoraDlmm => dex::Variant::MeteoraDlmm(proto_def::DexMeteoraDlmm {}),
+                Dex::RaydiumCpmmSwap => {
+                    dex::Variant::RaydiumCpmmSwap(proto_def::DexRaydiumCpmmSwap {})
+                },
+                Dex::OpenBookV2 => dex::Variant::OpenBookV2(proto_def::DexOpenBookV2 {}),
+                Dex::WhirlpoolV2 => dex::Variant::WhirlpoolV2(proto_def::DexWhirlpoolV2 {}),
+                Dex::Phoenix => dex::Variant::Phoenix(proto_def::DexPhoenix {}),
+                Dex::ObricV2 => dex::Variant::ObricV2(proto_def::DexObricV2 {}),
+                Dex::SanctumAddLiq => dex::Variant::SanctumAddLiq(proto_def::DexSanctumAddLiq {}),
+                Dex::SanctumRemoveLiq => {
+                    dex::Variant::SanctumRemoveLiq(proto_def::DexSanctumRemoveLiq {})
+                },
+                Dex::SanctumNonWsolSwap => {
+                    dex::Variant::SanctumNonWsolSwap(proto_def::DexSanctumNonWsolSwap {})
+                },
+                Dex::SanctumWsolSwap => {
+                    dex::Variant::SanctumWsolSwap(proto_def::DexSanctumWsolSwap {})
+                },
+                Dex::PumpfunBuy => dex::Variant::PumpfunBuy(proto_def::DexPumpfunBuy {}),
+                Dex::PumpfunSell => dex::Variant::PumpfunSell(proto_def::DexPumpfunSell {}),
+                Dex::StabbleSwap => dex::Variant::StabbleSwap(proto_def::DexStabbleSwap {}),
+                Dex::SanctumRouter => dex::Variant::SanctumRouter(proto_def::DexSanctumRouter {}),
+                Dex::MeteoraVaultDeposit => {
+                    dex::Variant::MeteoraVaultDeposit(proto_def::DexMeteoraVaultDeposit {})
+                },
+                Dex::MeteoraVaultWithdraw => {
+                    dex::Variant::MeteoraVaultWithdraw(proto_def::DexMeteoraVaultWithdraw {})
+                },
+                Dex::Saros => dex::Variant::Saros(proto_def::DexSaros {}),
+                Dex::MeteoraLst => dex::Variant::MeteoraLst(proto_def::DexMeteoraLst {}),
+                Dex::Solfi => dex::Variant::Solfi(proto_def::DexSolfi {}),
+                Dex::QualiaSwap => dex::Variant::QualiaSwap(proto_def::DexQualiaSwap {}),
+                Dex::Zerofi => dex::Variant::Zerofi(proto_def::DexZerofi {}),
+                Dex::PumpfunammBuy => dex::Variant::PumpfunammBuy(proto_def::DexPumpfunammBuy {}),
+                Dex::PumpfunammSell => {
+                    dex::Variant::PumpfunammSell(proto_def::DexPumpfunammSell {})
+                },
+                Dex::Virtuals => dex::Variant::Virtuals(proto_def::DexVirtuals {}),
+                Dex::VertigoBuy => dex::Variant::VertigoBuy(proto_def::DexVertigoBuy {}),
+                Dex::VertigoSell => dex::Variant::VertigoSell(proto_def::DexVertigoSell {}),
+                Dex::PerpetualsAddLiq => {
+                    dex::Variant::PerpetualsAddLiq(proto_def::DexPerpetualsAddLiq {})
+                },
+                Dex::PerpetualsRemoveLiq => {
+                    dex::Variant::PerpetualsRemoveLiq(proto_def::DexPerpetualsRemoveLiq {})
+                },
+                Dex::PerpetualsSwap => {
+                    dex::Variant::PerpetualsSwap(proto_def::DexPerpetualsSwap {})
+                },
+                Dex::RaydiumLaunchpad => {
+                    dex::Variant::RaydiumLaunchpad(proto_def::DexRaydiumLaunchpad {})
+                },
+                Dex::LetsBonkFun => dex::Variant::LetsBonkFun(proto_def::DexLetsBonkFun {}),
+                Dex::Woofi => dex::Variant::Woofi(proto_def::DexWoofi {}),
+                Dex::MeteoraDbc => dex::Variant::MeteoraDbc(proto_def::DexMeteoraDbc {}),
+                Dex::MeteoraDlmmSwap2 => {
+                    dex::Variant::MeteoraDlmmSwap2(proto_def::DexMeteoraDlmmSwap2 {})
+                },
+                Dex::MeteoraDAMMV2 => dex::Variant::MeteoraDAMMV2(proto_def::DexMeteoraDammv2 {}),
+                Dex::Gavel => dex::Variant::Gavel(proto_def::DexGavel {}),
+                Dex::BoopfunBuy => dex::Variant::BoopfunBuy(proto_def::DexBoopfunBuy {}),
+                Dex::BoopfunSell => dex::Variant::BoopfunSell(proto_def::DexBoopfunSell {}),
+                Dex::MeteoraDbc2 => dex::Variant::MeteoraDbc2(proto_def::DexMeteoraDbc2 {}),
+                Dex::GooseFX => dex::Variant::GooseFX(proto_def::DexGooseFx {}),
+                Dex::Dooar => dex::Variant::Dooar(proto_def::DexDooar {}),
+                Dex::Numeraire => dex::Variant::Numeraire(proto_def::DexNumeraire {}),
+                Dex::SaberDecimalWrapperDeposit => dex::Variant::SaberDecimalWrapperDeposit(
+                    proto_def::DexSaberDecimalWrapperDeposit {},
+                ),
+                Dex::SaberDecimalWrapperWithdraw => dex::Variant::SaberDecimalWrapperWithdraw(
+                    proto_def::DexSaberDecimalWrapperWithdraw {},
+                ),
+                Dex::SarosDlmm => dex::Variant::SarosDlmm(proto_def::DexSarosDlmm {}),
+                Dex::OneDexSwap => dex::Variant::OneDexSwap(proto_def::DexOneDexSwap {}),
+                Dex::Manifest => dex::Variant::Manifest(proto_def::DexManifest {}),
+                Dex::ByrealClmm => dex::Variant::ByrealClmm(proto_def::DexByrealClmm {}),
+                Dex::PancakeSwapV3Swap => {
+                    dex::Variant::PancakeSwapV3Swap(proto_def::DexPancakeSwapV3Swap {})
+                },
+                Dex::PancakeSwapV3SwapV2 => {
+                    dex::Variant::PancakeSwapV3SwapV2(proto_def::DexPancakeSwapV3SwapV2 {})
+                },
+                Dex::Tessera => dex::Variant::Tessera(proto_def::DexTessera {}),
+                Dex::SolRfq {
+                    rfq_id,
+                    expected_maker_amount,
+                    expected_taker_amount,
+                    maker_send_amount,
+                    taker_send_amount,
+                    expiry,
+                    maker_use_native_sol,
+                    taker_use_native_sol,
+                } => dex::Variant::SolRfq(proto_def::DexSolRfq {
+                    rfq_id,
+                    expected_maker_amount,
+                    expected_taker_amount,
+                    maker_send_amount,
+                    taker_send_amount,
+                    expiry,
+                    maker_use_native_sol,
+                    taker_use_native_sol,
+                }),
+                Dex::Humidifi => dex::Variant::Humidifi(proto_def::DexHumidifi {}),
+                Dex::HeavenBuy => dex::Variant::HeavenBuy(proto_def::DexHeavenBuy {}),
+                Dex::HeavenSell => dex::Variant::HeavenSell(proto_def::DexHeavenSell {}),
+                Dex::SolfiV2 => dex::Variant::SolfiV2(proto_def::DexSolfiV2 {}),
+                Dex::Goonfi => dex::Variant::Goonfi(proto_def::DexGoonfi {}),
+                Dex::MoonitBuy => dex::Variant::MoonitBuy(proto_def::DexMoonitBuy {}),
+                Dex::MoonitSell => dex::Variant::MoonitSell(proto_def::DexMoonitSell {}),
+                Dex::RaydiumSwapV2 => dex::Variant::RaydiumSwapV2(proto_def::DexRaydiumSwapV2 {}),
+                Dex::Whalestreet => dex::Variant::Whalestreet(proto_def::DexWhalestreet {}),
+                Dex::SugarMoneyBuy {
+                    bonding_curve_bump,
+                    bonding_curve_sol_associated_account_bump,
+                } => dex::Variant::SugarMoneyBuy(proto_def::DexSugarMoneyBuy {
+                    bonding_curve_bump: bonding_curve_bump.into(),
+                    bonding_curve_sol_associated_account_bump:
+                        bonding_curve_sol_associated_account_bump.into(),
+                }),
+                Dex::SugarMoneySell {
+                    bonding_curve_bump,
+                    bonding_curve_sol_associated_account_bump,
+                } => dex::Variant::SugarMoneySell(proto_def::DexSugarMoneySell {
+                    bonding_curve_bump: bonding_curve_bump.into(),
+                    bonding_curve_sol_associated_account_bump:
+                        bonding_curve_sol_associated_account_bump.into(),
+                }),
+                Dex::MeteoraDAMMV2Swap2 => {
+                    dex::Variant::MeteoraDAMMV2Swap2(proto_def::DexMeteoraDammv2Swap2 {})
+                },
+                Dex::AlphaQ => dex::Variant::AlphaQ(proto_def::DexAlphaQ {}),
+                Dex::FutarchyAmm => dex::Variant::FutarchyAmm(proto_def::DexFutarchyAmm {}),
+                Dex::PumpfunBuy2 => dex::Variant::PumpfunBuy2(proto_def::DexPumpfunBuy2 {}),
+                Dex::PumpfunSell2 => dex::Variant::PumpfunSell2(proto_def::DexPumpfunSell2 {}),
+                Dex::HumidifiSwap2 { swap_id } => {
+                    dex::Variant::HumidifiSwap2(proto_def::DexHumidifiSwap2 { swap_id })
+                },
+                Dex::Scorch { id } => {
+                    dex::Variant::Scorch(proto_def::DexScorch { id: id.to_string() })
+                },
+                Dex::JupiterLendDeposit => {
+                    dex::Variant::JupiterLendDeposit(proto_def::DexJupiterLendDeposit {})
+                },
+                Dex::JupiterLendRedeem => {
+                    dex::Variant::JupiterLendRedeem(proto_def::DexJupiterLendRedeem {})
+                },
+                Dex::TaurusFi => dex::Variant::TaurusFi(proto_def::DexTaurusFi {}),
+            };
+
+            proto_def::Dex {
+                variant: Some(variant),
             }
         }
     }

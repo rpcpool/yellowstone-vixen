@@ -5,7 +5,7 @@ pub use generated_parser::*;
 use generated_sdk as generated;
 use solana_pubkey::Pubkey;
 
-pub const ID: Pubkey = DEX_SOLANA_V2_ID;
+pub const ID: Pubkey = ON_CHAIN_LABS_DEX_ROUTER2_ID;
 
 // #[cfg(feature = "proto")]
 pub mod proto_def {

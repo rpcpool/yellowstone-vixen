@@ -9,11 +9,11 @@ use crate::generated::types::PlatformFeeWrapUnwrapArgs;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
-pub const WRAP_UNWRAP_DISCRIMINATOR: [u8; 8] = [220, 101, 139, 249, 41, 190, 118, 199];
+pub const WRAP_UNWRAP_WITH_RECEIVER_DISCRIMINATOR: [u8; 8] = [123, 25, 47, 134, 233, 167, 171, 170];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct WrapUnwrap {
+pub struct WrapUnwrapWithReceiver {
     pub payer: solana_pubkey::Pubkey,
 
     pub payer_wsol_account: solana_pubkey::Pubkey,
@@ -33,24 +33,30 @@ pub struct WrapUnwrap {
     pub token_program: solana_pubkey::Pubkey,
 
     pub system_program: solana_pubkey::Pubkey,
+    /// - Wrap: WSOL token account (ATA) to receive WSOL
+    /// - Unwrap: System account (EOA) to receive SOL
+    pub receiver: solana_pubkey::Pubkey,
 
     pub event_authority: solana_pubkey::Pubkey,
 
     pub program: solana_pubkey::Pubkey,
 }
 
-impl WrapUnwrap {
-    pub fn instruction(&self, args: WrapUnwrapInstructionArgs) -> solana_instruction::Instruction {
+impl WrapUnwrapWithReceiver {
+    pub fn instruction(
+        &self,
+        args: WrapUnwrapWithReceiverInstructionArgs,
+    ) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: WrapUnwrapInstructionArgs,
+        args: WrapUnwrapWithReceiverInstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
-        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
         accounts.push(solana_instruction::AccountMeta::new(
             self.payer_wsol_account,
@@ -117,6 +123,7 @@ impl WrapUnwrap {
             self.system_program,
             false,
         ));
+        accounts.push(solana_instruction::AccountMeta::new(self.receiver, false));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
@@ -126,7 +133,9 @@ impl WrapUnwrap {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = WrapUnwrapInstructionData::new().try_to_vec().unwrap();
+        let mut data = WrapUnwrapWithReceiverInstructionData::new()
+            .try_to_vec()
+            .unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -140,14 +149,14 @@ impl WrapUnwrap {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct WrapUnwrapInstructionData {
+pub struct WrapUnwrapWithReceiverInstructionData {
     discriminator: [u8; 8],
 }
 
-impl WrapUnwrapInstructionData {
+impl WrapUnwrapWithReceiverInstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [220, 101, 139, 249, 41, 190, 118, 199],
+            discriminator: [123, 25, 47, 134, 233, 167, 171, 170],
         }
     }
 
@@ -156,7 +165,7 @@ impl WrapUnwrapInstructionData {
     }
 }
 
-impl Default for WrapUnwrapInstructionData {
+impl Default for WrapUnwrapWithReceiverInstructionData {
     fn default() -> Self {
         Self::new()
     }
@@ -164,17 +173,17 @@ impl Default for WrapUnwrapInstructionData {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct WrapUnwrapInstructionArgs {
+pub struct WrapUnwrapWithReceiverInstructionArgs {
     pub args: PlatformFeeWrapUnwrapArgs,
 }
 
-impl WrapUnwrapInstructionArgs {
+impl WrapUnwrapWithReceiverInstructionArgs {
     pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
         borsh::to_vec(self)
     }
 }
 
-/// Instruction builder for `WrapUnwrap`.
+/// Instruction builder for `WrapUnwrapWithReceiver`.
 ///
 /// ### Accounts:
 ///
@@ -188,10 +197,11 @@ impl WrapUnwrapInstructionArgs {
 ///   7. `[writable, optional]` wsol_sa
 ///   8. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
 ///   9. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   10. `[]` event_authority
-///   11. `[]` program
+///   10. `[writable]` receiver
+///   11. `[]` event_authority
+///   12. `[]` program
 #[derive(Clone, Debug, Default)]
-pub struct WrapUnwrapBuilder {
+pub struct WrapUnwrapWithReceiverBuilder {
     payer: Option<solana_pubkey::Pubkey>,
     payer_wsol_account: Option<solana_pubkey::Pubkey>,
     wsol_mint: Option<solana_pubkey::Pubkey>,
@@ -202,13 +212,14 @@ pub struct WrapUnwrapBuilder {
     wsol_sa: Option<solana_pubkey::Pubkey>,
     token_program: Option<solana_pubkey::Pubkey>,
     system_program: Option<solana_pubkey::Pubkey>,
+    receiver: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
     args: Option<PlatformFeeWrapUnwrapArgs>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl WrapUnwrapBuilder {
+impl WrapUnwrapWithReceiverBuilder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -281,6 +292,13 @@ impl WrapUnwrapBuilder {
         self.system_program = Some(system_program);
         self
     }
+    /// - Wrap: WSOL token account (ATA) to receive WSOL
+    /// - Unwrap: System account (EOA) to receive SOL
+    #[inline(always)]
+    pub fn receiver(&mut self, receiver: solana_pubkey::Pubkey) -> &mut Self {
+        self.receiver = Some(receiver);
+        self
+    }
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
@@ -313,7 +331,7 @@ impl WrapUnwrapBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = WrapUnwrap {
+        let accounts = WrapUnwrapWithReceiver {
             payer: self.payer.expect("payer is not set"),
             payer_wsol_account: self
                 .payer_wsol_account
@@ -332,10 +350,11 @@ impl WrapUnwrapBuilder {
             system_program: self
                 .system_program
                 .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            receiver: self.receiver.expect("receiver is not set"),
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
-        let args = WrapUnwrapInstructionArgs {
+        let args = WrapUnwrapWithReceiverInstructionArgs {
             args: self.args.clone().expect("args is not set"),
         };
 
@@ -343,8 +362,8 @@ impl WrapUnwrapBuilder {
     }
 }
 
-/// `wrap_unwrap` CPI accounts.
-pub struct WrapUnwrapCpiAccounts<'a, 'b> {
+/// `wrap_unwrap_with_receiver` CPI accounts.
+pub struct WrapUnwrapWithReceiverCpiAccounts<'a, 'b> {
     pub payer: &'b solana_account_info::AccountInfo<'a>,
 
     pub payer_wsol_account: &'b solana_account_info::AccountInfo<'a>,
@@ -364,14 +383,17 @@ pub struct WrapUnwrapCpiAccounts<'a, 'b> {
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
+    /// - Wrap: WSOL token account (ATA) to receive WSOL
+    /// - Unwrap: System account (EOA) to receive SOL
+    pub receiver: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `wrap_unwrap` CPI instruction.
-pub struct WrapUnwrapCpi<'a, 'b> {
+/// `wrap_unwrap_with_receiver` CPI instruction.
+pub struct WrapUnwrapWithReceiverCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
 
@@ -394,19 +416,22 @@ pub struct WrapUnwrapCpi<'a, 'b> {
     pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
     pub system_program: &'b solana_account_info::AccountInfo<'a>,
+    /// - Wrap: WSOL token account (ATA) to receive WSOL
+    /// - Unwrap: System account (EOA) to receive SOL
+    pub receiver: &'b solana_account_info::AccountInfo<'a>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: WrapUnwrapInstructionArgs,
+    pub __args: WrapUnwrapWithReceiverInstructionArgs,
 }
 
-impl<'a, 'b> WrapUnwrapCpi<'a, 'b> {
+impl<'a, 'b> WrapUnwrapWithReceiverCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: WrapUnwrapCpiAccounts<'a, 'b>,
-        args: WrapUnwrapInstructionArgs,
+        accounts: WrapUnwrapWithReceiverCpiAccounts<'a, 'b>,
+        args: WrapUnwrapWithReceiverInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -420,6 +445,7 @@ impl<'a, 'b> WrapUnwrapCpi<'a, 'b> {
             wsol_sa: accounts.wsol_sa,
             token_program: accounts.token_program,
             system_program: accounts.system_program,
+            receiver: accounts.receiver,
             event_authority: accounts.event_authority,
             program: accounts.program,
             __args: args,
@@ -448,7 +474,7 @@ impl<'a, 'b> WrapUnwrapCpi<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_error::ProgramResult {
-        let mut accounts = Vec::with_capacity(12 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(13 + remaining_accounts.len());
         accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
         accounts.push(solana_instruction::AccountMeta::new(
             *self.payer_wsol_account.key,
@@ -518,6 +544,10 @@ impl<'a, 'b> WrapUnwrapCpi<'a, 'b> {
             *self.system_program.key,
             false,
         ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.receiver.key,
+            false,
+        ));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
@@ -533,7 +563,9 @@ impl<'a, 'b> WrapUnwrapCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = WrapUnwrapInstructionData::new().try_to_vec().unwrap();
+        let mut data = WrapUnwrapWithReceiverInstructionData::new()
+            .try_to_vec()
+            .unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -542,7 +574,7 @@ impl<'a, 'b> WrapUnwrapCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(13 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(14 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.payer.clone());
         account_infos.push(self.payer_wsol_account.clone());
@@ -564,6 +596,7 @@ impl<'a, 'b> WrapUnwrapCpi<'a, 'b> {
         }
         account_infos.push(self.token_program.clone());
         account_infos.push(self.system_program.clone());
+        account_infos.push(self.receiver.clone());
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
         remaining_accounts
@@ -578,7 +611,7 @@ impl<'a, 'b> WrapUnwrapCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `WrapUnwrap` via CPI.
+/// Instruction builder for `WrapUnwrapWithReceiver` via CPI.
 ///
 /// ### Accounts:
 ///
@@ -592,16 +625,17 @@ impl<'a, 'b> WrapUnwrapCpi<'a, 'b> {
 ///   7. `[writable, optional]` wsol_sa
 ///   8. `[]` token_program
 ///   9. `[]` system_program
-///   10. `[]` event_authority
-///   11. `[]` program
+///   10. `[writable]` receiver
+///   11. `[]` event_authority
+///   12. `[]` program
 #[derive(Clone, Debug)]
-pub struct WrapUnwrapCpiBuilder<'a, 'b> {
-    instruction: Box<WrapUnwrapCpiBuilderInstruction<'a, 'b>>,
+pub struct WrapUnwrapWithReceiverCpiBuilder<'a, 'b> {
+    instruction: Box<WrapUnwrapWithReceiverCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> WrapUnwrapCpiBuilder<'a, 'b> {
+impl<'a, 'b> WrapUnwrapWithReceiverCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(WrapUnwrapCpiBuilderInstruction {
+        let instruction = Box::new(WrapUnwrapWithReceiverCpiBuilderInstruction {
             __program: program,
             payer: None,
             payer_wsol_account: None,
@@ -613,6 +647,7 @@ impl<'a, 'b> WrapUnwrapCpiBuilder<'a, 'b> {
             wsol_sa: None,
             token_program: None,
             system_program: None,
+            receiver: None,
             event_authority: None,
             program: None,
             args: None,
@@ -701,6 +736,13 @@ impl<'a, 'b> WrapUnwrapCpiBuilder<'a, 'b> {
         self.instruction.system_program = Some(system_program);
         self
     }
+    /// - Wrap: WSOL token account (ATA) to receive WSOL
+    /// - Unwrap: System account (EOA) to receive SOL
+    #[inline(always)]
+    pub fn receiver(&mut self, receiver: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.receiver = Some(receiver);
+        self
+    }
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -753,10 +795,10 @@ impl<'a, 'b> WrapUnwrapCpiBuilder<'a, 'b> {
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
-        let args = WrapUnwrapInstructionArgs {
+        let args = WrapUnwrapWithReceiverInstructionArgs {
             args: self.instruction.args.clone().expect("args is not set"),
         };
-        let instruction = WrapUnwrapCpi {
+        let instruction = WrapUnwrapWithReceiverCpi {
             __program: self.instruction.__program,
 
             payer: self.instruction.payer.expect("payer is not set"),
@@ -788,6 +830,8 @@ impl<'a, 'b> WrapUnwrapCpiBuilder<'a, 'b> {
                 .system_program
                 .expect("system_program is not set"),
 
+            receiver: self.instruction.receiver.expect("receiver is not set"),
+
             event_authority: self
                 .instruction
                 .event_authority
@@ -804,7 +848,7 @@ impl<'a, 'b> WrapUnwrapCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct WrapUnwrapCpiBuilderInstruction<'a, 'b> {
+struct WrapUnwrapWithReceiverCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     payer: Option<&'b solana_account_info::AccountInfo<'a>>,
     payer_wsol_account: Option<&'b solana_account_info::AccountInfo<'a>>,
@@ -816,6 +860,7 @@ struct WrapUnwrapCpiBuilderInstruction<'a, 'b> {
     wsol_sa: Option<&'b solana_account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
     args: Option<PlatformFeeWrapUnwrapArgs>,

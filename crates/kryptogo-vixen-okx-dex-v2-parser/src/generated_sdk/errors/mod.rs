@@ -5,6 +5,6 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-pub(crate) mod dex_solana_v2;
+pub(crate) mod on_chain_labs_dex_router2;
 
-pub use self::dex_solana_v2::DexSolanaV2Error;
+pub use self::on_chain_labs_dex_router2::OnChainLabsDexRouter2Error;

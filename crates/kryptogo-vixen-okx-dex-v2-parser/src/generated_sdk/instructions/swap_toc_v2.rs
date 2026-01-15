@@ -9,11 +9,11 @@ use crate::generated::types::SwapArgs;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
-pub const SWAP_TOB_WITH_RECEIVER_DISCRIMINATOR: [u8; 8] = [223, 170, 216, 234, 204, 6, 241, 25];
+pub const SWAP_TOC_V2_DISCRIMINATOR: [u8; 8] = [127, 214, 107, 189, 23, 90, 47, 104];
 
 /// Accounts.
 #[derive(Debug)]
-pub struct SwapTobWithReceiver {
+pub struct SwapTocV2 {
     pub payer: solana_pubkey::Pubkey,
 
     pub source_token_account: solana_pubkey::Pubkey,
@@ -24,7 +24,9 @@ pub struct SwapTobWithReceiver {
 
     pub destination_mint: solana_pubkey::Pubkey,
 
-    pub commission_account: Option<solana_pubkey::Pubkey>,
+    pub parent_commission_account: solana_pubkey::Pubkey,
+
+    pub child_commission_account: solana_pubkey::Pubkey,
 
     pub platform_fee_account: Option<solana_pubkey::Pubkey>,
 
@@ -41,28 +43,21 @@ pub struct SwapTobWithReceiver {
     pub associated_token_program: Option<solana_pubkey::Pubkey>,
 
     pub system_program: Option<solana_pubkey::Pubkey>,
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    pub sol_receiver: Option<solana_pubkey::Pubkey>,
 
     pub event_authority: solana_pubkey::Pubkey,
 
     pub program: solana_pubkey::Pubkey,
 }
 
-impl SwapTobWithReceiver {
-    pub fn instruction(
-        &self,
-        args: SwapTobWithReceiverInstructionArgs,
-    ) -> solana_instruction::Instruction {
+impl SwapTocV2 {
+    pub fn instruction(&self, args: SwapTocV2InstructionArgs) -> solana_instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::arithmetic_side_effects)]
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: SwapTobWithReceiverInstructionArgs,
+        args: SwapTocV2InstructionArgs,
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(17 + remaining_accounts.len());
@@ -83,17 +78,14 @@ impl SwapTobWithReceiver {
             self.destination_mint,
             false,
         ));
-        if let Some(commission_account) = self.commission_account {
-            accounts.push(solana_instruction::AccountMeta::new(
-                commission_account,
-                false,
-            ));
-        } else {
-            accounts.push(solana_instruction::AccountMeta::new_readonly(
-                crate::ON_CHAIN_LABS_DEX_ROUTER2_ID,
-                false,
-            ));
-        }
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.parent_commission_account,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.child_commission_account,
+            false,
+        ));
         if let Some(platform_fee_account) = self.platform_fee_account {
             accounts.push(solana_instruction::AccountMeta::new(
                 platform_fee_account,
@@ -176,14 +168,6 @@ impl SwapTobWithReceiver {
                 false,
             ));
         }
-        if let Some(sol_receiver) = self.sol_receiver {
-            accounts.push(solana_instruction::AccountMeta::new(sol_receiver, false));
-        } else {
-            accounts.push(solana_instruction::AccountMeta::new_readonly(
-                crate::ON_CHAIN_LABS_DEX_ROUTER2_ID,
-                false,
-            ));
-        }
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             self.event_authority,
             false,
@@ -193,9 +177,7 @@ impl SwapTobWithReceiver {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = SwapTobWithReceiverInstructionData::new()
-            .try_to_vec()
-            .unwrap();
+        let mut data = SwapTocV2InstructionData::new().try_to_vec().unwrap();
         let mut args = args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -209,14 +191,14 @@ impl SwapTobWithReceiver {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SwapTobWithReceiverInstructionData {
+pub struct SwapTocV2InstructionData {
     discriminator: [u8; 8],
 }
 
-impl SwapTobWithReceiverInstructionData {
+impl SwapTocV2InstructionData {
     pub fn new() -> Self {
         Self {
-            discriminator: [223, 170, 216, 234, 204, 6, 241, 25],
+            discriminator: [127, 214, 107, 189, 23, 90, 47, 104],
         }
     }
 
@@ -225,7 +207,7 @@ impl SwapTobWithReceiverInstructionData {
     }
 }
 
-impl Default for SwapTobWithReceiverInstructionData {
+impl Default for SwapTocV2InstructionData {
     fn default() -> Self {
         Self::new()
     }
@@ -233,20 +215,20 @@ impl Default for SwapTobWithReceiverInstructionData {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SwapTobWithReceiverInstructionArgs {
+pub struct SwapTocV2InstructionArgs {
     pub args: SwapArgs,
-    pub commission_info: u32,
+    pub total_commission_info: u32,
+    pub parent_commission_rate: u32,
     pub platform_fee_rate: u16,
-    pub trim_rate: u8,
 }
 
-impl SwapTobWithReceiverInstructionArgs {
+impl SwapTocV2InstructionArgs {
     pub(crate) fn try_to_vec(&self) -> Result<Vec<u8>, std::io::Error> {
         borsh::to_vec(self)
     }
 }
 
-/// Instruction builder for `SwapTobWithReceiver`.
+/// Instruction builder for `SwapTocV2`.
 ///
 /// ### Accounts:
 ///
@@ -255,26 +237,27 @@ impl SwapTobWithReceiverInstructionArgs {
 ///   2. `[writable]` destination_token_account
 ///   3. `[]` source_mint
 ///   4. `[]` destination_mint
-///   5. `[writable, optional]` commission_account
-///   6. `[writable, optional]` platform_fee_account
-///   7. `[writable, optional]` sa_authority
-///   8. `[writable, optional]` source_token_sa
-///   9. `[writable, optional]` destination_token_sa
-///   10. `[optional]` source_token_program
-///   11. `[optional]` destination_token_program
-///   12. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
-///   13. `[optional]` system_program (default to `11111111111111111111111111111111`)
-///   14. `[writable, optional]` sol_receiver
+///   5. `[writable]` parent_commission_account
+///   6. `[writable]` child_commission_account
+///   7. `[writable, optional]` platform_fee_account
+///   8. `[writable, optional]` sa_authority
+///   9. `[writable, optional]` source_token_sa
+///   10. `[writable, optional]` destination_token_sa
+///   11. `[optional]` source_token_program
+///   12. `[optional]` destination_token_program
+///   13. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
+///   14. `[optional]` system_program (default to `11111111111111111111111111111111`)
 ///   15. `[]` event_authority
 ///   16. `[]` program
 #[derive(Clone, Debug, Default)]
-pub struct SwapTobWithReceiverBuilder {
+pub struct SwapTocV2Builder {
     payer: Option<solana_pubkey::Pubkey>,
     source_token_account: Option<solana_pubkey::Pubkey>,
     destination_token_account: Option<solana_pubkey::Pubkey>,
     source_mint: Option<solana_pubkey::Pubkey>,
     destination_mint: Option<solana_pubkey::Pubkey>,
-    commission_account: Option<solana_pubkey::Pubkey>,
+    parent_commission_account: Option<solana_pubkey::Pubkey>,
+    child_commission_account: Option<solana_pubkey::Pubkey>,
     platform_fee_account: Option<solana_pubkey::Pubkey>,
     sa_authority: Option<solana_pubkey::Pubkey>,
     source_token_sa: Option<solana_pubkey::Pubkey>,
@@ -283,17 +266,16 @@ pub struct SwapTobWithReceiverBuilder {
     destination_token_program: Option<solana_pubkey::Pubkey>,
     associated_token_program: Option<solana_pubkey::Pubkey>,
     system_program: Option<solana_pubkey::Pubkey>,
-    sol_receiver: Option<solana_pubkey::Pubkey>,
     event_authority: Option<solana_pubkey::Pubkey>,
     program: Option<solana_pubkey::Pubkey>,
     args: Option<SwapArgs>,
-    commission_info: Option<u32>,
+    total_commission_info: Option<u32>,
+    parent_commission_rate: Option<u32>,
     platform_fee_rate: Option<u16>,
-    trim_rate: Option<u8>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
-impl SwapTobWithReceiverBuilder {
+impl SwapTocV2Builder {
     pub fn new() -> Self {
         Self::default()
     }
@@ -328,13 +310,20 @@ impl SwapTobWithReceiverBuilder {
         self.destination_mint = Some(destination_mint);
         self
     }
-    /// `[optional account]`
     #[inline(always)]
-    pub fn commission_account(
+    pub fn parent_commission_account(
         &mut self,
-        commission_account: Option<solana_pubkey::Pubkey>,
+        parent_commission_account: solana_pubkey::Pubkey,
     ) -> &mut Self {
-        self.commission_account = commission_account;
+        self.parent_commission_account = Some(parent_commission_account);
+        self
+    }
+    #[inline(always)]
+    pub fn child_commission_account(
+        &mut self,
+        child_commission_account: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.child_commission_account = Some(child_commission_account);
         self
     }
     /// `[optional account]`
@@ -400,15 +389,6 @@ impl SwapTobWithReceiverBuilder {
         self.system_program = system_program;
         self
     }
-    /// `[optional account]`
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    #[inline(always)]
-    pub fn sol_receiver(&mut self, sol_receiver: Option<solana_pubkey::Pubkey>) -> &mut Self {
-        self.sol_receiver = sol_receiver;
-        self
-    }
     #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
         self.event_authority = Some(event_authority);
@@ -425,18 +405,18 @@ impl SwapTobWithReceiverBuilder {
         self
     }
     #[inline(always)]
-    pub fn commission_info(&mut self, commission_info: u32) -> &mut Self {
-        self.commission_info = Some(commission_info);
+    pub fn total_commission_info(&mut self, total_commission_info: u32) -> &mut Self {
+        self.total_commission_info = Some(total_commission_info);
+        self
+    }
+    #[inline(always)]
+    pub fn parent_commission_rate(&mut self, parent_commission_rate: u32) -> &mut Self {
+        self.parent_commission_rate = Some(parent_commission_rate);
         self
     }
     #[inline(always)]
     pub fn platform_fee_rate(&mut self, platform_fee_rate: u16) -> &mut Self {
         self.platform_fee_rate = Some(platform_fee_rate);
-        self
-    }
-    #[inline(always)]
-    pub fn trim_rate(&mut self, trim_rate: u8) -> &mut Self {
-        self.trim_rate = Some(trim_rate);
         self
     }
     /// Add an additional account to the instruction.
@@ -456,7 +436,7 @@ impl SwapTobWithReceiverBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_instruction::Instruction {
-        let accounts = SwapTobWithReceiver {
+        let accounts = SwapTocV2 {
             payer: self.payer.expect("payer is not set"),
             source_token_account: self
                 .source_token_account
@@ -466,7 +446,12 @@ impl SwapTobWithReceiverBuilder {
                 .expect("destination_token_account is not set"),
             source_mint: self.source_mint.expect("source_mint is not set"),
             destination_mint: self.destination_mint.expect("destination_mint is not set"),
-            commission_account: self.commission_account,
+            parent_commission_account: self
+                .parent_commission_account
+                .expect("parent_commission_account is not set"),
+            child_commission_account: self
+                .child_commission_account
+                .expect("child_commission_account is not set"),
             platform_fee_account: self.platform_fee_account,
             sa_authority: self.sa_authority,
             source_token_sa: self.source_token_sa,
@@ -475,29 +460,31 @@ impl SwapTobWithReceiverBuilder {
             destination_token_program: self.destination_token_program,
             associated_token_program: self.associated_token_program,
             system_program: self.system_program,
-            sol_receiver: self.sol_receiver,
             event_authority: self.event_authority.expect("event_authority is not set"),
             program: self.program.expect("program is not set"),
         };
-        let args = SwapTobWithReceiverInstructionArgs {
+        let args = SwapTocV2InstructionArgs {
             args: self.args.clone().expect("args is not set"),
-            commission_info: self
-                .commission_info
+            total_commission_info: self
+                .total_commission_info
                 .clone()
-                .expect("commission_info is not set"),
+                .expect("total_commission_info is not set"),
+            parent_commission_rate: self
+                .parent_commission_rate
+                .clone()
+                .expect("parent_commission_rate is not set"),
             platform_fee_rate: self
                 .platform_fee_rate
                 .clone()
                 .expect("platform_fee_rate is not set"),
-            trim_rate: self.trim_rate.clone().expect("trim_rate is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `swap_tob_with_receiver` CPI accounts.
-pub struct SwapTobWithReceiverCpiAccounts<'a, 'b> {
+/// `swap_toc_v2` CPI accounts.
+pub struct SwapTocV2CpiAccounts<'a, 'b> {
     pub payer: &'b solana_account_info::AccountInfo<'a>,
 
     pub source_token_account: &'b solana_account_info::AccountInfo<'a>,
@@ -508,7 +495,9 @@ pub struct SwapTobWithReceiverCpiAccounts<'a, 'b> {
 
     pub destination_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub commission_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pub parent_commission_account: &'b solana_account_info::AccountInfo<'a>,
+
+    pub child_commission_account: &'b solana_account_info::AccountInfo<'a>,
 
     pub platform_fee_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
@@ -525,18 +514,14 @@ pub struct SwapTobWithReceiverCpiAccounts<'a, 'b> {
     pub associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    pub sol_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
 }
 
-/// `swap_tob_with_receiver` CPI instruction.
-pub struct SwapTobWithReceiverCpi<'a, 'b> {
+/// `swap_toc_v2` CPI instruction.
+pub struct SwapTocV2Cpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_account_info::AccountInfo<'a>,
 
@@ -550,7 +535,9 @@ pub struct SwapTobWithReceiverCpi<'a, 'b> {
 
     pub destination_mint: &'b solana_account_info::AccountInfo<'a>,
 
-    pub commission_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    pub parent_commission_account: &'b solana_account_info::AccountInfo<'a>,
+
+    pub child_commission_account: &'b solana_account_info::AccountInfo<'a>,
 
     pub platform_fee_account: Option<&'b solana_account_info::AccountInfo<'a>>,
 
@@ -567,23 +554,19 @@ pub struct SwapTobWithReceiverCpi<'a, 'b> {
     pub associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    pub sol_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
 
     pub event_authority: &'b solana_account_info::AccountInfo<'a>,
 
     pub program: &'b solana_account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: SwapTobWithReceiverInstructionArgs,
+    pub __args: SwapTocV2InstructionArgs,
 }
 
-impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
+impl<'a, 'b> SwapTocV2Cpi<'a, 'b> {
     pub fn new(
         program: &'b solana_account_info::AccountInfo<'a>,
-        accounts: SwapTobWithReceiverCpiAccounts<'a, 'b>,
-        args: SwapTobWithReceiverInstructionArgs,
+        accounts: SwapTocV2CpiAccounts<'a, 'b>,
+        args: SwapTocV2InstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -592,7 +575,8 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
             destination_token_account: accounts.destination_token_account,
             source_mint: accounts.source_mint,
             destination_mint: accounts.destination_mint,
-            commission_account: accounts.commission_account,
+            parent_commission_account: accounts.parent_commission_account,
+            child_commission_account: accounts.child_commission_account,
             platform_fee_account: accounts.platform_fee_account,
             sa_authority: accounts.sa_authority,
             source_token_sa: accounts.source_token_sa,
@@ -601,7 +585,6 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
             destination_token_program: accounts.destination_token_program,
             associated_token_program: accounts.associated_token_program,
             system_program: accounts.system_program,
-            sol_receiver: accounts.sol_receiver,
             event_authority: accounts.event_authority,
             program: accounts.program,
             __args: args,
@@ -648,17 +631,14 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
             *self.destination_mint.key,
             false,
         ));
-        if let Some(commission_account) = self.commission_account {
-            accounts.push(solana_instruction::AccountMeta::new(
-                *commission_account.key,
-                false,
-            ));
-        } else {
-            accounts.push(solana_instruction::AccountMeta::new_readonly(
-                crate::ON_CHAIN_LABS_DEX_ROUTER2_ID,
-                false,
-            ));
-        }
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.parent_commission_account.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.child_commission_account.key,
+            false,
+        ));
         if let Some(platform_fee_account) = self.platform_fee_account {
             accounts.push(solana_instruction::AccountMeta::new(
                 *platform_fee_account.key,
@@ -747,17 +727,6 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
                 false,
             ));
         }
-        if let Some(sol_receiver) = self.sol_receiver {
-            accounts.push(solana_instruction::AccountMeta::new(
-                *sol_receiver.key,
-                false,
-            ));
-        } else {
-            accounts.push(solana_instruction::AccountMeta::new_readonly(
-                crate::ON_CHAIN_LABS_DEX_ROUTER2_ID,
-                false,
-            ));
-        }
         accounts.push(solana_instruction::AccountMeta::new_readonly(
             *self.event_authority.key,
             false,
@@ -773,9 +742,7 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = SwapTobWithReceiverInstructionData::new()
-            .try_to_vec()
-            .unwrap();
+        let mut data = SwapTocV2InstructionData::new().try_to_vec().unwrap();
         let mut args = self.__args.try_to_vec().unwrap();
         data.append(&mut args);
 
@@ -791,9 +758,8 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
         account_infos.push(self.destination_token_account.clone());
         account_infos.push(self.source_mint.clone());
         account_infos.push(self.destination_mint.clone());
-        if let Some(commission_account) = self.commission_account {
-            account_infos.push(commission_account.clone());
-        }
+        account_infos.push(self.parent_commission_account.clone());
+        account_infos.push(self.child_commission_account.clone());
         if let Some(platform_fee_account) = self.platform_fee_account {
             account_infos.push(platform_fee_account.clone());
         }
@@ -818,9 +784,6 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
         if let Some(system_program) = self.system_program {
             account_infos.push(system_program.clone());
         }
-        if let Some(sol_receiver) = self.sol_receiver {
-            account_infos.push(sol_receiver.clone());
-        }
         account_infos.push(self.event_authority.clone());
         account_infos.push(self.program.clone());
         remaining_accounts
@@ -835,7 +798,7 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `SwapTobWithReceiver` via CPI.
+/// Instruction builder for `SwapTocV2` via CPI.
 ///
 /// ### Accounts:
 ///
@@ -844,33 +807,34 @@ impl<'a, 'b> SwapTobWithReceiverCpi<'a, 'b> {
 ///   2. `[writable]` destination_token_account
 ///   3. `[]` source_mint
 ///   4. `[]` destination_mint
-///   5. `[writable, optional]` commission_account
-///   6. `[writable, optional]` platform_fee_account
-///   7. `[writable, optional]` sa_authority
-///   8. `[writable, optional]` source_token_sa
-///   9. `[writable, optional]` destination_token_sa
-///   10. `[optional]` source_token_program
-///   11. `[optional]` destination_token_program
-///   12. `[optional]` associated_token_program
-///   13. `[optional]` system_program
-///   14. `[writable, optional]` sol_receiver
+///   5. `[writable]` parent_commission_account
+///   6. `[writable]` child_commission_account
+///   7. `[writable, optional]` platform_fee_account
+///   8. `[writable, optional]` sa_authority
+///   9. `[writable, optional]` source_token_sa
+///   10. `[writable, optional]` destination_token_sa
+///   11. `[optional]` source_token_program
+///   12. `[optional]` destination_token_program
+///   13. `[optional]` associated_token_program
+///   14. `[optional]` system_program
 ///   15. `[]` event_authority
 ///   16. `[]` program
 #[derive(Clone, Debug)]
-pub struct SwapTobWithReceiverCpiBuilder<'a, 'b> {
-    instruction: Box<SwapTobWithReceiverCpiBuilderInstruction<'a, 'b>>,
+pub struct SwapTocV2CpiBuilder<'a, 'b> {
+    instruction: Box<SwapTocV2CpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
+impl<'a, 'b> SwapTocV2CpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(SwapTobWithReceiverCpiBuilderInstruction {
+        let instruction = Box::new(SwapTocV2CpiBuilderInstruction {
             __program: program,
             payer: None,
             source_token_account: None,
             destination_token_account: None,
             source_mint: None,
             destination_mint: None,
-            commission_account: None,
+            parent_commission_account: None,
+            child_commission_account: None,
             platform_fee_account: None,
             sa_authority: None,
             source_token_sa: None,
@@ -879,13 +843,12 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
             destination_token_program: None,
             associated_token_program: None,
             system_program: None,
-            sol_receiver: None,
             event_authority: None,
             program: None,
             args: None,
-            commission_info: None,
+            total_commission_info: None,
+            parent_commission_rate: None,
             platform_fee_rate: None,
-            trim_rate: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -927,13 +890,20 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
         self.instruction.destination_mint = Some(destination_mint);
         self
     }
-    /// `[optional account]`
     #[inline(always)]
-    pub fn commission_account(
+    pub fn parent_commission_account(
         &mut self,
-        commission_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+        parent_commission_account: &'b solana_account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.commission_account = commission_account;
+        self.instruction.parent_commission_account = Some(parent_commission_account);
+        self
+    }
+    #[inline(always)]
+    pub fn child_commission_account(
+        &mut self,
+        child_commission_account: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.child_commission_account = Some(child_commission_account);
         self
     }
     /// `[optional account]`
@@ -1008,18 +978,6 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
         self.instruction.system_program = system_program;
         self
     }
-    /// `[optional account]`
-    /// Optional SOL receiver account
-    /// - None: normal swap or SOL stays with payer
-    /// - Some: SOL receiver when converting wSOL -> SOL
-    #[inline(always)]
-    pub fn sol_receiver(
-        &mut self,
-        sol_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
-    ) -> &mut Self {
-        self.instruction.sol_receiver = sol_receiver;
-        self
-    }
     #[inline(always)]
     pub fn event_authority(
         &mut self,
@@ -1039,18 +997,18 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn commission_info(&mut self, commission_info: u32) -> &mut Self {
-        self.instruction.commission_info = Some(commission_info);
+    pub fn total_commission_info(&mut self, total_commission_info: u32) -> &mut Self {
+        self.instruction.total_commission_info = Some(total_commission_info);
+        self
+    }
+    #[inline(always)]
+    pub fn parent_commission_rate(&mut self, parent_commission_rate: u32) -> &mut Self {
+        self.instruction.parent_commission_rate = Some(parent_commission_rate);
         self
     }
     #[inline(always)]
     pub fn platform_fee_rate(&mut self, platform_fee_rate: u16) -> &mut Self {
         self.instruction.platform_fee_rate = Some(platform_fee_rate);
-        self
-    }
-    #[inline(always)]
-    pub fn trim_rate(&mut self, trim_rate: u8) -> &mut Self {
-        self.instruction.trim_rate = Some(trim_rate);
         self
     }
     /// Add an additional account to the instruction.
@@ -1087,25 +1045,25 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
     #[allow(clippy::clone_on_copy)]
     #[allow(clippy::vec_init_then_push)]
     pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
-        let args = SwapTobWithReceiverInstructionArgs {
+        let args = SwapTocV2InstructionArgs {
             args: self.instruction.args.clone().expect("args is not set"),
-            commission_info: self
+            total_commission_info: self
                 .instruction
-                .commission_info
+                .total_commission_info
                 .clone()
-                .expect("commission_info is not set"),
+                .expect("total_commission_info is not set"),
+            parent_commission_rate: self
+                .instruction
+                .parent_commission_rate
+                .clone()
+                .expect("parent_commission_rate is not set"),
             platform_fee_rate: self
                 .instruction
                 .platform_fee_rate
                 .clone()
                 .expect("platform_fee_rate is not set"),
-            trim_rate: self
-                .instruction
-                .trim_rate
-                .clone()
-                .expect("trim_rate is not set"),
         };
-        let instruction = SwapTobWithReceiverCpi {
+        let instruction = SwapTocV2Cpi {
             __program: self.instruction.__program,
 
             payer: self.instruction.payer.expect("payer is not set"),
@@ -1130,7 +1088,15 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
                 .destination_mint
                 .expect("destination_mint is not set"),
 
-            commission_account: self.instruction.commission_account,
+            parent_commission_account: self
+                .instruction
+                .parent_commission_account
+                .expect("parent_commission_account is not set"),
+
+            child_commission_account: self
+                .instruction
+                .child_commission_account
+                .expect("child_commission_account is not set"),
 
             platform_fee_account: self.instruction.platform_fee_account,
 
@@ -1148,8 +1114,6 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
 
             system_program: self.instruction.system_program,
 
-            sol_receiver: self.instruction.sol_receiver,
-
             event_authority: self
                 .instruction
                 .event_authority
@@ -1166,14 +1130,15 @@ impl<'a, 'b> SwapTobWithReceiverCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct SwapTobWithReceiverCpiBuilderInstruction<'a, 'b> {
+struct SwapTocV2CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_account_info::AccountInfo<'a>,
     payer: Option<&'b solana_account_info::AccountInfo<'a>>,
     source_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     destination_token_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     source_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
     destination_mint: Option<&'b solana_account_info::AccountInfo<'a>>,
-    commission_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    parent_commission_account: Option<&'b solana_account_info::AccountInfo<'a>>,
+    child_commission_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     platform_fee_account: Option<&'b solana_account_info::AccountInfo<'a>>,
     sa_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     source_token_sa: Option<&'b solana_account_info::AccountInfo<'a>>,
@@ -1182,13 +1147,12 @@ struct SwapTobWithReceiverCpiBuilderInstruction<'a, 'b> {
     destination_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     associated_token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-    sol_receiver: Option<&'b solana_account_info::AccountInfo<'a>>,
     event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
     program: Option<&'b solana_account_info::AccountInfo<'a>>,
     args: Option<SwapArgs>,
-    commission_info: Option<u32>,
+    total_commission_info: Option<u32>,
+    parent_commission_rate: Option<u32>,
     platform_fee_rate: Option<u16>,
-    trim_rate: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }
