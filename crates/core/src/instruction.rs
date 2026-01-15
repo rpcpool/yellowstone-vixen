@@ -452,7 +452,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
         let sh_parent = stack_heights[pos - 1].unwrap();
         match sh_this.cmp(&sh_parent) {
             std::cmp::Ordering::Greater => {
-                // ascending
+                // descend in tree to child node
                 stack.push(0);
             }
             std::cmp::Ordering::Equal => {
@@ -463,7 +463,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
                 }
             }
             std::cmp::Ordering::Less => {
-                // descending
+                // ascend in tree to parent node
                 stack.truncate(sh_this as usize);
                 // stack is actually never empty here
                 if let Some(top) = stack.last_mut() {
