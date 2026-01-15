@@ -443,17 +443,13 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
 
     let mut paths: Vec<IxIndex> = Vec::with_capacity(stack_heights.len());
 
-    let mut stack: Vec<u32> = Vec::new();
+    let mut stack: Vec<u32> = Vec::with_capacity(4);
     stack.push(outer_index);
     stack.push(0);
-    // println!("stack pos {} {:?}", 0, stack.iter().map(|v| v + 1).collect_vec());
     paths.push(IxIndex(stack.clone()));
-    // let sh_base = stack_heights[0].unwrap(); // 2
     for pos in 1..stack_heights.len() {
-        // pos is nested under pos - 1
         let sh_this = stack_heights[pos].unwrap();
         let sh_parent = stack_heights[pos - 1].unwrap();
-        // println!("sh this {} parent {}", sh_this, sh_parent);
         match sh_this.cmp(&sh_parent) {
             std::cmp::Ordering::Greater => {
                 // ascending
@@ -461,8 +457,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
             }
             std::cmp::Ordering::Equal => {
                 // same level
-                // TODO must always exist
-                assert!(!stack.is_empty());
+                // stack is actually never empty here
                 if let Some(top) = stack.last_mut() {
                     *top += 1;
                 }
@@ -470,36 +465,15 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
             std::cmp::Ordering::Less => {
                 // descending
                 stack.truncate(sh_this as usize);
-                // TODO must always exist
-                assert!(!stack.is_empty());
+                // stack is actually never empty here
                 if let Some(top) = stack.last_mut() {
                     *top += 1;
                 }
             }
         }
 
-        // println!("stack pos {} {:?}", pos, stack.iter().map(|v| v + 1).collect_vec());
         paths.push(IxIndex(stack.clone()));
     }
 
     paths
 }
-
-
-fn print_tree(insns: &[InstructionUpdate]) -> Vec<IxIndex> {
-    fn visit_children(ix: &InstructionUpdate, out: &mut Vec<IxIndex>) {
-        // println!("P {:?}", ix.path.as_ref().unwrap());
-        out.push(ix.path.clone());
-        for child in ix.inner.iter() {
-            visit_children(child,out);
-        }
-    }
-
-    let mut out: Vec<IxIndex> = Vec::new();
-    for ix in insns.iter() {
-        visit_children(&ix, &mut out);
-    }
-
-    out
-}
-
