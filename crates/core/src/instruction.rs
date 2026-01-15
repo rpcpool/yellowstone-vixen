@@ -1,7 +1,7 @@
 //! Helpers for parsing transaction updates into instructions.
 
 use std::{collections::VecDeque, sync::Arc};
-use std::fmt::{Debug, Pointer, Write};
+use std::fmt::{Debug};
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     prelude::MessageHeader,
@@ -112,7 +112,7 @@ pub struct InstructionUpdate {
     pub inner: Vec<InstructionUpdate>,
     /// The index of this instruction within the transaction.
     /// always set after parsing.
-    pub ix_path: Option<IxPath>,
+    pub ix_index: Option<IxIndex>,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -127,37 +127,36 @@ pub struct AccountKeys {
 }
 
 #[derive(Clone)]
-pub struct IxPath {
-    // 0-based indices representing the path to the instruction
-    path_idx: Vec<u32>,
-}
+/// 0-based indices representing the path to the instruction
+// typically one or two elements long, but can be 3+ levels deep
+pub struct IxIndex(Vec<u32>);
 
-impl IxPath {
+impl IxIndex {
     /// Create a new empty instruction path.
-    pub fn new_one(idx: u32) -> Self {
+    pub fn new_single(idx: u32) -> Self {
         let mut path_idx = Vec::with_capacity(4);
         path_idx.push(idx);
-        Self { path_idx }
+        Self(path_idx)
     }
 
     /// Push a new index onto the instruction path.
     pub fn push_clone(&self, idx: u32) -> Self {
-        let mut path_idx = self.path_idx.clone();
+        let mut path_idx = self.0.clone();
         path_idx.push(idx);
-        Self { path_idx }
+        Self(path_idx)
     }
 
     /// Get the current instruction path as a slice.
-    pub fn as_slice(&self) -> &[u32] { &self.path_idx }
+    pub fn as_slice(&self) -> &[u32] { &self.0 }
 
     /// Get the length of the instruction path.
-    pub fn len(&self) -> usize { self.path_idx.len() }
+    pub fn len(&self) -> usize { self.0.len() }
 }
 
-impl Debug for IxPath {
+impl Debug for IxIndex {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // 1.7
-        let formatted = self.path_idx.iter()
+        let formatted = self.0.iter()
             .map(|i| (i + 1).to_string())
             .collect::<Vec<_>>()
             .join(".");
@@ -283,8 +282,8 @@ impl InstructionUpdate {
             .collect::<Result<Vec<_>, _>>()?;
 
         for (index_outer, outer_instr) in outer.iter_mut().enumerate() {
-            let outer_ix_path = IxPath::new_one(index_outer as u32);
-            outer_instr.ix_path = Some(outer_ix_path.clone());
+            let outer_ix_path = IxIndex::new_single(index_outer as u32);
+            outer_instr.ix_index = Some(outer_ix_path.clone());
         }
 
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
@@ -292,7 +291,7 @@ impl InstructionUpdate {
         for outer_instr in &outer {
             outer_instr.visit_all().for_each(|i| {
                 debug_assert!(
-                    i.ix_path.is_some(),
+                    i.ix_index.is_some(),
                     "All inner instructions must have ix_path assigned"
                 );
             });
@@ -347,9 +346,9 @@ impl InstructionUpdate {
 
             {
                 // depth-first traversal without recursion
-                let mut dq: VecDeque<(&mut InstructionUpdate, IxPath)> = VecDeque::new();
+                let mut dq: VecDeque<(&mut InstructionUpdate, IxIndex)> = VecDeque::new();
 
-                let outer_ix_path = IxPath::new_one(index_outer);
+                let outer_ix_path = IxIndex::new_single(index_outer);
 
                 for (idx_inner, ins_inner) in inner.iter_mut().enumerate() {
                     let path_inner = outer_ix_path.push_clone(idx_inner as u32);
@@ -364,7 +363,7 @@ impl InstructionUpdate {
                         let nested = cur_ix_path.push_clone(ix as u32);
                         dq.push_front((inner, nested));
                     }
-                    cur.ix_path = Some(cur_ix_path);
+                    cur.ix_index = Some(cur_ix_path);
                 }
 
             }
@@ -422,7 +421,7 @@ impl InstructionUpdate {
             shared,
             inner: vec![],
             // needs to be assigned later
-            ix_path: None,
+            ix_index: None,
         })
     }
 
