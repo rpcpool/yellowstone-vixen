@@ -13,9 +13,6 @@ authors.workspace = true
 yellowstone-vixen-core = { workspace = true }
 solana-program-option = { workspace = true, optional = true }
 solana-pubkey = { workspace = true }
-yellowstone-vixen-proto = { workspace = true, features = [
-  "parser",
-], optional = true }
 thiserror.workspace = true
 bs58.workspace = true
 
@@ -25,9 +22,3 @@ tokio.workspace = true
 
 [features]
 default = []
-proto = [
-  "dep:yellowstone-vixen-proto",
-  "yellowstone-vixen-core/proto",
-  "yellowstone-vixen-proto/parser",
-  "solana-program-option",
-]
