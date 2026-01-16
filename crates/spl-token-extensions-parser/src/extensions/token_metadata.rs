@@ -38,7 +38,7 @@ pub struct EmitAccounts {
     pub metadata: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TokenMetadataInstruction {
     Initialize {
         accounts: InitializeAccounts,

@@ -9,7 +9,7 @@ pub struct InitializeConfidentialTransferFeeConfigAccounts {
     pub mint: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConfidentialWithdrawWithheldTokensFromMintAccounts {
     pub mint: Pubkey,
     pub fee_recipient: Pubkey,
@@ -18,7 +18,7 @@ pub struct ConfidentialWithdrawWithheldTokensFromMintAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConfidentialWithdrawWithheldTokensFromAccounts {
     pub mint: Pubkey,
     pub fee_recipient: Pubkey,
@@ -28,27 +28,27 @@ pub struct ConfidentialWithdrawWithheldTokensFromAccounts {
     pub source_accounts: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConfidentialHarvestWithheldTokensToMintAccounts {
     pub mint: Pubkey,
     pub source_accounts: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EnableHarvestToMintAccounts {
     pub mint: Pubkey,
     pub confidential_transfer_fee_authority: Pubkey,
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DisableHarvestToMintAccounts {
     pub account: Pubkey,
     pub confidential_transfer_fee_authority: Pubkey,
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ConfidentialTransferFeeInstruction {
     InitializeConfidentialTransferFeeConfig {
         accounts: InitializeConfidentialTransferFeeConfigAccounts,

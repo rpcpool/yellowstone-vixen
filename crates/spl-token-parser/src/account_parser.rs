@@ -8,7 +8,7 @@ use yellowstone_vixen_core::{
     AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TokenProgramState {
     TokenAccount(Account),
     Mint(Mint),

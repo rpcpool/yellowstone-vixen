@@ -74,7 +74,7 @@ pub fn parse_token_metadata_extension(data_bytes: &[u8]) -> Result<TokenMetadata
     Ok(token_metadata.clone())
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ExtensionData {
     ImmutableOwner(extension::immutable_owner::ImmutableOwner),
     TransferFeeAmount(extension::transfer_fee::TransferFeeAmount),

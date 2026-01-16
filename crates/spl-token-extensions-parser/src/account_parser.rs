@@ -12,14 +12,14 @@ use super::accounts::{
     mint_account_extensions_data_bytes, token_account_extensions_data_bytes, ExtensionData,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TokenExtensionAccountType {
     TokenAccount,
     Mint,
     Multisig,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ExtendedMint {
     pub base_account: Mint,
     pub extension_data_vec: Vec<ExtensionData>,
@@ -43,7 +43,7 @@ impl ExtendedMint {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ExtendedTokenAccount {
     pub base_account: Account,
     pub extension_data_vec: Vec<ExtensionData>,
@@ -83,7 +83,7 @@ fn extension_account_type(data_bytes: &[u8]) -> Result<TokenExtensionAccountType
     Err(ProgramError::InvalidAccountData)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TokenExtensionState {
     ExtendedTokenAccount(ExtendedTokenAccount),
     ExtendedMint(ExtendedMint),
