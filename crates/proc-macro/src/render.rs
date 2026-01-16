@@ -18,11 +18,11 @@ pub fn render_vixen_parser(idl: &RootNode) -> TokenStream {
         render_instruction_parser(&idl.program.name, &idl.program.instructions);
 
     quote! {
-        mod #program_mod_ident {
+        pub mod #program_mod_ident {
             use borsh::{BorshDeserialize, BorshSerialize};
             use yellowstone_vixen_parser::prelude::*;
 
-            const ID: yellowstone_vixen_parser::Pubkey = #program_pubkey;
+            pub const ID: yellowstone_vixen_parser::Pubkey = #program_pubkey;
 
             #defined_types
             #accounts
