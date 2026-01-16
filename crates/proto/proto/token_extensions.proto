@@ -3,558 +3,500 @@ syntax = "proto3";
 import "token.proto";
 
 package vixen.parser.token_extensions;
-// package vixen.parser;
 
-
+// --------------------------
 // TransferFee Extension
-message TransferCheckedWithFeeAccountsProto {
+// --------------------------
+
+message TransferCheckedWithFeeAccounts {
   string source = 1;
   string mint = 2;
   string destination = 3;
-  string owner = 4;
-  repeated string multisig_signers = 5;
+  string authority = 4;
+  repeated string signers = 5;
 }
 
-message TransferCheckedWithFeeDataProto {
+message TransferCheckedWithFeeArgs {
   uint64 amount = 1;
-  uint64 fee_amount = 2;
-  uint64 decimals = 3;
+  uint64 fee = 2;
+  uint8 decimals = 3;
 }
 
-message TransferCheckedWithFeeIxProto {
-  TransferCheckedWithFeeAccountsProto accounts = 1;
-  TransferCheckedWithFeeDataProto data = 2;
+message TransferCheckedWithFee {
+  TransferCheckedWithFeeAccounts accounts = 1;
+  TransferCheckedWithFeeArgs args = 2;
 }
 
-message InitializeTransferFeeConfigAccountsProto {
-  string mint = 1;
-}
+message InitializeTransferFeeConfigAccounts { string mint = 1; }
 
-message InitializeTransferFeeConfigDataProto {
+message InitializeTransferFeeConfigArgs {
   optional string transfer_fee_config_authority = 1;
   optional string withdraw_withheld_authority = 2;
-  uint64 transfer_fee_basis_points = 3;
+  uint16 transfer_fee_basis_points = 3;
   uint64 maximum_fee = 4;
 }
 
-message InitializeTransferFeeConfigIxProto {
-  InitializeTransferFeeConfigAccountsProto accounts = 1;
-  InitializeTransferFeeConfigDataProto data = 2;
+message InitializeTransferFeeConfig {
+  InitializeTransferFeeConfigAccounts accounts = 1;
+  InitializeTransferFeeConfigArgs args = 2;
 }
 
-message WithdrawWithheldTokensFromMintAccountsProto {
+message WithdrawWithheldTokensFromMintAccounts {
   string mint = 1;
-  string fee_recipient = 2;
-  string withdraw_withheld_authority = 3;
-  repeated string multisig_signers = 4;
+  string destination = 2;
+  string authority = 3;
+  repeated string signers = 4;
 }
 
-message WithdrawWithheldTokensFromMintIxProto {
-  WithdrawWithheldTokensFromMintAccountsProto accounts = 1;
+message WithdrawWithheldTokensFromMint {
+  WithdrawWithheldTokensFromMintAccounts accounts = 1;
 }
 
-message WithdrawWithheldTokensFromAccountsAccountsProto {
+message WithdrawWithheldTokensFromAccountsAccounts {
   string mint = 1;
-  string fee_recipient = 2;
-  string withdraw_withheld_authority = 3;
-  repeated string source_accounts = 4;
-  repeated string multisig_signers = 5;
+  string destination = 2;
+  string authority = 3;
+  repeated string sources = 4;
+  repeated string signers = 5;
 }
 
-
-message WithdrawWithheldTokensFromAccountsDataProto {
+message WithdrawWithheldTokensFromAccountsArgs {
   uint64 num_token_accounts = 1;
 }
 
-message WithdrawWithheldTokensFromAccountsIxProto {
-  WithdrawWithheldTokensFromAccountsAccountsProto accounts = 1;
-  WithdrawWithheldTokensFromAccountsDataProto data = 2;
+message WithdrawWithheldTokensFromAccounts {
+  WithdrawWithheldTokensFromAccountsAccounts accounts = 1;
+  WithdrawWithheldTokensFromAccountsArgs args = 2;
 }
 
-
-message HarvestWithheldTokensToMintAccountsProto {
+message HarvestWithheldTokensToMintAccounts {
   string mint = 1;
-  string mint_fee_owner = 2;
+  string authority = 2;
 }
 
-message HarvestWithheldTokensToMintIxProto {
-  HarvestWithheldTokensToMintAccountsProto accounts = 1;
+message HarvestWithheldTokensToMint {
+  HarvestWithheldTokensToMintAccounts accounts = 1;
 }
 
-message SetTransferFeeAccountsProto {
+message SetTransferFeeAccounts {
   string mint = 1;
-  string mint_fee_acc_owner = 2;
-  repeated string multisig_signers = 3;
+  string authority = 2;
+  repeated string signers = 3;
 }
 
-message SetTransferFeeDataProto {
-  uint64 transfer_fee_basis_points = 1;
+message SetTransferFeeArgs {
+  uint16 transfer_fee_basis_points = 1;
   uint64 maximum_fee = 2;
 }
 
-message SetTransferFeeIxProto {
-  SetTransferFeeAccountsProto accounts = 1;
-  SetTransferFeeDataProto data = 2;
+message SetTransferFee {
+  SetTransferFeeAccounts accounts = 1;
+  SetTransferFeeArgs args = 2;
 }
 
-
-message TransferFeeIxProto {
-  oneof ix_oneof {
-    TransferCheckedWithFeeIxProto transfer_checked_with_fee_ix = 1;
-    InitializeTransferFeeConfigIxProto initialize_transfer_fee_config_ix = 2;
-    WithdrawWithheldTokensFromMintIxProto withdraw_withheld_tokens_from_mint_ix = 3;
-    WithdrawWithheldTokensFromAccountsIxProto withdraw_withheld_tokens_from_accounts_ix = 4;
-    HarvestWithheldTokensToMintIxProto harvest_withheld_tokens_to_mint_ix = 5;
-    SetTransferFeeIxProto set_transfer_fee_ix = 6;
+message TransferFeeInstruction {
+  oneof kind {
+    TransferCheckedWithFee transfer_checked_with_fee = 1;
+    InitializeTransferFeeConfig initialize_transfer_fee_config = 2;
+    WithdrawWithheldTokensFromMint withdraw_withheld_from_mint = 3;
+    WithdrawWithheldTokensFromAccounts withdraw_withheld_from_accounts = 4;
+    HarvestWithheldTokensToMint harvest_withheld_to_mint = 5;
+    SetTransferFee set_transfer_fee = 6;
   }
 }
 
-
+// --------------------------
 // TokenMetadata Extension
+// --------------------------
 
-message InitializeAccountsProto {
+message InitializeTokenMetadataAccounts {
   string metadata = 1;
   string update_authority = 2;
   string mint = 3;
   string mint_authority = 4;
 }
 
-message InitializeDataProto {
+message InitializeTokenMetadataArgs {
   string name = 1;
   string symbol = 2;
   string uri = 3;
 }
 
-message InitializeIxProto {
-  InitializeAccountsProto accounts = 1;
-  InitializeDataProto data = 2;
+message InitializeTokenMetadata {
+  InitializeTokenMetadataAccounts accounts = 1;
+  InitializeTokenMetadataArgs args = 2;
 }
 
-message UpdateFieldAccountsProto {
+message UpdateTokenMetadataFieldAccounts {
   string metadata = 1;
   string update_authority = 2;
 }
 
-message UpdateFieldDataProto {
+message UpdateTokenMetadataFieldArgs {
   string key = 1;
   string value = 2;
 }
 
-message UpdateFieldIxProto {
-  UpdateFieldAccountsProto accounts = 1;
-  UpdateFieldDataProto data = 2;
+message UpdateTokenMetadataField {
+  UpdateTokenMetadataFieldAccounts accounts = 1;
+  UpdateTokenMetadataFieldArgs args = 2;
 }
 
-message RmoveKeyAccountsProto {
+message RemoveTokenMetadataKeyAccounts {
   string metadata = 1;
   string update_authority = 2;
 }
 
-message RemoveKeyDataProto {
+message RemoveTokenMetadataKeyArgs {
   bool idempotent = 1;
   string key = 2;
 }
 
-message RemoveKeyIxProto {
-  RmoveKeyAccountsProto accounts = 1;
-  RemoveKeyDataProto data = 2;
+message RemoveTokenMetadataKey {
+  RemoveTokenMetadataKeyAccounts accounts = 1;
+  RemoveTokenMetadataKeyArgs args = 2;
 }
 
-message UpdateAuthorityAccountsProto {
+message UpdateTokenMetadataAuthorityAccounts {
   string metadata = 1;
   string current_update_authority = 2;
 }
 
-message UpdateAuthorityDataProto {
-  string new_authority = 1;
+message UpdateTokenMetadataAuthorityArgs { string new_update_authority = 1; }
 
-}
-message UpdateAuthorityIxProto {
-  UpdateAuthorityAccountsProto accounts = 1;
-  UpdateAuthorityDataProto data = 2;
+message UpdateTokenMetadataAuthority {
+  UpdateTokenMetadataAuthorityAccounts accounts = 1;
+  UpdateTokenMetadataAuthorityArgs args = 2;
 }
 
+message EmitTokenMetadataAccounts { string metadata = 1; }
 
-message EmitAccountsProto {
-  string metadata = 1;
-}
-
-message EmitDataProto {
+message EmitTokenMetadataArgs {
   optional uint64 start = 1;
   optional uint64 end = 2;
 }
 
-message EmitIxProto {
-  EmitAccountsProto accounts = 1;
-  EmitDataProto data = 2;
+message EmitTokenMetadata {
+  EmitTokenMetadataAccounts accounts = 1;
+  EmitTokenMetadataArgs args = 2;
 }
 
-message TokenMetadataIxProto {
-  oneof ix_oneof {
-    InitializeIxProto initialize_ix = 1;
-    UpdateFieldIxProto update_fields_ix = 2;
-    RemoveKeyIxProto remove_key_ix = 3;
-    UpdateAuthorityIxProto update_authority_ix = 4;
-    EmitIxProto emit_ix = 5;
+message TokenMetadataInstruction {
+  oneof kind {
+    InitializeTokenMetadata initialize = 1;
+    UpdateTokenMetadataField update_field = 2;
+    RemoveTokenMetadataKey remove_key = 3;
+    UpdateTokenMetadataAuthority update_authority = 4;
+    EmitTokenMetadata emit = 5;
   }
 }
 
+// --------------------------
 // TokenGroup Extension
+// --------------------------
 
-message InitializeGroupAccountsProto {
+message InitializeTokenGroupAccounts {
   string group = 1;
   string mint = 2;
   string mint_authority = 3;
 }
 
-message InitializeGroupDataProto {
+message InitializeTokenGroupArgs {
   optional string update_authority = 1;
   uint64 max_size = 2;
 }
 
-message InitializeGroupIxProto {
-  InitializeGroupAccountsProto accounts = 1;
-  InitializeGroupDataProto data = 2;
+message InitializeTokenGroup {
+  InitializeTokenGroupAccounts accounts = 1;
+  InitializeTokenGroupArgs args = 2;
 }
 
-message UpdateGroupMaxSizeAccountsProto {
+message UpdateTokenGroupMaxSizeAccounts {
   string group = 1;
-  string update_authority = 2;
+  string authority = 2;
 }
 
-message UpdateGroupMaxSizeDataProto {
-  uint64 max_size = 1;
+message UpdateTokenGroupMaxSizeArgs { uint64 max_size = 1; }
+
+message UpdateTokenGroupMaxSize {
+  UpdateTokenGroupMaxSizeAccounts accounts = 1;
+  UpdateTokenGroupMaxSizeArgs args = 2;
 }
 
-message UpdateGroupMaxSizeIxProto {
-  UpdateGroupMaxSizeAccountsProto accounts = 1;
-  UpdateGroupMaxSizeDataProto data = 2;
-}
-
-message UpdateGroupAuthorityAccountsProto {
+message UpdateTokenGroupAuthorityAccounts {
   string group = 1;
   string current_authority = 2;
 }
 
-message UpdateGroupAuthorityDataProto {
-  string new_authority = 1;
+message UpdateTokenGroupAuthorityArgs { string new_authority = 1; }
+
+message UpdateTokenGroupAuthority {
+  UpdateTokenGroupAuthorityAccounts accounts = 1;
+  UpdateTokenGroupAuthorityArgs args = 2;
 }
 
-message UpdateGroupAuthorityIxProto {
-  UpdateGroupAuthorityAccountsProto accounts = 1;
-  UpdateGroupAuthorityDataProto data = 2;
-}
-
-message InitializeMemberAccountsProto {
-  string member = 1;
+message InitializeTokenGroupMemberAccounts {
+  string group_member = 1;
   string member_mint = 2;
   string member_mint_authority = 3;
   string group = 4;
   string group_update_authority = 5;
 }
 
-message InitializeMemberIxProto {
-  InitializeMemberAccountsProto accounts = 1;
+message InitializeTokenGroupMember {
+  InitializeTokenGroupMemberAccounts accounts = 1;
 }
 
-message TokenGroupIxProto {
-  oneof ix_oneof {
-    InitializeGroupIxProto initialize_group_ix = 1;
-    UpdateGroupMaxSizeIxProto update_group_max_size_ix = 2;
-    UpdateGroupAuthorityIxProto update_group_authority_ix = 3;
-    InitializeMemberIxProto initialize_member_ix = 4;
+message TokenGroupInstruction {
+  oneof instruction {
+    InitializeTokenGroup initialize_group = 1;
+    UpdateTokenGroupMaxSize update_group_max_size = 2;
+    UpdateTokenGroupAuthority update_group_authority = 3;
+    InitializeTokenGroupMember initialize_group_member = 4;
   }
 }
 
+// --------------------------
 // ConfidentialTransfer Extension
+// --------------------------
 
-message InitializeConfidentialMintAccountsProto {
-  string mint = 1;
+message InitializeConfidentialMintAccounts { string mint = 1; }
+message InitializeConfidentialMint {
+  InitializeConfidentialMintAccounts accounts = 1;
 }
 
-message InitializeConfidentialMintIxProto {
-  InitializeConfidentialMintAccountsProto accounts = 1;
-}
-
-message UpdateMintAccountsProto {
+message UpdateConfidentialMintAuthorityAccounts {
   string mint = 1;
   string authority = 2;
 }
-
-message UpdateMintIxProto {
-  UpdateMintAccountsProto accounts = 1;
+message UpdateConfidentialMintAuthority {
+  UpdateConfidentialMintAuthorityAccounts accounts = 1;
 }
 
-message ConfigureAccountAccountsProto {
+message ConfigureConfidentialAccountAccounts {
   string account = 1;
   string mint = 2;
   string sysvar = 3;
   string owner = 4;
-  repeated string multisig_signers = 5;
+  repeated string signers = 5;
+}
+message ConfigureConfidentialAccount {
+  ConfigureConfidentialAccountAccounts accounts = 1;
 }
 
-message ConfigureAccountIxProto {
-  ConfigureAccountAccountsProto accounts = 1;
-}
-
-message ApproveAccountAccountsProto {
+message ApproveConfidentialAccountAccounts {
   string account = 1;
   string mint = 2;
   string authority = 3;
 }
-
-message ApproveAccountIxProto {
-  ApproveAccountAccountsProto accounts = 1;
+message ApproveConfidentialAccount {
+  ApproveConfidentialAccountAccounts accounts = 1;
 }
 
-message EmptyAccountAccountsProto {
+message EmptyConfidentialAccountAccounts {
   string account = 1;
   string sysvar = 2;
   string owner = 3;
-  repeated string multisig_signers = 4;
+  repeated string signers = 4;
+}
+message EmptyConfidentialAccount {
+  EmptyConfidentialAccountAccounts accounts = 1;
 }
 
-message EmptyAccountIxProto {
-  EmptyAccountAccountsProto accounts = 1;
-}
-
-message DepositAccountsProto {
+message DepositConfidentialAccounts {
   string account = 1;
   string mint = 2;
   string owner = 3;
-  repeated string multisig_signers = 4;
+  repeated string signers = 4;
 }
+message DepositConfidential { DepositConfidentialAccounts accounts = 1; }
 
-message DepositIxProto {
-  DepositAccountsProto accounts = 1;
-}
-
-message WithdrawAccountsProto {
+message WithdrawConfidentialAccounts {
   string source_account = 1;
   string mint = 2;
   string destination = 3;
   string owner = 4;
-  repeated string multisig_signers = 5;
+  repeated string signers = 5;
 }
+message WithdrawConfidential { WithdrawConfidentialAccounts accounts = 1; }
 
-message WithdrawIxProto {
-  WithdrawAccountsProto accounts = 1;
-}
-
-message ConfidentialTransferAccountsProto {
+message TransferConfidentialAccounts {
   string source_account = 1;
   string mint = 2;
   string destination = 3;
   string owner = 4;
   string context_account = 5;
-  repeated string multisig_signers = 6;
+  repeated string signers = 6;
 }
+message TransferConfidential { TransferConfidentialAccounts accounts = 1; }
 
-message ConfidentialTransferIxProto {
-  ConfidentialTransferAccountsProto accounts = 1;
-}
-
-message ApplyPendingBalanceAccountsProto {
+message ApplyPendingBalanceConfidentialAccounts {
   string account = 1;
   string owner = 2;
-  repeated string multisig_signers = 3;
+  repeated string signers = 3;
+}
+message ApplyPendingBalanceConfidential {
+  ApplyPendingBalanceConfidentialAccounts accounts = 1;
 }
 
-message ApplyPendingBalanceIxProto {
-  ApplyPendingBalanceAccountsProto accounts = 1;
-}
-
-message CreditsAccountsProto {
+message ConfidentialCreditsAccounts {
   string account = 1;
   string owner = 2;
-  repeated string multisig_signers = 3;
+  repeated string signers = 3;
+}
+message EnableConfidentialCredits { ConfidentialCreditsAccounts accounts = 1; }
+message DisableConfidentialCredits { ConfidentialCreditsAccounts accounts = 1; }
+message EnableNonConfidentialCredits {
+  ConfidentialCreditsAccounts accounts = 1;
+}
+message DisableNonConfidentialCredits {
+  ConfidentialCreditsAccounts accounts = 1;
 }
 
-message EnableConfidentialCreditsIxProto {
-  CreditsAccountsProto accounts = 1;
-}
-
-message DisableConfidentialCreditsIxProto {
-  CreditsAccountsProto accounts = 1;
-}
-
-message EnableNonConfidentialCreditsIxProto {
-  CreditsAccountsProto accounts = 1;
-}
-
-message DisableNonConfidentialCreditsIxProto {
-  CreditsAccountsProto accounts = 1;
-}
-
-message TransferWithFeeAccountsProto {
+message TransferConfidentialWithFeeAccounts {
   string source_account = 1;
   string mint = 2;
   string destination = 3;
 }
-
-message TransferWithFeeIxProto {
-  TransferWithFeeAccountsProto accounts = 1;
+message TransferConfidentialWithFee {
+  TransferConfidentialWithFeeAccounts accounts = 1;
 }
 
-message ConfigureAccountWithRegistryAccountsProto {
+message ConfigureConfidentialAccountWithRegistryAccounts {
   string account = 1;
   string mint = 2;
   string registry = 3;
 }
-
-message ConfigureAccountWithRegistryIxProto {
-  ConfigureAccountWithRegistryAccountsProto accounts = 1;
+message ConfigureConfidentialAccountWithRegistry {
+  ConfigureConfidentialAccountWithRegistryAccounts accounts = 1;
 }
 
-message ConfidentialTransferExtIxProto {
-  oneof ix_oneof {
-    InitializeConfidentialMintIxProto initialize_mint_ix = 1;
-    UpdateMintIxProto update_mint_ix = 2;
-    ConfigureAccountIxProto configure_account_ix = 3;
-    ApproveAccountIxProto approve_account_ix = 4;
-    EmptyAccountIxProto empty_account_ix = 5;
-    DepositIxProto deposit_ix = 6;
-    WithdrawIxProto withdraw_ix = 7;
-    ConfidentialTransferIxProto transfer_ix = 8;
-    ApplyPendingBalanceIxProto apply_pending_balance_ix = 9;
-    EnableConfidentialCreditsIxProto enable_confidential_credits_ix = 10;
-    DisableConfidentialCreditsIxProto disable_confidential_credits_ix = 11;
-    EnableNonConfidentialCreditsIxProto enable_non_confidential_credits_ix = 12;
-    DisableNonConfidentialCreditsIxProto disable_non_confidential_credits_ix = 13;
-    TransferWithFeeIxProto transfer_with_fee_ix = 14;
-    ConfigureAccountWithRegistryIxProto configure_account_with_registry_ix = 15;
+message ConfidentialTransferInstruction {
+  oneof instruction {
+    InitializeConfidentialMint initialize_mint = 1;
+    UpdateConfidentialMintAuthority update_mint_authority = 2;
+    ConfigureConfidentialAccount configure_account = 3;
+    ApproveConfidentialAccount approve_account = 4;
+    EmptyConfidentialAccount empty_account = 5;
+    DepositConfidential deposit = 6;
+    WithdrawConfidential withdraw = 7;
+    TransferConfidential transfer = 8;
+    ApplyPendingBalanceConfidential apply_pending_balance = 9;
+    EnableConfidentialCredits enable_confidential_credits = 10;
+    DisableConfidentialCredits disable_confidential_credits = 11;
+    EnableNonConfidentialCredits enable_non_confidential_credits = 12;
+    DisableNonConfidentialCredits disable_non_confidential_credits = 13;
+    TransferConfidentialWithFee transfer_with_fee = 14;
+    ConfigureConfidentialAccountWithRegistry configure_account_with_registry =
+        15;
   }
 }
 
+// --------------------------
 // ConfidentialTransferFee Extension
+// --------------------------
 
-message InitializeConfidentialTransferFeeConfigAccountsProto {
-  string mint = 1;
+message InitializeConfidentialTransferFeeConfigAccounts { string mint = 1; }
+message InitializeConfidentialTransferFeeConfig {
+  InitializeConfidentialTransferFeeConfigAccounts accounts = 1;
 }
 
-message InitializeConfidentialTransferFeeConfigIxProto {
-  InitializeConfidentialTransferFeeConfigAccountsProto accounts = 1;
-}
-
-
-message ConfidentialWithdrawWithheldTokensFromMintAccountsProto {
+message ConfidentialWithdrawWithheldTokensFromMintAccounts {
   string mint = 1;
-  string fee_recipient = 2;
+  string destination = 2;
   string sysvar = 3;
-  string withdraw_withheld_authority = 4;
-  repeated string multisig_signers = 5;
+  string authority = 4;
+  repeated string signers = 5;
+}
+message ConfidentialWithdrawWithheldTokensFromMint {
+  ConfidentialWithdrawWithheldTokensFromMintAccounts accounts = 1;
 }
 
-message ConfidentialWithdrawWithheldTokensFromMintIxProto {
-  ConfidentialWithdrawWithheldTokensFromMintAccountsProto accounts = 1;
-}
-
-message ConfidentialWithdrawWithheldTokensFromAccountsAccountsProto {
+message ConfidentialWithdrawWithheldTokensFromAccountsAccounts {
   string mint = 1;
-  string fee_recipient = 2;
-  string withdraw_withheld_authority = 3;
+  string destination = 2;
+  string authority = 3;
   repeated string source_accounts = 4;
-  repeated string multisig_signers = 5;
+  repeated string signers = 5;
+}
+message ConfidentialWithdrawWithheldTokensFromAccounts {
+  ConfidentialWithdrawWithheldTokensFromAccountsAccounts accounts = 1;
 }
 
-
-message ConfidentialWithdrawWithheldTokensFromAccountsIxProto {
-  ConfidentialWithdrawWithheldTokensFromAccountsAccountsProto accounts = 1;
-
-}
-
-message ConfidentialHarvestWithheldTokensToMintAccountsProto {
+message ConfidentialHarvestWithheldTokensToMintAccounts {
   string mint = 1;
   repeated string source_accounts = 2;
 }
-
-message ConfidentialHarvestWithheldTokensToMintIxProto {
-  ConfidentialHarvestWithheldTokensToMintAccountsProto accounts = 1;
+message ConfidentialHarvestWithheldTokensToMint {
+  ConfidentialHarvestWithheldTokensToMintAccounts accounts = 1;
 }
 
-message EnableHarvestToMintAccountsProto {
+message EnableHarvestToMintAccounts {
   string mint = 1;
-  string confidential_transfer_fee_authority = 2;
-  repeated string multisig_signers = 3;
+  string authority = 2;
+  repeated string signers = 3;
 }
-
-
-message DisableHarvestToMintAccountsProto {
+message DisableHarvestToMintAccounts {
   string account = 1;
-  string confidential_transfer_fee_authority = 2;
-  repeated string multisig_signers = 3;
+  string authority = 2;
+  repeated string signers = 3;
 }
+message EnableHarvestToMint { EnableHarvestToMintAccounts accounts = 1; }
+message DisableHarvestToMint { DisableHarvestToMintAccounts accounts = 1; }
 
-message EnableHarvestToMintIxProto {
-  EnableHarvestToMintAccountsProto accounts = 1;
-}
-
-message DisableHarvestToMintIxProto {
-  DisableHarvestToMintAccountsProto accounts = 1;
-}
-
-message ConfidentialTransferFeeIxProto {
-  oneof ix_oneof {
-    InitializeConfidentialTransferFeeConfigIxProto initialize_confidential_transfer_fee_config_ix = 1;
-    ConfidentialWithdrawWithheldTokensFromMintIxProto withdraw_withheld_tokens_from_mint_ix = 2;
-    ConfidentialWithdrawWithheldTokensFromAccountsIxProto withdraw_withheld_tokens_from_accounts_ix = 3;
-    ConfidentialHarvestWithheldTokensToMintIxProto harvest_withheld_tokens_to_mint_ix = 4;
-    EnableHarvestToMintIxProto enable_harvest_to_mint_ix = 5;
-    DisableHarvestToMintIxProto disable_harvest_to_mint_ix = 6;
+message ConfidentialTransferFeeInstruction {
+  oneof instruction {
+    InitializeConfidentialTransferFeeConfig
+        initialize_confidential_transfer_fee_config = 1;
+    ConfidentialWithdrawWithheldTokensFromMint withdraw_withheld_from_mint = 2;
+    ConfidentialWithdrawWithheldTokensFromAccounts
+        withdraw_withheld_from_accounts = 3;
+    ConfidentialHarvestWithheldTokensToMint harvest_withheld_to_mint = 4;
+    EnableHarvestToMint enable_harvest_to_mint = 5;
+    DisableHarvestToMint disable_harvest_to_mint = 6;
   }
 }
 
-
+// --------------------------
 // Common Extension Instructions
-message ExtInitializeAccountsProto {
+// --------------------------
+
+message CommonExtensionInitializeAccounts { string mint = 1; }
+message CommonExtensionInitialize {
+  CommonExtensionInitializeAccounts accounts = 1;
+}
+
+message CommonExtensionUpdateAccounts {
   string mint = 1;
+  string authority = 2;
+  repeated string signers = 3;
 }
+message CommonExtensionUpdate { CommonExtensionUpdateAccounts accounts = 1; }
 
-message ExtInitializeIxProto {
-  ExtInitializeAccountsProto accounts = 1;
-
-}
-
-message UpdateAccountsProto {
-  string mint = 1;
-  string extension_authority = 2;
-  repeated string multisig_signers = 3;
-}
-
-message UpdateIxProto {
-  UpdateAccountsProto accounts = 1;
-}
-
-message EnableAccountsProto {
+message CommonExtensionEnableAccounts {
   string account = 1;
   string owner = 2;
-  repeated string multisig_signers = 3;
+  repeated string signers = 3;
 }
+message CommonExtensionEnable { CommonExtensionEnableAccounts accounts = 1; }
 
-message EnableIxProto {
-  EnableAccountsProto accounts = 1;
-}
-
-message DisableAccountsProto {
+message CommonExtensionDisableAccounts {
   string account = 1;
   string owner = 2;
-  repeated string multisig_signers = 3;
+  repeated string signers = 3;
 }
+message CommonExtensionDisable { CommonExtensionDisableAccounts accounts = 1; }
 
-message DisableIxProto {
-  DisableAccountsProto accounts = 1;
-}
-
-message CommonExtensionIxProto {
-  oneof ix_oneof {
-    ExtInitializeIxProto ext_initialize_ix = 1;
-    UpdateIxProto update_ix = 2;
-    EnableIxProto enable_ix = 3;
-    DisableIxProto disable_ix = 4;
+message CommonExtensionInstruction {
+  oneof kind {
+    CommonExtensionInitialize initialize = 1;
+    CommonExtensionUpdate update = 2;
+    CommonExtensionEnable enable = 3;
+    CommonExtensionDisable disable = 4;
   }
 }
 
-enum ExtensionWithCommonIxsProto {
+enum ExtensionWithCommon {
   CPI_GUARD = 0;
   DEFAULT_ACCOUNT_STATE = 1;
   INTEREST_BEARING_MINT = 2;
@@ -564,74 +506,41 @@ enum ExtensionWithCommonIxsProto {
   METADATA_POINTER = 6;
   TRANSFER_HOOK = 7;
 }
-message CommonExtensionIxsProto {
-  ExtensionWithCommonIxsProto extension = 1;
-  CommonExtensionIxProto ix = 2;
+message CommonExtensions {
+  ExtensionWithCommon extension = 1;
+  CommonExtensionInstruction instruction = 2;
 }
 
-message CpiGuardIxProto {
-  CommonExtensionIxProto ix = 1;
-}
+message CpiGuard { CommonExtensionInstruction instruction = 1; }
+message DefaultAccountState { CommonExtensionInstruction instruction = 1; }
+message InterestBearingMint { CommonExtensionInstruction instruction = 1; }
+message MemoTransfer { CommonExtensionInstruction instruction = 1; }
+message GroupMemberPointer { CommonExtensionInstruction instruction = 1; }
+message GroupPointer { CommonExtensionInstruction instruction = 1; }
+message MetadataPointer { CommonExtensionInstruction instruction = 1; }
+message TransferHook { CommonExtensionInstruction instruction = 1; }
 
-message DefaultAccountStateIxProto {
-  CommonExtensionIxProto ix = 1;
-}
-
-message InterestBearingMintIxProto {
-  CommonExtensionIxProto ix = 1;
-}
-
-message MemoTransferIxProto {
-  CommonExtensionIxProto ix = 1;
-}
-
-message GroupMemberPointerIxProto {
-  CommonExtensionIxProto ix = 1;
-}
-
-message GroupPointerIxProto {
-  CommonExtensionIxProto ix = 1;
-}
-
-message MetadataPointerIxProto {
-  CommonExtensionIxProto ix = 1;
-}
-
-message TransferHookIxProto {
-  CommonExtensionIxProto ix = 1;
-}
-
-message WithdrawExcessLamportsAccountsProto {
-  string source_account = 1;
-  string destination_account = 2;
+message WithdrawExcessLamportsAccounts {
+  string source = 1;
+  string destination = 2;
   string authority = 3;
-  repeated string multisig_signers = 4;
+  repeated string signers = 4;
+}
+message WithdrawExcessLamports { WithdrawExcessLamportsAccounts accounts = 1; }
+
+message InitializePermanentDelegateAccounts { string account = 1; }
+message InitializePermanentDelegateData { string delegate = 1; }
+message InitializePermanentDelegate {
+  InitializePermanentDelegateAccounts accounts = 1;
+  InitializePermanentDelegateData data = 2;
 }
 
-message WithdrawExcessLamportsIxProto {
-  WithdrawExcessLamportsAccountsProto accounts = 1;
-}
-
-message InitializePermanentDelegateAccountsProto {
+message ReallocateAccounts {
   string account = 1;
-}
-
-message InitializePermanentDelegateDataProto {
-  string delegate = 1;
-}
-
-message InitializePermanentDelegateIxProto {
-  InitializePermanentDelegateAccountsProto accounts = 1;
-  InitializePermanentDelegateDataProto data = 2;
-}
-
-message ReallocateAccountsProto {
-  string account = 1;
-  string payer_account = 2;
+  string payer = 2;
   string owner = 3;
-  repeated string multisig_signers = 4;
+  repeated string signers = 4;
 }
-
 enum ExtensionType {
   UNINITIALIZED_EXT = 0;
   TRANSFER_FEE_CONFIG_EXT = 1;
@@ -658,92 +567,83 @@ enum ExtensionType {
   GROUP_MEMBER_POINTER_EXT = 22;
   TOKEN_GROUP_MEMBER_EXT = 23;
 }
-message ReallocateDataProto {
-  repeated ExtensionType extensions_types = 1;
+message ReallocateArgs { repeated ExtensionType extension_types = 1; }
+message Reallocate {
+  ReallocateAccounts accounts = 1;
+  ReallocateArgs args = 2;
 }
 
-message ReallocateIxProto {
-  ReallocateAccountsProto accounts = 1;
-  ReallocateDataProto data = 2;
+message InitializeNonTransferableMintAccounts { string mint = 1; }
+message InitializeNonTransferableMint {
+  InitializeNonTransferableMintAccounts accounts = 1;
 }
 
-message InitializeNonTransferableMintAccountsProto {
-  string mint = 1;
-}
-
-message InitializeNonTransferableMintIxProto {
-  InitializeNonTransferableMintAccountsProto accounts = 1;
-
-}
-
-message InitializeMintCloseAuthorityAccountsProto {
-  string mint = 1;
-}
-
-message InitializeMintCloseAuthorityDataProto {
+message InitializeMintCloseAuthorityAccounts { string mint = 1; }
+message InitializeMintCloseAuthorityArgs {
   optional string close_authority = 1;
 }
-
-message InitializeMintCloseAuthorityIxProto {
-  InitializeMintCloseAuthorityAccountsProto accounts = 1;
-  InitializeMintCloseAuthorityDataProto data = 2;
+message InitializeMintCloseAuthority {
+  InitializeMintCloseAuthorityAccounts accounts = 1;
+  InitializeMintCloseAuthorityArgs args = 2;
 }
 
-message CreateNativeMintAccountsProto {
+message CreateNativeMintAccounts {
   string mint = 1;
-  string funding_account = 2;
+  string payer = 2;
 }
+message CreateNativeMint { CreateNativeMintAccounts accounts = 1; }
 
-message CreateNativeMintIxProto {
-  CreateNativeMintAccountsProto accounts = 1;
-}
-
+// ---------------------
 // Token Extension State
+// ---------------------
+
 message ProgramState {
-  oneof state_oneof {
-    ExtendedTokenAccountProto extended_token_account = 1;
-    ExtendedMintProto extended_mint_account = 2;
-    vixen.parser.token.MultisigProto multisig = 3;
-
+  oneof state {
+    ExtendedTokenAccount extended_token_account = 1;
+    ExtendedMint extended_mint = 2;
+    vixen.parser.token.Multisig multisig = 3;
   }
 }
 
+// ----------------------------
 // Token Extension Instructions
-message ProgramIxs {
-  oneof ix_oneof {
-    vixen.parser.token.ProgramIxs token_program_ix = 1;
-    TransferFeeIxProto transfer_fee_ix = 2;
-    TokenMetadataIxProto token_metadata_ix = 3;
-    TokenGroupIxProto token_group_ix = 4;
-    ConfidentialTransferExtIxProto confidential_transfer_ix = 5;
-    ConfidentialTransferFeeIxProto confidential_transfer_fee_ix = 6;
-    CpiGuardIxProto cpi_guard_ix = 7;
-    TransferHookIxProto transfer_hook_ix = 8;
-    MetadataPointerIxProto metadata_pointer_ix = 9;
-    MemoTransferIxProto memo_transfer_ix = 10;
-    InterestBearingMintIxProto interest_bearing_mint_ix = 11;
-    DefaultAccountStateIxProto default_account_state_ix = 12;
-    GroupMemberPointerIxProto group_member_pointer_ix = 13;
-    GroupPointerIxProto group_pointer_ix = 14;
-    WithdrawExcessLamportsIxProto withdraw_excess_lamports_ix = 15;
-    InitializePermanentDelegateIxProto initialize_permanent_delegate_ix = 16;
-    ReallocateIxProto reallocate_ix = 17;
-    InitializeNonTransferableMintIxProto initialize_non_transferable_mint_ix = 18;
-    InitializeMintCloseAuthorityIxProto initialize_mint_close_authority_ix = 19;
-    CreateNativeMintIxProto create_native_mint_ix = 20;
-    vixen.parser.token.SetAuthorityIxProto set_authority = 21;
+// ----------------------------
+
+message ProgramInstruction {
+  oneof instruction {
+    vixen.parser.token.TokenProgramInstruction token_program = 1;
+    TransferFeeInstruction transfer_fee = 2;
+    TokenMetadataInstruction token_metadata = 3;
+    TokenGroupInstruction token_group = 4;
+    ConfidentialTransferInstruction confidential_transfer = 5;
+    ConfidentialTransferFeeInstruction confidential_transfer_fee = 6;
+    CpiGuard cpi_guard = 7;
+    TransferHook transfer_hook = 8;
+    MetadataPointer metadata_pointer = 9;
+    MemoTransfer memo_transfer = 10;
+    InterestBearingMint interest_bearing_mint = 11;
+    DefaultAccountState default_account_state = 12;
+    GroupMemberPointer group_member_pointer = 13;
+    GroupPointer group_pointer = 14;
+    WithdrawExcessLamports withdraw_excess_lamports = 15;
+    InitializePermanentDelegate initialize_permanent_delegate = 16;
+    Reallocate reallocate = 17;
+    InitializeNonTransferableMint initialize_non_transferable_mint = 18;
+    InitializeMintCloseAuthority initialize_mint_close_authority = 19;
+    CreateNativeMint create_native_mint = 20;
+    vixen.parser.token.SetAuthority set_authority = 21;
   }
 }
 
-message ImmutableOwnerProto {
+// ----------------------
+// Token Extension Types
+// ----------------------
 
-}
+message ImmutableOwner {}
 
-message TransferFeeAmountProto {
-  uint64 withheld_amount = 1;
-}
+message TransferFeeAmount { uint64 withheld_amount = 1; }
 
-message ConfidentialTransferAccountProto {
+message ConfidentialTransferAccount {
   bool approved = 1;
   string elgamal_pubkey = 2;
   string pending_balance_lo = 3;
@@ -758,58 +658,43 @@ message ConfidentialTransferAccountProto {
   uint64 actual_pending_balance_credit_counter = 12;
 }
 
-message MemoTransferProto {
-  bool require_incoming_transfer_memos = 1;
-}
+message MemoTransfer { bool require_incoming_transfer_memos = 1; }
 
-message NonTransferableAccountProto {
-}
+message NonTransferableAccount {}
 
-message TransferHookAccountProto {
-  bool transferring = 1;
-}
+message TransferHookAccount { bool transferring = 1; }
 
-message CpiGuardProto {
-  bool lock_cpi = 1;
-}
+message CpiGuard { bool lock_cpi = 1; }
 
-message ConfidentialTransferFeeAmountProto {
-  string withheld_amount = 1;
-}
+message ConfidentialTransferFeeAmount { string withheld_amount = 1; }
 
-message TransferFeeProto {
+message TransferFee {
   uint64 epoch = 1;
   uint64 maximum_fee = 2;
-  uint64 transfer_fee_basis_points = 3;
+  uint16 transfer_fee_basis_points = 3;
 }
 
-message TransferFeeConfigProto {
+message TransferFeeConfig {
   string transfer_fee_config_authority = 1;
   string withdraw_withheld_authority = 2;
   uint64 withheld_amount = 3;
-  TransferFeeProto older_transfer_fee = 4;
-  TransferFeeProto newer_transfer_fee = 5;
+  TransferFee older_transfer_fee = 4;
+  TransferFee newer_transfer_fee = 5;
 }
 
-message MintCloseAuthorityProto {
-  string close_authority = 1;
-}
+message MintCloseAuthority { string close_authority = 1; }
 
-message ConfidentialTransferMintProto {
+message ConfidentialTransferMint {
   string authority = 1;
   bool auto_approve_new_accounts = 2;
   optional string auditor_elgamal_pubkey = 3;
 }
 
+message DefaultAccountState { uint8 state = 1; }
 
-message DefaultAccountStateProto {
-  uint64 state = 1;
-}
+message NonTransferable {}
 
-message NonTransferableProto {
-}
-
-message InterestBearingConfigProto {
+message InterestBearingConfig {
   string rate_authority = 1;
   int64 initialization_timestamp = 2;
   int64 pre_update_average_rate = 3;
@@ -817,123 +702,120 @@ message InterestBearingConfigProto {
   int64 current_rate = 5;
 }
 
-message PermanentDelegateProto {
-  string delegate = 1;
-}
+message PermanentDelegate { string delegate = 1; }
 
-message TransferHookProto {
+message TransferHook {
   string authority = 1;
   string program_id = 2;
 }
 
-message ConfidentialTransferFeeConfigProto {
+message ConfidentialTransferFeeConfig {
   string authority = 1;
   string withdraw_withheld_authority_elgamal_pubkey = 2;
   bool harvest_to_mint_enabled = 3;
   string withheld_amount = 4;
 }
 
-message MetadataPointerProto {
+message MetadataPointer {
   string authority = 1;
   string metadata_address = 2;
 }
 
-message KeyValue {
+message KeyValuePair {
   string key = 1;
   string value = 2;
 }
 
-message TokenMetadataProto {
+message TokenMetadata {
   string update_authority = 1;
   string mint = 2;
   string name = 3;
   string symbol = 4;
   string uri = 5;
-  repeated KeyValue additional_metadata = 6;
+  repeated KeyValuePair additional_metadata = 6;
 }
 
-message GroupPointerProto {
+message GroupPointer {
   string authority = 1;
   string group_address = 2;
 }
 
-message TokenGroupProto {
+message TokenGroup {
   string update_authority = 1;
   string mint = 2;
   uint64 size = 3;
   uint64 max_size = 4;
 }
 
-message GroupMemberPointerProto {
+message GroupMemberPointer {
   string authority = 1;
-  string member_address = 3;
+  string member_address = 2;
 }
 
-message TokenGroupMemberProto {
+message TokenGroupMember {
   string mint = 1;
   string group = 2;
   uint64 member_number = 3;
 }
 
-message ConfidentialMintBurnProto {
+message ConfidentialMintBurn {
   string confidential_supply = 1;
   string decryptable_supply = 2;
   string supply_elgamal_pubkey = 3;
   string pending_burn = 4;
 }
 
-message ScaledUiAmountConfigProto {
+message ScaledUiAmountConfig {
   optional string authority = 1;
   double multiplier = 2;
   int64 new_multiplier_effective_timestamp = 3;
   double new_multiplier = 4;
 }
 
-message PausableConfigProto {
+message PausableConfig {
   optional string authority = 1;
   bool paused = 2;
 }
 
-message PausableAccountProto {}
+message PausableAccount {}
 
-message ExtensionDataProto {
+message ExtensionData {
   oneof data {
-    ImmutableOwnerProto immutable_owner = 1;
-    TransferFeeAmountProto transfer_fee_amount = 2;
-    ConfidentialTransferAccountProto confidential_transfer_account = 3;
-    MemoTransferProto memo_transfer = 4;
-    NonTransferableAccountProto non_transferable_account = 5;
-    TransferHookAccountProto transfer_hook_account = 6;
-    CpiGuardProto cpi_guard = 7;
-    ConfidentialTransferFeeAmountProto confidential_transfer_fee_amount = 8;
-    TransferFeeConfigProto transfer_fee_config = 9;
-    MintCloseAuthorityProto mint_close_authority = 10;
-    ConfidentialTransferMintProto confidential_transfer_mint = 11;
-    DefaultAccountStateProto default_account_state = 12;
-    NonTransferableProto non_transferable = 13;
-    InterestBearingConfigProto interest_bearing_config = 14;
-    PermanentDelegateProto permanent_delegate = 15;
-    TransferHookProto transfer_hook = 16;
-    ConfidentialTransferFeeConfigProto confidential_transfer_fee_config = 17;
-    MetadataPointerProto metadata_pointer = 18;
-    TokenMetadataProto token_metadata = 19;
-    GroupPointerProto group_pointer = 20;
-    TokenGroupProto token_group = 21;
-    GroupMemberPointerProto group_member_pointer = 22;
-    TokenGroupMemberProto token_group_member = 23;
-    ConfidentialMintBurnProto confidential_mint_burn = 24;
-    ScaledUiAmountConfigProto scaled_ui_amount_config = 25;
-    PausableConfigProto pausable_config = 26;
-    PausableAccountProto pausable_account = 27;
+    ImmutableOwner immutable_owner = 1;
+    TransferFeeAmount transfer_fee_amount = 2;
+    ConfidentialTransferAccount confidential_transfer_account = 3;
+    MemoTransfer memo_transfer = 4;
+    NonTransferableAccount non_transferable_account = 5;
+    TransferHookAccount transfer_hook_account = 6;
+    CpiGuard cpi_guard = 7;
+    ConfidentialTransferFeeAmount confidential_transfer_fee_amount = 8;
+    TransferFeeConfig transfer_fee_config = 9;
+    MintCloseAuthority mint_close_authority = 10;
+    ConfidentialTransferMint confidential_transfer_mint = 11;
+    DefaultAccountState default_account_state = 12;
+    NonTransferable non_transferable = 13;
+    InterestBearingConfig interest_bearing_config = 14;
+    PermanentDelegate permanent_delegate = 15;
+    TransferHook transfer_hook = 16;
+    ConfidentialTransferFeeConfig confidential_transfer_fee_config = 17;
+    MetadataPointer metadata_pointer = 18;
+    TokenMetadata token_metadata = 19;
+    GroupPointer group_pointer = 20;
+    TokenGroup token_group = 21;
+    GroupMemberPointer group_member_pointer = 22;
+    TokenGroupMember token_group_member = 23;
+    ConfidentialMintBurn confidential_mint_burn = 24;
+    ScaledUiAmountConfig scaled_ui_amount_config = 25;
+    PausableConfig pausable_config = 26;
+    PausableAccount pausable_account = 27;
   }
 }
 
-message ExtendedTokenAccountProto {
-  vixen.parser.token.TokenAccountProto base_account = 1;
-  repeated ExtensionDataProto extension_data_vec = 2;
+message ExtendedTokenAccount {
+  vixen.parser.token.TokenAccount base_account = 1;
+  repeated ExtensionData extension_data = 2;
 }
-
-message ExtendedMintProto {
-  vixen.parser.token.MintProto base_mint = 1;
-  repeated ExtensionDataProto extension_data_vec = 2;
+message ExtendedMint {
+  vixen.parser.token.Mint base_mint = 1;
+  repeated ExtensionData extension_data = 2;
 }

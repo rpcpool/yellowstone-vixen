@@ -12,19 +12,22 @@ authors.workspace = true
 prost.workspace = true
 prost-types = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true, features = ["gzip", "zstd"] }
+tonic-prost = { workspace = true, optional = true }
 tonic-reflection = { workspace = true, optional = true }
 
 [build-dependencies]
 protobuf-src = { workspace = true, optional = true }
-prost-build = { workspace = true, optional = true }
+tonic-prost-build = { workspace = true, optional = true }
 tonic-build = { workspace = true, optional = true }
+tonic-prost = { workspace = true, optional = true }
 
 [features]
-parser = ["dep:prost-build", "dep:protobuf-src"]
 stream = [
   "dep:prost-types",
   "dep:tonic",
   "dep:tonic-build",
+  "dep:tonic-prost",
   "dep:tonic-reflection",
+  "dep:tonic-prost-build",
   "dep:protobuf-src",
 ]

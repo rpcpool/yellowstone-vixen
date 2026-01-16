@@ -12,32 +12,6 @@ pub extern crate tonic;
 pub extern crate tonic_reflection;
 
 mod vixen {
-    #[cfg(feature = "parser")]
-    pub mod parser {
-        #![allow(missing_docs)]
-
-        pub mod token {
-            #![allow(clippy::all)]
-            include!(concat!(env!("OUT_DIR"), "/vixen.parser.token.rs"));
-
-            pub const DESCRIPTOR_SET: &[u8] =
-                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.token.bin"));
-        }
-
-        pub mod token_extensions {
-            #![allow(clippy::all)]
-            include!(concat!(
-                env!("OUT_DIR"),
-                "/vixen.parser.token_extensions.rs"
-            ));
-
-            pub const DESCRIPTOR_SET: &[u8] = include_bytes!(concat!(
-                env!("OUT_DIR"),
-                "/vixen.parser.token_extensions.bin"
-            ));
-        }
-    }
-
     #[cfg(feature = "stream")]
     pub mod stream {
         #![allow(missing_docs)]
