@@ -27,7 +27,7 @@ pub struct ApproveAccountAccounts {
     pub authority: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EmptyAccountAccounts {
     pub account: Pubkey,
     pub sysvar: Pubkey,
@@ -35,8 +35,7 @@ pub struct EmptyAccountAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
-
+#[derive(Debug, Clone)]
 pub struct DepositAccounts {
     pub account: Pubkey,
     pub mint: Pubkey,
@@ -44,7 +43,7 @@ pub struct DepositAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WithdrawAccounts {
     pub source_account: Pubkey,
     pub mint: Pubkey,
@@ -53,7 +52,7 @@ pub struct WithdrawAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 
 pub struct ConfidentialTransferAccounts {
     pub source_account: Pubkey,
@@ -64,14 +63,14 @@ pub struct ConfidentialTransferAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ApplyPendingBalanceAccounts {
     pub account: Pubkey,
     pub owner: Pubkey,
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 
 pub struct CreditsAccounts {
     pub account: Pubkey,
@@ -96,7 +95,7 @@ pub struct ConfigureAccountWithRegistryAccounts {
 }
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ConfidentialTransferInstruction {
     InitializeMint {
         accounts: InitializeMintAccounts,

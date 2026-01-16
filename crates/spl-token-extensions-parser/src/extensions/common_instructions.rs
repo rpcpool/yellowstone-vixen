@@ -3,7 +3,7 @@ use yellowstone_vixen_parser::{check_min_accounts_req, Error, Result};
 
 use super::extension::decode_extension_ix_type;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExtensionWithCommonInstruction {
     CpiGuard,
     DefaultAccountState,
@@ -15,7 +15,7 @@ pub enum ExtensionWithCommonInstruction {
     TransferHook,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InstructionSupported {
     InitAndUpdate,
     EnableAndDisable,
@@ -44,34 +44,34 @@ pub struct ExtInitializeAccounts {
     pub mint: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UpdateAccounts {
     pub mint: Pubkey,
     pub extension_authority: Pubkey,
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EnableAccounts {
     pub account: Pubkey,
     pub owner: Pubkey,
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DisableAccounts {
     pub account: Pubkey,
     pub owner: Pubkey,
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CommonExtensionInstructions {
     pub extension: ExtensionWithCommonInstruction,
     pub instruction: CommonInstruction,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CommonInstruction {
     Initialize { accounts: ExtInitializeAccounts },
     Update { accounts: UpdateAccounts },

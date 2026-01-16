@@ -9,7 +9,7 @@ use super::{
 };
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TokenExtensionProgramInstruction {
     TokenProgram(TokenProgramInstruction),
     SetAuthority {
@@ -73,7 +73,7 @@ pub struct InitializeNonTransferableMintAccounts {
     pub mint: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ReallocateAccounts {
     pub account: Pubkey,
     pub payer: Pubkey,
@@ -81,7 +81,7 @@ pub struct ReallocateAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ReallocateArgs {
     pub extension_types: Vec<ExtensionType>,
 }
@@ -96,7 +96,7 @@ pub struct InitializePermanentDelegateArgs {
     pub delegate: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WithdrawExcessLamportsAccounts {
     pub source_account: Pubkey,
     pub destination_account: Pubkey,

@@ -134,6 +134,7 @@ pub struct FreezeAccountAccounts {
     pub mint_freeze_authority: Pubkey,
     pub multisig_signers: Vec<Pubkey>,
 }
+
 #[derive(Debug, Clone)]
 pub struct ThawAccountAccounts {
     pub account: Pubkey,
@@ -207,6 +208,7 @@ pub struct GetAccountDataSizeAccounts {
 pub struct InitializeImmutableOwnerAccounts {
     pub account: Pubkey,
 }
+
 #[derive(Debug, Clone, Copy)]
 pub struct AmountToUiAmountAccounts {
     pub mint: Pubkey,
@@ -227,7 +229,7 @@ pub struct UiAmountToAmountArgs {
     pub ui_amount: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TokenProgramInstruction {
     Transfer {
         accounts: TransferAccounts,

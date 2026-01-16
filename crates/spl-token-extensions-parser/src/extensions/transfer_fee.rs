@@ -4,7 +4,7 @@ use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
 
 use super::extension::ExtensionInstructionParser;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TransferCheckedWithFeeAccounts {
     pub source: Pubkey,
     pub mint: Pubkey,
@@ -12,6 +12,7 @@ pub struct TransferCheckedWithFeeAccounts {
     pub owner: Pubkey,
     pub multisig_signers: Vec<Pubkey>,
 }
+
 #[derive(Debug, Clone, Copy)]
 pub struct TransferCheckedWithFeeArgs {
     pub amount: u64,
@@ -32,7 +33,7 @@ pub struct InitializeTransferFeeConfigArgs {
     pub maximum_fee: u64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WithdrawWithheldTokensFromMintAccounts {
     pub mint: Pubkey,
     pub fee_recipient: Pubkey,
@@ -40,7 +41,7 @@ pub struct WithdrawWithheldTokensFromMintAccounts {
     pub multisig_signers: Vec<Pubkey>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WithdrawWithheldTokensFromAccountsAccounts {
     pub mint: Pubkey,
     pub fee_recipient: Pubkey,
@@ -54,7 +55,7 @@ pub struct WithdrawWithheldTokensFromAccountsArgs {
     pub num_token_accounts: u8,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 
 pub struct SetTransferFeeAccounts {
     pub mint: Pubkey,
@@ -75,7 +76,7 @@ pub struct HarvestWithheldTokensToMintAccounts {
     pub mint_fee_acc_owner: Pubkey,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TransferFeeInstruction {
     TransferCheckedWithFee {
         accounts: TransferCheckedWithFeeAccounts,
