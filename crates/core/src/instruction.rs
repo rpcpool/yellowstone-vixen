@@ -1,7 +1,7 @@
 //! Helpers for parsing transaction updates into instructions.
 
 use std::{collections::VecDeque, sync::Arc};
-
+use std::fmt::{Debug};
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     prelude::MessageHeader,
@@ -98,7 +98,7 @@ pub struct InstructionShared {
 }
 
 /// A parsed instruction from a transaction update.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InstructionUpdate {
     /// The program ID of the instruction.
     pub program: Pubkey,
@@ -110,6 +110,8 @@ pub struct InstructionUpdate {
     pub shared: Arc<InstructionShared>,
     /// Inner instructions invoked by this instruction.
     pub inner: Vec<InstructionUpdate>,
+    /// The path of this instruction within the transaction.
+    pub path: IxIndex,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -121,6 +123,45 @@ pub struct AccountKeys {
     pub dynamic_rw: Vec<Vec<u8>>,
     /// Resolved readonly account keys.
     pub dynamic_ro: Vec<Vec<u8>>,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+/// 0-based indices representing the path to the instruction
+// typically one or two elements long, but can be 3+ levels deep
+pub struct IxIndex(Vec<u32>);
+
+impl IxIndex {
+    /// Create a new empty instruction path.
+    pub fn new_single(idx: u32) -> Self {
+        let mut path_idx = Vec::with_capacity(4);
+        path_idx.push(idx);
+        Self(path_idx)
+    }
+
+    /// Push a new index onto the instruction path.
+    pub fn push_clone(&self, idx: u32) -> Self {
+        let mut path_idx = self.0.clone();
+        path_idx.push(idx);
+        Self(path_idx)
+    }
+
+    /// Get the current instruction path as a slice.
+    pub fn as_slice(&self) -> &[u32] { &self.0 }
+
+    /// Get the length of the instruction path.
+    pub fn len(&self) -> usize { self.0.len() }
+}
+
+impl Debug for IxIndex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // 1.7
+        let formatted = self.0.iter()
+            .map(|i| (i + 1).to_string())
+            .collect::<Vec<_>>()
+            .join(".");
+
+        f.write_str(&formatted)
+    }
 }
 
 /// Errors that can occur when parsing an account key.
@@ -235,8 +276,8 @@ impl InstructionUpdate {
         });
 
         let mut outer = instructions
-            .into_iter()
-            .map(|i| Self::parse_one(Arc::clone(&shared), i))
+            .into_iter().enumerate()
+            .map(|(idx, i)| Self::parse_one(Arc::clone(&shared), i, IxIndex::new_single(idx as u32)))
             .collect::<Result<Vec<_>, _>>()?;
 
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
@@ -244,36 +285,43 @@ impl InstructionUpdate {
         Ok(outer)
     }
 
+    // called once per tx
     fn parse_inner(
         shared: &Arc<InstructionShared>,
         inner_instructions: Vec<InnerInstructions>,
         outer: &mut [Self],
     ) -> Result<(), ParseError> {
+
         for insn in inner_instructions {
             let InnerInstructions {
-                index,
+                index: index_outer,
                 instructions,
             } = insn;
 
-            let Some(outer) = index.try_into().ok().and_then(|i: usize| outer.get_mut(i)) else {
-                return Err(ParseError::InvalidInnerInstructionIndex(index));
+            let Some(outer) = index_outer.try_into().ok().and_then(|i: usize| outer.get_mut(i)) else {
+                return Err(ParseError::InvalidInnerInstructionIndex(index_outer));
             };
 
+            let heights: Vec<Option<u32>> = instructions.iter().map(|ins| ins.stack_height.clone()).collect();
+            let paths_at_index = derive_paths_from_stackheights(&heights, index_outer);
+
             let mut inner = instructions
-                .into_iter()
-                .map(|i| Self::parse_one_inner(Arc::clone(shared), i))
+                .into_iter().enumerate()
+                .map(|(idx, i)| Self::parse_one_inner(Arc::clone(shared), i, paths_at_index[idx].clone()))
                 .collect::<Result<Vec<_>, _>>()?;
+
 
             if let Some(mut i) = inner.len().checked_sub(1) {
                 while i > 0 {
                     let parent_idx = i - 1;
                     let Some(height) = inner[parent_idx].1 else {
+                        // stack_height missing for old data
                         continue;
                     };
                     while inner
                         .get(i)
                         .and_then(|&(_, h)| h)
-                        .is_some_and(|h| h > height)
+                        .is_some_and(|h| h > height )
                     {
                         let (child, _) = inner.remove(i);
                         inner[parent_idx].0.inner.push(child);
@@ -283,11 +331,13 @@ impl InstructionUpdate {
             }
 
             let inner: Vec<_> = inner.into_iter().map(|(i, _)| i).collect();
+
             if outer.inner.is_empty() {
                 outer.inner = inner;
             } else {
                 outer.inner.extend(inner);
             }
+
         }
 
         Ok(())
@@ -297,18 +347,20 @@ impl InstructionUpdate {
     fn parse_one(
         shared: Arc<InstructionShared>,
         ins: CompiledInstruction,
+        ix_index: IxIndex,
     ) -> Result<Self, ParseError> {
         let CompiledInstruction {
             program_id_index,
             ref accounts,
             data,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data)
+        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index)
     }
 
     fn parse_one_inner(
         shared: Arc<InstructionShared>,
         ins: InnerInstruction,
+        ix_index: IxIndex,
     ) -> Result<(Self, Option<u32>), ParseError> {
         let InnerInstruction {
             program_id_index,
@@ -316,7 +368,7 @@ impl InstructionUpdate {
             data,
             stack_height,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data).map(|i| (i, stack_height))
+        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index).map(|i| (i, stack_height))
     }
 
     fn parse_from_parts(
@@ -324,6 +376,7 @@ impl InstructionUpdate {
         program_id_index: u32,
         accounts: &[u8],
         data: Vec<u8>,
+        ix_index: IxIndex,
     ) -> Result<Self, ParseError> {
         Ok(Self {
             program: shared.accounts.get(program_id_index)?,
@@ -334,6 +387,7 @@ impl InstructionUpdate {
             data,
             shared,
             inner: vec![],
+            path: ix_index,
         })
     }
 
@@ -379,4 +433,55 @@ impl<'a> Iterator for VisitAll<'a> {
             },
         }
     }
+}
+
+
+fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u32) -> Vec<IxIndex> {
+    if stack_heights.is_empty() {
+        return Vec::new();
+    }
+
+    let mut paths: Vec<IxIndex> = Vec::with_capacity(stack_heights.len());
+
+    let mut stack: Vec<u32> = Vec::with_capacity(4);
+    stack.push(outer_index);
+    stack.push(0);
+    paths.push(IxIndex(stack.clone()));
+    for (pos, ref sh_this) in stack_heights.iter().enumerate().skip(1) {
+        let (Some(sh_this), Some(sh_parent)) = (sh_this, stack_heights[pos - 1]) else {
+            // catch exceptional cases where stack height is missing
+            // assume same level
+            if let Some(top) = stack.last_mut() {
+                *top += 1;
+            }
+            paths.push(IxIndex(stack.clone()));
+            continue;
+        };
+        match sh_this.cmp(&sh_parent) {
+            std::cmp::Ordering::Greater => {
+                // descend in tree to child node
+                stack.push(0);
+            }
+            std::cmp::Ordering::Equal => {
+                // same level
+                // stack is actually never empty here
+                if let Some(top) = stack.last_mut() {
+                    *top += 1;
+                }
+            }
+            std::cmp::Ordering::Less => {
+                // ascend in tree to parent node
+                stack.truncate(*sh_this as usize);
+                // stack is actually never empty here
+                if let Some(top) = stack.last_mut() {
+                    *top += 1;
+                }
+            }
+        }
+
+        paths.push(IxIndex(stack.clone()));
+    }
+
+    debug_assert_eq!(paths.len(), stack_heights.len(), "derived paths failed for {:?}", stack_heights);
+    paths
 }
