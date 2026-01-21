@@ -1,9 +1,9 @@
-use std::{collections::HashMap, time::Duration};
+use std::time::Duration;
 
 use async_trait::async_trait;
 use clap::ValueEnum;
 use futures_util::StreamExt;
-use tokio::{sync::mpsc::Sender, task::JoinSet};
+use tokio::sync::mpsc::Sender;
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
@@ -72,51 +72,55 @@ impl SourceTrait for YellowstoneGrpcSource {
     async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
         let filters = self.filters.clone();
         let config = self.config.clone();
-
         let timeout = Duration::from_secs(config.timeout);
 
-        let mut tasks_set = JoinSet::new();
+        let mut client = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
+            .x_token(config.x_token.clone())?
+            .max_decoding_message_size(config.max_decoding_message_size.unwrap_or(usize::MAX))
+            .accept_compressed(config.accept_compression.unwrap_or_default().into())
+            .connect_timeout(timeout)
+            .timeout(timeout)
+            .tls_config(ClientTlsConfig::new().with_native_roots())?
+            .connect()
+            .await?;
 
-        for (filter_id, prefilter) in filters.parsers_filters {
-            let filter = Filters::new(HashMap::from([(filter_id, prefilter)]));
-
-            let tx = tx.clone();
-
-            let mut client = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
-                .x_token(config.x_token.clone())?
-                .max_decoding_message_size(config.max_decoding_message_size.unwrap_or(usize::MAX))
-                .accept_compressed(config.accept_compression.unwrap_or_default().into())
-                .connect_timeout(timeout)
-                .timeout(timeout)
-                .tls_config(ClientTlsConfig::new().with_native_roots())?
-                .connect()
-                .await?;
-
-            let mut subscribe_request: SubscribeRequest = filter.into();
-            if let Some(from_slot) = config.from_slot {
-                subscribe_request.from_slot = Some(from_slot);
-            }
-            if let Some(commitment_level) = config.commitment_level {
-                subscribe_request.commitment = Some(commitment_level as i32);
-            }
-
-            let (_sub_tx, stream) = client
-                .subscribe_with_request(Some(subscribe_request))
-                .await?;
-
-            tasks_set.spawn(async move {
-                let mut stream = std::pin::pin!(stream);
-
-                while let Some(update) = stream.next().await {
-                    let res = tx.send(update).await;
-                    if res.is_err() {
-                        tracing::error!("Failed to send update to buffer");
-                    }
-                }
-            });
+        let mut subscribe_request: SubscribeRequest = filters.into();
+        if let Some(from_slot) = config.from_slot {
+            subscribe_request.from_slot = Some(from_slot);
+        }
+        if let Some(commitment_level) = config.commitment_level {
+            subscribe_request.commitment = Some(commitment_level as i32);
         }
 
-        tasks_set.join_all().await;
+        tracing::debug!(
+            has_transactions = !subscribe_request.transactions.is_empty(),
+            transaction_filters = ?subscribe_request.transactions.keys().collect::<Vec<_>>(),
+            has_blocks_meta = !subscribe_request.blocks_meta.is_empty(),
+            blocks_meta_filters = ?subscribe_request.blocks_meta.keys().collect::<Vec<_>>(),
+            has_slots = !subscribe_request.slots.is_empty(),
+            slots_filters = ?subscribe_request.slots.keys().collect::<Vec<_>>(),
+            from_slot = ?subscribe_request.from_slot,
+            commitment = ?subscribe_request.commitment,
+            "Subscribing to gRPC stream"
+        );
+
+        let (_sub_tx, stream) = client
+            .subscribe_with_request(Some(subscribe_request))
+            .await?;
+
+        let mut stream = std::pin::pin!(stream);
+
+        tracing::debug!("gRPC stream started");
+
+        while let Some(update) = stream.next().await {
+            let res = tx.send(update).await;
+            if res.is_err() {
+                tracing::error!("Failed to send update to buffer");
+                break; // TODO: CHECK: It should have a break there ?
+            }
+        }
+
+        tracing::debug!("gRPC stream ended");
 
         Ok(())
     }
