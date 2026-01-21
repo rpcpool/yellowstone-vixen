@@ -221,8 +221,9 @@ impl Buffer {
                                 Ok(u) => u,
                                 Err(e) => {
                                     tracing::error!(
-                                        "Yellowstone grpc stream error: {:?}",
-                                        e.code()
+                                        code = ?e.code(),
+                                        message = %e.message(),
+                                        "Yellowstone grpc stream error"
                                     );
                                     return Err(crate::Error::YellowstoneStatus(e));
                                 },
