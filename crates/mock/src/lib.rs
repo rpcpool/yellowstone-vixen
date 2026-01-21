@@ -160,6 +160,7 @@ impl From<&SerializableInstructionUpdate> for InstructionUpdate {
             data: value.data.clone(),
             shared: Arc::new(InstructionShared::default()),
             inner: value.inner.iter().map(Into::into).collect(),
+            log_indices: vec![],
         }
     }
 }
