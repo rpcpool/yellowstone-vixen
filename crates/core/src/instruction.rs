@@ -111,7 +111,7 @@ pub struct InstructionUpdate {
     /// Inner instructions invoked by this instruction.
     pub inner: Vec<InstructionUpdate>,
     /// The path of this instruction within the transaction.
-    pub path: IxIndex,
+    pub path: Path,
 }
 
 /// The keys of the accounts involved in a transaction.
@@ -128,9 +128,9 @@ pub struct AccountKeys {
 #[derive(Clone, PartialEq, Eq)]
 /// 0-based indices representing the path to the instruction
 // typically one or two elements long, but can be 3+ levels deep
-pub struct IxIndex(Vec<u32>);
+pub struct Path(Vec<u32>);
 
-impl IxIndex {
+impl Path {
     /// Create a new empty instruction path.
     pub fn new_single(idx: u32) -> Self {
         let mut path_idx = Vec::with_capacity(4);
@@ -152,7 +152,7 @@ impl IxIndex {
     pub fn len(&self) -> usize { self.0.len() }
 }
 
-impl Debug for IxIndex {
+impl Debug for Path {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // 1.7
         let formatted = self.0.iter()
@@ -277,7 +277,7 @@ impl InstructionUpdate {
 
         let mut outer = instructions
             .into_iter().enumerate()
-            .map(|(idx, i)| Self::parse_one(Arc::clone(&shared), i, IxIndex::new_single(idx as u32)))
+            .map(|(idx, i)| Self::parse_one(Arc::clone(&shared), i, Path::new_single(idx as u32)))
             .collect::<Result<Vec<_>, _>>()?;
 
         Self::parse_inner(&shared, inner_instructions, &mut outer)?;
@@ -347,20 +347,20 @@ impl InstructionUpdate {
     fn parse_one(
         shared: Arc<InstructionShared>,
         ins: CompiledInstruction,
-        ix_index: IxIndex,
+        path: Path,
     ) -> Result<Self, ParseError> {
         let CompiledInstruction {
             program_id_index,
             ref accounts,
             data,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index)
+        Self::parse_from_parts(shared, program_id_index, accounts, data, path)
     }
 
     fn parse_one_inner(
         shared: Arc<InstructionShared>,
         ins: InnerInstruction,
-        ix_index: IxIndex,
+        path: Path,
     ) -> Result<(Self, Option<u32>), ParseError> {
         let InnerInstruction {
             program_id_index,
@@ -368,7 +368,7 @@ impl InstructionUpdate {
             data,
             stack_height,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data, ix_index).map(|i| (i, stack_height))
+        Self::parse_from_parts(shared, program_id_index, accounts, data, path).map(|i| (i, stack_height))
     }
 
     fn parse_from_parts(
@@ -376,7 +376,7 @@ impl InstructionUpdate {
         program_id_index: u32,
         accounts: &[u8],
         data: Vec<u8>,
-        ix_index: IxIndex,
+        path: Path,
     ) -> Result<Self, ParseError> {
         Ok(Self {
             program: shared.accounts.get(program_id_index)?,
@@ -387,7 +387,7 @@ impl InstructionUpdate {
             data,
             shared,
             inner: vec![],
-            path: ix_index,
+            path,
         })
     }
 
@@ -436,17 +436,17 @@ impl<'a> Iterator for VisitAll<'a> {
 }
 
 
-fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u32) -> Vec<IxIndex> {
+fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u32) -> Vec<Path> {
     if stack_heights.is_empty() {
         return Vec::new();
     }
 
-    let mut paths: Vec<IxIndex> = Vec::with_capacity(stack_heights.len());
+    let mut paths: Vec<Path> = Vec::with_capacity(stack_heights.len());
 
     let mut stack: Vec<u32> = Vec::with_capacity(4);
     stack.push(outer_index);
     stack.push(0);
-    paths.push(IxIndex(stack.clone()));
+    paths.push(Path(stack.clone()));
     for (pos, ref sh_this) in stack_heights.iter().enumerate().skip(1) {
         let (Some(sh_this), Some(sh_parent)) = (sh_this, stack_heights[pos - 1]) else {
             // catch exceptional cases where stack height is missing
@@ -454,7 +454,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
             if let Some(top) = stack.last_mut() {
                 *top += 1;
             }
-            paths.push(IxIndex(stack.clone()));
+            paths.push(Path(stack.clone()));
             continue;
         };
         match sh_this.cmp(&sh_parent) {
@@ -479,7 +479,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
             }
         }
 
-        paths.push(IxIndex(stack.clone()));
+        paths.push(Path(stack.clone()));
     }
 
     debug_assert_eq!(paths.len(), stack_heights.len(), "derived paths failed for {:?}", stack_heights);
