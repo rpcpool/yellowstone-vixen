@@ -152,6 +152,10 @@ impl Path {
     pub fn len(&self) -> usize { self.0.len() }
 }
 
+impl From<Vec<u32>> for Path {
+    fn from(value: Vec<u32>) -> Self { Self(value) }
+}
+
 impl Debug for Path {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // 1.7
