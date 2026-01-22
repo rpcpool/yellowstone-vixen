@@ -150,6 +150,25 @@ impl Path {
 
     /// Get the length of the instruction path.
     pub fn len(&self) -> usize { self.0.len() }
+
+
+    /// Check if this instruction path is a (direct) parent of another instruction path.
+    pub fn is_parent_of(&self, other: &Path) -> bool {
+        if self.len() + 1 != other.len() {
+            return false;
+        }
+        let same_prefix_len = self.len();
+        other.0[..same_prefix_len] == self.0[..same_prefix_len]
+    }
+
+    /// Check if this instruction path is an ancestor of another instruction path.
+    pub fn is_ancestor_of(&self, other: &Path) -> bool {
+        if self.len() >= other.len() {
+            return false;
+        }
+        let same_prefix_len = self.len();
+        other.0[..same_prefix_len] == self.0[..same_prefix_len]
+    }
 }
 
 impl From<Vec<u32>> for Path {
@@ -488,4 +507,44 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
 
     debug_assert_eq!(paths.len(), stack_heights.len(), "derived paths failed for {:?}", stack_heights);
     paths
+}
+
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_ix_path_parent() {
+        use super::Path;
+
+        let p_empty = Path::from(vec![]);
+        let p0 = Path::from(vec![0]);
+        let p1 = Path::from(vec![0, 1]);
+        let p2 = Path::from(vec![0, 1, 2]);
+        let p3 = Path::from(vec![0, 2]);
+        let p4 = Path::from(vec![0, 1, 2, 3]);
+
+        assert!(p_empty.is_parent_of(&p0));
+        assert!(p1.is_parent_of(&p2));
+        assert!(!p1.is_parent_of(&p4));
+        assert!(!p2.is_parent_of(&p1));
+        assert!(!p1.is_parent_of(&p3));
+        assert!(!p1.is_parent_of(&p1));
+    }
+
+    #[test]
+    fn test_ix_path_ancestor() {
+        use super::Path;
+
+        let p1 = Path::from(vec![0, 1]);
+        let p2 = Path::from(vec![0, 1, 2]);
+        let p3 = Path::from(vec![0, 2]);
+        let p4 = Path::from(vec![0, 1, 2, 3]);
+
+        assert!(p1.is_ancestor_of(&p2));
+        assert!(p1.is_ancestor_of(&p4));
+        assert!(!p2.is_ancestor_of(&p1));
+        assert!(!p1.is_ancestor_of(&p3));
+        assert!(!p1.is_parent_of(&p1));
+    }
+
 }
