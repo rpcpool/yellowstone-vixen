@@ -128,6 +128,7 @@ pub struct AccountKeys {
 #[derive(Clone, PartialEq, Eq)]
 /// 0-based indices representing the path to the instruction
 // typically one or two elements long, but can be 3+ levels deep
+// empty path makes no sense, but is allowed for completeness
 pub struct Path(Vec<u32>);
 
 impl Path {
@@ -482,6 +483,13 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
         };
         match sh_this.cmp(&sh_parent) {
             std::cmp::Ordering::Greater => {
+                // calling is always +1 stack height
+                debug_assert_eq!(
+                    *sh_this,
+                    sh_parent + 1,
+                    "invalid stack heights: {:?}",
+                    stack_heights
+                );
                 // descend in tree to child node
                 stack.push(0);
             }
@@ -493,6 +501,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
                 }
             }
             std::cmp::Ordering::Less => {
+                // returning from calls might skip multiple levels (not only one link above)
                 // ascend in tree to parent node
                 stack.truncate(*sh_this as usize);
                 // stack is actually never empty here
