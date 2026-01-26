@@ -1,5 +1,5 @@
 # This is an example TOML configuration file for Yellowstone Vixen.
-# Copy to Vixen.toml and them modify as needed.
+# Copy to Vixen.toml and then modify as needed.
 
 # Only needed if you are using the Yellowstone gRPC as a source.
 [source]
