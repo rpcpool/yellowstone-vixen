@@ -5,6 +5,7 @@ use codama_nodes::{
 };
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
+use crate::parse::hexdecode_relaxed;
 
 pub fn render_vixen_parser(idl: &RootNode) -> TokenStream {
     let program_mod_ident = format_ident!("{}", to_snake_case(&idl.program.name));
@@ -228,7 +229,7 @@ fn render_account_parser(
                                 ValueNode::Bytes(bytes) => {
                                     let discriminator = match bytes.encoding {
                                         codama_nodes::BytesEncoding::Base16 => {
-                                            hex::decode(&bytes.data)
+                                            hexdecode_relaxed(&bytes.data)
                                                 .expect("Failed to decode base16 (hex) bytes")
                                         }
                                         codama_nodes::BytesEncoding::Base58 => {
@@ -402,7 +403,7 @@ fn render_instruction_parser(
                         field.default_value.as_ref().and_then(|value| match value {
                             InstructionInputValueNode::Bytes(bytes) => {
                                 let discriminator = match bytes.encoding {
-                                    codama_nodes::BytesEncoding::Base16 => hex::decode(&bytes.data)
+                                    codama_nodes::BytesEncoding::Base16 => hexdecode_relaxed(&bytes.data)
                                         .expect("Failed to decode base16 (hex) bytes"),
                                     codama_nodes::BytesEncoding::Base58 => {
                                         bs58::decode(&bytes.data)
