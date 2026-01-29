@@ -15,6 +15,7 @@ use yellowstone_vixen::{
     filter_pipeline::FilterPipeline,
     vixen_core::{Prefilter, Pubkey},
 };
+use yellowstone_vixen::vixen_core::instruction::InstructionUpdate;
 use yellowstone_vixen_spl_token_parser::InstructionParser;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
@@ -28,9 +29,9 @@ pub struct Opts {
 #[derive(Debug)]
 pub struct Logger;
 
-impl<V: std::fmt::Debug + Sync, R: Sync> vixen::Handler<V, R> for Logger {
-    async fn handle(&self, value: &V, _raw: &R) -> vixen::HandlerResult<()> {
-        println!("{value:?}");
+impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger {
+    async fn handle(&self, value: &V, input: &InstructionUpdate) -> vixen::HandlerResult<()> {
+        println!("ix {:?} - {value:?}", input.path);
         Ok(())
     }
 }

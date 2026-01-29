@@ -32,7 +32,7 @@ use solana_transaction_status::{
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
-    instruction::{InstructionShared, InstructionUpdate},
+    instruction::{InstructionShared, InstructionUpdate, Path as IxPath},
     ProgramParser, Pubkey as VixenPubkey,
 };
 
@@ -160,6 +160,7 @@ impl From<&SerializableInstructionUpdate> for InstructionUpdate {
             data: value.data.clone(),
             shared: Arc::new(InstructionShared::default()),
             inner: value.inner.iter().map(Into::into).collect(),
+            path: value.ix_index.iter().map(|x| *x as u32).collect::<Vec<u32>>().into(),
         }
     }
 }
