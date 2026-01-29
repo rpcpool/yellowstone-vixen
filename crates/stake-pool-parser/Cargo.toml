@@ -13,9 +13,6 @@ spl-stake-pool = { workspace = true, features = ["no-entrypoint"] }
 yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen-parser = { workspace = true }
-yellowstone-vixen-proto = { workspace = true, features = [
-  "parser",
-], optional = true }
 thiserror.workspace = true
 borsh.workspace = true
 bs58.workspace = true
