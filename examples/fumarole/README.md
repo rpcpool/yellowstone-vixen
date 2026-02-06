@@ -98,16 +98,3 @@ All keys are `kebab-case`.
 | `commitment-level`          | `string`                 | No       | Overrides the `SubscribeRequest` commitment. Possible: `"processed"`, `"confirmed"`, `"finalized"`. |
 | `max-decoding-message-size` | `int`                    | No       | Max decoded message size in bytes (default: `usize::MAX`).                                          |
 | `accept-compression`        | `"zstd"` &#124; `"gzip"` | No       | Request/response compression.                                                                       |
-
-### Prometheus-related fields
-
-`FumaroleConfig` also defines (behind the crate feature `prometheus`) these keys:
-
-- `metrics-endpoint`
-- `metrics-job-name`
-- `metrics-interval`
-
-In the current `YellowstoneFumaroleSource` implementation, these are **declared
-but not wired** (the source does not start a push loop itself). If you want
-metrics, use Vixen runtime metrics (see `examples/prometheus`) and push them
-from your app.
