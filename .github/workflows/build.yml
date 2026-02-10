@@ -39,16 +39,8 @@ jobs:
             yellowstone-vixen/target/
           key: cargo-${{ hashFiles('**/Cargo.lock') }}-0001
 
-      - name: Install Latest Protoc
-        run: |
-          PROTOC_VERSION=26.1
-          ARCH=x86_64
-          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-${ARCH}.zip
-          sudo apt-get update
-          sudo apt-get install -y unzip protobuf-compiler libprotobuf-dev
-          unzip protoc-${PROTOC_VERSION}-linux-${ARCH}.zip -d $HOME/.local
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          protoc --version
+      - name: Install LLVM/Clang
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang
 
       # Build yellowstone-vixen
       - name: build yellowstone-vixen
