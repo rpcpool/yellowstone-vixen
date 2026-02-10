@@ -133,6 +133,7 @@ pub struct Path(Vec<u32>);
 
 impl Path {
     /// Create a new empty instruction path.
+    #[must_use]
     pub fn new_single(idx: u32) -> Self {
         let mut path_idx = Vec::with_capacity(4);
         path_idx.push(idx);
@@ -140,6 +141,7 @@ impl Path {
     }
 
     /// Push a new index onto the instruction path.
+    #[must_use]
     pub fn push_clone(&self, idx: u32) -> Self {
         let mut path_idx = self.0.clone();
         path_idx.push(idx);
@@ -147,12 +149,19 @@ impl Path {
     }
 
     /// Get the current instruction path as a slice.
+    #[must_use]
     pub fn as_slice(&self) -> &[u32] { &self.0 }
 
     /// Get the length of the instruction path.
+    #[must_use]
     pub fn len(&self) -> usize { self.0.len() }
 
+    /// Check if the instruction path is empty.
+    #[must_use]
+    pub fn is_empty(&self) -> bool { self.0.is_empty() }
+
     /// Check if this instruction path is a (direct) parent of another instruction path.
+    #[must_use]
     pub fn is_parent_of(&self, other: &Path) -> bool {
         if self.len() + 1 != other.len() {
             return false;
@@ -162,6 +171,7 @@ impl Path {
     }
 
     /// Check if this instruction path is an ancestor of another instruction path.
+    #[must_use]
     pub fn is_ancestor_of(&self, other: &Path) -> bool {
         if self.len() >= other.len() {
             return false;
@@ -300,6 +310,7 @@ impl InstructionUpdate {
             message_header: header.ok_or(Missing::TransactionMessageHeader)?,
         });
 
+        #[allow(clippy::cast_possible_truncation)] // instruction count never exceeds u32::MAX
         let mut outer = instructions
             .into_iter()
             .enumerate()
@@ -331,10 +342,8 @@ impl InstructionUpdate {
                 return Err(ParseError::InvalidInnerInstructionIndex(index_outer));
             };
 
-            let heights: Vec<Option<u32>> = instructions
-                .iter()
-                .map(|ins| ins.stack_height.clone())
-                .collect();
+            let heights: Vec<Option<u32>> =
+                instructions.iter().map(|ins| ins.stack_height).collect();
             let paths_at_index = derive_paths_from_stackheights(&heights, index_outer);
 
             let mut inner = instructions
@@ -496,8 +505,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
                 debug_assert_eq!(
                     *sh_this,
                     sh_parent + 1,
-                    "invalid stack heights: {:?}",
-                    stack_heights
+                    "invalid stack heights: {stack_heights:?}"
                 );
                 // descend in tree to child node
                 stack.push(0);
@@ -526,8 +534,7 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
     debug_assert_eq!(
         paths.len(),
         stack_heights.len(),
-        "derived paths failed for {:?}",
-        stack_heights
+        "derived paths failed for {stack_heights:?}"
     );
     paths
 }
