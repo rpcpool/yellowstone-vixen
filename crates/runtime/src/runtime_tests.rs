@@ -12,13 +12,9 @@ use crate::{
 
 // ========== Test helpers ==========
 
-async fn wait_for_runtime_ready() {
-    tokio::time::sleep(Duration::from_millis(50)).await;
-}
+async fn wait_for_runtime_ready() { tokio::time::sleep(Duration::from_millis(50)).await; }
 
-async fn hold_channel_open_briefly() {
-    tokio::time::sleep(Duration::from_millis(10)).await;
-}
+async fn hold_channel_open_briefly() { tokio::time::sleep(Duration::from_millis(10)).await; }
 
 fn signal_stream_ended(status_tx: oneshot::Sender<SourceExitStatus>) {
     let _ = status_tx.send(SourceExitStatus::StreamEnded);
@@ -94,15 +90,12 @@ fn create_update_channel() -> (
 
 // ========== Action helpers ==========
 
-fn drop_receiver<T>(rx: T) {
-    drop(rx);
-}
+fn drop_receiver<T>(rx: T) { drop(rx); }
 
 async fn send_update_expecting_failure(tx: &Sender<Result<SubscribeUpdate, tonic::Status>>) {
     let result = tx.send(Ok(make_ping_update())).await;
     assert!(result.is_err(), "Send should fail when receiver dropped");
 }
-
 
 // ========== Assertion helpers ==========
 
@@ -168,9 +161,8 @@ struct MockStreamEndSource;
 #[async_trait]
 impl SourceTrait for MockStreamEndSource {
     type Config = NullConfig;
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self {
-        Self
-    }
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -191,9 +183,8 @@ struct MockStreamErrorSource;
 #[async_trait]
 impl SourceTrait for MockStreamErrorSource {
     type Config = NullConfig;
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self {
-        Self
-    }
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -216,9 +207,8 @@ struct MockErrorSource;
 #[async_trait]
 impl SourceTrait for MockErrorSource {
     type Config = NullConfig;
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self {
-        Self
-    }
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -241,9 +231,8 @@ struct MockStreamEndWithUpdatesSource {
 #[async_trait]
 impl SourceTrait for MockStreamEndWithUpdatesSource {
     type Config = NullConfig;
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self {
-        Self { updates_to_send: 5 }
-    }
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self { updates_to_send: 5 } }
 
     async fn connect(
         &self,

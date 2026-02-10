@@ -160,7 +160,12 @@ impl From<&SerializableInstructionUpdate> for InstructionUpdate {
             data: value.data.clone(),
             shared: Arc::new(InstructionShared::default()),
             inner: value.inner.iter().map(Into::into).collect(),
-            path: value.ix_index.iter().map(|x| *x as u32).collect::<Vec<u32>>().into(),
+            path: value
+                .ix_index
+                .iter()
+                .map(|x| *x as u32)
+                .collect::<Vec<u32>>()
+                .into(),
         }
     }
 }
