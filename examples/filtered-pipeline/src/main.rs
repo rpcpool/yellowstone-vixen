@@ -13,9 +13,8 @@ use clap::Parser;
 use yellowstone_vixen::{
     self as vixen,
     filter_pipeline::FilterPipeline,
-    vixen_core::{Prefilter, Pubkey},
+    vixen_core::{instruction::InstructionUpdate, Prefilter, Pubkey},
 };
-use yellowstone_vixen::vixen_core::instruction::InstructionUpdate;
 use yellowstone_vixen_spl_token_parser::InstructionParser;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 

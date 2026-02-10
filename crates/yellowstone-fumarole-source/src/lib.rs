@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, num::NonZero};
 use async_trait::async_trait;
 use bytesize::ByteSize;
 use clap::ValueEnum;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::{mpsc::Sender, oneshot};
 use yellowstone_fumarole_client::{
     DragonsmouthAdapterSession, FumaroleClient, FumaroleSubscribeConfig, DEFAULT_PARA_DATA_STREAMS,
 };
@@ -12,7 +12,10 @@ use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
     tonic::Status,
 };
-use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
+use yellowstone_vixen::{
+    sources::{SourceExitStatus, SourceTrait},
+    CommitmentLevel, Error as VixenError,
+};
 use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Yellowstone gRPC API.
@@ -78,7 +81,11 @@ impl SourceTrait for YellowstoneFumaroleSource {
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { filters, config } }
 
-    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), VixenError> {
         let filters = self.filters.clone();
         let subscriber_name = self.config.subscriber_name.clone();
 
@@ -112,27 +119,28 @@ impl SourceTrait for YellowstoneFumaroleSource {
             mut fumarole_handle,
         } = dragonsmouth_session;
 
-        loop {
+        let exit_status = loop {
             tokio::select! {
                 result = &mut fumarole_handle => {
                     tracing::info!("Fumarole handle closed: {:?}", result);
-                    break;
+                    break SourceExitStatus::StreamEnded;
                 }
                 maybe_update = source.recv() => match maybe_update {
                     Some(update) => {
                         if tx.send(update).await.is_err() {
-                            tracing::error!("Failed to send update to buffer");
-                            break;
+                            tracing::info!("Receiver dropped, stopping source");
+                            break SourceExitStatus::ReceiverDropped;
                         }
                     }
                     None => {
                         tracing::info!("Source returned None, exiting");
-                        break;
+                        break SourceExitStatus::StreamEnded;
                     }
                 }
             }
-        }
+        };
 
+        let _ = status_tx.send(exit_status);
         Ok(())
     }
 }

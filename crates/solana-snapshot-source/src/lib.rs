@@ -23,7 +23,7 @@ use solana_ledger::{
 };
 use solana_pubkey::Pubkey as SolanaPubkey;
 use solana_runtime::bank::Bank;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 use yellowstone_grpc_proto::{
     geyser::{
         subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateAccount,
@@ -31,7 +31,10 @@ use yellowstone_grpc_proto::{
     },
     tonic::Status,
 };
-use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
+use yellowstone_vixen::{
+    sources::{SourceExitStatus, SourceTrait},
+    Error as VixenError,
+};
 use yellowstone_vixen_core::{Filters, Pubkey};
 
 const MAX_GENESIS_ARCHIVE_UNPACKED_SIZE: u64 = 10485760;
@@ -180,6 +183,7 @@ impl SourceTrait for SolanaSnapshotSource {
     async fn connect(
         &self,
         tx: tokio::sync::mpsc::Sender<Result<SubscribeUpdate, Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
     ) -> Result<(), VixenError> {
         let filter_owner_key_lookup = FilterOwnerKeyLookup::new(&self.filters);
         let solana_snapshot = SolanaSnapshot::load_ledger(self.config.ledger_path.clone())?;
@@ -323,6 +327,7 @@ impl SourceTrait for SolanaSnapshotSource {
         drop(sync_tx);
         let _ = sender_handle.await;
 
+        let _ = status_tx.send(SourceExitStatus::Completed);
         Ok(())
     }
 }

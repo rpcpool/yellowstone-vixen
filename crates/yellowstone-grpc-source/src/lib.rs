@@ -3,13 +3,16 @@ use std::time::Duration;
 use async_trait::async_trait;
 use clap::ValueEnum;
 use futures_util::StreamExt;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::{mpsc::Sender, oneshot};
 use yellowstone_grpc_client::GeyserGrpcClient;
 use yellowstone_grpc_proto::{
     geyser::{SubscribeRequest, SubscribeUpdate},
     tonic::{codec::CompressionEncoding, transport::ClientTlsConfig, Status},
 };
-use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
+use yellowstone_vixen::{
+    sources::{SourceExitStatus, SourceTrait},
+    CommitmentLevel, Error as VixenError,
+};
 use yellowstone_vixen_core::Filters;
 
 #[derive(Default, Copy, Debug, serde::Deserialize, Clone, ValueEnum)]
@@ -69,7 +72,11 @@ impl SourceTrait for YellowstoneGrpcSource {
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
-    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), VixenError> {
         let filters = self.filters.clone();
         let config = self.config.clone();
         let timeout = Duration::from_secs(config.timeout);
@@ -112,15 +119,30 @@ impl SourceTrait for YellowstoneGrpcSource {
 
         tracing::debug!("gRPC stream started");
 
-        while let Some(update) = stream.next().await {
-            let res = tx.send(update).await;
-            if res.is_err() {
-                tracing::error!("Failed to send update to buffer");
-                break; // TODO: CHECK: It should have a break there ?
+        let exit_status = loop {
+            match stream.next().await {
+                Some(Ok(update)) => {
+                    if tx.send(Ok(update)).await.is_err() {
+                        tracing::info!("Receiver dropped, stopping source");
+                        // Defensive only - normally unreachable because Signal/Buffer
+                        // branch wins first when receiver drops.
+                        break SourceExitStatus::ReceiverDropped;
+                    }
+                },
+                Some(Err(status)) => {
+                    tracing::warn!(code = ?status.code(), message = %status.message(), "Received error status from stream");
+                    let code = status.code();
+                    let message = status.message().to_string();
+                    let _ = tx.send(Err(status)).await;
+                    break SourceExitStatus::StreamError { code, message };
+                },
+                None => {
+                    break SourceExitStatus::StreamEnded;
+                },
             }
-        }
+        };
 
-        tracing::debug!("gRPC stream ended");
+        let _ = status_tx.send(exit_status);
 
         Ok(())
     }
