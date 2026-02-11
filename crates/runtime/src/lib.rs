@@ -15,8 +15,10 @@
 use std::marker::PhantomData;
 
 use config::BufferConfig;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 use yellowstone_grpc_proto::tonic::Status;
+
+use crate::sources::SourceExitStatus;
 
 #[cfg(feature = "prometheus")]
 pub extern crate prometheus;
@@ -176,15 +178,73 @@ impl<S: SourceTrait> Runtime<S> {
     ///
     /// # Panics
     /// Only panics if the rustls crypto provider fails to install.
+    ///
+    /// # Shutdown Flows
+    ///
+    /// ```text
+    /// ┌─────────────────────────────────────────────────────────────────────┐
+    /// │                         RUNTIME SELECT!                             │
+    /// │                                                                     │
+    /// │   Signal ─────────────────┐                                         │
+    /// │   (Ctrl+C, SIGTERM)       │                                         │
+    /// │                           ▼                                         │
+    /// │                    ┌─────────────┐     ┌─────────────┐              │
+    /// │                    │Signal wins  │────▶│stop_buffer()│              │
+    /// │                    │select!      │     │drops rx     │              │
+    /// │                    └─────────────┘     └──────┬──────┘              │
+    /// │                           │                   │                     │
+    /// │                           ▼                   ▼                     │
+    /// │                      Ok(()) exit      Source sees send              │
+    /// │                                       fail, but select!             │
+    /// │                                       already done                  │
+    /// │                                                                     │
+    /// ├─────────────────────────────────────────────────────────────────────┤
+    /// │                                                                     │
+    /// │   Buffer ─────────────────┐                                         │
+    /// │   (rx recv error/close)   │                                         │
+    /// │                           ▼                                         │
+    /// │                    ┌─────────────┐                                  │
+    /// │                    │Buffer wins  │────▶ Err(YellowstoneStatus)      │
+    /// │                    │select!      │      or Ok(StopCode)             │
+    /// │                    └─────────────┘                                  │
+    /// │                                                                     │
+    /// ├─────────────────────────────────────────────────────────────────────┤
+    /// │                                                                     │
+    /// │   SourceExit ─────────────┐                                         │
+    /// │   (source task ended)     │                                         │
+    /// │                           ▼                                         │
+    /// │                    ┌─────────────┐                                  │
+    /// │                    │SourceExit   │                                  │
+    /// │                    │wins select! │                                  │
+    /// │                    └──────┬──────┘                                  │
+    /// │                           │                                         │
+    /// │        ┌──────────────┬───┴──------───┬──────────────┐              │
+    /// │        ▼              ▼               ▼              ▼              │
+    /// │   Completed      StreamEnded      StreamError     Error             │
+    /// │   (finite src)  (unexpected)        (gRPC)        (other)           │
+    /// │        │              │               │              │              │
+    /// │        ▼              ▼               ▼              ▼              │
+    /// │      Ok(())      ServerHangup     ServerHangup     Other            │
+    /// │                                                                     │
+    /// │    ┌──────────────────────────────────────────────────────────┐     │
+    /// │    │ ReceiverDropped: defensive only - normally unreachable   │     │
+    /// │    │ because Signal/Buffer branch wins first when rx drops    │     │
+    /// │    └──────────────────────────────────────────────────────────┘     │
+    /// └─────────────────────────────────────────────────────────────────────┘
+    /// ```
     #[tracing::instrument("Runtime::run", skip(self))]
+    #[allow(clippy::too_many_lines)]
     pub async fn try_run_async(self) -> Result<(), Box<Error>> {
         enum StopType<S> {
             Signal(S),
             Buffer(Result<(), Error>),
+            SourceExit(Result<SourceExitStatus, oneshot::error::RecvError>),
         }
 
         let (tx, updates_rx) =
             mpsc::channel::<Result<SubscribeUpdate, Status>>(self.buffer.sources_channel_size);
+
+        let (status_tx, status_rx) = oneshot::channel::<SourceExitStatus>();
 
         #[cfg(feature = "prometheus")]
         metrics::register_metrics(&self.metrics_registry);
@@ -194,7 +254,7 @@ impl<S: SourceTrait> Runtime<S> {
         let source = S::new(self.source, filters);
 
         tokio::spawn(async move {
-            let _ = source.connect(tx).await;
+            let _ = source.connect(tx, status_tx).await;
         });
 
         let signal;
@@ -245,6 +305,7 @@ impl<S: SourceTrait> Runtime<S> {
         let stop_ty = tokio::select! {
             s = signal => StopType::Signal(s),
             b = buffer.wait_for_stop() => StopType::Buffer(b),
+            status = status_rx => StopType::SourceExit(status),
         };
 
         let should_stop_buffer = !matches!(stop_ty, StopType::Buffer(..));
@@ -261,6 +322,32 @@ impl<S: SourceTrait> Runtime<S> {
             .into()),
             StopType::Buffer(result) => result,
             StopType::Signal(Err(e)) => Err(e),
+            StopType::SourceExit(Ok(status)) => match status {
+                SourceExitStatus::ReceiverDropped => {
+                    tracing::info!("Source stopped: receiver dropped (shutdown)");
+                    Ok(())
+                },
+                SourceExitStatus::Completed => {
+                    tracing::info!("Source completed successfully");
+                    Ok(())
+                },
+                SourceExitStatus::StreamEnded => {
+                    tracing::warn!("Source stopped: stream ended unexpectedly");
+                    Err(Error::ServerHangup)
+                },
+                SourceExitStatus::StreamError { code, message } => {
+                    tracing::error!(?code, %message, "Source stopped: stream error");
+                    Err(Error::ServerHangup)
+                },
+                SourceExitStatus::Error(msg) => {
+                    tracing::error!(%msg, "Source stopped: error");
+                    Err(Error::Other(msg.into()))
+                },
+            },
+            StopType::SourceExit(Err(_)) => {
+                tracing::warn!("Source exit status channel closed unexpectedly");
+                Err(Error::ClientHangup)
+            },
         }?;
 
         if should_stop_buffer {
@@ -277,3 +364,6 @@ impl<S: SourceTrait> Runtime<S> {
         }
     }
 }
+
+#[cfg(test)]
+mod runtime_tests;

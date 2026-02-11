@@ -28,28 +28,32 @@ jobs:
 
       # This step can be omited, to save storage space on the organization account
       # Build process will take longer
-      - name: Cache Build Dependencies
+      # Cache downloaded crates from crates.io and git dependencies
+      # This avoids re-downloading on every build
+      # Note: We don't cache target/ here - sccache handles compilation caching more efficiently
+      - name: Cache cargo registry
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
+            ~/.cargo/registry/index/
             ~/.cargo/git/db/
-            yellowstone-vixen/target/
-          key: cargo-${{ hashFiles('**/Cargo.lock') }}-0001
+          key: cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-registry-
 
-      - name: Install Latest Protoc
-        run: |
-          PROTOC_VERSION=26.1
-          ARCH=x86_64
-          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-${ARCH}.zip
-          sudo apt-get update
-          sudo apt-get install -y unzip protobuf-compiler libprotobuf-dev
-          unzip protoc-${PROTOC_VERSION}-linux-${ARCH}.zip -d $HOME/.local
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          protoc --version
+      # sccache caches individual compilation units (each .rs file's output)
+      # Unlike target/ caching, sccache survives Cargo.lock changes because
+      # it caches by source content hash, not by dependency tree
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      # Required for rocksdb (solana-ledger dependency)
+      - name: Install LLVM/Clang
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang
 
       # Build yellowstone-vixen
-      - name: build yellowstone-vixen
+      - name: Build yellowstone-vixen
         run: cargo build --verbose --release
+        env:
+          RUSTC_WRAPPER: sccache
+          SCCACHE_GHA_ENABLED: true

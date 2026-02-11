@@ -8,7 +8,10 @@ use solana_client::{
 };
 use solana_commitment_config::CommitmentConfig;
 use solana_pubkey::Pubkey;
-use tokio::{sync::mpsc::Sender, task::JoinSet};
+use tokio::{
+    sync::{mpsc::Sender, oneshot},
+    task::JoinSet,
+};
 use yellowstone_grpc_proto::{
     geyser::{
         subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdateAccount,
@@ -16,7 +19,10 @@ use yellowstone_grpc_proto::{
     },
     tonic::Status,
 };
-use yellowstone_vixen::{sources::SourceTrait, CommitmentLevel, Error as VixenError};
+use yellowstone_vixen::{
+    sources::{SourceExitStatus, SourceTrait},
+    CommitmentLevel, Error as VixenError,
+};
 use yellowstone_vixen_core::Filters;
 
 /// A `Source` implementation for the Solana Accounts RPC API.
@@ -62,7 +68,12 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
-    async fn connect(&self, tx: Sender<Result<SubscribeUpdate, Status>>) -> Result<(), VixenError> {
+    #[allow(deprecated)] // get_program_accounts_with_config is deprecated but replacement not yet stable
+    async fn connect(
+        &self,
+        tx: Sender<Result<SubscribeUpdate, Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
+    ) -> Result<(), VixenError> {
         let filters = &self.filters;
         let config = &self.config;
 
@@ -158,6 +169,7 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
         tasks_set.join_all().await;
 
+        let _ = status_tx.send(SourceExitStatus::Completed);
         Ok(())
     }
 }

@@ -6,14 +6,17 @@ use std::sync::{
 use async_trait::async_trait;
 use futures_util::FutureExt;
 use jetstreamer_firehose::firehose::{firehose, BlockData, OnErrorFn, TransactionData};
-use tokio::sync::mpsc::Sender;
+use tokio::sync::{mpsc::Sender, oneshot};
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, error, info};
 use yellowstone_grpc_proto::{
     geyser::{subscribe_update::UpdateOneof, SubscribeUpdate, SubscribeUpdateBlock},
     solana::storage::confirmed_block::{BlockHeight, UnixTimestamp},
 };
-use yellowstone_vixen::{sources::SourceTrait, Error as VixenError};
+use yellowstone_vixen::{
+    sources::{SourceExitStatus, SourceTrait},
+    Error as VixenError,
+};
 use yellowstone_vixen_core::Filters;
 
 type SharedError = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -338,6 +341,7 @@ impl SourceTrait for JetstreamSource {
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, yellowstone_grpc_proto::tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
     ) -> Result<(), VixenError> {
         let config = self.config.clone();
         let filters = self.filters.clone();
@@ -346,14 +350,19 @@ impl SourceTrait for JetstreamSource {
         let token = cancellation_token.clone();
 
         tokio::spawn(async move {
-            if let Err(e) = Self::stream_loop(config, filters, tx.clone(), token).await {
-                error!(error = %e, "Jetstream streaming failed");
-                let _ = tx
-                    .send(Err(yellowstone_grpc_proto::tonic::Status::internal(
-                        e.to_string(),
-                    )))
-                    .await;
-            }
+            let exit_status = match Self::stream_loop(config, filters, tx.clone(), token).await {
+                Ok(()) => SourceExitStatus::Completed,
+                Err(e) => {
+                    error!(error = %e, "Jetstream streaming failed");
+                    let _ = tx
+                        .send(Err(yellowstone_grpc_proto::tonic::Status::internal(
+                            e.to_string(),
+                        )))
+                        .await;
+                    SourceExitStatus::Error(e.to_string())
+                },
+            };
+            let _ = status_tx.send(exit_status);
         });
 
         Ok(())

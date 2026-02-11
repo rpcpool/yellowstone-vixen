@@ -4,78 +4,45 @@
 //! send updates to a channel. This trait is implemented by various modules, including the `yellowstone_grpc` module.
 
 use async_trait::async_trait;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::{mpsc::Sender, oneshot};
 use vixen_core::Filters;
-use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic::Status};
+use yellowstone_grpc_proto::{geyser::SubscribeUpdate, tonic};
 
-/// # SourceTrait
+/// How a source exited.
+#[derive(Debug)]
+pub enum SourceExitStatus {
+    /// Update channel receiver was dropped.
+    ReceiverDropped,
+    /// Source finished successfully (finite sources like snapshot/RPC).
+    Completed,
+    /// Server closed connection unexpectedly (streaming sources).
+    StreamEnded,
+    /// gRPC error.
+    StreamError {
+        /// gRPC status code.
+        code: tonic::Code,
+        /// Server error message.
+        message: String,
+    },
+    /// Other errors.
+    Error(String),
+}
+
+/// Data source that streams updates to the runtime.
 ///
-/// This trait defines the behavior for data sources that can be used to connect to it and
-/// send updates to a channel. Users can implement this trait to create their own sources.
-///
-/// The `SourceTrait` provides a standardized way to:
-/// * Connect to external data sources
-/// * Stream updates through a channel
-/// * Configure filters for data processing
-/// * Manage source-specific configuration
-///
-/// # Examples
-///
-/// ```rust
-/// use async_trait::async_trait;
-/// use tokio::sync::mpsc::Sender;
-/// use yellowstone_vixen::sources::SourceTrait;
-/// use vixen_core::Filters;
-///
-/// #[derive(Debug)]
-/// struct MyCustomSource {
-///     filters: Filters,
-/// }
-///
-/// #[async_trait]
-/// impl SourceTrait for MyCustomSource {
-///     type Config = MyConfig;
-///
-///     fn new(config: Self::Config, filters: Filters) -> Self {
-///         MyCustomSource { filters }
-///     }
-///
-///     async fn connect(
-///         &self,
-///         tx: Sender<Result<SubscribeUpdate, Status>>,
-///     ) -> Result<(), crate::Error> {
-///         // Implementation for connecting to your data source
-///         // and sending updates through the channel
-///         todo!()
-///     }
-/// }
-/// ```
-///
-/// **Then Vixen clients can use this source by adding it to the runtime**:
-///
-/// ```rust
-/// vixen::Runtime::<_, MyCustomSource>::builder()
-///     .build(config)
-///     .run_async()
-///     .await;
-/// ```
-///
-/// ---
-/// # Required Methods
-///
-/// * `connect` - Establishes connection to the data source and streams updates
-/// * `new` - Creates a new instance of the source with the given configuration and filters
+/// Implement this trait to create custom sources. See `YellowstoneGrpcSource` for an example.
 #[async_trait]
-pub trait SourceTrait: std::fmt::Debug + Send + 'static {
-    /// The configuration for the source.
+pub trait SourceTrait: std::fmt::Debug + Send + Sync + 'static {
+    /// Source-specific configuration.
     type Config: serde::de::DeserializeOwned + clap::Args + std::fmt::Debug;
 
-    /// Creates a new instance of the source.
+    /// Create a source from config and filters.
     fn new(config: Self::Config, filters: Filters) -> Self;
 
-    /// Connect to the `Source` and send the updates to the `tx` channel.
+    /// Connect and stream updates. Send exit status via `status_tx` before returning.
     async fn connect(
         &self,
-        tx: Sender<Result<SubscribeUpdate, Status>>,
+        tx: Sender<Result<SubscribeUpdate, tonic::Status>>,
+        status_tx: oneshot::Sender<SourceExitStatus>,
     ) -> Result<(), crate::Error>;
 }
