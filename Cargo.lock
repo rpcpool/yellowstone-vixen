@@ -876,33 +876,6 @@ dependencies = [
 
 [[package]]
 name = "axum"
-version = "0.7.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edca88bc138befd0323b20752846e6587272d3b03b0343c8ea28a6f819e6e71f"
-dependencies = [
- "async-trait",
- "axum-core 0.4.5",
- "bytes",
- "futures-util",
- "http 1.4.0",
- "http-body 1.0.1",
- "http-body-util",
- "itoa",
- "matchit 0.7.3",
- "memchr",
- "mime",
- "percent-encoding 2.3.2",
- "pin-project-lite",
- "rustversion",
- "serde",
- "sync_wrapper 1.0.2",
- "tower 0.5.2",
- "tower-layer",
- "tower-service",
-]
-
-[[package]]
-name = "axum"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b098575ebe77cb6d14fc7f32749631a6e44edbef6b796f89b020e99ba20d425"
@@ -939,26 +912,6 @@ dependencies = [
  "http-body 0.4.6",
  "mime",
  "rustversion",
- "tower-layer",
- "tower-service",
-]
-
-[[package]]
-name = "axum-core"
-version = "0.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09f2bd6146b97ae3359fa0cc6d6b376d9539582c7b4220f041a33ec24c226199"
-dependencies = [
- "async-trait",
- "bytes",
- "futures-util",
- "http 1.4.0",
- "http-body 1.0.1",
- "http-body-util",
- "mime",
- "pin-project-lite",
- "rustversion",
- "sync_wrapper 1.0.2",
  "tower-layer",
  "tower-service",
 ]
@@ -12685,13 +12638,10 @@ version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877c5b330756d856ffcc4553ab34a5684481ade925ecc54bcd1bf02b1d0d4d52"
 dependencies = [
- "async-stream",
  "async-trait",
- "axum 0.7.9",
  "base64 0.22.1",
  "bytes",
  "flate2",
- "h2 0.4.12",
  "http 1.4.0",
  "http-body 1.0.1",
  "http-body-util",
@@ -12701,7 +12651,6 @@ dependencies = [
  "percent-encoding 2.3.2",
  "pin-project",
  "prost 0.13.5",
- "socket2 0.5.10",
  "tokio",
  "tokio-stream",
  "tower 0.4.13",
@@ -12759,20 +12708,6 @@ dependencies = [
 
 [[package]]
 name = "tonic-build"
-version = "0.12.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9557ce109ea773b399c9b9e5dca39294110b74f1f342cb347a80d1fce8c26a11"
-dependencies = [
- "prettyplease 0.2.37",
- "proc-macro2",
- "prost-build 0.13.5",
- "prost-types 0.13.5",
- "quote",
- "syn 2.0.111",
-]
-
-[[package]]
-name = "tonic-build"
 version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c40aaccc9f9eccf2cd82ebc111adc13030d23e887244bc9cfa5d1d636049de3"
@@ -12825,15 +12760,16 @@ dependencies = [
 
 [[package]]
 name = "tonic-reflection"
-version = "0.12.3"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "878d81f52e7fcfd80026b7fdb6a9b578b3c3653ba987f87f0dce4b64043cba27"
+checksum = "758112f988818866f38face806ebf8c8961ad2c087e2ba89ad30010ba5fd80c1"
 dependencies = [
- "prost 0.13.5",
- "prost-types 0.13.5",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "tokio",
  "tokio-stream",
- "tonic 0.12.3",
+ "tonic 0.14.2",
+ "tonic-prost",
 ]
 
 [[package]]
@@ -14060,7 +13996,7 @@ dependencies = [
  "borsh 1.6.0",
  "clap 4.5.53",
  "prometheus",
- "prost 0.13.5",
+ "prost 0.14.1",
  "rustls 0.23.35",
  "tokio",
  "toml 0.8.23",
@@ -14109,7 +14045,7 @@ dependencies = [
  "borsh 1.6.0",
  "clap 4.5.53",
  "prometheus",
- "prost 0.13.5",
+ "prost 0.14.1",
  "rustls 0.23.35",
  "tokio",
  "toml 0.8.23",
@@ -14155,7 +14091,7 @@ dependencies = [
  "jetstreamer-firehose",
  "jetstreamer-utils",
  "prometheus",
- "prost-types 0.13.5",
+ "prost-types 0.14.1",
  "serde",
  "solana-instruction 3.0.0",
  "solana-message 3.0.1",
@@ -14224,12 +14160,12 @@ dependencies = [
 name = "yellowstone-vixen-proto"
 version = "0.6.0-alpha.0"
 dependencies = [
- "prost 0.13.5",
- "prost-build 0.13.5",
- "prost-types 0.13.5",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "protobuf-src",
- "tonic 0.12.3",
- "tonic-build 0.12.3",
+ "tonic 0.14.2",
+ "tonic-prost",
+ "tonic-prost-build",
  "tonic-reflection",
 ]
 
@@ -14383,7 +14319,7 @@ dependencies = [
  "prometheus",
  "serde",
  "tokio",
- "tonic 0.12.3",
+ "tonic 0.14.2",
  "tracing",
  "yellowstone-fumarole-client",
  "yellowstone-grpc-proto",
