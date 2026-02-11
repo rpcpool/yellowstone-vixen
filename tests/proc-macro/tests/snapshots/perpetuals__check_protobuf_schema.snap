@@ -1,0 +1,1936 @@
+---
+source: tests/proc-macro/tests/perpetuals.rs
+expression: "perpetuals::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package perpetuals;
+
+message PriceImpactBuffer {
+  repeated int64 open_interest = 1;
+  int64 last_updated = 2;
+  uint64 fee_factor = 3;
+  float exponent = 4;
+  uint64 delta_imbalance_threshold_decimal = 5;
+  uint64 max_fee_bps = 6;
+}
+    
+message Assets {
+  uint64 fees_reserves = 1;
+  uint64 owned = 2;
+  uint64 locked = 3;
+  uint64 guaranteed_usd = 4;
+  uint64 global_short_sizes = 5;
+  uint64 global_short_average_prices = 6;
+}
+    
+message PricingParams {
+  uint64 trade_impact_fee_scalar = 1;
+  uint64 buffer = 2;
+  uint64 swap_spread = 3;
+  uint64 max_leverage = 4;
+  uint64 max_global_long_sizes = 5;
+  uint64 max_global_short_sizes = 6;
+}
+    
+message FundingRateState {
+  bytes cumulative_interest_rate = 1;
+  int64 last_update = 2;
+  uint64 hourly_funding_dbps = 3;
+}
+    
+message JumpRateState {
+  uint64 min_rate_bps = 1;
+  uint64 max_rate_bps = 2;
+  uint64 target_rate_bps = 3;
+  uint64 target_utilization_rate = 4;
+}
+    
+message BorrowLendParams {
+  uint64 borrows_limit_in_bps = 1;
+  uint64 maintainance_margin_bps = 2;
+  uint64 protocol_fee_bps = 3;
+  uint64 liquidation_margin = 4;
+  uint64 liquidation_fee_bps = 5;
+}
+    
+message OraclePrice {
+  uint64 price = 1;
+  int32 exponent = 2;
+}
+    
+message Price {
+  uint64 price = 1;
+  int32 expo = 2;
+  int64 publish_time = 3;
+}
+    
+message OracleParams {
+  bytes oracle_account = 1;
+  OracleType oracle_type = 2;
+  uint64 buffer = 3;
+  uint32 max_price_age_sec = 4;
+}
+    
+message AmountAndFee {
+  uint64 amount = 1;
+  uint64 fee = 2;
+  uint64 fee_bps = 3;
+}
+    
+message Permissions {
+  bool allow_swap = 1;
+  bool allow_add_liquidity = 2;
+  bool allow_remove_liquidity = 3;
+  bool allow_increase_position = 4;
+  bool allow_decrease_position = 5;
+  bool allow_collateral_withdrawal = 6;
+  bool allow_liquidate_position = 7;
+}
+    
+message Fees {
+  uint64 swap_multiplier = 1;
+  uint64 stable_swap_multiplier = 2;
+  uint64 add_remove_liquidity_bps = 3;
+  uint64 swap_bps = 4;
+  uint64 tax_bps = 5;
+  uint64 stable_swap_bps = 6;
+  uint64 stable_swap_tax_bps = 7;
+  uint64 liquidation_reward_bps = 8;
+  uint64 protocol_share_bps = 9;
+}
+    
+message PoolApr {
+  int64 last_updated = 1;
+  uint64 fee_apr_bps = 2;
+  uint64 realized_fee_usd = 3;
+}
+    
+message Limit {
+  bytes max_aum_usd = 1;
+  bytes token_weightage_buffer_bps = 2;
+  uint64 buffer = 3;
+}
+    
+message Secp256k1Pubkey {
+  uint32 prefix = 1;
+  bytes key = 2;
+}
+    
+message PriceImpactMechanismTradeSize {
+}
+    
+message PriceImpactMechanismDeltaImbalance {
+}
+    
+message PriceImpactMechanism {
+}
+    
+message OracleTypeNone {
+}
+    
+message OracleTypeTest {
+}
+    
+message OracleTypePyth {
+}
+    
+message OracleType {
+}
+    
+message PriceCalcModeMin {
+}
+    
+message PriceCalcModeMax {
+}
+    
+message PriceCalcModeIgnore {
+}
+    
+message PriceCalcMode {
+}
+    
+message PriceStaleToleranceStrict {
+}
+    
+message PriceStaleToleranceLoose {
+}
+    
+message PriceStaleTolerance {
+}
+    
+message TradePoolTypeIncrease {
+}
+    
+message TradePoolTypeDecrease {
+}
+    
+message TradePoolType {
+}
+    
+message RequestTypeMarket {
+}
+    
+message RequestTypeTrigger {
+}
+    
+message RequestType {
+}
+    
+message RequestChangeNone {
+}
+    
+message RequestChangeIncrease {
+}
+    
+message RequestChangeDecrease {
+}
+    
+message RequestChange {
+}
+    
+message SideNone {
+}
+    
+message SideLong {
+}
+    
+message SideShort {
+}
+    
+message Side {
+}
+    
+message BorrowPosition {
+  bytes owner = 1;
+  bytes pool = 2;
+  bytes custody = 3;
+  int64 open_time = 4;
+  int64 update_time = 5;
+  bytes borrow_size = 6;
+  bytes cumulative_compounded_interest_snapshot = 7;
+  uint64 locked_collateral = 8;
+  uint32 bump = 9;
+  int64 last_borrowed = 10;
+}
+    
+message Custody {
+  bytes pool = 1;
+  bytes mint = 2;
+  bytes token_account = 3;
+  uint32 decimals = 4;
+  bool is_stable = 5;
+  OracleParams oracle = 6;
+  PricingParams pricing = 7;
+  Permissions permissions = 8;
+  uint64 target_ratio_bps = 9;
+  Assets assets = 10;
+  FundingRateState funding_rate_state = 11;
+  uint32 bump = 12;
+  uint32 token_account_bump = 13;
+  uint64 increase_position_bps = 14;
+  uint64 decrease_position_bps = 15;
+  uint64 max_position_size_usd = 16;
+  bytes doves_oracle = 17;
+  JumpRateState jump_rate_state = 18;
+  bytes doves_ag_oracle = 19;
+  PriceImpactBuffer price_impact_buffer = 20;
+  BorrowLendParams borrow_lend_parameters = 21;
+  FundingRateState borrows_funding_rate_state = 22;
+  bytes debt = 23;
+  bytes borrow_lend_interests_accured = 24;
+  uint64 borrow_limit_in_token_amount = 25;
+  uint64 min_interest_fee_bps = 26;
+  uint64 min_interest_fee_grace_period_seconds = 27;
+  uint64 total_staked_amount_lamports = 28;
+  uint64 max_total_staked_amount_lamports = 29;
+  uint64 external_swap_fee_multiplier_bps = 30;
+  bool disable_close_position_request = 31;
+  uint64 withdrawal_limit_token_amount = 32;
+  uint64 withdrawal_token_amount_accumulated = 33;
+  int64 withdrawal_limit_last_reset_at = 34;
+  uint64 withdrawal_limit_interval_seconds = 35;
+}
+    
+message Perpetuals {
+  Permissions permissions = 1;
+  repeated bytes pools = 2;
+  bytes admin = 3;
+  uint32 transfer_authority_bump = 4;
+  uint32 perpetuals_bump = 5;
+  int64 inception_time = 6;
+}
+    
+message Pool {
+  string name = 1;
+  repeated bytes custodies = 2;
+  bytes aum_usd = 3;
+  Limit limit = 4;
+  Fees fees = 5;
+  PoolApr pool_apr = 6;
+  int64 max_request_execution_sec = 7;
+  uint32 bump = 8;
+  uint32 lp_token_bump = 9;
+  int64 inception_time = 10;
+  Secp256k1Pubkey parameter_update_oracle = 11;
+  int64 aum_usd_updated_at = 12;
+  uint64 max_trigger_price_diff_bps = 13;
+  bool disable_close_position_request = 14;
+  uint64 max_lp_token_price_change_bps = 15;
+  uint64 aum_usd_refreshed_at_slot = 16;
+}
+    
+message PositionRequest {
+  bytes owner = 1;
+  bytes pool = 2;
+  bytes custody = 3;
+  bytes position = 4;
+  bytes mint = 5;
+  int64 open_time = 6;
+  int64 update_time = 7;
+  uint64 size_usd_delta = 8;
+  uint64 collateral_delta = 9;
+  RequestChange request_change = 10;
+  RequestType request_type = 11;
+  Side side = 12;
+  optional uint64 price_slippage = 13;
+  optional uint64 jupiter_minimum_out = 14;
+  optional uint64 pre_swap_amount = 15;
+  optional uint64 trigger_price = 16;
+  optional bool trigger_above_threshold = 17;
+  optional bool entire_position = 18;
+  bool executed = 19;
+  uint64 counter = 20;
+  uint32 bump = 21;
+  optional bytes referral = 22;
+}
+    
+message Position {
+  bytes owner = 1;
+  bytes pool = 2;
+  bytes custody = 3;
+  bytes collateral_custody = 4;
+  int64 open_time = 5;
+  int64 update_time = 6;
+  Side side = 7;
+  uint64 price = 8;
+  uint64 size_usd = 9;
+  uint64 collateral_usd = 10;
+  int64 realised_pnl_usd = 11;
+  bytes cumulative_interest_snapshot = 12;
+  uint64 locked_amount = 13;
+  uint32 bump = 14;
+}
+    
+message StakeInfo {
+  bytes pool = 1;
+  bytes stake_account = 2;
+  uint64 current_staked_amount_lamports = 3;
+  uint64 total_staking_rewards_lamports = 4;
+  int64 last_updated_at = 5;
+  bool deactivating = 6;
+  uint64 stake_account_index = 7;
+  uint32 bump = 8;
+}
+    
+message TokenLedger {
+  bytes token_account = 1;
+  uint64 amount = 2;
+}
+    
+message InitAccounts {
+  bytes upgrade_authority = 1;
+  bytes admin = 2;
+  bytes transfer_authority = 3;
+  bytes perpetuals = 4;
+  bytes perpetuals_program = 5;
+  bytes perpetuals_program_data = 6;
+  bytes system_program = 7;
+  bytes token_program = 8;
+}
+    
+message InitArgs {
+  bool allow_swap = 1;
+  bool allow_add_liquidity = 2;
+  bool allow_remove_liquidity = 3;
+  bool allow_increase_position = 4;
+  bool allow_decrease_position = 5;
+  bool allow_collateral_withdrawal = 6;
+  bool allow_liquidate_position = 7;
+}
+    
+message InitIx {
+  optional InitAccounts accounts = 1;
+  optional InitArgs args = 2;
+}
+    
+message AddPoolAccounts {
+  bytes admin = 1;
+  bytes transfer_authority = 2;
+  bytes perpetuals = 3;
+  bytes pool = 4;
+  bytes lp_token_mint = 5;
+  bytes system_program = 6;
+  bytes token_program = 7;
+  bytes rent = 8;
+}
+    
+message AddPoolArgs {
+  string name = 1;
+  Limit limit = 2;
+  Fees fees = 3;
+  int64 max_request_execution_sec = 4;
+}
+    
+message AddPoolIx {
+  optional AddPoolAccounts accounts = 1;
+  optional AddPoolArgs args = 2;
+}
+    
+message AddCustodyAccounts {
+  bytes admin = 1;
+  bytes transfer_authority = 2;
+  bytes perpetuals = 3;
+  bytes pool = 4;
+  bytes custody = 5;
+  bytes custody_token_account = 6;
+  bytes custody_token_mint = 7;
+  bytes system_program = 8;
+  bytes token_program = 9;
+  bytes rent = 10;
+}
+    
+message AddCustodyArgs {
+  bool is_stable = 1;
+  OracleParams oracle = 2;
+  PricingParams pricing = 3;
+  Permissions permissions = 4;
+  uint64 hourly_funding_dbps = 5;
+  uint64 target_ratio_bps = 6;
+  uint64 increase_position_bps = 7;
+  uint64 decrease_position_bps = 8;
+  bytes doves_oracle = 9;
+  uint64 max_position_size_usd = 10;
+  JumpRateState jump_rate = 11;
+  uint64 price_impact_fee_factor = 12;
+  float price_impact_exponent = 13;
+  uint64 delta_imbalance_threshold_decimal = 14;
+  uint64 max_fee_bps = 15;
+  bytes doves_ag_oracle = 16;
+}
+    
+message AddCustodyIx {
+  optional AddCustodyAccounts accounts = 1;
+  optional AddCustodyArgs args = 2;
+}
+    
+message SetCustodyConfigAccounts {
+  bytes admin = 1;
+  bytes perpetuals = 2;
+  bytes custody = 3;
+}
+    
+message SetCustodyConfigArgs {
+  OracleParams oracle = 1;
+  PricingParams pricing = 2;
+  Permissions permissions = 3;
+  uint64 hourly_funding_dbps = 4;
+  uint64 target_ratio_bps = 5;
+  uint64 increase_position_bps = 6;
+  uint64 decrease_position_bps = 7;
+  bytes doves_oracle = 8;
+  uint64 max_position_size_usd = 9;
+  JumpRateState jump_rate = 10;
+  uint64 price_impact_fee_factor = 11;
+  float price_impact_exponent = 12;
+  uint64 delta_imbalance_threshold_decimal = 13;
+  uint64 max_fee_bps = 14;
+  bytes doves_ag_oracle = 15;
+  BorrowLendParams borrow_lend_parameters = 16;
+  uint64 borrow_hourly_funding_dbps = 17;
+  uint64 borrow_limit_in_token_amount = 18;
+  uint64 min_interest_fee_bps = 19;
+  uint64 min_interest_fee_grace_period_seconds = 20;
+  uint64 max_total_staked_amount_lamports = 21;
+  uint64 external_swap_fee_multiplier_bps = 22;
+  bool disable_close_position_request = 23;
+  uint64 withdrawal_limit_interval_seconds = 24;
+  uint64 withdrawal_limit_token_amount = 25;
+}
+    
+message SetCustodyConfigIx {
+  optional SetCustodyConfigAccounts accounts = 1;
+  optional SetCustodyConfigArgs args = 2;
+}
+    
+message SetPoolConfigAccounts {
+  bytes admin = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+}
+    
+message SetPoolConfigArgs {
+  Fees fees = 1;
+  Limit limit = 2;
+  int64 max_request_execution_sec = 3;
+  Secp256k1Pubkey parameter_update_oracle = 4;
+  uint64 max_trigger_price_diff_bps = 5;
+  bool disable_close_position_request = 6;
+  uint64 max_lp_token_price_change_bps = 7;
+}
+    
+message SetPoolConfigIx {
+  optional SetPoolConfigAccounts accounts = 1;
+  optional SetPoolConfigArgs args = 2;
+}
+    
+message SetPerpetualsConfigAccounts {
+  bytes admin = 1;
+  bytes perpetuals = 2;
+}
+    
+message SetPerpetualsConfigArgs {
+  Permissions permissions = 1;
+}
+    
+message SetPerpetualsConfigIx {
+  optional SetPerpetualsConfigAccounts accounts = 1;
+  optional SetPerpetualsConfigArgs args = 2;
+}
+    
+message TransferAdminAccounts {
+  bytes admin = 1;
+  bytes new_admin = 2;
+  bytes perpetuals = 3;
+}
+    
+message TransferAdminArgs {
+}
+    
+message TransferAdminIx {
+  optional TransferAdminAccounts accounts = 1;
+  optional TransferAdminArgs args = 2;
+}
+    
+message WithdrawFees2Accounts {
+  bytes keeper = 1;
+  bytes transfer_authority = 2;
+  bytes perpetuals = 3;
+  bytes pool = 4;
+  bytes custody = 5;
+  bytes custody_token_account = 6;
+  bytes custody_doves_price_account = 7;
+  bytes custody_pythnet_price_account = 8;
+  bytes receiving_token_account = 9;
+  bytes token_program = 10;
+}
+    
+message WithdrawFees2Args {
+}
+    
+message WithdrawFees2Ix {
+  optional WithdrawFees2Accounts accounts = 1;
+  optional WithdrawFees2Args args = 2;
+}
+    
+message CreateTokenMetadataAccounts {
+  bytes admin = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes transfer_authority = 4;
+  bytes metadata = 5;
+  bytes lp_token_mint = 6;
+  bytes token_metadata_program = 7;
+  bytes system_program = 8;
+  bytes rent = 9;
+}
+    
+message CreateTokenMetadataArgs {
+  string name = 1;
+  string symbol = 2;
+  string uri = 3;
+}
+    
+message CreateTokenMetadataIx {
+  optional CreateTokenMetadataAccounts accounts = 1;
+  optional CreateTokenMetadataArgs args = 2;
+}
+    
+message CreateTokenLedgerAccounts {
+  bytes token_ledger = 1;
+  bytes payer = 2;
+  bytes system_program = 3;
+}
+    
+message CreateTokenLedgerArgs {
+}
+    
+message CreateTokenLedgerIx {
+  optional CreateTokenLedgerAccounts accounts = 1;
+  optional CreateTokenLedgerArgs args = 2;
+}
+    
+message ReallocCustodyAccounts {
+  bytes keeper = 1;
+  bytes custody = 2;
+  bytes system_program = 3;
+  bytes rent = 4;
+}
+    
+message ReallocCustodyArgs {
+}
+    
+message ReallocCustodyIx {
+  optional ReallocCustodyAccounts accounts = 1;
+  optional ReallocCustodyArgs args = 2;
+}
+    
+message ReallocPoolAccounts {
+  bytes keeper = 1;
+  bytes pool = 2;
+  bytes system_program = 3;
+  bytes rent = 4;
+}
+    
+message ReallocPoolArgs {
+}
+    
+message ReallocPoolIx {
+  optional ReallocPoolAccounts accounts = 1;
+  optional ReallocPoolArgs args = 2;
+}
+    
+message CreateAndDelegateStakeAccountAccounts {
+  bytes keeper = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes custody_token_account = 5;
+  bytes transfer_authority = 6;
+  bytes stake_account = 7;
+  bytes stake_info = 8;
+  bytes validator_vote_account = 9;
+  bytes stake_config = 10;
+  bytes wsol_mint = 11;
+  bytes temp_wsol_account = 12;
+  bytes rent = 13;
+  bytes clock = 14;
+  bytes stake_history = 15;
+  bytes stake_program = 16;
+  bytes system_program = 17;
+  bytes token_program = 18;
+}
+    
+message CreateAndDelegateStakeAccountArgs {
+  uint64 stake_account_index = 1;
+  uint64 stake_amount_lamports = 2;
+}
+    
+message CreateAndDelegateStakeAccountIx {
+  optional CreateAndDelegateStakeAccountAccounts accounts = 1;
+  optional CreateAndDelegateStakeAccountArgs args = 2;
+}
+    
+message UnstakeAccounts {
+  bytes operator = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes transfer_authority = 5;
+  bytes stake_account = 6;
+  bytes stake_info = 7;
+  bytes clock = 8;
+  bytes stake_program = 9;
+}
+    
+message UnstakeArgs {
+}
+    
+message UnstakeIx {
+  optional UnstakeAccounts accounts = 1;
+  optional UnstakeArgs args = 2;
+}
+    
+message WithdrawStakeAccounts {
+  bytes keeper = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes custody_token_account = 5;
+  bytes transfer_authority = 6;
+  bytes stake_account = 7;
+  bytes stake_info = 8;
+  bytes clock = 9;
+  bytes stake_history = 10;
+  bytes stake_program = 11;
+  bytes system_program = 12;
+  bytes token_program = 13;
+}
+    
+message WithdrawStakeArgs {
+}
+    
+message WithdrawStakeIx {
+  optional WithdrawStakeAccounts accounts = 1;
+  optional WithdrawStakeArgs args = 2;
+}
+    
+message RedeemStakeAccounts {
+  bytes keeper = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes stake_account = 5;
+  bytes stake_info = 6;
+}
+    
+message RedeemStakeArgs {
+}
+    
+message RedeemStakeIx {
+  optional RedeemStakeAccounts accounts = 1;
+  optional RedeemStakeArgs args = 2;
+}
+    
+message OperatorSetCustodyConfigAccounts {
+  bytes operator = 1;
+  bytes custody = 2;
+}
+    
+message OperatorSetCustodyConfigArgs {
+  PricingParams pricing = 1;
+  uint64 hourly_funding_dbps = 2;
+  uint64 target_ratio_bps = 3;
+  uint64 increase_position_bps = 4;
+  uint64 decrease_position_bps = 5;
+  uint64 max_position_size_usd = 6;
+  JumpRateState jump_rate = 7;
+  uint64 price_impact_fee_factor = 8;
+  float price_impact_exponent = 9;
+  uint64 delta_imbalance_threshold_decimal = 10;
+  uint64 max_fee_bps = 11;
+  BorrowLendParams borrow_lend_parameters = 12;
+  uint64 borrow_hourly_funding_dbps = 13;
+  uint64 borrow_limit_in_token_amount = 14;
+  uint64 min_interest_fee_bps = 15;
+  uint64 min_interest_fee_grace_period_seconds = 16;
+  uint64 max_total_staked_amount_lamports = 17;
+  uint64 external_swap_fee_multiplier_bps = 18;
+  bool disable_close_position_request = 19;
+  uint64 withdrawal_limit_token_amount = 20;
+  uint64 withdrawal_limit_interval_seconds = 21;
+}
+    
+message OperatorSetCustodyConfigIx {
+  optional OperatorSetCustodyConfigAccounts accounts = 1;
+  optional OperatorSetCustodyConfigArgs args = 2;
+}
+    
+message OperatorSetPoolConfigAccounts {
+  bytes operator = 1;
+  bytes pool = 2;
+}
+    
+message OperatorSetPoolConfigArgs {
+  Fees fees = 1;
+  Limit limit = 2;
+  int64 max_request_execution_sec = 3;
+  uint64 max_trigger_price_diff_bps = 4;
+  bool disable_close_position_request = 5;
+  uint64 max_lp_token_price_change_bps = 6;
+}
+    
+message OperatorSetPoolConfigIx {
+  optional OperatorSetPoolConfigAccounts accounts = 1;
+  optional OperatorSetPoolConfigArgs args = 2;
+}
+    
+message TestInitAccounts {
+  bytes upgrade_authority = 1;
+  bytes admin = 2;
+  bytes transfer_authority = 3;
+  bytes perpetuals = 4;
+  bytes system_program = 5;
+  bytes token_program = 6;
+}
+    
+message TestInitArgs {
+  bool allow_swap = 1;
+  bool allow_add_liquidity = 2;
+  bool allow_remove_liquidity = 3;
+  bool allow_increase_position = 4;
+  bool allow_decrease_position = 5;
+  bool allow_collateral_withdrawal = 6;
+  bool allow_liquidate_position = 7;
+}
+    
+message TestInitIx {
+  optional TestInitAccounts accounts = 1;
+  optional TestInitArgs args = 2;
+}
+    
+message SetTestTimeAccounts {
+  bytes admin = 1;
+  bytes perpetuals = 2;
+}
+    
+message SetTestTimeArgs {
+  int64 time = 1;
+}
+    
+message SetTestTimeIx {
+  optional SetTestTimeAccounts accounts = 1;
+  optional SetTestTimeArgs args = 2;
+}
+    
+message SetTokenLedgerAccounts {
+  bytes token_ledger = 1;
+  bytes token_account = 2;
+  bytes token_program = 3;
+}
+    
+message SetTokenLedgerArgs {
+}
+    
+message SetTokenLedgerIx {
+  optional SetTokenLedgerAccounts accounts = 1;
+  optional SetTokenLedgerArgs args = 2;
+}
+    
+message Swap2Accounts {
+  bytes owner = 1;
+  bytes funding_account = 2;
+  bytes receiving_account = 3;
+  bytes transfer_authority = 4;
+  bytes perpetuals = 5;
+  bytes pool = 6;
+  bytes receiving_custody = 7;
+  bytes receiving_custody_doves_price_account = 8;
+  bytes receiving_custody_pythnet_price_account = 9;
+  bytes receiving_custody_token_account = 10;
+  bytes dispensing_custody = 11;
+  bytes dispensing_custody_doves_price_account = 12;
+  bytes dispensing_custody_pythnet_price_account = 13;
+  bytes dispensing_custody_token_account = 14;
+  bytes token_program = 15;
+  bytes event_authority = 16;
+  bytes program = 17;
+}
+    
+message Swap2Args {
+  uint64 amount_in = 1;
+  uint64 min_amount_out = 2;
+}
+    
+message Swap2Ix {
+  optional Swap2Accounts accounts = 1;
+  optional Swap2Args args = 2;
+}
+    
+message SwapWithTokenLedgerAccounts {
+  bytes owner = 1;
+  bytes funding_account = 2;
+  bytes receiving_account = 3;
+  bytes transfer_authority = 4;
+  bytes perpetuals = 5;
+  bytes pool = 6;
+  bytes receiving_custody = 7;
+  bytes receiving_custody_doves_price_account = 8;
+  bytes receiving_custody_token_account = 9;
+  bytes dispensing_custody = 10;
+  bytes dispensing_custody_doves_price_account = 11;
+  bytes dispensing_custody_token_account = 12;
+  bytes token_ledger = 13;
+  bytes token_program = 14;
+  bytes instruction = 15;
+  bytes event_authority = 16;
+  bytes program = 17;
+}
+    
+message SwapWithTokenLedgerArgs {
+  uint64 min_amount_out = 1;
+}
+    
+message SwapWithTokenLedgerIx {
+  optional SwapWithTokenLedgerAccounts accounts = 1;
+  optional SwapWithTokenLedgerArgs args = 2;
+}
+    
+message InstantIncreasePositionPreSwapAccounts {
+  bytes owner = 1;
+  bytes funding_account = 2;
+  bytes receiving_account = 3;
+  bytes transfer_authority = 4;
+  bytes perpetuals = 5;
+  bytes pool = 6;
+  bytes receiving_custody = 7;
+  bytes receiving_custody_doves_price_account = 8;
+  bytes receiving_custody_token_account = 9;
+  bytes dispensing_custody = 10;
+  bytes dispensing_custody_doves_price_account = 11;
+  bytes dispensing_custody_token_account = 12;
+  bytes token_program = 13;
+  bytes instruction = 14;
+  bytes event_authority = 15;
+  bytes program = 16;
+}
+    
+message InstantIncreasePositionPreSwapArgs {
+  uint64 amount_in = 1;
+  uint64 min_amount_out = 2;
+}
+    
+message InstantIncreasePositionPreSwapIx {
+  optional InstantIncreasePositionPreSwapAccounts accounts = 1;
+  optional InstantIncreasePositionPreSwapArgs args = 2;
+}
+    
+message AddLiquidity2Accounts {
+  bytes owner = 1;
+  bytes funding_account = 2;
+  bytes lp_token_account = 3;
+  bytes transfer_authority = 4;
+  bytes perpetuals = 5;
+  bytes pool = 6;
+  bytes custody = 7;
+  bytes custody_doves_price_account = 8;
+  bytes custody_pythnet_price_account = 9;
+  bytes custody_token_account = 10;
+  bytes lp_token_mint = 11;
+  bytes token_program = 12;
+  bytes event_authority = 13;
+  bytes program = 14;
+}
+    
+message AddLiquidity2Args {
+  uint64 token_amount_in = 1;
+  uint64 min_lp_amount_out = 2;
+  optional uint64 token_amount_pre_swap = 3;
+}
+    
+message AddLiquidity2Ix {
+  optional AddLiquidity2Accounts accounts = 1;
+  optional AddLiquidity2Args args = 2;
+}
+    
+message RemoveLiquidity2Accounts {
+  bytes owner = 1;
+  bytes receiving_account = 2;
+  bytes lp_token_account = 3;
+  bytes transfer_authority = 4;
+  bytes perpetuals = 5;
+  bytes pool = 6;
+  bytes custody = 7;
+  bytes custody_doves_price_account = 8;
+  bytes custody_pythnet_price_account = 9;
+  bytes custody_token_account = 10;
+  bytes lp_token_mint = 11;
+  bytes token_program = 12;
+  bytes event_authority = 13;
+  bytes program = 14;
+}
+    
+message RemoveLiquidity2Args {
+  uint64 lp_amount_in = 1;
+  uint64 min_amount_out = 2;
+}
+    
+message RemoveLiquidity2Ix {
+  optional RemoveLiquidity2Accounts accounts = 1;
+  optional RemoveLiquidity2Args args = 2;
+}
+    
+message CreateIncreasePositionMarketRequestAccounts {
+  bytes owner = 1;
+  bytes funding_account = 2;
+  bytes perpetuals = 3;
+  bytes pool = 4;
+  bytes position = 5;
+  bytes position_request = 6;
+  bytes position_request_ata = 7;
+  bytes custody = 8;
+  bytes collateral_custody = 9;
+  bytes input_mint = 10;
+  bytes referral = 11;
+  bytes token_program = 12;
+  bytes associated_token_program = 13;
+  bytes system_program = 14;
+  bytes event_authority = 15;
+  bytes program = 16;
+}
+    
+message CreateIncreasePositionMarketRequestArgs {
+  uint64 size_usd_delta = 1;
+  uint64 collateral_token_delta = 2;
+  Side side = 3;
+  uint64 price_slippage = 4;
+  optional uint64 jupiter_minimum_out = 5;
+  uint64 counter = 6;
+}
+    
+message CreateIncreasePositionMarketRequestIx {
+  optional CreateIncreasePositionMarketRequestAccounts accounts = 1;
+  optional CreateIncreasePositionMarketRequestArgs args = 2;
+}
+    
+message CreateDecreasePositionRequest2Accounts {
+  bytes owner = 1;
+  bytes receiving_account = 2;
+  bytes perpetuals = 3;
+  bytes pool = 4;
+  bytes position = 5;
+  bytes position_request = 6;
+  bytes position_request_ata = 7;
+  bytes custody = 8;
+  bytes custody_doves_price_account = 9;
+  bytes custody_pythnet_price_account = 10;
+  bytes collateral_custody = 11;
+  bytes desired_mint = 12;
+  bytes referral = 13;
+  bytes token_program = 14;
+  bytes associated_token_program = 15;
+  bytes system_program = 16;
+  bytes event_authority = 17;
+  bytes program = 18;
+}
+    
+message CreateDecreasePositionRequest2Args {
+  uint64 collateral_usd_delta = 1;
+  uint64 size_usd_delta = 2;
+  RequestType request_type = 3;
+  optional uint64 price_slippage = 4;
+  optional uint64 jupiter_minimum_out = 5;
+  optional uint64 trigger_price = 6;
+  optional bool trigger_above_threshold = 7;
+  optional bool entire_position = 8;
+  uint64 counter = 9;
+}
+    
+message CreateDecreasePositionRequest2Ix {
+  optional CreateDecreasePositionRequest2Accounts accounts = 1;
+  optional CreateDecreasePositionRequest2Args args = 2;
+}
+    
+message CreateDecreasePositionMarketRequestAccounts {
+  bytes owner = 1;
+  bytes receiving_account = 2;
+  bytes perpetuals = 3;
+  bytes pool = 4;
+  bytes position = 5;
+  bytes position_request = 6;
+  bytes position_request_ata = 7;
+  bytes custody = 8;
+  bytes collateral_custody = 9;
+  bytes desired_mint = 10;
+  bytes referral = 11;
+  bytes token_program = 12;
+  bytes associated_token_program = 13;
+  bytes system_program = 14;
+  bytes event_authority = 15;
+  bytes program = 16;
+}
+    
+message CreateDecreasePositionMarketRequestArgs {
+  uint64 collateral_usd_delta = 1;
+  uint64 size_usd_delta = 2;
+  uint64 price_slippage = 3;
+  optional uint64 jupiter_minimum_out = 4;
+  optional bool entire_position = 5;
+  uint64 counter = 6;
+}
+    
+message CreateDecreasePositionMarketRequestIx {
+  optional CreateDecreasePositionMarketRequestAccounts accounts = 1;
+  optional CreateDecreasePositionMarketRequestArgs args = 2;
+}
+    
+message UpdateDecreasePositionRequest2Accounts {
+  bytes owner = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes position = 4;
+  bytes position_request = 5;
+  bytes custody = 6;
+  bytes custody_doves_price_account = 7;
+  bytes custody_pythnet_price_account = 8;
+}
+    
+message UpdateDecreasePositionRequest2Args {
+  uint64 size_usd_delta = 1;
+  uint64 trigger_price = 2;
+}
+    
+message UpdateDecreasePositionRequest2Ix {
+  optional UpdateDecreasePositionRequest2Accounts accounts = 1;
+  optional UpdateDecreasePositionRequest2Args args = 2;
+}
+    
+message ClosePositionRequest2Accounts {
+  bytes keeper = 1;
+  bytes owner = 2;
+  bytes owner_ata = 3;
+  bytes pool = 4;
+  bytes position_request = 5;
+  bytes position_request_ata = 6;
+  bytes position = 7;
+  bytes mint = 8;
+  bytes token_program = 9;
+  bytes system_program = 10;
+  bytes associated_token_program = 11;
+  bytes event_authority = 12;
+  bytes program = 13;
+}
+    
+message ClosePositionRequest2Args {
+}
+    
+message ClosePositionRequest2Ix {
+  optional ClosePositionRequest2Accounts accounts = 1;
+  optional ClosePositionRequest2Args args = 2;
+}
+    
+message ClosePositionRequest3Accounts {
+  bytes keeper = 1;
+  bytes owner = 2;
+  bytes owner_ata = 3;
+  bytes pool = 4;
+  bytes position_request = 5;
+  bytes position_request_ata = 6;
+  bytes position = 7;
+  bytes custody = 8;
+  bytes mint = 9;
+  bytes token_program = 10;
+  bytes system_program = 11;
+  bytes associated_token_program = 12;
+  bytes event_authority = 13;
+  bytes program = 14;
+}
+    
+message ClosePositionRequest3Args {
+}
+    
+message ClosePositionRequest3Ix {
+  optional ClosePositionRequest3Accounts accounts = 1;
+  optional ClosePositionRequest3Args args = 2;
+}
+    
+message IncreasePosition4Accounts {
+  bytes keeper = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes position_request = 4;
+  bytes position_request_ata = 5;
+  bytes position = 6;
+  bytes custody = 7;
+  bytes custody_doves_price_account = 8;
+  bytes custody_pythnet_price_account = 9;
+  bytes collateral_custody = 10;
+  bytes collateral_custody_doves_price_account = 11;
+  bytes collateral_custody_pythnet_price_account = 12;
+  bytes collateral_custody_token_account = 13;
+  bytes token_program = 14;
+  bytes event_authority = 15;
+  bytes program = 16;
+}
+    
+message IncreasePosition4Args {
+}
+    
+message IncreasePosition4Ix {
+  optional IncreasePosition4Accounts accounts = 1;
+  optional IncreasePosition4Args args = 2;
+}
+    
+message IncreasePositionPreSwapAccounts {
+  bytes keeper = 1;
+  bytes keeper_ata = 2;
+  bytes position_request = 3;
+  bytes position_request_ata = 4;
+  bytes position = 5;
+  bytes collateral_custody = 6;
+  bytes collateral_custody_token_account = 7;
+  bytes instruction = 8;
+  bytes token_program = 9;
+  bytes event_authority = 10;
+  bytes program = 11;
+}
+    
+message IncreasePositionPreSwapArgs {
+}
+    
+message IncreasePositionPreSwapIx {
+  optional IncreasePositionPreSwapAccounts accounts = 1;
+  optional IncreasePositionPreSwapArgs args = 2;
+}
+    
+message IncreasePositionWithInternalSwapAccounts {
+  bytes keeper = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes position_request = 4;
+  bytes position_request_ata = 5;
+  bytes position = 6;
+  bytes custody = 7;
+  bytes custody_doves_price_account = 8;
+  bytes custody_pythnet_price_account = 9;
+  bytes collateral_custody = 10;
+  bytes collateral_custody_doves_price_account = 11;
+  bytes collateral_custody_pythnet_price_account = 12;
+  bytes collateral_custody_token_account = 13;
+  bytes receiving_custody = 14;
+  bytes receiving_custody_doves_price_account = 15;
+  bytes receiving_custody_pythnet_price_account = 16;
+  bytes receiving_custody_token_account = 17;
+  bytes token_program = 18;
+  bytes event_authority = 19;
+  bytes program = 20;
+}
+    
+message IncreasePositionWithInternalSwapArgs {
+}
+    
+message IncreasePositionWithInternalSwapIx {
+  optional IncreasePositionWithInternalSwapAccounts accounts = 1;
+  optional IncreasePositionWithInternalSwapArgs args = 2;
+}
+    
+message DecreasePosition4Accounts {
+  bytes keeper = 1;
+  bytes owner = 2;
+  bytes transfer_authority = 3;
+  bytes perpetuals = 4;
+  bytes pool = 5;
+  bytes position_request = 6;
+  bytes position_request_ata = 7;
+  bytes position = 8;
+  bytes custody = 9;
+  bytes custody_doves_price_account = 10;
+  bytes custody_pythnet_price_account = 11;
+  bytes collateral_custody = 12;
+  bytes collateral_custody_doves_price_account = 13;
+  bytes collateral_custody_pythnet_price_account = 14;
+  bytes collateral_custody_token_account = 15;
+  bytes token_program = 16;
+  bytes event_authority = 17;
+  bytes program = 18;
+}
+    
+message DecreasePosition4Args {
+}
+    
+message DecreasePosition4Ix {
+  optional DecreasePosition4Accounts accounts = 1;
+  optional DecreasePosition4Args args = 2;
+}
+    
+message DecreasePositionWithInternalSwapAccounts {
+  bytes keeper = 1;
+  bytes owner = 2;
+  bytes transfer_authority = 3;
+  bytes perpetuals = 4;
+  bytes pool = 5;
+  bytes position_request = 6;
+  bytes position_request_ata = 7;
+  bytes position = 8;
+  bytes custody = 9;
+  bytes custody_doves_price_account = 10;
+  bytes custody_pythnet_price_account = 11;
+  bytes collateral_custody = 12;
+  bytes collateral_custody_doves_price_account = 13;
+  bytes collateral_custody_pythnet_price_account = 14;
+  bytes collateral_custody_token_account = 15;
+  bytes dispensing_custody = 16;
+  bytes dispensing_custody_doves_price_account = 17;
+  bytes dispensing_custody_pythnet_price_account = 18;
+  bytes dispensing_custody_token_account = 19;
+  bytes token_program = 20;
+  bytes event_authority = 21;
+  bytes program = 22;
+}
+    
+message DecreasePositionWithInternalSwapArgs {
+}
+    
+message DecreasePositionWithInternalSwapIx {
+  optional DecreasePositionWithInternalSwapAccounts accounts = 1;
+  optional DecreasePositionWithInternalSwapArgs args = 2;
+}
+    
+message DecreasePositionWithTpslAccounts {
+  bytes keeper = 1;
+  bytes owner = 2;
+  bytes transfer_authority = 3;
+  bytes perpetuals = 4;
+  bytes pool = 5;
+  bytes position_request = 6;
+  bytes position_request_ata = 7;
+  bytes position = 8;
+  bytes custody = 9;
+  bytes custody_doves_price_account = 10;
+  bytes collateral_custody = 11;
+  bytes collateral_custody_doves_price_account = 12;
+  bytes collateral_custody_token_account = 13;
+  bytes token_program = 14;
+  bytes event_authority = 15;
+  bytes program = 16;
+}
+    
+message DecreasePositionWithTpslArgs {
+}
+    
+message DecreasePositionWithTpslIx {
+  optional DecreasePositionWithTpslAccounts accounts = 1;
+  optional DecreasePositionWithTpslArgs args = 2;
+}
+    
+message DecreasePositionWithTpslAndInternalSwapAccounts {
+  bytes keeper = 1;
+  bytes owner = 2;
+  bytes transfer_authority = 3;
+  bytes perpetuals = 4;
+  bytes pool = 5;
+  bytes position_request = 6;
+  bytes position_request_ata = 7;
+  bytes position = 8;
+  bytes custody = 9;
+  bytes custody_doves_price_account = 10;
+  bytes collateral_custody = 11;
+  bytes collateral_custody_doves_price_account = 12;
+  bytes collateral_custody_token_account = 13;
+  bytes dispensing_custody = 14;
+  bytes dispensing_custody_doves_price_account = 15;
+  bytes dispensing_custody_token_account = 16;
+  bytes token_program = 17;
+  bytes event_authority = 18;
+  bytes program = 19;
+}
+    
+message DecreasePositionWithTpslAndInternalSwapArgs {
+}
+    
+message DecreasePositionWithTpslAndInternalSwapIx {
+  optional DecreasePositionWithTpslAndInternalSwapAccounts accounts = 1;
+  optional DecreasePositionWithTpslAndInternalSwapArgs args = 2;
+}
+    
+message LiquidateFullPosition4Accounts {
+  bytes signer = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes position = 4;
+  bytes custody = 5;
+  bytes custody_doves_price_account = 6;
+  bytes custody_pythnet_price_account = 7;
+  bytes collateral_custody = 8;
+  bytes collateral_custody_doves_price_account = 9;
+  bytes collateral_custody_pythnet_price_account = 10;
+  bytes collateral_custody_token_account = 11;
+  bytes event_authority = 12;
+  bytes program = 13;
+}
+    
+message LiquidateFullPosition4Args {
+}
+    
+message LiquidateFullPosition4Ix {
+  optional LiquidateFullPosition4Accounts accounts = 1;
+  optional LiquidateFullPosition4Args args = 2;
+}
+    
+message RefreshAssetsUnderManagementAccounts {
+  bytes keeper = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes lp_token_mint = 4;
+}
+    
+message RefreshAssetsUnderManagementArgs {
+}
+    
+message RefreshAssetsUnderManagementIx {
+  optional RefreshAssetsUnderManagementAccounts accounts = 1;
+  optional RefreshAssetsUnderManagementArgs args = 2;
+}
+    
+message SetMaxGlobalSizesAccounts {
+  bytes keeper = 1;
+  bytes custody = 2;
+  bytes pool = 3;
+}
+    
+message SetMaxGlobalSizesArgs {
+  uint64 max_global_long_size = 1;
+  uint64 max_global_short_size = 2;
+  uint32 recovery_id = 3;
+  bytes signature = 4;
+  bytes reference_id = 5;
+  uint64 timestamp = 6;
+}
+    
+message SetMaxGlobalSizesIx {
+  optional SetMaxGlobalSizesAccounts accounts = 1;
+  optional SetMaxGlobalSizesArgs args = 2;
+}
+    
+message InstantCreateTpslAccounts {
+  bytes keeper = 1;
+  bytes api_keeper = 2;
+  bytes owner = 3;
+  bytes receiving_account = 4;
+  bytes perpetuals = 5;
+  bytes pool = 6;
+  bytes position = 7;
+  bytes position_request = 8;
+  bytes position_request_ata = 9;
+  bytes custody = 10;
+  bytes custody_doves_price_account = 11;
+  bytes custody_pythnet_price_account = 12;
+  bytes collateral_custody = 13;
+  bytes desired_mint = 14;
+  bytes referral = 15;
+  bytes token_program = 16;
+  bytes associated_token_program = 17;
+  bytes system_program = 18;
+  bytes event_authority = 19;
+  bytes program = 20;
+}
+    
+message InstantCreateTpslArgs {
+  uint64 collateral_usd_delta = 1;
+  uint64 size_usd_delta = 2;
+  uint64 trigger_price = 3;
+  bool trigger_above_threshold = 4;
+  bool entire_position = 5;
+  uint64 counter = 6;
+  int64 request_time = 7;
+}
+    
+message InstantCreateTpslIx {
+  optional InstantCreateTpslAccounts accounts = 1;
+  optional InstantCreateTpslArgs args = 2;
+}
+    
+message InstantCreateLimitOrderAccounts {
+  bytes keeper = 1;
+  bytes api_keeper = 2;
+  bytes owner = 3;
+  bytes funding_account = 4;
+  bytes perpetuals = 5;
+  bytes pool = 6;
+  bytes position = 7;
+  bytes position_request = 8;
+  bytes position_request_ata = 9;
+  bytes custody = 10;
+  bytes custody_doves_price_account = 11;
+  bytes custody_pythnet_price_account = 12;
+  bytes collateral_custody = 13;
+  bytes input_mint = 14;
+  bytes referral = 15;
+  bytes token_program = 16;
+  bytes associated_token_program = 17;
+  bytes system_program = 18;
+  bytes event_authority = 19;
+  bytes program = 20;
+}
+    
+message InstantCreateLimitOrderArgs {
+  uint64 size_usd_delta = 1;
+  uint64 collateral_token_delta = 2;
+  Side side = 3;
+  uint64 trigger_price = 4;
+  bool trigger_above_threshold = 5;
+  uint64 counter = 6;
+  int64 request_time = 7;
+}
+    
+message InstantCreateLimitOrderIx {
+  optional InstantCreateLimitOrderAccounts accounts = 1;
+  optional InstantCreateLimitOrderArgs args = 2;
+}
+    
+message InstantIncreasePositionAccounts {
+  bytes keeper = 1;
+  bytes api_keeper = 2;
+  bytes owner = 3;
+  bytes funding_account = 4;
+  bytes perpetuals = 5;
+  bytes pool = 6;
+  bytes position = 7;
+  bytes custody = 8;
+  bytes custody_doves_price_account = 9;
+  bytes custody_pythnet_price_account = 10;
+  bytes collateral_custody = 11;
+  bytes collateral_custody_doves_price_account = 12;
+  bytes collateral_custody_pythnet_price_account = 13;
+  bytes collateral_custody_token_account = 14;
+  bytes token_ledger = 15;
+  bytes referral = 16;
+  bytes token_program = 17;
+  bytes system_program = 18;
+  bytes event_authority = 19;
+  bytes program = 20;
+}
+    
+message InstantIncreasePositionArgs {
+  uint64 size_usd_delta = 1;
+  optional uint64 collateral_token_delta = 2;
+  Side side = 3;
+  uint64 price_slippage = 4;
+  int64 request_time = 5;
+}
+    
+message InstantIncreasePositionIx {
+  optional InstantIncreasePositionAccounts accounts = 1;
+  optional InstantIncreasePositionArgs args = 2;
+}
+    
+message InstantDecreasePositionAccounts {
+  bytes keeper = 1;
+  bytes api_keeper = 2;
+  bytes owner = 3;
+  bytes receiving_account = 4;
+  bytes transfer_authority = 5;
+  bytes perpetuals = 6;
+  bytes pool = 7;
+  bytes position = 8;
+  bytes custody = 9;
+  bytes custody_doves_price_account = 10;
+  bytes custody_pythnet_price_account = 11;
+  bytes collateral_custody = 12;
+  bytes collateral_custody_doves_price_account = 13;
+  bytes collateral_custody_pythnet_price_account = 14;
+  bytes collateral_custody_token_account = 15;
+  bytes desired_mint = 16;
+  bytes referral = 17;
+  bytes token_program = 18;
+  bytes associated_token_program = 19;
+  bytes system_program = 20;
+  bytes event_authority = 21;
+  bytes program = 22;
+}
+    
+message InstantDecreasePositionArgs {
+  uint64 collateral_usd_delta = 1;
+  uint64 size_usd_delta = 2;
+  uint64 price_slippage = 3;
+  optional bool entire_position = 4;
+  int64 request_time = 5;
+}
+    
+message InstantDecreasePositionIx {
+  optional InstantDecreasePositionAccounts accounts = 1;
+  optional InstantDecreasePositionArgs args = 2;
+}
+    
+message InstantDecreasePosition2Accounts {
+  bytes keeper = 1;
+  bytes api_keeper = 2;
+  bytes owner = 3;
+  bytes receiving_account = 4;
+  bytes transfer_authority = 5;
+  bytes perpetuals = 6;
+  bytes pool = 7;
+  bytes position = 8;
+  bytes custody = 9;
+  bytes custody_doves_price_account = 10;
+  bytes collateral_custody = 11;
+  bytes collateral_custody_doves_price_account = 12;
+  bytes collateral_custody_token_account = 13;
+  bytes desired_mint = 14;
+  bytes referral = 15;
+  bytes position_request = 16;
+  bytes position_request_ata = 17;
+  bytes token_program = 18;
+  bytes associated_token_program = 19;
+  bytes system_program = 20;
+  bytes event_authority = 21;
+  bytes program = 22;
+}
+    
+message InstantDecreasePosition2Args {
+  uint64 collateral_usd_delta = 1;
+  uint64 size_usd_delta = 2;
+  uint64 price_slippage = 3;
+  optional bool entire_position = 4;
+  int64 request_time = 5;
+  uint64 counter = 6;
+}
+    
+message InstantDecreasePosition2Ix {
+  optional InstantDecreasePosition2Accounts accounts = 1;
+  optional InstantDecreasePosition2Args args = 2;
+}
+    
+message InstantUpdateLimitOrderAccounts {
+  bytes keeper = 1;
+  bytes api_keeper = 2;
+  bytes owner = 3;
+  bytes perpetuals = 4;
+  bytes pool = 5;
+  bytes position = 6;
+  bytes position_request = 7;
+  bytes custody = 8;
+  bytes custody_doves_price_account = 9;
+  bytes custody_pythnet_price_account = 10;
+}
+    
+message InstantUpdateLimitOrderArgs {
+  uint64 size_usd_delta = 1;
+  uint64 trigger_price = 2;
+  int64 request_time = 3;
+}
+    
+message InstantUpdateLimitOrderIx {
+  optional InstantUpdateLimitOrderAccounts accounts = 1;
+  optional InstantUpdateLimitOrderArgs args = 2;
+}
+    
+message InstantUpdateTpslAccounts {
+  bytes keeper = 1;
+  bytes api_keeper = 2;
+  bytes owner = 3;
+  bytes perpetuals = 4;
+  bytes pool = 5;
+  bytes position = 6;
+  bytes position_request = 7;
+  bytes custody = 8;
+  bytes custody_doves_price_account = 9;
+  bytes custody_pythnet_price_account = 10;
+  bytes event_authority = 11;
+  bytes program = 12;
+}
+    
+message InstantUpdateTpslArgs {
+  uint64 size_usd_delta = 1;
+  uint64 trigger_price = 2;
+  int64 request_time = 3;
+}
+    
+message InstantUpdateTpslIx {
+  optional InstantUpdateTpslAccounts accounts = 1;
+  optional InstantUpdateTpslArgs args = 2;
+}
+    
+message GetAddLiquidityAmountAndFee2Accounts {
+  bytes perpetuals = 1;
+  bytes pool = 2;
+  bytes custody = 3;
+  bytes custody_doves_price_account = 4;
+  bytes custody_pythnet_price_account = 5;
+  bytes lp_token_mint = 6;
+}
+    
+message GetAddLiquidityAmountAndFee2Args {
+  uint64 token_amount_in = 1;
+}
+    
+message GetAddLiquidityAmountAndFee2Ix {
+  optional GetAddLiquidityAmountAndFee2Accounts accounts = 1;
+  optional GetAddLiquidityAmountAndFee2Args args = 2;
+}
+    
+message GetRemoveLiquidityAmountAndFee2Accounts {
+  bytes perpetuals = 1;
+  bytes pool = 2;
+  bytes custody = 3;
+  bytes custody_doves_price_account = 4;
+  bytes custody_pythnet_price_account = 5;
+  bytes lp_token_mint = 6;
+}
+    
+message GetRemoveLiquidityAmountAndFee2Args {
+  uint64 lp_amount_in = 1;
+}
+    
+message GetRemoveLiquidityAmountAndFee2Ix {
+  optional GetRemoveLiquidityAmountAndFee2Accounts accounts = 1;
+  optional GetRemoveLiquidityAmountAndFee2Args args = 2;
+}
+    
+message GetAssetsUnderManagement2Accounts {
+  bytes perpetuals = 1;
+  bytes pool = 2;
+}
+    
+message GetAssetsUnderManagement2Args {
+  optional PriceCalcMode mode = 1;
+}
+    
+message GetAssetsUnderManagement2Ix {
+  optional GetAssetsUnderManagement2Accounts accounts = 1;
+  optional GetAssetsUnderManagement2Args args = 2;
+}
+    
+message BorrowFromCustodyAccounts {
+  bytes owner = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes transfer_authority = 5;
+  bytes borrow_position = 6;
+  bytes custody_token_account = 7;
+  bytes user_token_account = 8;
+  bytes lp_token_mint = 9;
+  bytes token_program = 10;
+  bytes event_authority = 11;
+  bytes program = 12;
+}
+    
+message BorrowFromCustodyArgs {
+  uint64 amount = 1;
+}
+    
+message BorrowFromCustodyIx {
+  optional BorrowFromCustodyAccounts accounts = 1;
+  optional BorrowFromCustodyArgs args = 2;
+}
+    
+message RepayToCustodyAccounts {
+  bytes owner = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes borrow_position = 5;
+  bytes custody_token_account = 6;
+  bytes user_token_account = 7;
+  bytes token_program = 8;
+  bytes event_authority = 9;
+  bytes program = 10;
+}
+    
+message RepayToCustodyArgs {
+  uint64 amount = 1;
+}
+    
+message RepayToCustodyIx {
+  optional RepayToCustodyAccounts accounts = 1;
+  optional RepayToCustodyArgs args = 2;
+}
+    
+message DepositCollateralForBorrowsAccounts {
+  bytes owner = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes transfer_authority = 5;
+  bytes borrow_position = 6;
+  bytes collateral_token_account = 7;
+  bytes user_token_account = 8;
+  bytes lp_token_mint = 9;
+  bytes token_program = 10;
+  bytes system_program = 11;
+  bytes event_authority = 12;
+  bytes program = 13;
+}
+    
+message DepositCollateralForBorrowsArgs {
+  uint64 amount = 1;
+}
+    
+message DepositCollateralForBorrowsIx {
+  optional DepositCollateralForBorrowsAccounts accounts = 1;
+  optional DepositCollateralForBorrowsArgs args = 2;
+}
+    
+message WithdrawCollateralForBorrowsAccounts {
+  bytes owner = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes transfer_authority = 5;
+  bytes borrow_position = 6;
+  bytes collateral_token_account = 7;
+  bytes user_token_account = 8;
+  bytes lp_token_mint = 9;
+  bytes token_program = 10;
+  bytes event_authority = 11;
+  bytes program = 12;
+}
+    
+message WithdrawCollateralForBorrowsArgs {
+  uint64 amount = 1;
+}
+    
+message WithdrawCollateralForBorrowsIx {
+  optional WithdrawCollateralForBorrowsAccounts accounts = 1;
+  optional WithdrawCollateralForBorrowsArgs args = 2;
+}
+    
+message LiquidateBorrowPositionAccounts {
+  bytes signer = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes transfer_authority = 5;
+  bytes borrow_position = 6;
+  bytes collateral_token_account = 7;
+  bytes lp_token_mint = 8;
+  bytes token_program = 9;
+  bytes event_authority = 10;
+  bytes program = 11;
+}
+    
+message LiquidateBorrowPositionArgs {
+}
+    
+message LiquidateBorrowPositionIx {
+  optional LiquidateBorrowPositionAccounts accounts = 1;
+  optional LiquidateBorrowPositionArgs args = 2;
+}
+    
+message PartialLiquidateBorrowPositionAccounts {
+  bytes signer = 1;
+  bytes perpetuals = 2;
+  bytes pool = 3;
+  bytes custody = 4;
+  bytes transfer_authority = 5;
+  bytes borrow_position = 6;
+  bytes collateral_token_account = 7;
+  bytes lp_token_mint = 8;
+  bytes token_program = 9;
+  bytes event_authority = 10;
+  bytes program = 11;
+}
+    
+message PartialLiquidateBorrowPositionArgs {
+}
+    
+message PartialLiquidateBorrowPositionIx {
+  optional PartialLiquidateBorrowPositionAccounts accounts = 1;
+  optional PartialLiquidateBorrowPositionArgs args = 2;
+}
+    
+message CloseBorrowPositionAccounts {
+  bytes owner = 1;
+  bytes borrow_position = 2;
+  bytes system_program = 3;
+  bytes event_authority = 4;
+  bytes program = 5;
+}
+    
+message CloseBorrowPositionArgs {
+}
+    
+message CloseBorrowPositionIx {
+  optional CloseBorrowPositionAccounts accounts = 1;
+  optional CloseBorrowPositionArgs args = 2;
+}
+    
+message ProgramInstruction {
+}
+    
+message PriceImpactMechanism {
+  oneof kind {
+    PriceImpactMechanismTradeSize trade_size = 1;
+    PriceImpactMechanismDeltaImbalance delta_imbalance = 2;
+  }
+}
+message OracleType {
+  oneof kind {
+    OracleTypeNone none = 1;
+    OracleTypeTest test = 2;
+    OracleTypePyth pyth = 3;
+  }
+}
+message PriceCalcMode {
+  oneof kind {
+    PriceCalcModeMin min = 1;
+    PriceCalcModeMax max = 2;
+    PriceCalcModeIgnore ignore = 3;
+  }
+}
+message PriceStaleTolerance {
+  oneof kind {
+    PriceStaleToleranceStrict strict = 1;
+    PriceStaleToleranceLoose loose = 2;
+  }
+}
+message TradePoolType {
+  oneof kind {
+    TradePoolTypeIncrease increase = 1;
+    TradePoolTypeDecrease decrease = 2;
+  }
+}
+message RequestType {
+  oneof kind {
+    RequestTypeMarket market = 1;
+    RequestTypeTrigger trigger = 2;
+  }
+}
+message RequestChange {
+  oneof kind {
+    RequestChangeNone none = 1;
+    RequestChangeIncrease increase = 2;
+    RequestChangeDecrease decrease = 3;
+  }
+}
+message Side {
+  oneof kind {
+    SideNone none = 1;
+    SideLong long = 2;
+    SideShort short = 3;
+  }
+}
+message ProgramInstruction {
+  oneof ix {
+    InitIx init_ix = 1;
+    AddPoolIx add_pool_ix = 2;
+    AddCustodyIx add_custody_ix = 3;
+    SetCustodyConfigIx set_custody_config_ix = 4;
+    SetPoolConfigIx set_pool_config_ix = 5;
+    SetPerpetualsConfigIx set_perpetuals_config_ix = 6;
+    TransferAdminIx transfer_admin_ix = 7;
+    WithdrawFees2Ix withdraw_fees2_ix = 8;
+    CreateTokenMetadataIx create_token_metadata_ix = 9;
+    CreateTokenLedgerIx create_token_ledger_ix = 10;
+    ReallocCustodyIx realloc_custody_ix = 11;
+    ReallocPoolIx realloc_pool_ix = 12;
+    CreateAndDelegateStakeAccountIx create_and_delegate_stake_account_ix = 13;
+    UnstakeIx unstake_ix = 14;
+    WithdrawStakeIx withdraw_stake_ix = 15;
+    RedeemStakeIx redeem_stake_ix = 16;
+    OperatorSetCustodyConfigIx operator_set_custody_config_ix = 17;
+    OperatorSetPoolConfigIx operator_set_pool_config_ix = 18;
+    TestInitIx test_init_ix = 19;
+    SetTestTimeIx set_test_time_ix = 20;
+    SetTokenLedgerIx set_token_ledger_ix = 21;
+    Swap2Ix swap2_ix = 22;
+    SwapWithTokenLedgerIx swap_with_token_ledger_ix = 23;
+    InstantIncreasePositionPreSwapIx instant_increase_position_pre_swap_ix = 24;
+    AddLiquidity2Ix add_liquidity2_ix = 25;
+    RemoveLiquidity2Ix remove_liquidity2_ix = 26;
+    CreateIncreasePositionMarketRequestIx create_increase_position_market_request_ix = 27;
+    CreateDecreasePositionRequest2Ix create_decrease_position_request2_ix = 28;
+    CreateDecreasePositionMarketRequestIx create_decrease_position_market_request_ix = 29;
+    UpdateDecreasePositionRequest2Ix update_decrease_position_request2_ix = 30;
+    ClosePositionRequest2Ix close_position_request2_ix = 31;
+    ClosePositionRequest3Ix close_position_request3_ix = 32;
+    IncreasePosition4Ix increase_position4_ix = 33;
+    IncreasePositionPreSwapIx increase_position_pre_swap_ix = 34;
+    IncreasePositionWithInternalSwapIx increase_position_with_internal_swap_ix = 35;
+    DecreasePosition4Ix decrease_position4_ix = 36;
+    DecreasePositionWithInternalSwapIx decrease_position_with_internal_swap_ix = 37;
+    DecreasePositionWithTpslIx decrease_position_with_tpsl_ix = 38;
+    DecreasePositionWithTpslAndInternalSwapIx decrease_position_with_tpsl_and_internal_swap_ix = 39;
+    LiquidateFullPosition4Ix liquidate_full_position4_ix = 40;
+    RefreshAssetsUnderManagementIx refresh_assets_under_management_ix = 41;
+    SetMaxGlobalSizesIx set_max_global_sizes_ix = 42;
+    InstantCreateTpslIx instant_create_tpsl_ix = 43;
+    InstantCreateLimitOrderIx instant_create_limit_order_ix = 44;
+    InstantIncreasePositionIx instant_increase_position_ix = 45;
+    InstantDecreasePositionIx instant_decrease_position_ix = 46;
+    InstantDecreasePosition2Ix instant_decrease_position2_ix = 47;
+    InstantUpdateLimitOrderIx instant_update_limit_order_ix = 48;
+    InstantUpdateTpslIx instant_update_tpsl_ix = 49;
+    GetAddLiquidityAmountAndFee2Ix get_add_liquidity_amount_and_fee2_ix = 50;
+    GetRemoveLiquidityAmountAndFee2Ix get_remove_liquidity_amount_and_fee2_ix = 51;
+    GetAssetsUnderManagement2Ix get_assets_under_management2_ix = 52;
+    BorrowFromCustodyIx borrow_from_custody_ix = 53;
+    RepayToCustodyIx repay_to_custody_ix = 54;
+    DepositCollateralForBorrowsIx deposit_collateral_for_borrows_ix = 55;
+    WithdrawCollateralForBorrowsIx withdraw_collateral_for_borrows_ix = 56;
+    LiquidateBorrowPositionIx liquidate_borrow_position_ix = 57;
+    PartialLiquidateBorrowPositionIx partial_liquidate_borrow_position_ix = 58;
+    CloseBorrowPositionIx close_borrow_position_ix = 59;
+  }
+}

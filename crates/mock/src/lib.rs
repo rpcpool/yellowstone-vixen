@@ -364,7 +364,13 @@ macro_rules! run_account_parse {
 #[macro_export]
 macro_rules! run_ix_parse {
     ($parser:expr, $ix:expr) => {
-        $parser.parse(&$ix.into()).await.unwrap()
+        match $parser.parse(&$ix.into()).await {
+            Ok(v) => Some(v),
+
+            // Ignore filtered instructions, but panic on actual errors
+            Err(yellowstone_vixen_core::ParseError::Filtered) => None,
+            Err(e) => panic!("parse error: {e:?}"),
+        }
     };
 }
 
@@ -374,6 +380,7 @@ pub async fn load_fixture<P: ProgramParser>(
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
     maybe_create_fixture_dir()?;
     let path = fixture_path(fixture)?;
+
     if path.is_file() {
         read_fixture(&path)
     } else {

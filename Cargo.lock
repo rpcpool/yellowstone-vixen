@@ -13956,6 +13956,8 @@ dependencies = [
 name = "yellowstone-vixen-block-meta-parser"
 version = "0.6.0-alpha.0"
 dependencies = [
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "tokio",
  "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
@@ -13969,6 +13971,8 @@ dependencies = [
  "borsh 1.6.0",
  "bs58",
  "clap 4.5.53",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "serde",
  "thiserror 1.0.69",
  "yellowstone-grpc-proto",
@@ -14013,11 +14017,15 @@ name = "yellowstone-vixen-example-idl-parser"
 version = "0.0.0"
 dependencies = [
  "borsh 1.6.0",
+ "bs58",
  "clap 4.5.53",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "rustls 0.23.35",
  "toml 0.8.23",
  "tracing",
  "yellowstone-vixen",
+ "yellowstone-vixen-core",
  "yellowstone-vixen-parser",
  "yellowstone-vixen-proc-macro",
  "yellowstone-vixen-yellowstone-grpc-source",
@@ -14028,6 +14036,7 @@ name = "yellowstone-vixen-example-jetstreamer"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "bs58",
  "clap 4.5.53",
  "tokio",
  "tracing",
@@ -14150,6 +14159,8 @@ dependencies = [
  "hex",
  "prettyplease 0.2.37",
  "proc-macro2",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "quote",
  "serde",
  "serde_json",
@@ -14227,8 +14238,11 @@ dependencies = [
 name = "yellowstone-vixen-spl-token-extensions-parser"
 version = "0.6.0-alpha.0"
 dependencies = [
+ "borsh 1.6.0",
  "bs58",
  "bytemuck",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "solana-program-error 3.0.0",
  "solana-program-pack 3.0.0",
  "spl-pod 0.7.1",
@@ -14251,6 +14265,8 @@ version = "0.6.0-alpha.0"
 dependencies = [
  "bs58",
  "bytemuck",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "solana-program-error 3.0.0",
  "spl-pod 0.7.1",
  "spl-token 9.0.0",
@@ -14272,6 +14288,8 @@ version = "0.6.0-alpha.0"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "spl-pod 0.7.1",
  "spl-stake-pool",
  "thiserror 1.0.69",

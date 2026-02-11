@@ -11,6 +11,8 @@ readme = "./../../README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+prost = { workspace = true }
+prost-types = { workspace = true }
 spl-pod = { workspace = true }
 spl-token = { workspace = true }
 solana-program-error = { workspace = true }

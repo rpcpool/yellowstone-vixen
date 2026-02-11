@@ -1,0 +1,774 @@
+---
+source: tests/proc-macro/tests/pump_fun.rs
+expression: "pump_fun::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package pump_fun;
+
+message AdminSetCreatorEvent {
+  int64 timestamp = 1;
+  bytes admin_set_creator_authority = 2;
+  bytes mint = 3;
+  bytes bonding_curve = 4;
+  bytes old_creator = 5;
+  bytes new_creator = 6;
+}
+    
+message AdminSetIdlAuthorityEvent {
+  bytes idl_authority = 1;
+}
+    
+message AdminUpdateTokenIncentivesEvent {
+  int64 start_time = 1;
+  int64 end_time = 2;
+  uint64 day_number = 3;
+  uint64 token_supply_per_day = 4;
+  bytes mint = 5;
+  int64 seconds_in_a_day = 6;
+  int64 timestamp = 7;
+}
+    
+message ClaimTokenIncentivesEvent {
+  bytes user = 1;
+  bytes mint = 2;
+  uint64 amount = 3;
+  int64 timestamp = 4;
+  uint64 total_claimed_tokens = 5;
+  uint64 current_sol_volume = 6;
+}
+    
+message CloseUserVolumeAccumulatorEvent {
+  bytes user = 1;
+  int64 timestamp = 2;
+  uint64 total_unclaimed_tokens = 3;
+  uint64 total_claimed_tokens = 4;
+  uint64 current_sol_volume = 5;
+  int64 last_update_timestamp = 6;
+}
+    
+message CollectCreatorFeeEvent {
+  int64 timestamp = 1;
+  bytes creator = 2;
+  uint64 creator_fee = 3;
+}
+    
+message CompleteEvent {
+  bytes user = 1;
+  bytes mint = 2;
+  bytes bonding_curve = 3;
+  int64 timestamp = 4;
+}
+    
+message CompletePumpAmmMigrationEvent {
+  bytes user = 1;
+  bytes mint = 2;
+  uint64 mint_amount = 3;
+  uint64 sol_amount = 4;
+  uint64 pool_migration_fee = 5;
+  bytes bonding_curve = 6;
+  int64 timestamp = 7;
+  bytes pool = 8;
+}
+    
+message CreateEvent {
+  string name = 1;
+  string symbol = 2;
+  string uri = 3;
+  bytes mint = 4;
+  bytes bonding_curve = 5;
+  bytes user = 6;
+  bytes creator = 7;
+  int64 timestamp = 8;
+  uint64 virtual_token_reserves = 9;
+  uint64 virtual_sol_reserves = 10;
+  uint64 real_token_reserves = 11;
+  uint64 token_total_supply = 12;
+  bytes token_program = 13;
+  bool is_mayhem_mode = 14;
+}
+    
+message ExtendAccountEvent {
+  bytes account = 1;
+  bytes user = 2;
+  uint64 current_size = 3;
+  uint64 new_size = 4;
+  int64 timestamp = 5;
+}
+    
+message FeeTier {
+  bytes market_cap_lamports_threshold = 1;
+  Fees fees = 2;
+}
+    
+message Fees {
+  uint64 lp_fee_bps = 1;
+  uint64 protocol_fee_bps = 2;
+  uint64 creator_fee_bps = 3;
+}
+    
+message InitUserVolumeAccumulatorEvent {
+  bytes payer = 1;
+  bytes user = 2;
+  int64 timestamp = 3;
+}
+    
+message OptionBool {
+  bool item_0 = 1;
+}
+    
+message ReservedFeeRecipientsEvent {
+  int64 timestamp = 1;
+  bytes reserved_fee_recipient = 2;
+  repeated bytes reserved_fee_recipients = 3;
+}
+    
+message SetCreatorEvent {
+  int64 timestamp = 1;
+  bytes mint = 2;
+  bytes bonding_curve = 3;
+  bytes creator = 4;
+}
+    
+message SetMetaplexCreatorEvent {
+  int64 timestamp = 1;
+  bytes mint = 2;
+  bytes bonding_curve = 3;
+  bytes metadata = 4;
+  bytes creator = 5;
+}
+    
+message SetParamsEvent {
+  uint64 initial_virtual_token_reserves = 1;
+  uint64 initial_virtual_sol_reserves = 2;
+  uint64 initial_real_token_reserves = 3;
+  uint64 final_real_sol_reserves = 4;
+  uint64 token_total_supply = 5;
+  uint64 fee_basis_points = 6;
+  bytes withdraw_authority = 7;
+  bool enable_migrate = 8;
+  uint64 pool_migration_fee = 9;
+  uint64 creator_fee_basis_points = 10;
+  repeated bytes fee_recipients = 11;
+  int64 timestamp = 12;
+  bytes set_creator_authority = 13;
+  bytes admin_set_creator_authority = 14;
+}
+    
+message SyncUserVolumeAccumulatorEvent {
+  bytes user = 1;
+  uint64 total_claimed_tokens_before = 2;
+  uint64 total_claimed_tokens_after = 3;
+  int64 timestamp = 4;
+}
+    
+message TradeEvent {
+  bytes mint = 1;
+  uint64 sol_amount = 2;
+  uint64 token_amount = 3;
+  bool is_buy = 4;
+  bytes user = 5;
+  int64 timestamp = 6;
+  uint64 virtual_sol_reserves = 7;
+  uint64 virtual_token_reserves = 8;
+  uint64 real_sol_reserves = 9;
+  uint64 real_token_reserves = 10;
+  bytes fee_recipient = 11;
+  uint64 fee_basis_points = 12;
+  uint64 fee = 13;
+  bytes creator = 14;
+  uint64 creator_fee_basis_points = 15;
+  uint64 creator_fee = 16;
+  bool track_volume = 17;
+  uint64 total_unclaimed_tokens = 18;
+  uint64 total_claimed_tokens = 19;
+  uint64 current_sol_volume = 20;
+  int64 last_update_timestamp = 21;
+  string ix_name = 22;
+}
+    
+message UpdateGlobalAuthorityEvent {
+  bytes global = 1;
+  bytes authority = 2;
+  bytes new_authority = 3;
+  int64 timestamp = 4;
+}
+    
+message BondingCurve {
+  uint64 virtual_token_reserves = 1;
+  uint64 virtual_sol_reserves = 2;
+  uint64 real_token_reserves = 3;
+  uint64 real_sol_reserves = 4;
+  uint64 token_total_supply = 5;
+  bool complete = 6;
+  bytes creator = 7;
+  bool is_mayhem_mode = 8;
+}
+    
+message FeeConfig {
+  uint32 bump = 1;
+  bytes admin = 2;
+  Fees flat_fees = 3;
+  repeated FeeTier fee_tiers = 4;
+}
+    
+message Global {
+  bool initialized = 1;
+  bytes authority = 2;
+  bytes fee_recipient = 3;
+  uint64 initial_virtual_token_reserves = 4;
+  uint64 initial_virtual_sol_reserves = 5;
+  uint64 initial_real_token_reserves = 6;
+  uint64 token_total_supply = 7;
+  uint64 fee_basis_points = 8;
+  bytes withdraw_authority = 9;
+  bool enable_migrate = 10;
+  uint64 pool_migration_fee = 11;
+  uint64 creator_fee_basis_points = 12;
+  repeated bytes fee_recipients = 13;
+  bytes set_creator_authority = 14;
+  bytes admin_set_creator_authority = 15;
+  bool create_v2_enabled = 16;
+  bytes whitelist_pda = 17;
+  bytes reserved_fee_recipient = 18;
+  bool mayhem_mode_enabled = 19;
+  repeated bytes reserved_fee_recipients = 20;
+}
+    
+message GlobalVolumeAccumulator {
+  int64 start_time = 1;
+  int64 end_time = 2;
+  int64 seconds_in_a_day = 3;
+  bytes mint = 4;
+  repeated uint64 total_token_supply = 5;
+  repeated uint64 sol_volumes = 6;
+}
+    
+message UserVolumeAccumulator {
+  bytes user = 1;
+  bool needs_claim = 2;
+  uint64 total_unclaimed_tokens = 3;
+  uint64 total_claimed_tokens = 4;
+  uint64 current_sol_volume = 5;
+  int64 last_update_timestamp = 6;
+  bool has_total_claimed_tokens = 7;
+}
+    
+message AdminSetCreatorAccounts {
+  bytes admin_set_creator_authority = 1;
+  bytes global = 2;
+  bytes mint = 3;
+  bytes bonding_curve = 4;
+  bytes event_authority = 5;
+  bytes program = 6;
+}
+    
+message AdminSetCreatorArgs {
+  bytes creator = 1;
+}
+    
+message AdminSetCreatorIx {
+  optional AdminSetCreatorAccounts accounts = 1;
+  optional AdminSetCreatorArgs args = 2;
+}
+    
+message AdminSetIdlAuthorityAccounts {
+  bytes authority = 1;
+  bytes global = 2;
+  bytes idl_account = 3;
+  bytes system_program = 4;
+  bytes program_signer = 5;
+  bytes event_authority = 6;
+  bytes program = 7;
+}
+    
+message AdminSetIdlAuthorityArgs {
+  bytes idl_authority = 1;
+}
+    
+message AdminSetIdlAuthorityIx {
+  optional AdminSetIdlAuthorityAccounts accounts = 1;
+  optional AdminSetIdlAuthorityArgs args = 2;
+}
+    
+message AdminUpdateTokenIncentivesAccounts {
+  bytes authority = 1;
+  bytes global = 2;
+  bytes global_volume_accumulator = 3;
+  bytes mint = 4;
+  bytes global_incentive_token_account = 5;
+  bytes associated_token_program = 6;
+  bytes system_program = 7;
+  bytes token_program = 8;
+  bytes event_authority = 9;
+  bytes program = 10;
+}
+    
+message AdminUpdateTokenIncentivesArgs {
+  int64 start_time = 1;
+  int64 end_time = 2;
+  int64 seconds_in_a_day = 3;
+  uint64 day_number = 4;
+  uint64 pump_token_supply_per_day = 5;
+}
+    
+message AdminUpdateTokenIncentivesIx {
+  optional AdminUpdateTokenIncentivesAccounts accounts = 1;
+  optional AdminUpdateTokenIncentivesArgs args = 2;
+}
+    
+message BuyAccounts {
+  bytes global = 1;
+  bytes fee_recipient = 2;
+  bytes mint = 3;
+  bytes bonding_curve = 4;
+  bytes associated_bonding_curve = 5;
+  bytes associated_user = 6;
+  bytes user = 7;
+  bytes system_program = 8;
+  bytes token_program = 9;
+  bytes creator_vault = 10;
+  bytes event_authority = 11;
+  bytes program = 12;
+  bytes global_volume_accumulator = 13;
+  bytes user_volume_accumulator = 14;
+  bytes fee_config = 15;
+  bytes fee_program = 16;
+}
+    
+message BuyArgs {
+  uint64 amount = 1;
+  uint64 max_sol_cost = 2;
+  OptionBool track_volume = 3;
+}
+    
+message BuyIx {
+  optional BuyAccounts accounts = 1;
+  optional BuyArgs args = 2;
+}
+    
+message BuyExactSolInAccounts {
+  bytes global = 1;
+  bytes fee_recipient = 2;
+  bytes mint = 3;
+  bytes bonding_curve = 4;
+  bytes associated_bonding_curve = 5;
+  bytes associated_user = 6;
+  bytes user = 7;
+  bytes system_program = 8;
+  bytes token_program = 9;
+  bytes creator_vault = 10;
+  bytes event_authority = 11;
+  bytes program = 12;
+  bytes global_volume_accumulator = 13;
+  bytes user_volume_accumulator = 14;
+  bytes fee_config = 15;
+  bytes fee_program = 16;
+}
+    
+message BuyExactSolInArgs {
+  uint64 spendable_sol_in = 1;
+  uint64 min_tokens_out = 2;
+  OptionBool track_volume = 3;
+}
+    
+message BuyExactSolInIx {
+  optional BuyExactSolInAccounts accounts = 1;
+  optional BuyExactSolInArgs args = 2;
+}
+    
+message ClaimTokenIncentivesAccounts {
+  bytes user = 1;
+  bytes user_ata = 2;
+  bytes global_volume_accumulator = 3;
+  bytes global_incentive_token_account = 4;
+  bytes user_volume_accumulator = 5;
+  bytes mint = 6;
+  bytes token_program = 7;
+  bytes system_program = 8;
+  bytes associated_token_program = 9;
+  bytes event_authority = 10;
+  bytes program = 11;
+  bytes payer = 12;
+}
+    
+message ClaimTokenIncentivesArgs {
+}
+    
+message ClaimTokenIncentivesIx {
+  optional ClaimTokenIncentivesAccounts accounts = 1;
+  optional ClaimTokenIncentivesArgs args = 2;
+}
+    
+message CloseUserVolumeAccumulatorAccounts {
+  bytes user = 1;
+  bytes user_volume_accumulator = 2;
+  bytes event_authority = 3;
+  bytes program = 4;
+}
+    
+message CloseUserVolumeAccumulatorArgs {
+}
+    
+message CloseUserVolumeAccumulatorIx {
+  optional CloseUserVolumeAccumulatorAccounts accounts = 1;
+  optional CloseUserVolumeAccumulatorArgs args = 2;
+}
+    
+message CollectCreatorFeeAccounts {
+  bytes creator = 1;
+  bytes creator_vault = 2;
+  bytes system_program = 3;
+  bytes event_authority = 4;
+  bytes program = 5;
+}
+    
+message CollectCreatorFeeArgs {
+}
+    
+message CollectCreatorFeeIx {
+  optional CollectCreatorFeeAccounts accounts = 1;
+  optional CollectCreatorFeeArgs args = 2;
+}
+    
+message CreateAccounts {
+  bytes mint = 1;
+  bytes mint_authority = 2;
+  bytes bonding_curve = 3;
+  bytes associated_bonding_curve = 4;
+  bytes global = 5;
+  bytes mpl_token_metadata = 6;
+  bytes metadata = 7;
+  bytes user = 8;
+  bytes system_program = 9;
+  bytes token_program = 10;
+  bytes associated_token_program = 11;
+  bytes rent = 12;
+  bytes event_authority = 13;
+  bytes program = 14;
+}
+    
+message CreateArgs {
+  string name = 1;
+  string symbol = 2;
+  string uri = 3;
+  bytes creator = 4;
+}
+    
+message CreateIx {
+  optional CreateAccounts accounts = 1;
+  optional CreateArgs args = 2;
+}
+    
+message CreateV2Accounts {
+  bytes mint = 1;
+  bytes mint_authority = 2;
+  bytes bonding_curve = 3;
+  bytes associated_bonding_curve = 4;
+  bytes global = 5;
+  bytes user = 6;
+  bytes system_program = 7;
+  bytes token_program = 8;
+  bytes associated_token_program = 9;
+  bytes mayhem_program_id = 10;
+  bytes global_params = 11;
+  bytes sol_vault = 12;
+  bytes mayhem_state = 13;
+  bytes mayhem_token_vault = 14;
+  bytes event_authority = 15;
+  bytes program = 16;
+}
+    
+message CreateV2Args {
+  string name = 1;
+  string symbol = 2;
+  string uri = 3;
+  bytes creator = 4;
+  bool is_mayhem_mode = 5;
+}
+    
+message CreateV2Ix {
+  optional CreateV2Accounts accounts = 1;
+  optional CreateV2Args args = 2;
+}
+    
+message ExtendAccountAccounts {
+  bytes account = 1;
+  bytes user = 2;
+  bytes system_program = 3;
+  bytes event_authority = 4;
+  bytes program = 5;
+}
+    
+message ExtendAccountArgs {
+}
+    
+message ExtendAccountIx {
+  optional ExtendAccountAccounts accounts = 1;
+  optional ExtendAccountArgs args = 2;
+}
+    
+message InitUserVolumeAccumulatorAccounts {
+  bytes payer = 1;
+  bytes user = 2;
+  bytes user_volume_accumulator = 3;
+  bytes system_program = 4;
+  bytes event_authority = 5;
+  bytes program = 6;
+}
+    
+message InitUserVolumeAccumulatorArgs {
+}
+    
+message InitUserVolumeAccumulatorIx {
+  optional InitUserVolumeAccumulatorAccounts accounts = 1;
+  optional InitUserVolumeAccumulatorArgs args = 2;
+}
+    
+message InitializeAccounts {
+  bytes global = 1;
+  bytes user = 2;
+  bytes system_program = 3;
+}
+    
+message InitializeArgs {
+}
+    
+message InitializeIx {
+  optional InitializeAccounts accounts = 1;
+  optional InitializeArgs args = 2;
+}
+    
+message MigrateAccounts {
+  bytes global = 1;
+  bytes withdraw_authority = 2;
+  bytes mint = 3;
+  bytes bonding_curve = 4;
+  bytes associated_bonding_curve = 5;
+  bytes user = 6;
+  bytes system_program = 7;
+  bytes token_program = 8;
+  bytes pump_amm = 9;
+  bytes pool = 10;
+  bytes pool_authority = 11;
+  bytes pool_authority_mint_account = 12;
+  bytes pool_authority_wsol_account = 13;
+  bytes amm_global_config = 14;
+  bytes wsol_mint = 15;
+  bytes lp_mint = 16;
+  bytes user_pool_token_account = 17;
+  bytes pool_base_token_account = 18;
+  bytes pool_quote_token_account = 19;
+  bytes token2022_program = 20;
+  bytes associated_token_program = 21;
+  bytes pump_amm_event_authority = 22;
+  bytes event_authority = 23;
+  bytes program = 24;
+}
+    
+message MigrateArgs {
+}
+    
+message MigrateIx {
+  optional MigrateAccounts accounts = 1;
+  optional MigrateArgs args = 2;
+}
+    
+message SellAccounts {
+  bytes global = 1;
+  bytes fee_recipient = 2;
+  bytes mint = 3;
+  bytes bonding_curve = 4;
+  bytes associated_bonding_curve = 5;
+  bytes associated_user = 6;
+  bytes user = 7;
+  bytes system_program = 8;
+  bytes creator_vault = 9;
+  bytes token_program = 10;
+  bytes event_authority = 11;
+  bytes program = 12;
+  bytes fee_config = 13;
+  bytes fee_program = 14;
+}
+    
+message SellArgs {
+  uint64 amount = 1;
+  uint64 min_sol_output = 2;
+}
+    
+message SellIx {
+  optional SellAccounts accounts = 1;
+  optional SellArgs args = 2;
+}
+    
+message SetCreatorAccounts {
+  bytes set_creator_authority = 1;
+  bytes global = 2;
+  bytes mint = 3;
+  bytes metadata = 4;
+  bytes bonding_curve = 5;
+  bytes event_authority = 6;
+  bytes program = 7;
+}
+    
+message SetCreatorArgs {
+  bytes creator = 1;
+}
+    
+message SetCreatorIx {
+  optional SetCreatorAccounts accounts = 1;
+  optional SetCreatorArgs args = 2;
+}
+    
+message SetMetaplexCreatorAccounts {
+  bytes mint = 1;
+  bytes metadata = 2;
+  bytes bonding_curve = 3;
+  bytes event_authority = 4;
+  bytes program = 5;
+}
+    
+message SetMetaplexCreatorArgs {
+}
+    
+message SetMetaplexCreatorIx {
+  optional SetMetaplexCreatorAccounts accounts = 1;
+  optional SetMetaplexCreatorArgs args = 2;
+}
+    
+message SetParamsAccounts {
+  bytes global = 1;
+  bytes authority = 2;
+  bytes event_authority = 3;
+  bytes program = 4;
+}
+    
+message SetParamsArgs {
+  uint64 initial_virtual_token_reserves = 1;
+  uint64 initial_virtual_sol_reserves = 2;
+  uint64 initial_real_token_reserves = 3;
+  uint64 token_total_supply = 4;
+  uint64 fee_basis_points = 5;
+  bytes withdraw_authority = 6;
+  bool enable_migrate = 7;
+  uint64 pool_migration_fee = 8;
+  uint64 creator_fee_basis_points = 9;
+  bytes set_creator_authority = 10;
+  bytes admin_set_creator_authority = 11;
+}
+    
+message SetParamsIx {
+  optional SetParamsAccounts accounts = 1;
+  optional SetParamsArgs args = 2;
+}
+    
+message SetReservedFeeRecipientsAccounts {
+  bytes global = 1;
+  bytes authority = 2;
+  bytes event_authority = 3;
+  bytes program = 4;
+}
+    
+message SetReservedFeeRecipientsArgs {
+  bytes whitelist_pda = 1;
+}
+    
+message SetReservedFeeRecipientsIx {
+  optional SetReservedFeeRecipientsAccounts accounts = 1;
+  optional SetReservedFeeRecipientsArgs args = 2;
+}
+    
+message SyncUserVolumeAccumulatorAccounts {
+  bytes user = 1;
+  bytes global_volume_accumulator = 2;
+  bytes user_volume_accumulator = 3;
+  bytes event_authority = 4;
+  bytes program = 5;
+}
+    
+message SyncUserVolumeAccumulatorArgs {
+}
+    
+message SyncUserVolumeAccumulatorIx {
+  optional SyncUserVolumeAccumulatorAccounts accounts = 1;
+  optional SyncUserVolumeAccumulatorArgs args = 2;
+}
+    
+message ToggleCreateV2Accounts {
+  bytes global = 1;
+  bytes authority = 2;
+  bytes event_authority = 3;
+  bytes program = 4;
+}
+    
+message ToggleCreateV2Args {
+  bool enabled = 1;
+}
+    
+message ToggleCreateV2Ix {
+  optional ToggleCreateV2Accounts accounts = 1;
+  optional ToggleCreateV2Args args = 2;
+}
+    
+message ToggleMayhemModeAccounts {
+  bytes global = 1;
+  bytes authority = 2;
+  bytes event_authority = 3;
+  bytes program = 4;
+}
+    
+message ToggleMayhemModeArgs {
+  bool enabled = 1;
+}
+    
+message ToggleMayhemModeIx {
+  optional ToggleMayhemModeAccounts accounts = 1;
+  optional ToggleMayhemModeArgs args = 2;
+}
+    
+message UpdateGlobalAuthorityAccounts {
+  bytes global = 1;
+  bytes authority = 2;
+  bytes new_authority = 3;
+  bytes event_authority = 4;
+  bytes program = 5;
+}
+    
+message UpdateGlobalAuthorityArgs {
+}
+    
+message UpdateGlobalAuthorityIx {
+  optional UpdateGlobalAuthorityAccounts accounts = 1;
+  optional UpdateGlobalAuthorityArgs args = 2;
+}
+    
+message ProgramInstruction {
+}
+    
+message ProgramInstruction {
+  oneof ix {
+    AdminSetCreatorIx admin_set_creator_ix = 1;
+    AdminSetIdlAuthorityIx admin_set_idl_authority_ix = 2;
+    AdminUpdateTokenIncentivesIx admin_update_token_incentives_ix = 3;
+    BuyIx buy_ix = 4;
+    BuyExactSolInIx buy_exact_sol_in_ix = 5;
+    ClaimTokenIncentivesIx claim_token_incentives_ix = 6;
+    CloseUserVolumeAccumulatorIx close_user_volume_accumulator_ix = 7;
+    CollectCreatorFeeIx collect_creator_fee_ix = 8;
+    CreateIx create_ix = 9;
+    CreateV2Ix create_v2_ix = 10;
+    ExtendAccountIx extend_account_ix = 11;
+    InitUserVolumeAccumulatorIx init_user_volume_accumulator_ix = 12;
+    InitializeIx initialize_ix = 13;
+    MigrateIx migrate_ix = 14;
+    SellIx sell_ix = 15;
+    SetCreatorIx set_creator_ix = 16;
+    SetMetaplexCreatorIx set_metaplex_creator_ix = 17;
+    SetParamsIx set_params_ix = 18;
+    SetReservedFeeRecipientsIx set_reserved_fee_recipients_ix = 19;
+    SyncUserVolumeAccumulatorIx sync_user_volume_accumulator_ix = 20;
+    ToggleCreateV2Ix toggle_create_v2_ix = 21;
+    ToggleMayhemModeIx toggle_mayhem_mode_ix = 22;
+    UpdateGlobalAuthorityIx update_global_authority_ix = 23;
+  }
+}

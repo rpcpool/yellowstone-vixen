@@ -13,6 +13,10 @@ tracing = { workspace = true }
 rustls = { workspace = true }
 borsh = { workspace = true, features = ["derive"] }
 yellowstone-vixen = { workspace = true }
+yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen-parser = { workspace = true }
 yellowstone-vixen-proc-macro = { workspace = true }
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+bs58 = { workspace = true }

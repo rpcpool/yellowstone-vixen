@@ -9,7 +9,11 @@ use yellowstone_vixen::{
 };
 use yellowstone_vixen_core::{instruction::InstructionUpdate, ParserId};
 use yellowstone_vixen_jetstream_source::{JetstreamSource, JetstreamSourceConfig, SlotRangeConfig};
-use yellowstone_vixen_spl_token_parser::{InstructionParser, TokenProgramInstruction};
+use yellowstone_vixen_spl_token_parser::{
+    token_program_instruction, InstructionParser, TokenProgramInstruction,
+};
+
+fn pk(bytes: &[u8]) -> String { bs58::encode(bytes).into_string() }
 
 /// Handler for SPL Token program instructions
 #[derive(Debug)]
@@ -21,82 +25,163 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
         value: &TokenProgramInstruction,
         _raw: &InstructionUpdate,
     ) -> HandlerResult<()> {
-        match value {
-            TokenProgramInstruction::Transfer { accounts, args } => {
-                info!(
-                    instruction = "Transfer",
-                    source = %accounts.source,
-                    destination = %accounts.destination,
-                    amount = args.amount,
-                    "Token transfer instruction"
-                );
+        let Some(ix) = value.ix.as_ref() else {
+            return Ok(());
+        };
+
+        match ix {
+            token_program_instruction::Ix::Transfer(t) => {
+                let accounts = t.accounts.as_ref();
+                let args = t.args.as_ref();
+
+                if let (Some(accounts), Some(args)) = (accounts, args) {
+                    info!(
+                        instruction = "Transfer",
+                        source = %pk(&accounts.source),
+                        destination = %pk(&accounts.destination),
+                        owner = %pk(&accounts.owner),
+                        amount = args.amount,
+                        "Token transfer instruction"
+                    );
+                } else {
+                    info!(instruction = "Transfer", "Missing accounts/args");
+                }
             },
-            TokenProgramInstruction::TransferChecked { accounts, args } => {
-                info!(
-                    instruction = "TransferChecked",
-                    source = %accounts.source,
-                    destination = %accounts.destination,
-                    mint = %accounts.mint,
-                    amount = args.amount,
-                    decimals = args.decimals,
-                    "Token transfer checked instruction"
-                );
+
+            token_program_instruction::Ix::TransferChecked(t) => {
+                let accounts = t.accounts.as_ref();
+                let args = t.args.as_ref();
+
+                if let (Some(accounts), Some(args)) = (accounts, args) {
+                    info!(
+                        instruction = "TransferChecked",
+                        source = %pk(&accounts.source),
+                        destination = %pk(&accounts.destination),
+                        mint = %pk(&accounts.mint),
+                        owner = %pk(&accounts.owner),
+                        amount = args.amount,
+                        decimals = args.decimals,
+                        "Token transfer checked instruction"
+                    );
+                } else {
+                    info!(instruction = "TransferChecked", "Missing accounts/args");
+                }
             },
-            TokenProgramInstruction::MintTo { accounts, args } => {
-                info!(
-                    instruction = "MintTo",
-                    mint = %accounts.mint,
-                    account = %accounts.account,
-                    amount = args.amount,
-                    "Token mint instruction"
-                );
+
+            token_program_instruction::Ix::MintTo(t) => {
+                let accounts = t.accounts.as_ref();
+                let args = t.args.as_ref();
+
+                if let (Some(accounts), Some(args)) = (accounts, args) {
+                    info!(
+                        instruction = "MintTo",
+                        mint = %pk(&accounts.mint),
+                        account = %pk(&accounts.account),
+                        mint_authority = %pk(&accounts.mint_authority),
+                        amount = args.amount,
+                        "Token mint instruction"
+                    );
+                } else {
+                    info!(instruction = "MintTo", "Missing accounts/args");
+                }
             },
-            TokenProgramInstruction::Burn { accounts, args } => {
-                info!(
-                    instruction = "Burn",
-                    account = %accounts.account,
-                    mint = %accounts.mint,
-                    amount = args.amount,
-                    "Token burn instruction"
-                );
+
+            token_program_instruction::Ix::Burn(t) => {
+                let accounts = t.accounts.as_ref();
+                let args = t.args.as_ref();
+
+                if let (Some(accounts), Some(args)) = (accounts, args) {
+                    info!(
+                        instruction = "Burn",
+                        account = %pk(&accounts.account),
+                        mint = %pk(&accounts.mint),
+                        owner = %pk(&accounts.owner),
+                        amount = args.amount,
+                        "Token burn instruction"
+                    );
+                } else {
+                    info!(instruction = "Burn", "Missing accounts/args");
+                }
             },
-            TokenProgramInstruction::InitializeMint { accounts, args } => {
-                info!(
-                    instruction = "InitializeMint",
-                    mint = %accounts.mint,
-                    decimals = args.decimals,
-                    "Token mint initialization"
-                );
+
+            token_program_instruction::Ix::InitializeMint(t) => {
+                let accounts = t.accounts.as_ref();
+                let args = t.args.as_ref();
+
+                if let (Some(accounts), Some(args)) = (accounts, args) {
+                    info!(
+                        instruction = "InitializeMint",
+                        mint = %pk(&accounts.mint),
+                        decimals = args.decimals,
+                        mint_authority = %pk(&args.mint_authority),
+                        freeze_authority = args
+                            .freeze_authority
+                            .as_ref()
+                            .map(|x| pk(x))
+                            .unwrap_or_else(|| "None".to_string()),
+                        "Token mint initialization"
+                    );
+                } else {
+                    info!(instruction = "InitializeMint", "Missing accounts/args");
+                }
             },
-            TokenProgramInstruction::InitializeAccount { accounts } => {
-                info!(
-                    instruction = "InitializeAccount",
-                    account = %accounts.account,
-                    mint = %accounts.mint,
-                    "Token account initialization"
-                );
+
+            token_program_instruction::Ix::InitializeAccount(t) => {
+                let accounts = t.accounts.as_ref();
+
+                if let Some(accounts) = accounts {
+                    info!(
+                        instruction = "InitializeAccount",
+                        account = %pk(&accounts.account),
+                        mint = %pk(&accounts.mint),
+                        owner = %pk(&accounts.owner),
+                        "Token account initialization"
+                    );
+                } else {
+                    info!(instruction = "InitializeAccount", "Missing accounts");
+                }
             },
-            TokenProgramInstruction::Approve { accounts, args } => {
-                info!(
-                    instruction = "Approve",
-                    source = %accounts.source,
-                    delegate = %accounts.delegate,
-                    amount = args.amount,
-                    "Token approval instruction"
-                );
+
+            token_program_instruction::Ix::Approve(t) => {
+                let accounts = t.accounts.as_ref();
+                let args = t.args.as_ref();
+
+                if let (Some(accounts), Some(args)) = (accounts, args) {
+                    info!(
+                        instruction = "Approve",
+                        source = %pk(&accounts.source),
+                        delegate = %pk(&accounts.delegate),
+                        owner = %pk(&accounts.owner),
+                        amount = args.amount,
+                        "Token approval instruction"
+                    );
+                } else {
+                    info!(instruction = "Approve", "Missing accounts/args");
+                }
             },
-            TokenProgramInstruction::CloseAccount { accounts } => {
-                info!(
-                    instruction = "CloseAccount",
-                    account = %accounts.account,
-                    destination = %accounts.destination,
-                    "Token account close instruction"
-                );
+
+            token_program_instruction::Ix::CloseAccount(t) => {
+                let accounts = t.accounts.as_ref();
+
+                if let Some(accounts) = accounts {
+                    info!(
+                        instruction = "CloseAccount",
+                        account = %pk(&accounts.account),
+                        destination = %pk(&accounts.destination),
+                        owner = %pk(&accounts.owner),
+                        "Token account close instruction"
+                    );
+                } else {
+                    info!(instruction = "CloseAccount", "Missing accounts");
+                }
             },
+
             other => {
+                // Oneof is the "real enum" now, so log it directly.
                 info!(instruction = ?other, "Other token program instruction");
             },
         }
+
         Ok(())
     }
 }

@@ -12,7 +12,7 @@ use spl_token_group_interface::state::{TokenGroup, TokenGroupMember};
 use spl_token_metadata_interface::state::TokenMetadata;
 use spl_type_length_value::variable_len_pack::VariableLenPack;
 
-fn get_extension_data_bytes<'data, T: BaseState + Pack>(
+fn get_extension_d<'data, T: BaseState + Pack>(
     state_with_ex: &'data StateWithExtensions<T>,
     extension_type: ExtensionType,
 ) -> Result<&'data [u8], ProgramError> {
@@ -54,23 +54,25 @@ pub fn token_account_extensions_data_bytes<'data>(
     state_with_ex: &'data StateWithExtensions<Account>,
     extension_type: ExtensionType,
 ) -> Result<&'data [u8], ProgramError> {
-    get_extension_data_bytes(state_with_ex, extension_type)
+    get_extension_d(state_with_ex, extension_type)
 }
 
 pub fn mint_account_extensions_data_bytes<'data>(
     state_with_ex: &'data StateWithExtensions<Mint>,
     extension_type: ExtensionType,
 ) -> Result<&'data [u8], ProgramError> {
-    get_extension_data_bytes(state_with_ex, extension_type)
+    get_extension_d(state_with_ex, extension_type)
 }
 
-pub fn parse_extension_data<E: Extension + Pod>(data_bytes: &[u8]) -> Result<E, ProgramError> {
-    let extension = pod_from_bytes::<E>(data_bytes)?;
+pub fn parse_extension_data<E: Extension + Pod>(d: &[u8]) -> Result<E, ProgramError> {
+    let extension = pod_from_bytes::<E>(d)?;
+
     Ok(extension.to_owned())
 }
 
-pub fn parse_token_metadata_extension(data_bytes: &[u8]) -> Result<TokenMetadata, ProgramError> {
-    let token_metadata = TokenMetadata::unpack_from_slice(data_bytes)?;
+pub fn parse_token_metadata_extension(d: &[u8]) -> Result<TokenMetadata, ProgramError> {
+    let token_metadata = TokenMetadata::unpack_from_slice(d)?;
+
     Ok(token_metadata.clone())
 }
 
@@ -113,91 +115,44 @@ impl TryFrom<(ExtensionType, &[u8])> for ExtensionData {
     type Error = ProgramError;
 
     fn try_from(value: (ExtensionType, &[u8])) -> Result<Self, Self::Error> {
-        let (extension_type, data_bytes) = value;
-        match extension_type {
-            ExtensionType::ImmutableOwner => Ok(ExtensionData::ImmutableOwner(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::TransferFeeAmount => Ok(ExtensionData::TransferFeeAmount(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::ConfidentialTransferAccount => Ok(
-                ExtensionData::ConfidentialTransferAccount(parse_extension_data(data_bytes)?),
-            ),
-            ExtensionType::MemoTransfer => Ok(ExtensionData::MemoTransfer(parse_extension_data(
-                data_bytes,
-            )?)),
-            ExtensionType::NonTransferableAccount => Ok(ExtensionData::NonTransferableAccount(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::TransferHookAccount => Ok(ExtensionData::TransferHookAccount(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::CpiGuard => {
-                Ok(ExtensionData::CpiGuard(parse_extension_data(data_bytes)?))
-            },
-            ExtensionType::ConfidentialTransferFeeAmount => Ok(
-                ExtensionData::ConfidentialTransferFeeAmount(parse_extension_data(data_bytes)?),
-            ),
-            ExtensionType::TransferFeeConfig => Ok(ExtensionData::TransferFeeConfig(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::MintCloseAuthority => Ok(ExtensionData::MintCloseAuthority(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::ConfidentialTransferMint => Ok(ExtensionData::ConfidentialTransferMint(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::DefaultAccountState => Ok(ExtensionData::DefaultAccountState(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::NonTransferable => Ok(ExtensionData::NonTransferable(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::InterestBearingConfig => Ok(ExtensionData::InterestBearingConfig(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::PermanentDelegate => Ok(ExtensionData::PermanentDelegate(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::TransferHook => Ok(ExtensionData::TransferHook(parse_extension_data(
-                data_bytes,
-            )?)),
-            ExtensionType::ConfidentialTransferFeeConfig => Ok(
-                ExtensionData::ConfidentialTransferFeeConfig(parse_extension_data(data_bytes)?),
-            ),
-            ExtensionType::MetadataPointer => Ok(ExtensionData::MetadataPointer(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::TokenMetadata => Ok(ExtensionData::TokenMetadata(
-                parse_token_metadata_extension(data_bytes)?,
-            )),
-            ExtensionType::GroupPointer => Ok(ExtensionData::GroupPointer(parse_extension_data(
-                data_bytes,
-            )?)),
-            ExtensionType::TokenGroup => {
-                Ok(ExtensionData::TokenGroup(parse_extension_data(data_bytes)?))
-            },
-            ExtensionType::GroupMemberPointer => Ok(ExtensionData::GroupMemberPointer(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::TokenGroupMember => Ok(ExtensionData::TokenGroupMember(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::ConfidentialMintBurn => Ok(ExtensionData::ConfidentialMintBurn(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::ScaledUiAmount => Ok(ExtensionData::ScaledUiAmountConfig(
-                parse_extension_data(data_bytes)?,
-            )),
-            ExtensionType::Pausable => Ok(ExtensionData::PausableConfig(parse_extension_data(
-                data_bytes,
-            )?)),
-            ExtensionType::PausableAccount => Ok(ExtensionData::PausableAccount(
-                parse_extension_data(data_bytes)?,
-            )),
+        // d = extension data bytes
+        let (extension_type, d) = value;
 
-            ExtensionType::Uninitialized => Err(ProgramError::InvalidArgument),
+        // uses aliases for better readability (One liners)
+        use parse_extension_data as parse;
+        use ExtensionData as ED;
+        use ExtensionType as ET;
+
+        match extension_type {
+            ET::ImmutableOwner => Ok(ED::ImmutableOwner(parse(d)?)),
+            ET::TransferFeeAmount => Ok(ED::TransferFeeAmount(parse(d)?)),
+            ET::ConfidentialTransferAccount => Ok(ED::ConfidentialTransferAccount(parse(d)?)),
+            ET::MemoTransfer => Ok(ED::MemoTransfer(parse(d)?)),
+            ET::NonTransferableAccount => Ok(ED::NonTransferableAccount(parse(d)?)),
+            ET::TransferHookAccount => Ok(ED::TransferHookAccount(parse(d)?)),
+            ET::CpiGuard => Ok(ED::CpiGuard(parse(d)?)),
+            ET::ConfidentialTransferFeeAmount => Ok(ED::ConfidentialTransferFeeAmount(parse(d)?)),
+            ET::TransferFeeConfig => Ok(ED::TransferFeeConfig(parse(d)?)),
+            ET::MintCloseAuthority => Ok(ED::MintCloseAuthority(parse(d)?)),
+            ET::ConfidentialTransferMint => Ok(ED::ConfidentialTransferMint(parse(d)?)),
+            ET::DefaultAccountState => Ok(ED::DefaultAccountState(parse(d)?)),
+            ET::NonTransferable => Ok(ED::NonTransferable(parse(d)?)),
+            ET::InterestBearingConfig => Ok(ED::InterestBearingConfig(parse(d)?)),
+            ET::PermanentDelegate => Ok(ED::PermanentDelegate(parse(d)?)),
+            ET::TransferHook => Ok(ED::TransferHook(parse(d)?)),
+            ET::ConfidentialTransferFeeConfig => Ok(ED::ConfidentialTransferFeeConfig(parse(d)?)),
+            ET::MetadataPointer => Ok(ED::MetadataPointer(parse(d)?)),
+            ET::TokenMetadata => Ok(ED::TokenMetadata(parse_token_metadata_extension(d)?)),
+            ET::GroupPointer => Ok(ED::GroupPointer(parse(d)?)),
+            ET::TokenGroup => Ok(ED::TokenGroup(parse(d)?)),
+            ET::GroupMemberPointer => Ok(ED::GroupMemberPointer(parse(d)?)),
+            ET::TokenGroupMember => Ok(ED::TokenGroupMember(parse(d)?)),
+            ET::ConfidentialMintBurn => Ok(ED::ConfidentialMintBurn(parse(d)?)),
+            ET::ScaledUiAmount => Ok(ED::ScaledUiAmountConfig(parse(d)?)),
+            ET::Pausable => Ok(ED::PausableConfig(parse(d)?)),
+            ET::PausableAccount => Ok(ED::PausableAccount(parse(d)?)),
+
+            ET::Uninitialized => Err(ProgramError::InvalidArgument),
         }
     }
 }

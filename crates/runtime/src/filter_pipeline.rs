@@ -40,7 +40,7 @@ impl<P: Parser, H> FilterPipeline<P, H> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust, ignore
     ///
     ///    vixen::Runtime::builder()
     ///        .source(YellowstoneGrpcSource::new())

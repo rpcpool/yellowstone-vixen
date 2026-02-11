@@ -1,0 +1,22 @@
+[package]
+name = "proc-macro-test"
+version.workspace = true
+edition.workspace = true
+
+[dev-dependencies]
+yellowstone-vixen-proc-macro = { workspace = true }
+yellowstone-vixen-mock = { workspace = true }
+
+# required by macro expansion
+yellowstone-vixen-parser = { workspace = true }
+yellowstone-vixen-core = { workspace = true }
+yellowstone-vixen = { workspace = true }
+
+prost = { workspace = true }
+borsh = { workspace = true }
+
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+regex = { workspace = true }
+
+insta = "1.46.3"
