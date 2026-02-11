@@ -52,9 +52,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang
 
       # Build yellowstone-vixen
-      # Use --release only on main branch, debug builds are faster for PR validation
       - name: Build yellowstone-vixen
-        run: cargo build ${{ github.ref == 'refs/heads/main' && '--release' || '' }}
+        run: cargo build --verbose --release
         env:
           RUSTC_WRAPPER: sccache
           SCCACHE_GHA_ENABLED: true
