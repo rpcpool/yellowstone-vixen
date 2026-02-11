@@ -1,7 +1,7 @@
 //! Helpers for parsing transaction updates into instructions.
 
-use std::{collections::VecDeque, sync::Arc};
-use std::fmt::{Debug};
+use std::{collections::VecDeque, fmt::Debug, sync::Arc};
+
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     prelude::MessageHeader,
@@ -133,6 +133,7 @@ pub struct Path(Vec<u32>);
 
 impl Path {
     /// Create a new empty instruction path.
+    #[must_use]
     pub fn new_single(idx: u32) -> Self {
         let mut path_idx = Vec::with_capacity(4);
         path_idx.push(idx);
@@ -140,6 +141,7 @@ impl Path {
     }
 
     /// Push a new index onto the instruction path.
+    #[must_use]
     pub fn push_clone(&self, idx: u32) -> Self {
         let mut path_idx = self.0.clone();
         path_idx.push(idx);
@@ -147,13 +149,19 @@ impl Path {
     }
 
     /// Get the current instruction path as a slice.
+    #[must_use]
     pub fn as_slice(&self) -> &[u32] { &self.0 }
 
     /// Get the length of the instruction path.
+    #[must_use]
     pub fn len(&self) -> usize { self.0.len() }
 
+    /// Check if the instruction path is empty.
+    #[must_use]
+    pub fn is_empty(&self) -> bool { self.0.is_empty() }
 
     /// Check if this instruction path is a (direct) parent of another instruction path.
+    #[must_use]
     pub fn is_parent_of(&self, other: &Path) -> bool {
         if self.len() + 1 != other.len() {
             return false;
@@ -163,6 +171,7 @@ impl Path {
     }
 
     /// Check if this instruction path is an ancestor of another instruction path.
+    #[must_use]
     pub fn is_ancestor_of(&self, other: &Path) -> bool {
         if self.len() >= other.len() {
             return false;
@@ -179,7 +188,9 @@ impl From<Vec<u32>> for Path {
 impl Debug for Path {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // 1.7
-        let formatted = self.0.iter()
+        let formatted = self
+            .0
+            .iter()
             .map(|i| (i + 1).to_string())
             .collect::<Vec<_>>()
             .join(".");
@@ -299,8 +310,10 @@ impl InstructionUpdate {
             message_header: header.ok_or(Missing::TransactionMessageHeader)?,
         });
 
+        #[allow(clippy::cast_possible_truncation)] // instruction count never exceeds u32::MAX
         let mut outer = instructions
-            .into_iter().enumerate()
+            .into_iter()
+            .enumerate()
             .map(|(idx, i)| Self::parse_one(Arc::clone(&shared), i, Path::new_single(idx as u32)))
             .collect::<Result<Vec<_>, _>>()?;
 
@@ -315,25 +328,31 @@ impl InstructionUpdate {
         inner_instructions: Vec<InnerInstructions>,
         outer: &mut [Self],
     ) -> Result<(), ParseError> {
-
         for insn in inner_instructions {
             let InnerInstructions {
                 index: index_outer,
                 instructions,
             } = insn;
 
-            let Some(outer) = index_outer.try_into().ok().and_then(|i: usize| outer.get_mut(i)) else {
+            let Some(outer) = index_outer
+                .try_into()
+                .ok()
+                .and_then(|i: usize| outer.get_mut(i))
+            else {
                 return Err(ParseError::InvalidInnerInstructionIndex(index_outer));
             };
 
-            let heights: Vec<Option<u32>> = instructions.iter().map(|ins| ins.stack_height.clone()).collect();
+            let heights: Vec<Option<u32>> =
+                instructions.iter().map(|ins| ins.stack_height).collect();
             let paths_at_index = derive_paths_from_stackheights(&heights, index_outer);
 
             let mut inner = instructions
-                .into_iter().enumerate()
-                .map(|(idx, i)| Self::parse_one_inner(Arc::clone(shared), i, paths_at_index[idx].clone()))
+                .into_iter()
+                .enumerate()
+                .map(|(idx, i)| {
+                    Self::parse_one_inner(Arc::clone(shared), i, paths_at_index[idx].clone())
+                })
                 .collect::<Result<Vec<_>, _>>()?;
-
 
             if let Some(mut i) = inner.len().checked_sub(1) {
                 while i > 0 {
@@ -345,7 +364,7 @@ impl InstructionUpdate {
                     while inner
                         .get(i)
                         .and_then(|&(_, h)| h)
-                        .is_some_and(|h| h > height )
+                        .is_some_and(|h| h > height)
                     {
                         let (child, _) = inner.remove(i);
                         inner[parent_idx].0.inner.push(child);
@@ -361,7 +380,6 @@ impl InstructionUpdate {
             } else {
                 outer.inner.extend(inner);
             }
-
         }
 
         Ok(())
@@ -392,7 +410,8 @@ impl InstructionUpdate {
             data,
             stack_height,
         } = ins;
-        Self::parse_from_parts(shared, program_id_index, accounts, data, path).map(|i| (i, stack_height))
+        Self::parse_from_parts(shared, program_id_index, accounts, data, path)
+            .map(|i| (i, stack_height))
     }
 
     fn parse_from_parts(
@@ -459,7 +478,6 @@ impl<'a> Iterator for VisitAll<'a> {
     }
 }
 
-
 fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u32) -> Vec<Path> {
     if stack_heights.is_empty() {
         return Vec::new();
@@ -487,19 +505,18 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
                 debug_assert_eq!(
                     *sh_this,
                     sh_parent + 1,
-                    "invalid stack heights: {:?}",
-                    stack_heights
+                    "invalid stack heights: {stack_heights:?}"
                 );
                 // descend in tree to child node
                 stack.push(0);
-            }
+            },
             std::cmp::Ordering::Equal => {
                 // same level
                 // stack is actually never empty here
                 if let Some(top) = stack.last_mut() {
                     *top += 1;
                 }
-            }
+            },
             std::cmp::Ordering::Less => {
                 // returning from calls might skip multiple levels (not only one link above)
                 // ascend in tree to parent node
@@ -508,16 +525,19 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
                 if let Some(top) = stack.last_mut() {
                     *top += 1;
                 }
-            }
+            },
         }
 
         paths.push(Path(stack.clone()));
     }
 
-    debug_assert_eq!(paths.len(), stack_heights.len(), "derived paths failed for {:?}", stack_heights);
+    debug_assert_eq!(
+        paths.len(),
+        stack_heights.len(),
+        "derived paths failed for {stack_heights:?}"
+    );
     paths
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -555,5 +575,4 @@ mod tests {
         assert!(!p1.is_ancestor_of(&p3));
         assert!(!p1.is_parent_of(&p1));
     }
-
 }

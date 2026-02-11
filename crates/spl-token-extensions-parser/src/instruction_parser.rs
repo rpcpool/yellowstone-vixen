@@ -252,7 +252,7 @@ impl InstructionParser {
                 }
 
                 Err(Error::from_inner("Error unpacking instruction data", e))
-            }
+            },
         }
     }
 }

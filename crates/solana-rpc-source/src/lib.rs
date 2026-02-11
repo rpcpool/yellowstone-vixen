@@ -68,6 +68,7 @@ impl SourceTrait for SolanaAccountsRpcSource {
 
     fn new(config: Self::Config, filters: Filters) -> Self { Self { config, filters } }
 
+    #[allow(deprecated)] // get_program_accounts_with_config is deprecated but replacement not yet stable
     async fn connect(
         &self,
         tx: Sender<Result<SubscribeUpdate, Status>>,

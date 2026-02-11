@@ -72,14 +72,12 @@ jobs:
         run: cargo +nightly fmt --all -- --check
 
       - name: cargo deny check advisories
-        uses: EmbarkStudios/cargo-deny-action@v1
+        uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check advisories
 
-      - name: install protoc
-        run: |
-          sudo apt update
-          sudo apt install protobuf-compiler
+      - name: Install LLVM/Clang
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang
 
       - name: Run clippy
         run: cargo clippy --all-targets --tests -- -Dwarnings

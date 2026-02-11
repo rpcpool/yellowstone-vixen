@@ -12,13 +12,9 @@ use crate::{
 
 // ========== Test helpers ==========
 
-async fn wait_for_runtime_ready() {
-    tokio::time::sleep(Duration::from_millis(50)).await;
-}
+async fn wait_for_runtime_ready() { tokio::time::sleep(Duration::from_millis(50)).await; }
 
-async fn hold_channel_open_briefly() {
-    tokio::time::sleep(Duration::from_millis(10)).await;
-}
+async fn hold_channel_open_briefly() { tokio::time::sleep(Duration::from_millis(10)).await; }
 
 fn signal_stream_ended(status_tx: oneshot::Sender<SourceExitStatus>) {
     let _ = status_tx.send(SourceExitStatus::StreamEnded);
@@ -85,6 +81,7 @@ fn create_status_channel() -> (
     oneshot::channel()
 }
 
+#[allow(clippy::type_complexity)]
 fn create_update_channel() -> (
     Sender<Result<SubscribeUpdate, tonic::Status>>,
     tokio::sync::mpsc::Receiver<Result<SubscribeUpdate, tonic::Status>>,
@@ -94,69 +91,64 @@ fn create_update_channel() -> (
 
 // ========== Action helpers ==========
 
-fn drop_receiver<T>(rx: T) {
-    drop(rx);
-}
+fn drop_receiver<T>(rx: T) { drop(rx); }
 
 async fn send_update_expecting_failure(tx: &Sender<Result<SubscribeUpdate, tonic::Status>>) {
     let result = tx.send(Ok(make_ping_update())).await;
     assert!(result.is_err(), "Send should fail when receiver dropped");
 }
 
-
 // ========== Assertion helpers ==========
 
-fn assert_receiver_dropped(status: SourceExitStatus) {
+fn assert_receiver_dropped(status: &SourceExitStatus) {
     assert!(matches!(status, SourceExitStatus::ReceiverDropped));
 }
 
-fn assert_stream_ended(status: SourceExitStatus) {
+fn assert_stream_ended(status: &SourceExitStatus) {
     assert!(
         matches!(status, SourceExitStatus::StreamEnded),
-        "Expected StreamEnded, got {:?}",
-        status
+        "Expected StreamEnded, got {status:?}"
     );
 }
 
-fn assert_completed(status: SourceExitStatus) {
+fn assert_completed(status: &SourceExitStatus) {
     assert!(
         matches!(status, SourceExitStatus::Completed),
-        "Expected Completed, got {:?}",
-        status
+        "Expected Completed, got {status:?}"
     );
 }
 
 fn assert_stream_error_details(
-    status: SourceExitStatus,
+    status: &SourceExitStatus,
     expected_code: tonic::Code,
     expected_msg: &str,
 ) {
     match status {
         SourceExitStatus::StreamError { code, message } => {
-            assert_eq!(code, expected_code);
+            assert_eq!(*code, expected_code);
             assert_eq!(message, expected_msg);
         },
-        _ => panic!("Expected StreamError, got {:?}", status),
+        _ => panic!("Expected StreamError, got {status:?}"),
     }
 }
 
-fn assert_stream_error_code(status: SourceExitStatus, expected_code: tonic::Code) {
+fn assert_stream_error_code(status: &SourceExitStatus, expected_code: tonic::Code) {
     match status {
         SourceExitStatus::StreamError { code, .. } => {
-            assert_eq!(code, expected_code);
+            assert_eq!(*code, expected_code);
         },
-        _ => panic!("Expected StreamError, got {:?}", status),
+        _ => panic!("Expected StreamError, got {status:?}"),
     }
 }
 
-fn assert_error_message(status: SourceExitStatus, expected: &str) {
+fn assert_error_message(status: &SourceExitStatus, expected: &str) {
     match status {
         SourceExitStatus::Error(msg) => assert_eq!(msg, expected),
-        _ => panic!("Expected Error, got {:?}", status),
+        _ => panic!("Expected Error, got {status:?}"),
     }
 }
 
-fn assert_send_fails<T, E>(result: Result<T, E>) {
+fn assert_send_fails<T, E>(result: &Result<T, E>) {
     assert!(result.is_err());
 }
 
@@ -168,9 +160,8 @@ struct MockStreamEndSource;
 #[async_trait]
 impl SourceTrait for MockStreamEndSource {
     type Config = NullConfig;
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self {
-        Self
-    }
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -191,9 +182,8 @@ struct MockStreamErrorSource;
 #[async_trait]
 impl SourceTrait for MockStreamErrorSource {
     type Config = NullConfig;
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self {
-        Self
-    }
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -216,9 +206,8 @@ struct MockErrorSource;
 #[async_trait]
 impl SourceTrait for MockErrorSource {
     type Config = NullConfig;
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self {
-        Self
-    }
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self }
 
     async fn connect(
         &self,
@@ -241,9 +230,8 @@ struct MockStreamEndWithUpdatesSource {
 #[async_trait]
 impl SourceTrait for MockStreamEndWithUpdatesSource {
     type Config = NullConfig;
-    fn new(_: NullConfig, _: vixen_core::Filters) -> Self {
-        Self { updates_to_send: 5 }
-    }
+
+    fn new(_: NullConfig, _: vixen_core::Filters) -> Self { Self { updates_to_send: 5 } }
 
     async fn connect(
         &self,
@@ -315,7 +303,7 @@ async fn test_source_exit_status_receiver_dropped() {
     send_update_expecting_failure(&tx).await;
     signal_receiver_dropped(status_tx);
 
-    assert_receiver_dropped(status_rx.await.unwrap());
+    assert_receiver_dropped(&status_rx.await.unwrap());
 }
 
 #[tokio::test]
@@ -324,7 +312,7 @@ async fn test_source_exit_status_stream_ended() {
 
     signal_stream_ended(status_tx);
 
-    assert_stream_ended(status_rx.await.unwrap());
+    assert_stream_ended(&status_rx.await.unwrap());
 }
 
 #[tokio::test]
@@ -333,7 +321,7 @@ async fn test_source_exit_status_completed() {
 
     signal_completed(status_tx);
 
-    assert_completed(status_rx.await.unwrap());
+    assert_completed(&status_rx.await.unwrap());
 }
 
 #[tokio::test]
@@ -343,7 +331,7 @@ async fn test_source_exit_status_stream_error_preserves_details() {
     signal_stream_error(status_tx, tonic::Code::PermissionDenied, "auth expired");
 
     assert_stream_error_details(
-        status_rx.await.unwrap(),
+        &status_rx.await.unwrap(),
         tonic::Code::PermissionDenied,
         "auth expired",
     );
@@ -355,7 +343,7 @@ async fn test_source_exit_status_error_preserves_message() {
 
     signal_error(status_tx, "connection timeout");
 
-    assert_error_message(status_rx.await.unwrap(), "connection timeout");
+    assert_error_message(&status_rx.await.unwrap(), "connection timeout");
 }
 
 // ========== Unit tests for various gRPC error codes ==========
@@ -366,7 +354,7 @@ async fn test_grpc_unavailable_error() {
 
     signal_stream_error(status_tx, tonic::Code::Unavailable, "service unavailable");
 
-    assert_stream_error_code(status_rx.await.unwrap(), tonic::Code::Unavailable);
+    assert_stream_error_code(&status_rx.await.unwrap(), tonic::Code::Unavailable);
 }
 
 #[tokio::test]
@@ -376,7 +364,7 @@ async fn test_grpc_unauthenticated_error() {
     signal_stream_error(status_tx, tonic::Code::Unauthenticated, "invalid token");
 
     assert_stream_error_details(
-        status_rx.await.unwrap(),
+        &status_rx.await.unwrap(),
         tonic::Code::Unauthenticated,
         "invalid token",
     );
@@ -392,7 +380,7 @@ async fn test_grpc_resource_exhausted_error() {
         "rate limit exceeded",
     );
 
-    assert_stream_error_code(status_rx.await.unwrap(), tonic::Code::ResourceExhausted);
+    assert_stream_error_code(&status_rx.await.unwrap(), tonic::Code::ResourceExhausted);
 }
 
 // ========== Edge case tests ==========
@@ -403,5 +391,5 @@ async fn test_status_channel_dropped_before_send() {
 
     drop_receiver(status_rx);
 
-    assert_send_fails(status_tx.send(SourceExitStatus::StreamEnded));
+    assert_send_fails(&status_tx.send(SourceExitStatus::StreamEnded));
 }

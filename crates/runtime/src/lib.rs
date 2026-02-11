@@ -233,6 +233,7 @@ impl<S: SourceTrait> Runtime<S> {
     /// └─────────────────────────────────────────────────────────────────────┘
     /// ```
     #[tracing::instrument("Runtime::run", skip(self))]
+    #[allow(clippy::too_many_lines)]
     pub async fn try_run_async(self) -> Result<(), Box<Error>> {
         enum StopType<S> {
             Signal(S),
@@ -332,20 +333,20 @@ impl<S: SourceTrait> Runtime<S> {
                 },
                 SourceExitStatus::StreamEnded => {
                     tracing::warn!("Source stopped: stream ended unexpectedly");
-                    Err(Error::ServerHangup.into())
+                    Err(Error::ServerHangup)
                 },
                 SourceExitStatus::StreamError { code, message } => {
                     tracing::error!(?code, %message, "Source stopped: stream error");
-                    Err(Error::ServerHangup.into())
+                    Err(Error::ServerHangup)
                 },
                 SourceExitStatus::Error(msg) => {
                     tracing::error!(%msg, "Source stopped: error");
-                    Err(Error::Other(msg.into()).into())
+                    Err(Error::Other(msg.into()))
                 },
             },
             StopType::SourceExit(Err(_)) => {
                 tracing::warn!("Source exit status channel closed unexpectedly");
-                Err(Error::ClientHangup.into())
+                Err(Error::ClientHangup)
             },
         }?;
 
