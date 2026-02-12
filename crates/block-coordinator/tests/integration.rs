@@ -52,7 +52,7 @@
 //! │                           FLUSH DECISION TREE                               │
 //! ├─────────────────────────────────────────────────────────────────────────────┤
 //! │                                                                             │
-//! │  try_flush_sequential() — called once per event in run()                    │
+//! │  drain_flushable() — called once per event batch in run()                   │
 //! │                                                                             │
 //! │  FOR each slot in buffer (ascending order):                                 │
 //! │                                                                             │
@@ -104,7 +104,7 @@
 //! │  discard_slot() actions:                                                    │
 //! │    • Add to discarded_slots set                                             │
 //! │    • Remove from buffer                                                     │
-//! │    • try_flush_sequential called in run() after event                       │
+//! │    • drain_flushable called in run() after event                            │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //!
@@ -136,7 +136,7 @@
 //! │    ✓ double_confirmation_is_idempotent Confirming twice is safe             │
 //! │                                                                             │
 //! │  INVARIANT VIOLATION (panic tests):                                         │
-//! │    ✓ late_message_for_flushed_slot_panics  Detects two-gate bug             │
+//! │    ✓ late_message_for_flushed_slot_errors  Detects two-gate bug             │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
@@ -179,7 +179,7 @@ use yellowstone_grpc_proto::{
     prelude::{BlockHeight, UnixTimestamp},
 };
 use yellowstone_vixen_block_coordinator::{
-    BlockMachineCoordinator, ConfirmedSlot, CoordinatorMessage, RecordSortKey,
+    BlockMachineCoordinator, ConfirmedSlot, CoordinatorError, CoordinatorMessage, RecordSortKey,
 };
 
 // =============================================================================
@@ -353,7 +353,7 @@ impl SlotBuilder {
     fn record(mut self, value: &str) -> Self {
         let tx_index = self.records.len() as u64;
         self.records.push((
-            RecordSortKey { tx_index, ix_path: vec![0] },
+            RecordSortKey::new(tx_index, vec![0]),
             value.to_string(),
         ));
         self
@@ -361,7 +361,7 @@ impl SlotBuilder {
 
     fn record_at(mut self, tx_index: u64, ix_path: Vec<usize>, value: &str) -> Self {
         self.records.push((
-            RecordSortKey { tx_index, ix_path },
+            RecordSortKey::new(tx_index, ix_path),
             value.to_string(),
         ));
         self
@@ -503,7 +503,7 @@ impl Slot {
         self.parsed_tx
             .send(CoordinatorMessage::Parsed {
                 slot: self.slot,
-                key: RecordSortKey { tx_index, ix_path: vec![0] },
+                key: RecordSortKey::new(tx_index, vec![0]),
                 record: value.to_string(),
             })
             .await
@@ -525,7 +525,7 @@ async fn send_record_to_slot(
     parsed_tx
         .send(CoordinatorMessage::Parsed {
             slot,
-            key: RecordSortKey { tx_index: 0, ix_path: vec![0] },
+            key: RecordSortKey::new(0, vec![0]),
             record: value.to_string(),
         })
         .await
@@ -754,7 +754,7 @@ async fn gap_in_sequence_blocks_flush() {
 }
 
 #[tokio::test]
-async fn late_message_for_flushed_slot_panics() {
+async fn late_message_for_flushed_slot_errors() {
     let (input_tx, input_rx) = mpsc::channel(256);
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, mut output_rx) = mpsc::channel(64);
@@ -776,18 +776,40 @@ async fn late_message_for_flushed_slot_panics() {
         .expect("Channel closed");
     assert_eq!(flushed.slot, 100);
 
-    // Send late message - this should cause coordinator to panic
+    // Send late message - this should return an error
     send_record_to_slot(&parsed_tx, 100, "too-late").await;
 
-    // Wait for coordinator task to complete (it should panic)
-    let result = handle.await;
-    assert!(result.is_err(), "Coordinator should have panicked");
-
-    let panic_msg = result.unwrap_err();
+    // Wait for coordinator task to complete (it should return an error)
+    let result = handle.await.expect("task join");
     assert!(
-        panic_msg.to_string().contains("TWO-GATE INVARIANT VIOLATED")
-            || format!("{:?}", panic_msg).contains("TWO-GATE INVARIANT VIOLATED"),
-        "Panic message should mention TWO-GATE INVARIANT VIOLATED, got: {:?}",
-        panic_msg
+        matches!(result, Err(CoordinatorError::TwoGateInvariantViolation { .. })),
+        "Expected TwoGateInvariantViolation, got: {result:?}"
+    );
+}
+
+#[tokio::test]
+async fn output_channel_closed_returns_error() {
+    let (input_tx, input_rx) = mpsc::channel(256);
+    let (parsed_tx, parsed_rx) = mpsc::channel(256);
+    let (output_tx, output_rx) = mpsc::channel(64);
+
+    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
+    let handle = tokio::spawn(coordinator.run());
+
+    // Drop the output receiver — the coordinator can't send flushed slots.
+    drop(output_rx);
+
+    // Create a ready slot that will try to flush.
+    let slot = SlotBuilder::new(input_tx.clone(), parsed_tx.clone(), 100)
+        .parent(99)
+        .empty()
+        .await;
+
+    slot.confirm().await;
+
+    let result = handle.await.expect("task join");
+    assert!(
+        matches!(result, Err(CoordinatorError::OutputChannelClosed { slot: 100 })),
+        "Expected OutputChannelClosed, got: {result:?}"
     );
 }

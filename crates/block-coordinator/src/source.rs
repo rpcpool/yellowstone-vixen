@@ -110,7 +110,11 @@ impl SourceTrait for CoordinatorSource {
             .config
             .coordinator_input_tx
             .as_ref()
-            .expect("coordinator_input_tx must be set before connect");
+            .ok_or_else(|| {
+                VixenError::Io(std::io::Error::other(
+                    "coordinator_input_tx must be set before connect",
+                ))
+            })?;
 
         let mut fixture_writer = match (&self.config.fixture_path, self.config.fixture_slots) {
             (Some(path), Some(slots)) => {

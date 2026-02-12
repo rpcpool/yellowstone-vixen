@@ -13721,6 +13721,7 @@ dependencies = [
  "futures-util",
  "prost 0.14.1",
  "serde",
+ "smallvec",
  "solana-clock 3.0.0",
  "solana-commitment-config",
  "solana-hash 3.1.0",

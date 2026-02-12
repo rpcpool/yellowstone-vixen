@@ -27,6 +27,7 @@ futures-util = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 clap = { workspace = true, features = ["derive"] }
 prost = { workspace = true }
+smallvec = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["sync", "macros", "rt", "test-util"] }

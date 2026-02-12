@@ -38,9 +38,20 @@ impl FixtureWriter {
     ///
     /// Returns `true` if capture should continue, `false` when the target
     /// number of BlockMeta messages has been reached.
+    /// Flush any buffered data to disk. Call this when the stream ends
+    /// before the target slot count is reached to avoid losing trailing messages.
+    pub fn finish(mut self) -> io::Result<()> {
+        self.writer.flush()
+    }
+
     pub fn write(&mut self, update: &SubscribeUpdate) -> io::Result<bool> {
         let bytes = update.encode_to_vec();
-        let len = bytes.len() as u32;
+        let len: u32 = bytes.len().try_into().map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Message too large for u32 length prefix: {} bytes", bytes.len()),
+            )
+        })?;
         self.writer.write_all(&len.to_be_bytes())?;
         self.writer.write_all(&bytes)?;
 
@@ -83,13 +94,70 @@ impl Iterator for FixtureReader {
         match self.reader.read_exact(&mut len_buf) {
             Ok(()) => {},
             Err(e) if e.kind() == io::ErrorKind::UnexpectedEof => return None,
-            Err(_) => return None,
+            Err(e) => {
+                tracing::error!(?e, "FixtureReader: I/O error reading length prefix");
+                return None;
+            }
         }
 
         let len = u32::from_be_bytes(len_buf) as usize;
         let mut msg_buf = vec![0u8; len];
-        self.reader.read_exact(&mut msg_buf).ok()?;
+        if let Err(e) = self.reader.read_exact(&mut msg_buf) {
+            tracing::error!(?e, len, "FixtureReader: I/O error reading message body");
+            return None;
+        }
 
-        SubscribeUpdate::decode(&msg_buf[..]).ok()
+        match SubscribeUpdate::decode(&msg_buf[..]) {
+            Ok(update) => Some(update),
+            Err(e) => {
+                tracing::error!(?e, len, "FixtureReader: protobuf decode failed");
+                None
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_test_update(slot: u64) -> SubscribeUpdate {
+        SubscribeUpdate {
+            filters: vec![],
+            created_at: None,
+            update_oneof: Some(UpdateOneof::Slot(
+                yellowstone_grpc_proto::geyser::SubscribeUpdateSlot {
+                    slot,
+                    parent: Some(slot.saturating_sub(1)),
+                    status: 0,
+                    dead_error: None,
+                },
+            )),
+        }
+    }
+
+    #[test]
+    fn writer_reader_roundtrip() {
+        let dir = std::env::temp_dir().join("block-coordinator-test");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("roundtrip.bin");
+
+        let updates: Vec<_> = (100..105).map(make_test_update).collect();
+
+        // Write
+        let mut writer = FixtureWriter::new(&path, usize::MAX).unwrap();
+        for update in &updates {
+            writer.write(update).unwrap();
+        }
+        writer.finish().unwrap();
+
+        // Read back
+        let read_back: Vec<_> = FixtureReader::new(&path).unwrap().collect();
+        assert_eq!(read_back.len(), updates.len());
+        for (original, decoded) in updates.iter().zip(read_back.iter()) {
+            assert_eq!(original.update_oneof, decoded.update_oneof);
+        }
+
+        std::fs::remove_file(&path).ok();
     }
 }
