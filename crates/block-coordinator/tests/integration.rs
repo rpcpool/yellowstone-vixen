@@ -16,8 +16,8 @@
 //! │    expected_tx_count: Option<u64>         // from FrozenBlock               │
 //! │    parsed_tx_count: u64                   // from TransactionParsed         │
 //! │    confirmed: bool                        // from Confirmed event           │
-//! │    records: BTreeMap<(tx, ix), R>         // from Parsed messages           │
-//! │    parent_slot, blockhash, block_time, block_height                         │
+//! │    records: BTreeMap<RecordSortKey, R>    // from Parsed messages           │
+//! │    parent_slot, blockhash                                                   │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //!
@@ -36,7 +36,7 @@
 //! │           │ NO                 └─────────────────────────────────┘          │
 //! │           ▼                                                                 │
 //! │  ┌────────────────────┐  YES   ┌─────────────────────────────────┐          │
-//! │  │ slot <= last_flush?├───────►│ ERROR LOG (two-gate bug!)       │          │
+//! │  │ slot <= last_flush?├───────►│ PANIC (two-gate invariant!)     │          │
 //! │  └────────┬───────────┘        │ Should never happen if healthy  │          │
 //! │           │ NO                 └─────────────────────────────────┘          │
 //! │           ▼                                                                 │
@@ -52,12 +52,12 @@
 //! │                           FLUSH DECISION TREE                               │
 //! ├─────────────────────────────────────────────────────────────────────────────┤
 //! │                                                                             │
-//! │  try_flush_sequential() — called after TransactionParsed or Confirmed       │
+//! │  try_flush_sequential() — called once per event in run()                    │
 //! │                                                                             │
 //! │  FOR each slot in buffer (ascending order):                                 │
 //! │                                                                             │
 //! │  ┌──────────────────────────────────────────┐                               │
-//! │  │ GATE 1: fully_parsed?                    │                               │
+//! │  │ GATE 1: is_fully_parsed?                 │                               │
 //! │  │ (parsed_tx_count >= expected_tx_count)   │                               │
 //! │  └─────────────────┬────────────────────────┘                               │
 //! │                    │                                                        │
@@ -104,7 +104,7 @@
 //! │  discard_slot() actions:                                                    │
 //! │    • Add to discarded_slots set                                             │
 //! │    • Remove from buffer                                                     │
-//! │    • Call try_flush_sequential() ──► [dead_slot_unblocks_next]              │
+//! │    • try_flush_sequential called in run() after event                       │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //!
@@ -123,7 +123,8 @@
 //! │                                                                             │
 //! │  DISCARD HANDLING:                                                          │
 //! │    ✓ dead_slot_discarded            Dead slot removed, no output            │
-//! │    ✓ dead_slot_unblocks_next        Discard unblocks subsequent slot        │
+//! │    ✓ dead_slot_discards_descendants Killing ancestor discards whole chain  │
+//! │    ✓ dead_slot_unblocks_next        Dead sibling unblocks subsequent slot   │
 //! │    ✓ untracked_slot_discarded       Rejected BlockSummary causes discard    │
 //! │    ✓ discarded_slot_ignores_parsed  Messages for discarded slot dropped     │
 //! │                                                                             │
@@ -168,15 +169,17 @@
 
 use std::time::Duration;
 
-use solana_commitment_config::CommitmentLevel;
 use solana_hash::Hash;
 use tokio::sync::mpsc;
-use yellowstone_block_machine::state_machine::{
-    BlockReplayEvent, BlockSummary, ConsensusUpdate, EntryInfo, SlotCommitmentStatusUpdate,
-    SlotLifecycle, SlotLifecycleUpdate,
+use yellowstone_grpc_proto::{
+    geyser::{
+        subscribe_update::UpdateOneof, SlotStatus, SubscribeUpdate, SubscribeUpdateBlockMeta,
+        SubscribeUpdateEntry, SubscribeUpdateSlot,
+    },
+    prelude::{BlockHeight, UnixTimestamp},
 };
 use yellowstone_vixen_block_coordinator::{
-    BlockMachineCoordinator, ConfirmedSlot, CoordinatorInput, CoordinatorMessage,
+    BlockMachineCoordinator, ConfirmedSlot, CoordinatorMessage, RecordSortKey,
 };
 
 // =============================================================================
@@ -184,7 +187,7 @@ use yellowstone_vixen_block_coordinator::{
 // =============================================================================
 
 struct TestHarness {
-    input_tx: mpsc::Sender<CoordinatorInput>,
+    input_tx: mpsc::Sender<SubscribeUpdate>,
     parsed_tx: mpsc::Sender<CoordinatorMessage<String>>,
     output_rx: mpsc::Receiver<ConfirmedSlot<String>>,
 }
@@ -202,28 +205,17 @@ impl TestHarness {
     }
 
     fn slot(&self, slot: u64) -> SlotBuilder {
-        SlotBuilder::new(self.input_tx.clone(), self.parsed_tx.clone(), slot)
+        SlotBuilder::new(
+            self.input_tx.clone(),
+            self.parsed_tx.clone(),
+            slot,
+        )
     }
 
     async fn send_orphan_block_summary(&self, slot: u64, parent: u64) {
+        let blockhash = Hash::new_unique();
         self.input_tx
-            .send(CoordinatorInput::Replay(BlockReplayEvent::BlockSummary(
-                BlockSummary {
-                    slot,
-                    entry_count: 1,
-                    parent_slot: parent,
-                    executed_transaction_count: 1,
-                    blockhash: Hash::new_unique(),
-                },
-            )))
-            .await
-            .unwrap();
-        self.input_tx
-            .send(CoordinatorInput::BlockExtra {
-                slot,
-                block_time: Some(1700000000),
-                block_height: Some(slot - 1),
-            })
+            .send(make_block_meta_update(slot, parent, 1, &blockhash))
             .await
             .unwrap();
     }
@@ -245,16 +237,69 @@ impl TestHarness {
 }
 
 // =============================================================================
+// SubscribeUpdate Builders
+// =============================================================================
+
+fn make_slot_update(slot: u64, parent: u64, status: SlotStatus) -> SubscribeUpdate {
+    SubscribeUpdate {
+        filters: vec![],
+        created_at: None,
+        update_oneof: Some(UpdateOneof::Slot(SubscribeUpdateSlot {
+            slot,
+            parent: Some(parent),
+            status: status.into(),
+            dead_error: None,
+        })),
+    }
+}
+
+fn make_entry_update(slot: u64, index: u64, tx_count: u64) -> SubscribeUpdate {
+    SubscribeUpdate {
+        filters: vec![],
+        created_at: None,
+        update_oneof: Some(UpdateOneof::Entry(SubscribeUpdateEntry {
+            slot,
+            index,
+            num_hashes: 1,
+            hash: Hash::new_unique().to_bytes().to_vec(),
+            executed_transaction_count: tx_count,
+            starting_transaction_index: 0,
+        })),
+    }
+}
+
+fn make_block_meta_update(slot: u64, parent: u64, tx_count: u64, blockhash: &Hash) -> SubscribeUpdate {
+    SubscribeUpdate {
+        filters: vec![],
+        created_at: None,
+        update_oneof: Some(UpdateOneof::BlockMeta(SubscribeUpdateBlockMeta {
+            slot,
+            blockhash: bs58::encode(blockhash.as_ref()).into_string(),
+            rewards: None,
+            block_time: Some(UnixTimestamp {
+                timestamp: 1700000000,
+            }),
+            block_height: Some(BlockHeight {
+                block_height: slot - 1,
+            }),
+            parent_slot: parent,
+            parent_blockhash: bs58::encode(Hash::default().as_ref()).into_string(),
+            executed_transaction_count: tx_count,
+            entries_count: 1,
+        })),
+    }
+}
+
+// =============================================================================
 // Flush Assertion
 // =============================================================================
 
 struct FlushAssertion(ConfirmedSlot<String>);
 
 impl FlushAssertion {
-    fn records(self, expected: &[&str]) -> Self {
+    fn records(self, expected: &[&str]) {
         let expected: Vec<String> = expected.iter().map(|s| s.to_string()).collect();
         assert_eq!(self.0.records, expected, "Records mismatch");
-        self
     }
 
     fn tx_count(self, expected: u64) -> Self {
@@ -267,9 +312,9 @@ impl FlushAssertion {
         self
     }
 
-    fn empty(self) -> Self {
+    fn empty(self) {
         assert!(self.0.records.is_empty(), "Expected no records");
-        self.tx_count(0)
+        assert_eq!(self.0.executed_transaction_count, 0, "Tx count mismatch");
     }
 }
 
@@ -278,16 +323,16 @@ impl FlushAssertion {
 // =============================================================================
 
 struct SlotBuilder {
-    input_tx: mpsc::Sender<CoordinatorInput>,
+    input_tx: mpsc::Sender<SubscribeUpdate>,
     parsed_tx: mpsc::Sender<CoordinatorMessage<String>>,
     slot: u64,
     parent: u64,
-    records: Vec<(u64, Vec<usize>, String)>,
+    records: Vec<(RecordSortKey, String)>,
 }
 
 impl SlotBuilder {
     fn new(
-        input_tx: mpsc::Sender<CoordinatorInput>,
+        input_tx: mpsc::Sender<SubscribeUpdate>,
         parsed_tx: mpsc::Sender<CoordinatorMessage<String>>,
         slot: u64,
     ) -> Self {
@@ -307,12 +352,18 @@ impl SlotBuilder {
 
     fn record(mut self, value: &str) -> Self {
         let tx_index = self.records.len() as u64;
-        self.records.push((tx_index, vec![0], value.to_string()));
+        self.records.push((
+            RecordSortKey { tx_index, ix_path: vec![0] },
+            value.to_string(),
+        ));
         self
     }
 
     fn record_at(mut self, tx_index: u64, ix_path: Vec<usize>, value: &str) -> Self {
-        self.records.push((tx_index, ix_path, value.to_string()));
+        self.records.push((
+            RecordSortKey { tx_index, ix_path },
+            value.to_string(),
+        ));
         self
     }
 
@@ -331,70 +382,38 @@ impl SlotBuilder {
         self.send_lifecycle_without_parsed(expected_tx).await
     }
 
-    async fn send_lifecycle_without_parsed(self, tx_count: u64) -> Slot {
-        let parent = Some(self.parent);
+    /// Send all block lifecycle events (FirstShredReceived, CreatedBank, Entry, Completed, BlockMeta).
+    async fn send_block_events(&self, tx_count: u64) {
         let blockhash = Hash::new_unique();
 
-        for stage in [
-            SlotLifecycle::FirstShredReceived,
-            SlotLifecycle::CreatedBank,
+        for status in [
+            SlotStatus::SlotFirstShredReceived,
+            SlotStatus::SlotCreatedBank,
         ] {
             self.input_tx
-                .send(CoordinatorInput::Replay(
-                    BlockReplayEvent::SlotLifecycleStatus(SlotLifecycleUpdate {
-                        slot: self.slot,
-                        parent_slot: parent,
-                        stage,
-                    }),
-                ))
+                .send(make_slot_update(self.slot, self.parent, status))
                 .await
                 .unwrap();
         }
 
         self.input_tx
-            .send(CoordinatorInput::Replay(BlockReplayEvent::Entry(EntryInfo {
-                slot: self.slot,
-                entry_index: 0,
-                starting_txn_index: 0,
-                entry_hash: Hash::new_unique(),
-                executed_txn_count: tx_count,
-            })))
+            .send(make_entry_update(self.slot, 0, tx_count))
             .await
             .unwrap();
 
         self.input_tx
-            .send(CoordinatorInput::Replay(
-                BlockReplayEvent::SlotLifecycleStatus(SlotLifecycleUpdate {
-                    slot: self.slot,
-                    parent_slot: parent,
-                    stage: SlotLifecycle::Completed,
-                }),
-            ))
+            .send(make_slot_update(self.slot, self.parent, SlotStatus::SlotCompleted))
             .await
             .unwrap();
 
         self.input_tx
-            .send(CoordinatorInput::Replay(BlockReplayEvent::BlockSummary(
-                BlockSummary {
-                    slot: self.slot,
-                    entry_count: 1,
-                    parent_slot: self.parent,
-                    executed_transaction_count: tx_count,
-                    blockhash,
-                },
-            )))
+            .send(make_block_meta_update(self.slot, self.parent, tx_count, &blockhash))
             .await
             .unwrap();
+    }
 
-        self.input_tx
-            .send(CoordinatorInput::BlockExtra {
-                slot: self.slot,
-                block_time: Some(1700000000),
-                block_height: Some(self.slot - 1),
-            })
-            .await
-            .unwrap();
-
+    async fn send_lifecycle_without_parsed(self, tx_count: u64) -> Slot {
+        self.send_block_events(tx_count).await;
         tokio::time::sleep(Duration::from_millis(5)).await;
 
         Slot {
@@ -407,81 +426,21 @@ impl SlotBuilder {
     }
 
     async fn send_lifecycle(self, tx_count: u64) -> Slot {
-        let parent = Some(self.parent);
-        let blockhash = Hash::new_unique();
+        self.send_block_events(tx_count).await;
 
-        for stage in [
-            SlotLifecycle::FirstShredReceived,
-            SlotLifecycle::CreatedBank,
-        ] {
-            self.input_tx
-                .send(CoordinatorInput::Replay(
-                    BlockReplayEvent::SlotLifecycleStatus(SlotLifecycleUpdate {
-                        slot: self.slot,
-                        parent_slot: parent,
-                        stage,
-                    }),
-                ))
-                .await
-                .unwrap();
-        }
-
-        self.input_tx
-            .send(CoordinatorInput::Replay(BlockReplayEvent::Entry(EntryInfo {
-                slot: self.slot,
-                entry_index: 0,
-                starting_txn_index: 0,
-                entry_hash: Hash::new_unique(),
-                executed_txn_count: tx_count,
-            })))
-            .await
-            .unwrap();
-
-        self.input_tx
-            .send(CoordinatorInput::Replay(
-                BlockReplayEvent::SlotLifecycleStatus(SlotLifecycleUpdate {
-                    slot: self.slot,
-                    parent_slot: parent,
-                    stage: SlotLifecycle::Completed,
-                }),
-            ))
-            .await
-            .unwrap();
-
-        self.input_tx
-            .send(CoordinatorInput::Replay(BlockReplayEvent::BlockSummary(
-                BlockSummary {
-                    slot: self.slot,
-                    entry_count: 1,
-                    parent_slot: self.parent,
-                    executed_transaction_count: tx_count,
-                    blockhash,
-                },
-            )))
-            .await
-            .unwrap();
-
-        self.input_tx
-            .send(CoordinatorInput::BlockExtra {
-                slot: self.slot,
-                block_time: Some(1700000000),
-                block_height: Some(self.slot - 1),
-            })
-            .await
-            .unwrap();
-
-        for (tx_index, ix_path, record) in &self.records {
+        // Send parsed records
+        for (key, record) in &self.records {
             self.parsed_tx
                 .send(CoordinatorMessage::Parsed {
                     slot: self.slot,
-                    tx_index: *tx_index,
-                    ix_path: ix_path.clone(),
+                    key: key.clone(),
                     record: record.clone(),
                 })
                 .await
                 .unwrap();
         }
 
+        // Send TransactionParsed signals
         for _ in 0..tx_count {
             self.parsed_tx
                 .send(CoordinatorMessage::TransactionParsed { slot: self.slot })
@@ -504,7 +463,7 @@ impl SlotBuilder {
 // =============================================================================
 
 struct Slot {
-    input_tx: mpsc::Sender<CoordinatorInput>,
+    input_tx: mpsc::Sender<SubscribeUpdate>,
     parsed_tx: mpsc::Sender<CoordinatorMessage<String>>,
     slot: u64,
     parent: u64,
@@ -514,36 +473,24 @@ struct Slot {
 impl Slot {
     async fn confirm(&self) {
         tokio::time::sleep(Duration::from_millis(5)).await;
-        self.send_commitment(CommitmentLevel::Confirmed).await;
+        self.send_commitment(SlotStatus::SlotConfirmed).await;
     }
 
     async fn finalize(&self) {
         tokio::time::sleep(Duration::from_millis(5)).await;
-        self.send_commitment(CommitmentLevel::Finalized).await;
+        self.send_commitment(SlotStatus::SlotFinalized).await;
     }
 
-    async fn send_commitment(&self, commitment: CommitmentLevel) {
+    async fn send_commitment(&self, status: SlotStatus) {
         self.input_tx
-            .send(CoordinatorInput::Consensus(
-                ConsensusUpdate::SlotCommitmentStatus(SlotCommitmentStatusUpdate {
-                    slot: self.slot,
-                    parent_slot: Some(self.parent),
-                    commitment,
-                }),
-            ))
+            .send(make_slot_update(self.slot, self.parent, status))
             .await
             .unwrap();
     }
 
     async fn kill(&self) {
         self.input_tx
-            .send(CoordinatorInput::Replay(
-                BlockReplayEvent::SlotLifecycleStatus(SlotLifecycleUpdate {
-                    slot: self.slot,
-                    parent_slot: Some(self.parent),
-                    stage: SlotLifecycle::Dead,
-                }),
-            ))
+            .send(make_slot_update(self.slot, self.parent, SlotStatus::SlotDead))
             .await
             .unwrap();
         tokio::time::sleep(Duration::from_millis(5)).await;
@@ -556,8 +503,7 @@ impl Slot {
         self.parsed_tx
             .send(CoordinatorMessage::Parsed {
                 slot: self.slot,
-                tx_index,
-                ix_path: vec![0],
+                key: RecordSortKey { tx_index, ix_path: vec![0] },
                 record: value.to_string(),
             })
             .await
@@ -579,8 +525,7 @@ async fn send_record_to_slot(
     parsed_tx
         .send(CoordinatorMessage::Parsed {
             slot,
-            tx_index: 0,
-            ix_path: vec![0],
+            key: RecordSortKey { tx_index: 0, ix_path: vec![0] },
             record: value.to_string(),
         })
         .await
@@ -645,15 +590,39 @@ async fn dead_slot_discarded() {
 async fn dead_slot_unblocks_next() {
     let mut harness = TestHarness::spawn();
 
-    let blocking = harness.slot(100).parent(99).record("blocker").parsed().await;
-    let waiting = harness.slot(101).parent(100).record("survives").parsed().await;
+    // Parent slot — confirmed and flushed first.
+    let parent = harness.slot(100).parent(99).empty().await;
+    parent.confirm().await;
+    harness.expect_flush(100).await;
+
+    // Two siblings (same parent=100). Killing one should NOT propagate to the other.
+    let blocker = harness.slot(101).parent(100).record("blocker").parsed().await;
+    let waiting = harness.slot(102).parent(100).record("survives").parsed().await;
 
     waiting.confirm().await;
     harness.expect_no_flush().await;
 
-    blocking.kill().await;
+    blocker.kill().await;
 
-    harness.expect_flush(101).await.records(&["survives"]);
+    harness.expect_flush(102).await.records(&["survives"]);
+}
+
+#[tokio::test]
+async fn dead_slot_discards_descendants() {
+    let mut harness = TestHarness::spawn();
+
+    // Chain: 100 → 101 → 102. Killing 100 should discard 101 and 102 too.
+    let ancestor = harness.slot(100).parent(99).record("root").parsed().await;
+    let child = harness.slot(101).parent(100).record("child").parsed().await;
+    let grandchild = harness.slot(102).parent(101).record("grandchild").parsed().await;
+
+    child.confirm().await;
+    grandchild.confirm().await;
+
+    // Both descendants are ready, but killing the ancestor should discard the whole chain.
+    ancestor.kill().await;
+
+    harness.expect_no_flush().await;
 }
 
 #[tokio::test]
@@ -793,11 +762,8 @@ async fn late_message_for_flushed_slot_panics() {
     let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
     let handle = tokio::spawn(coordinator.run());
 
-    let harness_input_tx = input_tx.clone();
-    let harness_parsed_tx = parsed_tx.clone();
-
     // Create and flush slot 100
-    let slot = SlotBuilder::new(harness_input_tx, harness_parsed_tx.clone(), 100)
+    let slot = SlotBuilder::new(input_tx.clone(), parsed_tx.clone(), 100)
         .parent(99)
         .empty()
         .await;

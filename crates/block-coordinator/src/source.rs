@@ -1,7 +1,7 @@
 //! CoordinatorSource — transparent tap between geyser stream and Vixen Runtime.
 //!
-//! Implements Vixen's `SourceTrait` to extract lightweight BlockSM inputs
-//! into a side channel while forwarding transaction events to the Runtime.
+//! Implements Vixen's `SourceTrait` to forward raw geyser events to the coordinator
+//! while also forwarding transaction events to the Vixen Runtime.
 //!
 
 use std::{path::PathBuf, time::Duration};
@@ -21,12 +21,12 @@ use yellowstone_vixen::{sources::{SourceExitStatus, SourceTrait}, Error as Vixen
 use yellowstone_vixen_core::Filters;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
 
-use crate::{extract_coordinator_inputs, fixtures::FixtureWriter, CoordinatorInput};
+use crate::fixtures::FixtureWriter;
 
 /// Config for CoordinatorSource.
 ///
-/// Wraps the real source config plus a channel for BlockSM inputs.
-/// The channel is set programmatically after deserialization — it can't
+/// Wraps the real source config plus channels for coordinator inputs.
+/// The channels are set programmatically after deserialization — they can't
 /// come from a config file, hence `#[serde(skip)]` + `#[arg(skip)]`.
 #[derive(Debug, serde::Deserialize, clap::Args)]
 pub struct CoordinatorSourceConfig {
@@ -34,10 +34,10 @@ pub struct CoordinatorSourceConfig {
     #[serde(flatten)]
     pub source: YellowstoneGrpcConfig,
 
-    /// Channel to send BlockSM inputs to the coordinator.
+    /// Channel to send raw SubscribeUpdate events to the coordinator.
     #[serde(skip)]
     #[arg(skip)]
-    pub coordinator_input_tx: Option<Sender<CoordinatorInput>>,
+    pub coordinator_input_tx: Option<Sender<SubscribeUpdate>>,
 
     /// Path to write captured fixture data (length-delimited protobuf).
     #[serde(skip)]
@@ -84,12 +84,11 @@ impl CoordinatorSubscription for SubscribeRequest {
     }
 }
 
-/// Vixen source that taps the geyser stream for BlockSM inputs.
+/// Vixen source that taps the geyser stream for the coordinator.
 ///
 /// On each `SubscribeUpdate`:
-/// 1. Extract lightweight BlockSM inputs (integers + 32-byte hash, no large allocs)
-/// 2. Send them to the coordinator via the side channel
-/// 3. Forward the full event to the Vixen Runtime (move, no clone)
+/// 1. Forward the raw event to the coordinator (clone for BlockSM-relevant events)
+/// 2. Forward Account/Transaction events to the Vixen Runtime (move, no clone)
 #[derive(Debug)]
 pub struct CoordinatorSource {
     config: CoordinatorSourceConfig,
@@ -178,13 +177,20 @@ impl SourceTrait for CoordinatorSource {
                         }
                     }
 
-                    // Lightweight extraction: integers + 32-byte hash only.
-                    let inputs: Vec<CoordinatorInput> = extract_coordinator_inputs(subscribe_update);
-                    if !inputs.is_empty() {
-                        tracing::debug!(count = inputs.len(), "Extracted coordinator inputs");
-                    }
-                    for input in inputs {
-                        if coordinator_tx.send(input).await.is_err() {
+                    // Forward BlockSM-relevant events to the coordinator.
+                    // Entry, Slot, and BlockMeta events are needed for block reconstruction.
+                    let is_block_sm_event = matches!(
+                        subscribe_update.update_oneof,
+                        Some(
+                            UpdateOneof::Entry(_)
+                                | UpdateOneof::Slot(_)
+                                | UpdateOneof::BlockMeta(_)
+                        )
+                    );
+
+                    if is_block_sm_event {
+                        // Clone for coordinator (Account/Transaction events go to Runtime uncloned)
+                        if coordinator_tx.send(subscribe_update.clone()).await.is_err() {
                             tracing::error!("Coordinator input channel closed");
                             break 'stream SourceExitStatus::Error(
                                 "Coordinator input channel closed".to_string(),
@@ -192,7 +198,7 @@ impl SourceTrait for CoordinatorSource {
                         }
                     }
 
-                    // Only forward to the Runtime Account and Transactions events.
+                    // Only forward Account and Transaction events to the Runtime.
                     if !matches!(
                         subscribe_update.update_oneof,
                         Some(UpdateOneof::Account(_) | UpdateOneof::Transaction(_))
