@@ -86,8 +86,3 @@ jobs:
           RUSTC_WRAPPER: sccache
           SCCACHE_GHA_ENABLED: true
 
-      - name: Test build
-        run: cargo build
-        env:
-          RUSTC_WRAPPER: sccache
-          SCCACHE_GHA_ENABLED: true
