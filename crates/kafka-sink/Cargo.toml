@@ -1,0 +1,32 @@
+[package]
+name = "yellowstone-vixen-kafka-sink"
+description = "Kafka sink for Yellowstone Vixen - writes blocks and instructions to Kafka with ordering guarantees"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+# Kafka
+rdkafka = { workspace = true }
+
+# Async
+tokio = { workspace = true, features = ["sync", "rt"] }
+futures = { workspace = true }
+
+# Serialization
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+prost = { workspace = true }
+
+# Vixen
+yellowstone-vixen = { workspace = true }
+yellowstone-vixen-core = { workspace = true }
+yellowstone-vixen-block-coordinator = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# HTTP client for Schema Registry
+reqwest = { workspace = true }
