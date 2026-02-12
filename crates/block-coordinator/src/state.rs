@@ -4,9 +4,7 @@ use solana_clock::Slot;
 
 use crate::{
     buffer::SlotRecordBuffer,
-    types::{
-        BlockMetadata, ConfirmedSlot, CoordinatorError, DiscardReason, RecordSortKey,
-    },
+    types::{BlockMetadata, ConfirmedSlot, CoordinatorError, DiscardReason, RecordSortKey},
 };
 
 /// All inputs to the coordinator state machine.
@@ -18,7 +16,11 @@ pub enum CoordinatorEvent<R> {
     /// Slot discarded (dead, forked, or untracked).
     SlotDiscarded { slot: Slot, reason: DiscardReason },
     /// A parsed record from a handler.
-    RecordParsed { slot: Slot, key: RecordSortKey, record: R },
+    RecordParsed {
+        slot: Slot,
+        key: RecordSortKey,
+        record: R,
+    },
     /// A handler finished parsing a transaction.
     TransactionParsed { slot: Slot },
 }
@@ -33,17 +35,11 @@ pub struct CoordinatorState<R> {
 impl<R> CoordinatorState<R> {
     const MAX_DISCARDED_SLOTS: usize = 100;
 
-    pub fn pending_slot_count(&self) -> usize {
-        self.buffer.len()
-    }
+    pub fn pending_slot_count(&self) -> usize { self.buffer.len() }
 
-    pub fn discarded_slot_count(&self) -> usize {
-        self.discarded_slots.len()
-    }
+    pub fn discarded_slot_count(&self) -> usize { self.discarded_slots.len() }
 
-    pub fn last_flushed_slot(&self) -> Option<Slot> {
-        self.last_flushed_slot
-    }
+    pub fn last_flushed_slot(&self) -> Option<Slot> { self.last_flushed_slot }
 
     pub fn oldest_pending_slot(&self) -> Option<Slot> {
         self.buffer.first_key_value().map(|(&s, _)| s)
@@ -55,29 +51,38 @@ impl<R> CoordinatorState<R> {
                 if self.is_already_flushed(slot) {
                     return Ok(());
                 }
-                self.buffer.entry(slot).or_default().set_block_metadata(metadata);
-            }
+                self.buffer
+                    .entry(slot)
+                    .or_default()
+                    .set_block_metadata(metadata);
+            },
             CoordinatorEvent::SlotConfirmed { slot } => {
                 if self.is_already_flushed(slot) {
                     return Ok(());
                 }
                 self.buffer.entry(slot).or_default().mark_as_confirmed();
-            }
+            },
             CoordinatorEvent::SlotDiscarded { slot, reason } => {
                 self.discard_slot(slot, reason);
-            }
+            },
             CoordinatorEvent::RecordParsed { slot, key, record } => {
                 if !self.validate_slot(slot)? {
                     return Ok(());
                 }
-                self.buffer.entry(slot).or_default().insert_record(key, record);
-            }
+                self.buffer
+                    .entry(slot)
+                    .or_default()
+                    .insert_record(key, record);
+            },
             CoordinatorEvent::TransactionParsed { slot } => {
                 if !self.validate_slot(slot)? {
                     return Ok(());
                 }
-                self.buffer.entry(slot).or_default().increment_parsed_tx_count();
-            }
+                self.buffer
+                    .entry(slot)
+                    .or_default()
+                    .increment_parsed_tx_count();
+            },
         }
         Ok(())
     }
@@ -90,9 +95,9 @@ impl<R> CoordinatorState<R> {
                 break;
             }
 
-            let parent_slot = buf.parent_slot().ok_or(
-                CoordinatorError::ReadySlotMissingMetadata { slot },
-            )?;
+            let parent_slot = buf
+                .parent_slot()
+                .ok_or(CoordinatorError::ReadySlotMissingMetadata { slot })?;
 
             // First-slot exemption: when no slot has been flushed yet, we have
             // no parent chain to validate against. The very first ready slot
@@ -194,8 +199,9 @@ impl<R> Default for CoordinatorState<R> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use solana_hash::Hash;
+
+    use super::*;
 
     fn metadata(parent_slot: Slot, expected_tx_count: u64) -> BlockMetadata {
         BlockMetadata {
@@ -367,7 +373,7 @@ mod tests {
         match err {
             CoordinatorError::TwoGateInvariantViolation { slot, .. } => {
                 assert_eq!(slot, 100);
-            }
+            },
             _ => panic!("Unexpected error: {err}"),
         }
     }

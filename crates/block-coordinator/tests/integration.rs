@@ -201,15 +201,15 @@ impl TestHarness {
         let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
         tokio::spawn(coordinator.run());
 
-        Self { input_tx, parsed_tx, output_rx }
+        Self {
+            input_tx,
+            parsed_tx,
+            output_rx,
+        }
     }
 
     fn slot(&self, slot: u64) -> SlotBuilder {
-        SlotBuilder::new(
-            self.input_tx.clone(),
-            self.parsed_tx.clone(),
-            slot,
-        )
+        SlotBuilder::new(self.input_tx.clone(), self.parsed_tx.clone(), slot)
     }
 
     async fn send_orphan_block_summary(&self, slot: u64, parent: u64) {
@@ -268,7 +268,12 @@ fn make_entry_update(slot: u64, index: u64, tx_count: u64) -> SubscribeUpdate {
     }
 }
 
-fn make_block_meta_update(slot: u64, parent: u64, tx_count: u64, blockhash: &Hash) -> SubscribeUpdate {
+fn make_block_meta_update(
+    slot: u64,
+    parent: u64,
+    tx_count: u64,
+    blockhash: &Hash,
+) -> SubscribeUpdate {
     SubscribeUpdate {
         filters: vec![],
         created_at: None,
@@ -303,7 +308,10 @@ impl FlushAssertion {
     }
 
     fn tx_count(self, expected: u64) -> Self {
-        assert_eq!(self.0.executed_transaction_count, expected, "Tx count mismatch");
+        assert_eq!(
+            self.0.executed_transaction_count, expected,
+            "Tx count mismatch"
+        );
         self
     }
 
@@ -352,24 +360,18 @@ impl SlotBuilder {
 
     fn record(mut self, value: &str) -> Self {
         let tx_index = self.records.len() as u64;
-        self.records.push((
-            RecordSortKey::new(tx_index, vec![0]),
-            value.to_string(),
-        ));
+        self.records
+            .push((RecordSortKey::new(tx_index, vec![0]), value.to_string()));
         self
     }
 
     fn record_at(mut self, tx_index: u64, ix_path: Vec<usize>, value: &str) -> Self {
-        self.records.push((
-            RecordSortKey::new(tx_index, ix_path),
-            value.to_string(),
-        ));
+        self.records
+            .push((RecordSortKey::new(tx_index, ix_path), value.to_string()));
         self
     }
 
-    async fn empty(self) -> Slot {
-        self.send_lifecycle(0).await
-    }
+    async fn empty(self) -> Slot { self.send_lifecycle(0).await }
 
     async fn parsed(self) -> Slot {
         let tx_count = self.records.len().max(1) as u64;
@@ -402,12 +404,21 @@ impl SlotBuilder {
             .unwrap();
 
         self.input_tx
-            .send(make_slot_update(self.slot, self.parent, SlotStatus::SlotCompleted))
+            .send(make_slot_update(
+                self.slot,
+                self.parent,
+                SlotStatus::SlotCompleted,
+            ))
             .await
             .unwrap();
 
         self.input_tx
-            .send(make_block_meta_update(self.slot, self.parent, tx_count, &blockhash))
+            .send(make_block_meta_update(
+                self.slot,
+                self.parent,
+                tx_count,
+                &blockhash,
+            ))
             .await
             .unwrap();
     }
@@ -490,7 +501,11 @@ impl Slot {
 
     async fn kill(&self) {
         self.input_tx
-            .send(make_slot_update(self.slot, self.parent, SlotStatus::SlotDead))
+            .send(make_slot_update(
+                self.slot,
+                self.parent,
+                SlotStatus::SlotDead,
+            ))
             .await
             .unwrap();
         tokio::time::sleep(Duration::from_millis(5)).await;
@@ -557,15 +572,30 @@ async fn two_gate_flush_end_to_end() {
     harness.expect_no_flush().await;
     slot.confirm().await;
 
-    harness.expect_flush(100).await.parent(99).tx_count(2).records(&["tx0-ix0", "tx0-cpi", "tx1-ix0"]);
+    harness
+        .expect_flush(100)
+        .await
+        .parent(99)
+        .tx_count(2)
+        .records(&["tx0-ix0", "tx0-cpi", "tx1-ix0"]);
 }
 
 #[tokio::test]
 async fn sequential_flush_order() {
     let mut harness = TestHarness::spawn();
 
-    let slot_101 = harness.slot(101).parent(100).record("rec-101").parsed().await;
-    let slot_102 = harness.slot(102).parent(101).record("rec-102").parsed().await;
+    let slot_101 = harness
+        .slot(101)
+        .parent(100)
+        .record("rec-101")
+        .parsed()
+        .await;
+    let slot_102 = harness
+        .slot(102)
+        .parent(101)
+        .record("rec-102")
+        .parsed()
+        .await;
 
     slot_102.confirm().await;
     harness.expect_no_flush().await;
@@ -580,7 +610,12 @@ async fn sequential_flush_order() {
 async fn dead_slot_discarded() {
     let mut harness = TestHarness::spawn();
 
-    let slot = harness.slot(100).parent(99).record("will-die").parsed().await;
+    let slot = harness
+        .slot(100)
+        .parent(99)
+        .record("will-die")
+        .parsed()
+        .await;
     slot.kill().await;
 
     harness.expect_no_flush().await;
@@ -596,8 +631,18 @@ async fn dead_slot_unblocks_next() {
     harness.expect_flush(100).await;
 
     // Two siblings (same parent=100). Killing one should NOT propagate to the other.
-    let blocker = harness.slot(101).parent(100).record("blocker").parsed().await;
-    let waiting = harness.slot(102).parent(100).record("survives").parsed().await;
+    let blocker = harness
+        .slot(101)
+        .parent(100)
+        .record("blocker")
+        .parsed()
+        .await;
+    let waiting = harness
+        .slot(102)
+        .parent(100)
+        .record("survives")
+        .parsed()
+        .await;
 
     waiting.confirm().await;
     harness.expect_no_flush().await;
@@ -614,7 +659,12 @@ async fn dead_slot_discards_descendants() {
     // Chain: 100 → 101 → 102. Killing 100 should discard 101 and 102 too.
     let ancestor = harness.slot(100).parent(99).record("root").parsed().await;
     let child = harness.slot(101).parent(100).record("child").parsed().await;
-    let grandchild = harness.slot(102).parent(101).record("grandchild").parsed().await;
+    let grandchild = harness
+        .slot(102)
+        .parent(101)
+        .record("grandchild")
+        .parsed()
+        .await;
 
     child.confirm().await;
     grandchild.confirm().await;
@@ -672,7 +722,12 @@ async fn sibling_fork_via_finalized() {
     let parent = harness.slot(100).parent(99).empty().await;
     parent.confirm().await;
 
-    let winner = harness.slot(101).parent(100).record("winner").parsed().await;
+    let winner = harness
+        .slot(101)
+        .parent(100)
+        .record("winner")
+        .parsed()
+        .await;
     let loser = harness.slot(102).parent(100).record("loser").parsed().await;
 
     winner.confirm().await;
@@ -738,7 +793,12 @@ async fn gap_in_sequence_blocks_flush() {
     let mut harness = TestHarness::spawn();
 
     let slot_100 = harness.slot(100).parent(99).empty().await;
-    let slot_102 = harness.slot(102).parent(101).record("waiting").parsed().await;
+    let slot_102 = harness
+        .slot(102)
+        .parent(101)
+        .record("waiting")
+        .parsed()
+        .await;
 
     slot_100.confirm().await;
     harness.expect_flush(100).await;
@@ -782,7 +842,10 @@ async fn late_message_for_flushed_slot_errors() {
     // Wait for coordinator task to complete (it should return an error)
     let result = handle.await.expect("task join");
     assert!(
-        matches!(result, Err(CoordinatorError::TwoGateInvariantViolation { .. })),
+        matches!(
+            result,
+            Err(CoordinatorError::TwoGateInvariantViolation { .. })
+        ),
         "Expected TwoGateInvariantViolation, got: {result:?}"
     );
 }
@@ -809,7 +872,10 @@ async fn output_channel_closed_returns_error() {
 
     let result = handle.await.expect("task join");
     assert!(
-        matches!(result, Err(CoordinatorError::OutputChannelClosed { slot: 100 })),
+        matches!(
+            result,
+            Err(CoordinatorError::OutputChannelClosed { slot: 100 })
+        ),
         "Expected OutputChannelClosed, got: {result:?}"
     );
 }

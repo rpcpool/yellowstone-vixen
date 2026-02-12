@@ -34,9 +34,16 @@ impl fmt::Display for DiscardReason {
 /// Coordinator invariants and unrecoverable errors.
 #[derive(Debug)]
 pub enum CoordinatorError {
-    TwoGateInvariantViolation { slot: Slot, last_flushed: Option<Slot> },
-    ReadySlotMissingMetadata { slot: Slot },
-    OutputChannelClosed { slot: Slot },
+    TwoGateInvariantViolation {
+        slot: Slot,
+        last_flushed: Option<Slot>,
+    },
+    ReadySlotMissingMetadata {
+        slot: Slot,
+    },
+    OutputChannelClosed {
+        slot: Slot,
+    },
 }
 
 impl fmt::Display for CoordinatorError {
@@ -48,10 +55,10 @@ impl fmt::Display for CoordinatorError {
             ),
             Self::ReadySlotMissingMetadata { slot } => {
                 write!(f, "Ready slot missing metadata: slot {slot}")
-            }
+            },
             Self::OutputChannelClosed { slot } => {
                 write!(f, "Output channel closed while sending slot {slot}")
-            }
+            },
         }
     }
 }
@@ -134,9 +141,7 @@ pub struct CoordinatorHandle<R> {
 }
 
 impl<R: Send> CoordinatorHandle<R> {
-    pub fn new(tx: tokio::sync::mpsc::Sender<CoordinatorMessage<R>>) -> Self {
-        Self { tx }
-    }
+    pub fn new(tx: tokio::sync::mpsc::Sender<CoordinatorMessage<R>>) -> Self { Self { tx } }
 
     pub async fn send_parsed(
         &self,

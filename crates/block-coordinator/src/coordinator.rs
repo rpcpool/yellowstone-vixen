@@ -1,7 +1,6 @@
 use tokio::sync::mpsc;
 use yellowstone_block_machine::{
-    dragonsmouth::wrapper::BlocksStateMachineWrapper,
-    state_machine::BlockStateMachineOutput,
+    dragonsmouth::wrapper::BlocksStateMachineWrapper, state_machine::BlockStateMachineOutput,
 };
 use yellowstone_grpc_proto::geyser::{subscribe_update::UpdateOneof, SubscribeUpdate};
 
@@ -66,9 +65,10 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
                     parent_slot = confirmed.parent_slot,
                     "Flushing slot"
                 );
-                self.output_tx.send(confirmed).await.map_err(|e| {
-                    CoordinatorError::OutputChannelClosed { slot: e.0.slot }
-                })?;
+                self.output_tx
+                    .send(confirmed)
+                    .await
+                    .map_err(|e| CoordinatorError::OutputChannelClosed { slot: e.0.slot })?;
             }
         }
         Ok(())
@@ -82,7 +82,10 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
         if let Some(UpdateOneof::BlockMeta(meta)) = &update.update_oneof
             && bs58::decode(&meta.blockhash).into_vec().is_err()
         {
-            tracing::warn!(slot = meta.slot, "BlockMeta has invalid blockhash — skipping");
+            tracing::warn!(
+                slot = meta.slot,
+                "BlockMeta has invalid blockhash — skipping"
+            );
             return events;
         }
 
@@ -113,26 +116,26 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
                         slot: frozen.slot,
                         metadata,
                     });
-                }
+                },
                 BlockStateMachineOutput::SlotStatus(status)
                     if status.commitment
                         == solana_commitment_config::CommitmentLevel::Confirmed =>
                 {
                     events.push(CoordinatorEvent::SlotConfirmed { slot: status.slot });
-                }
-                BlockStateMachineOutput::SlotStatus(_) => {}
+                },
+                BlockStateMachineOutput::SlotStatus(_) => {},
                 BlockStateMachineOutput::DeadSlotDetected(dead) => {
                     events.push(CoordinatorEvent::SlotDiscarded {
                         slot: dead.slot,
                         reason: DiscardReason::Dead,
                     });
-                }
+                },
                 BlockStateMachineOutput::ForksDetected(fork) => {
                     events.push(CoordinatorEvent::SlotDiscarded {
                         slot: fork.slot,
                         reason: DiscardReason::Forked,
                     });
-                }
+                },
             }
         }
 
@@ -143,10 +146,10 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
         match msg {
             CoordinatorMessage::Parsed { slot, key, record } => {
                 vec![CoordinatorEvent::RecordParsed { slot, key, record }]
-            }
+            },
             CoordinatorMessage::TransactionParsed { slot } => {
                 vec![CoordinatorEvent::TransactionParsed { slot }]
-            }
+            },
         }
     }
 }

@@ -17,7 +17,10 @@ use yellowstone_grpc_proto::{
     },
     tonic::{transport::ClientTlsConfig, Status},
 };
-use yellowstone_vixen::{sources::{SourceExitStatus, SourceTrait}, Error as VixenError};
+use yellowstone_vixen::{
+    sources::{SourceExitStatus, SourceTrait},
+    Error as VixenError,
+};
 use yellowstone_vixen_core::Filters;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
 
@@ -68,9 +71,7 @@ impl CoordinatorSubscription for SubscribeRequest {
             "coordinator".to_string(),
             SubscribeRequestFilterBlocksMeta {},
         );
-        self.slots
-            .entry("coordinator".to_string())
-            .or_default();
+        self.slots.entry("coordinator".to_string()).or_default();
         for filter in self.slots.values_mut() {
             filter.interslot_updates = Some(true);
             filter.filter_by_commitment = None;
@@ -106,15 +107,11 @@ impl SourceTrait for CoordinatorSource {
         tx: Sender<Result<SubscribeUpdate, Status>>,
         status_tx: oneshot::Sender<SourceExitStatus>,
     ) -> Result<(), VixenError> {
-        let coordinator_tx = self
-            .config
-            .coordinator_input_tx
-            .as_ref()
-            .ok_or_else(|| {
-                VixenError::Io(std::io::Error::other(
-                    "coordinator_input_tx must be set before connect",
-                ))
-            })?;
+        let coordinator_tx = self.config.coordinator_input_tx.as_ref().ok_or_else(|| {
+            VixenError::Io(std::io::Error::other(
+                "coordinator_input_tx must be set before connect",
+            ))
+        })?;
 
         let mut fixture_writer = match (&self.config.fixture_path, self.config.fixture_slots) {
             (Some(path), Some(slots)) => {

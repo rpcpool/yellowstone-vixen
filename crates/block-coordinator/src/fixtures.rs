@@ -40,25 +40,23 @@ impl FixtureWriter {
     /// number of BlockMeta messages has been reached.
     /// Flush any buffered data to disk. Call this when the stream ends
     /// before the target slot count is reached to avoid losing trailing messages.
-    pub fn finish(mut self) -> io::Result<()> {
-        self.writer.flush()
-    }
+    pub fn finish(mut self) -> io::Result<()> { self.writer.flush() }
 
     pub fn write(&mut self, update: &SubscribeUpdate) -> io::Result<bool> {
         let bytes = update.encode_to_vec();
         let len: u32 = bytes.len().try_into().map_err(|_| {
             io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!("Message too large for u32 length prefix: {} bytes", bytes.len()),
+                format!(
+                    "Message too large for u32 length prefix: {} bytes",
+                    bytes.len()
+                ),
             )
         })?;
         self.writer.write_all(&len.to_be_bytes())?;
         self.writer.write_all(&bytes)?;
 
-        if matches!(
-            update.update_oneof,
-            Some(UpdateOneof::BlockMeta(_))
-        ) {
+        if matches!(update.update_oneof, Some(UpdateOneof::BlockMeta(_))) {
             self.block_meta_count += 1;
             if self.block_meta_count >= self.target_slots {
                 self.writer.flush()?;
@@ -97,7 +95,7 @@ impl Iterator for FixtureReader {
             Err(e) => {
                 tracing::error!(?e, "FixtureReader: I/O error reading length prefix");
                 return None;
-            }
+            },
         }
 
         let len = u32::from_be_bytes(len_buf) as usize;
@@ -112,7 +110,7 @@ impl Iterator for FixtureReader {
             Err(e) => {
                 tracing::error!(?e, len, "FixtureReader: protobuf decode failed");
                 None
-            }
+            },
         }
     }
 }

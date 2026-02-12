@@ -38,7 +38,10 @@ impl<R> Default for SlotRecordBuffer<R> {
 impl<R> SlotRecordBuffer<R> {
     pub fn insert_record(&mut self, key: RecordSortKey, record: R) {
         if self.records.contains_key(&key) {
-            tracing::warn!(?key, "Duplicate RecordSortKey — previous record overwritten");
+            tracing::warn!(
+                ?key,
+                "Duplicate RecordSortKey — previous record overwritten"
+            );
         }
         self.records.insert(key, record);
     }
@@ -73,9 +76,7 @@ impl<R> SlotRecordBuffer<R> {
         }
     }
 
-    pub fn mark_as_confirmed(&mut self) {
-        self.confirmed = true;
-    }
+    pub fn mark_as_confirmed(&mut self) { self.confirmed = true; }
 
     pub fn is_fully_parsed(&self) -> bool {
         self.metadata
@@ -84,25 +85,17 @@ impl<R> SlotRecordBuffer<R> {
     }
 
     /// Both gates must be satisfied for flush.
-    pub fn is_ready(&self) -> bool {
-        self.is_fully_parsed() && self.confirmed
-    }
+    pub fn is_ready(&self) -> bool { self.is_fully_parsed() && self.confirmed }
 
     pub fn parent_slot(&self) -> Option<Slot> {
         self.metadata.as_ref().map(|meta| meta.parent_slot)
     }
 
-    pub fn parsed_tx_count(&self) -> u64 {
-        self.parsed_tx_count
-    }
+    pub fn parsed_tx_count(&self) -> u64 { self.parsed_tx_count }
 
-    pub fn is_confirmed(&self) -> bool {
-        self.confirmed
-    }
+    pub fn is_confirmed(&self) -> bool { self.confirmed }
 
-    pub fn record_count(&self) -> usize {
-        self.records.len()
-    }
+    pub fn record_count(&self) -> usize { self.records.len() }
 
     /// Consume this buffer and produce a ConfirmedSlot.
     /// Returns None if metadata is missing.
@@ -125,8 +118,9 @@ impl<R> SlotRecordBuffer<R> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use solana_hash::Hash;
+
+    use super::*;
 
     #[test]
     fn insert_and_sorted_drain() {
@@ -137,28 +131,16 @@ mod tests {
             expected_tx_count: 0,
         });
         // Insert out of order
-        buf.insert_record(
-            RecordSortKey::new(1, vec![0]),
-            "tx1-ix0".into(),
-        );
-        buf.insert_record(
-            RecordSortKey::new(0, vec![0, 1]),
-            "tx0-ix0.1".into(),
-        );
-        buf.insert_record(
-            RecordSortKey::new(0, vec![0]),
-            "tx0-ix0".into(),
-        );
+        buf.insert_record(RecordSortKey::new(1, vec![0]), "tx1-ix0".into());
+        buf.insert_record(RecordSortKey::new(0, vec![0, 1]), "tx0-ix0.1".into());
+        buf.insert_record(RecordSortKey::new(0, vec![0]), "tx0-ix0".into());
 
         let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");
-        assert_eq!(
-            confirmed.records,
-            vec![
-                "tx0-ix0".to_string(),
-                "tx0-ix0.1".to_string(),
-                "tx1-ix0".to_string(),
-            ]
-        );
+        assert_eq!(confirmed.records, vec![
+            "tx0-ix0".to_string(),
+            "tx0-ix0.1".to_string(),
+            "tx1-ix0".to_string(),
+        ]);
     }
 
     #[test]
@@ -209,42 +191,24 @@ mod tests {
         });
         // Simulate: tx0 has main ix [0] with two CPIs [0,0] and [0,1]
         // And [0,0] has a nested CPI [0,0,0]
-        buf.insert_record(
-            RecordSortKey::new(0, vec![0, 1]),
-            "cpi-1".into(),
-        );
-        buf.insert_record(
-            RecordSortKey::new(0, vec![0, 0, 0]),
-            "nested-cpi".into(),
-        );
-        buf.insert_record(
-            RecordSortKey::new(0, vec![0]),
-            "main".into(),
-        );
-        buf.insert_record(
-            RecordSortKey::new(0, vec![0, 0]),
-            "cpi-0".into(),
-        );
+        buf.insert_record(RecordSortKey::new(0, vec![0, 1]), "cpi-1".into());
+        buf.insert_record(RecordSortKey::new(0, vec![0, 0, 0]), "nested-cpi".into());
+        buf.insert_record(RecordSortKey::new(0, vec![0]), "main".into());
+        buf.insert_record(RecordSortKey::new(0, vec![0, 0]), "cpi-0".into());
 
         let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");
-        assert_eq!(
-            confirmed.records,
-            vec![
-                "main".to_string(),
-                "cpi-0".to_string(),
-                "nested-cpi".to_string(),
-                "cpi-1".to_string(),
-            ]
-        );
+        assert_eq!(confirmed.records, vec![
+            "main".to_string(),
+            "cpi-0".to_string(),
+            "nested-cpi".to_string(),
+            "cpi-1".to_string(),
+        ]);
     }
 
     #[test]
     fn drain_empties_buffer() {
         let mut buf = SlotRecordBuffer::<String>::default();
-        buf.insert_record(
-            RecordSortKey::new(0, vec![0]),
-            "record".into(),
-        );
+        buf.insert_record(RecordSortKey::new(0, vec![0]), "record".into());
         assert_eq!(buf.record_count(), 1);
 
         buf.set_block_metadata(BlockMetadata {
