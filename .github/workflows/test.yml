@@ -43,31 +43,17 @@ jobs:
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.9
 
-      - name: Set rust version
-        run: |
-          echo "channel=$(cat rust-toolchain.toml | grep channel | awk '{print $3}' | sed 's/"//g')" >> "$GITHUB_ENV"
-          echo "targets=$(cat rust-toolchain.toml | grep targets | awk '{print $3}' | sed 's/\[//' | sed 's/\]//' | sed 's/"//g')" >> "$GITHUB_ENV"
-          echo "components=$(cat rust-toolchain.toml | grep components | awk -F = '{print $2}' | sed 's/\[//' | sed 's/\]//' | sed 's/"//g')" >> "$GITHUB_ENV"
-
+      # Project toolchain + clippy are auto-installed from rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: nightly
-
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: ${{ env.channel }}
-          components: ${{ env.components }}
+          components: rustfmt
 
       - name: cargo tree
         run: |
           cargo tree
           git checkout Cargo.lock
           cargo tree --frozen --offline
-
-      - name: Install toolchain components
-        run: |
-          rustup component add --toolchain nightly rustfmt
-          rustup component add --toolchain ${{ env.channel }} clippy
 
       - name: Run fmt
         run: cargo +nightly fmt --all -- --check
