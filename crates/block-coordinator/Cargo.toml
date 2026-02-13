@@ -1,0 +1,33 @@
+[package]
+name = "yellowstone-vixen-block-coordinator"
+description = "Coordinator for Vixen"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "./../../README.md"
+
+
+[dependencies]
+yellowstone-block-machine = { workspace = true }
+yellowstone-grpc-proto = { workspace = true }
+yellowstone-grpc-client = { workspace = true }
+yellowstone-vixen = { workspace = true }
+yellowstone-vixen-core = { workspace = true }
+yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
+solana-clock = { workspace = true }
+solana-hash = { workspace = true }
+solana-commitment-config = { workspace = true }
+tokio = { workspace = true, features = ["sync", "macros", "rt"] }
+tracing = { workspace = true }
+bs58 = { workspace = true }
+async-trait = { workspace = true }
+futures-util = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+clap = { workspace = true, features = ["derive"] }
+prost = { workspace = true }
+smallvec = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["sync", "macros", "rt", "test-util"] }

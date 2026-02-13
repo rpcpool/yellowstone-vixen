@@ -280,7 +280,7 @@ impl SourceTrait for SolanaSnapshotSource {
                                             owner: account.owner().to_bytes().to_vec(),
                                             executable: account.executable(),
                                             rent_epoch: account.rent_epoch(),
-                                            data: account.data().to_vec(),
+                                            data: account.data().to_vec().into(),
                                             write_version: 0,
                                             txn_signature: None,
                                         }),
