@@ -21,6 +21,7 @@ use yellowstone_vixen_core::{
 
 use crate::{
     events::{PreparedRecord, RecordHeader},
+    schema_registry::{wrap_payload_with_confluent_wire_format, RegisteredSchema},
     utils::make_record_key,
 };
 
@@ -193,8 +194,6 @@ impl KafkaSinkBuilder {
             .collect()
     }
 }
-
-use crate::schema_registry::{wrap_payload_with_confluent_wire_format, RegisteredSchema};
 
 #[derive(Clone)]
 pub struct ConfiguredParsers {

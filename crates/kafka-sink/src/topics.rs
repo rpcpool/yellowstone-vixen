@@ -1,59 +1,11 @@
 use std::time::Duration;
 
 use rdkafka::{
-    admin::{AdminClient, AdminOptions, NewTopic, TopicReplication},
     consumer::{BaseConsumer, Consumer},
     ClientConfig, Message, TopicPartitionList,
 };
 
 use crate::{config::KafkaSinkConfig, events::SlotCommitEvent};
-
-// TODO: maybe there is way to configure redpanda to do it automatically then can let him handle topic creation natively
-/// Creates topics if they don't exist, skips if they already exist.
-pub fn ensure_topics_exist_with_log_compaction(
-    config: &KafkaSinkConfig,
-    instruction_topics: &[&str],
-) {
-    let admin: AdminClient<_> = ClientConfig::new()
-        .set("bootstrap.servers", &config.brokers)
-        .create()
-        .expect("Failed to create Kafka admin client");
-
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("Failed to create runtime for topic creation");
-
-    rt.block_on(async {
-        let topics_to_create: Vec<NewTopic> = std::iter::once(config.slots_topic.as_str())
-            .chain(instruction_topics.iter().copied())
-            .map(|t| {
-                NewTopic::new(t, 1, TopicReplication::Fixed(1)).set("cleanup.policy", "compact")
-            })
-            .collect();
-
-        match admin
-            .create_topics(topics_to_create.iter(), &AdminOptions::new())
-            .await
-        {
-            Ok(results) => {
-                for result in results {
-                    match result {
-                        Ok(topic) => tracing::info!(topic, "Topic created with log compaction"),
-                        Err((topic, err)) => {
-                            if err == rdkafka::types::RDKafkaErrorCode::TopicAlreadyExists {
-                                tracing::debug!(topic, "Topic already exists");
-                            } else {
-                                tracing::warn!(?err, topic, "Failed to create topic");
-                            }
-                        },
-                    }
-                }
-            },
-            Err(e) => tracing::error!(?e, "Failed to create topics"),
-        }
-    });
-}
 
 /// Last committed block info from the slots topic.
 #[derive(Debug, Clone, Copy)]
@@ -61,8 +13,8 @@ pub struct LastCommitted {
     pub slot: u64,
 }
 
-/// Read the latest committed block from the slots topic.
-/// Used for resumption (slot for from_slot) and deduplication (block_height for ordering).
+/// Read the latest committed slot from the slots topic for resumption.
+/// Slot is sufficient since the block machine coordinator handles ordering.
 /// Returns None if the topic is empty or doesn't exist.
 pub fn read_last_committed_block(config: &KafkaSinkConfig) -> Option<LastCommitted> {
     let consumer: BaseConsumer = ClientConfig::new()

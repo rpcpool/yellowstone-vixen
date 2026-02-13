@@ -25,7 +25,5 @@ pub use schema_registry::{
     SchemaDefinition,
 };
 pub use sink::{ConfiguredParsers, KafkaSinkBuilder, ParsedInstruction, SecondaryFilter};
-pub use topics::{
-    ensure_topics_exist_with_log_compaction, read_last_committed_block, LastCommitted,
-};
+pub use topics::{read_last_committed_block, LastCommitted};
 pub use utils::make_record_key;
