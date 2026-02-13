@@ -331,7 +331,7 @@ pub struct UiAmountToAmountArgs {
 pub struct TokenProgramInstruction {
     #[prost(
         oneof = "token_program_instruction::Ix",
-        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20"
+        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23"
     )]
     pub ix: Option<token_program_instruction::Ix>,
 }
