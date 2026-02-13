@@ -43,7 +43,10 @@ impl ConfirmedSlotSink {
         Self { config, producer }
     }
 
-    pub async fn run(self, mut rx: mpsc::Receiver<ConfirmedSlot<PreparedRecord>>) {
+    pub async fn run(
+        self,
+        mut rx: mpsc::Receiver<ConfirmedSlot<PreparedRecord>>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         tracing::info!("ConfirmedSlotSink started, waiting for confirmed slots...");
 
         while let Some(confirmed) = rx.recv().await {
@@ -59,16 +62,18 @@ impl ConfirmedSlotSink {
                         );
                     },
                     Err(e) => {
-                        panic!(
-                            "Slot {} failed after {attempt} attempts, last error: {e}",
+                        return Err(format!(
+                            "Slot {} failed after {attempt} attempts: {e}",
                             confirmed.slot,
-                        );
+                        )
+                        .into());
                     },
                 }
             }
         }
 
         tracing::warn!("ConfirmedSlotSink channel closed, shutting down");
+        Ok(())
     }
 
     async fn write_confirmed_slot(
