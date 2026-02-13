@@ -5,7 +5,6 @@
 
 use std::{sync::Arc, time::Duration};
 
-use futures::future::join_all;
 use rdkafka::{
     message::OwnedHeaders,
     producer::{FutureProducer, FutureRecord},
@@ -42,16 +41,30 @@ impl ConfirmedSlotSink {
         Self { config, producer }
     }
 
+    const MAX_ATTEMPTS: u32 = 3;
+
     pub async fn run(self, mut rx: mpsc::Receiver<ConfirmedSlot<PreparedRecord>>) {
         tracing::info!("ConfirmedSlotSink started, waiting for confirmed slots...");
 
         while let Some(confirmed) = rx.recv().await {
-            if let Err(e) = self.write_confirmed_slot(&confirmed).await {
-                tracing::error!(
-                    ?e,
-                    slot = confirmed.slot,
-                    "Error writing confirmed slot to Kafka"
-                );
+            for attempt in 1..=Self::MAX_ATTEMPTS {
+                match self.write_confirmed_slot(&confirmed).await {
+                    Ok(()) => break,
+                    Err(e) if attempt < Self::MAX_ATTEMPTS => {
+                        tracing::warn!(
+                            ?e,
+                            slot = confirmed.slot,
+                            attempt,
+                            "Kafka write failed, retrying"
+                        );
+                    },
+                    Err(e) => {
+                        panic!(
+                            "Slot {} failed after {attempt} attempts, last error: {e}",
+                            confirmed.slot,
+                        );
+                    },
+                }
             }
         }
 
@@ -63,49 +76,36 @@ impl ConfirmedSlotSink {
         confirmed: &ConfirmedSlot<PreparedRecord>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.batch_publish_records(confirmed.slot, &confirmed.records)
-            .await;
+            .await?;
         self.commit_slot_checkpoint(confirmed).await
     }
 
-    /// Publish all records to their respective Kafka topics in parallel.
-    async fn batch_publish_records(&self, slot: u64, records: &[PreparedRecord]) {
-        let futures: Vec<_> = records
-            .iter()
-            .map(|r| {
-                let headers = to_kafka_headers(&r.headers);
-                self.producer.send(
-                    FutureRecord::to(&r.topic)
-                        .payload(&r.payload)
-                        .key(&r.key)
+    /// Publish all records sequentially to preserve transaction ordering within each topic.
+    /// Records arrive pre-sorted by (tx_index, ix_path) from the coordinator.
+    /// Fails the entire slot on any write error so the caller can replay it.
+    async fn batch_publish_records(
+        &self,
+        slot: u64,
+        records: &[PreparedRecord],
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        for record in records {
+            let headers = to_kafka_headers(&record.headers);
+            self.producer
+                .send(
+                    FutureRecord::to(&record.topic)
+                        .payload(&record.payload)
+                        .key(&record.key)
                         .headers(headers),
                     Duration::from_secs(5),
                 )
-            })
-            .collect();
-
-        let results = join_all(futures).await;
-
-        let failure_count = results
-            .into_iter()
-            .zip(records.iter())
-            .filter(|(result, record)| {
-                if let Err((e, _)) = result {
+                .await
+                .map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
                     tracing::error!(?e, slot, topic = %record.topic, "Kafka write failed");
-                    true
-                } else {
-                    false
-                }
-            })
-            .count();
-
-        if failure_count > 0 {
-            tracing::warn!(
-                slot,
-                failure_count,
-                record_count = records.len(),
-                "Partial write failures"
-            );
+                    format!("Kafka write failed for slot {slot}: {e}").into()
+                })?;
         }
+
+        Ok(())
     }
 
     /// Commit a slot checkpoint to the slots topic (atomic marker for resumption).
@@ -127,8 +127,7 @@ impl ConfirmedSlotSink {
         let payload = serde_json::to_string(&event)?;
         let slot_key = slot.to_string();
 
-        match self
-            .producer
+        self.producer
             .send(
                 FutureRecord::to(&self.config.slots_topic)
                     .payload(&payload)
@@ -136,11 +135,11 @@ impl ConfirmedSlotSink {
                 Duration::from_secs(5),
             )
             .await
-        {
-            Ok(_) => tracing::info!(slot, decoded_count, record_count, "Kafka: committed slot"),
-            Err((e, _)) => tracing::error!(?e, slot, "Kafka: failed to commit slot"),
-        }
+            .map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
+                format!("Kafka: failed to commit slot {slot}: {e}").into()
+            })?;
 
+        tracing::info!(slot, decoded_count, record_count, "Kafka: committed slot");
         Ok(())
     }
 }
