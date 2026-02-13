@@ -1,6 +1,5 @@
 pub mod config;
 pub mod events;
-pub mod filters;
 pub mod handler;
 pub mod kafka_sink;
 pub mod parsers;
@@ -15,7 +14,6 @@ pub use config::KafkaSinkConfig;
 pub use events::{
     DecodedInstructionEvent, PreparedRecord, RawInstructionEvent, RecordHeader, SlotCommitEvent,
 };
-pub use filters::JupTransferFilter;
 pub use handler::BufferingHandler;
 pub use kafka_sink::ConfirmedSlotSink;
 pub use parsers::TransactionParser;
