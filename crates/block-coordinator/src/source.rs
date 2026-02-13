@@ -55,8 +55,9 @@ pub struct CoordinatorSourceConfig {
 
 trait CoordinatorSubscription {
     /// Add all subscriptions required by the BlockSM coordinator:
-    /// entries (block reconstruction), blocks_meta (BlockSummary), and
-    /// slot lifecycle (FirstShredReceived, CreatedBank, Completed, Dead).
+    /// - entries (block reconstruction)
+    /// - blocks_meta (BlockSummary)
+    /// - slot lifecycle (FirstShredReceived, CreatedBank, Completed, Dead).
     fn with_coordinator_subscriptions(self) -> Self;
 
     /// Set the starting slot for the gRPC stream.

@@ -19,7 +19,6 @@ pub struct SchemaDefinition {
     pub message_index: i32,
 }
 
-/// Registered schema info including ID and message index.
 #[derive(Clone, Debug)]
 pub struct RegisteredSchema {
     pub schema_id: i32,

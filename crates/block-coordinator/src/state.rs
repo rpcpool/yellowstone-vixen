@@ -33,6 +33,7 @@ pub struct CoordinatorState<R> {
 }
 
 impl<R> CoordinatorState<R> {
+    /// arbitrary number
     const MAX_DISCARDED_SLOTS: usize = 100;
 
     pub fn pending_slot_count(&self) -> usize { self.buffer.len() }

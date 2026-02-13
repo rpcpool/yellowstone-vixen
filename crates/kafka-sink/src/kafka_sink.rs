@@ -37,11 +37,11 @@ pub struct ConfirmedSlotSink {
 }
 
 impl ConfirmedSlotSink {
+    const MAX_ATTEMPTS: u32 = 3;
+
     pub fn new(config: KafkaSinkConfig, producer: Arc<FutureProducer>) -> Self {
         Self { config, producer }
     }
-
-    const MAX_ATTEMPTS: u32 = 3;
 
     pub async fn run(self, mut rx: mpsc::Receiver<ConfirmedSlot<PreparedRecord>>) {
         tracing::info!("ConfirmedSlotSink started, waiting for confirmed slots...");
