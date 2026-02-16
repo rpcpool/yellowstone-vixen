@@ -5,43 +5,44 @@ use spl_stake_pool::{
 use yellowstone_vixen_core::{
     AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
+use yellowstone_vixen_proc_macro::vixen_proto;
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct SplStakePoolProgramStateProto {
-    #[prost(oneof = "spl_stake_pool_program_state_proto::State", tags = "1, 2")]
+    #[vixen_proto_hint(oneof = "spl_stake_pool_program_state_proto::State", tags = "1, 2")]
     pub state: Option<spl_stake_pool_program_state_proto::State>,
 }
 
 pub mod spl_stake_pool_program_state_proto {
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    use super::vixen_proto;
+
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
     pub enum State {
-        #[prost(message, tag = "1")]
         StakePool(super::StakePoolAccountProto),
-        #[prost(message, tag = "2")]
         ValidatorList(super::ValidatorListAccountProto),
     }
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct StakePoolAccountProto {
     /// First byte discriminator (1)
-    #[prost(uint32, tag = "1")]
     pub account_type: u32,
 
     /// Raw borsh bytes (including discriminator byte)
-    #[prost(bytes = "vec", tag = "2")]
-    pub data: ::prost::alloc::vec::Vec<u8>,
+    pub data: Vec<u8>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ValidatorListAccountProto {
     /// First byte discriminator (2)
-    #[prost(uint32, tag = "1")]
     pub account_type: u32,
 
     /// Raw borsh bytes (including discriminator byte)
-    #[prost(bytes = "vec", tag = "2")]
-    pub data: ::prost::alloc::vec::Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 #[allow(clippy::large_enum_variant)]

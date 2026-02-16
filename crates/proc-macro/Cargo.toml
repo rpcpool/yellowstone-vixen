@@ -24,8 +24,9 @@ codama-nodes = { workspace = true }
 hex = { workspace = true }
 bs58 = { workspace = true }
 base64 = { workspace = true }
-prost = { workspace = true }
-prost-types = { workspace = true }
+
+[features]
+proto = []
 
 [dev-dependencies]
 prettyplease = { workspace = true }

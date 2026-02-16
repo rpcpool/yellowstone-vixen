@@ -99,8 +99,14 @@ pub trait Parser {
     type Input;
 
     /// The type of the parsed value produced by this parser.
-    /// Implements `prost::Message` to make it compatible with protobuf serialization.
+    /// When the `proto` feature is enabled, this type must implement `prost::Message`
+    /// for protobuf serialization compatibility.
+    #[cfg(feature = "proto")]
     type Output: ::prost::Message;
+
+    /// The type of the parsed value produced by this parser.
+    #[cfg(not(feature = "proto"))]
+    type Output;
 
     /// A unique ID for this parser.  Used to associate the parser with its
     /// requested prefilter data.

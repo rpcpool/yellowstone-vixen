@@ -7,99 +7,84 @@ use spl_token_2022::{
     state::{Account, AccountState, Mint, Multisig},
 };
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter, ProgramParser};
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use crate::PubkeyBytes;
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct TokenExtensionStateProto {
-    #[prost(oneof = "token_extension_state_proto::State", tags = "1, 2, 3")]
+    #[vixen_proto_hint(oneof = "token_extension_state_proto::State", tags = "1, 2, 3")]
     pub state: Option<token_extension_state_proto::State>,
 }
 
 pub mod token_extension_state_proto {
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    use super::vixen_proto;
+
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
     pub enum State {
-        #[prost(message, tag = "1")]
         ExtendedTokenAccount(super::ExtendedTokenAccountProto),
-        #[prost(message, tag = "2")]
         ExtendedMint(super::ExtendedMintProto),
-        #[prost(message, tag = "3")]
         Multisig(super::MultisigProto),
     }
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ExtensionDataProto {
     /// `spl_token_2022::extension::ExtensionType` as i32
-    #[prost(int32, tag = "1")]
     pub extension_type: i32,
 
     /// Raw bytes of the extension payload (exactly what Token-2022 stores)
-    #[prost(bytes = "vec", tag = "2")]
     pub data: Vec<u8>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ExtendedMintProto {
-    #[prost(message, tag = "1")]
     pub base_account: Option<MintProto>,
-    #[prost(message, repeated, tag = "2")]
     pub extensions: Vec<ExtensionDataProto>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ExtendedTokenAccountProto {
-    #[prost(message, tag = "1")]
     pub base_account: Option<AccountProto>,
-    #[prost(message, repeated, tag = "2")]
     pub extensions: Vec<ExtensionDataProto>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct MintProto {
-    #[prost(bytes = "vec", optional, tag = "1")]
     pub mint_authority: Option<PubkeyBytes>,
-    #[prost(uint64, tag = "2")]
     pub supply: u64,
-    #[prost(uint32, tag = "3")]
     pub decimals: u32,
-    #[prost(bool, tag = "4")]
     pub is_initialized: bool,
-    #[prost(bytes = "vec", optional, tag = "5")]
     pub freeze_authority: Option<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct AccountProto {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub owner: PubkeyBytes,
-    #[prost(uint64, tag = "3")]
     pub amount: u64,
-    #[prost(bytes = "vec", optional, tag = "4")]
     pub delegate: Option<PubkeyBytes>,
     /// `spl_token_2022::state::AccountState` as u32
-    #[prost(uint32, tag = "5")]
     pub state: u32,
     /// If native: rent-exempt reserve lamports (same semantics as spl-token)
-    #[prost(uint64, optional, tag = "6")]
     pub is_native: Option<u64>,
-    #[prost(uint64, tag = "7")]
     pub delegated_amount: u64,
-    #[prost(bytes = "vec", optional, tag = "8")]
     pub close_authority: Option<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct MultisigProto {
-    #[prost(uint32, tag = "1")]
     pub m: u32,
-    #[prost(uint32, tag = "2")]
     pub n: u32,
-    #[prost(bool, tag = "3")]
     pub is_initialized: bool,
-    #[prost(bytes = "vec", repeated, tag = "4")]
     pub signers: Vec<PubkeyBytes>,
 }
 

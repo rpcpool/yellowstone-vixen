@@ -13962,6 +13962,7 @@ dependencies = [
  "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
+ "yellowstone-vixen-proc-macro",
 ]
 
 [[package]]
@@ -14159,8 +14160,6 @@ dependencies = [
  "hex",
  "prettyplease 0.2.37",
  "proc-macro2",
- "prost 0.14.1",
- "prost-types 0.14.1",
  "quote",
  "serde",
  "serde_json",
@@ -14252,10 +14251,10 @@ dependencies = [
  "spl-type-length-value 0.9.0",
  "thiserror 1.0.69",
  "tokio",
- "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
  "yellowstone-vixen-spl-token-parser",
 ]
 
@@ -14275,10 +14274,10 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tracing",
- "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
  "yellowstone-vixen-proto",
 ]
 
@@ -14294,10 +14293,10 @@ dependencies = [
  "spl-stake-pool",
  "thiserror 1.0.69",
  "tokio",
- "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
  "yellowstone-vixen-proto",
 ]
 
@@ -14319,7 +14318,6 @@ dependencies = [
  "topograph",
  "tracing",
  "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
  "yellowstone-vixen",
  "yellowstone-vixen-core",
  "yellowstone-vixen-proto",

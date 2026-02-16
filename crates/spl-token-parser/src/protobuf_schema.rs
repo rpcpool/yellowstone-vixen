@@ -1,3 +1,4 @@
+#[cfg(feature = "proto")]
 pub const PROTOBUF_SCHEMA: &str = r#"syntax = "proto3";
 
 package spl_token;

@@ -1,6 +1,6 @@
-use prost::alloc::vec::Vec;
 use yellowstone_vixen_core::instruction::InstructionUpdate;
 use yellowstone_vixen_parser::{check_min_accounts_req, Error, Result};
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use super::extension::decode_extension_ix_type;
 use crate::PubkeyBytes;
@@ -41,43 +41,38 @@ impl ExtensionWithCommonInstruction {
     }
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ExtInitializeAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct UpdateAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub extension_authority: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "3")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct EnableAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "3")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct DisableAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "3")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ::prost::Enumeration)]
+#[vixen_proto(enumeration)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
 pub enum ExtensionWithCommonInstructionProto {
     CpiGuard = 0,
@@ -107,49 +102,49 @@ fn extension_to_proto(e: ExtensionWithCommonInstruction) -> i32 {
     }
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct CommonExtensionInstructions {
-    #[prost(enumeration = "ExtensionWithCommonInstructionProto", tag = "1")]
+    #[vixen_proto_hint(enumeration = "ExtensionWithCommonInstructionProto")]
     pub extension: i32,
 
-    #[prost(oneof = "common_extension_instructions::Ix", tags = "2, 3, 4, 5")]
+    #[vixen_proto_hint(oneof = "common_extension_instructions::Ix", tags = "2, 3, 4, 5")]
     pub ix: Option<common_extension_instructions::Ix>,
 }
 
 pub mod common_extension_instructions {
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    use super::vixen_proto;
+
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct Initialize {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::ExtInitializeAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct Update {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::UpdateAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct Enable {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::EnableAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct Disable {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::DisableAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
     pub enum Ix {
-        #[prost(message, tag = "2")]
         Initialize(Initialize),
-        #[prost(message, tag = "3")]
         Update(Update),
-        #[prost(message, tag = "4")]
         Enable(Enable),
-        #[prost(message, tag = "5")]
         Disable(Disable),
     }
 }

@@ -1,6 +1,6 @@
-use prost::alloc::vec::Vec;
 use spl_token_2022::{extension::ExtensionType, instruction::AuthorityType as SplAuthorityType};
 use yellowstone_vixen_spl_token_parser::{SetAuthorityAccounts, TokenProgramInstruction};
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use super::{
     CommonExtensionInstructions, ConfidentialTransferFeeInstruction,
@@ -9,77 +9,69 @@ use super::{
 };
 use crate::PubkeyBytes;
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct CreateNativeMintAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub funding_account: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeMintCloseAuthorityAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
 }
 
-#[derive(
-    Clone, PartialEq, ::prost::Message, ::borsh::BorshDeserialize, ::borsh::BorshSerialize,
-)]
+#[vixen_proto]
+#[derive(Clone, PartialEq, ::borsh::BorshDeserialize, ::borsh::BorshSerialize)]
 pub struct InitializeMintCloseAuthorityArgs {
-    #[prost(bytes = "vec", optional, tag = "1")]
     pub close_authority: Option<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeNonTransferableMintAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ReallocateAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub payer: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "4")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ReallocateArgs {
-    #[prost(uint32, repeated, tag = "1")]
     pub extension_types: Vec<u32>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializePermanentDelegateAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializePermanentDelegateArgs {
-    #[prost(bytes = "vec", tag = "1")]
     pub delegate: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct WithdrawExcessLamportsAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub source_account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub destination_account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub authority: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "4")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ::prost::Enumeration)]
+#[vixen_proto(enumeration)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
 pub enum AuthorityTypeProto {
     MintTokens = 0,
@@ -126,205 +118,177 @@ impl From<spl_token_2022::instruction::AuthorityType> for AuthorityTypeProto {
     }
 }
 
-#[derive(
-    Clone, PartialEq, ::prost::Message, ::borsh::BorshDeserialize, ::borsh::BorshSerialize,
-)]
+#[vixen_proto]
+#[derive(Clone, PartialEq, ::borsh::BorshDeserialize, ::borsh::BorshSerialize)]
 pub struct SetAuthorityArgs {
-    #[prost(enumeration = "AuthorityTypeProto", tag = "1")]
+    #[vixen_proto_hint(enumeration = "AuthorityTypeProto")]
     pub authority_type: i32,
-    #[prost(bytes = "vec", optional, tag = "2")]
     pub new_authority: Option<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct TokenExtensionProgramInstruction {
-    #[prost(
-        oneof = "token_extension_program_instruction::Ix",
-        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21"
-    )]
+    #[vixen_proto_hint(oneof = "token_extension_program_instruction::Ix", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21")]
     pub ix: Option<token_extension_program_instruction::Ix>,
 }
 
 pub mod token_extension_program_instruction {
     use super::*;
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct TokenProgram {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<TokenProgramInstruction>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct SetAuthority {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<SetAuthorityAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: Option<super::SetAuthorityArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct CreateNativeMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::CreateNativeMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct InitializeMintCloseAuthority {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::InitializeMintCloseAuthorityAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: Option<super::InitializeMintCloseAuthorityArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct InitializeNonTransferableMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::InitializeNonTransferableMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct Reallocate {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::ReallocateAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: Option<super::ReallocateArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct InitializePermanentDelegate {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::InitializePermanentDelegateAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: Option<super::InitializePermanentDelegateArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct WithdrawExcessLamports {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::WithdrawExcessLamportsAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct TransferFee {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<TransferFeeInstruction>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct ConfidentialTransfer {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<ConfidentialTransferInstruction>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct ConfidentialTransferFee {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<ConfidentialTransferFeeInstruction>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct CpiGuard {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<CommonExtensionInstructions>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct DefaultAccountState {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<CommonExtensionInstructions>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct GroupMemberPointer {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<CommonExtensionInstructions>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct GroupPointer {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<CommonExtensionInstructions>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct InterestBearingMint {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<CommonExtensionInstructions>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct MemoTransfer {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<CommonExtensionInstructions>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct MetadataPointer {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<CommonExtensionInstructions>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct TransferHook {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<CommonExtensionInstructions>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct TokenMetadata {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<TokenMetadataInstruction>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct TokenGroup {
-        #[prost(message, optional, tag = "1")]
         pub ix: Option<TokenGroupInstruction>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
     pub enum Ix {
-        #[prost(message, tag = "1")]
         TokenProgram(TokenProgram),
-        #[prost(message, tag = "2")]
         SetAuthority(SetAuthority),
-        #[prost(message, tag = "3")]
         CreateNativeMint(CreateNativeMint),
-        #[prost(message, tag = "4")]
         InitializeMintCloseAuthority(InitializeMintCloseAuthority),
-        #[prost(message, tag = "5")]
         InitializeNonTransferableMint(InitializeNonTransferableMint),
-        #[prost(message, tag = "6")]
         Reallocate(Reallocate),
-        #[prost(message, tag = "7")]
         InitializePermanentDelegate(InitializePermanentDelegate),
-        #[prost(message, tag = "8")]
         WithdrawExcessLamports(WithdrawExcessLamports),
-        #[prost(message, tag = "9")]
         TransferFee(TransferFee),
-        #[prost(message, tag = "10")]
         ConfidentialTransfer(ConfidentialTransfer),
-        #[prost(message, tag = "11")]
         ConfidentialTransferFee(ConfidentialTransferFee),
-        #[prost(message, tag = "12")]
         CpiGuard(CpiGuard),
-        #[prost(message, tag = "13")]
         DefaultAccountState(DefaultAccountState),
-        #[prost(message, tag = "14")]
         GroupMemberPointer(GroupMemberPointer),
-        #[prost(message, tag = "15")]
         GroupPointer(GroupPointer),
-        #[prost(message, tag = "16")]
         InterestBearingMint(InterestBearingMint),
-        #[prost(message, tag = "17")]
         MemoTransfer(MemoTransfer),
-        #[prost(message, tag = "18")]
         MetadataPointer(MetadataPointer),
-        #[prost(message, tag = "19")]
         TransferHook(TransferHook),
-        #[prost(message, tag = "20")]
         TokenMetadata(TokenMetadata),
-        #[prost(message, tag = "21")]
         TokenGroup(TokenGroup),
     }
 }

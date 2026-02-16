@@ -1,179 +1,153 @@
-use prost::alloc::vec::Vec;
 use spl_token_2022::extension::transfer_fee::instruction::TransferFeeInstruction as SplTransferFeeInstruction;
 use yellowstone_vixen_core::instruction::InstructionUpdate;
 use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use super::extension::ExtensionInstructionParser;
 use crate::PubkeyBytes;
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct TransferCheckedWithFeeAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub source: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub destination: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "4")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "5")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct TransferCheckedWithFeeArgs {
-    #[prost(uint64, tag = "1")]
     pub amount: u64,
-    #[prost(uint64, tag = "2")]
     pub fee_amount: u64,
     // u8 -> uint32 in proto
-    #[prost(uint32, tag = "3")]
     pub decimals: u32,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeTransferFeeConfigAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeTransferFeeConfigArgs {
-    #[prost(bytes = "vec", optional, tag = "1")]
     pub transfer_fee_config_authority: Option<PubkeyBytes>,
-    #[prost(bytes = "vec", optional, tag = "2")]
     pub withdraw_withheld_authority: Option<PubkeyBytes>,
     // u16 -> uint32 in proto
-    #[prost(uint32, tag = "3")]
     pub transfer_fee_basis_points: u32,
-    #[prost(uint64, tag = "4")]
     pub maximum_fee: u64,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct WithdrawWithheldTokensFromMintAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub fee_recipient: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub withdraw_withheld_authority: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "4")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct WithdrawWithheldTokensFromAccountsAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub fee_recipient: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub withdraw_withheld_authority: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "4")]
     pub source_accounts: Vec<PubkeyBytes>,
-    #[prost(bytes = "vec", repeated, tag = "5")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct WithdrawWithheldTokensFromAccountsArgs {
     // u8 -> uint32 in proto
-    #[prost(uint32, tag = "1")]
     pub num_token_accounts: u32,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct SetTransferFeeAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint_fee_acc_owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "3")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct SetTransferFeeArgs {
     // u16 -> uint32 in proto
-    #[prost(uint32, tag = "1")]
     pub transfer_fee_basis_points: u32,
-    #[prost(uint64, tag = "2")]
     pub maximum_fee: u64,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct HarvestWithheldTokensToMintAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint_fee_acc_owner: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct TransferFeeInstruction {
-    #[prost(oneof = "transfer_fee_instruction::Ix", tags = "1, 2, 3, 4, 5, 6")]
+    #[vixen_proto_hint(oneof = "transfer_fee_instruction::Ix", tags = "1, 2, 3, 4, 5, 6")]
     pub ix: Option<transfer_fee_instruction::Ix>,
 }
 
 pub mod transfer_fee_instruction {
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    use super::vixen_proto;
+
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct TransferCheckedWithFee {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::TransferCheckedWithFeeAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: Option<super::TransferCheckedWithFeeArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct InitializeTransferFeeConfig {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::InitializeTransferFeeConfigAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: Option<super::InitializeTransferFeeConfigArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct WithdrawWithheldTokensFromMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::WithdrawWithheldTokensFromMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct WithdrawWithheldTokensFromAccounts {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::WithdrawWithheldTokensFromAccountsAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: Option<super::WithdrawWithheldTokensFromAccountsArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct HarvestWithheldTokensToMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::HarvestWithheldTokensToMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct SetTransferFee {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::SetTransferFeeAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: Option<super::SetTransferFeeArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
     pub enum Ix {
-        #[prost(message, tag = "1")]
         TransferCheckedWithFee(TransferCheckedWithFee),
-        #[prost(message, tag = "2")]
         InitializeTransferFeeConfig(InitializeTransferFeeConfig),
-        #[prost(message, tag = "3")]
         WithdrawWithheldTokensFromMint(WithdrawWithheldTokensFromMint),
-        #[prost(message, tag = "4")]
         WithdrawWithheldTokensFromAccounts(WithdrawWithheldTokensFromAccounts),
-        #[prost(message, tag = "5")]
         HarvestWithheldTokensToMint(HarvestWithheldTokensToMint),
-        #[prost(message, tag = "6")]
         SetTransferFee(SetTransferFee),
     }
 }

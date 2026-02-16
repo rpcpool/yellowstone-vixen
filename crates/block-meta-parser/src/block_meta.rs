@@ -1,49 +1,37 @@
 use std::borrow::Cow;
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use yellowstone_grpc_proto::geyser::SubscribeUpdateBlockMeta;
 use yellowstone_vixen_core::{ParseResult, Parser, Prefilter, ProgramParser, Pubkey};
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct Reward {
-    #[prost(string, tag = "1")]
-    pub pubkey: ::prost::alloc::string::String,
-    #[prost(int64, tag = "2")]
+    pub pubkey: String,
     pub lamports: i64,
-    #[prost(uint64, tag = "3")]
     pub post_balance: u64,
-    #[prost(int32, tag = "4")]
     pub reward_type: i32,
-    #[prost(string, tag = "5")]
-    pub commission: ::prost::alloc::string::String,
+    pub commission: String,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct Rewards {
-    #[prost(message, repeated, tag = "1")]
-    pub rewards: ::prost::alloc::vec::Vec<Reward>,
-    #[prost(uint64, optional, tag = "2")]
+    pub rewards: Vec<Reward>,
     pub num_partitions: ::core::option::Option<u64>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct BlockMetaUpdate {
-    #[prost(uint64, tag = "1")]
     pub slot: u64,
-    #[prost(string, tag = "2")]
-    pub blockhash: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "3")]
+    pub blockhash: String,
     pub rewards: ::core::option::Option<Rewards>,
-    #[prost(int64, optional, tag = "4")]
     pub block_time: ::core::option::Option<i64>,
-    #[prost(uint64, optional, tag = "5")]
     pub block_height: ::core::option::Option<u64>,
-    #[prost(uint64, tag = "6")]
     pub parent_slot: u64,
-    #[prost(string, tag = "7")]
-    pub parent_blockhash: ::prost::alloc::string::String,
-    #[prost(uint64, tag = "8")]
+    pub parent_blockhash: String,
     pub executed_transaction_count: u64,
-    #[prost(uint64, tag = "9")]
     pub entries_count: u64,
 }
 

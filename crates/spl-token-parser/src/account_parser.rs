@@ -7,75 +7,63 @@ use spl_token::{
 use yellowstone_vixen_core::{
     AccountUpdate, ParseError, ParseResult, Parser, Prefilter, ProgramParser,
 };
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use crate::PubkeyBytes;
 
 /// SPL Token account state, proto-compatible
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct MintProto {
-    #[prost(bytes = "vec", optional, tag = "1")]
     pub mint_authority: ::core::option::Option<PubkeyBytes>,
-    #[prost(uint64, tag = "2")]
     pub supply: u64,
-    #[prost(uint32, tag = "3")]
     pub decimals: u32,
-    #[prost(bool, tag = "4")]
     pub is_initialized: bool,
-    #[prost(bytes = "vec", optional, tag = "5")]
     pub freeze_authority: ::core::option::Option<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct TokenAccountProto {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub owner: PubkeyBytes,
-    #[prost(uint64, tag = "3")]
     pub amount: u64,
 
-    #[prost(bytes = "vec", optional, tag = "4")]
     pub delegate: ::core::option::Option<PubkeyBytes>,
-    #[prost(uint32, tag = "5")]
     pub state: u32,
-    #[prost(uint64, tag = "6")]
     pub delegated_amount: u64,
 
     /// If present, native rent-exempt reserve (lamports).
-    #[prost(optional, uint64, tag = "7")]
     pub is_native: ::core::option::Option<u64>,
 
-    #[prost(bytes = "vec", optional, tag = "8")]
     pub close_authority: ::core::option::Option<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct MultisigProto {
-    #[prost(uint32, tag = "1")]
     pub m: u32,
-    #[prost(uint32, tag = "2")]
     pub n: u32,
-    #[prost(bool, tag = "3")]
     pub is_initialized: bool,
-    #[prost(bytes = "vec", repeated, tag = "4")]
-    pub signers: ::prost::alloc::vec::Vec<PubkeyBytes>,
+    pub signers: Vec<PubkeyBytes>,
 }
 
 /// One-of wrapper for SPL Token program account state.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct TokenProgramStateProto {
-    #[prost(oneof = "token_program_state_proto::State", tags = "1, 2, 3")]
+    #[vixen_proto_hint(oneof = "token_program_state_proto::State", tags = "1, 2, 3")]
     pub state: ::core::option::Option<token_program_state_proto::State>,
 }
 
 pub mod token_program_state_proto {
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    use super::vixen_proto;
+
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
     pub enum State {
-        #[prost(message, tag = "1")]
         TokenAccount(super::TokenAccountProto),
-        #[prost(message, tag = "2")]
         Mint(super::MintProto),
-        #[prost(message, tag = "3")]
         Multisig(super::MultisigProto),
     }
 }

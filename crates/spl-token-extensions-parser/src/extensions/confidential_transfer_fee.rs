@@ -1,78 +1,65 @@
-use prost::alloc::vec::Vec;
 use spl_token_2022::extension::confidential_transfer_fee::instruction::ConfidentialTransferFeeInstruction as SplConfidentialTransferFeeInstruction;
 use yellowstone_vixen_core::instruction::InstructionUpdate;
 use yellowstone_vixen_parser::{check_min_accounts_req, Result};
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use super::extension::{decode_extension_ix_type, ExtensionInstructionParser};
 use crate::PubkeyBytes;
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeConfidentialTransferFeeConfigAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ConfidentialWithdrawWithheldTokensFromMintAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub fee_recipient: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub sysvar: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "4")]
     pub withdraw_withheld_authority: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "5")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ConfidentialWithdrawWithheldTokensFromAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub fee_recipient: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub sysvar: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "4")]
     pub withdraw_withheld_authority: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "5")]
     pub source_accounts: Vec<PubkeyBytes>,
-    #[prost(bytes = "vec", repeated, tag = "6")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ConfidentialHarvestWithheldTokensToMintAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "2")]
     pub source_accounts: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct EnableHarvestToMintAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub confidential_transfer_fee_authority: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "3")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct DisableHarvestToMintAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub confidential_transfer_fee_authority: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "3")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ConfidentialTransferFeeInstruction {
-    #[prost(
+    #[vixen_proto_hint(
         oneof = "confidential_transfer_fee_instruction::Ix",
         tags = "1, 2, 3, 4, 5, 6"
     )]
@@ -80,60 +67,57 @@ pub struct ConfidentialTransferFeeInstruction {
 }
 
 pub mod confidential_transfer_fee_instruction {
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    use super::vixen_proto;
+
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct InitializeConfidentialTransferFeeConfig {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::InitializeConfidentialTransferFeeConfigAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct WithdrawWithheldTokensFromMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::ConfidentialWithdrawWithheldTokensFromMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct WithdrawWithheldTokensFromAccounts {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::ConfidentialWithdrawWithheldTokensFromAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct HarvestWithheldTokensToMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::ConfidentialHarvestWithheldTokensToMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct EnableHarvestToMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::EnableHarvestToMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct DisableHarvestToMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<super::DisableHarvestToMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
     pub enum Ix {
-        #[prost(message, tag = "1")]
         InitializeConfidentialTransferFeeConfig(InitializeConfidentialTransferFeeConfig),
 
-        #[prost(message, tag = "2")]
         WithdrawWithheldTokensFromMint(WithdrawWithheldTokensFromMint),
 
-        #[prost(message, tag = "3")]
         WithdrawWithheldTokensFromAccounts(WithdrawWithheldTokensFromAccounts),
 
-        #[prost(message, tag = "4")]
         HarvestWithheldTokensToMint(HarvestWithheldTokensToMint),
 
-        #[prost(message, tag = "5")]
         EnableHarvestToMint(EnableHarvestToMint),
 
-        #[prost(message, tag = "6")]
         DisableHarvestToMint(DisableHarvestToMint),
     }
 }

@@ -6,11 +6,14 @@ use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::LitStr;
 
-/// 
+///
 /// Build the *account parser* for a program.
 ///
-/// Generates a prost-compatible wrapper struct with a oneof field:
+/// Generates a wrapper struct with a oneof field. When the `proto` feature is
+/// enabled, prost attributes are emitted directly; otherwise plain Rust types
+/// are generated.
 ///
+/// With `proto` feature:
 /// ```rust, ignore
 /// #[derive(Clone, PartialEq, ::prost::Message)]
 /// pub struct {ProgramName}Account {
@@ -28,7 +31,23 @@ use syn::LitStr;
 ///     }
 /// }
 /// ```
-/// 
+///
+/// Without `proto` feature:
+/// ```rust, ignore
+/// #[derive(Clone, Debug, PartialEq)]
+/// pub struct {ProgramName}Account {
+///     pub kind: Option<{program_name}_account::Kind>,
+/// }
+///
+/// pub mod {program_name}_account {
+///     #[derive(Clone, Debug, PartialEq)]
+///     pub enum Kind {
+///         AccountA(Vec<u8>),
+///         AccountB(Vec<u8>),
+///     }
+/// }
+/// ```
+///
 pub fn account_parser(
     program_name_camel: &CamelCaseString,
     accounts: &[codama_nodes::AccountNode],
@@ -65,9 +84,15 @@ pub fn account_parser(
         let tag = (i + 1) as u32;
         let account_ident = format_ident!("{}", crate::utils::to_pascal_case(&account.name));
 
-        quote! {
-            #[prost(bytes, tag = #tag)]
-            #account_ident(::prost::alloc::vec::Vec<u8>)
+        if cfg!(feature = "proto") {
+            quote! {
+                #[prost(bytes, tag = #tag)]
+                #account_ident(Vec<u8>)
+            }
+        } else {
+            quote! {
+                #account_ident(Vec<u8>)
+            }
         }
     });
 
@@ -134,12 +159,15 @@ pub fn account_parser(
                     codama_nodes::BytesEncoding::Base16 => {
                         hex::decode(&bytes.data).expect("Failed to decode base16 (hex) bytes")
                     },
+                    
                     codama_nodes::BytesEncoding::Base58 => bs58::decode(&bytes.data)
                         .into_vec()
                         .expect("Failed to decode base58 bytes"),
+                    
                     codama_nodes::BytesEncoding::Base64 => STANDARD
                         .decode(&bytes.data)
                         .expect("Failed to decode base64 bytes"),
+
                     codama_nodes::BytesEncoding::Utf8 => bytes.data.as_bytes().to_vec(),
                 };
 
@@ -172,21 +200,41 @@ pub fn account_parser(
         })
     });
 
-    quote! {
-        /// Prost-compatible wrapper struct for program accounts.
-        /// Uses the oneof pattern to represent account variants.
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct #account_struct_ident {
-            #[prost(oneof = #oneof_path_lit, tags = #tags_lit)]
-            pub kind: ::core::option::Option<#account_mod_ident::Kind>,
-        }
+    let struct_and_mod = if cfg!(feature = "proto") {
+        quote! {
+            /// Wrapper struct for program accounts.
+            #[derive(Clone, PartialEq, ::prost::Message)]
+            pub struct #account_struct_ident {
+                #[prost(oneof = #oneof_path_lit, tags = #tags_lit)]
+                pub kind: ::core::option::Option<#account_mod_ident::Kind>,
+            }
 
-        pub mod #account_mod_ident {
-            #[derive(Clone, PartialEq, ::prost::Oneof)]
-            pub enum Kind {
-                #(#oneof_variants),*
+            pub mod #account_mod_ident {
+                #[derive(Clone, PartialEq, ::prost::Oneof)]
+                pub enum Kind {
+                    #(#oneof_variants),*
+                }
             }
         }
+    } else {
+        quote! {
+            /// Wrapper struct for program accounts.
+            #[derive(Clone, Debug, PartialEq)]
+            pub struct #account_struct_ident {
+                pub kind: ::core::option::Option<#account_mod_ident::Kind>,
+            }
+
+            pub mod #account_mod_ident {
+                #[derive(Clone, Debug, PartialEq)]
+                pub enum Kind {
+                    #(#oneof_variants),*
+                }
+            }
+        }
+    };
+
+    quote! {
+        #struct_and_mod
 
         impl #account_struct_ident {
             pub fn try_unpack(data: &[u8]) -> ParseResult<Self> {

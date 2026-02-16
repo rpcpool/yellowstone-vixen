@@ -1,122 +1,111 @@
 use spl_token_group_interface::instruction::TokenGroupInstruction as SplTokenGroupInstruction;
 use yellowstone_vixen_core::instruction::InstructionUpdate;
 use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use crate::{ExtensionInstructionParser, PubkeyBytes};
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeGroupAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub group: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub mint_authority: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeGroupArgs {
-    #[prost(uint64, tag = "1")]
     pub max_size: u64,
-    #[prost(bytes = "vec", optional, tag = "2")]
     pub update_authority: ::core::option::Option<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct UpdateGroupMaxSizeAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub group: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub update_authority: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct UpdateGroupMaxSizeArgs {
-    #[prost(uint64, tag = "1")]
     pub max_size: u64,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct UpdateGroupAuthorityAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub group: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub current_authority: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct UpdateGroupAuthorityArgs {
-    #[prost(bytes = "vec", tag = "1")]
     pub new_authority: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeMemberAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub member: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub member_mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub member_mint_authority: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "4")]
     pub group: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "5")]
     pub group_update_authority: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeMemberArgs {
     // empty
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct TokenGroupInstruction {
-    #[prost(oneof = "token_group_instruction::Ix", tags = "1, 2, 3, 4")]
+    #[vixen_proto_hint(oneof = "token_group_instruction::Ix", tags = "1, 2, 3, 4")]
     pub ix: ::core::option::Option<token_group_instruction::Ix>,
 }
 
 pub mod token_group_instruction {
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    use super::vixen_proto;
+
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct InitializeGroup {
-        #[prost(message, optional, tag = "1")]
         pub accounts: ::core::option::Option<super::InitializeGroupAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: ::core::option::Option<super::InitializeGroupArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct UpdateGroupMaxSize {
-        #[prost(message, optional, tag = "1")]
         pub accounts: ::core::option::Option<super::UpdateGroupMaxSizeAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: ::core::option::Option<super::UpdateGroupMaxSizeArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct UpdateGroupAuthority {
-        #[prost(message, optional, tag = "1")]
         pub accounts: ::core::option::Option<super::UpdateGroupAuthorityAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: ::core::option::Option<super::UpdateGroupAuthorityArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct InitializeMember {
-        #[prost(message, optional, tag = "1")]
         pub accounts: ::core::option::Option<super::InitializeMemberAccounts>,
-        #[prost(message, optional, tag = "2")]
         pub args: ::core::option::Option<super::InitializeMemberArgs>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
     pub enum Ix {
-        #[prost(message, tag = "1")]
         InitializeGroup(InitializeGroup),
-        #[prost(message, tag = "2")]
         UpdateGroupMaxSize(UpdateGroupMaxSize),
-        #[prost(message, tag = "3")]
         UpdateGroupAuthority(UpdateGroupAuthority),
-        #[prost(message, tag = "4")]
         InitializeMember(InitializeMember),
     }
 }

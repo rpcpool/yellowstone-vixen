@@ -1,270 +1,224 @@
-use prost::alloc::vec::Vec;
 use spl_token_2022::extension::confidential_transfer::instruction::ConfidentialTransferInstruction as SplConfidentialTransferInstruction;
 use yellowstone_vixen_core::instruction::InstructionUpdate;
 use yellowstone_vixen_parser::{check_min_accounts_req, Result};
 use yellowstone_vixen_spl_token_parser::InitializeMintAccounts;
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use crate::{decode_extension_ix_type, ExtensionInstructionParser, PubkeyBytes};
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct UpdateMintAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub authority: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ConfigureAccountAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub sysvar: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "4")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "5")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ApproveAccountAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub authority: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct EmptyAccountAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub sysvar: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "4")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct DepositAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "4")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct WithdrawAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub source_account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub destination: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "4")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "5")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ConfidentialTransferAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub source_account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub destination: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "4")]
     pub context_account: PubkeyBytes, // Sysvar account or context state account
-    #[prost(bytes = "vec", tag = "5")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "6")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ApplyPendingBalanceAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "3")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct CreditsAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub owner: PubkeyBytes,
-    #[prost(bytes = "vec", repeated, tag = "3")]
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct TransferWithFeeAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub source_account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub destination: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ConfigureAccountWithRegistryAccounts {
-    #[prost(bytes = "vec", tag = "1")]
     pub account: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "2")]
     pub mint: PubkeyBytes,
-    #[prost(bytes = "vec", tag = "3")]
     pub registry: PubkeyBytes,
 }
 
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct ConfidentialTransferInstruction {
-    #[prost(
-        oneof = "confidential_transfer_instruction::Ix",
-        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15"
-    )]
+    #[vixen_proto_hint(oneof = "confidential_transfer_instruction::Ix", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15")]
     pub ix: Option<confidential_transfer_instruction::Ix>,
 }
 
 pub mod confidential_transfer_instruction {
     use super::*;
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct InitializeMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<InitializeMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct UpdateMint {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<UpdateMintAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct ConfigureAccount {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<ConfigureAccountAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct ApproveAccount {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<ApproveAccountAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct EmptyAccount {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<EmptyAccountAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct Deposit {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<DepositAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct Withdraw {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<WithdrawAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct Transfer {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<ConfidentialTransferAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct ApplyPendingBalance {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<ApplyPendingBalanceAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct EnableConfidentialCredits {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<CreditsAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct DisableConfidentialCredits {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<CreditsAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct EnableNonConfidentialCredits {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<CreditsAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct DisableNonConfidentialCredits {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<CreditsAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct TransferWithFee {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<TransferWithFeeAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
     pub struct ConfigureAccountWithRegistry {
-        #[prost(message, optional, tag = "1")]
         pub accounts: Option<ConfigureAccountWithRegistryAccounts>,
     }
 
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
     pub enum Ix {
-        #[prost(message, tag = "1")]
         InitializeMint(InitializeMint),
-        #[prost(message, tag = "2")]
         UpdateMint(UpdateMint),
-        #[prost(message, tag = "3")]
         ConfigureAccount(ConfigureAccount),
-        #[prost(message, tag = "4")]
         ApproveAccount(ApproveAccount),
-        #[prost(message, tag = "5")]
         EmptyAccount(EmptyAccount),
-        #[prost(message, tag = "6")]
         Deposit(Deposit),
-        #[prost(message, tag = "7")]
         Withdraw(Withdraw),
-        #[prost(message, tag = "8")]
         Transfer(Transfer),
-        #[prost(message, tag = "9")]
         ApplyPendingBalance(ApplyPendingBalance),
-        #[prost(message, tag = "10")]
         EnableConfidentialCredits(EnableConfidentialCredits),
-        #[prost(message, tag = "11")]
         DisableConfidentialCredits(DisableConfidentialCredits),
-        #[prost(message, tag = "12")]
         EnableNonConfidentialCredits(EnableNonConfidentialCredits),
-        #[prost(message, tag = "13")]
         DisableNonConfidentialCredits(DisableNonConfidentialCredits),
-        #[prost(message, tag = "14")]
         TransferWithFee(TransferWithFee),
-        #[prost(message, tag = "15")]
         ConfigureAccountWithRegistry(ConfigureAccountWithRegistry),
     }
 }
