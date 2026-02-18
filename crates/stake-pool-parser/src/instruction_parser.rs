@@ -12,7 +12,7 @@ pub struct InstructionParser;
 
 impl Parser for InstructionParser {
     type Input = InstructionUpdate;
-    type Output = StakePoolProgramInstructionProto;
+    type Output = StakePoolProgramInstruction;
 
     fn id(&self) -> std::borrow::Cow<'static, str> { "StakePool::InstructionParser".into() }
 
@@ -40,13 +40,11 @@ impl ProgramParser for InstructionParser {
 }
 
 impl InstructionParser {
-    pub(crate) fn parse_impl(
-        ix: &InstructionUpdate,
-    ) -> ParseResult<StakePoolProgramInstructionProto> {
+    pub(crate) fn parse_impl(ix: &InstructionUpdate) -> ParseResult<StakePoolProgramInstruction> {
         let ix_type = StakePoolInstruction::try_from_slice(ix.data.as_slice())?;
         let accounts_len = ix.accounts.len();
 
-        use stake_pool_program_instruction_proto::Instruction as Out;
+        use stake_pool_program_instruction::Instruction as Out;
 
         let instruction = match ix_type {
             StakePoolInstruction::Initialize {
@@ -58,8 +56,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 9)?;
 
-                Out::Initialize(InitializeIxProto {
-                    accounts: Some(InitializeAccountsProto {
+                Out::Initialize(Initialize {
+                    accounts: Some(InitializeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
                         staker: ix.accounts[2].into_bytes().to_vec(),
@@ -71,7 +69,7 @@ impl InstructionParser {
                         token_program: ix.accounts[8].into_bytes().to_vec(),
                         deposit_authority: ix.accounts.get(9).map(|a| a.into_bytes().to_vec()),
                     }),
-                    args: Some(InitializeArgsProto {
+                    args: Some(InitializeArgs {
                         fee: Some(fee_to_proto(fee)),
                         withdrawal_fee: Some(fee_to_proto(withdrawal_fee)),
                         deposit_fee: Some(fee_to_proto(deposit_fee)),
@@ -84,8 +82,8 @@ impl InstructionParser {
             StakePoolInstruction::AddValidatorToPool(raw_validator_seed) => {
                 check_min_accounts_req(accounts_len, 13)?;
 
-                Out::AddValidatorToPool(AddValidatorToPoolIxProto {
-                    accounts: Some(AddValidatorToPoolAccountsProto {
+                Out::AddValidatorToPool(AddValidatorToPool {
+                    accounts: Some(AddValidatorToPoolAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
                         funder: ix.accounts[2].into_bytes().to_vec(),
@@ -100,15 +98,15 @@ impl InstructionParser {
                         system_program: ix.accounts[11].into_bytes().to_vec(),
                         stake_program: ix.accounts[12].into_bytes().to_vec(),
                     }),
-                    args: Some(AddValidatorToPoolArgsProto { raw_validator_seed }),
+                    args: Some(AddValidatorToPoolArgs { raw_validator_seed }),
                 })
             },
 
             StakePoolInstruction::RemoveValidatorFromPool => {
                 check_min_accounts_req(accounts_len, 8)?;
 
-                Out::RemoveValidatorFromPool(RemoveValidatorFromPoolIxProto {
-                    accounts: Some(RemoveValidatorFromPoolAccountsProto {
+                Out::RemoveValidatorFromPool(RemoveValidatorFromPool {
+                    accounts: Some(RemoveValidatorFromPoolAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_withdraw: ix.accounts[2].into_bytes().to_vec(),
@@ -127,8 +125,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 10)?;
 
-                Out::DecreaseValidatorStake(DecreaseValidatorStakeIxProto {
-                    accounts: Some(DecreaseValidatorStakeAccountsProto {
+                Out::DecreaseValidatorStake(DecreaseValidatorStake {
+                    accounts: Some(DecreaseValidatorStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[2].into_bytes().to_vec(),
@@ -140,7 +138,7 @@ impl InstructionParser {
                         system_program: ix.accounts[8].into_bytes().to_vec(),
                         stake_program: ix.accounts[9].into_bytes().to_vec(),
                     }),
-                    args: Some(DecreaseValidatorStakeArgsProto {
+                    args: Some(DecreaseValidatorStakeArgs {
                         lamports,
                         transient_stake_seed,
                     }),
@@ -153,8 +151,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 14)?;
 
-                Out::IncreaseValidatorStake(IncreaseValidatorStakeIxProto {
-                    accounts: Some(IncreaseValidatorStakeAccountsProto {
+                Out::IncreaseValidatorStake(IncreaseValidatorStake {
+                    accounts: Some(IncreaseValidatorStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[2].into_bytes().to_vec(),
@@ -170,7 +168,7 @@ impl InstructionParser {
                         system_program: ix.accounts[12].into_bytes().to_vec(),
                         stake_program: ix.accounts[13].into_bytes().to_vec(),
                     }),
-                    args: Some(IncreaseValidatorStakeArgsProto {
+                    args: Some(IncreaseValidatorStakeArgs {
                         lamports,
                         transient_stake_seed,
                     }),
@@ -183,13 +181,13 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                Out::SetPreferredValidator(SetPreferredValidatorIxProto {
-                    accounts: Some(SetPreferredValidatorAccountsProto {
+                Out::SetPreferredValidator(SetPreferredValidator {
+                    accounts: Some(SetPreferredValidatorAccounts {
                         stake_pool_address: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
                         validator_list_address: ix.accounts[2].into_bytes().to_vec(),
                     }),
-                    args: Some(SetPreferredValidatorArgsProto {
+                    args: Some(SetPreferredValidatorArgs {
                         validator_type: preferred_validator_type_to_proto(validator_type) as i32,
                         // real Pubkey, not an account meta
                         validator_vote_address: validator_vote_address
@@ -204,8 +202,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 7)?;
 
-                Out::UpdateValidatorListBalance(UpdateValidatorListBalanceIxProto {
-                    accounts: Some(UpdateValidatorListBalanceAccountsProto {
+                Out::UpdateValidatorListBalance(UpdateValidatorListBalance {
+                    accounts: Some(UpdateValidatorListBalanceAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
                         validator_list_address: ix.accounts[2].into_bytes().to_vec(),
@@ -214,7 +212,7 @@ impl InstructionParser {
                         sysvar_stake_history: ix.accounts[5].into_bytes().to_vec(),
                         stake_program: ix.accounts[6].into_bytes().to_vec(),
                     }),
-                    args: Some(UpdateValidatorListBalanceArgsProto {
+                    args: Some(UpdateValidatorListBalanceArgs {
                         start_index,
                         no_merge,
                     }),
@@ -224,8 +222,8 @@ impl InstructionParser {
             StakePoolInstruction::UpdateStakePoolBalance => {
                 check_min_accounts_req(accounts_len, 7)?;
 
-                Out::UpdateStakePoolBalance(UpdateStakePoolBalanceIxProto {
-                    accounts: Some(UpdateStakePoolBalanceAccountsProto {
+                Out::UpdateStakePoolBalance(UpdateStakePoolBalance {
+                    accounts: Some(UpdateStakePoolBalanceAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[2].into_bytes().to_vec(),
@@ -240,8 +238,8 @@ impl InstructionParser {
             StakePoolInstruction::CleanupRemovedValidatorEntries => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Out::CleanupRemovedValidatorEntries(CleanupRemovedValidatorEntriesIxProto {
-                    accounts: Some(CleanupRemovedValidatorEntriesAccountsProto {
+                Out::CleanupRemovedValidatorEntries(CleanupRemovedValidatorEntries {
+                    accounts: Some(CleanupRemovedValidatorEntriesAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
                     }),
@@ -251,8 +249,8 @@ impl InstructionParser {
             StakePoolInstruction::DepositStake => {
                 check_min_accounts_req(accounts_len, 15)?;
 
-                Out::DepositStake(DepositStakeIxProto {
-                    accounts: Some(DepositStakeAccountsProto {
+                Out::DepositStake(DepositStake {
+                    accounts: Some(DepositStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_deposit_authority: ix.accounts[2].into_bytes().to_vec(),
@@ -275,8 +273,8 @@ impl InstructionParser {
             StakePoolInstruction::WithdrawStake(amount) => {
                 check_min_accounts_req(accounts_len, 13)?;
 
-                Out::WithdrawStake(WithdrawStakeIxProto {
-                    accounts: Some(WithdrawStakeAccountsProto {
+                Out::WithdrawStake(WithdrawStake {
+                    accounts: Some(WithdrawStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_withdraw: ix.accounts[2].into_bytes().to_vec(),
@@ -291,15 +289,15 @@ impl InstructionParser {
                         token_program: ix.accounts[11].into_bytes().to_vec(),
                         stake_program: ix.accounts[12].into_bytes().to_vec(),
                     }),
-                    args: Some(WithdrawStakeArgsProto { amount }),
+                    args: Some(WithdrawStakeArgs { amount }),
                 })
             },
 
             StakePoolInstruction::SetManager => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                Out::SetManager(SetManagerIxProto {
-                    accounts: Some(SetManagerAccountsProto {
+                Out::SetManager(SetManager {
+                    accounts: Some(SetManagerAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
                         new_manager: ix.accounts[2].into_bytes().to_vec(),
@@ -311,12 +309,12 @@ impl InstructionParser {
             StakePoolInstruction::SetFee { fee } => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Out::SetFee(SetFeeIxProto {
-                    accounts: Some(SetFeeAccountsProto {
+                Out::SetFee(SetFee {
+                    accounts: Some(SetFeeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
                     }),
-                    args: Some(SetFeeArgsProto {
+                    args: Some(SetFeeArgs {
                         fee: Some(fee_type_to_proto(fee)),
                     }),
                 })
@@ -325,8 +323,8 @@ impl InstructionParser {
             StakePoolInstruction::SetStaker => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                Out::SetStaker(SetStakerIxProto {
-                    accounts: Some(SetStakerAccountsProto {
+                Out::SetStaker(SetStaker {
+                    accounts: Some(SetStakerAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         set_staker_authority: ix.accounts[1].into_bytes().to_vec(),
                         new_staker: ix.accounts[2].into_bytes().to_vec(),
@@ -337,8 +335,8 @@ impl InstructionParser {
             StakePoolInstruction::DepositSol(amount) => {
                 check_min_accounts_req(accounts_len, 10)?;
 
-                Out::DepositSol(DepositSolIxProto {
-                    accounts: Some(DepositSolAccountsProto {
+                Out::DepositSol(DepositSol {
+                    accounts: Some(DepositSolAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
                         reserve_stake_account: ix.accounts[2].into_bytes().to_vec(),
@@ -351,20 +349,20 @@ impl InstructionParser {
                         token_program: ix.accounts[9].into_bytes().to_vec(),
                         deposit_authority: ix.accounts.get(10).map(|a| a.into_bytes().to_vec()),
                     }),
-                    args: Some(DepositSolArgsProto { amount }),
+                    args: Some(DepositSolArgs { amount }),
                 })
             },
 
             StakePoolInstruction::SetFundingAuthority(funding_type) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Out::SetFundingAuthority(SetFundingAuthorityIxProto {
-                    accounts: Some(SetFundingAuthorityAccountsProto {
+                Out::SetFundingAuthority(SetFundingAuthority {
+                    accounts: Some(SetFundingAuthorityAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
                         auth: ix.accounts.get(2).map(|a| a.into_bytes().to_vec()),
                     }),
-                    args: Some(SetFundingAuthorityArgsProto {
+                    args: Some(SetFundingAuthorityArgs {
                         funding_type: funding_type_to_proto(funding_type) as i32,
                     }),
                 })
@@ -373,8 +371,8 @@ impl InstructionParser {
             StakePoolInstruction::WithdrawSol(amount) => {
                 check_min_accounts_req(accounts_len, 12)?;
 
-                Out::WithdrawSol(WithdrawSolIxProto {
-                    accounts: Some(WithdrawSolAccountsProto {
+                Out::WithdrawSol(WithdrawSol {
+                    accounts: Some(WithdrawSolAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
                         user_transfer_authority: ix.accounts[2].into_bytes().to_vec(),
@@ -392,15 +390,15 @@ impl InstructionParser {
                             .get(12)
                             .map(|a| a.into_bytes().to_vec()),
                     }),
-                    args: Some(WithdrawSolArgsProto { amount }),
+                    args: Some(WithdrawSolArgs { amount }),
                 })
             },
 
             StakePoolInstruction::CreateTokenMetadata { name, symbol, uri } => {
                 check_min_accounts_req(accounts_len, 8)?;
 
-                Out::CreateTokenMetadata(CreateTokenMetadataIxProto {
-                    accounts: Some(CreateTokenMetadataAccountsProto {
+                Out::CreateTokenMetadata(CreateTokenMetadata {
+                    accounts: Some(CreateTokenMetadataAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[2].into_bytes().to_vec(),
@@ -410,22 +408,22 @@ impl InstructionParser {
                         mpl_token_metadata: ix.accounts[6].into_bytes().to_vec(),
                         system_program: ix.accounts[7].into_bytes().to_vec(),
                     }),
-                    args: Some(CreateTokenMetadataArgsProto { name, symbol, uri }),
+                    args: Some(CreateTokenMetadataArgs { name, symbol, uri }),
                 })
             },
 
             StakePoolInstruction::UpdateTokenMetadata { name, symbol, uri } => {
                 check_min_accounts_req(accounts_len, 5)?;
 
-                Out::UpdateTokenMetadata(UpdateTokenMetadataIxProto {
-                    accounts: Some(UpdateTokenMetadataAccountsProto {
+                Out::UpdateTokenMetadata(UpdateTokenMetadata {
+                    accounts: Some(UpdateTokenMetadataAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[2].into_bytes().to_vec(),
                         token_metadata: ix.accounts[3].into_bytes().to_vec(),
                         mpl_token_metadata: ix.accounts[4].into_bytes().to_vec(),
                     }),
-                    args: Some(UpdateTokenMetadataArgsProto { name, symbol, uri }),
+                    args: Some(UpdateTokenMetadataArgs { name, symbol, uri }),
                 })
             },
 
@@ -436,8 +434,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 14)?;
 
-                Out::IncreaseAdditionalValidatorStake(IncreaseAdditionalValidatorStakeIxProto {
-                    accounts: Some(IncreaseAdditionalValidatorStakeAccountsProto {
+                Out::IncreaseAdditionalValidatorStake(IncreaseAdditionalValidatorStake {
+                    accounts: Some(IncreaseAdditionalValidatorStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[2].into_bytes().to_vec(),
@@ -453,7 +451,7 @@ impl InstructionParser {
                         system_program: ix.accounts[12].into_bytes().to_vec(),
                         stake_program: ix.accounts[13].into_bytes().to_vec(),
                     }),
-                    args: Some(IncreaseAdditionalValidatorStakeArgsProto {
+                    args: Some(IncreaseAdditionalValidatorStakeArgs {
                         lamports,
                         transient_stake_seed,
                         ephemeral_stake_seed,
@@ -468,8 +466,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 12)?;
 
-                Out::DecreaseAdditionalValidatorStake(DecreaseAdditionalValidatorStakeIxProto {
-                    accounts: Some(DecreaseAdditionalValidatorStakeAccountsProto {
+                Out::DecreaseAdditionalValidatorStake(DecreaseAdditionalValidatorStake {
+                    accounts: Some(DecreaseAdditionalValidatorStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[2].into_bytes().to_vec(),
@@ -483,7 +481,7 @@ impl InstructionParser {
                         system_program: ix.accounts[10].into_bytes().to_vec(),
                         stake_program: ix.accounts[11].into_bytes().to_vec(),
                     }),
-                    args: Some(DecreaseAdditionalValidatorStakeArgsProto {
+                    args: Some(DecreaseAdditionalValidatorStakeArgs {
                         lamports,
                         transient_stake_seed,
                         ephemeral_stake_seed,
@@ -497,25 +495,27 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 11)?;
 
-                Out::DecreaseValidatorStakeWithReserve(DecreaseValidatorStakeWithReserveIxProto {
-                    accounts: Some(DecreaseValidatorStakeWithReserveAccountsProto {
-                        stake_pool: ix.accounts[0].into_bytes().to_vec(),
-                        staker: ix.accounts[1].into_bytes().to_vec(),
-                        stake_pool_withdraw_authority: ix.accounts[2].into_bytes().to_vec(),
-                        validator_list: ix.accounts[3].into_bytes().to_vec(),
-                        reserve_stake: ix.accounts[4].into_bytes().to_vec(),
-                        validator_stake: ix.accounts[5].into_bytes().to_vec(),
-                        transient_stake: ix.accounts[6].into_bytes().to_vec(),
-                        clock: ix.accounts[7].into_bytes().to_vec(),
-                        stake_history: ix.accounts[8].into_bytes().to_vec(),
-                        system_program: ix.accounts[9].into_bytes().to_vec(),
-                        stake_program: ix.accounts[10].into_bytes().to_vec(),
-                    }),
-                    args: Some(DecreaseValidatorStakeWithReserveArgsProto {
-                        lamports,
-                        transient_stake_seed,
-                    }),
-                })
+                Out::DecreaseValidatorStakeWithReserve(
+                    DecreaseValidatorStakeWithReserve {
+                        accounts: Some(DecreaseValidatorStakeWithReserveAccounts {
+                            stake_pool: ix.accounts[0].into_bytes().to_vec(),
+                            staker: ix.accounts[1].into_bytes().to_vec(),
+                            stake_pool_withdraw_authority: ix.accounts[2].into_bytes().to_vec(),
+                            validator_list: ix.accounts[3].into_bytes().to_vec(),
+                            reserve_stake: ix.accounts[4].into_bytes().to_vec(),
+                            validator_stake: ix.accounts[5].into_bytes().to_vec(),
+                            transient_stake: ix.accounts[6].into_bytes().to_vec(),
+                            clock: ix.accounts[7].into_bytes().to_vec(),
+                            stake_history: ix.accounts[8].into_bytes().to_vec(),
+                            system_program: ix.accounts[9].into_bytes().to_vec(),
+                            stake_program: ix.accounts[10].into_bytes().to_vec(),
+                        }),
+                        args: Some(DecreaseValidatorStakeWithReserveArgs {
+                            lamports,
+                            transient_stake_seed,
+                        }),
+                    },
+                )
             },
 
             StakePoolInstruction::DepositStakeWithSlippage {
@@ -523,8 +523,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 15)?;
 
-                Out::DepositStakeWithSlippage(DepositStakeWithSlippageIxProto {
-                    accounts: Some(DepositStakeWithSlippageAccountsProto {
+                Out::DepositStakeWithSlippage(DepositStakeWithSlippage {
+                    accounts: Some(DepositStakeWithSlippageAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_deposit_authority: ix.accounts[2].into_bytes().to_vec(),
@@ -541,7 +541,7 @@ impl InstructionParser {
                         token_program: ix.accounts[13].into_bytes().to_vec(),
                         stake_program: ix.accounts[14].into_bytes().to_vec(),
                     }),
-                    args: Some(DepositStakeWithSlippageArgsProto {
+                    args: Some(DepositStakeWithSlippageArgs {
                         minimum_pool_tokens_out,
                     }),
                 })
@@ -553,8 +553,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 13)?;
 
-                Out::WithdrawStakeWithSlippage(WithdrawStakeWithSlippageIxProto {
-                    accounts: Some(WithdrawStakeWithSlippageAccountsProto {
+                Out::WithdrawStakeWithSlippage(WithdrawStakeWithSlippage {
+                    accounts: Some(WithdrawStakeWithSlippageAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
                         stake_pool_withdraw: ix.accounts[2].into_bytes().to_vec(),
@@ -569,7 +569,7 @@ impl InstructionParser {
                         token_program: ix.accounts[11].into_bytes().to_vec(),
                         stake_program: ix.accounts[12].into_bytes().to_vec(),
                     }),
-                    args: Some(WithdrawStakeWithSlippageArgsProto {
+                    args: Some(WithdrawStakeWithSlippageArgs {
                         pool_tokens_in,
                         minimum_lamports_out,
                     }),
@@ -582,8 +582,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 10)?;
 
-                Out::DepositSolWithSlippage(DepositSolWithSlippageIxProto {
-                    accounts: Some(DepositSolWithSlippageAccountsProto {
+                Out::DepositSolWithSlippage(DepositSolWithSlippage {
+                    accounts: Some(DepositSolWithSlippageAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
                         reserve_stake_account: ix.accounts[2].into_bytes().to_vec(),
@@ -596,7 +596,7 @@ impl InstructionParser {
                         token_program: ix.accounts[9].into_bytes().to_vec(),
                         deposit_authority: ix.accounts.get(10).map(|a| a.into_bytes().to_vec()),
                     }),
-                    args: Some(DepositSolWithSlippageArgsProto {
+                    args: Some(DepositSolWithSlippageArgs {
                         lamports_in,
                         minimum_pool_tokens_out,
                     }),
@@ -609,8 +609,8 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 12)?;
 
-                Out::WithdrawSolWithSlippage(WithdrawSolWithSlippageIxProto {
-                    accounts: Some(WithdrawSolWithSlippageAccountsProto {
+                Out::WithdrawSolWithSlippage(WithdrawSolWithSlippage {
+                    accounts: Some(WithdrawSolWithSlippageAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
                         user_transfer_authority: ix.accounts[2].into_bytes().to_vec(),
@@ -628,7 +628,7 @@ impl InstructionParser {
                             .get(12)
                             .map(|a| a.into_bytes().to_vec()),
                     }),
-                    args: Some(WithdrawSolWithSlippageArgsProto {
+                    args: Some(WithdrawSolWithSlippageArgs {
                         pool_tokens_in,
                         minimum_lamports_out,
                     }),
@@ -642,7 +642,7 @@ impl InstructionParser {
             },
         };
 
-        Ok(StakePoolProgramInstructionProto {
+        Ok(StakePoolProgramInstruction {
             instruction: Some(instruction),
         })
     }

@@ -3,7 +3,7 @@ pub const PROTOBUF_SCHEMA: &str = r#"syntax = "proto3";
 
 package spl_token;
 
-enum AuthorityTypeProto {
+enum AuthorityType {
   AUTHORITY_MINT_TOKENS = 0;
   AUTHORITY_FREEZE_ACCOUNT = 1;
   AUTHORITY_ACCOUNT_OWNER = 2;
@@ -169,7 +169,7 @@ message ApproveArgs {
 }
 
 message SetAuthorityArgs {
-  AuthorityTypeProto authority_type = 1;
+  AuthorityType authority_type = 1;
   optional bytes new_authority = 2;
 }
 

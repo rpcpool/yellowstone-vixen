@@ -267,7 +267,7 @@ message AdminSetCreatorArgs {
   bytes creator = 1;
 }
     
-message AdminSetCreatorIx {
+message AdminSetCreator {
   optional AdminSetCreatorAccounts accounts = 1;
   optional AdminSetCreatorArgs args = 2;
 }
@@ -286,7 +286,7 @@ message AdminSetIdlAuthorityArgs {
   bytes idl_authority = 1;
 }
     
-message AdminSetIdlAuthorityIx {
+message AdminSetIdlAuthority {
   optional AdminSetIdlAuthorityAccounts accounts = 1;
   optional AdminSetIdlAuthorityArgs args = 2;
 }
@@ -312,7 +312,7 @@ message AdminUpdateTokenIncentivesArgs {
   uint64 pump_token_supply_per_day = 5;
 }
     
-message AdminUpdateTokenIncentivesIx {
+message AdminUpdateTokenIncentives {
   optional AdminUpdateTokenIncentivesAccounts accounts = 1;
   optional AdminUpdateTokenIncentivesArgs args = 2;
 }
@@ -342,7 +342,7 @@ message BuyArgs {
   OptionBool track_volume = 3;
 }
     
-message BuyIx {
+message Buy {
   optional BuyAccounts accounts = 1;
   optional BuyArgs args = 2;
 }
@@ -372,7 +372,7 @@ message BuyExactSolInArgs {
   OptionBool track_volume = 3;
 }
     
-message BuyExactSolInIx {
+message BuyExactSolIn {
   optional BuyExactSolInAccounts accounts = 1;
   optional BuyExactSolInArgs args = 2;
 }
@@ -395,7 +395,7 @@ message ClaimTokenIncentivesAccounts {
 message ClaimTokenIncentivesArgs {
 }
     
-message ClaimTokenIncentivesIx {
+message ClaimTokenIncentives {
   optional ClaimTokenIncentivesAccounts accounts = 1;
   optional ClaimTokenIncentivesArgs args = 2;
 }
@@ -410,7 +410,7 @@ message CloseUserVolumeAccumulatorAccounts {
 message CloseUserVolumeAccumulatorArgs {
 }
     
-message CloseUserVolumeAccumulatorIx {
+message CloseUserVolumeAccumulator {
   optional CloseUserVolumeAccumulatorAccounts accounts = 1;
   optional CloseUserVolumeAccumulatorArgs args = 2;
 }
@@ -426,7 +426,7 @@ message CollectCreatorFeeAccounts {
 message CollectCreatorFeeArgs {
 }
     
-message CollectCreatorFeeIx {
+message CollectCreatorFee {
   optional CollectCreatorFeeAccounts accounts = 1;
   optional CollectCreatorFeeArgs args = 2;
 }
@@ -455,7 +455,7 @@ message CreateArgs {
   bytes creator = 4;
 }
     
-message CreateIx {
+message Create {
   optional CreateAccounts accounts = 1;
   optional CreateArgs args = 2;
 }
@@ -487,7 +487,7 @@ message CreateV2Args {
   bool is_mayhem_mode = 5;
 }
     
-message CreateV2Ix {
+message CreateV2 {
   optional CreateV2Accounts accounts = 1;
   optional CreateV2Args args = 2;
 }
@@ -503,7 +503,7 @@ message ExtendAccountAccounts {
 message ExtendAccountArgs {
 }
     
-message ExtendAccountIx {
+message ExtendAccount {
   optional ExtendAccountAccounts accounts = 1;
   optional ExtendAccountArgs args = 2;
 }
@@ -520,7 +520,7 @@ message InitUserVolumeAccumulatorAccounts {
 message InitUserVolumeAccumulatorArgs {
 }
     
-message InitUserVolumeAccumulatorIx {
+message InitUserVolumeAccumulator {
   optional InitUserVolumeAccumulatorAccounts accounts = 1;
   optional InitUserVolumeAccumulatorArgs args = 2;
 }
@@ -534,7 +534,7 @@ message InitializeAccounts {
 message InitializeArgs {
 }
     
-message InitializeIx {
+message Initialize {
   optional InitializeAccounts accounts = 1;
   optional InitializeArgs args = 2;
 }
@@ -569,7 +569,7 @@ message MigrateAccounts {
 message MigrateArgs {
 }
     
-message MigrateIx {
+message Migrate {
   optional MigrateAccounts accounts = 1;
   optional MigrateArgs args = 2;
 }
@@ -596,7 +596,7 @@ message SellArgs {
   uint64 min_sol_output = 2;
 }
     
-message SellIx {
+message Sell {
   optional SellAccounts accounts = 1;
   optional SellArgs args = 2;
 }
@@ -615,7 +615,7 @@ message SetCreatorArgs {
   bytes creator = 1;
 }
     
-message SetCreatorIx {
+message SetCreator {
   optional SetCreatorAccounts accounts = 1;
   optional SetCreatorArgs args = 2;
 }
@@ -631,7 +631,7 @@ message SetMetaplexCreatorAccounts {
 message SetMetaplexCreatorArgs {
 }
     
-message SetMetaplexCreatorIx {
+message SetMetaplexCreator {
   optional SetMetaplexCreatorAccounts accounts = 1;
   optional SetMetaplexCreatorArgs args = 2;
 }
@@ -657,7 +657,7 @@ message SetParamsArgs {
   bytes admin_set_creator_authority = 11;
 }
     
-message SetParamsIx {
+message SetParams {
   optional SetParamsAccounts accounts = 1;
   optional SetParamsArgs args = 2;
 }
@@ -673,7 +673,7 @@ message SetReservedFeeRecipientsArgs {
   bytes whitelist_pda = 1;
 }
     
-message SetReservedFeeRecipientsIx {
+message SetReservedFeeRecipients {
   optional SetReservedFeeRecipientsAccounts accounts = 1;
   optional SetReservedFeeRecipientsArgs args = 2;
 }
@@ -689,7 +689,7 @@ message SyncUserVolumeAccumulatorAccounts {
 message SyncUserVolumeAccumulatorArgs {
 }
     
-message SyncUserVolumeAccumulatorIx {
+message SyncUserVolumeAccumulator {
   optional SyncUserVolumeAccumulatorAccounts accounts = 1;
   optional SyncUserVolumeAccumulatorArgs args = 2;
 }
@@ -705,7 +705,7 @@ message ToggleCreateV2Args {
   bool enabled = 1;
 }
     
-message ToggleCreateV2Ix {
+message ToggleCreateV2 {
   optional ToggleCreateV2Accounts accounts = 1;
   optional ToggleCreateV2Args args = 2;
 }
@@ -721,7 +721,7 @@ message ToggleMayhemModeArgs {
   bool enabled = 1;
 }
     
-message ToggleMayhemModeIx {
+message ToggleMayhemMode {
   optional ToggleMayhemModeAccounts accounts = 1;
   optional ToggleMayhemModeArgs args = 2;
 }
@@ -737,38 +737,35 @@ message UpdateGlobalAuthorityAccounts {
 message UpdateGlobalAuthorityArgs {
 }
     
-message UpdateGlobalAuthorityIx {
+message UpdateGlobalAuthority {
   optional UpdateGlobalAuthorityAccounts accounts = 1;
   optional UpdateGlobalAuthorityArgs args = 2;
 }
     
 message ProgramInstruction {
-}
-    
-message ProgramInstruction {
-  oneof ix {
-    AdminSetCreatorIx admin_set_creator_ix = 1;
-    AdminSetIdlAuthorityIx admin_set_idl_authority_ix = 2;
-    AdminUpdateTokenIncentivesIx admin_update_token_incentives_ix = 3;
-    BuyIx buy_ix = 4;
-    BuyExactSolInIx buy_exact_sol_in_ix = 5;
-    ClaimTokenIncentivesIx claim_token_incentives_ix = 6;
-    CloseUserVolumeAccumulatorIx close_user_volume_accumulator_ix = 7;
-    CollectCreatorFeeIx collect_creator_fee_ix = 8;
-    CreateIx create_ix = 9;
-    CreateV2Ix create_v2_ix = 10;
-    ExtendAccountIx extend_account_ix = 11;
-    InitUserVolumeAccumulatorIx init_user_volume_accumulator_ix = 12;
-    InitializeIx initialize_ix = 13;
-    MigrateIx migrate_ix = 14;
-    SellIx sell_ix = 15;
-    SetCreatorIx set_creator_ix = 16;
-    SetMetaplexCreatorIx set_metaplex_creator_ix = 17;
-    SetParamsIx set_params_ix = 18;
-    SetReservedFeeRecipientsIx set_reserved_fee_recipients_ix = 19;
-    SyncUserVolumeAccumulatorIx sync_user_volume_accumulator_ix = 20;
-    ToggleCreateV2Ix toggle_create_v2_ix = 21;
-    ToggleMayhemModeIx toggle_mayhem_mode_ix = 22;
-    UpdateGlobalAuthorityIx update_global_authority_ix = 23;
+  oneof instruction {
+    AdminSetCreator admin_set_creator = 1;
+    AdminSetIdlAuthority admin_set_idl_authority = 2;
+    AdminUpdateTokenIncentives admin_update_token_incentives = 3;
+    Buy buy = 4;
+    BuyExactSolIn buy_exact_sol_in = 5;
+    ClaimTokenIncentives claim_token_incentives = 6;
+    CloseUserVolumeAccumulator close_user_volume_accumulator = 7;
+    CollectCreatorFee collect_creator_fee = 8;
+    Create create = 9;
+    CreateV2 create_v2 = 10;
+    ExtendAccount extend_account = 11;
+    InitUserVolumeAccumulator init_user_volume_accumulator = 12;
+    Initialize initialize = 13;
+    Migrate migrate = 14;
+    Sell sell = 15;
+    SetCreator set_creator = 16;
+    SetMetaplexCreator set_metaplex_creator = 17;
+    SetParams set_params = 18;
+    SetReservedFeeRecipients set_reserved_fee_recipients = 19;
+    SyncUserVolumeAccumulator sync_user_volume_accumulator = 20;
+    ToggleCreateV2 toggle_create_v2 = 21;
+    ToggleMayhemMode toggle_mayhem_mode = 22;
+    UpdateGlobalAuthority update_global_authority = 23;
   }
 }

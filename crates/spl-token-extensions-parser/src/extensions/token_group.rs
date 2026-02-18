@@ -65,8 +65,8 @@ pub struct InitializeMemberArgs {
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
 pub struct TokenGroupInstruction {
-    #[vixen_proto_hint(oneof = "token_group_instruction::Ix", tags = "1, 2, 3, 4")]
-    pub ix: ::core::option::Option<token_group_instruction::Ix>,
+    #[vixen_proto_hint(oneof = "token_group_instruction::Instruction", tags = "1, 2, 3, 4")]
+    pub instruction: ::core::option::Option<token_group_instruction::Instruction>,
 }
 
 pub mod token_group_instruction {
@@ -102,7 +102,7 @@ pub mod token_group_instruction {
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum Ix {
+    pub enum Instruction {
         InitializeGroup(InitializeGroup),
         UpdateGroupMaxSize(UpdateGroupMaxSize),
         UpdateGroupAuthority(UpdateGroupAuthority),
@@ -142,7 +142,7 @@ impl ExtensionInstructionParser for TokenGroupInstruction {
             SplTokenGroupInstruction::InitializeGroup(args) => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                oneof::Ix::InitializeGroup(oneof::InitializeGroup {
+                oneof::Instruction::InitializeGroup(oneof::InitializeGroup {
                     accounts: Some(InitializeGroupAccounts {
                         group: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -157,7 +157,7 @@ impl ExtensionInstructionParser for TokenGroupInstruction {
             SplTokenGroupInstruction::UpdateGroupMaxSize(args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::UpdateGroupMaxSize(oneof::UpdateGroupMaxSize {
+                oneof::Instruction::UpdateGroupMaxSize(oneof::UpdateGroupMaxSize {
                     accounts: Some(UpdateGroupMaxSizeAccounts {
                         group: ix.accounts[0].to_vec(),
                         update_authority: ix.accounts[1].to_vec(),
@@ -170,7 +170,7 @@ impl ExtensionInstructionParser for TokenGroupInstruction {
             SplTokenGroupInstruction::UpdateGroupAuthority(args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::UpdateGroupAuthority(oneof::UpdateGroupAuthority {
+                oneof::Instruction::UpdateGroupAuthority(oneof::UpdateGroupAuthority {
                     accounts: Some(UpdateGroupAuthorityAccounts {
                         group: ix.accounts[0].to_vec(),
                         current_authority: ix.accounts[1].to_vec(),
@@ -183,7 +183,7 @@ impl ExtensionInstructionParser for TokenGroupInstruction {
             SplTokenGroupInstruction::InitializeMember(_args) => {
                 check_min_accounts_req(accounts_len, 5)?;
 
-                oneof::Ix::InitializeMember(oneof::InitializeMember {
+                oneof::Instruction::InitializeMember(oneof::InitializeMember {
                     accounts: Some(InitializeMemberAccounts {
                         member: ix.accounts[0].to_vec(),
                         member_mint: ix.accounts[1].to_vec(),
@@ -196,6 +196,8 @@ impl ExtensionInstructionParser for TokenGroupInstruction {
             },
         };
 
-        Ok(TokenGroupInstruction { ix: Some(msg) })
+        Ok(TokenGroupInstruction {
+            instruction: Some(msg),
+        })
     }
 }

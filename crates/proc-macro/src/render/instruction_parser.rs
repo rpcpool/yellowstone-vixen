@@ -13,7 +13,7 @@ pub fn single_instruction_parser(
 
     let ix_name_pascal = crate::utils::to_pascal_case(&instruction.name);
 
-    let payload_ident: syn::Ident = format_ident!("{}Ix", ix_name_pascal);
+    let payload_ident: syn::Ident = format_ident!("{}", ix_name_pascal);
     let accounts_ident = format_ident!("{}Accounts", ix_name_pascal);
     let args_ident = format_ident!("{}Args", ix_name_pascal);
 
@@ -49,9 +49,9 @@ pub fn single_instruction_parser(
             // Example:
             //
             // ProgramInstruction {
-            //  ix: Some(
-            //      program_instruction_oneof::Ix::Create(
-            //          CreateIx {
+            //  instruction: Some(
+            //      program_instruction_oneof::Instruction::Create(
+            //          Create {
             //              accounts: Some(CreateAccounts { ... }),
             //              args: Some(CreateArgs { ... }),
             //          }
@@ -60,8 +60,8 @@ pub fn single_instruction_parser(
             // }
             //
             return Ok(#wrapper_ident {
-                ix: ::core::option::Option::Some(
-                    program_instruction_oneof::Ix::#payload_ident(
+                instruction: ::core::option::Option::Some(
+                    program_instruction_oneof::Instruction::#payload_ident(
                         #payload_ident {
                             accounts: ::core::option::Option::Some(#accounts_value),
                             args: #args_expr,

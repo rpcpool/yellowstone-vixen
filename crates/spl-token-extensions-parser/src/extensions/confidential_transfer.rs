@@ -1,8 +1,8 @@
 use spl_token_2022::extension::confidential_transfer::instruction::ConfidentialTransferInstruction as SplConfidentialTransferInstruction;
 use yellowstone_vixen_core::instruction::InstructionUpdate;
 use yellowstone_vixen_parser::{check_min_accounts_req, Result};
-use yellowstone_vixen_spl_token_parser::InitializeMintAccounts;
 use yellowstone_vixen_proc_macro::vixen_proto;
+use yellowstone_vixen_spl_token_parser::InitializeMintAccounts;
 
 use crate::{decode_extension_ix_type, ExtensionInstructionParser, PubkeyBytes};
 
@@ -105,8 +105,11 @@ pub struct ConfigureAccountWithRegistryAccounts {
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
 pub struct ConfidentialTransferInstruction {
-    #[vixen_proto_hint(oneof = "confidential_transfer_instruction::Ix", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15")]
-    pub ix: Option<confidential_transfer_instruction::Ix>,
+    #[vixen_proto_hint(
+        oneof = "confidential_transfer_instruction::Instruction",
+        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15"
+    )]
+    pub instruction: Option<confidential_transfer_instruction::Instruction>,
 }
 
 pub mod confidential_transfer_instruction {
@@ -204,7 +207,7 @@ pub mod confidential_transfer_instruction {
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum Ix {
+    pub enum Instruction {
         InitializeMint(InitializeMint),
         UpdateMint(UpdateMint),
         ConfigureAccount(ConfigureAccount),
@@ -235,7 +238,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::InitializeMint => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                oneof::Ix::InitializeMint(oneof::InitializeMint {
+                oneof::Instruction::InitializeMint(oneof::InitializeMint {
                     accounts: Some(InitializeMintAccounts {
                         mint: ix.accounts[0].to_vec(),
                     }),
@@ -245,7 +248,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::UpdateMint => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::UpdateMint(oneof::UpdateMint {
+                oneof::Instruction::UpdateMint(oneof::UpdateMint {
                     accounts: Some(UpdateMintAccounts {
                         mint: ix.accounts[0].to_vec(),
                         authority: ix.accounts[1].to_vec(),
@@ -256,7 +259,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::ConfigureAccount => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                oneof::Ix::ConfigureAccount(oneof::ConfigureAccount {
+                oneof::Instruction::ConfigureAccount(oneof::ConfigureAccount {
                     accounts: Some(ConfigureAccountAccounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -270,7 +273,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::ApproveAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                oneof::Ix::ApproveAccount(oneof::ApproveAccount {
+                oneof::Instruction::ApproveAccount(oneof::ApproveAccount {
                     accounts: Some(ApproveAccountAccounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -282,7 +285,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::EmptyAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                oneof::Ix::EmptyAccount(oneof::EmptyAccount {
+                oneof::Instruction::EmptyAccount(oneof::EmptyAccount {
                     accounts: Some(EmptyAccountAccounts {
                         account: ix.accounts[0].to_vec(),
                         sysvar: ix.accounts[1].to_vec(),
@@ -295,7 +298,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::Deposit => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                oneof::Ix::Deposit(oneof::Deposit {
+                oneof::Instruction::Deposit(oneof::Deposit {
                     accounts: Some(DepositAccounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -308,7 +311,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::Withdraw => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                oneof::Ix::Withdraw(oneof::Withdraw {
+                oneof::Instruction::Withdraw(oneof::Withdraw {
                     accounts: Some(WithdrawAccounts {
                         source_account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -322,7 +325,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::Transfer => {
                 check_min_accounts_req(accounts_len, 5)?;
 
-                oneof::Ix::Transfer(oneof::Transfer {
+                oneof::Instruction::Transfer(oneof::Transfer {
                     accounts: Some(ConfidentialTransferAccounts {
                         source_account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -337,7 +340,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::ApplyPendingBalance => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::ApplyPendingBalance(oneof::ApplyPendingBalance {
+                oneof::Instruction::ApplyPendingBalance(oneof::ApplyPendingBalance {
                     accounts: Some(ApplyPendingBalanceAccounts {
                         account: ix.accounts[0].to_vec(),
                         owner: ix.accounts[1].to_vec(),
@@ -349,7 +352,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::EnableConfidentialCredits => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::EnableConfidentialCredits(oneof::EnableConfidentialCredits {
+                oneof::Instruction::EnableConfidentialCredits(oneof::EnableConfidentialCredits {
                     accounts: Some(CreditsAccounts {
                         account: ix.accounts[0].to_vec(),
                         owner: ix.accounts[1].to_vec(),
@@ -361,7 +364,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::DisableConfidentialCredits => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::DisableConfidentialCredits(oneof::DisableConfidentialCredits {
+                oneof::Instruction::DisableConfidentialCredits(oneof::DisableConfidentialCredits {
                     accounts: Some(CreditsAccounts {
                         account: ix.accounts[0].to_vec(),
                         owner: ix.accounts[1].to_vec(),
@@ -373,31 +376,41 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::EnableNonConfidentialCredits => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::EnableNonConfidentialCredits(oneof::EnableNonConfidentialCredits {
-                    accounts: Some(CreditsAccounts {
-                        account: ix.accounts[0].to_vec(),
-                        owner: ix.accounts[1].to_vec(),
-                        multisig_signers: ix.accounts[2..].iter().map(|pk| pk.to_vec()).collect(),
-                    }),
-                })
+                oneof::Instruction::EnableNonConfidentialCredits(
+                    oneof::EnableNonConfidentialCredits {
+                        accounts: Some(CreditsAccounts {
+                            account: ix.accounts[0].to_vec(),
+                            owner: ix.accounts[1].to_vec(),
+                            multisig_signers: ix.accounts[2..]
+                                .iter()
+                                .map(|pk| pk.to_vec())
+                                .collect(),
+                        }),
+                    },
+                )
             },
 
             SplConfidentialTransferInstruction::DisableNonConfidentialCredits => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::DisableNonConfidentialCredits(oneof::DisableNonConfidentialCredits {
-                    accounts: Some(CreditsAccounts {
-                        account: ix.accounts[0].to_vec(),
-                        owner: ix.accounts[1].to_vec(),
-                        multisig_signers: ix.accounts[2..].iter().map(|pk| pk.to_vec()).collect(),
-                    }),
-                })
+                oneof::Instruction::DisableNonConfidentialCredits(
+                    oneof::DisableNonConfidentialCredits {
+                        accounts: Some(CreditsAccounts {
+                            account: ix.accounts[0].to_vec(),
+                            owner: ix.accounts[1].to_vec(),
+                            multisig_signers: ix.accounts[2..]
+                                .iter()
+                                .map(|pk| pk.to_vec())
+                                .collect(),
+                        }),
+                    },
+                )
             },
 
             SplConfidentialTransferInstruction::TransferWithFee => {
                 check_min_accounts_req(accounts_len, 5)?;
 
-                oneof::Ix::TransferWithFee(oneof::TransferWithFee {
+                oneof::Instruction::TransferWithFee(oneof::TransferWithFee {
                     accounts: Some(TransferWithFeeAccounts {
                         source_account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -409,16 +422,20 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             SplConfidentialTransferInstruction::ConfigureAccountWithRegistry => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                oneof::Ix::ConfigureAccountWithRegistry(oneof::ConfigureAccountWithRegistry {
-                    accounts: Some(ConfigureAccountWithRegistryAccounts {
-                        account: ix.accounts[0].to_vec(),
-                        mint: ix.accounts[1].to_vec(),
-                        registry: ix.accounts[2].to_vec(),
-                    }),
-                })
+                oneof::Instruction::ConfigureAccountWithRegistry(
+                    oneof::ConfigureAccountWithRegistry {
+                        accounts: Some(ConfigureAccountWithRegistryAccounts {
+                            account: ix.accounts[0].to_vec(),
+                            mint: ix.accounts[1].to_vec(),
+                            registry: ix.accounts[2].to_vec(),
+                        }),
+                    },
+                )
             },
         };
 
-        Ok(crate::ConfidentialTransferInstruction { ix: Some(ix_msg) })
+        Ok(crate::ConfidentialTransferInstruction {
+            instruction: Some(ix_msg),
+        })
     }
 }

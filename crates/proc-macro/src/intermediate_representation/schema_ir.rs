@@ -70,7 +70,7 @@ pub enum OneofKindIr {
 #[derive(Debug, Clone)]
 pub struct OneofIr {
     pub parent_message: String, // e.g. "ProgramInstruction" or "MyEnum"
-    pub field_name: String,     // e.g. "ix" or "kind"
+    pub field_name: String,     // e.g. "instruction" or "kind"
     pub variants: Vec<OneofVariantIr>,
     pub kind: OneofKindIr,
 }
@@ -78,8 +78,8 @@ pub struct OneofIr {
 #[derive(Debug, Clone)]
 pub struct OneofVariantIr {
     pub tag: u32,
-    pub variant_name: String, // e.g. "CreateIx" or "VariantA"
-    pub message_type: String, // e.g. "CreateIx" or "MyEnumVariantA"
+    pub variant_name: String, // e.g. "CreateInstruction" or "VariantA"
+    pub message_type: String, // e.g. "CreateInstruction" or "MyEnumVariantA"
 }
 
 impl SchemaIr {

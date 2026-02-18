@@ -5,7 +5,7 @@ pub type PubkeyBytes = Vec<u8>; // expected len = 32
 #[vixen_proto(enumeration)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
-pub enum AuthorityTypeProto {
+pub enum AuthorityType {
     MintTokens = 0,
     FreezeAccount = 1,
     AccountOwner = 2,
@@ -116,7 +116,7 @@ pub struct SetAuthorityAccounts {
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
 pub struct SetAuthorityArgs {
-    #[vixen_proto_hint(enumeration = "AuthorityTypeProto")]
+    #[vixen_proto_hint(enumeration = "AuthorityType")]
     pub authority_type: i32,
     pub new_authority: Option<PubkeyBytes>,
 }
@@ -283,10 +283,10 @@ pub struct UiAmountToAmountArgs {
 #[derive(Clone, PartialEq)]
 pub struct TokenProgramInstruction {
     #[vixen_proto_hint(
-        oneof = "token_program_instruction::Ix",
+        oneof = "token_program_instruction::Instruction",
         tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23"
     )]
-    pub ix: Option<token_program_instruction::Ix>,
+    pub instruction: Option<token_program_instruction::Instruction>,
 }
 
 pub mod token_program_instruction {
@@ -447,7 +447,7 @@ pub mod token_program_instruction {
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum Ix {
+    pub enum Instruction {
         Transfer(Transfer),
         InitializeMint(InitializeMint),
         InitializeAccount(InitializeAccount),

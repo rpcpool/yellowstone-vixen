@@ -21,13 +21,13 @@ async fn parse_sell_ix() {
 
     let sell = ixs
         .iter()
-        .find_map(|ix| match ix.as_ref()?.ix.as_ref()? {
-            pump_fun::program_instruction_oneof::Ix::SellIx(s) => Some(s),
+        .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+            pump_fun::program_instruction_oneof::Instruction::Sell(s) => Some(s),
             _ => None,
         })
-        .expect("no SellIx found");
+        .expect("no Sell found");
 
-    let expected = pump_fun::SellIx {
+    let expected = pump_fun::Sell {
         accounts: Some(pump_fun::SellAccounts {
             global: vec![
                 58, 134, 94, 105, 238, 15, 84, 128, 202, 188, 246, 99, 87, 228, 220, 47, 24, 213,
@@ -103,13 +103,13 @@ async fn parse_buy_ix() {
 
     let buy = ixs
         .iter()
-        .find_map(|ix| match ix.as_ref()?.ix.as_ref()? {
-            pump_fun::program_instruction_oneof::Ix::BuyIx(b) => Some(b),
+        .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+            pump_fun::program_instruction_oneof::Instruction::Buy(b) => Some(b),
             _ => None,
         })
-        .expect("no BuyIx found");
+        .expect("no Buy found");
 
-    let expected = pump_fun::BuyIx {
+    let expected = pump_fun::Buy {
         accounts: Some(pump_fun::BuyAccounts {
             global: vec![
                 58, 134, 94, 105, 238, 15, 84, 128, 202, 188, 246, 99, 87, 228, 220, 47, 24, 213,

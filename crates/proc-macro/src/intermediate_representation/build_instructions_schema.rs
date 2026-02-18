@@ -12,11 +12,11 @@ use crate::intermediate_representation::{
 ///
 ///   1) <IxName>Accounts  → holds all account pubkeys
 ///   2) <IxName>Args      → holds instruction arguments
-///   3) <IxName>Ix        → wrapper combining accounts + args
+///   3) <IxName>          → wrapper combining accounts + args
 ///
 /// At the end, we also create a global:
 ///
-///   ProgramInstruction { oneof ix { ... } }
+///   ProgramInstruction { oneof instruction { ... } }
 ///
 /// This acts as the root enum for all instructions.
 ///
@@ -72,7 +72,7 @@ use crate::intermediate_representation::{
 ///
 /// ```rust, ignore
 /// TypeIr {
-///   name: "OpenPositionIx",
+///   name: "OpenPosition",
 ///   fields: [
 ///     { name: "accounts", tag: 1, field_type: Message(OpenPositionAccounts), optional },
 ///     { name: "args",     tag: 2, field_type: Message(OpenPositionArgs),     optional },
@@ -93,10 +93,10 @@ use crate::intermediate_representation::{
 ///
 /// OneofIr {
 ///   parent_message: "ProgramInstruction",
-///   field_name: "ix",
+///   field_name: "instruction",
 ///   variants: [
-///     { tag: 1, variant_name: "OpenPositionIx", message_type: "OpenPositionIx" },
-///     { tag: 2, variant_name: "SetLimitsIx",    message_type: "SetLimitsIx" },
+///     { tag: 1, variant_name: "OpenPosition", message_type: "OpenPosition" },
+///     { tag: 2, variant_name: "SetLimits",    message_type: "SetLimits" },
 ///     ...
 ///   ]
 /// }
@@ -115,13 +115,13 @@ pub fn build_instructions_schema(instructions: &[InstructionNode], ir: &mut Sche
 /// Build the three messages for a single instruction:
 ///   - `<IxName>Accounts`  — one PubkeyBytes field per account
 ///   - `<IxName>Args`      — instruction arguments (delegates to `build_fields_ir`)
-///   - `<IxName>Ix`        — wrapper with optional accounts + args
+///   - `<IxName>`          — wrapper with optional accounts + args
 fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
     let ix_name = crate::utils::to_pascal_case(&ix.name);
 
     let accounts_name = format!("{ix_name}Accounts");
     let args_name = format!("{ix_name}Args");
-    let payload_name = format!("{ix_name}Ix");
+    let payload_name = ix_name.clone();
 
     let account_fields: Vec<FieldIr> = ix
         .accounts
@@ -169,20 +169,14 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
     });
 }
 
-/// Build the `ProgramInstruction` message with a `oneof ix { ... }` that dispatches
-/// to each individual `<IxName>Ix` payload.
+/// Build the `ProgramInstruction` message with a `oneof instruction { ... }` that dispatches
+/// to each individual `<IxName>` payload.
 fn build_instruction_dispatch_oneof(instructions: &[InstructionNode], ir: &mut SchemaIr) {
-    ir.push_unique_type(TypeIr {
-        name: "ProgramInstruction".to_string(),
-        fields: vec![],
-        kind: TypeKindIr::Instruction,
-    });
-
     let variants: Vec<OneofVariantIr> = instructions
         .iter()
         .enumerate()
         .map(|(i, ix)| {
-            let payload_name = format!("{}Ix", crate::utils::to_pascal_case(&ix.name));
+            let payload_name = crate::utils::to_pascal_case(&ix.name);
 
             OneofVariantIr {
                 tag: (i + 1) as u32,
@@ -194,7 +188,7 @@ fn build_instruction_dispatch_oneof(instructions: &[InstructionNode], ir: &mut S
 
     ir.oneofs.push(OneofIr {
         parent_message: "ProgramInstruction".to_string(),
-        field_name: "ix".to_string(),
+        field_name: "instruction".to_string(),
         variants,
         kind: crate::intermediate_representation::OneofKindIr::InstructionDispatch,
     });

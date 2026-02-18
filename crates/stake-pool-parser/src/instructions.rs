@@ -4,53 +4,53 @@ use crate::PubkeyBytes;
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct StakePoolProgramInstructionProto {
+pub struct StakePoolProgramInstruction {
     #[vixen_proto_hint(
-        oneof = "stake_pool_program_instruction_proto::Instruction",
+        oneof = "stake_pool_program_instruction::Instruction",
         tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
                 23, 24, 25, 26"
     )]
-    pub instruction: Option<stake_pool_program_instruction_proto::Instruction>,
+    pub instruction: Option<stake_pool_program_instruction::Instruction>,
 }
 
-pub mod stake_pool_program_instruction_proto {
+pub mod stake_pool_program_instruction {
     use super::vixen_proto;
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Instruction {
-        Initialize(super::InitializeIxProto),
-        AddValidatorToPool(super::AddValidatorToPoolIxProto),
-        RemoveValidatorFromPool(super::RemoveValidatorFromPoolIxProto),
-        DecreaseValidatorStake(super::DecreaseValidatorStakeIxProto),
-        IncreaseValidatorStake(super::IncreaseValidatorStakeIxProto),
-        SetPreferredValidator(super::SetPreferredValidatorIxProto),
-        UpdateValidatorListBalance(super::UpdateValidatorListBalanceIxProto),
-        UpdateStakePoolBalance(super::UpdateStakePoolBalanceIxProto),
-        CleanupRemovedValidatorEntries(super::CleanupRemovedValidatorEntriesIxProto),
-        DepositStake(super::DepositStakeIxProto),
-        WithdrawStake(super::WithdrawStakeIxProto),
-        SetManager(super::SetManagerIxProto),
-        SetFee(super::SetFeeIxProto),
-        SetStaker(super::SetStakerIxProto),
-        DepositSol(super::DepositSolIxProto),
-        SetFundingAuthority(super::SetFundingAuthorityIxProto),
-        WithdrawSol(super::WithdrawSolIxProto),
-        CreateTokenMetadata(super::CreateTokenMetadataIxProto),
-        UpdateTokenMetadata(super::UpdateTokenMetadataIxProto),
-        IncreaseAdditionalValidatorStake(super::IncreaseAdditionalValidatorStakeIxProto),
-        DecreaseAdditionalValidatorStake(super::DecreaseAdditionalValidatorStakeIxProto),
-        DecreaseValidatorStakeWithReserve(super::DecreaseValidatorStakeWithReserveIxProto),
-        DepositStakeWithSlippage(super::DepositStakeWithSlippageIxProto),
-        WithdrawStakeWithSlippage(super::WithdrawStakeWithSlippageIxProto),
-        DepositSolWithSlippage(super::DepositSolWithSlippageIxProto),
-        WithdrawSolWithSlippage(super::WithdrawSolWithSlippageIxProto),
+        Initialize(super::Initialize),
+        AddValidatorToPool(super::AddValidatorToPool),
+        RemoveValidatorFromPool(super::RemoveValidatorFromPool),
+        DecreaseValidatorStake(super::DecreaseValidatorStake),
+        IncreaseValidatorStake(super::IncreaseValidatorStake),
+        SetPreferredValidator(super::SetPreferredValidator),
+        UpdateValidatorListBalance(super::UpdateValidatorListBalance),
+        UpdateStakePoolBalance(super::UpdateStakePoolBalance),
+        CleanupRemovedValidatorEntries(super::CleanupRemovedValidatorEntries),
+        DepositStake(super::DepositStake),
+        WithdrawStake(super::WithdrawStake),
+        SetManager(super::SetManager),
+        SetFee(super::SetFee),
+        SetStaker(super::SetStaker),
+        DepositSol(super::DepositSol),
+        SetFundingAuthority(super::SetFundingAuthority),
+        WithdrawSol(super::WithdrawSol),
+        CreateTokenMetadata(super::CreateTokenMetadata),
+        UpdateTokenMetadata(super::UpdateTokenMetadata),
+        IncreaseAdditionalValidatorStake(super::IncreaseAdditionalValidatorStake),
+        DecreaseAdditionalValidatorStake(super::DecreaseAdditionalValidatorStake),
+        DecreaseValidatorStakeWithReserve(super::DecreaseValidatorStakeWithReserve),
+        DepositStakeWithSlippage(super::DepositStakeWithSlippage),
+        WithdrawStakeWithSlippage(super::WithdrawStakeWithSlippage),
+        DepositSolWithSlippage(super::DepositSolWithSlippage),
+        WithdrawSolWithSlippage(super::WithdrawSolWithSlippage),
     }
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct FeeProto {
+pub struct Fee {
     pub numerator: u64,
     pub denominator: u64,
 }
@@ -58,7 +58,7 @@ pub struct FeeProto {
 #[vixen_proto(enumeration)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(i32)]
-pub enum PreferredValidatorTypeProto {
+pub enum PreferredValidatorType {
     Deposit = 0,
     Withdraw = 1,
 }
@@ -66,7 +66,7 @@ pub enum PreferredValidatorTypeProto {
 #[vixen_proto(enumeration)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(i32)]
-pub enum FundingTypeProto {
+pub enum FundingType {
     SolDeposit = 0,
     StakeDeposit = 1,
     SolWithdraw = 2,
@@ -75,7 +75,7 @@ pub enum FundingTypeProto {
 #[vixen_proto(enumeration)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(i32)]
-pub enum FeeKindProto {
+pub enum FeeKind {
     SolReferral = 0,
     StakeReferral = 1,
     Epoch = 2,
@@ -87,21 +87,21 @@ pub enum FeeKindProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct FeeTypeProto {
-    #[vixen_proto_hint(enumeration = "FeeKindProto")]
+pub struct FeeType {
+    #[vixen_proto_hint(enumeration = "FeeKind")]
     pub kind: i32,
 
-    #[vixen_proto_hint(oneof = "fee_type_proto::Value", tags = "2, 3")]
-    pub value: Option<fee_type_proto::Value>,
+    #[vixen_proto_hint(oneof = "fee_type::Value", tags = "2, 3")]
+    pub value: Option<fee_type::Value>,
 }
 
-pub mod fee_type_proto {
+pub mod fee_type {
     use super::vixen_proto;
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Value {
-        Fee(super::FeeProto),
+        Fee(super::Fee),
 
         ReferralBps(u32),
     }
@@ -109,7 +109,7 @@ pub mod fee_type_proto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct InitializeAccountsProto {
+pub struct InitializeAccounts {
     pub stake_pool: PubkeyBytes,
     pub manager: PubkeyBytes,
     pub staker: PubkeyBytes,
@@ -124,24 +124,24 @@ pub struct InitializeAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct InitializeArgsProto {
-    pub fee: Option<FeeProto>,
-    pub withdrawal_fee: Option<FeeProto>,
-    pub deposit_fee: Option<FeeProto>,
+pub struct InitializeArgs {
+    pub fee: Option<Fee>,
+    pub withdrawal_fee: Option<Fee>,
+    pub deposit_fee: Option<Fee>,
     pub referral_fee: u32,
     pub max_validators: u32,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct InitializeIxProto {
-    pub accounts: Option<InitializeAccountsProto>,
-    pub args: Option<InitializeArgsProto>,
+pub struct Initialize {
+    pub accounts: Option<InitializeAccounts>,
+    pub args: Option<InitializeArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct AddValidatorToPoolAccountsProto {
+pub struct AddValidatorToPoolAccounts {
     pub stake_pool: PubkeyBytes,
     pub staker: PubkeyBytes,
     pub funder: PubkeyBytes,
@@ -159,20 +159,20 @@ pub struct AddValidatorToPoolAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct AddValidatorToPoolArgsProto {
+pub struct AddValidatorToPoolArgs {
     pub raw_validator_seed: u32,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct AddValidatorToPoolIxProto {
-    pub accounts: Option<AddValidatorToPoolAccountsProto>,
-    pub args: Option<AddValidatorToPoolArgsProto>,
+pub struct AddValidatorToPool {
+    pub accounts: Option<AddValidatorToPoolAccounts>,
+    pub args: Option<AddValidatorToPoolArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct RemoveValidatorFromPoolAccountsProto {
+pub struct RemoveValidatorFromPoolAccounts {
     pub stake_pool: PubkeyBytes,
     pub staker: PubkeyBytes,
     pub stake_pool_withdraw: PubkeyBytes,
@@ -185,13 +185,13 @@ pub struct RemoveValidatorFromPoolAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct RemoveValidatorFromPoolIxProto {
-    pub accounts: Option<RemoveValidatorFromPoolAccountsProto>,
+pub struct RemoveValidatorFromPool {
+    pub accounts: Option<RemoveValidatorFromPoolAccounts>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseValidatorStakeAccountsProto {
+pub struct DecreaseValidatorStakeAccounts {
     pub stake_pool: PubkeyBytes,
     pub staker: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
@@ -206,21 +206,21 @@ pub struct DecreaseValidatorStakeAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseValidatorStakeArgsProto {
+pub struct DecreaseValidatorStakeArgs {
     pub lamports: u64,
     pub transient_stake_seed: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseValidatorStakeIxProto {
-    pub accounts: Option<DecreaseValidatorStakeAccountsProto>,
-    pub args: Option<DecreaseValidatorStakeArgsProto>,
+pub struct DecreaseValidatorStake {
+    pub accounts: Option<DecreaseValidatorStakeAccounts>,
+    pub args: Option<DecreaseValidatorStakeArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct IncreaseValidatorStakeAccountsProto {
+pub struct IncreaseValidatorStakeAccounts {
     pub stake_pool: PubkeyBytes,
     pub staker: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
@@ -239,21 +239,21 @@ pub struct IncreaseValidatorStakeAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct IncreaseValidatorStakeArgsProto {
+pub struct IncreaseValidatorStakeArgs {
     pub lamports: u64,
     pub transient_stake_seed: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct IncreaseValidatorStakeIxProto {
-    pub accounts: Option<IncreaseValidatorStakeAccountsProto>,
-    pub args: Option<IncreaseValidatorStakeArgsProto>,
+pub struct IncreaseValidatorStake {
+    pub accounts: Option<IncreaseValidatorStakeAccounts>,
+    pub args: Option<IncreaseValidatorStakeArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetPreferredValidatorAccountsProto {
+pub struct SetPreferredValidatorAccounts {
     pub stake_pool_address: PubkeyBytes,
     pub staker: PubkeyBytes,
     pub validator_list_address: PubkeyBytes,
@@ -261,22 +261,22 @@ pub struct SetPreferredValidatorAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetPreferredValidatorArgsProto {
-    #[vixen_proto_hint(enumeration = "PreferredValidatorTypeProto")]
+pub struct SetPreferredValidatorArgs {
+    #[vixen_proto_hint(enumeration = "PreferredValidatorType")]
     pub validator_type: i32,
     pub validator_vote_address: Option<PubkeyBytes>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetPreferredValidatorIxProto {
-    pub accounts: Option<SetPreferredValidatorAccountsProto>,
-    pub args: Option<SetPreferredValidatorArgsProto>,
+pub struct SetPreferredValidator {
+    pub accounts: Option<SetPreferredValidatorAccounts>,
+    pub args: Option<SetPreferredValidatorArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateValidatorListBalanceAccountsProto {
+pub struct UpdateValidatorListBalanceAccounts {
     pub stake_pool: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
     pub validator_list_address: PubkeyBytes,
@@ -288,21 +288,21 @@ pub struct UpdateValidatorListBalanceAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateValidatorListBalanceArgsProto {
+pub struct UpdateValidatorListBalanceArgs {
     pub start_index: u32,
     pub no_merge: bool,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateValidatorListBalanceIxProto {
-    pub accounts: Option<UpdateValidatorListBalanceAccountsProto>,
-    pub args: Option<UpdateValidatorListBalanceArgsProto>,
+pub struct UpdateValidatorListBalance {
+    pub accounts: Option<UpdateValidatorListBalanceAccounts>,
+    pub args: Option<UpdateValidatorListBalanceArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateStakePoolBalanceAccountsProto {
+pub struct UpdateStakePoolBalanceAccounts {
     pub stake_pool: PubkeyBytes,
     pub withdraw_authority: PubkeyBytes,
     pub validator_list_storage: PubkeyBytes,
@@ -314,26 +314,26 @@ pub struct UpdateStakePoolBalanceAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateStakePoolBalanceIxProto {
-    pub accounts: Option<UpdateStakePoolBalanceAccountsProto>,
+pub struct UpdateStakePoolBalance {
+    pub accounts: Option<UpdateStakePoolBalanceAccounts>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct CleanupRemovedValidatorEntriesAccountsProto {
+pub struct CleanupRemovedValidatorEntriesAccounts {
     pub stake_pool: PubkeyBytes,
     pub validator_list_storage: PubkeyBytes,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct CleanupRemovedValidatorEntriesIxProto {
-    pub accounts: Option<CleanupRemovedValidatorEntriesAccountsProto>,
+pub struct CleanupRemovedValidatorEntries {
+    pub accounts: Option<CleanupRemovedValidatorEntriesAccounts>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositStakeAccountsProto {
+pub struct DepositStakeAccounts {
     pub stake_pool: PubkeyBytes,
     pub validator_list_storage: PubkeyBytes,
     pub stake_pool_deposit_authority: PubkeyBytes,
@@ -353,13 +353,13 @@ pub struct DepositStakeAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositStakeIxProto {
-    pub accounts: Option<DepositStakeAccountsProto>,
+pub struct DepositStake {
+    pub accounts: Option<DepositStakeAccounts>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawStakeAccountsProto {
+pub struct WithdrawStakeAccounts {
     pub stake_pool: PubkeyBytes,
     pub validator_list_storage: PubkeyBytes,
     pub stake_pool_withdraw: PubkeyBytes,
@@ -377,20 +377,20 @@ pub struct WithdrawStakeAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawStakeArgsProto {
+pub struct WithdrawStakeArgs {
     pub amount: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawStakeIxProto {
-    pub accounts: Option<WithdrawStakeAccountsProto>,
-    pub args: Option<WithdrawStakeArgsProto>,
+pub struct WithdrawStake {
+    pub accounts: Option<WithdrawStakeAccounts>,
+    pub args: Option<WithdrawStakeArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetManagerAccountsProto {
+pub struct SetManagerAccounts {
     pub stake_pool: PubkeyBytes,
     pub manager: PubkeyBytes,
     pub new_manager: PubkeyBytes,
@@ -399,33 +399,33 @@ pub struct SetManagerAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetManagerIxProto {
-    pub accounts: Option<SetManagerAccountsProto>,
+pub struct SetManager {
+    pub accounts: Option<SetManagerAccounts>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetFeeAccountsProto {
+pub struct SetFeeAccounts {
     pub stake_pool: PubkeyBytes,
     pub manager: PubkeyBytes,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetFeeArgsProto {
-    pub fee: Option<FeeTypeProto>,
+pub struct SetFeeArgs {
+    pub fee: Option<FeeType>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetFeeIxProto {
-    pub accounts: Option<SetFeeAccountsProto>,
-    pub args: Option<SetFeeArgsProto>,
+pub struct SetFee {
+    pub accounts: Option<SetFeeAccounts>,
+    pub args: Option<SetFeeArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetStakerAccountsProto {
+pub struct SetStakerAccounts {
     pub stake_pool: PubkeyBytes,
     pub set_staker_authority: PubkeyBytes,
     pub new_staker: PubkeyBytes,
@@ -433,13 +433,13 @@ pub struct SetStakerAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetStakerIxProto {
-    pub accounts: Option<SetStakerAccountsProto>,
+pub struct SetStaker {
+    pub accounts: Option<SetStakerAccounts>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositSolAccountsProto {
+pub struct DepositSolAccounts {
     pub stake_pool: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
     pub reserve_stake_account: PubkeyBytes,
@@ -455,20 +455,20 @@ pub struct DepositSolAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositSolArgsProto {
+pub struct DepositSolArgs {
     pub amount: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositSolIxProto {
-    pub accounts: Option<DepositSolAccountsProto>,
-    pub args: Option<DepositSolArgsProto>,
+pub struct DepositSol {
+    pub accounts: Option<DepositSolAccounts>,
+    pub args: Option<DepositSolArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetFundingAuthorityAccountsProto {
+pub struct SetFundingAuthorityAccounts {
     pub stake_pool: PubkeyBytes,
     pub manager: PubkeyBytes,
     pub auth: Option<PubkeyBytes>,
@@ -476,21 +476,21 @@ pub struct SetFundingAuthorityAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetFundingAuthorityArgsProto {
-    #[vixen_proto_hint(enumeration = "FundingTypeProto")]
+pub struct SetFundingAuthorityArgs {
+    #[vixen_proto_hint(enumeration = "FundingType")]
     pub funding_type: i32,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetFundingAuthorityIxProto {
-    pub accounts: Option<SetFundingAuthorityAccountsProto>,
-    pub args: Option<SetFundingAuthorityArgsProto>,
+pub struct SetFundingAuthority {
+    pub accounts: Option<SetFundingAuthorityAccounts>,
+    pub args: Option<SetFundingAuthorityArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawSolAccountsProto {
+pub struct WithdrawSolAccounts {
     pub stake_pool: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
     pub user_transfer_authority: PubkeyBytes,
@@ -508,20 +508,20 @@ pub struct WithdrawSolAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawSolArgsProto {
+pub struct WithdrawSolArgs {
     pub amount: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawSolIxProto {
-    pub accounts: Option<WithdrawSolAccountsProto>,
-    pub args: Option<WithdrawSolArgsProto>,
+pub struct WithdrawSol {
+    pub accounts: Option<WithdrawSolAccounts>,
+    pub args: Option<WithdrawSolArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct CreateTokenMetadataAccountsProto {
+pub struct CreateTokenMetadataAccounts {
     pub stake_pool: PubkeyBytes,
     pub manager: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
@@ -534,7 +534,7 @@ pub struct CreateTokenMetadataAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct CreateTokenMetadataArgsProto {
+pub struct CreateTokenMetadataArgs {
     pub name: String,
     pub symbol: String,
     pub uri: String,
@@ -542,14 +542,14 @@ pub struct CreateTokenMetadataArgsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct CreateTokenMetadataIxProto {
-    pub accounts: Option<CreateTokenMetadataAccountsProto>,
-    pub args: Option<CreateTokenMetadataArgsProto>,
+pub struct CreateTokenMetadata {
+    pub accounts: Option<CreateTokenMetadataAccounts>,
+    pub args: Option<CreateTokenMetadataArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateTokenMetadataAccountsProto {
+pub struct UpdateTokenMetadataAccounts {
     pub stake_pool: PubkeyBytes,
     pub manager: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
@@ -559,7 +559,7 @@ pub struct UpdateTokenMetadataAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateTokenMetadataArgsProto {
+pub struct UpdateTokenMetadataArgs {
     pub name: String,
     pub symbol: String,
     pub uri: String,
@@ -567,14 +567,14 @@ pub struct UpdateTokenMetadataArgsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateTokenMetadataIxProto {
-    pub accounts: Option<UpdateTokenMetadataAccountsProto>,
-    pub args: Option<UpdateTokenMetadataArgsProto>,
+pub struct UpdateTokenMetadata {
+    pub accounts: Option<UpdateTokenMetadataAccounts>,
+    pub args: Option<UpdateTokenMetadataArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct IncreaseAdditionalValidatorStakeAccountsProto {
+pub struct IncreaseAdditionalValidatorStakeAccounts {
     pub stake_pool: PubkeyBytes,
     pub staker: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
@@ -593,7 +593,7 @@ pub struct IncreaseAdditionalValidatorStakeAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct IncreaseAdditionalValidatorStakeArgsProto {
+pub struct IncreaseAdditionalValidatorStakeArgs {
     pub lamports: u64,
     pub transient_stake_seed: u64,
     pub ephemeral_stake_seed: u64,
@@ -601,14 +601,14 @@ pub struct IncreaseAdditionalValidatorStakeArgsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct IncreaseAdditionalValidatorStakeIxProto {
-    pub accounts: Option<IncreaseAdditionalValidatorStakeAccountsProto>,
-    pub args: Option<IncreaseAdditionalValidatorStakeArgsProto>,
+pub struct IncreaseAdditionalValidatorStake {
+    pub accounts: Option<IncreaseAdditionalValidatorStakeAccounts>,
+    pub args: Option<IncreaseAdditionalValidatorStakeArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseAdditionalValidatorStakeAccountsProto {
+pub struct DecreaseAdditionalValidatorStakeAccounts {
     pub stake_pool: PubkeyBytes,
     pub staker: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
@@ -625,7 +625,7 @@ pub struct DecreaseAdditionalValidatorStakeAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseAdditionalValidatorStakeArgsProto {
+pub struct DecreaseAdditionalValidatorStakeArgs {
     pub lamports: u64,
     pub transient_stake_seed: u64,
     pub ephemeral_stake_seed: u64,
@@ -633,14 +633,14 @@ pub struct DecreaseAdditionalValidatorStakeArgsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseAdditionalValidatorStakeIxProto {
-    pub accounts: Option<DecreaseAdditionalValidatorStakeAccountsProto>,
-    pub args: Option<DecreaseAdditionalValidatorStakeArgsProto>,
+pub struct DecreaseAdditionalValidatorStake {
+    pub accounts: Option<DecreaseAdditionalValidatorStakeAccounts>,
+    pub args: Option<DecreaseAdditionalValidatorStakeArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseValidatorStakeWithReserveAccountsProto {
+pub struct DecreaseValidatorStakeWithReserveAccounts {
     pub stake_pool: PubkeyBytes,
     pub staker: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
@@ -656,21 +656,21 @@ pub struct DecreaseValidatorStakeWithReserveAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseValidatorStakeWithReserveArgsProto {
+pub struct DecreaseValidatorStakeWithReserveArgs {
     pub lamports: u64,
     pub transient_stake_seed: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseValidatorStakeWithReserveIxProto {
-    pub accounts: Option<DecreaseValidatorStakeWithReserveAccountsProto>,
-    pub args: Option<DecreaseValidatorStakeWithReserveArgsProto>,
+pub struct DecreaseValidatorStakeWithReserve {
+    pub accounts: Option<DecreaseValidatorStakeWithReserveAccounts>,
+    pub args: Option<DecreaseValidatorStakeWithReserveArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositStakeWithSlippageAccountsProto {
+pub struct DepositStakeWithSlippageAccounts {
     pub stake_pool: PubkeyBytes,
     pub validator_list_storage: PubkeyBytes,
     pub stake_pool_deposit_authority: PubkeyBytes,
@@ -690,20 +690,20 @@ pub struct DepositStakeWithSlippageAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositStakeWithSlippageArgsProto {
+pub struct DepositStakeWithSlippageArgs {
     pub minimum_pool_tokens_out: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositStakeWithSlippageIxProto {
-    pub accounts: Option<DepositStakeWithSlippageAccountsProto>,
-    pub args: Option<DepositStakeWithSlippageArgsProto>,
+pub struct DepositStakeWithSlippage {
+    pub accounts: Option<DepositStakeWithSlippageAccounts>,
+    pub args: Option<DepositStakeWithSlippageArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawStakeWithSlippageAccountsProto {
+pub struct WithdrawStakeWithSlippageAccounts {
     pub stake_pool: PubkeyBytes,
     pub validator_list_storage: PubkeyBytes,
     pub stake_pool_withdraw: PubkeyBytes,
@@ -721,21 +721,21 @@ pub struct WithdrawStakeWithSlippageAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawStakeWithSlippageArgsProto {
+pub struct WithdrawStakeWithSlippageArgs {
     pub pool_tokens_in: u64,
     pub minimum_lamports_out: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawStakeWithSlippageIxProto {
-    pub accounts: Option<WithdrawStakeWithSlippageAccountsProto>,
-    pub args: Option<WithdrawStakeWithSlippageArgsProto>,
+pub struct WithdrawStakeWithSlippage {
+    pub accounts: Option<WithdrawStakeWithSlippageAccounts>,
+    pub args: Option<WithdrawStakeWithSlippageArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositSolWithSlippageAccountsProto {
+pub struct DepositSolWithSlippageAccounts {
     pub stake_pool: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
     pub reserve_stake_account: PubkeyBytes,
@@ -751,21 +751,21 @@ pub struct DepositSolWithSlippageAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositSolWithSlippageArgsProto {
+pub struct DepositSolWithSlippageArgs {
     pub lamports_in: u64,
     pub minimum_pool_tokens_out: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositSolWithSlippageIxProto {
-    pub accounts: Option<DepositSolWithSlippageAccountsProto>,
-    pub args: Option<DepositSolWithSlippageArgsProto>,
+pub struct DepositSolWithSlippage {
+    pub accounts: Option<DepositSolWithSlippageAccounts>,
+    pub args: Option<DepositSolWithSlippageArgs>,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawSolWithSlippageAccountsProto {
+pub struct WithdrawSolWithSlippageAccounts {
     pub stake_pool: PubkeyBytes,
     pub stake_pool_withdraw_authority: PubkeyBytes,
     pub user_transfer_authority: PubkeyBytes,
@@ -783,22 +783,22 @@ pub struct WithdrawSolWithSlippageAccountsProto {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawSolWithSlippageArgsProto {
+pub struct WithdrawSolWithSlippageArgs {
     pub pool_tokens_in: u64,
     pub minimum_lamports_out: u64,
 }
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawSolWithSlippageIxProto {
-    pub accounts: Option<WithdrawSolWithSlippageAccountsProto>,
-    pub args: Option<WithdrawSolWithSlippageArgsProto>,
+pub struct WithdrawSolWithSlippage {
+    pub accounts: Option<WithdrawSolWithSlippageAccounts>,
+    pub args: Option<WithdrawSolWithSlippageArgs>,
 }
 
 // ── Conversion helpers ──────────────────────────────────────────────
 
-pub(crate) fn fee_to_proto(fee: spl_stake_pool::state::Fee) -> FeeProto {
-    FeeProto {
+pub(crate) fn fee_to_proto(fee: spl_stake_pool::state::Fee) -> Fee {
+    Fee {
         numerator: fee.numerator,
         denominator: fee.denominator,
     }
@@ -806,61 +806,59 @@ pub(crate) fn fee_to_proto(fee: spl_stake_pool::state::Fee) -> FeeProto {
 
 pub(crate) fn preferred_validator_type_to_proto(
     v: spl_stake_pool::instruction::PreferredValidatorType,
-) -> PreferredValidatorTypeProto {
+) -> PreferredValidatorType {
     use spl_stake_pool::instruction::PreferredValidatorType as PVT;
 
     match v {
-        PVT::Deposit => PreferredValidatorTypeProto::Deposit,
-        PVT::Withdraw => PreferredValidatorTypeProto::Withdraw,
+        PVT::Deposit => PreferredValidatorType::Deposit,
+        PVT::Withdraw => PreferredValidatorType::Withdraw,
     }
 }
 
-pub(crate) fn funding_type_to_proto(
-    v: spl_stake_pool::instruction::FundingType,
-) -> FundingTypeProto {
+pub(crate) fn funding_type_to_proto(v: spl_stake_pool::instruction::FundingType) -> FundingType {
     use spl_stake_pool::instruction::FundingType as FT;
 
     match v {
-        FT::SolDeposit => FundingTypeProto::SolDeposit,
-        FT::StakeDeposit => FundingTypeProto::StakeDeposit,
-        FT::SolWithdraw => FundingTypeProto::SolWithdraw,
+        FT::SolDeposit => FundingType::SolDeposit,
+        FT::StakeDeposit => FundingType::StakeDeposit,
+        FT::SolWithdraw => FundingType::SolWithdraw,
     }
 }
 
-/// StakePoolInstruction::SetFee carries a `FeeType` (not a `Fee`).
+/// StakePool::SetFee carries a `FeeType` (not a `Fee`).
 /// `FeeType` is an enum whose variants carry the new `Fee` value.
 /// We normalize it into `{ kind, fee }`.
-pub(crate) fn fee_type_to_proto(v: spl_stake_pool::state::FeeType) -> FeeTypeProto {
-    use fee_type_proto::Value;
+pub(crate) fn fee_type_to_proto(v: spl_stake_pool::state::FeeType) -> FeeType {
+    use fee_type::Value;
     use spl_stake_pool::state::FeeType as FT;
 
     match v {
-        FT::SolDeposit(fee) => FeeTypeProto {
-            kind: FeeKindProto::SolDeposit as i32,
+        FT::SolDeposit(fee) => FeeType {
+            kind: FeeKind::SolDeposit as i32,
             value: Some(Value::Fee(fee_to_proto(fee))),
         },
-        FT::StakeDeposit(fee) => FeeTypeProto {
-            kind: FeeKindProto::StakeDeposit as i32,
+        FT::StakeDeposit(fee) => FeeType {
+            kind: FeeKind::StakeDeposit as i32,
             value: Some(Value::Fee(fee_to_proto(fee))),
         },
-        FT::SolWithdrawal(fee) => FeeTypeProto {
-            kind: FeeKindProto::SolWithdrawal as i32,
+        FT::SolWithdrawal(fee) => FeeType {
+            kind: FeeKind::SolWithdrawal as i32,
             value: Some(Value::Fee(fee_to_proto(fee))),
         },
-        FT::StakeWithdrawal(fee) => FeeTypeProto {
-            kind: FeeKindProto::StakeWithdrawal as i32,
+        FT::StakeWithdrawal(fee) => FeeType {
+            kind: FeeKind::StakeWithdrawal as i32,
             value: Some(Value::Fee(fee_to_proto(fee))),
         },
-        FT::Epoch(fee) => FeeTypeProto {
-            kind: FeeKindProto::Epoch as i32,
+        FT::Epoch(fee) => FeeType {
+            kind: FeeKind::Epoch as i32,
             value: Some(Value::Fee(fee_to_proto(fee))),
         },
-        FT::SolReferral(bps) => FeeTypeProto {
-            kind: FeeKindProto::SolReferral as i32,
+        FT::SolReferral(bps) => FeeType {
+            kind: FeeKind::SolReferral as i32,
             value: Some(Value::ReferralBps(bps as u32)),
         },
-        FT::StakeReferral(bps) => FeeTypeProto {
-            kind: FeeKindProto::StakeReferral as i32,
+        FT::StakeReferral(bps) => FeeType {
+            kind: FeeKind::StakeReferral as i32,
             value: Some(Value::ReferralBps(bps as u32)),
         },
     }

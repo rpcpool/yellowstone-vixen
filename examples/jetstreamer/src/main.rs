@@ -25,12 +25,12 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
         value: &TokenProgramInstruction,
         _raw: &InstructionUpdate,
     ) -> HandlerResult<()> {
-        let Some(ix) = value.ix.as_ref() else {
+        let Some(ix) = value.instruction.as_ref() else {
             return Ok(());
         };
 
         match ix {
-            token_program_instruction::Ix::Transfer(t) => {
+            token_program_instruction::Instruction::Transfer(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -48,7 +48,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Ix::TransferChecked(t) => {
+            token_program_instruction::Instruction::TransferChecked(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -68,7 +68,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Ix::MintTo(t) => {
+            token_program_instruction::Instruction::MintTo(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -86,7 +86,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Ix::Burn(t) => {
+            token_program_instruction::Instruction::Burn(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -104,7 +104,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Ix::InitializeMint(t) => {
+            token_program_instruction::Instruction::InitializeMint(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -126,7 +126,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Ix::InitializeAccount(t) => {
+            token_program_instruction::Instruction::InitializeAccount(t) => {
                 let accounts = t.accounts.as_ref();
 
                 if let Some(accounts) = accounts {
@@ -142,7 +142,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Ix::Approve(t) => {
+            token_program_instruction::Instruction::Approve(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -160,7 +160,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Ix::CloseAccount(t) => {
+            token_program_instruction::Instruction::CloseAccount(t) => {
                 let accounts = t.accounts.as_ref();
 
                 if let Some(accounts) = accounts {

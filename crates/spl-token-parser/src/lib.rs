@@ -1,6 +1,7 @@
 mod account_parser;
 mod instruction_parser;
 mod instructions;
+
 #[cfg(feature = "proto")]
 mod protobuf_schema;
 

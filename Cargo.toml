@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/*", "examples/*"]
+members = ["crates/*", "examples/*", "tests/*"]
 exclude = ["examples/multi-dex-stream"]
 resolver = "2"
 

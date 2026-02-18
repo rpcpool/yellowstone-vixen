@@ -75,8 +75,11 @@ pub struct EmitArgs {
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
 pub struct TokenMetadataInstruction {
-    #[vixen_proto_hint(oneof = "token_metadata_instruction::Ix", tags = "1, 2, 3, 4, 5")]
-    pub ix: Option<token_metadata_instruction::Ix>,
+    #[vixen_proto_hint(
+        oneof = "token_metadata_instruction::Instruction",
+        tags = "1, 2, 3, 4, 5"
+    )]
+    pub instruction: Option<token_metadata_instruction::Instruction>,
 }
 
 pub mod token_metadata_instruction {
@@ -119,7 +122,7 @@ pub mod token_metadata_instruction {
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum Ix {
+    pub enum Instruction {
         Initialize(Initialize),
         UpdateField(UpdateField),
         RemoveKey(RemoveKey),
@@ -141,7 +144,7 @@ impl ExtensionInstructionParser for TokenMetadataInstruction {
             SplTokenMetadataInstruction::Initialize(_args) => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                oneof::Ix::Initialize(oneof::Initialize {
+                oneof::Instruction::Initialize(oneof::Initialize {
                     accounts: Some(InitializeAccounts {
                         metadata: ix.accounts[0].to_vec(),
                         update_authority: ix.accounts[1].to_vec(),
@@ -156,7 +159,7 @@ impl ExtensionInstructionParser for TokenMetadataInstruction {
             SplTokenMetadataInstruction::UpdateField(_args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::UpdateField(oneof::UpdateField {
+                oneof::Instruction::UpdateField(oneof::UpdateField {
                     accounts: Some(UpdateFieldAccounts {
                         metadata: ix.accounts[0].to_vec(),
                         update_authority: ix.accounts[1].to_vec(),
@@ -169,7 +172,7 @@ impl ExtensionInstructionParser for TokenMetadataInstruction {
             SplTokenMetadataInstruction::RemoveKey(_args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::RemoveKey(oneof::RemoveKey {
+                oneof::Instruction::RemoveKey(oneof::RemoveKey {
                     accounts: Some(RemoveKeyAccounts {
                         metadata: ix.accounts[0].to_vec(),
                         update_authority: ix.accounts[1].to_vec(),
@@ -182,7 +185,7 @@ impl ExtensionInstructionParser for TokenMetadataInstruction {
             SplTokenMetadataInstruction::UpdateAuthority(_args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::UpdateAuthority(oneof::UpdateAuthority {
+                oneof::Instruction::UpdateAuthority(oneof::UpdateAuthority {
                     accounts: Some(UpdateAuthorityAccounts {
                         metadata: ix.accounts[0].to_vec(),
                         current_update_authority: ix.accounts[1].to_vec(),
@@ -195,7 +198,7 @@ impl ExtensionInstructionParser for TokenMetadataInstruction {
             SplTokenMetadataInstruction::Emit(_args) => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                oneof::Ix::Emit(oneof::Emit {
+                oneof::Instruction::Emit(oneof::Emit {
                     accounts: Some(EmitAccounts {
                         metadata: ix.accounts[0].to_vec(),
                     }),
@@ -206,6 +209,8 @@ impl ExtensionInstructionParser for TokenMetadataInstruction {
             },
         };
 
-        Ok(TokenMetadataInstruction { ix: Some(msg) })
+        Ok(TokenMetadataInstruction {
+            instruction: Some(msg),
+        })
     }
 }

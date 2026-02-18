@@ -93,8 +93,11 @@ pub struct HarvestWithheldTokensToMintAccounts {
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
 pub struct TransferFeeInstruction {
-    #[vixen_proto_hint(oneof = "transfer_fee_instruction::Ix", tags = "1, 2, 3, 4, 5, 6")]
-    pub ix: Option<transfer_fee_instruction::Ix>,
+    #[vixen_proto_hint(
+        oneof = "transfer_fee_instruction::Instruction",
+        tags = "1, 2, 3, 4, 5, 6"
+    )]
+    pub instruction: Option<transfer_fee_instruction::Instruction>,
 }
 
 pub mod transfer_fee_instruction {
@@ -142,7 +145,7 @@ pub mod transfer_fee_instruction {
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum Ix {
+    pub enum Instruction {
         TransferCheckedWithFee(TransferCheckedWithFee),
         InitializeTransferFeeConfig(InitializeTransferFeeConfig),
         WithdrawWithheldTokensFromMint(WithdrawWithheldTokensFromMint),
@@ -170,7 +173,7 @@ impl ExtensionInstructionParser for TransferFeeInstruction {
             } => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                oneof::Ix::TransferCheckedWithFee(oneof::TransferCheckedWithFee {
+                oneof::Instruction::TransferCheckedWithFee(oneof::TransferCheckedWithFee {
                     accounts: Some(TransferCheckedWithFeeAccounts {
                         source: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -194,34 +197,41 @@ impl ExtensionInstructionParser for TransferFeeInstruction {
             } => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                oneof::Ix::InitializeTransferFeeConfig(oneof::InitializeTransferFeeConfig {
-                    accounts: Some(InitializeTransferFeeConfigAccounts {
-                        mint: ix.accounts[0].to_vec(),
-                    }),
-                    args: Some(InitializeTransferFeeConfigArgs {
-                        transfer_fee_config_authority: transfer_fee_config_authority
-                            .map(|p| p.to_bytes().to_vec())
-                            .into(),
-                        withdraw_withheld_authority: withdraw_withheld_authority
-                            .map(|p| p.to_bytes().to_vec())
-                            .into(),
-                        transfer_fee_basis_points: transfer_fee_basis_points as u32,
-                        maximum_fee,
-                    }),
-                })
+                oneof::Instruction::InitializeTransferFeeConfig(
+                    oneof::InitializeTransferFeeConfig {
+                        accounts: Some(InitializeTransferFeeConfigAccounts {
+                            mint: ix.accounts[0].to_vec(),
+                        }),
+                        args: Some(InitializeTransferFeeConfigArgs {
+                            transfer_fee_config_authority: transfer_fee_config_authority
+                                .map(|p| p.to_bytes().to_vec())
+                                .into(),
+                            withdraw_withheld_authority: withdraw_withheld_authority
+                                .map(|p| p.to_bytes().to_vec())
+                                .into(),
+                            transfer_fee_basis_points: transfer_fee_basis_points as u32,
+                            maximum_fee,
+                        }),
+                    },
+                )
             },
 
             SplTransferFeeInstruction::WithdrawWithheldTokensFromMint => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                oneof::Ix::WithdrawWithheldTokensFromMint(oneof::WithdrawWithheldTokensFromMint {
-                    accounts: Some(WithdrawWithheldTokensFromMintAccounts {
-                        mint: ix.accounts[0].to_vec(),
-                        fee_recipient: ix.accounts[1].to_vec(),
-                        withdraw_withheld_authority: ix.accounts[2].to_vec(),
-                        multisig_signers: ix.accounts[3..].iter().map(|pk| pk.to_vec()).collect(),
-                    }),
-                })
+                oneof::Instruction::WithdrawWithheldTokensFromMint(
+                    oneof::WithdrawWithheldTokensFromMint {
+                        accounts: Some(WithdrawWithheldTokensFromMintAccounts {
+                            mint: ix.accounts[0].to_vec(),
+                            fee_recipient: ix.accounts[1].to_vec(),
+                            withdraw_withheld_authority: ix.accounts[2].to_vec(),
+                            multisig_signers: ix.accounts[3..]
+                                .iter()
+                                .map(|pk| pk.to_vec())
+                                .collect(),
+                        }),
+                    },
+                )
             },
 
             SplTransferFeeInstruction::WithdrawWithheldTokensFromAccounts {
@@ -231,7 +241,7 @@ impl ExtensionInstructionParser for TransferFeeInstruction {
 
                 check_min_accounts_req(accounts_len, 3 + n)?;
 
-                oneof::Ix::WithdrawWithheldTokensFromAccounts(
+                oneof::Instruction::WithdrawWithheldTokensFromAccounts(
                     oneof::WithdrawWithheldTokensFromAccounts {
                         accounts: Some(WithdrawWithheldTokensFromAccountsAccounts {
                             mint: ix.accounts[0].to_vec(),
@@ -256,12 +266,14 @@ impl ExtensionInstructionParser for TransferFeeInstruction {
             SplTransferFeeInstruction::HarvestWithheldTokensToMint => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::HarvestWithheldTokensToMint(oneof::HarvestWithheldTokensToMint {
-                    accounts: Some(HarvestWithheldTokensToMintAccounts {
-                        mint: ix.accounts[0].to_vec(),
-                        mint_fee_acc_owner: ix.accounts[1].to_vec(),
-                    }),
-                })
+                oneof::Instruction::HarvestWithheldTokensToMint(
+                    oneof::HarvestWithheldTokensToMint {
+                        accounts: Some(HarvestWithheldTokensToMintAccounts {
+                            mint: ix.accounts[0].to_vec(),
+                            mint_fee_acc_owner: ix.accounts[1].to_vec(),
+                        }),
+                    },
+                )
             },
 
             SplTransferFeeInstruction::SetTransferFee {
@@ -270,7 +282,7 @@ impl ExtensionInstructionParser for TransferFeeInstruction {
             } => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::SetTransferFee(oneof::SetTransferFee {
+                oneof::Instruction::SetTransferFee(oneof::SetTransferFee {
                     accounts: Some(SetTransferFeeAccounts {
                         mint: ix.accounts[0].to_vec(),
                         mint_fee_acc_owner: ix.accounts[1].to_vec(),
@@ -284,6 +296,8 @@ impl ExtensionInstructionParser for TransferFeeInstruction {
             },
         };
 
-        Ok(TransferFeeInstruction { ix: Some(ix_msg) })
+        Ok(TransferFeeInstruction {
+            instruction: Some(ix_msg),
+        })
     }
 }

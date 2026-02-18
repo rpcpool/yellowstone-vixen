@@ -77,7 +77,7 @@ pub fn parse_token_metadata_extension(d: &[u8]) -> Result<TokenMetadata, Program
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ExtensionData {
+pub enum NativeExtensionData {
     ImmutableOwner(extension::immutable_owner::ImmutableOwner),
     TransferFeeAmount(extension::transfer_fee::TransferFeeAmount),
     ConfidentialTransferAccount(extension::confidential_transfer::ConfidentialTransferAccount),
@@ -111,7 +111,7 @@ pub enum ExtensionData {
     PausableAccount(extension::pausable::PausableAccount),
 }
 
-impl TryFrom<(ExtensionType, &[u8])> for ExtensionData {
+impl TryFrom<(ExtensionType, &[u8])> for NativeExtensionData {
     type Error = ProgramError;
 
     fn try_from(value: (ExtensionType, &[u8])) -> Result<Self, Self::Error> {
@@ -120,8 +120,8 @@ impl TryFrom<(ExtensionType, &[u8])> for ExtensionData {
 
         // uses aliases for better readability (One liners)
         use parse_extension_data as parse;
-        use ExtensionData as ED;
         use ExtensionType as ET;
+        use NativeExtensionData as ED;
 
         match extension_type {
             ET::ImmutableOwner => Ok(ED::ImmutableOwner(parse(d)?)),

@@ -5,16 +5,18 @@ use yellowstone_vixen_proc_macro::vixen_proto;
 use super::extension::decode_extension_ix_type;
 use crate::PubkeyBytes;
 
+#[vixen_proto(enumeration)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(i32)]
 pub enum ExtensionWithCommonInstruction {
-    CpiGuard,
-    DefaultAccountState,
-    InterestBearingMint,
-    MemoTransfer,
-    GroupMemberPointer,
-    GroupPointer,
-    MetadataPointer,
-    TransferHook,
+    CpiGuard = 0,
+    DefaultAccountState = 1,
+    InterestBearingMint = 2,
+    MemoTransfer = 3,
+    GroupMemberPointer = 4,
+    GroupPointer = 5,
+    MetadataPointer = 6,
+    TransferHook = 7,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -71,45 +73,17 @@ pub struct DisableAccounts {
     pub multisig_signers: Vec<PubkeyBytes>,
 }
 
-#[vixen_proto(enumeration)]
-#[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(i32)]
-pub enum ExtensionWithCommonInstructionProto {
-    CpiGuard = 0,
-    DefaultAccountState = 1,
-    InterestBearingMint = 2,
-    MemoTransfer = 3,
-    GroupMemberPointer = 4,
-    GroupPointer = 5,
-    MetadataPointer = 6,
-    TransferHook = 7,
-}
-
-#[inline]
-fn extension_to_proto(e: ExtensionWithCommonInstruction) -> i32 {
-    use ExtensionWithCommonInstruction as E;
-    use ExtensionWithCommonInstructionProto as P;
-
-    match e {
-        E::CpiGuard => P::CpiGuard as i32,
-        E::DefaultAccountState => P::DefaultAccountState as i32,
-        E::InterestBearingMint => P::InterestBearingMint as i32,
-        E::MemoTransfer => P::MemoTransfer as i32,
-        E::GroupMemberPointer => P::GroupMemberPointer as i32,
-        E::GroupPointer => P::GroupPointer as i32,
-        E::MetadataPointer => P::MetadataPointer as i32,
-        E::TransferHook => P::TransferHook as i32,
-    }
-}
-
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
 pub struct CommonExtensionInstructions {
-    #[vixen_proto_hint(enumeration = "ExtensionWithCommonInstructionProto")]
+    #[vixen_proto_hint(enumeration = "ExtensionWithCommonInstruction")]
     pub extension: i32,
 
-    #[vixen_proto_hint(oneof = "common_extension_instructions::Ix", tags = "2, 3, 4, 5")]
-    pub ix: Option<common_extension_instructions::Ix>,
+    #[vixen_proto_hint(
+        oneof = "common_extension_instructions::Instruction",
+        tags = "2, 3, 4, 5"
+    )]
+    pub instruction: Option<common_extension_instructions::Instruction>,
 }
 
 pub mod common_extension_instructions {
@@ -141,7 +115,7 @@ pub mod common_extension_instructions {
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum Ix {
+    pub enum Instruction {
         Initialize(Initialize),
         Update(Update),
         Enable(Enable),
@@ -164,8 +138,8 @@ impl CommonExtensionInstructions {
                 0 => {
                     check_min_accounts_req(accounts_len, 1)?;
                     CommonExtensionInstructions {
-                        extension: extension_to_proto(extension),
-                        ix: Some(oneof::Ix::Initialize(oneof::Initialize {
+                        extension: extension as i32,
+                        instruction: Some(oneof::Instruction::Initialize(oneof::Initialize {
                             accounts: Some(ExtInitializeAccounts {
                                 mint: ix.accounts[0].to_vec(),
                             }),
@@ -175,8 +149,8 @@ impl CommonExtensionInstructions {
                 1 => {
                     check_min_accounts_req(accounts_len, 2)?;
                     CommonExtensionInstructions {
-                        extension: extension_to_proto(extension),
-                        ix: Some(oneof::Ix::Update(oneof::Update {
+                        extension: extension as i32,
+                        instruction: Some(oneof::Instruction::Update(oneof::Update {
                             accounts: Some(UpdateAccounts {
                                 mint: ix.accounts[0].to_vec(),
                                 extension_authority: ix.accounts[1].to_vec(),
@@ -195,8 +169,8 @@ impl CommonExtensionInstructions {
                 0 => {
                     check_min_accounts_req(accounts_len, 2)?;
                     CommonExtensionInstructions {
-                        extension: extension_to_proto(extension),
-                        ix: Some(oneof::Ix::Enable(oneof::Enable {
+                        extension: extension as i32,
+                        instruction: Some(oneof::Instruction::Enable(oneof::Enable {
                             accounts: Some(EnableAccounts {
                                 account: ix.accounts[0].to_vec(),
                                 owner: ix.accounts[1].to_vec(),
@@ -211,8 +185,8 @@ impl CommonExtensionInstructions {
                 1 => {
                     check_min_accounts_req(accounts_len, 2)?;
                     CommonExtensionInstructions {
-                        extension: extension_to_proto(extension),
-                        ix: Some(oneof::Ix::Disable(oneof::Disable {
+                        extension: extension as i32,
+                        instruction: Some(oneof::Instruction::Disable(oneof::Disable {
                             accounts: Some(DisableAccounts {
                                 account: ix.accounts[0].to_vec(),
                                 owner: ix.accounts[1].to_vec(),

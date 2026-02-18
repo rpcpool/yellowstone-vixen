@@ -1,6 +1,6 @@
 use spl_token_2022::{extension::ExtensionType, instruction::AuthorityType as SplAuthorityType};
-use yellowstone_vixen_spl_token_parser::{SetAuthorityAccounts, TokenProgramInstruction};
 use yellowstone_vixen_proc_macro::vixen_proto;
+use yellowstone_vixen_spl_token_parser::{SetAuthorityAccounts, TokenProgramInstruction};
 
 use super::{
     CommonExtensionInstructions, ConfidentialTransferFeeInstruction,
@@ -73,7 +73,7 @@ pub struct WithdrawExcessLamportsAccounts {
 #[vixen_proto(enumeration)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
-pub enum AuthorityTypeProto {
+pub enum AuthorityType {
     MintTokens = 0,
     FreezeAccount = 1,
     AccountOwner = 2,
@@ -93,7 +93,7 @@ pub enum AuthorityTypeProto {
     Pause = 16,
 }
 
-impl From<spl_token_2022::instruction::AuthorityType> for AuthorityTypeProto {
+impl From<spl_token_2022::instruction::AuthorityType> for AuthorityType {
     fn from(a: spl_token_2022::instruction::AuthorityType) -> Self {
         use spl_token_2022::instruction::AuthorityType as A;
         match a {
@@ -121,7 +121,7 @@ impl From<spl_token_2022::instruction::AuthorityType> for AuthorityTypeProto {
 #[vixen_proto]
 #[derive(Clone, PartialEq, ::borsh::BorshDeserialize, ::borsh::BorshSerialize)]
 pub struct SetAuthorityArgs {
-    #[vixen_proto_hint(enumeration = "AuthorityTypeProto")]
+    #[vixen_proto_hint(enumeration = "AuthorityType")]
     pub authority_type: i32,
     pub new_authority: Option<PubkeyBytes>,
 }
@@ -129,8 +129,11 @@ pub struct SetAuthorityArgs {
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
 pub struct TokenExtensionProgramInstruction {
-    #[vixen_proto_hint(oneof = "token_extension_program_instruction::Ix", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21")]
-    pub ix: Option<token_extension_program_instruction::Ix>,
+    #[vixen_proto_hint(
+        oneof = "token_extension_program_instruction::Instruction",
+        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21"
+    )]
+    pub instruction: Option<token_extension_program_instruction::Instruction>,
 }
 
 pub mod token_extension_program_instruction {
@@ -139,7 +142,7 @@ pub mod token_extension_program_instruction {
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct TokenProgram {
-        pub ix: Option<TokenProgramInstruction>,
+        pub instruction: Option<TokenProgramInstruction>,
     }
 
     #[vixen_proto]
@@ -191,84 +194,84 @@ pub mod token_extension_program_instruction {
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct TransferFee {
-        pub ix: Option<TransferFeeInstruction>,
+        pub instruction: Option<TransferFeeInstruction>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct ConfidentialTransfer {
-        pub ix: Option<ConfidentialTransferInstruction>,
+        pub instruction: Option<ConfidentialTransferInstruction>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct ConfidentialTransferFee {
-        pub ix: Option<ConfidentialTransferFeeInstruction>,
+        pub instruction: Option<ConfidentialTransferFeeInstruction>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct CpiGuard {
-        pub ix: Option<CommonExtensionInstructions>,
+        pub instruction: Option<CommonExtensionInstructions>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct DefaultAccountState {
-        pub ix: Option<CommonExtensionInstructions>,
+        pub instruction: Option<CommonExtensionInstructions>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct GroupMemberPointer {
-        pub ix: Option<CommonExtensionInstructions>,
+        pub instruction: Option<CommonExtensionInstructions>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct GroupPointer {
-        pub ix: Option<CommonExtensionInstructions>,
+        pub instruction: Option<CommonExtensionInstructions>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct InterestBearingMint {
-        pub ix: Option<CommonExtensionInstructions>,
+        pub instruction: Option<CommonExtensionInstructions>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct MemoTransfer {
-        pub ix: Option<CommonExtensionInstructions>,
+        pub instruction: Option<CommonExtensionInstructions>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct MetadataPointer {
-        pub ix: Option<CommonExtensionInstructions>,
+        pub instruction: Option<CommonExtensionInstructions>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct TransferHook {
-        pub ix: Option<CommonExtensionInstructions>,
+        pub instruction: Option<CommonExtensionInstructions>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct TokenMetadata {
-        pub ix: Option<TokenMetadataInstruction>,
+        pub instruction: Option<TokenMetadataInstruction>,
     }
 
     #[vixen_proto]
     #[derive(Clone, PartialEq)]
     pub struct TokenGroup {
-        pub ix: Option<TokenGroupInstruction>,
+        pub instruction: Option<TokenGroupInstruction>,
     }
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum Ix {
+    pub enum Instruction {
         TokenProgram(TokenProgram),
         SetAuthority(SetAuthority),
         CreateNativeMint(CreateNativeMint),

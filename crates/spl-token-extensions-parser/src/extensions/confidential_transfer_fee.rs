@@ -60,10 +60,10 @@ pub struct DisableHarvestToMintAccounts {
 #[derive(Clone, PartialEq)]
 pub struct ConfidentialTransferFeeInstruction {
     #[vixen_proto_hint(
-        oneof = "confidential_transfer_fee_instruction::Ix",
+        oneof = "confidential_transfer_fee_instruction::Instruction",
         tags = "1, 2, 3, 4, 5, 6"
     )]
-    pub ix: Option<confidential_transfer_fee_instruction::Ix>,
+    pub instruction: Option<confidential_transfer_fee_instruction::Instruction>,
 }
 
 pub mod confidential_transfer_fee_instruction {
@@ -107,7 +107,7 @@ pub mod confidential_transfer_fee_instruction {
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum Ix {
+    pub enum Instruction {
         InitializeConfidentialTransferFeeConfig(InitializeConfidentialTransferFeeConfig),
 
         WithdrawWithheldTokensFromMint(WithdrawWithheldTokensFromMint),
@@ -133,7 +133,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeInstruction {
             SplConfidentialTransferFeeInstruction::InitializeConfidentialTransferFeeConfig => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                oneof::Ix::InitializeConfidentialTransferFeeConfig(
+                oneof::Instruction::InitializeConfidentialTransferFeeConfig(
                     oneof::InitializeConfidentialTransferFeeConfig {
                         accounts: Some(InitializeConfidentialTransferFeeConfigAccounts {
                             mint: ix.accounts[0].to_vec(),
@@ -145,21 +145,26 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeInstruction {
             SplConfidentialTransferFeeInstruction::WithdrawWithheldTokensFromMint => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                oneof::Ix::WithdrawWithheldTokensFromMint(oneof::WithdrawWithheldTokensFromMint {
-                    accounts: Some(ConfidentialWithdrawWithheldTokensFromMintAccounts {
-                        mint: ix.accounts[0].to_vec(),
-                        fee_recipient: ix.accounts[1].to_vec(),
-                        sysvar: ix.accounts[2].to_vec(),
-                        withdraw_withheld_authority: ix.accounts[3].to_vec(),
-                        multisig_signers: ix.accounts[4..].iter().map(|pk| pk.to_vec()).collect(),
-                    }),
-                })
+                oneof::Instruction::WithdrawWithheldTokensFromMint(
+                    oneof::WithdrawWithheldTokensFromMint {
+                        accounts: Some(ConfidentialWithdrawWithheldTokensFromMintAccounts {
+                            mint: ix.accounts[0].to_vec(),
+                            fee_recipient: ix.accounts[1].to_vec(),
+                            sysvar: ix.accounts[2].to_vec(),
+                            withdraw_withheld_authority: ix.accounts[3].to_vec(),
+                            multisig_signers: ix.accounts[4..]
+                                .iter()
+                                .map(|pk| pk.to_vec())
+                                .collect(),
+                        }),
+                    },
+                )
             },
 
             SplConfidentialTransferFeeInstruction::WithdrawWithheldTokensFromAccounts => {
                 check_min_accounts_req(accounts_len, 5)?;
 
-                oneof::Ix::WithdrawWithheldTokensFromAccounts(
+                oneof::Instruction::WithdrawWithheldTokensFromAccounts(
                     oneof::WithdrawWithheldTokensFromAccounts {
                         accounts: Some(ConfidentialWithdrawWithheldTokensFromAccounts {
                             mint: ix.accounts[0].to_vec(),
@@ -179,18 +184,23 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeInstruction {
             SplConfidentialTransferFeeInstruction::HarvestWithheldTokensToMint => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::HarvestWithheldTokensToMint(oneof::HarvestWithheldTokensToMint {
-                    accounts: Some(ConfidentialHarvestWithheldTokensToMintAccounts {
-                        mint: ix.accounts[0].to_vec(),
-                        source_accounts: ix.accounts[1..].iter().map(|pk| pk.to_vec()).collect(),
-                    }),
-                })
+                oneof::Instruction::HarvestWithheldTokensToMint(
+                    oneof::HarvestWithheldTokensToMint {
+                        accounts: Some(ConfidentialHarvestWithheldTokensToMintAccounts {
+                            mint: ix.accounts[0].to_vec(),
+                            source_accounts: ix.accounts[1..]
+                                .iter()
+                                .map(|pk| pk.to_vec())
+                                .collect(),
+                        }),
+                    },
+                )
             },
 
             SplConfidentialTransferFeeInstruction::EnableHarvestToMint => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::EnableHarvestToMint(oneof::EnableHarvestToMint {
+                oneof::Instruction::EnableHarvestToMint(oneof::EnableHarvestToMint {
                     accounts: Some(EnableHarvestToMintAccounts {
                         mint: ix.accounts[0].to_vec(),
                         confidential_transfer_fee_authority: ix.accounts[1].to_vec(),
@@ -202,7 +212,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeInstruction {
             SplConfidentialTransferFeeInstruction::DisableHarvestToMint => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                oneof::Ix::DisableHarvestToMint(oneof::DisableHarvestToMint {
+                oneof::Instruction::DisableHarvestToMint(oneof::DisableHarvestToMint {
                     accounts: Some(DisableHarvestToMintAccounts {
                         account: ix.accounts[0].to_vec(),
                         confidential_transfer_fee_authority: ix.accounts[1].to_vec(),
@@ -212,6 +222,8 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeInstruction {
             },
         };
 
-        Ok(ConfidentialTransferFeeInstruction { ix: Some(ix_msg) })
+        Ok(ConfidentialTransferFeeInstruction {
+            instruction: Some(ix_msg),
+        })
     }
 }

@@ -61,7 +61,7 @@ fn render_oneof_parent(oneof_ir: &OneofIr) -> TokenStream {
     let (mod_ident, oneof_ident) = match oneof_ir.kind {
         OneofKindIr::InstructionDispatch => (
             format_ident!("program_instruction_oneof"),
-            format_ident!("Ix"),
+            format_ident!("Instruction"),
         ),
         OneofKindIr::Enum => (
             format_ident!("{}", crate::utils::to_snake_case(&oneof_ir.parent_message)),
