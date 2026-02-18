@@ -98,6 +98,8 @@ yellowstone-block-machine = { git = "https://github.com/rpcpool/yellowstone-bloc
 yellowstone-fumarole-client = "0.3.1-rc1+solana.3"
 yellowstone-grpc-client = { version = "11" }
 yellowstone-grpc-proto = { version = "11", default-features = false }
+rdkafka = { version = "0.36", features = ["cmake-build"] }
+reqwest = { version = "0.12", features = ["json", "blocking"] }
 
 yellowstone-vixen = { path = "crates/runtime", version = "0.6.0-alpha.0" }
 yellowstone-vixen-proc-macro = { path = "crates/proc-macro", version = "0.6.0-alpha.0" }
@@ -122,3 +124,6 @@ yellowstone-vixen-jetstream-source = { path = "crates/jetstreamer-source", versi
 
 # Coordinators
 yellowstone-vixen-block-coordinator = { path = "crates/block-coordinator", version = "0.6.0-alpha.0" }
+
+# Sinks
+yellowstone-vixen-kafka-sink = { path = "crates/kafka-sink", version = "0.6.0-alpha.0" }

@@ -47,9 +47,8 @@ jobs:
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.9
 
-      # Required for rocksdb (solana-ledger dependency)
-      - name: Install LLVM/Clang
-        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang cmake libcurl4-openssl-dev libsasl2-dev
 
       # Build yellowstone-vixen
       - name: Build yellowstone-vixen
