@@ -1,0 +1,38 @@
+---
+source: tests/proc-macro/tests/order_engine.rs
+expression: "order_engine::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package order_engine;
+
+message FillAccounts {
+  bytes taker = 1;
+  bytes maker = 2;
+  bytes taker_input_mint_token_account = 3;
+  bytes maker_input_mint_token_account = 4;
+  bytes taker_output_mint_token_account = 5;
+  bytes maker_output_mint_token_account = 6;
+  bytes input_mint = 7;
+  bytes input_token_program = 8;
+  bytes output_mint = 9;
+  bytes output_token_program = 10;
+  bytes system_program = 11;
+}
+    
+message FillArgs {
+  uint64 input_amount = 1;
+  uint64 output_amount = 2;
+  int64 expire_at = 3;
+}
+    
+message FillInstruction {
+  optional FillAccounts accounts = 1;
+  optional FillArgs args = 2;
+}
+    
+message Instructions {
+  oneof instruction {
+    FillInstruction fill = 1;
+  }
+}

@@ -200,7 +200,23 @@ pub fn account_parser(
         })
     });
 
-    let struct_and_mod = if cfg!(feature = "proto") {
+    let struct_and_mod = if accounts.is_empty() {
+        // When there are no accounts, prost cannot handle an empty `tags = ""` attribute,
+        // so we emit a plain struct with no prost oneof.
+        if cfg!(feature = "proto") {
+            quote! {
+                /// Wrapper struct for program accounts (no accounts defined).
+                #[derive(Clone, PartialEq, ::prost::Message)]
+                pub struct #account_struct_ident {}
+            }
+        } else {
+            quote! {
+                /// Wrapper struct for program accounts (no accounts defined).
+                #[derive(Clone, Debug, PartialEq)]
+                pub struct #account_struct_ident {}
+            }
+        }
+    } else if cfg!(feature = "proto") {
         quote! {
             /// Wrapper struct for program accounts.
             #[derive(Clone, PartialEq, ::prost::Message)]
