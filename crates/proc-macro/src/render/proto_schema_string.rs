@@ -1,4 +1,4 @@
-use std::fmt::Write;
+use std::{collections::HashSet, fmt::Write};
 
 use crate::intermediate_representation::{
     FieldTypeIr, LabelIr, OneofIr, ScalarIr, SchemaIr, TypeIr,
@@ -19,8 +19,19 @@ pub fn proto_schema_string(schema: &SchemaIr, package: &str) -> String {
         }
     }
 
-    // Regular types
+    // Oneof parents are rendered separately below — skip them here to avoid duplicates.
+    let oneof_parents: HashSet<&str> = schema
+        .oneofs
+        .iter()
+        .map(|o| o.parent_message.as_str())
+        .collect();
+
+    // Regular types (excluding oneof parents)
     for t in &schema.types {
+        if oneof_parents.contains(t.name.as_str()) {
+            continue;
+        }
+
         render_type(&mut out, t);
     }
 

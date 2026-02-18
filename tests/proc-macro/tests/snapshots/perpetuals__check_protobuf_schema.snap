@@ -123,9 +123,6 @@ message PriceImpactMechanismTradeSize {
 message PriceImpactMechanismDeltaImbalance {
 }
     
-message PriceImpactMechanism {
-}
-    
 message OracleTypeNone {
 }
     
@@ -133,9 +130,6 @@ message OracleTypeTest {
 }
     
 message OracleTypePyth {
-}
-    
-message OracleType {
 }
     
 message PriceCalcModeMin {
@@ -147,16 +141,10 @@ message PriceCalcModeMax {
 message PriceCalcModeIgnore {
 }
     
-message PriceCalcMode {
-}
-    
 message PriceStaleToleranceStrict {
 }
     
 message PriceStaleToleranceLoose {
-}
-    
-message PriceStaleTolerance {
 }
     
 message TradePoolTypeIncrease {
@@ -165,16 +153,10 @@ message TradePoolTypeIncrease {
 message TradePoolTypeDecrease {
 }
     
-message TradePoolType {
-}
-    
 message RequestTypeMarket {
 }
     
 message RequestTypeTrigger {
-}
-    
-message RequestType {
 }
     
 message RequestChangeNone {
@@ -186,9 +168,6 @@ message RequestChangeIncrease {
 message RequestChangeDecrease {
 }
     
-message RequestChange {
-}
-    
 message SideNone {
 }
     
@@ -196,9 +175,6 @@ message SideLong {
 }
     
 message SideShort {
-}
-    
-message Side {
 }
     
 message BorrowPosition {

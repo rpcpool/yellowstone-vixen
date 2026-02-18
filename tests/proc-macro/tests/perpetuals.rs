@@ -1,3 +1,5 @@
+mod common;
+
 use insta;
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
@@ -7,6 +9,8 @@ include_vixen_parser!("idls/perp_idl.json");
 
 #[tokio::test]
 async fn check_protobuf_schema() {
+    common::check_protobuf_format(perpetuals::PROTOBUF_SCHEMA);
+
     insta::assert_snapshot!(perpetuals::PROTOBUF_SCHEMA);
 }
 
@@ -23,9 +27,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
         let decrease = ixs
             .iter()
             .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
-                perpetuals::Instruction::DecreasePositionWithTpsl(s) => {
-                    Some(s)
-                },
+                perpetuals::Instruction::DecreasePositionWithTpsl(s) => Some(s),
                 _ => None,
             })
             .expect("no decrease position ix found");
@@ -104,9 +106,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
         let close = ixs
             .iter()
             .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
-                perpetuals::Instruction::ClosePositionRequest2(s) => {
-                    Some(s)
-                },
+                perpetuals::Instruction::ClosePositionRequest2(s) => Some(s),
                 _ => None,
             })
             .expect("no close position request 2 ix found");
