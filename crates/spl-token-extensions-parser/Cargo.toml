@@ -24,6 +24,9 @@ yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen-proc-macro = { workspace = true }
 yellowstone-vixen-parser = { workspace = true }
 yellowstone-vixen-spl-token-parser = { workspace = true }
+yellowstone-vixen-proto = { workspace = true, features = [
+  "parser",
+], optional = true }
 thiserror.workspace = true
 bs58.workspace = true
 bytemuck = { workspace = true }
@@ -35,4 +38,12 @@ tokio.workspace = true
 
 [features]
 default = ["proto"]
-proto = ["dep:prost", "dep:prost-types", "yellowstone-vixen-core/proto", "yellowstone-vixen-proc-macro/proto"]
+proto = [
+  "dep:prost",
+  "dep:prost-types",
+  "dep:yellowstone-vixen-proto",
+  "yellowstone-vixen-core/proto",
+  "yellowstone-vixen-proc-macro/proto",
+  "yellowstone-vixen-proto/parser",
+  "yellowstone-vixen-parser/proto",
+]

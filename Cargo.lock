@@ -14289,6 +14289,7 @@ dependencies = [
  "yellowstone-vixen-mock",
  "yellowstone-vixen-parser",
  "yellowstone-vixen-proc-macro",
+ "yellowstone-vixen-proto",
  "yellowstone-vixen-spl-token-parser",
 ]
 
