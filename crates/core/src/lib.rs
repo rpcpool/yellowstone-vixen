@@ -245,7 +245,7 @@ impl AccountPrefilter {
 }
 
 /// A prefilter for matching transactions.
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TransactionPrefilter {
     /// The transaction **must** include at least **ONE** of these accounts. Otherwise, the transaction
     ///  won't be retrieved.
@@ -254,19 +254,39 @@ pub struct TransactionPrefilter {
     ///  That means if any of the accounts are not included in the transaction, the transaction
     ///  won't be retrieved.
     pub accounts_required: HashSet<Pubkey>,
+    /// Filter by transaction success/failure status.
+    /// - `None`: Include all transactions (required for "any" filter in Richat)
+    /// - `Some(false)`: Only successful transactions (default)
+    /// - `Some(true)`: Only failed transactions
+    pub failed: Option<bool>,
+}
+
+impl Default for TransactionPrefilter {
+    fn default() -> Self {
+        Self {
+            accounts_include: HashSet::new(),
+            accounts_required: HashSet::new(),
+            failed: Some(false), // Default to successful transactions (keep original behaviour)
+        }
+    }
 }
 
 impl TransactionPrefilter {
     /// Merge another transaction prefilter into this one, producing a prefilter
-    /// that describes the union of the two.
+    /// that describes the union of the two (consensus or all).
     pub fn merge(&mut self, other: TransactionPrefilter) {
         let Self {
             accounts_include,
             accounts_required,
+            failed,
         } = self;
 
         accounts_include.extend(other.accounts_include);
         accounts_required.extend(other.accounts_required);
+
+        if other.failed.is_none() {
+            *failed = None;
+        }
     }
 }
 
@@ -310,14 +330,30 @@ impl BlockPrefilter {
     }
 }
 
-/// A prefilter for matching slot updates updates.
-#[derive(Debug, Default, Clone, PartialEq, Copy)]
-pub struct SlotPrefilter {}
+/// A prefilter for matching slot updates.
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub struct SlotPrefilter {
+    /// If true (default), only receive slot updates at the connection's commitment level.
+    /// If false, receive ALL slot status transitions (processed, confirmed, finalized, dead).
+    pub filter_by_commitment: bool,
+}
+
+impl Default for SlotPrefilter {
+    fn default() -> Self {
+        Self {
+            filter_by_commitment: true,
+        }
+    }
+}
 
 impl SlotPrefilter {
-    /// Merge another slot prefilter into this one.
-    /// This function currently does nothing as the struct has no fields.
-    pub fn merge(_lhs: &mut Self, _rhs: Self) {}
+    /// Merge another slot prefilter into this one, producing a union of both filters, the more permissive wins.
+    /// `filter_by_commitment` controls which slot status updates are received:
+    /// - `true`: Only receive updates at the connection's commitment level
+    /// - `false`: Receive ALL slot status transitions (processed, confirmed, finalized, dead)
+    pub fn merge(lhs: &mut Self, rhs: Self) {
+        lhs.filter_by_commitment = lhs.filter_by_commitment && rhs.filter_by_commitment;
+    }
 }
 
 /// Helper macro for converting Vixen's [`Pubkey`] to a Solana ed25519 public
@@ -540,7 +576,7 @@ pub struct PrefilterBuilder {
     block_include_transactions: bool,
     /// Matching [`BlockPrefilter::include_entries`]
     block_include_entries: bool,
-    /// Including all accounts  
+    /// Including all accounts
     accounts_include_all: bool,
     /// Matching [`AccountPrefilter::accounts`]
     accounts: Option<HashSet<Pubkey>>,
@@ -605,6 +641,7 @@ impl PrefilterBuilder {
         let transaction = TransactionPrefilter {
             accounts_include: transaction_accounts_include.unwrap_or_default(),
             accounts_required: transaction_accounts_required.unwrap_or_default(),
+            ..Default::default()
         };
 
         let block_meta = BlockMetaPrefilter {};
@@ -616,7 +653,7 @@ impl PrefilterBuilder {
             include_entries: block_include_entries,
         };
 
-        let slot = SlotPrefilter {};
+        let slot = SlotPrefilter::default();
 
         let account = if accounts_include_all {
             Some(AccountPrefilter::default())
@@ -815,9 +852,9 @@ impl From<Filters> for SubscribeRequest {
                 .parsers_filters
                 .iter()
                 .filter_map(|(k, v)| {
-                    v.slot?;
+                    let slot_filter = v.slot.as_ref()?;
                     Some((k.clone(), SubscribeRequestFilterSlots {
-                        filter_by_commitment: Some(true),
+                        filter_by_commitment: Some(slot_filter.filter_by_commitment),
                         interslot_updates: None,
                     }))
                 })
@@ -830,8 +867,7 @@ impl From<Filters> for SubscribeRequest {
 
                     Some((k.clone(), SubscribeRequestFilterTransactions {
                         vote: None,
-                        // TODO: make this configurable
-                        failed: Some(false),
+                        failed: v.failed,
                         signature: None,
                         account_include: v
                             .accounts_include

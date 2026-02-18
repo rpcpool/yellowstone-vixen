@@ -143,7 +143,7 @@ impl SourceTrait for SolanaAccountsRpcSource {
                                         owner: account.owner.as_array().to_vec(),
                                         executable: account.executable,
                                         rent_epoch: account.rent_epoch,
-                                        data: account.data,
+                                        data: account.data.into(),
                                         write_version: 0,
                                         txn_signature: None,
                                     }),

@@ -62,6 +62,7 @@ solana-transaction = "^3.0.0"
 solana-transaction-status = "^3.0.0"
 solana-ledger = "^3.0.0"
 solana-runtime = "^3.0.0"
+solana-clock = "^3.0.0"
 spl-pod = "^0.7.0"
 spl-stake-pool = "^2.0.0"
 spl-token = "^9.0.0"
@@ -92,9 +93,14 @@ jetstreamer-firehose = "0.2"
 jetstreamer-utils = "0.2"
 warp = "0.3"
 
-yellowstone-fumarole-client = "^0.2.0"
-yellowstone-grpc-client = { version = "9" }
-yellowstone-grpc-proto = { version = "9", default-features = false }
+yellowstone-block-machine = { git = "https://github.com/rpcpool/yellowstone-block-machine", rev = "51b5c294d920bbf37ea6e8dbaddcbe0d2f4cd948", features = [
+    "dragonsmouth-thin",
+] }
+yellowstone-fumarole-client = "0.3.1-rc1+solana.3"
+yellowstone-grpc-client = { version = "11" }
+yellowstone-grpc-proto = { version = "11", default-features = false }
+rdkafka = { version = "0.36", features = ["cmake-build"] }
+reqwest = { version = "0.12", features = ["json", "blocking"] }
 
 yellowstone-vixen = { path = "crates/runtime", version = "0.7.0-alpha.0" }
 yellowstone-vixen-proc-macro = { path = "crates/proc-macro", version = "0.7.0-alpha.0" }
@@ -116,3 +122,9 @@ yellowstone-vixen-yellowstone-grpc-source = { path = "crates/yellowstone-grpc-so
 yellowstone-vixen-yellowstone-fumarole-source = { path = "crates/yellowstone-fumarole-source", version = "0.7.0-alpha.0" }
 yellowstone-vixen-solana-snapshot-source = { path = "crates/solana-snapshot-source", version = "0.7.0-alpha.0" }
 yellowstone-vixen-jetstream-source = { path = "crates/jetstreamer-source", version = "0.7.0-alpha.0" }
+
+# Coordinators
+yellowstone-vixen-block-coordinator = { path = "crates/block-coordinator", version = "0.7.0-alpha.0" }
+
+# Sinks
+yellowstone-vixen-kafka-sink = { path = "crates/kafka-sink", version = "0.7.0-alpha.0" }

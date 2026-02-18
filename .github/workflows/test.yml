@@ -30,43 +30,30 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - uses: actions/cache@v4
+      - name: Cache cargo registry
+        uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
+            ~/.cargo/registry/index/
             ~/.cargo/git/db/
-            ./target
-          key: v0001-${{ matrix.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            v0001-${{ matrix.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
+          key: cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-registry-
 
-      - name: Set rust version
-        run: |
-          echo "channel=$(cat rust-toolchain.toml | grep channel | awk '{print $3}' | sed 's/"//g')" >> "$GITHUB_ENV"
-          echo "targets=$(cat rust-toolchain.toml | grep targets | awk '{print $3}' | sed 's/\[//' | sed 's/\]//' | sed 's/"//g')" >> "$GITHUB_ENV"
-          echo "components=$(cat rust-toolchain.toml | grep components | awk -F = '{print $2}' | sed 's/\[//' | sed 's/\]//' | sed 's/"//g')" >> "$GITHUB_ENV"
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
 
+      # Project toolchain + clippy are auto-installed from rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: nightly
-
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: ${{ env.channel }}
-          components: ${{ env.components }}
+          components: rustfmt
 
       - name: cargo tree
         run: |
           cargo tree
           git checkout Cargo.lock
           cargo tree --frozen --offline
-
-      - name: Install toolchain components
-        run: |
-          rustup component add --toolchain nightly rustfmt
-          rustup component add --toolchain ${{ env.channel }} clippy
 
       - name: Run fmt
         run: cargo +nightly fmt --all -- --check
@@ -76,12 +63,12 @@ jobs:
         with:
           command: check advisories
 
-      - name: Install LLVM/Clang
-        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang cmake libcurl4-openssl-dev libsasl2-dev
 
       - name: Run clippy
         run: cargo clippy --all-targets --tests -- -Dwarnings
+        env:
+          RUSTC_WRAPPER: sccache
+          SCCACHE_GHA_ENABLED: true
 
-      - name: Test build
-        run: |
-          cargo build
