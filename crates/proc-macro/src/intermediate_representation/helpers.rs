@@ -64,6 +64,7 @@ pub fn build_fields_ir(
 ) -> Vec<FieldIr> {
     let mut out = Vec::new();
     let mut tag: u32 = 0;
+    let mut seen_names: std::collections::HashMap<String, u32> = std::collections::HashMap::new();
 
     for field in fields {
         if field.default_value_strategy() == Some(codama_nodes::DefaultValueStrategy::Omitted) {
@@ -72,7 +73,20 @@ pub fn build_fields_ir(
 
         tag += 1;
 
-        let field_name = crate::utils::to_snake_case(field.name());
+        // Handle duplicate field names by appending a suffix (e.g. `field`, `field_2`, `field_3`, etc.)
+        let field_name = {
+            let base_name = crate::utils::to_snake_case(field.name());
+
+            let count = seen_names.entry(base_name.clone()).or_insert(0);
+
+            *count += 1;
+
+            if *count > 1 {
+                format!("{}_{}", base_name, count)
+            } else {
+                base_name
+            }
+        };
 
         match field.r#type() {
             // Inline tuple => materialize a new message and reference it as Optional

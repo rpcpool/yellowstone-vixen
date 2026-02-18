@@ -1,0 +1,1166 @@
+---
+source: tests/proc-macro/tests/dynamic_bonding_curve.rs
+expression: "dynamic_bonding_curve::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package dynamic_bonding_curve;
+
+message BaseFeeConfig {
+  uint64 cliff_fee_numerator = 1;
+  uint64 second_factor = 2;
+  uint64 third_factor = 3;
+  uint32 first_factor = 4;
+  uint32 base_fee_mode = 5;
+  bytes padding0 = 6;
+}
+    
+message BaseFeeParameters {
+  uint64 cliff_fee_numerator = 1;
+  uint32 first_factor = 2;
+  uint64 second_factor = 3;
+  uint64 third_factor = 4;
+  uint32 base_fee_mode = 5;
+}
+    
+message ConfigParameters {
+  PoolFeeParameters pool_fees = 1;
+  uint32 collect_fee_mode = 2;
+  uint32 migration_option = 3;
+  uint32 activation_type = 4;
+  uint32 token_type = 5;
+  uint32 token_decimal = 6;
+  uint32 partner_liquidity_percentage = 7;
+  uint32 partner_permanent_locked_liquidity_percentage = 8;
+  uint32 creator_liquidity_percentage = 9;
+  uint32 creator_permanent_locked_liquidity_percentage = 10;
+  uint64 migration_quote_threshold = 11;
+  bytes sqrt_start_price = 12;
+  LockedVestingParams locked_vesting = 13;
+  uint32 migration_fee_option = 14;
+  optional TokenSupplyParams token_supply = 15;
+  uint32 creator_trading_fee_percentage = 16;
+  uint32 token_update_authority = 17;
+  MigrationFee migration_fee = 18;
+  MigratedPoolFee migrated_pool_fee = 19;
+  uint64 pool_creation_fee = 20;
+  LiquidityVestingInfoParams partner_liquidity_vesting_info = 21;
+  LiquidityVestingInfoParams creator_liquidity_vesting_info = 22;
+  uint32 migrated_pool_base_fee_mode = 23;
+  MigratedPoolMarketCapFeeSchedulerParams migrated_pool_market_cap_fee_scheduler_params = 24;
+  bool enable_first_swap_with_min_fee = 25;
+  bytes padding = 26;
+  repeated LiquidityDistributionParameters curve = 27;
+}
+    
+message DynamicFeeConfig {
+  uint32 initialized = 1;
+  bytes padding = 2;
+  uint32 max_volatility_accumulator = 3;
+  uint32 variable_fee_control = 4;
+  uint32 bin_step = 5;
+  uint32 filter_period = 6;
+  uint32 decay_period = 7;
+  uint32 reduction_factor = 8;
+  bytes padding2 = 9;
+  bytes bin_step_u128 = 10;
+}
+    
+message DynamicFeeParameters {
+  uint32 bin_step = 1;
+  bytes bin_step_u128 = 2;
+  uint32 filter_period = 3;
+  uint32 decay_period = 4;
+  uint32 reduction_factor = 5;
+  uint32 max_volatility_accumulator = 6;
+  uint32 variable_fee_control = 7;
+}
+    
+message EvtClaimCreatorTradingFee {
+  bytes pool = 1;
+  uint64 token_base_amount = 2;
+  uint64 token_quote_amount = 3;
+}
+    
+message EvtClaimPoolCreationFee {
+  bytes pool = 1;
+  bytes receiver = 2;
+  uint64 creation_fee = 3;
+}
+    
+message EvtClaimProtocolFee {
+  bytes pool = 1;
+  uint64 token_base_amount = 2;
+  uint64 token_quote_amount = 3;
+}
+    
+message EvtClaimProtocolLiquidityMigrationFee {
+  bytes pool = 1;
+  uint64 token_base_amount = 2;
+  uint64 token_quote_amount = 3;
+}
+    
+message EvtClaimTradingFee {
+  bytes pool = 1;
+  uint64 token_base_amount = 2;
+  uint64 token_quote_amount = 3;
+}
+    
+message EvtCloseClaimFeeOperator {
+  bytes claim_fee_operator = 1;
+  bytes operator = 2;
+}
+    
+message EvtCreateClaimFeeOperator {
+  bytes operator = 1;
+}
+    
+message EvtCreateConfig {
+  bytes config = 1;
+  bytes quote_mint = 2;
+  bytes fee_claimer = 3;
+  bytes owner = 4;
+  PoolFeeParameters pool_fees = 5;
+  uint32 collect_fee_mode = 6;
+  uint32 migration_option = 7;
+  uint32 activation_type = 8;
+  uint32 token_decimal = 9;
+  uint32 token_type = 10;
+  uint32 partner_permanent_locked_liquidity_percentage = 11;
+  uint32 partner_liquidity_percentage = 12;
+  uint32 creator_permanent_locked_liquidity_percentage = 13;
+  uint32 creator_liquidity_percentage = 14;
+  uint64 swap_base_amount = 15;
+  uint64 migration_quote_threshold = 16;
+  uint64 migration_base_amount = 17;
+  bytes sqrt_start_price = 18;
+  LockedVestingParams locked_vesting = 19;
+  uint32 migration_fee_option = 20;
+  uint32 fixed_token_supply_flag = 21;
+  uint64 pre_migration_token_supply = 22;
+  uint64 post_migration_token_supply = 23;
+  repeated LiquidityDistributionParameters curve = 24;
+}
+    
+message EvtCreateConfigV2 {
+  bytes config = 1;
+  bytes quote_mint = 2;
+  bytes fee_claimer = 3;
+  bytes leftover_receiver = 4;
+  ConfigParameters config_parameters = 5;
+}
+    
+message EvtCreateMeteoraMigrationMetadata {
+  bytes virtual_pool = 1;
+}
+    
+message EvtCreatorWithdrawSurplus {
+  bytes pool = 1;
+  uint64 surplus_amount = 2;
+}
+    
+message EvtCurveComplete {
+  bytes pool = 1;
+  bytes config = 2;
+  uint64 base_reserve = 3;
+  uint64 quote_reserve = 4;
+}
+    
+message EvtInitializePool {
+  bytes pool = 1;
+  bytes config = 2;
+  bytes creator = 3;
+  bytes base_mint = 4;
+  uint32 pool_type = 5;
+  uint64 activation_point = 6;
+}
+    
+message EvtPartnerClaimPoolCreationFee {
+  bytes pool = 1;
+  bytes partner = 2;
+  uint64 creation_fee = 3;
+  bytes fee_receiver = 4;
+}
+    
+message EvtPartnerMetadata {
+  bytes partner_metadata = 1;
+  bytes fee_claimer = 2;
+}
+    
+message EvtPartnerWithdrawMigrationFee {
+  bytes pool = 1;
+  uint64 fee = 2;
+}
+    
+message EvtPartnerWithdrawSurplus {
+  bytes pool = 1;
+  uint64 surplus_amount = 2;
+}
+    
+message EvtSwap {
+  bytes pool = 1;
+  bytes config = 2;
+  uint32 trade_direction = 3;
+  bool has_referral = 4;
+  SwapParameters params = 5;
+  SwapResult swap_result = 6;
+  uint64 amount_in = 7;
+  uint64 current_timestamp = 8;
+}
+    
+message EvtSwap2 {
+  bytes pool = 1;
+  bytes config = 2;
+  uint32 trade_direction = 3;
+  bool has_referral = 4;
+  SwapParameters2 swap_parameters = 5;
+  SwapResult2 swap_result = 6;
+  uint64 quote_reserve_amount = 7;
+  uint64 migration_threshold = 8;
+  uint64 current_timestamp = 9;
+}
+    
+message EvtUpdatePoolCreator {
+  bytes pool = 1;
+  bytes creator = 2;
+  bytes new_creator = 3;
+}
+    
+message EvtVirtualPoolMetadata {
+  bytes virtual_pool_metadata = 1;
+  bytes virtual_pool = 2;
+}
+    
+message EvtWithdrawLeftover {
+  bytes pool = 1;
+  bytes leftover_receiver = 2;
+  uint64 leftover_amount = 3;
+}
+    
+message EvtWithdrawMigrationFee {
+  bytes pool = 1;
+  uint64 fee = 2;
+  uint32 flag = 3;
+}
+    
+message InitializePoolParameters {
+  string name = 1;
+  string symbol = 2;
+  string uri = 3;
+}
+    
+message LiquidityDistributionConfig {
+  bytes sqrt_price = 1;
+  bytes liquidity = 2;
+}
+    
+message LiquidityDistributionParameters {
+  bytes sqrt_price = 1;
+  bytes liquidity = 2;
+}
+    
+message LiquidityVestingInfo {
+  uint32 is_initialized = 1;
+  uint32 vesting_percentage = 2;
+  bytes padding = 3;
+  uint32 bps_per_period = 4;
+  uint32 number_of_periods = 5;
+  uint32 frequency = 6;
+  uint32 cliff_duration_from_migration_time = 7;
+}
+    
+message LiquidityVestingInfoParams {
+  uint32 vesting_percentage = 1;
+  uint32 bps_per_period = 2;
+  uint32 number_of_periods = 3;
+  uint32 cliff_duration_from_migration_time = 4;
+  uint32 frequency = 5;
+}
+    
+message LockedVestingConfig {
+  uint64 amount_per_period = 1;
+  uint64 cliff_duration_from_migration_time = 2;
+  uint64 frequency = 3;
+  uint64 number_of_period = 4;
+  uint64 cliff_unlock_amount = 5;
+  uint64 padding = 6;
+}
+    
+message LockedVestingParams {
+  uint64 amount_per_period = 1;
+  uint64 cliff_duration_from_migration_time = 2;
+  uint64 frequency = 3;
+  uint64 number_of_period = 4;
+  uint64 cliff_unlock_amount = 5;
+}
+    
+message MigratedPoolFee {
+  uint32 collect_fee_mode = 1;
+  uint32 dynamic_fee = 2;
+  uint32 pool_fee_bps = 3;
+}
+    
+message MigratedPoolMarketCapFeeSchedulerParams {
+  uint32 number_of_period = 1;
+  uint32 sqrt_price_step_bps = 2;
+  uint32 scheduler_expiration_duration = 3;
+  uint64 reduction_factor = 4;
+}
+    
+message MigrationFee {
+  uint32 fee_percentage = 1;
+  uint32 creator_fee_percentage = 2;
+}
+    
+message PoolFeeParameters {
+  BaseFeeParameters base_fee = 1;
+  optional DynamicFeeParameters dynamic_fee = 2;
+}
+    
+message PoolFees {
+  uint64 trade_fee_numerator = 1;
+  uint64 trade_fee_denominator = 2;
+  uint64 protocol_trade_fee_numerator = 3;
+  uint64 protocol_trade_fee_denominator = 4;
+}
+    
+message PoolFeesConfig {
+  BaseFeeConfig base_fee = 1;
+  DynamicFeeConfig dynamic_fee = 2;
+}
+    
+message PoolMetrics {
+  uint64 total_protocol_base_fee = 1;
+  uint64 total_protocol_quote_fee = 2;
+  uint64 total_trading_base_fee = 3;
+  uint64 total_trading_quote_fee = 4;
+}
+    
+message SwapParameters {
+  uint64 amount_in = 1;
+  uint64 minimum_amount_out = 2;
+}
+    
+message SwapParameters2 {
+  uint64 amount0 = 1;
+  uint64 amount1 = 2;
+  uint32 swap_mode = 3;
+}
+    
+message SwapResult {
+  uint64 actual_input_amount = 1;
+  uint64 output_amount = 2;
+  bytes next_sqrt_price = 3;
+  uint64 trading_fee = 4;
+  uint64 protocol_fee = 5;
+  uint64 referral_fee = 6;
+}
+    
+message SwapResult2 {
+  uint64 included_fee_input_amount = 1;
+  uint64 excluded_fee_input_amount = 2;
+  uint64 amount_left = 3;
+  uint64 output_amount = 4;
+  bytes next_sqrt_price = 5;
+  uint64 trading_fee = 6;
+  uint64 protocol_fee = 7;
+  uint64 referral_fee = 8;
+}
+    
+message TokenSupplyParams {
+  uint64 pre_migration_token_supply = 1;
+  uint64 post_migration_token_supply = 2;
+}
+    
+message VolatilityTracker {
+  uint64 last_update_timestamp = 1;
+  bytes padding = 2;
+  bytes sqrt_price_reference = 3;
+  bytes volatility_accumulator = 4;
+  bytes volatility_reference = 5;
+}
+    
+message ClaimFeeOperator {
+  bytes operator = 1;
+  bytes padding = 2;
+}
+    
+message Config {
+  PoolFees pool_fees = 1;
+  uint64 activation_duration = 2;
+  bytes vault_config_key = 3;
+  bytes pool_creator_authority = 4;
+  uint32 activation_type = 5;
+  uint64 partner_fee_numerator = 6;
+  bytes padding = 7;
+}
+    
+message LockEscrow {
+  bytes pool = 1;
+  bytes owner = 2;
+  bytes escrow_vault = 3;
+  uint32 bump = 4;
+  uint64 total_locked_amount = 5;
+  bytes lp_per_token = 6;
+  uint64 unclaimed_fee_pending = 7;
+  uint64 a_fee = 8;
+  uint64 b_fee = 9;
+}
+    
+message MeteoraDammMigrationMetadata {
+  bytes virtual_pool = 1;
+  bytes padding0 = 2;
+  bytes partner = 3;
+  bytes lp_mint = 4;
+  uint64 partner_locked_liquidity = 5;
+  uint64 partner_liquidity = 6;
+  uint64 creator_locked_liquidity = 7;
+  uint64 creator_liquidity = 8;
+  uint32 padding0_2 = 9;
+  uint32 creator_locked_status = 10;
+  uint32 partner_locked_status = 11;
+  uint32 creator_claim_status = 12;
+  uint32 partner_claim_status = 13;
+  bytes padding = 14;
+}
+    
+message PartnerMetadata {
+  bytes fee_claimer = 1;
+  repeated bytes padding = 2;
+  string name = 3;
+  string website = 4;
+  string logo = 5;
+}
+    
+message PoolConfig {
+  bytes quote_mint = 1;
+  bytes fee_claimer = 2;
+  bytes leftover_receiver = 3;
+  PoolFeesConfig pool_fees = 4;
+  LiquidityVestingInfo partner_liquidity_vesting_info = 5;
+  LiquidityVestingInfo creator_liquidity_vesting_info = 6;
+  bytes padding0 = 7;
+  uint32 padding1 = 8;
+  uint32 collect_fee_mode = 9;
+  uint32 migration_option = 10;
+  uint32 activation_type = 11;
+  uint32 token_decimal = 12;
+  uint32 version = 13;
+  uint32 token_type = 14;
+  uint32 quote_token_flag = 15;
+  uint32 partner_permanent_locked_liquidity_percentage = 16;
+  uint32 partner_liquidity_percentage = 17;
+  uint32 creator_permanent_locked_liquidity_percentage = 18;
+  uint32 creator_liquidity_percentage = 19;
+  uint32 migration_fee_option = 20;
+  uint32 fixed_token_supply_flag = 21;
+  uint32 creator_trading_fee_percentage = 22;
+  uint32 token_update_authority = 23;
+  uint32 migration_fee_percentage = 24;
+  uint32 creator_migration_fee_percentage = 25;
+  bytes padding2 = 26;
+  uint64 swap_base_amount = 27;
+  uint64 migration_quote_threshold = 28;
+  uint64 migration_base_threshold = 29;
+  bytes migration_sqrt_price = 30;
+  LockedVestingConfig locked_vesting_config = 31;
+  uint64 pre_migration_token_supply = 32;
+  uint64 post_migration_token_supply = 33;
+  uint32 migrated_collect_fee_mode = 34;
+  uint32 migrated_dynamic_fee = 35;
+  uint32 migrated_pool_fee_bps = 36;
+  uint32 migrated_pool_base_fee_mode = 37;
+  uint32 enable_first_swap_with_min_fee = 38;
+  bytes padding1_2 = 39;
+  uint64 pool_creation_fee = 40;
+  bytes migrated_pool_base_fee_bytes = 41;
+  bytes sqrt_start_price = 42;
+  repeated LiquidityDistributionConfig curve = 43;
+}
+    
+message VirtualPool {
+  VolatilityTracker volatility_tracker = 1;
+  bytes config = 2;
+  bytes creator = 3;
+  bytes base_mint = 4;
+  bytes base_vault = 5;
+  bytes quote_vault = 6;
+  uint64 base_reserve = 7;
+  uint64 quote_reserve = 8;
+  uint64 protocol_base_fee = 9;
+  uint64 protocol_quote_fee = 10;
+  uint64 partner_base_fee = 11;
+  uint64 partner_quote_fee = 12;
+  bytes sqrt_price = 13;
+  uint64 activation_point = 14;
+  uint32 pool_type = 15;
+  uint32 is_migrated = 16;
+  uint32 is_partner_withdraw_surplus = 17;
+  uint32 is_protocol_withdraw_surplus = 18;
+  uint32 migration_progress = 19;
+  uint32 is_withdraw_leftover = 20;
+  uint32 is_creator_withdraw_surplus = 21;
+  uint32 migration_fee_withdraw_status = 22;
+  PoolMetrics metrics = 23;
+  uint64 finish_curve_timestamp = 24;
+  uint64 creator_base_fee = 25;
+  uint64 creator_quote_fee = 26;
+  uint32 legacy_creation_fee_bits = 27;
+  uint32 creation_fee_bits = 28;
+  uint32 has_swap = 29;
+  bytes padding0 = 30;
+  uint32 protocol_liquidity_migration_fee_bps = 31;
+  bytes padding1 = 32;
+  uint64 protocol_migration_base_fee_amount = 33;
+  uint64 protocol_migration_quote_fee_amount = 34;
+  repeated uint64 padding2 = 35;
+}
+    
+message VirtualPoolMetadata {
+  bytes virtual_pool = 1;
+  repeated bytes padding = 2;
+  string name = 3;
+  string website = 4;
+  string logo = 5;
+}
+    
+message ClaimCreatorTradingFeeAccounts {
+  bytes pool_authority = 1;
+  bytes pool = 2;
+  bytes token_a_account = 3;
+  bytes token_b_account = 4;
+  bytes base_vault = 5;
+  bytes quote_vault = 6;
+  bytes base_mint = 7;
+  bytes quote_mint = 8;
+  bytes creator = 9;
+  bytes token_base_program = 10;
+  bytes token_quote_program = 11;
+  bytes event_authority = 12;
+  bytes program = 13;
+}
+    
+message ClaimCreatorTradingFeeArgs {
+  uint64 max_base_amount = 1;
+  uint64 max_quote_amount = 2;
+}
+    
+message ClaimCreatorTradingFeeInstruction {
+  optional ClaimCreatorTradingFeeAccounts accounts = 1;
+  optional ClaimCreatorTradingFeeArgs args = 2;
+}
+    
+message ClaimPartnerPoolCreationFeeAccounts {
+  bytes config = 1;
+  bytes pool = 2;
+  bytes fee_claimer = 3;
+  bytes fee_receiver = 4;
+  bytes event_authority = 5;
+  bytes program = 6;
+}
+    
+message ClaimPartnerPoolCreationFeeArgs {
+}
+    
+message ClaimPartnerPoolCreationFeeInstruction {
+  optional ClaimPartnerPoolCreationFeeAccounts accounts = 1;
+  optional ClaimPartnerPoolCreationFeeArgs args = 2;
+}
+    
+message ClaimProtocolFeeAccounts {
+  bytes pool_authority = 1;
+  bytes config = 2;
+  bytes pool = 3;
+  bytes base_vault = 4;
+  bytes quote_vault = 5;
+  bytes base_mint = 6;
+  bytes quote_mint = 7;
+  bytes token_base_account = 8;
+  bytes token_quote_account = 9;
+  bytes claim_fee_operator = 10;
+  bytes signer = 11;
+  bytes token_base_program = 12;
+  bytes token_quote_program = 13;
+  bytes event_authority = 14;
+  bytes program = 15;
+}
+    
+message ClaimProtocolFeeArgs {
+  uint64 max_base_amount = 1;
+  uint64 max_quote_amount = 2;
+}
+    
+message ClaimProtocolFeeInstruction {
+  optional ClaimProtocolFeeAccounts accounts = 1;
+  optional ClaimProtocolFeeArgs args = 2;
+}
+    
+message ClaimProtocolPoolCreationFeeAccounts {
+  bytes config = 1;
+  bytes pool = 2;
+  bytes claim_fee_operator = 3;
+  bytes signer = 4;
+  bytes treasury = 5;
+  bytes event_authority = 6;
+  bytes program = 7;
+}
+    
+message ClaimProtocolPoolCreationFeeArgs {
+}
+    
+message ClaimProtocolPoolCreationFeeInstruction {
+  optional ClaimProtocolPoolCreationFeeAccounts accounts = 1;
+  optional ClaimProtocolPoolCreationFeeArgs args = 2;
+}
+    
+message ClaimTradingFeeAccounts {
+  bytes pool_authority = 1;
+  bytes config = 2;
+  bytes pool = 3;
+  bytes token_a_account = 4;
+  bytes token_b_account = 5;
+  bytes base_vault = 6;
+  bytes quote_vault = 7;
+  bytes base_mint = 8;
+  bytes quote_mint = 9;
+  bytes fee_claimer = 10;
+  bytes token_base_program = 11;
+  bytes token_quote_program = 12;
+  bytes event_authority = 13;
+  bytes program = 14;
+}
+    
+message ClaimTradingFeeArgs {
+  uint64 max_amount_a = 1;
+  uint64 max_amount_b = 2;
+}
+    
+message ClaimTradingFeeInstruction {
+  optional ClaimTradingFeeAccounts accounts = 1;
+  optional ClaimTradingFeeArgs args = 2;
+}
+    
+message CloseClaimProtocolFeeOperatorAccounts {
+  bytes claim_fee_operator = 1;
+  bytes rent_receiver = 2;
+  bytes signer = 3;
+  bytes event_authority = 4;
+  bytes program = 5;
+}
+    
+message CloseClaimProtocolFeeOperatorArgs {
+}
+    
+message CloseClaimProtocolFeeOperatorInstruction {
+  optional CloseClaimProtocolFeeOperatorAccounts accounts = 1;
+  optional CloseClaimProtocolFeeOperatorArgs args = 2;
+}
+    
+message CreateClaimProtocolFeeOperatorAccounts {
+  bytes claim_fee_operator = 1;
+  bytes operator = 2;
+  bytes signer = 3;
+  bytes payer = 4;
+  bytes system_program = 5;
+  bytes event_authority = 6;
+  bytes program = 7;
+}
+    
+message CreateClaimProtocolFeeOperatorArgs {
+}
+    
+message CreateClaimProtocolFeeOperatorInstruction {
+  optional CreateClaimProtocolFeeOperatorAccounts accounts = 1;
+  optional CreateClaimProtocolFeeOperatorArgs args = 2;
+}
+    
+message CreateConfigAccounts {
+  bytes config = 1;
+  bytes fee_claimer = 2;
+  bytes leftover_receiver = 3;
+  bytes quote_mint = 4;
+  bytes payer = 5;
+  bytes system_program = 6;
+  bytes event_authority = 7;
+  bytes program = 8;
+}
+    
+message CreateConfigArgs {
+  ConfigParameters config_parameters = 1;
+}
+    
+message CreateConfigInstruction {
+  optional CreateConfigAccounts accounts = 1;
+  optional CreateConfigArgs args = 2;
+}
+    
+message CreateLockerAccounts {
+  bytes virtual_pool = 1;
+  bytes config = 2;
+  bytes pool_authority = 3;
+  bytes base_vault = 4;
+  bytes base_mint = 5;
+  bytes base = 6;
+  bytes creator = 7;
+  bytes escrow = 8;
+  bytes escrow_token = 9;
+  bytes payer = 10;
+  bytes token_program = 11;
+  bytes locker_program = 12;
+  bytes locker_event_authority = 13;
+  bytes system_program = 14;
+}
+    
+message CreateLockerArgs {
+}
+    
+message CreateLockerInstruction {
+  optional CreateLockerAccounts accounts = 1;
+  optional CreateLockerArgs args = 2;
+}
+    
+message CreatePartnerMetadataAccounts {
+  bytes partner_metadata = 1;
+  bytes payer = 2;
+  bytes fee_claimer = 3;
+  bytes system_program = 4;
+  bytes event_authority = 5;
+  bytes program = 6;
+}
+    
+message CreatePartnerMetadataArgs {
+  bytes padding = 1;
+  string name = 2;
+  string website = 3;
+  string logo = 4;
+}
+    
+message CreatePartnerMetadataInstruction {
+  optional CreatePartnerMetadataAccounts accounts = 1;
+  optional CreatePartnerMetadataArgs args = 2;
+}
+    
+message CreateVirtualPoolMetadataAccounts {
+  bytes virtual_pool = 1;
+  bytes virtual_pool_metadata = 2;
+  bytes creator = 3;
+  bytes payer = 4;
+  bytes system_program = 5;
+  bytes event_authority = 6;
+  bytes program = 7;
+}
+    
+message CreateVirtualPoolMetadataArgs {
+  bytes padding = 1;
+  string name = 2;
+  string website = 3;
+  string logo = 4;
+}
+    
+message CreateVirtualPoolMetadataInstruction {
+  optional CreateVirtualPoolMetadataAccounts accounts = 1;
+  optional CreateVirtualPoolMetadataArgs args = 2;
+}
+    
+message CreatorWithdrawSurplusAccounts {
+  bytes pool_authority = 1;
+  bytes config = 2;
+  bytes virtual_pool = 3;
+  bytes token_quote_account = 4;
+  bytes quote_vault = 5;
+  bytes quote_mint = 6;
+  bytes creator = 7;
+  bytes token_quote_program = 8;
+  bytes event_authority = 9;
+  bytes program = 10;
+}
+    
+message CreatorWithdrawSurplusArgs {
+}
+    
+message CreatorWithdrawSurplusInstruction {
+  optional CreatorWithdrawSurplusAccounts accounts = 1;
+  optional CreatorWithdrawSurplusArgs args = 2;
+}
+    
+message InitializeVirtualPoolWithSplTokenAccounts {
+  bytes config = 1;
+  bytes pool_authority = 2;
+  bytes creator = 3;
+  bytes base_mint = 4;
+  bytes quote_mint = 5;
+  bytes pool = 6;
+  bytes base_vault = 7;
+  bytes quote_vault = 8;
+  bytes mint_metadata = 9;
+  bytes metadata_program = 10;
+  bytes payer = 11;
+  bytes token_quote_program = 12;
+  bytes token_program = 13;
+  bytes system_program = 14;
+  bytes event_authority = 15;
+  bytes program = 16;
+}
+    
+message InitializeVirtualPoolWithSplTokenArgs {
+  InitializePoolParameters params = 1;
+}
+    
+message InitializeVirtualPoolWithSplTokenInstruction {
+  optional InitializeVirtualPoolWithSplTokenAccounts accounts = 1;
+  optional InitializeVirtualPoolWithSplTokenArgs args = 2;
+}
+    
+message InitializeVirtualPoolWithToken2022Accounts {
+  bytes config = 1;
+  bytes pool_authority = 2;
+  bytes creator = 3;
+  bytes base_mint = 4;
+  bytes quote_mint = 5;
+  bytes pool = 6;
+  bytes base_vault = 7;
+  bytes quote_vault = 8;
+  bytes payer = 9;
+  bytes token_quote_program = 10;
+  bytes token_program = 11;
+  bytes system_program = 12;
+  bytes event_authority = 13;
+  bytes program = 14;
+}
+    
+message InitializeVirtualPoolWithToken2022Args {
+  InitializePoolParameters params = 1;
+}
+    
+message InitializeVirtualPoolWithToken2022Instruction {
+  optional InitializeVirtualPoolWithToken2022Accounts accounts = 1;
+  optional InitializeVirtualPoolWithToken2022Args args = 2;
+}
+    
+message MigrateMeteoraDammAccounts {
+  bytes virtual_pool = 1;
+  bytes migration_metadata = 2;
+  bytes config = 3;
+  bytes pool_authority = 4;
+  bytes pool = 5;
+  bytes damm_config = 6;
+  bytes lp_mint = 7;
+  bytes token_a_mint = 8;
+  bytes token_b_mint = 9;
+  bytes a_vault = 10;
+  bytes b_vault = 11;
+  bytes a_token_vault = 12;
+  bytes b_token_vault = 13;
+  bytes a_vault_lp_mint = 14;
+  bytes b_vault_lp_mint = 15;
+  bytes a_vault_lp = 16;
+  bytes b_vault_lp = 17;
+  bytes base_vault = 18;
+  bytes quote_vault = 19;
+  bytes virtual_pool_lp = 20;
+  bytes protocol_token_a_fee = 21;
+  bytes protocol_token_b_fee = 22;
+  bytes payer = 23;
+  bytes rent = 24;
+  bytes mint_metadata = 25;
+  bytes metadata_program = 26;
+  bytes amm_program = 27;
+  bytes vault_program = 28;
+  bytes token_program = 29;
+  bytes associated_token_program = 30;
+  bytes system_program = 31;
+}
+    
+message MigrateMeteoraDammArgs {
+}
+    
+message MigrateMeteoraDammInstruction {
+  optional MigrateMeteoraDammAccounts accounts = 1;
+  optional MigrateMeteoraDammArgs args = 2;
+}
+    
+message MigrateMeteoraDammClaimLpTokenAccounts {
+  bytes virtual_pool = 1;
+  bytes migration_metadata = 2;
+  bytes pool_authority = 3;
+  bytes lp_mint = 4;
+  bytes source_token = 5;
+  bytes destination_token = 6;
+  bytes owner = 7;
+  bytes sender = 8;
+  bytes token_program = 9;
+}
+    
+message MigrateMeteoraDammClaimLpTokenArgs {
+}
+    
+message MigrateMeteoraDammClaimLpTokenInstruction {
+  optional MigrateMeteoraDammClaimLpTokenAccounts accounts = 1;
+  optional MigrateMeteoraDammClaimLpTokenArgs args = 2;
+}
+    
+message MigrateMeteoraDammLockLpTokenAccounts {
+  bytes virtual_pool = 1;
+  bytes migration_metadata = 2;
+  bytes pool_authority = 3;
+  bytes pool = 4;
+  bytes lp_mint = 5;
+  bytes lock_escrow = 6;
+  bytes owner = 7;
+  bytes source_tokens = 8;
+  bytes escrow_vault = 9;
+  bytes amm_program = 10;
+  bytes a_vault = 11;
+  bytes b_vault = 12;
+  bytes a_vault_lp = 13;
+  bytes b_vault_lp = 14;
+  bytes a_vault_lp_mint = 15;
+  bytes b_vault_lp_mint = 16;
+  bytes token_program = 17;
+}
+    
+message MigrateMeteoraDammLockLpTokenArgs {
+}
+    
+message MigrateMeteoraDammLockLpTokenInstruction {
+  optional MigrateMeteoraDammLockLpTokenAccounts accounts = 1;
+  optional MigrateMeteoraDammLockLpTokenArgs args = 2;
+}
+    
+message MigrationDammV2Accounts {
+  bytes virtual_pool = 1;
+  bytes migration_metadata = 2;
+  bytes config = 3;
+  bytes pool_authority = 4;
+  bytes pool = 5;
+  bytes first_position_nft_mint = 6;
+  bytes first_position_nft_account = 7;
+  bytes first_position = 8;
+  bytes second_position_nft_mint = 9;
+  bytes second_position_nft_account = 10;
+  bytes second_position = 11;
+  bytes damm_pool_authority = 12;
+  bytes amm_program = 13;
+  bytes base_mint = 14;
+  bytes quote_mint = 15;
+  bytes token_a_vault = 16;
+  bytes token_b_vault = 17;
+  bytes base_vault = 18;
+  bytes quote_vault = 19;
+  bytes payer = 20;
+  bytes token_base_program = 21;
+  bytes token_quote_program = 22;
+  bytes token2022_program = 23;
+  bytes damm_event_authority = 24;
+  bytes system_program = 25;
+}
+    
+message MigrationDammV2Args {
+}
+    
+message MigrationDammV2Instruction {
+  optional MigrationDammV2Accounts accounts = 1;
+  optional MigrationDammV2Args args = 2;
+}
+    
+message MigrationDammV2CreateMetadataAccounts {
+  bytes virtual_pool = 1;
+  bytes config = 2;
+  bytes migration_metadata = 3;
+  bytes payer = 4;
+  bytes system_program = 5;
+  bytes event_authority = 6;
+  bytes program = 7;
+}
+    
+message MigrationDammV2CreateMetadataArgs {
+}
+    
+message MigrationDammV2CreateMetadataInstruction {
+  optional MigrationDammV2CreateMetadataAccounts accounts = 1;
+  optional MigrationDammV2CreateMetadataArgs args = 2;
+}
+    
+message MigrationMeteoraDammCreateMetadataAccounts {
+  bytes virtual_pool = 1;
+  bytes config = 2;
+  bytes migration_metadata = 3;
+  bytes payer = 4;
+  bytes system_program = 5;
+  bytes event_authority = 6;
+  bytes program = 7;
+}
+    
+message MigrationMeteoraDammCreateMetadataArgs {
+}
+    
+message MigrationMeteoraDammCreateMetadataInstruction {
+  optional MigrationMeteoraDammCreateMetadataAccounts accounts = 1;
+  optional MigrationMeteoraDammCreateMetadataArgs args = 2;
+}
+    
+message PartnerWithdrawSurplusAccounts {
+  bytes pool_authority = 1;
+  bytes config = 2;
+  bytes virtual_pool = 3;
+  bytes token_quote_account = 4;
+  bytes quote_vault = 5;
+  bytes quote_mint = 6;
+  bytes fee_claimer = 7;
+  bytes token_quote_program = 8;
+  bytes event_authority = 9;
+  bytes program = 10;
+}
+    
+message PartnerWithdrawSurplusArgs {
+}
+    
+message PartnerWithdrawSurplusInstruction {
+  optional PartnerWithdrawSurplusAccounts accounts = 1;
+  optional PartnerWithdrawSurplusArgs args = 2;
+}
+    
+message SwapAccounts {
+  bytes pool_authority = 1;
+  bytes config = 2;
+  bytes pool = 3;
+  bytes input_token_account = 4;
+  bytes output_token_account = 5;
+  bytes base_vault = 6;
+  bytes quote_vault = 7;
+  bytes base_mint = 8;
+  bytes quote_mint = 9;
+  bytes payer = 10;
+  bytes token_base_program = 11;
+  bytes token_quote_program = 12;
+  bytes referral_token_account = 13;
+  bytes event_authority = 14;
+  bytes program = 15;
+}
+    
+message SwapArgs {
+  SwapParameters params = 1;
+}
+    
+message SwapInstruction {
+  optional SwapAccounts accounts = 1;
+  optional SwapArgs args = 2;
+}
+    
+message Swap2Accounts {
+  bytes pool_authority = 1;
+  bytes config = 2;
+  bytes pool = 3;
+  bytes input_token_account = 4;
+  bytes output_token_account = 5;
+  bytes base_vault = 6;
+  bytes quote_vault = 7;
+  bytes base_mint = 8;
+  bytes quote_mint = 9;
+  bytes payer = 10;
+  bytes token_base_program = 11;
+  bytes token_quote_program = 12;
+  bytes referral_token_account = 13;
+  bytes event_authority = 14;
+  bytes program = 15;
+}
+    
+message Swap2Args {
+  SwapParameters2 params = 1;
+}
+    
+message Swap2Instruction {
+  optional Swap2Accounts accounts = 1;
+  optional Swap2Args args = 2;
+}
+    
+message TransferPoolCreatorAccounts {
+  bytes virtual_pool = 1;
+  bytes config = 2;
+  bytes creator = 3;
+  bytes new_creator = 4;
+  bytes event_authority = 5;
+  bytes program = 6;
+}
+    
+message TransferPoolCreatorArgs {
+}
+    
+message TransferPoolCreatorInstruction {
+  optional TransferPoolCreatorAccounts accounts = 1;
+  optional TransferPoolCreatorArgs args = 2;
+}
+    
+message WithdrawLeftoverAccounts {
+  bytes pool_authority = 1;
+  bytes config = 2;
+  bytes virtual_pool = 3;
+  bytes token_base_account = 4;
+  bytes base_vault = 5;
+  bytes base_mint = 6;
+  bytes leftover_receiver = 7;
+  bytes token_base_program = 8;
+  bytes event_authority = 9;
+  bytes program = 10;
+}
+    
+message WithdrawLeftoverArgs {
+}
+    
+message WithdrawLeftoverInstruction {
+  optional WithdrawLeftoverAccounts accounts = 1;
+  optional WithdrawLeftoverArgs args = 2;
+}
+    
+message WithdrawMigrationFeeAccounts {
+  bytes pool_authority = 1;
+  bytes config = 2;
+  bytes virtual_pool = 3;
+  bytes token_quote_account = 4;
+  bytes quote_vault = 5;
+  bytes quote_mint = 6;
+  bytes sender = 7;
+  bytes token_quote_program = 8;
+  bytes event_authority = 9;
+  bytes program = 10;
+}
+    
+message WithdrawMigrationFeeArgs {
+  uint32 flag = 1;
+}
+    
+message WithdrawMigrationFeeInstruction {
+  optional WithdrawMigrationFeeAccounts accounts = 1;
+  optional WithdrawMigrationFeeArgs args = 2;
+}
+    
+message Instructions {
+  oneof instruction {
+    ClaimCreatorTradingFeeInstruction claim_creator_trading_fee = 1;
+    ClaimPartnerPoolCreationFeeInstruction claim_partner_pool_creation_fee = 2;
+    ClaimProtocolFeeInstruction claim_protocol_fee = 3;
+    ClaimProtocolPoolCreationFeeInstruction claim_protocol_pool_creation_fee = 4;
+    ClaimTradingFeeInstruction claim_trading_fee = 5;
+    CloseClaimProtocolFeeOperatorInstruction close_claim_protocol_fee_operator = 6;
+    CreateClaimProtocolFeeOperatorInstruction create_claim_protocol_fee_operator = 7;
+    CreateConfigInstruction create_config = 8;
+    CreateLockerInstruction create_locker = 9;
+    CreatePartnerMetadataInstruction create_partner_metadata = 10;
+    CreateVirtualPoolMetadataInstruction create_virtual_pool_metadata = 11;
+    CreatorWithdrawSurplusInstruction creator_withdraw_surplus = 12;
+    InitializeVirtualPoolWithSplTokenInstruction initialize_virtual_pool_with_spl_token = 13;
+    InitializeVirtualPoolWithToken2022Instruction initialize_virtual_pool_with_token2022 = 14;
+    MigrateMeteoraDammInstruction migrate_meteora_damm = 15;
+    MigrateMeteoraDammClaimLpTokenInstruction migrate_meteora_damm_claim_lp_token = 16;
+    MigrateMeteoraDammLockLpTokenInstruction migrate_meteora_damm_lock_lp_token = 17;
+    MigrationDammV2Instruction migration_damm_v2 = 18;
+    MigrationDammV2CreateMetadataInstruction migration_damm_v2_create_metadata = 19;
+    MigrationMeteoraDammCreateMetadataInstruction migration_meteora_damm_create_metadata = 20;
+    PartnerWithdrawSurplusInstruction partner_withdraw_surplus = 21;
+    SwapInstruction swap = 22;
+    Swap2Instruction swap2 = 23;
+    TransferPoolCreatorInstruction transfer_pool_creator = 24;
+    WithdrawLeftoverInstruction withdraw_leftover = 25;
+    WithdrawMigrationFeeInstruction withdraw_migration_fee = 26;
+  }
+}
