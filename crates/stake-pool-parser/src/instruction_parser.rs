@@ -12,7 +12,7 @@ pub struct InstructionParser;
 
 impl Parser for InstructionParser {
     type Input = InstructionUpdate;
-    type Output = StakePoolProgramInstruction;
+    type Output = StakePoolProgram;
 
     fn id(&self) -> std::borrow::Cow<'static, str> { "StakePool::InstructionParser".into() }
 
@@ -40,11 +40,11 @@ impl ProgramParser for InstructionParser {
 }
 
 impl InstructionParser {
-    pub(crate) fn parse_impl(ix: &InstructionUpdate) -> ParseResult<StakePoolProgramInstruction> {
+    pub(crate) fn parse_impl(ix: &InstructionUpdate) -> ParseResult<StakePoolProgram> {
         let ix_type = StakePoolInstruction::try_from_slice(ix.data.as_slice())?;
         let accounts_len = ix.accounts.len();
 
-        use stake_pool_program_instruction::Instruction as Out;
+        use stake_pool_program::Instruction as Out;
 
         let instruction = match ix_type {
             StakePoolInstruction::Initialize {
@@ -56,7 +56,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 9)?;
 
-                Out::Initialize(Initialize {
+                Out::Initialize(InitializeInstruction {
                     accounts: Some(InitializeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
@@ -82,7 +82,7 @@ impl InstructionParser {
             StakePoolInstruction::AddValidatorToPool(raw_validator_seed) => {
                 check_min_accounts_req(accounts_len, 13)?;
 
-                Out::AddValidatorToPool(AddValidatorToPool {
+                Out::AddValidatorToPool(AddValidatorToPoolInstruction {
                     accounts: Some(AddValidatorToPoolAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
@@ -105,7 +105,7 @@ impl InstructionParser {
             StakePoolInstruction::RemoveValidatorFromPool => {
                 check_min_accounts_req(accounts_len, 8)?;
 
-                Out::RemoveValidatorFromPool(RemoveValidatorFromPool {
+                Out::RemoveValidatorFromPool(RemoveValidatorFromPoolInstruction {
                     accounts: Some(RemoveValidatorFromPoolAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
@@ -125,7 +125,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 10)?;
 
-                Out::DecreaseValidatorStake(DecreaseValidatorStake {
+                Out::DecreaseValidatorStake(DecreaseValidatorStakeInstruction {
                     accounts: Some(DecreaseValidatorStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
@@ -151,7 +151,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 14)?;
 
-                Out::IncreaseValidatorStake(IncreaseValidatorStake {
+                Out::IncreaseValidatorStake(IncreaseValidatorStakeInstruction {
                     accounts: Some(IncreaseValidatorStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
@@ -181,7 +181,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                Out::SetPreferredValidator(SetPreferredValidator {
+                Out::SetPreferredValidator(SetPreferredValidatorInstruction {
                     accounts: Some(SetPreferredValidatorAccounts {
                         stake_pool_address: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
@@ -202,7 +202,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 7)?;
 
-                Out::UpdateValidatorListBalance(UpdateValidatorListBalance {
+                Out::UpdateValidatorListBalance(UpdateValidatorListBalanceInstruction {
                     accounts: Some(UpdateValidatorListBalanceAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
@@ -222,7 +222,7 @@ impl InstructionParser {
             StakePoolInstruction::UpdateStakePoolBalance => {
                 check_min_accounts_req(accounts_len, 7)?;
 
-                Out::UpdateStakePoolBalance(UpdateStakePoolBalance {
+                Out::UpdateStakePoolBalance(UpdateStakePoolBalanceInstruction {
                     accounts: Some(UpdateStakePoolBalanceAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
@@ -238,7 +238,7 @@ impl InstructionParser {
             StakePoolInstruction::CleanupRemovedValidatorEntries => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Out::CleanupRemovedValidatorEntries(CleanupRemovedValidatorEntries {
+                Out::CleanupRemovedValidatorEntries(CleanupRemovedValidatorEntriesInstruction {
                     accounts: Some(CleanupRemovedValidatorEntriesAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
@@ -249,7 +249,7 @@ impl InstructionParser {
             StakePoolInstruction::DepositStake => {
                 check_min_accounts_req(accounts_len, 15)?;
 
-                Out::DepositStake(DepositStake {
+                Out::DepositStake(DepositStakeInstruction {
                     accounts: Some(DepositStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
@@ -273,7 +273,7 @@ impl InstructionParser {
             StakePoolInstruction::WithdrawStake(amount) => {
                 check_min_accounts_req(accounts_len, 13)?;
 
-                Out::WithdrawStake(WithdrawStake {
+                Out::WithdrawStake(WithdrawStakeInstruction {
                     accounts: Some(WithdrawStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
@@ -296,7 +296,7 @@ impl InstructionParser {
             StakePoolInstruction::SetManager => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                Out::SetManager(SetManager {
+                Out::SetManager(SetManagerInstruction {
                     accounts: Some(SetManagerAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
@@ -309,7 +309,7 @@ impl InstructionParser {
             StakePoolInstruction::SetFee { fee } => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Out::SetFee(SetFee {
+                Out::SetFee(SetFeeInstruction {
                     accounts: Some(SetFeeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
@@ -323,7 +323,7 @@ impl InstructionParser {
             StakePoolInstruction::SetStaker => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                Out::SetStaker(SetStaker {
+                Out::SetStaker(SetStakerInstruction {
                     accounts: Some(SetStakerAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         set_staker_authority: ix.accounts[1].into_bytes().to_vec(),
@@ -335,7 +335,7 @@ impl InstructionParser {
             StakePoolInstruction::DepositSol(amount) => {
                 check_min_accounts_req(accounts_len, 10)?;
 
-                Out::DepositSol(DepositSol {
+                Out::DepositSol(DepositSolInstruction {
                     accounts: Some(DepositSolAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
@@ -356,7 +356,7 @@ impl InstructionParser {
             StakePoolInstruction::SetFundingAuthority(funding_type) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Out::SetFundingAuthority(SetFundingAuthority {
+                Out::SetFundingAuthority(SetFundingAuthorityInstruction {
                     accounts: Some(SetFundingAuthorityAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
@@ -371,7 +371,7 @@ impl InstructionParser {
             StakePoolInstruction::WithdrawSol(amount) => {
                 check_min_accounts_req(accounts_len, 12)?;
 
-                Out::WithdrawSol(WithdrawSol {
+                Out::WithdrawSol(WithdrawSolInstruction {
                     accounts: Some(WithdrawSolAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
@@ -397,7 +397,7 @@ impl InstructionParser {
             StakePoolInstruction::CreateTokenMetadata { name, symbol, uri } => {
                 check_min_accounts_req(accounts_len, 8)?;
 
-                Out::CreateTokenMetadata(CreateTokenMetadata {
+                Out::CreateTokenMetadata(CreateTokenMetadataInstruction {
                     accounts: Some(CreateTokenMetadataAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
@@ -415,7 +415,7 @@ impl InstructionParser {
             StakePoolInstruction::UpdateTokenMetadata { name, symbol, uri } => {
                 check_min_accounts_req(accounts_len, 5)?;
 
-                Out::UpdateTokenMetadata(UpdateTokenMetadata {
+                Out::UpdateTokenMetadata(UpdateTokenMetadataInstruction {
                     accounts: Some(UpdateTokenMetadataAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         manager: ix.accounts[1].into_bytes().to_vec(),
@@ -434,7 +434,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 14)?;
 
-                Out::IncreaseAdditionalValidatorStake(IncreaseAdditionalValidatorStake {
+                Out::IncreaseAdditionalValidatorStake(IncreaseAdditionalValidatorStakeInstruction {
                     accounts: Some(IncreaseAdditionalValidatorStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
@@ -466,7 +466,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 12)?;
 
-                Out::DecreaseAdditionalValidatorStake(DecreaseAdditionalValidatorStake {
+                Out::DecreaseAdditionalValidatorStake(DecreaseAdditionalValidatorStakeInstruction {
                     accounts: Some(DecreaseAdditionalValidatorStakeAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         staker: ix.accounts[1].into_bytes().to_vec(),
@@ -496,7 +496,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 11)?;
 
                 Out::DecreaseValidatorStakeWithReserve(
-                    DecreaseValidatorStakeWithReserve {
+                    DecreaseValidatorStakeWithReserveInstruction {
                         accounts: Some(DecreaseValidatorStakeWithReserveAccounts {
                             stake_pool: ix.accounts[0].into_bytes().to_vec(),
                             staker: ix.accounts[1].into_bytes().to_vec(),
@@ -523,7 +523,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 15)?;
 
-                Out::DepositStakeWithSlippage(DepositStakeWithSlippage {
+                Out::DepositStakeWithSlippage(DepositStakeWithSlippageInstruction {
                     accounts: Some(DepositStakeWithSlippageAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
@@ -553,7 +553,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 13)?;
 
-                Out::WithdrawStakeWithSlippage(WithdrawStakeWithSlippage {
+                Out::WithdrawStakeWithSlippage(WithdrawStakeWithSlippageInstruction {
                     accounts: Some(WithdrawStakeWithSlippageAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         validator_list_storage: ix.accounts[1].into_bytes().to_vec(),
@@ -582,7 +582,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 10)?;
 
-                Out::DepositSolWithSlippage(DepositSolWithSlippage {
+                Out::DepositSolWithSlippage(DepositSolWithSlippageInstruction {
                     accounts: Some(DepositSolWithSlippageAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
@@ -609,7 +609,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 12)?;
 
-                Out::WithdrawSolWithSlippage(WithdrawSolWithSlippage {
+                Out::WithdrawSolWithSlippage(WithdrawSolWithSlippageInstruction {
                     accounts: Some(WithdrawSolWithSlippageAccounts {
                         stake_pool: ix.accounts[0].into_bytes().to_vec(),
                         stake_pool_withdraw_authority: ix.accounts[1].into_bytes().to_vec(),
@@ -642,7 +642,7 @@ impl InstructionParser {
             },
         };
 
-        Ok(StakePoolProgramInstruction {
+        Ok(StakePoolProgram {
             instruction: Some(instruction),
         })
     }

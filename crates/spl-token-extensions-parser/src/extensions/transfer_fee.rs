@@ -92,7 +92,7 @@ pub struct HarvestWithheldTokensToMintAccounts {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct TransferFeeInstruction {
+pub struct TransferFeeIx {
     #[vixen_proto_hint(
         oneof = "transfer_fee_instruction::Instruction",
         tags = "1, 2, 3, 4, 5, 6"
@@ -155,7 +155,7 @@ pub mod transfer_fee_instruction {
     }
 }
 
-impl ExtensionInstructionParser for TransferFeeInstruction {
+impl ExtensionInstructionParser for TransferFeeIx {
     #[allow(clippy::too_many_lines)]
     fn try_parse(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
@@ -296,7 +296,7 @@ impl ExtensionInstructionParser for TransferFeeInstruction {
             },
         };
 
-        Ok(TransferFeeInstruction {
+        Ok(TransferFeeIx {
             instruction: Some(ix_msg),
         })
     }

@@ -104,7 +104,7 @@ pub struct ConfigureAccountWithRegistryAccounts {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct ConfidentialTransferInstruction {
+pub struct ConfidentialTransferIx {
     #[vixen_proto_hint(
         oneof = "confidential_transfer_instruction::Instruction",
         tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15"
@@ -226,7 +226,7 @@ pub mod confidential_transfer_instruction {
     }
 }
 
-impl ExtensionInstructionParser for ConfidentialTransferInstruction {
+impl ExtensionInstructionParser for ConfidentialTransferIx {
     #[allow(clippy::too_many_lines)]
     fn try_parse(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
@@ -434,7 +434,7 @@ impl ExtensionInstructionParser for ConfidentialTransferInstruction {
             },
         };
 
-        Ok(crate::ConfidentialTransferInstruction {
+        Ok(crate::ConfidentialTransferIx {
             instruction: Some(ix_msg),
         })
     }

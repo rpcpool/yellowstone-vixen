@@ -61,7 +61,7 @@ pub enum ScalarIr {
 // Enum we need to know what kind of oneof this is for rendering purposes
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OneofKindIr {
-    /// The top-level instruction dispatcher (ProgramInstruction { oneof ix { ... } })
+    /// The top-level instruction dispatcher (e.g. PumpFun { oneof instruction { ... } })
     InstructionDispatch,
     /// A user-defined enum (e.g. OrderType { oneof kind { ... } })
     Enum,
@@ -69,7 +69,7 @@ pub enum OneofKindIr {
 
 #[derive(Debug, Clone)]
 pub struct OneofIr {
-    pub parent_message: String, // e.g. "ProgramInstruction" or "MyEnum"
+    pub parent_message: String, // e.g. "PumpFun" or "MyEnum"
     pub field_name: String,     // e.g. "instruction" or "kind"
     pub variants: Vec<OneofVariantIr>,
     pub kind: OneofKindIr,

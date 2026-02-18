@@ -64,7 +64,7 @@ pub struct InitializeMemberArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct TokenGroupInstruction {
+pub struct TokenGroupIx {
     #[vixen_proto_hint(oneof = "token_group_instruction::Instruction", tags = "1, 2, 3, 4")]
     pub instruction: ::core::option::Option<token_group_instruction::Instruction>,
 }
@@ -129,7 +129,7 @@ fn opt_nonzero_pubkey_to_bytes(
     }
 }
 
-impl ExtensionInstructionParser for TokenGroupInstruction {
+impl ExtensionInstructionParser for TokenGroupIx {
     fn try_parse(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
 
@@ -196,7 +196,7 @@ impl ExtensionInstructionParser for TokenGroupInstruction {
             },
         };
 
-        Ok(TokenGroupInstruction {
+        Ok(TokenGroupIx {
             instruction: Some(msg),
         })
     }

@@ -16,7 +16,7 @@ use crate::intermediate_representation::{
 ///
 /// At the end, we also create a global:
 ///
-///   ProgramInstruction { oneof instruction { ... } }
+///   <ProgramName> { oneof instruction { ... } }
 ///
 /// This acts as the root enum for all instructions.
 ///
@@ -82,17 +82,11 @@ use crate::intermediate_representation::{
 /// ```
 ///
 /// ─────────────────────────────────────────────────────────────
-/// Final global instruction enum:
+/// Final global instruction enum (uses the program name, e.g. "Perpetuals"):
 ///
 /// ```rust, ignore
-/// TypeIr {
-///   name: "ProgramInstruction",
-///   fields: [],
-///   kind: Instruction
-/// }
-///
 /// OneofIr {
-///   parent_message: "ProgramInstruction",
+///   parent_message: "Perpetuals",
 ///   field_name: "instruction",
 ///   variants: [
 ///     { tag: 1, variant_name: "OpenPosition", message_type: "OpenPosition" },
@@ -104,12 +98,16 @@ use crate::intermediate_representation::{
 ///
 /// This allows a single protobuf message to represent any instruction.
 ///
-pub fn build_instructions_schema(instructions: &[InstructionNode], ir: &mut SchemaIr) {
+pub fn build_instructions_schema(
+    program_name: &str,
+    instructions: &[InstructionNode],
+    ir: &mut SchemaIr,
+) {
     for ix in instructions {
         build_instruction_messages(ix, ir);
     }
 
-    build_instruction_dispatch_oneof(instructions, ir);
+    build_instruction_dispatch_oneof(program_name, instructions, ir);
 }
 
 /// Build the three messages for a single instruction:
@@ -121,7 +119,7 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
 
     let accounts_name = format!("{ix_name}Accounts");
     let args_name = format!("{ix_name}Args");
-    let payload_name = ix_name.clone();
+    let payload_name = format!("{ix_name}Instruction");
 
     let account_fields: Vec<FieldIr> = ix
         .accounts
@@ -169,25 +167,32 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
     });
 }
 
-/// Build the `ProgramInstruction` message with a `oneof instruction { ... }` that dispatches
+/// Build the `Instructions` message with a `oneof instruction { ... }` that dispatches
 /// to each individual `<IxName>` payload.
-fn build_instruction_dispatch_oneof(instructions: &[InstructionNode], ir: &mut SchemaIr) {
+fn build_instruction_dispatch_oneof(
+    program_name: &str,
+    instructions: &[InstructionNode],
+    ir: &mut SchemaIr,
+) {
+    let _ = program_name;
+    let parent_name = "Instructions".to_string();
+
     let variants: Vec<OneofVariantIr> = instructions
         .iter()
         .enumerate()
         .map(|(i, ix)| {
-            let payload_name = crate::utils::to_pascal_case(&ix.name);
+            let ix_name = crate::utils::to_pascal_case(&ix.name);
 
             OneofVariantIr {
                 tag: (i + 1) as u32,
-                variant_name: payload_name.clone(),
-                message_type: payload_name,
+                variant_name: ix_name.clone(),
+                message_type: format!("{ix_name}Instruction"),
             }
         })
         .collect();
 
     ir.oneofs.push(OneofIr {
-        parent_message: "ProgramInstruction".to_string(),
+        parent_message: parent_name,
         field_name: "instruction".to_string(),
         variants,
         kind: crate::intermediate_representation::OneofKindIr::InstructionDispatch,

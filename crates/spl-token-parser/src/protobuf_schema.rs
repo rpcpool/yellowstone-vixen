@@ -204,138 +204,138 @@ message UiAmountToAmountArgs {
   string ui_amount = 1;
 }
 
-message Transfer {
+message TransferInstruction {
   TransferAccounts accounts = 1;
   TransferArgs args = 2;
 }
 
-message InitializeMint {
+message InitializeMintInstruction {
   InitializeMintAccounts accounts = 1;
   InitializeMintArgs args = 2;
 }
 
-message InitializeAccount {
+message InitializeAccountInstruction {
   InitializeAccountAccounts accounts = 1;
 }
 
-message InitializeAccount2 {
+message InitializeAccount2Instruction {
   InitializeAccount2Accounts accounts = 1;
   InitializeAccount2Args args = 2;
 }
 
-message InitializeAccount3 {
+message InitializeAccount3Instruction {
   InitializeAccount2Accounts accounts = 1;
   InitializeAccount2Args args = 2;
 }
 
-message InitializeMultisig {
+message InitializeMultisigInstruction {
   InitializeMultisigAccounts accounts = 1;
   InitializeMultisigArgs args = 2;
 }
 
-message Approve {
+message ApproveInstruction {
   ApproveAccounts accounts = 1;
   ApproveArgs args = 2;
 }
 
-message Revoke {
+message RevokeInstruction {
   RevokeAccounts accounts = 1;
 }
 
-message SetAuthority {
+message SetAuthorityInstruction {
   SetAuthorityAccounts accounts = 1;
   SetAuthorityArgs args = 2;
 }
 
-message MintTo {
+message MintToInstruction {
   MintToAccounts accounts = 1;
   MintToArgs args = 2;
 }
 
-message Burn {
+message BurnInstruction {
   BurnAccounts accounts = 1;
   BurnArgs args = 2;
 }
 
-message CloseAccount {
+message CloseAccountInstruction {
   CloseAccountAccounts accounts = 1;
 }
 
-message FreezeAccount {
+message FreezeAccountInstruction {
   FreezeAccountAccounts accounts = 1;
 }
 
-message ThawAccount {
+message ThawAccountInstruction {
   ThawAccountAccounts accounts = 1;
 }
 
-message TransferChecked {
+message TransferCheckedInstruction {
   TransferCheckedAccounts accounts = 1;
   TransferCheckedArgs args = 2;
 }
 
-message ApproveChecked {
+message ApproveCheckedInstruction {
   ApproveCheckedAccounts accounts = 1;
   ApproveCheckedArgs args = 2;
 }
 
-message MintToChecked {
+message MintToCheckedInstruction {
   MintToCheckedAccounts accounts = 1;
   MintToCheckedArgs args = 2;
 }
 
-message BurnChecked {
+message BurnCheckedInstruction {
   BurnCheckedAccounts accounts = 1;
   BurnCheckedArgs args = 2;
 }
 
-message SyncNative {
+message SyncNativeInstruction {
   SyncNativeAccounts accounts = 1;
 }
 
-message GetAccountDataSize {
+message GetAccountDataSizeInstruction {
   GetAccountDataSizeAccounts accounts = 1;
 }
 
-message InitializeImmutableOwner {
+message InitializeImmutableOwnerInstruction {
   InitializeImmutableOwnerAccounts accounts = 1;
 }
 
-message AmountToUiAmount {
+message AmountToUiAmountInstruction {
   AmountToUiAmountAccounts accounts = 1;
   AmountToUiAmountArgs args = 2;
 }
 
-message UiAmountToAmount {
+message UiAmountToAmountInstruction {
   UiAmountToAmountAccounts accounts = 1;
   UiAmountToAmountArgs args = 2;
 }
 
-message TokenProgramInstruction {
+message TokenProgram {
   oneof ix {
-    Transfer transfer = 1;
-    InitializeMint initialize_mint = 2;
-    InitializeAccount initialize_account = 3;
-    InitializeAccount2 initialize_account2 = 4;
-    InitializeAccount3 initialize_account3 = 5;
-    InitializeMultisig initialize_multisig = 6;
-    Approve approve = 7;
-    Revoke revoke = 8;
-    SetAuthority set_authority = 9;
-    MintTo mint_to = 10;
-    Burn burn = 11;
-    CloseAccount close_account = 12;
-    FreezeAccount freeze_account = 13;
-    ThawAccount thaw_account = 14;
-    TransferChecked transfer_checked = 15;
-    ApproveChecked approve_checked = 16;
-    MintToChecked mint_to_checked = 17;
-    BurnChecked burn_checked = 18;
-    SyncNative sync_native = 19;
-    GetAccountDataSize get_account_data_size = 20;
-    InitializeImmutableOwner initialize_immutable_owner = 21;
-    AmountToUiAmount amount_to_ui_amount = 22;
-    UiAmountToAmount ui_amount_to_amount = 23;
+    TransferInstruction transfer = 1;
+    InitializeMintInstruction initialize_mint = 2;
+    InitializeAccountInstruction initialize_account = 3;
+    InitializeAccount2Instruction initialize_account2 = 4;
+    InitializeAccount3Instruction initialize_account3 = 5;
+    InitializeMultisigInstruction initialize_multisig = 6;
+    ApproveInstruction approve = 7;
+    RevokeInstruction revoke = 8;
+    SetAuthorityInstruction set_authority = 9;
+    MintToInstruction mint_to = 10;
+    BurnInstruction burn = 11;
+    CloseAccountInstruction close_account = 12;
+    FreezeAccountInstruction freeze_account = 13;
+    ThawAccountInstruction thaw_account = 14;
+    TransferCheckedInstruction transfer_checked = 15;
+    ApproveCheckedInstruction approve_checked = 16;
+    MintToCheckedInstruction mint_to_checked = 17;
+    BurnCheckedInstruction burn_checked = 18;
+    SyncNativeInstruction sync_native = 19;
+    GetAccountDataSizeInstruction get_account_data_size = 20;
+    InitializeImmutableOwnerInstruction initialize_immutable_owner = 21;
+    AmountToUiAmountInstruction amount_to_ui_amount = 22;
+    UiAmountToAmountInstruction ui_amount_to_amount = 23;
   }
 }
 "#;

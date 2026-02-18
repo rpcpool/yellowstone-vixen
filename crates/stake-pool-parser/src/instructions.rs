@@ -4,47 +4,47 @@ use crate::PubkeyBytes;
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct StakePoolProgramInstruction {
+pub struct StakePoolProgram {
     #[vixen_proto_hint(
-        oneof = "stake_pool_program_instruction::Instruction",
+        oneof = "stake_pool_program::Instruction",
         tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, \
                 23, 24, 25, 26"
     )]
-    pub instruction: Option<stake_pool_program_instruction::Instruction>,
+    pub instruction: Option<stake_pool_program::Instruction>,
 }
 
-pub mod stake_pool_program_instruction {
+pub mod stake_pool_program {
     use super::vixen_proto;
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
     pub enum Instruction {
-        Initialize(super::Initialize),
-        AddValidatorToPool(super::AddValidatorToPool),
-        RemoveValidatorFromPool(super::RemoveValidatorFromPool),
-        DecreaseValidatorStake(super::DecreaseValidatorStake),
-        IncreaseValidatorStake(super::IncreaseValidatorStake),
-        SetPreferredValidator(super::SetPreferredValidator),
-        UpdateValidatorListBalance(super::UpdateValidatorListBalance),
-        UpdateStakePoolBalance(super::UpdateStakePoolBalance),
-        CleanupRemovedValidatorEntries(super::CleanupRemovedValidatorEntries),
-        DepositStake(super::DepositStake),
-        WithdrawStake(super::WithdrawStake),
-        SetManager(super::SetManager),
-        SetFee(super::SetFee),
-        SetStaker(super::SetStaker),
-        DepositSol(super::DepositSol),
-        SetFundingAuthority(super::SetFundingAuthority),
-        WithdrawSol(super::WithdrawSol),
-        CreateTokenMetadata(super::CreateTokenMetadata),
-        UpdateTokenMetadata(super::UpdateTokenMetadata),
-        IncreaseAdditionalValidatorStake(super::IncreaseAdditionalValidatorStake),
-        DecreaseAdditionalValidatorStake(super::DecreaseAdditionalValidatorStake),
-        DecreaseValidatorStakeWithReserve(super::DecreaseValidatorStakeWithReserve),
-        DepositStakeWithSlippage(super::DepositStakeWithSlippage),
-        WithdrawStakeWithSlippage(super::WithdrawStakeWithSlippage),
-        DepositSolWithSlippage(super::DepositSolWithSlippage),
-        WithdrawSolWithSlippage(super::WithdrawSolWithSlippage),
+        Initialize(super::InitializeInstruction),
+        AddValidatorToPool(super::AddValidatorToPoolInstruction),
+        RemoveValidatorFromPool(super::RemoveValidatorFromPoolInstruction),
+        DecreaseValidatorStake(super::DecreaseValidatorStakeInstruction),
+        IncreaseValidatorStake(super::IncreaseValidatorStakeInstruction),
+        SetPreferredValidator(super::SetPreferredValidatorInstruction),
+        UpdateValidatorListBalance(super::UpdateValidatorListBalanceInstruction),
+        UpdateStakePoolBalance(super::UpdateStakePoolBalanceInstruction),
+        CleanupRemovedValidatorEntries(super::CleanupRemovedValidatorEntriesInstruction),
+        DepositStake(super::DepositStakeInstruction),
+        WithdrawStake(super::WithdrawStakeInstruction),
+        SetManager(super::SetManagerInstruction),
+        SetFee(super::SetFeeInstruction),
+        SetStaker(super::SetStakerInstruction),
+        DepositSol(super::DepositSolInstruction),
+        SetFundingAuthority(super::SetFundingAuthorityInstruction),
+        WithdrawSol(super::WithdrawSolInstruction),
+        CreateTokenMetadata(super::CreateTokenMetadataInstruction),
+        UpdateTokenMetadata(super::UpdateTokenMetadataInstruction),
+        IncreaseAdditionalValidatorStake(super::IncreaseAdditionalValidatorStakeInstruction),
+        DecreaseAdditionalValidatorStake(super::DecreaseAdditionalValidatorStakeInstruction),
+        DecreaseValidatorStakeWithReserve(super::DecreaseValidatorStakeWithReserveInstruction),
+        DepositStakeWithSlippage(super::DepositStakeWithSlippageInstruction),
+        WithdrawStakeWithSlippage(super::WithdrawStakeWithSlippageInstruction),
+        DepositSolWithSlippage(super::DepositSolWithSlippageInstruction),
+        WithdrawSolWithSlippage(super::WithdrawSolWithSlippageInstruction),
     }
 }
 
@@ -134,7 +134,7 @@ pub struct InitializeArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct Initialize {
+pub struct InitializeInstruction {
     pub accounts: Option<InitializeAccounts>,
     pub args: Option<InitializeArgs>,
 }
@@ -165,7 +165,7 @@ pub struct AddValidatorToPoolArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct AddValidatorToPool {
+pub struct AddValidatorToPoolInstruction {
     pub accounts: Option<AddValidatorToPoolAccounts>,
     pub args: Option<AddValidatorToPoolArgs>,
 }
@@ -185,7 +185,7 @@ pub struct RemoveValidatorFromPoolAccounts {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct RemoveValidatorFromPool {
+pub struct RemoveValidatorFromPoolInstruction {
     pub accounts: Option<RemoveValidatorFromPoolAccounts>,
 }
 
@@ -213,7 +213,7 @@ pub struct DecreaseValidatorStakeArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseValidatorStake {
+pub struct DecreaseValidatorStakeInstruction {
     pub accounts: Option<DecreaseValidatorStakeAccounts>,
     pub args: Option<DecreaseValidatorStakeArgs>,
 }
@@ -246,7 +246,7 @@ pub struct IncreaseValidatorStakeArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct IncreaseValidatorStake {
+pub struct IncreaseValidatorStakeInstruction {
     pub accounts: Option<IncreaseValidatorStakeAccounts>,
     pub args: Option<IncreaseValidatorStakeArgs>,
 }
@@ -269,7 +269,7 @@ pub struct SetPreferredValidatorArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetPreferredValidator {
+pub struct SetPreferredValidatorInstruction {
     pub accounts: Option<SetPreferredValidatorAccounts>,
     pub args: Option<SetPreferredValidatorArgs>,
 }
@@ -295,7 +295,7 @@ pub struct UpdateValidatorListBalanceArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateValidatorListBalance {
+pub struct UpdateValidatorListBalanceInstruction {
     pub accounts: Option<UpdateValidatorListBalanceAccounts>,
     pub args: Option<UpdateValidatorListBalanceArgs>,
 }
@@ -314,7 +314,7 @@ pub struct UpdateStakePoolBalanceAccounts {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateStakePoolBalance {
+pub struct UpdateStakePoolBalanceInstruction {
     pub accounts: Option<UpdateStakePoolBalanceAccounts>,
 }
 
@@ -327,7 +327,7 @@ pub struct CleanupRemovedValidatorEntriesAccounts {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct CleanupRemovedValidatorEntries {
+pub struct CleanupRemovedValidatorEntriesInstruction {
     pub accounts: Option<CleanupRemovedValidatorEntriesAccounts>,
 }
 
@@ -353,7 +353,7 @@ pub struct DepositStakeAccounts {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositStake {
+pub struct DepositStakeInstruction {
     pub accounts: Option<DepositStakeAccounts>,
 }
 
@@ -383,7 +383,7 @@ pub struct WithdrawStakeArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawStake {
+pub struct WithdrawStakeInstruction {
     pub accounts: Option<WithdrawStakeAccounts>,
     pub args: Option<WithdrawStakeArgs>,
 }
@@ -399,7 +399,7 @@ pub struct SetManagerAccounts {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetManager {
+pub struct SetManagerInstruction {
     pub accounts: Option<SetManagerAccounts>,
 }
 
@@ -418,7 +418,7 @@ pub struct SetFeeArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetFee {
+pub struct SetFeeInstruction {
     pub accounts: Option<SetFeeAccounts>,
     pub args: Option<SetFeeArgs>,
 }
@@ -433,7 +433,7 @@ pub struct SetStakerAccounts {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetStaker {
+pub struct SetStakerInstruction {
     pub accounts: Option<SetStakerAccounts>,
 }
 
@@ -461,7 +461,7 @@ pub struct DepositSolArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositSol {
+pub struct DepositSolInstruction {
     pub accounts: Option<DepositSolAccounts>,
     pub args: Option<DepositSolArgs>,
 }
@@ -483,7 +483,7 @@ pub struct SetFundingAuthorityArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct SetFundingAuthority {
+pub struct SetFundingAuthorityInstruction {
     pub accounts: Option<SetFundingAuthorityAccounts>,
     pub args: Option<SetFundingAuthorityArgs>,
 }
@@ -514,7 +514,7 @@ pub struct WithdrawSolArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawSol {
+pub struct WithdrawSolInstruction {
     pub accounts: Option<WithdrawSolAccounts>,
     pub args: Option<WithdrawSolArgs>,
 }
@@ -542,7 +542,7 @@ pub struct CreateTokenMetadataArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct CreateTokenMetadata {
+pub struct CreateTokenMetadataInstruction {
     pub accounts: Option<CreateTokenMetadataAccounts>,
     pub args: Option<CreateTokenMetadataArgs>,
 }
@@ -567,7 +567,7 @@ pub struct UpdateTokenMetadataArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct UpdateTokenMetadata {
+pub struct UpdateTokenMetadataInstruction {
     pub accounts: Option<UpdateTokenMetadataAccounts>,
     pub args: Option<UpdateTokenMetadataArgs>,
 }
@@ -601,7 +601,7 @@ pub struct IncreaseAdditionalValidatorStakeArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct IncreaseAdditionalValidatorStake {
+pub struct IncreaseAdditionalValidatorStakeInstruction {
     pub accounts: Option<IncreaseAdditionalValidatorStakeAccounts>,
     pub args: Option<IncreaseAdditionalValidatorStakeArgs>,
 }
@@ -633,7 +633,7 @@ pub struct DecreaseAdditionalValidatorStakeArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseAdditionalValidatorStake {
+pub struct DecreaseAdditionalValidatorStakeInstruction {
     pub accounts: Option<DecreaseAdditionalValidatorStakeAccounts>,
     pub args: Option<DecreaseAdditionalValidatorStakeArgs>,
 }
@@ -663,7 +663,7 @@ pub struct DecreaseValidatorStakeWithReserveArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DecreaseValidatorStakeWithReserve {
+pub struct DecreaseValidatorStakeWithReserveInstruction {
     pub accounts: Option<DecreaseValidatorStakeWithReserveAccounts>,
     pub args: Option<DecreaseValidatorStakeWithReserveArgs>,
 }
@@ -696,7 +696,7 @@ pub struct DepositStakeWithSlippageArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositStakeWithSlippage {
+pub struct DepositStakeWithSlippageInstruction {
     pub accounts: Option<DepositStakeWithSlippageAccounts>,
     pub args: Option<DepositStakeWithSlippageArgs>,
 }
@@ -728,7 +728,7 @@ pub struct WithdrawStakeWithSlippageArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawStakeWithSlippage {
+pub struct WithdrawStakeWithSlippageInstruction {
     pub accounts: Option<WithdrawStakeWithSlippageAccounts>,
     pub args: Option<WithdrawStakeWithSlippageArgs>,
 }
@@ -758,7 +758,7 @@ pub struct DepositSolWithSlippageArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct DepositSolWithSlippage {
+pub struct DepositSolWithSlippageInstruction {
     pub accounts: Option<DepositSolWithSlippageAccounts>,
     pub args: Option<DepositSolWithSlippageArgs>,
 }
@@ -790,7 +790,7 @@ pub struct WithdrawSolWithSlippageArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct WithdrawSolWithSlippage {
+pub struct WithdrawSolWithSlippageInstruction {
     pub accounts: Option<WithdrawSolWithSlippageAccounts>,
     pub args: Option<WithdrawSolWithSlippageArgs>,
 }

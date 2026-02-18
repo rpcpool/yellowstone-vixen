@@ -58,7 +58,7 @@ pub struct DisableHarvestToMintAccounts {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct ConfidentialTransferFeeInstruction {
+pub struct ConfidentialTransferFeeIx {
     #[vixen_proto_hint(
         oneof = "confidential_transfer_fee_instruction::Instruction",
         tags = "1, 2, 3, 4, 5, 6"
@@ -122,7 +122,7 @@ pub mod confidential_transfer_fee_instruction {
     }
 }
 
-impl ExtensionInstructionParser for ConfidentialTransferFeeInstruction {
+impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
     fn try_parse(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
         let ix_type = decode_extension_ix_type(&ix.data[1..])?;
@@ -222,7 +222,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeInstruction {
             },
         };
 
-        Ok(ConfidentialTransferFeeInstruction {
+        Ok(ConfidentialTransferFeeIx {
             instruction: Some(ix_msg),
         })
     }

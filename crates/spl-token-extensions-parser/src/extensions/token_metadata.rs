@@ -74,7 +74,7 @@ pub struct EmitArgs {
 
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
-pub struct TokenMetadataInstruction {
+pub struct TokenMetadataIx {
     #[vixen_proto_hint(
         oneof = "token_metadata_instruction::Instruction",
         tags = "1, 2, 3, 4, 5"
@@ -131,7 +131,7 @@ pub mod token_metadata_instruction {
     }
 }
 
-impl ExtensionInstructionParser for TokenMetadataInstruction {
+impl ExtensionInstructionParser for TokenMetadataIx {
     fn try_parse(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
 
@@ -209,7 +209,7 @@ impl ExtensionInstructionParser for TokenMetadataInstruction {
             },
         };
 
-        Ok(TokenMetadataInstruction {
+        Ok(TokenMetadataIx {
             instruction: Some(msg),
         })
     }

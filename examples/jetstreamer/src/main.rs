@@ -9,9 +9,7 @@ use yellowstone_vixen::{
 };
 use yellowstone_vixen_core::{instruction::InstructionUpdate, ParserId};
 use yellowstone_vixen_jetstream_source::{JetstreamSource, JetstreamSourceConfig, SlotRangeConfig};
-use yellowstone_vixen_spl_token_parser::{
-    token_program_instruction, InstructionParser, TokenProgramInstruction,
-};
+use yellowstone_vixen_spl_token_parser::{Instruction, InstructionParser, TokenProgram};
 
 fn pk(bytes: &[u8]) -> String { bs58::encode(bytes).into_string() }
 
@@ -19,18 +17,14 @@ fn pk(bytes: &[u8]) -> String { bs58::encode(bytes).into_string() }
 #[derive(Debug)]
 struct TokenInstructionLogger;
 
-impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLogger {
-    async fn handle(
-        &self,
-        value: &TokenProgramInstruction,
-        _raw: &InstructionUpdate,
-    ) -> HandlerResult<()> {
+impl Handler<TokenProgram, InstructionUpdate> for TokenInstructionLogger {
+    async fn handle(&self, value: &TokenProgram, _raw: &InstructionUpdate) -> HandlerResult<()> {
         let Some(ix) = value.instruction.as_ref() else {
             return Ok(());
         };
 
         match ix {
-            token_program_instruction::Instruction::Transfer(t) => {
+            Instruction::Transfer(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -48,7 +42,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Instruction::TransferChecked(t) => {
+            Instruction::TransferChecked(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -68,7 +62,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Instruction::MintTo(t) => {
+            Instruction::MintTo(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -86,7 +80,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Instruction::Burn(t) => {
+            Instruction::Burn(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -104,7 +98,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Instruction::InitializeMint(t) => {
+            Instruction::InitializeMint(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -126,7 +120,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Instruction::InitializeAccount(t) => {
+            Instruction::InitializeAccount(t) => {
                 let accounts = t.accounts.as_ref();
 
                 if let Some(accounts) = accounts {
@@ -142,7 +136,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Instruction::Approve(t) => {
+            Instruction::Approve(t) => {
                 let accounts = t.accounts.as_ref();
                 let args = t.args.as_ref();
 
@@ -160,7 +154,7 @@ impl Handler<TokenProgramInstruction, InstructionUpdate> for TokenInstructionLog
                 }
             },
 
-            token_program_instruction::Instruction::CloseAccount(t) => {
+            Instruction::CloseAccount(t) => {
                 let accounts = t.accounts.as_ref();
 
                 if let Some(accounts) = accounts {

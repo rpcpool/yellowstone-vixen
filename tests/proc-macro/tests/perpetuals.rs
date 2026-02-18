@@ -23,14 +23,14 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
         let decrease = ixs
             .iter()
             .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
-                perpetuals::program_instruction_oneof::Instruction::DecreasePositionWithTpsl(s) => {
+                perpetuals::Instruction::DecreasePositionWithTpsl(s) => {
                     Some(s)
                 },
                 _ => None,
             })
             .expect("no decrease position ix found");
 
-        let expected = perpetuals::DecreasePositionWithTpsl {
+        let expected = perpetuals::DecreasePositionWithTpslInstruction {
             accounts: Some(perpetuals::DecreasePositionWithTpslAccounts {
                 keeper: vec![
                     238, 103, 24, 154, 146, 36, 183, 11, 249, 126, 171, 22, 248, 91, 126, 66, 80,
@@ -104,14 +104,14 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
         let close = ixs
             .iter()
             .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
-                perpetuals::program_instruction_oneof::Instruction::ClosePositionRequest2(s) => {
+                perpetuals::Instruction::ClosePositionRequest2(s) => {
                     Some(s)
                 },
                 _ => None,
             })
             .expect("no close position request 2 ix found");
 
-        let expected = perpetuals::ClosePositionRequest2 {
+        let expected = perpetuals::ClosePositionRequest2Instruction {
             accounts: Some(perpetuals::ClosePositionRequest2Accounts {
                 keeper: vec![
                     238, 103, 24, 154, 146, 36, 183, 11, 249, 126, 171, 22, 248, 91, 126, 66, 80,

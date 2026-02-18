@@ -56,19 +56,147 @@ fn render_type(t: &TypeIr) -> TokenStream {
 }
 
 fn render_oneof_parent(oneof_ir: &OneofIr) -> TokenStream {
-    let parent_ident = format_ident!("{}", oneof_ir.parent_message);
+    match oneof_ir.kind {
+        OneofKindIr::InstructionDispatch => render_instruction_dispatch(oneof_ir),
+        OneofKindIr::Enum => render_enum_oneof(oneof_ir),
+    }
+}
 
-    let (mod_ident, oneof_ident) = match oneof_ir.kind {
-        OneofKindIr::InstructionDispatch => (
-            format_ident!("program_instruction_oneof"),
-            format_ident!("Instruction"),
-        ),
-        OneofKindIr::Enum => (
-            format_ident!("{}", crate::utils::to_snake_case(&oneof_ir.parent_message)),
-            format_ident!("Kind"),
-        ),
+/// Render instruction dispatch: flattened (no module wrapper).
+/// The parent struct (`Instructions`) and the `Instruction` enum live at the same level.
+fn render_instruction_dispatch(oneof_ir: &OneofIr) -> TokenStream {
+    let parent_ident = format_ident!("{}", oneof_ir.parent_message); // "Instructions"
+    let oneof_ident = format_ident!("Instruction");
+    let field_ident = format_ident!("{}", oneof_ir.field_name);
+
+    let variants = oneof_ir.variants.iter().map(|v| {
+        let v_ident = format_ident!("{}", v.variant_name);
+        let msg_ident = format_ident!("{}", v.message_type);
+        let tag = v.tag;
+
+        if cfg!(feature = "proto") {
+            quote! {
+                #[prost(message, tag = #tag)]
+                #v_ident(#msg_ident)
+            }
+        } else {
+            quote! {
+                #v_ident(#msg_ident)
+            }
+        }
+    });
+
+    let borsh_serialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
+        let disc = i as u8;
+        let v_ident = format_ident!("{}", v.variant_name);
+
+        quote! {
+            ::core::option::Option::Some(#oneof_ident::#v_ident(v)) => {
+                ::borsh::BorshSerialize::serialize(&#disc, writer)?;
+                ::borsh::BorshSerialize::serialize(v, writer)
+            }
+        }
+    });
+
+    let borsh_deserialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
+        let disc = i as u8;
+        let v_ident = format_ident!("{}", v.variant_name);
+
+        quote! {
+            #disc => {
+                let v = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
+
+                ::core::option::Option::Some(#oneof_ident::#v_ident(v))
+            }
+        }
+    });
+
+    let struct_and_enum = if cfg!(feature = "proto") {
+        let tags_lit = {
+            let tags_list = oneof_ir
+                .variants
+                .iter()
+                .map(|v| v.tag.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            LitStr::new(&tags_list, Span::call_site())
+        };
+
+        let oneof_lit = LitStr::new("Instruction", Span::call_site());
+
+        quote! {
+            #[derive(Clone, PartialEq, ::prost::Message)]
+            pub struct #parent_ident {
+                #[prost(oneof = #oneof_lit, tags = #tags_lit)]
+                pub #field_ident: ::core::option::Option<#oneof_ident>,
+            }
+
+            #[derive(Clone, PartialEq, ::prost::Oneof)]
+            pub enum #oneof_ident {
+                #(#variants),*
+            }
+        }
+    } else {
+        quote! {
+            #[derive(Clone, Debug, PartialEq)]
+            pub struct #parent_ident {
+                pub #field_ident: ::core::option::Option<#oneof_ident>,
+            }
+
+            #[derive(Clone, Debug, PartialEq)]
+            pub enum #oneof_ident {
+                #(#variants),*
+            }
+        }
     };
 
+    quote! {
+        #struct_and_enum
+
+        impl ::borsh::BorshSerialize for #parent_ident {
+            fn serialize<W: ::borsh::io::Write>(
+                &self,
+                writer: &mut W
+            ) -> ::core::result::Result<(), ::borsh::io::Error> {
+                match &self.#field_ident {
+                    #(#borsh_serialize_arms,)*
+                    ::core::option::Option::None => {
+                        ::core::result::Result::Err(::borsh::io::Error::new(
+                            ::borsh::io::ErrorKind::InvalidData,
+                            "oneof field is None"
+                        ))
+                    }
+                }
+            }
+        }
+
+        impl ::borsh::BorshDeserialize for #parent_ident {
+            fn deserialize_reader<R: ::borsh::io::Read>(
+                reader: &mut R
+            ) -> ::core::result::Result<Self, ::borsh::io::Error> {
+                let disc: u8 = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
+
+                let #field_ident = match disc {
+                    #(#borsh_deserialize_arms,)*
+                    _ => {
+                        return ::core::result::Result::Err(::borsh::io::Error::new(
+                            ::borsh::io::ErrorKind::InvalidData,
+                            "invalid discriminant"
+                        ));
+                    }
+                };
+                ::core::result::Result::Ok(Self { #field_ident })
+            }
+        }
+    }
+}
+
+/// Render user-defined enum oneofs: keeps the module wrapper pattern.
+fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
+    let parent_ident = format_ident!("{}", oneof_ir.parent_message);
+    let mod_ident = format_ident!("{}", crate::utils::to_snake_case(&oneof_ir.parent_message));
+    let oneof_ident = format_ident!("Kind");
     let field_ident = format_ident!("{}", oneof_ir.field_name);
 
     let variants = oneof_ir.variants.iter().map(|v| {
@@ -88,7 +216,6 @@ fn render_oneof_parent(oneof_ir: &OneofIr) -> TokenStream {
         }
     });
 
-    // We encode discriminant as the VARIANT INDEX (0..n-1), not the proto tag.
     let borsh_serialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
         let disc = i as u8;
         let v_ident = format_ident!("{}", v.variant_name);
@@ -115,7 +242,6 @@ fn render_oneof_parent(oneof_ir: &OneofIr) -> TokenStream {
     });
 
     let struct_and_mod = if cfg!(feature = "proto") {
-        // tags = "1, 2, 3"
         let tags_lit = {
             let tags_list = oneof_ir
                 .variants
