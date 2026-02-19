@@ -180,7 +180,7 @@ async fn parse_buy_ix() {
         args: Some(pump_fun::BuyArgs {
             amount: 693_868_985_905,
             max_sol_cost: 55_000_000,
-            track_volume: None,
+            track_volume: Some(pump_fun::OptionBool { item_0: false }),
         }),
     };
 

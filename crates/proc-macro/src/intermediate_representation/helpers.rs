@@ -217,20 +217,26 @@ fn map_type(t: &codama_nodes::TypeNode) -> FieldTypeIr {
         T::Boolean(_) => FieldTypeIr::Scalar(ScalarIr::Bool),
 
         T::Number(n) => match n.format {
-            NF::U8 | NF::U16 | NF::U32 | NF::ShortU16 => FieldTypeIr::Scalar(ScalarIr::Uint32),
+            NF::U8 => FieldTypeIr::Scalar(ScalarIr::U8),
+            NF::U16 => FieldTypeIr::Scalar(ScalarIr::U16),
+            NF::ShortU16 => FieldTypeIr::Scalar(ScalarIr::ShortU16),
+            NF::U32 => FieldTypeIr::Scalar(ScalarIr::Uint32),
             NF::U64 => FieldTypeIr::Scalar(ScalarIr::Uint64),
-            NF::I8 | NF::I16 | NF::I32 => FieldTypeIr::Scalar(ScalarIr::Int32),
+            NF::I8 => FieldTypeIr::Scalar(ScalarIr::I8),
+            NF::I16 => FieldTypeIr::Scalar(ScalarIr::I16),
+            NF::I32 => FieldTypeIr::Scalar(ScalarIr::Int32),
             NF::I64 => FieldTypeIr::Scalar(ScalarIr::Int64),
             NF::F32 => FieldTypeIr::Scalar(ScalarIr::Float),
             NF::F64 => FieldTypeIr::Scalar(ScalarIr::Double),
-            NF::U128 | NF::I128 => FieldTypeIr::Scalar(ScalarIr::Bytes),
+            NF::U128 | NF::I128 => FieldTypeIr::Scalar(ScalarIr::FixedBytes(16)),
         },
 
         T::Link(link) => FieldTypeIr::Message(crate::utils::to_pascal_case(&link.name)),
 
-        // FixedSize bytes/string => bytes
+        // FixedSize bytes/string => fixed-size bytes (no length prefix on-chain)
         T::FixedSize(node) => match *node.r#type {
-            T::Bytes(_) | T::String(_) => FieldTypeIr::Scalar(ScalarIr::Bytes),
+            T::Bytes(_) | T::String(_) => FieldTypeIr::Scalar(ScalarIr::FixedBytes(node.size)),
+
             _ => panic!("map_type not implemented for FixedSize {:?}", node.r#type),
         },
 

@@ -91,14 +91,15 @@ fn render_oneof_parent(out: &mut String, oneof: &OneofIr) {
 fn scalar_to_proto(s: &ScalarIr) -> &'static str {
     match s {
         ScalarIr::Bool => "bool",
-        ScalarIr::Uint32 => "uint32",
+        ScalarIr::U8 | ScalarIr::U16 | ScalarIr::ShortU16 | ScalarIr::Uint32 => "uint32",
         ScalarIr::Uint64 => "uint64",
-        ScalarIr::Int32 => "int32",
+        ScalarIr::I8 | ScalarIr::I16 | ScalarIr::Int32 => "int32",
         ScalarIr::Int64 => "int64",
         ScalarIr::Float => "float",
         ScalarIr::Double => "double",
         ScalarIr::String => "string",
         ScalarIr::Bytes => "bytes",
+        ScalarIr::FixedBytes(_) => "bytes",
         ScalarIr::PubkeyBytes => "bytes",
     }
 }

@@ -45,16 +45,40 @@ pub enum FieldTypeIr {
 #[derive(Debug, Clone)]
 pub enum ScalarIr {
     Bool,
+
+    /// On-chain u8 (1 byte). Widened to Rust u32 / proto uint32 for prost compatibility.
+    U8,
+    /// On-chain u16 (2 bytes). Widened to Rust u32 / proto uint32 for prost compatibility.
+    U16,
+    /// Solana compact u16 (1-3 bytes). Widened to Rust u32 / proto uint32.
+    ShortU16,
+    /// On-chain u32 (4 bytes). Native match with Rust u32 / proto uint32.
     Uint32,
+    /// On-chain u64 (8 bytes). Native match with Rust u64 / proto uint64.
     Uint64,
+
+    /// On-chain i8 (1 byte). Widened to Rust i32 / proto int32 for prost compatibility.
+    I8,
+    /// On-chain i16 (2 bytes). Widened to Rust i32 / proto int32 for prost compatibility.
+    I16,
+    /// On-chain i32 (4 bytes). Native match with Rust i32 / proto int32.
     Int32,
+    /// On-chain i64 (8 bytes). Native match with Rust i64 / proto int64.
     Int64,
+
     Float,
     Double,
     String,
     Bytes,
 
-    /// bytes with extra semantic meaning (still `bytes` in proto)
+    /// Fixed-size byte array with known size (no length prefix on-chain).
+    /// Stored as `Vec<u8>` in Rust for prost compatibility, but borsh
+    /// reads/writes exactly N bytes. Used for u128/i128 (16), pubkeys (32),
+    /// fixed byte arrays, etc.
+    FixedBytes(usize),
+
+    /// 32-byte pubkey. Same borsh as FixedBytes(32) but uses the `PubkeyBytes`
+    /// type alias in Rust for semantic clarity.
     PubkeyBytes,
 }
 

@@ -98,7 +98,7 @@ pub fn account_parser(
 
     let account_matches = accounts.iter().filter_map(|account| {
         let discriminator = account.discriminators.first()?;
-        
+
         let account_ident = format_ident!("{}", crate::utils::to_pascal_case(&account.name));
 
         Some(match discriminator {
@@ -119,12 +119,16 @@ pub fn account_parser(
                 quote! {
                     if let Some(discriminator) = data.get(#offset) {
                         if discriminator == #value {
-                            return Ok(#account_struct_ident {
-                                kind: Some(#account_mod_ident::Kind::#account_ident(
-                                    <#account_ident as ::borsh::BorshDeserialize>::try_from_slice(data)
-                                        .map_err(|e| ParseError::Other(e.into()))?
-                                ))
-                            });
+                            match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
+                                Ok(parsed) => {
+                                    return Ok(#account_struct_ident {
+                                        kind: Some(#account_mod_ident::Kind::#account_ident(parsed))
+                                    });
+                                }
+                                Err(e) => {
+                                    return Err(ParseError::Other(e.into()));
+                                }
+                            }
                         }
                     }
                 }
@@ -162,11 +166,11 @@ pub fn account_parser(
                     codama_nodes::BytesEncoding::Base16 => {
                         hex::decode(&bytes.data).expect("Failed to decode base16 (hex) bytes")
                     },
-                    
+
                     codama_nodes::BytesEncoding::Base58 => bs58::decode(&bytes.data)
                         .into_vec()
                         .expect("Failed to decode base58 bytes"),
-                    
+
                     codama_nodes::BytesEncoding::Base64 => STANDARD
                         .decode(&bytes.data)
                         .expect("Failed to decode base64 bytes"),
@@ -179,12 +183,16 @@ pub fn account_parser(
                 quote! {
                     if let Some(slice) = data.get(#offset..#end) {
                         if slice == &[#(#discriminator),*] {
-                            return Ok(#account_struct_ident {
-                                kind: Some(#account_mod_ident::Kind::#account_ident(
-                                    <#account_ident as ::borsh::BorshDeserialize>::try_from_slice(&data[#end..])
-                                        .map_err(|e| ParseError::Other(e.into()))?
-                                ))
-                            });
+                            match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[#end..]) {
+                                Ok(parsed) => {
+                                    return Ok(#account_struct_ident {
+                                        kind: Some(#account_mod_ident::Kind::#account_ident(parsed))
+                                    });
+                                }
+                                Err(e) => {
+                                    return Err(ParseError::Other(e.into()));
+                                }
+                            }
                         }
                     }
                 }
@@ -196,12 +204,16 @@ pub fn account_parser(
 
                 quote! {
                     if data.len() == #size {
-                        return Ok(#account_struct_ident {
-                            kind: Some(#account_mod_ident::Kind::#account_ident(
-                                <#account_ident as ::borsh::BorshDeserialize>::try_from_slice(data)
-                                    .map_err(|e| ParseError::Other(e.into()))?
-                            ))
-                        });
+                        match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
+                            Ok(parsed) => {
+                                return Ok(#account_struct_ident {
+                                    kind: Some(#account_mod_ident::Kind::#account_ident(parsed))
+                                });
+                            }
+                            Err(e) => {
+                                return Err(ParseError::Other(e.into()));
+                            }
+                        }
                     }
                 }
             },
@@ -263,6 +275,7 @@ pub fn account_parser(
         impl #account_struct_ident {
             pub fn try_unpack(data: &[u8]) -> ParseResult<Self> {
                 #(#account_matches)*
+
                 Err(ParseError::from(#parser_error_msg.to_owned()))
             }
         }
@@ -289,7 +302,10 @@ pub fn account_parser(
                 let inner = acct
                     .account
                     .as_ref()
-                    .ok_or_else(|| ParseError::from("Unable to unwrap account ref".to_owned()))?;
+                    .ok_or_else(|| {
+                        println!("[account_parser] account ref is None!");
+                        ParseError::from("Unable to unwrap account ref".to_owned())
+                    })?;
 
                 #account_struct_ident::try_unpack(&inner.data)
             }

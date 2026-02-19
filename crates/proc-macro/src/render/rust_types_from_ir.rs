@@ -63,6 +63,7 @@ fn render_oneof_parent(oneof_ir: &OneofIr) -> TokenStream {
 }
 
 /// Render instruction dispatch: flattened (no module wrapper).
+///
 /// The parent struct (`Instructions`) and the `Instruction` enum live at the same level.
 fn render_instruction_dispatch(oneof_ir: &OneofIr) -> TokenStream {
     let parent_ident = format_ident!("{}", oneof_ir.parent_message); // "Instructions"
@@ -161,6 +162,7 @@ fn render_instruction_dispatch(oneof_ir: &OneofIr) -> TokenStream {
             ) -> ::core::result::Result<(), ::borsh::io::Error> {
                 match &self.#field_ident {
                     #(#borsh_serialize_arms,)*
+
                     ::core::option::Option::None => {
                         ::core::result::Result::Err(::borsh::io::Error::new(
                             ::borsh::io::ErrorKind::InvalidData,
@@ -179,6 +181,7 @@ fn render_instruction_dispatch(oneof_ir: &OneofIr) -> TokenStream {
 
                 let #field_ident = match disc {
                     #(#borsh_deserialize_arms,)*
+
                     _ => {
                         return ::core::result::Result::Err(::borsh::io::Error::new(
                             ::borsh::io::ErrorKind::InvalidData,
@@ -299,6 +302,7 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
             ) -> ::core::result::Result<(), ::borsh::io::Error> {
                 match &self.#field_ident {
                     #(#borsh_serialize_arms,)*
+
                     ::core::option::Option::None => {
                         ::core::result::Result::Err(::borsh::io::Error::new(
                             ::borsh::io::ErrorKind::InvalidData,
@@ -317,6 +321,7 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
 
                 let #field_ident = match disc {
                     #(#borsh_deserialize_arms,)*
+
                     _ => {
                         return ::core::result::Result::Err(::borsh::io::Error::new(
                             ::borsh::io::ErrorKind::InvalidData,
@@ -334,9 +339,35 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
     let name = format_ident!("{}", f.name);
     let tag = f.tag;
 
-    // PubkeyBytes fields need custom borsh (de)serialization because on-chain pubkeys
-    // are fixed 32-byte arrays (no length prefix), but `Vec<u8>` borsh reads a u32 prefix.
-    let borsh_attr = pubkey_borsh_attrs(&f.label, &f.field_type);
+    // Custom borsh attrs for fields whose on-chain encoding differs from the Rust type:
+    // - FixedBytes/PubkeyBytes: on-chain fixed N bytes, Rust Vec<u8> (borsh reads length prefix)
+    // - Widened integers: on-chain u8/u16/i8/i16, Rust u32/i32 (borsh reads wrong byte count)
+    let borsh_attr = {
+        let fixed = fixed_bytes_borsh_attrs(&f.label, &f.field_type);
+
+        if fixed.is_empty() {
+            widen_borsh_attrs(&f.label, &f.field_type)
+        } else {
+            fixed
+        }
+    };
+
+    // Singular Message fields: on-chain the struct is required (no Option tag byte),
+    // but prost requires `Option<T>` for message fields. We override borsh to read
+    // the struct directly and wrap in Some.
+    let required_msg_attr = if matches!(
+        (&f.label, &f.field_type),
+        (LabelIr::Singular, FieldTypeIr::Message(_))
+    ) {
+        quote! {
+            #[borsh(
+                deserialize_with = "borsh_deserialize_required_msg",
+                serialize_with = "borsh_serialize_required_msg"
+            )]
+        }
+    } else {
+        quote! {}
+    };
 
     // Without proto, emit plain fields with no prost attributes
     if !cfg!(feature = "proto") {
@@ -344,7 +375,7 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
             (LabelIr::Singular, FieldTypeIr::Message(msg)) => {
                 let ident = format_ident!("{}", msg);
 
-                quote! { pub #name: ::core::option::Option<#ident> }
+                quote! { #required_msg_attr pub #name: ::core::option::Option<#ident> }
             },
             (LabelIr::Singular, field_type) => {
                 let (_, rust_type) = map_ir_type_to_prost(field_type);
@@ -380,6 +411,7 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
 
             quote! {
                 #[prost(message, optional, tag = #tag)]
+                #required_msg_attr
                 pub #name: ::core::option::Option<#ident>
             }
         },
@@ -434,32 +466,102 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
     }
 }
 
-/// Returns `#[borsh(deserialize_with = "...", serialize_with = "...")]` for PubkeyBytes fields,
-/// or an empty TokenStream for all other field types.
-fn pubkey_borsh_attrs(label: &LabelIr, field_type: &FieldTypeIr) -> TokenStream {
-    if !matches!(field_type, FieldTypeIr::Scalar(ScalarIr::PubkeyBytes)) {
-        return quote! {};
-    }
+///
+/// Returns `#[borsh(deserialize_with = "...", serialize_with = "...")]` for fixed-size byte fields
+/// (PubkeyBytes and FixedBytes), or an empty TokenStream for all other field types.
+///
+/// Uses const-generic helpers like `borsh_deserialize_fixed_bytes::<32>` so a single set of functions
+/// handles any fixed byte size.
+///
+fn fixed_bytes_borsh_attrs(label: &LabelIr, field_type: &FieldTypeIr) -> TokenStream {
+    let size: usize = match field_type {
+        FieldTypeIr::Scalar(ScalarIr::PubkeyBytes) => 32,
+        FieldTypeIr::Scalar(ScalarIr::FixedBytes(n)) => *n,
+        _ => return quote! {},
+    };
+
+    let deser_path = LitStr::new(
+        &format!("borsh_deserialize_fixed_bytes::<{size}, _>"),
+        Span::call_site(),
+    );
+    let ser_path = LitStr::new(
+        &format!("borsh_serialize_fixed_bytes::<{size}, _>"),
+        Span::call_site(),
+    );
+    let deser_opt_path = LitStr::new(
+        &format!("borsh_deserialize_opt_fixed_bytes::<{size}, _>"),
+        Span::call_site(),
+    );
+    let ser_opt_path = LitStr::new(
+        &format!("borsh_serialize_opt_fixed_bytes::<{size}, _>"),
+        Span::call_site(),
+    );
+    let deser_vec_path = LitStr::new(
+        &format!("borsh_deserialize_vec_fixed_bytes::<{size}, _>"),
+        Span::call_site(),
+    );
+    let ser_vec_path = LitStr::new(
+        &format!("borsh_serialize_vec_fixed_bytes::<{size}, _>"),
+        Span::call_site(),
+    );
 
     match label {
         LabelIr::Singular => quote! {
             #[borsh(
-                deserialize_with = "borsh_deser_pubkey_bytes",
-                serialize_with = "borsh_ser_pubkey_bytes"
+                deserialize_with = #deser_path,
+                serialize_with = #ser_path
             )]
         },
         LabelIr::Optional => quote! {
             #[borsh(
-                deserialize_with = "borsh_deser_opt_pubkey_bytes",
-                serialize_with = "borsh_ser_opt_pubkey_bytes"
+                deserialize_with = #deser_opt_path,
+                serialize_with = #ser_opt_path
             )]
         },
         LabelIr::Repeated => quote! {
             #[borsh(
-                deserialize_with = "borsh_deser_vec_pubkey_bytes",
-                serialize_with = "borsh_ser_vec_pubkey_bytes"
+                deserialize_with = #deser_vec_path,
+                serialize_with = #ser_vec_path
             )]
         },
+    }
+}
+
+/// Returns `#[borsh(deserialize_with = "...", serialize_with = "...")]` for integer fields
+/// that are widened from their on-chain size to a proto-compatible Rust type
+/// (e.g. u8 → u32, i16 → i32), or an empty TokenStream if no widening is needed.
+fn widen_borsh_attrs(label: &LabelIr, field_type: &FieldTypeIr) -> TokenStream {
+    let suffixes = match field_type {
+        FieldTypeIr::Scalar(ScalarIr::U8) => ("u8_as_u32", "u32_as_u8"),
+        FieldTypeIr::Scalar(ScalarIr::U16 | ScalarIr::ShortU16) => ("u16_as_u32", "u32_as_u16"),
+        FieldTypeIr::Scalar(ScalarIr::I8) => ("i8_as_i32", "i32_as_i8"),
+        FieldTypeIr::Scalar(ScalarIr::I16) => ("i16_as_i32", "i32_as_i16"),
+        _ => return quote! {},
+    };
+
+    let (deserialize_fn_name, serialize_fn_name) = match label {
+        LabelIr::Singular => (
+            format!("borsh_deserialize_{}", suffixes.0),
+            format!("borsh_serialize_{}", suffixes.1),
+        ),
+        LabelIr::Optional => (
+            format!("borsh_deserialize_opt_{}", suffixes.0),
+            format!("borsh_serialize_opt_{}", suffixes.1),
+        ),
+        LabelIr::Repeated => (
+            format!("borsh_deserialize_vec_{}", suffixes.0),
+            format!("borsh_serialize_vec_{}", suffixes.1),
+        ),
+    };
+
+    let deserialize_lit = LitStr::new(&deserialize_fn_name, Span::call_site());
+    let serialize_lit = LitStr::new(&serialize_fn_name, Span::call_site());
+
+    quote! {
+        #[borsh(
+            deserialize_with = #deserialize_lit,
+            serialize_with = #serialize_lit
+        )]
     }
 }
 
@@ -468,14 +570,17 @@ fn map_ir_type_to_prost(field_type: &FieldTypeIr) -> (TokenStream, TokenStream) 
     match field_type {
         FieldTypeIr::Scalar(s) => match s {
             ScalarIr::Bool => (quote!(bool), quote!(bool)),
-            ScalarIr::Uint32 => (quote!(uint32), quote!(u32)),
+            ScalarIr::U8 | ScalarIr::U16 | ScalarIr::ShortU16 | ScalarIr::Uint32 => {
+                (quote!(uint32), quote!(u32))
+            },
             ScalarIr::Uint64 => (quote!(uint64), quote!(u64)),
-            ScalarIr::Int32 => (quote!(int32), quote!(i32)),
+            ScalarIr::I8 | ScalarIr::I16 | ScalarIr::Int32 => (quote!(int32), quote!(i32)),
             ScalarIr::Int64 => (quote!(int64), quote!(i64)),
             ScalarIr::Float => (quote!(float), quote!(f32)),
             ScalarIr::Double => (quote!(double), quote!(f64)),
             ScalarIr::String => (quote!(string), quote!(String)),
             ScalarIr::Bytes => (quote!(bytes = "vec"), quote!(Vec<u8>)),
+            ScalarIr::FixedBytes(_) => (quote!(bytes = "vec"), quote!(Vec<u8>)),
             ScalarIr::PubkeyBytes => (quote!(bytes = "vec"), quote!(PubkeyBytes)),
         },
         FieldTypeIr::Message(name) => {
