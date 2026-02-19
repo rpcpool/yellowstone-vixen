@@ -130,7 +130,9 @@ pub fn single_instruction_parser(
 
             let discriminator: Vec<u8> = match bytes.encoding {
                 codama_nodes::BytesEncoding::Base16 => {
-                    hex::decode(&bytes.data).expect("decode base16")
+                    let padded = crate::utils::pad_hex(&bytes.data);
+
+                    hex::decode(&padded).expect("decode base16")
                 },
                 codama_nodes::BytesEncoding::Base58 => {
                     bs58::decode(&bytes.data).into_vec().expect("decode base58")
