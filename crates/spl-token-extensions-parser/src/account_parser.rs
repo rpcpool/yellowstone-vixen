@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use solana_program_error::ProgramError;
 use solana_program_pack::Pack;
 use spl_token_2022::{
-    extension::{BaseStateWithExtensions, ExtensionType, StateWithExtensions},
+    extension::{BaseStateWithExtensions, StateWithExtensions},
     state::{Account as SplAccount, AccountState, Mint as SplMint, Multisig as SplMultisig},
 };
 use yellowstone_vixen_core::{AccountUpdate, ParseResult, Parser, Prefilter, ProgramParser};
@@ -161,11 +161,6 @@ fn extension_account_type(data_bytes: &[u8]) -> Result<TokenExtensionAccountType
     Err(ProgramError::InvalidAccountData)
 }
 
-fn extension_type_to_i32(ext: ExtensionType) -> i32 {
-    // Keep stable: just cast the enum discriminant
-    ext as i32
-}
-
 fn build_extensions_for_mint(
     unpacked: &StateWithExtensions<SplMint>,
 ) -> Result<Vec<ExtensionData>, ProgramError> {
@@ -177,7 +172,7 @@ fn build_extensions_for_mint(
         let data = crate::accounts::mint_account_extensions_data_bytes(unpacked, ext)?;
 
         out.push(ExtensionData {
-            extension_type: extension_type_to_i32(ext),
+            extension_type: ext as i32,
             data: data.to_vec(),
         });
     }
@@ -196,7 +191,7 @@ fn build_extensions_for_account(
         let data = crate::accounts::token_account_extensions_data_bytes(unpacked, ext)?;
 
         out.push(ExtensionData {
-            extension_type: extension_type_to_i32(ext),
+            extension_type: ext as i32,
             data: data.to_vec(),
         });
     }
