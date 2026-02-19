@@ -11,6 +11,7 @@ pub fn create_producer(config: &KafkaSinkConfig) -> FutureProducer {
             config.queue_buffering_max_messages.to_string(),
         )
         .set("batch.num.messages", config.batch_num_messages.to_string())
+        .set("enable.idempotence", "true")
         .create()
         .expect("Failed to create Kafka producer")
 }

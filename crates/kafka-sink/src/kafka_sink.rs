@@ -85,29 +85,50 @@ impl ConfirmedSlotSink {
         self.commit_slot_checkpoint(confirmed).await
     }
 
-    /// Publish all records sequentially to preserve transaction ordering within each topic.
+    /// Publish all records to Kafka, preserving transaction ordering within each topic.
     /// Records arrive pre-sorted by (tx_index, ix_path) from the coordinator.
+    ///
+    /// `FutureProducer::send()` is async only because it contains an internal sleep-retry
+    /// loop for queue-full conditions — the actual enqueue into librdkafka's internal queue
+    /// is synchronous.
+    ///
+    /// Uses `join_all` to await all delivery acks concurrently. Ordering is preserved because:
+    /// 1) `join_all` polls futures in index order
+    /// 2) each `send()` enqueues synchronously on its first poll before yielding at the ack-wait
+    /// 3) `enable.idempotence=true` prevents retry reordering at the network layer
+    ///
+    /// `queue_timeout` is set to `Duration::ZERO` so that a queue-full condition
+    /// immediately returns an error (failing the slot for retry) rather than sleeping
+    /// before enqueue, which could allow a later future to enqueue first.
+    ///
     /// Fails the entire slot on any write error so the caller can replay it.
     async fn batch_publish_records(
         &self,
         slot: u64,
         records: &[PreparedRecord],
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        for record in records {
-            let headers = to_kafka_headers(&record.headers);
-            self.producer
-                .send(
+        let futures: Vec<_> = records
+            .iter()
+            .map(|record| {
+                let headers = to_kafka_headers(&record.headers);
+                self.producer.send(
                     FutureRecord::to(&record.topic)
                         .payload(&record.payload)
                         .key(&record.key)
                         .headers(headers),
-                    Duration::from_secs(5),
+                    // Do not retry when a send fail. Returns an RDKafkaErrorCode::QueueFull error instead so the slot retries, ensuring we never lose the ordering
+                    Duration::ZERO,
                 )
-                .await
-                .map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
-                    tracing::error!(?e, slot, topic = %record.topic, "Kafka write failed");
-                    format!("Kafka write failed for slot {slot}: {e}").into()
-                })?;
+            })
+            .collect();
+
+        let results = futures::future::join_all(futures).await;
+
+        for (i, result) in results.into_iter().enumerate() {
+            result.map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
+                tracing::error!(?e, slot, topic = %records[i].topic, "Kafka write failed");
+                format!("Kafka write failed for slot {slot}: {e}").into()
+            })?;
         }
 
         Ok(())
