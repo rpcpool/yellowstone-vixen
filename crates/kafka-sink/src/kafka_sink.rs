@@ -116,6 +116,7 @@ impl ConfirmedSlotSink {
                         .payload(&record.payload)
                         .key(&record.key)
                         .headers(headers),
+                    // Do not retry when a send fail. Returns an RDKafkaErrorCode::QueueFull error instead so the slot retries, ensuring we never lose the ordering
                     Duration::ZERO,
                 )
             })
