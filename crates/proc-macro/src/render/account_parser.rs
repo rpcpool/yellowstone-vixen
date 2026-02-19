@@ -24,10 +24,10 @@ use syn::LitStr;
 /// pub mod {program_name}_account {
 ///     #[derive(Clone, PartialEq, ::prost::Oneof)]
 ///     pub enum Kind {
-///         #[prost(bytes, tag = 1)]
-///         AccountA(Vec<u8>),
-///         #[prost(bytes, tag = 2)]
-///         AccountB(Vec<u8>),
+///         #[prost(message, tag = 1)]
+///         AccountA(super::AccountA),
+///         #[prost(message, tag = 2)]
+///         AccountB(super::AccountB),
 ///     }
 /// }
 /// ```
@@ -42,8 +42,8 @@ use syn::LitStr;
 /// pub mod {program_name}_account {
 ///     #[derive(Clone, Debug, PartialEq)]
 ///     pub enum Kind {
-///         AccountA(Vec<u8>),
-///         AccountB(Vec<u8>),
+///         AccountA(super::AccountA),
+///         AccountB(super::AccountB),
 ///     }
 /// }
 /// ```
@@ -86,12 +86,12 @@ pub fn account_parser(
 
         if cfg!(feature = "proto") {
             quote! {
-                #[prost(bytes, tag = #tag)]
-                #account_ident(Vec<u8>)
+                #[prost(message, tag = #tag)]
+                #account_ident(super::#account_ident)
             }
         } else {
             quote! {
-                #account_ident(Vec<u8>)
+                #account_ident(super::#account_ident)
             }
         }
     });
@@ -120,7 +120,10 @@ pub fn account_parser(
                     if let Some(discriminator) = data.get(#offset) {
                         if discriminator == #value {
                             return Ok(#account_struct_ident {
-                                kind: Some(#account_mod_ident::Kind::#account_ident(data.to_vec()))
+                                kind: Some(#account_mod_ident::Kind::#account_ident(
+                                    <#account_ident as ::borsh::BorshDeserialize>::try_from_slice(data)
+                                        .map_err(|e| ParseError::Other(e.into()))?
+                                ))
                             });
                         }
                     }
@@ -177,8 +180,10 @@ pub fn account_parser(
                     if let Some(slice) = data.get(#offset..#end) {
                         if slice == &[#(#discriminator),*] {
                             return Ok(#account_struct_ident {
-                                // Remove discriminator bytes from account data before returning (#end..)
-                                kind: Some(#account_mod_ident::Kind::#account_ident(data[#end..].to_vec()))
+                                kind: Some(#account_mod_ident::Kind::#account_ident(
+                                    <#account_ident as ::borsh::BorshDeserialize>::try_from_slice(&data[#end..])
+                                        .map_err(|e| ParseError::Other(e.into()))?
+                                ))
                             });
                         }
                     }
@@ -192,7 +197,10 @@ pub fn account_parser(
                 quote! {
                     if data.len() == #size {
                         return Ok(#account_struct_ident {
-                            kind: Some(#account_mod_ident::Kind::#account_ident(data.to_vec()))
+                            kind: Some(#account_mod_ident::Kind::#account_ident(
+                                <#account_ident as ::borsh::BorshDeserialize>::try_from_slice(data)
+                                    .map_err(|e| ParseError::Other(e.into()))?
+                            ))
                         });
                     }
                 }

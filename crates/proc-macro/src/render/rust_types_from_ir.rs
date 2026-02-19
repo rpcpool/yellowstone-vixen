@@ -334,6 +334,10 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
     let name = format_ident!("{}", f.name);
     let tag = f.tag;
 
+    // PubkeyBytes fields need custom borsh (de)serialization because on-chain pubkeys
+    // are fixed 32-byte arrays (no length prefix), but `Vec<u8>` borsh reads a u32 prefix.
+    let borsh_attr = pubkey_borsh_attrs(&f.label, &f.field_type);
+
     // Without proto, emit plain fields with no prost attributes
     if !cfg!(feature = "proto") {
         return match (&f.label, &f.field_type) {
@@ -345,7 +349,7 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
             (LabelIr::Singular, field_type) => {
                 let (_, rust_type) = map_ir_type_to_prost(field_type);
 
-                quote! { pub #name: #rust_type }
+                quote! { #borsh_attr pub #name: #rust_type }
             },
             (LabelIr::Optional, FieldTypeIr::Message(msg)) => {
                 let ident = format_ident!("{}", msg);
@@ -355,7 +359,7 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
             (LabelIr::Optional, field_type) => {
                 let (_, rust_type) = map_ir_type_to_prost(field_type);
 
-                quote! { pub #name: ::core::option::Option<#rust_type> }
+                quote! { #borsh_attr pub #name: ::core::option::Option<#rust_type> }
             },
             (LabelIr::Repeated, FieldTypeIr::Message(msg)) => {
                 let ident = format_ident!("{}", msg);
@@ -365,7 +369,7 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
             (LabelIr::Repeated, field_type) => {
                 let (_, rust_type) = map_ir_type_to_prost(field_type);
 
-                quote! { pub #name: Vec<#rust_type> }
+                quote! { #borsh_attr pub #name: Vec<#rust_type> }
             },
         };
     }
@@ -385,6 +389,7 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
 
             quote! {
                 #[prost(#prost_type, tag = #tag)]
+                #borsh_attr
                 pub #name: #rust_type
             }
         },
@@ -403,6 +408,7 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
 
             quote! {
                 #[prost(#prost_type, optional, tag = #tag)]
+                #borsh_attr
                 pub #name: ::core::option::Option<#rust_type>
             }
         },
@@ -421,8 +427,38 @@ pub fn render_field(f: &FieldIr) -> TokenStream {
 
             quote! {
                 #[prost(#prost_type, repeated, tag = #tag)]
+                #borsh_attr
                 pub #name: Vec<#rust_type>
             }
+        },
+    }
+}
+
+/// Returns `#[borsh(deserialize_with = "...", serialize_with = "...")]` for PubkeyBytes fields,
+/// or an empty TokenStream for all other field types.
+fn pubkey_borsh_attrs(label: &LabelIr, field_type: &FieldTypeIr) -> TokenStream {
+    if !matches!(field_type, FieldTypeIr::Scalar(ScalarIr::PubkeyBytes)) {
+        return quote! {};
+    }
+
+    match label {
+        LabelIr::Singular => quote! {
+            #[borsh(
+                deserialize_with = "borsh_deser_pubkey_bytes",
+                serialize_with = "borsh_ser_pubkey_bytes"
+            )]
+        },
+        LabelIr::Optional => quote! {
+            #[borsh(
+                deserialize_with = "borsh_deser_opt_pubkey_bytes",
+                serialize_with = "borsh_ser_opt_pubkey_bytes"
+            )]
+        },
+        LabelIr::Repeated => quote! {
+            #[borsh(
+                deserialize_with = "borsh_deser_vec_pubkey_bytes",
+                serialize_with = "borsh_ser_vec_pubkey_bytes"
+            )]
         },
     }
 }
