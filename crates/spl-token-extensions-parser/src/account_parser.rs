@@ -271,7 +271,7 @@ mod tests {
     use core::panic;
 
     use yellowstone_vixen_core::Parser;
-    use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
+    use yellowstone_vixen_mock::account_fixture;
 
     use super::{token_extension_state, AccountParser};
 

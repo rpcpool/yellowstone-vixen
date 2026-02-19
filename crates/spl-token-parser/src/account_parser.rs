@@ -171,7 +171,7 @@ impl ProgramParser for AccountParser {
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_mock::{account_fixture, run_account_parse, FixtureData};
+    use yellowstone_vixen_mock::account_fixture;
 
     use super::{token_program_state, AccountParser, Parser, TokenProgramState};
 
