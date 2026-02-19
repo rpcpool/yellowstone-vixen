@@ -8,15 +8,29 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::KafkaSinkConfig;
 
+/// Compute the 0-based message index of the last top-level message in a proto schema.
+/// The last message is typically the Instructions dispatch oneof.
+fn compute_last_message_index(schema: &str) -> i32 {
+    let mut count = 0i32;
+    let mut depth = 0i32;
+    for line in schema.lines() {
+        let trimmed = line.trim();
+        // Only count top-level messages (depth 0)
+        if depth == 0 && trimmed.starts_with("message ") {
+            count += 1;
+        }
+        // Track brace nesting to skip nested messages
+        depth += trimmed.chars().filter(|&c| c == '{').count() as i32;
+        depth -= trimmed.chars().filter(|&c| c == '}').count() as i32;
+    }
+    count - 1 // 0-indexed
+}
+
 pub struct SchemaDefinition {
     /// Subject name (typically "<topic>-value" or "<topic>-key").
     pub subject: String,
     /// The protobuf schema content.
     pub schema: &'static str,
-    /// Index of the message type within the schema (0-indexed from the last message).
-    /// For a schema with only one message, this should be 0.
-    /// For our TokenProgramInstruction which is the last message, this is 0.
-    pub message_index: i32,
 }
 
 #[derive(Clone, Debug)]
@@ -204,10 +218,11 @@ pub fn ensure_schemas_registered(
 
         match schema_id {
             Ok(id) => {
-                tracing::info!(subject = %schema_def.subject, schema_id = id, "Schema ready");
+                let message_index = compute_last_message_index(schema_def.schema);
+                tracing::info!(subject = %schema_def.subject, schema_id = id, message_index, "Schema ready");
                 registered.insert(schema_def.subject.clone(), RegisteredSchema {
                     schema_id: id,
-                    message_index: schema_def.message_index,
+                    message_index,
                 });
             },
             Err(e) => {
@@ -236,5 +251,66 @@ fn get_latest_schema_id_for_subject(
         Some(version.id)
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_compute_last_message_index_simple() {
+        let schema = r#"
+syntax = "proto3";
+package test;
+
+message Foo {
+    string name = 1;
+}
+
+message Bar {
+    int32 id = 1;
+}
+"#;
+        assert_eq!(compute_last_message_index(schema), 1);
+    }
+
+    #[test]
+    fn test_compute_last_message_index_nested() {
+        let schema = r#"
+syntax = "proto3";
+package test;
+
+message Outer {
+    message Inner {
+        string x = 1;
+    }
+    Inner inner = 1;
+}
+
+message Middle {
+    int32 y = 1;
+}
+
+message Last {
+    oneof instruction {
+        Outer outer = 1;
+        Middle middle = 2;
+    }
+}
+"#;
+        // 3 top-level messages: Outer, Middle, Last -> last index = 2
+        assert_eq!(compute_last_message_index(schema), 2);
+    }
+
+    #[test]
+    fn test_compute_last_message_index_single() {
+        let schema = r#"
+syntax = "proto3";
+message Only {
+    string val = 1;
+}
+"#;
+        assert_eq!(compute_last_message_index(schema), 0);
     }
 }
