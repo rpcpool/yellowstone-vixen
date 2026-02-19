@@ -22,7 +22,13 @@ impl Parser for TransactionParser {
 
     fn prefilter(&self) -> Prefilter {
         let prefilter = Prefilter {
-            transaction: Some(TransactionPrefilter::default()),
+            transaction: Some(TransactionPrefilter {
+                // Include all transactions (both successful and failed) so that
+                // parsed_tx_count matches the block machine's expected_tx_count
+                // which counts all executed transactions from entry data.
+                failed: None,
+                ..Default::default()
+            }),
             ..Default::default()
         };
         tracing::info!(
