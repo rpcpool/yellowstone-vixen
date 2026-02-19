@@ -92,7 +92,7 @@ impl ConfirmedSlotSink {
     /// loop for queue-full conditions — the actual enqueue into librdkafka's internal queue
     /// is synchronous.
     ///
-    /// Uses `join_all` to await all delivery acks concurrently. Ordering is preserved because: 
+    /// Uses `join_all` to await all delivery acks concurrently. Ordering is preserved because:
     /// 1) `join_all` polls futures in index order
     /// 2) each `send()` enqueues synchronously on its first poll before yielding at the ack-wait
     /// 3) `enable.idempotence=true` prevents retry reordering at the network layer
