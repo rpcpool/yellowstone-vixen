@@ -331,8 +331,8 @@ fn try_from_tx_meta<P: ProgramParser>(
 macro_rules! account_fixture {
     ($pubkey:expr, $parser:expr) => {
         match $crate::load_fixture($pubkey, $parser).await.unwrap() {
-            FixtureData::Account(a) => {
-                run_account_parse!($parser, a)
+            $crate::FixtureData::Account(a) => {
+                $crate::run_account_parse!($parser, a)
             },
             f @ _ => panic!("Invalid account fixture {f:?}"),
         }

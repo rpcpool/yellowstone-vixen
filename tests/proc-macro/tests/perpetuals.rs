@@ -2,7 +2,7 @@ mod common;
 
 use insta;
 use yellowstone_vixen_core::Parser;
-use yellowstone_vixen_mock::tx_fixture;
+use yellowstone_vixen_mock::{account_fixture, tx_fixture};
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/perp_idl.json");
@@ -12,6 +12,83 @@ async fn check_protobuf_schema() {
     common::check_protobuf_format(perpetuals::PROTOBUF_SCHEMA);
 
     insta::assert_snapshot!(perpetuals::PROTOBUF_SCHEMA);
+}
+
+#[tokio::test]
+async fn parse_pool_account() {
+    let parser = perpetuals::AccountParser;
+    let account = account_fixture!("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq", &parser);
+
+    let pool = match account.kind {
+        Some(perpetuals::perpetuals_account::Kind::Pool(pool)) => pool,
+        _ => panic!("Unexpected account state"),
+    };
+
+    let expected = perpetuals::Pool {
+        name: "Pool".to_string(),
+        custodies: vec![
+            vec![
+                103, 89, 93, 216, 70, 192, 7, 242, 104, 150, 242, 174, 211, 27, 167, 181, 95, 209,
+                44, 204, 21, 142, 11, 0, 122, 157, 143, 232, 70, 182, 159, 233,
+            ],
+            vec![
+                139, 170, 74, 72, 100, 34, 108, 192, 34, 72, 77, 200, 40, 30, 26, 22, 143, 92, 244,
+                232, 5, 63, 26, 229, 6, 109, 145, 106, 136, 185, 223, 159,
+            ],
+            vec![
+                65, 77, 129, 72, 106, 241, 62, 110, 236, 158, 45, 91, 207, 69, 145, 50, 227, 164,
+                102, 71, 9, 182, 109, 56, 208, 100, 119, 145, 36, 198, 206, 62,
+            ],
+            vec![
+                222, 232, 11, 52, 19, 162, 211, 16, 128, 98, 107, 146, 108, 56, 175, 52, 190, 209,
+                134, 219, 54, 142, 151, 127, 58, 191, 75, 213, 69, 68, 154, 109,
+            ],
+            vec![
+                58, 87, 226, 203, 202, 208, 40, 131, 80, 35, 204, 171, 74, 216, 123, 210, 118, 78,
+                143, 193, 50, 214, 142, 152, 102, 9, 235, 19, 75, 215, 134, 249,
+            ],
+        ],
+        aum_usd: vec![42, 148, 219, 152, 238, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        limit: Some(perpetuals::Limit {
+            max_aum_usd: vec![0, 128, 83, 238, 123, 168, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            token_weightage_buffer_bps: vec![232, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            buffer: 0,
+        }),
+        fees: Some(perpetuals::Fees {
+            swap_multiplier: 100,
+            stable_swap_multiplier: 100,
+            add_remove_liquidity_bps: 20,
+            swap_bps: 10,
+            tax_bps: 100,
+            stable_swap_bps: 2,
+            stable_swap_tax_bps: 5,
+            liquidation_reward_bps: 150,
+            protocol_share_bps: 2500,
+        }),
+        pool_apr: Some(perpetuals::PoolApr {
+            last_updated: 1771002900,
+            fee_apr_bps: 1093,
+            realized_fee_usd: 1250427617755,
+        }),
+        max_request_execution_sec: 45,
+        bump: 252,
+        lp_token_bump: 254,
+        inception_time: 1689677832,
+        parameter_update_oracle: Some(perpetuals::Secp256k1Pubkey {
+            prefix: 2,
+            key: vec![
+                81, 186, 187, 169, 123, 155, 81, 29, 179, 83, 117, 14, 44, 57, 230, 19, 66, 46,
+                133, 49, 33, 164, 138, 181, 32, 132, 12, 0, 39, 52, 40, 92,
+            ],
+        }),
+        aum_usd_updated_at: 1771515604,
+        max_trigger_price_diff_bps: 500,
+        disable_close_position_request: false,
+        max_lp_token_price_change_bps: 100,
+        aum_usd_refreshed_at_slot: 401338012,
+    };
+
+    assert_eq!(pool, expected);
 }
 
 #[tokio::test]
