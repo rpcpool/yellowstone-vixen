@@ -23,7 +23,8 @@ fn compute_last_message_index(schema: &str) -> i32 {
             Some(is_top_level_msg)
         })
         .filter(|&b| b)
-        .count() as i32 - 1
+        .count() as i32
+        - 1
 }
 
 pub struct SchemaDefinition {
