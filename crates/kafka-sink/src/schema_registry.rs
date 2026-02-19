@@ -11,19 +11,19 @@ use crate::config::KafkaSinkConfig;
 /// Compute the 0-based message index of the last top-level message in a proto schema.
 /// The last message is typically the Instructions dispatch oneof.
 fn compute_last_message_index(schema: &str) -> i32 {
-    let mut count = 0i32;
-    let mut depth = 0i32;
-    for line in schema.lines() {
-        let trimmed = line.trim();
-        // Only count top-level messages (depth 0)
-        if depth == 0 && trimmed.starts_with("message ") {
-            count += 1;
-        }
-        // Track brace nesting to skip nested messages
-        depth += trimmed.chars().filter(|&c| c == '{').count() as i32;
-        depth -= trimmed.chars().filter(|&c| c == '}').count() as i32;
-    }
-    count - 1 // 0-indexed
+    schema
+        .lines()
+        .map(str::trim)
+        .scan(0i32, |depth, line| {
+            let is_top_level_msg = *depth == 0 && line.starts_with("message ");
+
+            *depth += line.chars().filter(|&c| c == '{').count() as i32;
+            *depth -= line.chars().filter(|&c| c == '}').count() as i32;
+
+            Some(is_top_level_msg)
+        })
+        .filter(|&b| b)
+        .count() as i32 - 1
 }
 
 pub struct SchemaDefinition {
