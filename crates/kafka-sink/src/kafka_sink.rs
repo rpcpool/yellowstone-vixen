@@ -85,29 +85,41 @@ impl ConfirmedSlotSink {
         self.commit_slot_checkpoint(confirmed).await
     }
 
-    /// Publish all records sequentially to preserve transaction ordering within each topic.
+    /// Publish all records to Kafka, preserving transaction ordering within each topic.
     /// Records arrive pre-sorted by (tx_index, ix_path) from the coordinator.
+    ///
+    /// Sends are enqueued sequentially into librdkafka's internal queue (via `.map().collect()`),
+    /// then all delivery acks are awaited in parallel with `join_all`. With single-partition topics
+    /// and `enable.idempotence=true`, offsets are assigned in enqueue order — so ordering is
+    /// preserved while eliminating serial round-trip waits.
+    ///
     /// Fails the entire slot on any write error so the caller can replay it.
     async fn batch_publish_records(
         &self,
         slot: u64,
         records: &[PreparedRecord],
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        for record in records {
-            let headers = to_kafka_headers(&record.headers);
-            self.producer
-                .send(
+        let futures: Vec<_> = records
+            .iter()
+            .map(|record| {
+                let headers = to_kafka_headers(&record.headers);
+                self.producer.send(
                     FutureRecord::to(&record.topic)
                         .payload(&record.payload)
                         .key(&record.key)
                         .headers(headers),
                     Duration::from_secs(5),
                 )
-                .await
-                .map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
-                    tracing::error!(?e, slot, topic = %record.topic, "Kafka write failed");
-                    format!("Kafka write failed for slot {slot}: {e}").into()
-                })?;
+            })
+            .collect();
+
+        let results = futures::future::join_all(futures).await;
+
+        for (i, result) in results.into_iter().enumerate() {
+            result.map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
+                tracing::error!(?e, slot, topic = %records[i].topic, "Kafka write failed");
+                format!("Kafka write failed for slot {slot}: {e}").into()
+            })?;
         }
 
         Ok(())
