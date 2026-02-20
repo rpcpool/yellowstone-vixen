@@ -28,37 +28,17 @@ use crate::{
 /// Parsed output result with protobuf-encoded bytes.
 #[derive(Debug, Clone)]
 pub struct ParsedOutput {
-    /// Human-readable name (e.g., "TransferChecked", "TokenAccount").
-    pub name: String,
-    /// Discriminant/variant identifier.
-    pub type_discriminant: String,
     /// Protobuf-encoded bytes (via prost::Message::encode_to_vec).
     pub data: Vec<u8>,
 }
 
 impl ParsedOutput {
     /// Create from any prost::Message type.
-    pub fn from_proto<T: Message + std::fmt::Debug>(output: &T) -> Self {
-        let debug_str = format!("{:?}", output);
+    pub fn from_proto<T: Message>(output: &T) -> Self {
         Self {
-            name: extract_type_name_from_debug(&debug_str).to_string(),
-            type_discriminant: format!("{:?}", std::mem::discriminant(output)),
             data: output.encode_to_vec(),
         }
     }
-}
-
-
-/// Extract the type name from a Debug-formatted string.
-///
-/// Handles both struct-like `TypeName { .. }` and tuple-like `TypeName(..)` formats.
-// TODO: replace with a proper name method on the proto types.
-fn extract_type_name_from_debug(debug_str: &str) -> &str {
-    debug_str
-        .split_once('{')
-        .map(|(name, _)| name.trim())
-        .or_else(|| debug_str.split_once('(').map(|(name, _)| name.trim()))
-        .unwrap_or(debug_str)
 }
 
 // --- DynInstructionParser ---
@@ -90,8 +70,6 @@ pub trait SecondaryFilter: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = Option<ParsedOutput>> + Send + 'a>>;
 
     fn topic(&self) -> &str;
-
-    fn label(&self) -> &str;
 }
 
 struct InstructionParserWrapper<P> {
@@ -104,7 +82,7 @@ struct InstructionParserWrapper<P> {
 impl<P, O> DynInstructionParser for InstructionParserWrapper<P>
 where
     P: Parser<Input = InstructionUpdate, Output = O> + Send + Sync,
-    O: Message + std::fmt::Debug + Send + Sync,
+    O: Message + Send + Sync,
 {
     fn try_parse<'a>(
         &'a self,
@@ -157,7 +135,7 @@ struct AccountParserWrapper<P> {
 impl<P, O> DynAccountParser for AccountParserWrapper<P>
 where
     P: Parser<Input = AccountUpdate, Output = O> + Send + Sync,
-    O: Message + std::fmt::Debug + Send + Sync,
+    O: Message + Send + Sync,
 {
     fn try_parse<'a>(
         &'a self,
@@ -200,7 +178,7 @@ pub trait SinkInput: sealed::Sealed {
         builder: &mut KafkaSinkBuilder,
     ) where
         P: Parser<Input = Self, Output = O> + Send + Sync + 'static,
-        O: Message + std::fmt::Debug + Send + Sync + 'static;
+        O: Message + Send + Sync + 'static;
 }
 
 impl sealed::Sealed for InstructionUpdate {}
@@ -214,7 +192,7 @@ impl SinkInput for InstructionUpdate {
         builder: &mut KafkaSinkBuilder,
     ) where
         P: Parser<Input = Self, Output = O> + Send + Sync + 'static,
-        O: Message + std::fmt::Debug + Send + Sync + 'static,
+        O: Message + Send + Sync + 'static,
     {
         builder
             .instruction_parsers
@@ -238,7 +216,7 @@ impl SinkInput for AccountUpdate {
         builder: &mut KafkaSinkBuilder,
     ) where
         P: Parser<Input = Self, Output = O> + Send + Sync + 'static,
-        O: Message + std::fmt::Debug + Send + Sync + 'static,
+        O: Message + Send + Sync + 'static,
     {
         builder
             .account_parsers
@@ -282,7 +260,7 @@ impl KafkaSinkBuilder {
     where
         P: Parser + Send + Sync + 'static,
         P::Input: SinkInput,
-        O: Message + std::fmt::Debug + Send + Sync + 'static,
+        O: Message + Send + Sync + 'static,
         P: Parser<Output = O>,
     {
         P::Input::add_parser(
@@ -309,7 +287,7 @@ impl KafkaSinkBuilder {
     where
         P: Parser + Send + Sync + 'static,
         P::Input: SinkInput,
-        O: Message + std::fmt::Debug + Send + Sync + 'static,
+        O: Message + Send + Sync + 'static,
         P: Parser<Output = O>,
     {
         P::Input::add_parser(
@@ -455,10 +433,10 @@ impl KafkaSink {
     async fn try_parse_instruction(
         &self,
         ix: &InstructionUpdate,
-    ) -> Option<(ParsedOutput, &str, &str)> {
+    ) -> Option<(ParsedOutput, &str)> {
         for parser in &self.instruction_parsers {
             if let Some(parsed) = parser.try_parse(ix).await {
-                return Some((parsed, parser.program_name(), parser.topic()));
+                return Some((parsed, parser.topic()));
             }
         }
         None
@@ -477,13 +455,12 @@ impl KafkaSink {
         ix: &InstructionUpdate,
     ) -> (PreparedRecord, Option<ParsedOutput>) {
         match self.try_parse_instruction(ix).await {
-            Some((parsed, program_name, topic)) => {
+            Some((parsed, topic)) => {
                 let record = self.prepare_decoded_instruction_record(
                     slot,
                     signature,
                     path,
                     parsed.clone(),
-                    program_name,
                     topic,
                 );
                 (record, Some(parsed))
@@ -547,33 +524,16 @@ impl KafkaSink {
         signature: &[u8],
         path: &Path,
         parsed: ParsedOutput,
-        program_name: &str,
         topic: &str,
     ) -> PreparedRecord {
-        let (key, mut headers) = Self::instruction_base_record(slot, signature, path);
+        let (key, headers) = Self::instruction_base_record(slot, signature, path);
         let payload = self.encode_payload_for_topic(topic, parsed.data);
-
-        headers.extend([
-            RecordHeader {
-                key: "program",
-                value: program_name.to_string(),
-            },
-            RecordHeader {
-                key: "instruction_type",
-                value: parsed.type_discriminant,
-            },
-            RecordHeader {
-                key: "instruction_name",
-                value: parsed.name.clone(),
-            },
-        ]);
 
         PreparedRecord {
             topic: topic.to_string(),
             payload,
             key,
             headers,
-            label: parsed.name,
             is_decoded: true,
             kind: RecordKind::Instruction,
         }
@@ -593,7 +553,7 @@ impl KafkaSink {
 
         headers.push(RecordHeader {
             key: "program_id",
-            value: program_id.clone(),
+            value: program_id,
         });
 
         PreparedRecord {
@@ -601,7 +561,6 @@ impl KafkaSink {
             payload: ix.data.clone(),
             key,
             headers,
-            label: program_id,
             is_decoded: false,
             kind: RecordKind::Instruction,
         }
@@ -644,7 +603,6 @@ impl KafkaSink {
                         &pubkey_str,
                         &owner_str,
                         parsed,
-                        parser.program_name(),
                         parser.topic(),
                     ));
                 },
@@ -673,7 +631,6 @@ impl KafkaSink {
         pubkey: &str,
         owner: &str,
         parsed: ParsedOutput,
-        program_name: &str,
         topic: &str,
     ) -> PreparedRecord {
         let key = make_account_record_key(slot, pubkey);
@@ -692,18 +649,6 @@ impl KafkaSink {
                 key: "owner",
                 value: owner.to_string(),
             },
-            RecordHeader {
-                key: "program",
-                value: program_name.to_string(),
-            },
-            RecordHeader {
-                key: "account_type",
-                value: parsed.type_discriminant,
-            },
-            RecordHeader {
-                key: "account_name",
-                value: parsed.name.clone(),
-            },
         ];
 
         PreparedRecord {
@@ -711,7 +656,6 @@ impl KafkaSink {
             payload,
             key,
             headers,
-            label: parsed.name,
             is_decoded: true,
             kind: RecordKind::Account,
         }
@@ -748,7 +692,6 @@ impl KafkaSink {
             payload: data.to_vec(),
             key,
             headers,
-            label: pubkey.to_string(),
             is_decoded: false,
             kind: RecordKind::Account,
         }

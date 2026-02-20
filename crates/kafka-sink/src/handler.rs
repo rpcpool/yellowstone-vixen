@@ -57,7 +57,6 @@ impl BufferingHandler {
                     &ix.shared.signature,
                     path,
                     filtered,
-                    filter.label(),
                     filter.topic(),
                 );
                 if let Err(e) = self
