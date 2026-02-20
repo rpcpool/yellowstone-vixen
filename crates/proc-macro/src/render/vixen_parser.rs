@@ -16,15 +16,45 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
     let instruction_parser =
         crate::render::instruction_parser(&idl.program.name, &idl.program.instructions);
 
-    let proto_schema = if cfg!(feature = "proto") {
-        let proto_str =
-            crate::render::proto_schema_string(&schema_ir, &program_mod_ident.to_string());
+    let program_name_pascal = crate::utils::to_pascal_case(&idl.program.name);
 
-        let proto_lit = syn::LitStr::new(&proto_str, proc_macro2::Span::call_site());
+    let proto_schema = if cfg!(feature = "proto") {
+        let output = crate::render::proto_schema_string(
+            &schema_ir,
+            &program_mod_ident.to_string(),
+            &program_name_pascal,
+        );
+
+        let proto_lit = syn::LitStr::new(&output.schema, proc_macro2::Span::call_site());
+
+        let account_dispatch_const = match output.account_dispatch_index {
+            Some(account_idx) => quote! {
+                /// 0-based index of the account dispatch message in the proto file descriptor.
+                pub const ACCOUNT_DISPATCH_MESSAGE_INDEX: Option<usize> = Some(#account_idx);
+            },
+            None => quote! {
+                /// 0-based index of the account dispatch message in the proto file descriptor.
+                pub const ACCOUNT_DISPATCH_MESSAGE_INDEX: Option<usize> = None;
+            },
+        };
+
+        let instruction_dispatch_const = match output.instruction_dispatch_index {
+            Some(instruction_idx) => quote! {
+                /// 0-based index of the instruction dispatch message in the proto file descriptor.
+                pub const INSTRUCTION_DISPATCH_MESSAGE_INDEX: Option<usize> = Some(#instruction_idx);
+            },
+            None => quote! {
+                /// 0-based index of the instruction dispatch message in the proto file descriptor.
+                pub const INSTRUCTION_DISPATCH_MESSAGE_INDEX: Option<usize> = None;
+            },
+        };
 
         quote! {
             /// Generated .proto schema for this program.
             pub const PROTOBUF_SCHEMA: &str = #proto_lit;
+
+            #account_dispatch_const
+            #instruction_dispatch_const
         }
     } else {
         quote! {}

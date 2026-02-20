@@ -1792,6 +1792,18 @@ message CloseBorrowPosition {
   optional CloseBorrowPositionArgs args = 2;
 }
     
+message PerpetualsAccount {
+  oneof account {
+    BorrowPosition borrow_position = 1;
+    Custody custody = 2;
+    Perpetuals perpetuals = 3;
+    Pool pool = 4;
+    PositionRequest position_request = 5;
+    Position position = 6;
+    StakeInfo stake_info = 7;
+    TokenLedger token_ledger = 8;
+  }
+}
 message PriceImpactMechanism {
   oneof kind {
     PriceImpactMechanismTradeSize trade_size = 1;

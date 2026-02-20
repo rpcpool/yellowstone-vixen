@@ -1134,6 +1134,18 @@ message WithdrawMigrationFee {
   optional WithdrawMigrationFeeArgs args = 2;
 }
     
+message DynamicBondingCurveAccount {
+  oneof account {
+    ClaimFeeOperator claim_fee_operator = 1;
+    Config config = 2;
+    LockEscrow lock_escrow = 3;
+    MeteoraDammMigrationMetadata meteora_damm_migration_metadata = 4;
+    PartnerMetadata partner_metadata = 5;
+    PoolConfig pool_config = 6;
+    VirtualPool virtual_pool = 7;
+    VirtualPoolMetadata virtual_pool_metadata = 8;
+  }
+}
 message Instructions {
   oneof instruction {
     ClaimCreatorTradingFee claim_creator_trading_fee = 1;

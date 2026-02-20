@@ -630,6 +630,13 @@ message SwapBaseOutV2 {
   optional SwapBaseOutV2Args args = 2;
 }
     
+message RaydiumAmmAccount {
+  oneof account {
+    TargetOrders target_orders = 1;
+    Fees fees = 2;
+    AmmInfo amm_info = 3;
+  }
+}
 message Instructions {
   oneof instruction {
     Initialize initialize = 1;

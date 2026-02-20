@@ -1,6 +1,7 @@
 use std::{env, path::PathBuf};
 
 fn main() {
+    #[cfg(any(feature = "parser", feature = "stream"))]
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
     #[cfg(any(feature = "parser", feature = "stream"))]

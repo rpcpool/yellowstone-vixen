@@ -11,6 +11,8 @@ pub use instruction_parser::*;
 pub use instructions::*;
 
 #[cfg(feature = "proto")]
-pub use yellowstone_vixen_proto::parser::token_extensions::PROTOBUF_SCHEMA;
+pub use yellowstone_vixen_proto::parser::token_extensions::{
+    ACCOUNT_DISPATCH_MESSAGE_INDEX, INSTRUCTION_DISPATCH_MESSAGE_INDEX, PROTOBUF_SCHEMA,
+};
 
 pub type PubkeyBytes = Vec<u8>; // expected len = 32

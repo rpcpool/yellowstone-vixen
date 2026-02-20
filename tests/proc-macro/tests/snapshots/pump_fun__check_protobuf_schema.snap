@@ -742,6 +742,15 @@ message UpdateGlobalAuthority {
   optional UpdateGlobalAuthorityArgs args = 2;
 }
     
+message PumpFunAccount {
+  oneof account {
+    BondingCurve bonding_curve = 1;
+    FeeConfig fee_config = 2;
+    Global global = 3;
+    GlobalVolumeAccumulator global_volume_accumulator = 4;
+    UserVolumeAccumulator user_volume_accumulator = 5;
+  }
+}
 message Instructions {
   oneof instruction {
     AdminSetCreator admin_set_creator = 1;
