@@ -96,18 +96,23 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
 
         for ix_update in &instructions {
             for ix in ix_update.visit_all() {
-                let (record, primary_parsed) = self
+                let result = self
                     .parsers
                     .parse_instruction(slot, &ix.shared.signature, &ix.path, ix)
                     .await;
 
-                if let Err(e) = self
-                    .handle
-                    .send_parsed(slot, sort_key(tx_index, &ix.path), record)
-                    .await
-                {
-                    tracing::error!(?e, slot, tx_index, "Failed to send parsed record");
-                }
+                let primary_parsed = if let Some((record, parsed)) = result {
+                    if let Err(e) = self
+                        .handle
+                        .send_parsed(slot, sort_key(tx_index, &ix.path), record)
+                        .await
+                    {
+                        tracing::error!(?e, slot, tx_index, "Failed to send parsed record");
+                    }
+                    parsed
+                } else {
+                    None
+                };
 
                 self.apply_secondary_filters_to_transaction(slot, tx_index, &ix.path, ix, primary_parsed.as_ref())
                     .await;
