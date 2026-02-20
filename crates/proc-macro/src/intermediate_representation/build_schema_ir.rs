@@ -16,7 +16,6 @@ pub fn build_schema_ir(idl: &RootNode) -> SchemaIr {
     crate::intermediate_representation::build_accounts(&idl.program.accounts, &mut ir);
 
     crate::intermediate_representation::build_instructions_schema(
-        &idl.program.name,
         &idl.program.instructions,
         &mut ir,
     );

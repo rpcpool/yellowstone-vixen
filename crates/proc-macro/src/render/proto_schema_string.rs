@@ -15,9 +15,11 @@ pub struct ProtoSchemaOutput {
     pub instruction_dispatch_index: Option<usize>,
 }
 
+///
 /// Render the IR schema as a .proto string and compute dispatch message indices.
 ///
 /// `program_name` is the PascalCase program name (e.g. "PumpFun").
+///
 pub fn proto_schema_string(
     schema: &SchemaIr,
     package: &str,
@@ -44,26 +46,27 @@ pub fn proto_schema_string(
         .map(|o| o.parent_message.as_str())
         .collect();
 
-    // Regular types (excluding oneof parents, deduped by name to handle
-    // DefinedType/Instruction name collisions from the IR).
-    let mut seen_names: HashSet<&str> = HashSet::new();
+    // Render all non-oneof-parent messages
+    {
+        let mut seen_names: HashSet<&str> = HashSet::new();
 
-    for t in &schema.types {
-        if oneof_parents.contains(t.name.as_str()) {
-            continue;
+        for t in &schema.types {
+            // Do not render oneof parent messages here, they are rendered separately below and we want to avoid duplicates.
+            if oneof_parents.contains(t.name.as_str()) {
+                continue;
+            }
+
+            // Skip if we've already rendered a message with the same name (can happen with DefinedType/Instruction name collisions in the IR).
+            if !seen_names.insert(t.name.as_str()) {
+                continue;
+            }
+
+            render_type(&mut out, t);
+
+            message_count += 1;
         }
-
-        if !seen_names.insert(t.name.as_str()) {
-            continue;
-        }
-
-        render_type(&mut out, t);
-
-        message_count += 1;
     }
 
-    // Account dispatch message: {ProgramName}Account { oneof account { ... } }
-    // Only rendered when the program has at least one account type.
     let account_types: Vec<&TypeIr> = schema
         .types
         .iter()
@@ -76,13 +79,12 @@ pub fn proto_schema_string(
         let idx = message_count;
 
         render_account_dispatch(&mut out, program_name, &account_types);
+
         message_count += 1;
 
         Some(idx)
     };
 
-    // Oneof parent types (enum oneofs + instruction dispatch).
-    // Skip oneofs with no variants (empty oneof is invalid proto).
     let mut instruction_dispatch_index = None;
 
     for oneof in &schema.oneofs {
@@ -98,8 +100,6 @@ pub fn proto_schema_string(
 
         message_count += 1;
     }
-
-    let _ = message_count;
 
     ProtoSchemaOutput {
         schema: out,
@@ -158,11 +158,11 @@ fn render_account_dispatch(out: &mut String, program_name: &str, account_types: 
     writeln!(out, "message {} {{", message_name).unwrap();
     writeln!(out, "  oneof account {{").unwrap();
 
-    for (i, acct) in account_types.iter().enumerate() {
+    for (i, account) in account_types.iter().enumerate() {
         let tag = i + 1;
-        let field_name = crate::utils::to_snake_case(&acct.name);
+        let field_name = crate::utils::to_snake_case(&account.name);
 
-        writeln!(out, "    {} {} = {};", acct.name, field_name, tag).unwrap();
+        writeln!(out, "    {} {} = {};", account.name, field_name, tag).unwrap();
     }
 
     writeln!(out, "  }}").unwrap();

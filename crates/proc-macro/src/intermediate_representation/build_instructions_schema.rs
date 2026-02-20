@@ -98,22 +98,20 @@ use crate::intermediate_representation::{
 ///
 /// This allows a single protobuf message to represent any instruction.
 ///
-pub fn build_instructions_schema(
-    program_name: &str,
-    instructions: &[InstructionNode],
-    ir: &mut SchemaIr,
-) {
+pub fn build_instructions_schema(instructions: &[InstructionNode], ir: &mut SchemaIr) {
     for ix in instructions {
         build_instruction_messages(ix, ir);
     }
 
-    build_instruction_dispatch_oneof(program_name, instructions, ir);
+    build_instruction_dispatch_oneof(instructions, ir);
 }
 
+///
 /// Build the three messages for a single instruction:
 ///   - `<IxName>Accounts`  — one PubkeyBytes field per account
 ///   - `<IxName>Args`      — instruction arguments (delegates to `build_fields_ir`)
 ///   - `<IxName>`          — wrapper with optional accounts + args
+///
 fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
     let ix_name = crate::utils::to_pascal_case(&ix.name);
 
@@ -172,14 +170,11 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
     });
 }
 
+///
 /// Build the `Instructions` message with a `oneof instruction { ... }` that dispatches
-/// to each individual `<IxName>` payload.
-fn build_instruction_dispatch_oneof(
-    program_name: &str,
-    instructions: &[InstructionNode],
-    ir: &mut SchemaIr,
-) {
-    let _ = program_name;
+/// to each individual `<InstructionName>` payload.
+///
+fn build_instruction_dispatch_oneof(instructions: &[InstructionNode], ir: &mut SchemaIr) {
     let parent_name = "Instructions".to_string();
 
     let variants: Vec<OneofVariantIr> = instructions
