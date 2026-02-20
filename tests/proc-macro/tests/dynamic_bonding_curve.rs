@@ -1,6 +1,5 @@
 mod common;
 
-use insta;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 include_vixen_parser!("idls/dynamic_bonding_curve.json");

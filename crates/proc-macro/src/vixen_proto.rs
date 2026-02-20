@@ -541,10 +541,10 @@ fn last_segment(ty: &Type) -> Option<&PathSegment> {
 }
 
 fn unwrap_generic_arg(seg: &PathSegment) -> Option<&Type> {
-    if let PathArguments::AngleBracketed(ref args) = seg.arguments {
-        if let Some(GenericArgument::Type(ty)) = args.args.first() {
-            return Some(ty);
-        }
+    if let PathArguments::AngleBracketed(ref args) = seg.arguments
+        && let Some(GenericArgument::Type(ty)) = args.args.first()
+    {
+        return Some(ty);
     }
 
     None

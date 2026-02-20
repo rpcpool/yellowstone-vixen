@@ -1,6 +1,5 @@
 mod common;
 
-use insta;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
 // This IDL have non-even length hex strings for discriminators, which caused `hex::decode` to fail before we added padding logic. This test ensures that the padding logic works correctly.

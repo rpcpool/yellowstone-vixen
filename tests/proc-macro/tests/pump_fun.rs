@@ -1,6 +1,5 @@
 mod common;
 
-use insta;
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;

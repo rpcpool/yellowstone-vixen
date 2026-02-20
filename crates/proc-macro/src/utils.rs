@@ -1,7 +1,7 @@
 /// Left-pad a hex string with a leading zero if it has an odd number of characters.
 /// `hex::decode` requires even-length input (each byte = 2 hex chars).
 pub fn pad_hex(hex: &str) -> String {
-    if hex.len() % 2 == 0 {
+    if hex.len().is_multiple_of(2) {
         hex.to_string()
     } else {
         format!("0{hex}")
