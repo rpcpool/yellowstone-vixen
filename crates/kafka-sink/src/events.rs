@@ -13,10 +13,6 @@ pub struct DecodedInstructionEvent {
     pub ix_index: String,
     /// Program name (e.g., "spl-token").
     pub program: String,
-    /// Discriminant/variant identifier.
-    pub instruction_type: String,
-    /// Human-readable instruction name (e.g., "TransferChecked").
-    pub instruction_name: String,
     /// Full instruction data (debug format).
     pub data: String,
 }
@@ -67,8 +63,6 @@ pub struct PreparedRecord {
     pub key: String,
     /// Kafka headers for metadata (readable without decoding payload).
     pub headers: Vec<RecordHeader>,
-    /// Label for logging (instruction name or program id).
-    pub label: String,
     /// Whether this is a decoded record (true) or fallback/unknown (false).
     pub is_decoded: bool,
     /// Whether this record is an instruction or account record.
