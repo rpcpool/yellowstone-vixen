@@ -8,6 +8,7 @@ repository = "https://github.com/rpcpool/yellowstone-vixen"
 
 [dependencies]
 anyhow = "1.0"
+bs58 = { workspace = true }
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 tracing = { workspace = true }

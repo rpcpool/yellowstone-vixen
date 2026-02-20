@@ -28,7 +28,6 @@ tokio = { workspace = true, features = ["rt-multi-thread", "signal"] }
 topograph = { workspace = true, features = ["tokio"] }
 tracing = { workspace = true }
 yellowstone-grpc-client = { workspace = true }
-yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-yellowstone-grpc-source = { workspace = true }

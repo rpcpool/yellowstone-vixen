@@ -3637,6 +3637,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "insta"
+version = "1.46.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e82db8c87c7f1ccecb34ce0c24399b8a73081427f3c7c50a5d597925356115e4"
+dependencies = [
+ "console 0.15.11",
+ "once_cell",
+ "similar",
+ "tempfile",
+]
+
+[[package]]
 name = "instant"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5185,6 +5197,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc-macro-test"
+version = "0.7.0-alpha.0"
+dependencies = [
+ "borsh 1.6.0",
+ "insta",
+ "prost 0.14.1",
+ "regex",
+ "tokio",
+ "yellowstone-vixen",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-mock",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6631,6 +6659,12 @@ name = "simd-adler32"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
+
+[[package]]
+name = "similar"
+version = "2.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbbb5d9659141646ae647b42fe094daf6c6192d1620870b449d9557f748b2daa"
 
 [[package]]
 name = "simpl"
@@ -13724,7 +13758,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -13745,7 +13779,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-block-coordinator"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "async-trait",
  "bs58",
@@ -13769,21 +13803,26 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-block-meta-parser"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "tokio",
  "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
+ "yellowstone-vixen-proc-macro",
 ]
 
 [[package]]
 name = "yellowstone-vixen-core"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
  "clap 4.5.53",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "serde",
  "thiserror 1.0.69",
  "yellowstone-grpc-proto",
@@ -13828,11 +13867,15 @@ name = "yellowstone-vixen-example-idl-parser"
 version = "0.0.0"
 dependencies = [
  "borsh 1.6.0",
+ "bs58",
  "clap 4.5.53",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "rustls 0.23.35",
  "toml 0.8.23",
  "tracing",
  "yellowstone-vixen",
+ "yellowstone-vixen-core",
  "yellowstone-vixen-parser",
  "yellowstone-vixen-proc-macro",
  "yellowstone-vixen-yellowstone-grpc-source",
@@ -13843,6 +13886,7 @@ name = "yellowstone-vixen-example-jetstreamer"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "bs58",
  "clap 4.5.53",
  "tokio",
  "tracing",
@@ -13897,7 +13941,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-jetstream-source"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "async-trait",
  "bincode",
@@ -13927,7 +13971,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-kafka-sink"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "futures 0.3.31",
  "prost 0.14.1",
@@ -13944,7 +13988,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-mock"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "futures 0.3.31",
  "regex",
@@ -13960,7 +14004,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-parser"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "bs58",
  "solana-program-option 3.0.0",
@@ -13974,7 +14018,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proc-macro"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "base64 0.22.1",
  "bs58",
@@ -13990,7 +14034,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-proto"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
@@ -14003,7 +14047,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-slot-parser"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "tokio",
  "yellowstone-vixen-core",
@@ -14012,7 +14056,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-rpc-source"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -14030,7 +14074,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-solana-snapshot-source"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "agave-snapshots",
  "async-trait",
@@ -14057,10 +14101,13 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-spl-token-extensions-parser"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
+ "borsh 1.6.0",
  "bs58",
  "bytemuck",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "solana-program-error 3.0.0",
  "solana-program-pack 3.0.0",
  "spl-pod 0.7.1",
@@ -14070,19 +14117,22 @@ dependencies = [
  "spl-type-length-value 0.9.0",
  "thiserror 1.0.69",
  "tokio",
- "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
+ "yellowstone-vixen-proto",
  "yellowstone-vixen-spl-token-parser",
 ]
 
 [[package]]
 name = "yellowstone-vixen-spl-token-parser"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "bs58",
  "bytemuck",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "solana-program-error 3.0.0",
  "spl-pod 0.7.1",
  "spl-token 9.0.0",
@@ -14091,33 +14141,35 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tracing",
- "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
  "yellowstone-vixen-proto",
 ]
 
 [[package]]
 name = "yellowstone-vixen-stake-pool-parser"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "borsh 1.6.0",
  "bs58",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
  "spl-pod 0.7.1",
  "spl-stake-pool",
  "thiserror 1.0.69",
  "tokio",
- "yellowstone-grpc-proto",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
  "yellowstone-vixen-proto",
 ]
 
 [[package]]
 name = "yellowstone-vixen-stream"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",
@@ -14133,7 +14185,6 @@ dependencies = [
  "topograph",
  "tracing",
  "yellowstone-grpc-client",
- "yellowstone-grpc-proto",
  "yellowstone-vixen",
  "yellowstone-vixen-core",
  "yellowstone-vixen-proto",
@@ -14142,7 +14193,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-fumarole-source"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "async-trait",
  "bytesize 2.3.1",
@@ -14161,7 +14212,7 @@ dependencies = [
 
 [[package]]
 name = "yellowstone-vixen-yellowstone-grpc-source"
-version = "0.6.0-alpha.0"
+version = "0.7.0-alpha.0"
 dependencies = [
  "async-trait",
  "clap 4.5.53",

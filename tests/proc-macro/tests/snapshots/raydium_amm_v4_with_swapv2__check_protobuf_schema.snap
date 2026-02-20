@@ -1,0 +1,661 @@
+---
+source: tests/proc-macro/tests/raydium_amm_v4_with_swapv2.rs
+expression: "raydium_amm::PROTOBUF_SCHEMA"
+---
+syntax = "proto3";
+
+package raydium_amm;
+
+message WithdrawDestToken {
+  uint64 withdraw_amount = 1;
+  uint64 coin_amount = 2;
+  uint64 pc_amount = 3;
+  bytes dest_token_coin = 4;
+  bytes dest_token_pc = 5;
+}
+    
+message WithdrawQueue {
+  repeated uint64 owner = 1;
+  uint64 head = 2;
+  uint64 count = 3;
+  repeated WithdrawDestToken buf = 4;
+}
+    
+message TargetOrder {
+  uint64 price = 1;
+  uint64 vol = 2;
+}
+    
+message OutPutData {
+  uint64 need_take_pnl_coin = 1;
+  uint64 need_take_pnl_pc = 2;
+  uint64 total_pnl_pc = 3;
+  uint64 total_pnl_coin = 4;
+  uint64 pool_open_time = 5;
+  uint64 punish_pc_amount = 6;
+  uint64 punish_coin_amount = 7;
+  uint64 orderbook_to_init_time = 8;
+  bytes swap_coin_in_amount = 9;
+  bytes swap_pc_out_amount = 10;
+  uint64 swap_take_pc_fee = 11;
+  bytes swap_pc_in_amount = 12;
+  bytes swap_coin_out_amount = 13;
+  uint64 swap_take_coin_fee = 14;
+}
+    
+message AmmConfig {
+  bytes pnl_owner = 1;
+  bytes cancel_owner = 2;
+  repeated uint64 pending1 = 3;
+  repeated uint64 pending2 = 4;
+}
+    
+message LastOrderDistance {
+  uint64 last_order_numerator = 1;
+  uint64 last_order_denominator = 2;
+}
+    
+message NeedTake {
+  uint64 need_take_pc = 1;
+  uint64 need_take_coin = 2;
+}
+    
+message SwapInstructionBaseIn {
+  uint64 amount_in = 1;
+  uint64 minimum_amount_out = 2;
+}
+    
+message SwapInstructionBaseOut {
+  uint64 max_amount_in = 1;
+  uint64 amount_out = 2;
+}
+    
+message TargetOrders {
+  repeated uint64 owner = 1;
+  repeated TargetOrder buy_orders = 2;
+  repeated uint64 padding1 = 3;
+  bytes target_x = 4;
+  bytes target_y = 5;
+  bytes plan_x_buy = 6;
+  bytes plan_y_buy = 7;
+  bytes plan_x_sell = 8;
+  bytes plan_y_sell = 9;
+  bytes placed_x = 10;
+  bytes placed_y = 11;
+  bytes calc_pnl_x = 12;
+  bytes calc_pnl_y = 13;
+  repeated TargetOrder sell_orders = 14;
+  repeated uint64 padding2 = 15;
+  repeated uint64 replace_buy_client_id = 16;
+  repeated uint64 replace_sell_client_id = 17;
+  uint64 last_order_numerator = 18;
+  uint64 last_order_denominator = 19;
+  uint64 plan_orders_cur = 20;
+  uint64 place_orders_cur = 21;
+  uint64 valid_buy_order_num = 22;
+  uint64 valid_sell_order_num = 23;
+  repeated uint64 padding3 = 24;
+  bytes free_slot_bits = 25;
+}
+    
+message Fees {
+  uint64 min_separate_numerator = 1;
+  uint64 min_separate_denominator = 2;
+  uint64 trade_fee_numerator = 3;
+  uint64 trade_fee_denominator = 4;
+  uint64 pnl_numerator = 5;
+  uint64 pnl_denominator = 6;
+  uint64 swap_fee_numerator = 7;
+  uint64 swap_fee_denominator = 8;
+}
+    
+message AmmInfo {
+  uint64 status = 1;
+  uint64 nonce = 2;
+  uint64 order_num = 3;
+  uint64 depth = 4;
+  uint64 coin_decimals = 5;
+  uint64 pc_decimals = 6;
+  uint64 state = 7;
+  uint64 reset_flag = 8;
+  uint64 min_size = 9;
+  uint64 vol_max_cut_ratio = 10;
+  uint64 amount_wave = 11;
+  uint64 coin_lot_size = 12;
+  uint64 pc_lot_size = 13;
+  uint64 min_price_multiplier = 14;
+  uint64 max_price_multiplier = 15;
+  uint64 sys_decimal_value = 16;
+  Fees fees = 17;
+  OutPutData out_put = 18;
+  bytes token_coin = 19;
+  bytes token_pc = 20;
+  bytes coin_mint = 21;
+  bytes pc_mint = 22;
+  bytes lp_mint = 23;
+  bytes open_orders = 24;
+  bytes market = 25;
+  bytes serum_dex = 26;
+  bytes target_orders = 27;
+  bytes withdraw_queue = 28;
+  bytes token_temp_lp = 29;
+  bytes amm_owner = 30;
+  uint64 lp_amount = 31;
+  uint64 client_order_id = 32;
+  repeated uint64 padding = 33;
+}
+    
+message InitializeAccounts {
+  bytes token_program = 1;
+  bytes system_program = 2;
+  bytes rent = 3;
+  bytes amm = 4;
+  bytes amm_authority = 5;
+  bytes amm_open_orders = 6;
+  bytes lp_mint_address = 7;
+  bytes coin_mint_address = 8;
+  bytes pc_mint_address = 9;
+  bytes pool_coin_token_account = 10;
+  bytes pool_pc_token_account = 11;
+  bytes pool_withdraw_queue = 12;
+  bytes pool_target_orders_account = 13;
+  bytes user_lp_token_account = 14;
+  bytes pool_temp_lp_token_account = 15;
+  bytes serum_program = 16;
+  bytes serum_market = 17;
+  bytes user_wallet = 18;
+}
+    
+message InitializeArgs {
+  uint32 nonce = 1;
+  uint64 open_time = 2;
+}
+    
+message Initialize {
+  optional InitializeAccounts accounts = 1;
+  optional InitializeArgs args = 2;
+}
+    
+message Initialize2Accounts {
+  bytes token_program = 1;
+  bytes spl_associated_token_account = 2;
+  bytes system_program = 3;
+  bytes rent = 4;
+  bytes amm = 5;
+  bytes amm_authority = 6;
+  bytes amm_open_orders = 7;
+  bytes lp_mint = 8;
+  bytes coin_mint = 9;
+  bytes pc_mint = 10;
+  bytes pool_coin_token_account = 11;
+  bytes pool_pc_token_account = 12;
+  bytes pool_withdraw_queue = 13;
+  bytes amm_target_orders = 14;
+  bytes pool_temp_lp = 15;
+  bytes serum_program = 16;
+  bytes serum_market = 17;
+  bytes user_wallet = 18;
+  bytes user_token_coin = 19;
+  bytes user_token_pc = 20;
+  bytes user_lp_token_account = 21;
+}
+    
+message Initialize2Args {
+  uint32 nonce = 1;
+  uint64 open_time = 2;
+  uint64 init_pc_amount = 3;
+  uint64 init_coin_amount = 4;
+}
+    
+message Initialize2 {
+  optional Initialize2Accounts accounts = 1;
+  optional Initialize2Args args = 2;
+}
+    
+message MonitorStepAccounts {
+  bytes token_program = 1;
+  bytes rent = 2;
+  bytes clock = 3;
+  bytes amm = 4;
+  bytes amm_authority = 5;
+  bytes amm_open_orders = 6;
+  bytes amm_target_orders = 7;
+  bytes pool_coin_token_account = 8;
+  bytes pool_pc_token_account = 9;
+  bytes pool_withdraw_queue = 10;
+  bytes serum_program = 11;
+  bytes serum_market = 12;
+  bytes serum_coin_vault_account = 13;
+  bytes serum_pc_vault_account = 14;
+  bytes serum_vault_signer = 15;
+  bytes serum_req_q = 16;
+  bytes serum_event_q = 17;
+  bytes serum_bids = 18;
+  bytes serum_asks = 19;
+}
+    
+message MonitorStepArgs {
+  uint32 plan_order_limit = 1;
+  uint32 place_order_limit = 2;
+  uint32 cancel_order_limit = 3;
+}
+    
+message MonitorStep {
+  optional MonitorStepAccounts accounts = 1;
+  optional MonitorStepArgs args = 2;
+}
+    
+message DepositAccounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_authority = 3;
+  bytes amm_open_orders = 4;
+  bytes amm_target_orders = 5;
+  bytes lp_mint_address = 6;
+  bytes pool_coin_token_account = 7;
+  bytes pool_pc_token_account = 8;
+  bytes serum_market = 9;
+  bytes user_coin_token_account = 10;
+  bytes user_pc_token_account = 11;
+  bytes user_lp_token_account = 12;
+  bytes user_owner = 13;
+  bytes serum_event_queue = 14;
+}
+    
+message DepositArgs {
+  uint64 max_coin_amount = 1;
+  uint64 max_pc_amount = 2;
+  uint64 base_side = 3;
+}
+    
+message Deposit {
+  optional DepositAccounts accounts = 1;
+  optional DepositArgs args = 2;
+}
+    
+message WithdrawAccounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_authority = 3;
+  bytes amm_open_orders = 4;
+  bytes amm_target_orders = 5;
+  bytes lp_mint_address = 6;
+  bytes pool_coin_token_account = 7;
+  bytes pool_pc_token_account = 8;
+  bytes pool_withdraw_queue = 9;
+  bytes pool_temp_lp_token_account = 10;
+  bytes serum_program = 11;
+  bytes serum_market = 12;
+  bytes serum_coin_vault_account = 13;
+  bytes serum_pc_vault_account = 14;
+  bytes serum_vault_signer = 15;
+  bytes user_lp_token_account = 16;
+  bytes user_coin_token_account = 17;
+  bytes user_pc_token_account = 18;
+  bytes user_owner = 19;
+  bytes serum_event_q = 20;
+  bytes serum_bids = 21;
+  bytes serum_asks = 22;
+}
+    
+message WithdrawArgs {
+  uint64 amount = 1;
+}
+    
+message Withdraw {
+  optional WithdrawAccounts accounts = 1;
+  optional WithdrawArgs args = 2;
+}
+    
+message MigrateToOpenBookAccounts {
+  bytes token_program = 1;
+  bytes system_program = 2;
+  bytes rent = 3;
+  bytes amm = 4;
+  bytes amm_authority = 5;
+  bytes amm_open_orders = 6;
+  bytes amm_token_coin = 7;
+  bytes amm_token_pc = 8;
+  bytes amm_target_orders = 9;
+  bytes serum_program = 10;
+  bytes serum_market = 11;
+  bytes serum_bids = 12;
+  bytes serum_asks = 13;
+  bytes serum_event_queue = 14;
+  bytes serum_coin_vault = 15;
+  bytes serum_pc_vault = 16;
+  bytes serum_vault_signer = 17;
+  bytes new_amm_open_orders = 18;
+  bytes new_serum_program = 19;
+  bytes new_serum_market = 20;
+  bytes admin = 21;
+}
+    
+message MigrateToOpenBookArgs {
+}
+    
+message MigrateToOpenBook {
+  optional MigrateToOpenBookAccounts accounts = 1;
+  optional MigrateToOpenBookArgs args = 2;
+}
+    
+message SetParamsAccounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_authority = 3;
+  bytes amm_open_orders = 4;
+  bytes amm_target_orders = 5;
+  bytes amm_coin_vault = 6;
+  bytes amm_pc_vault = 7;
+  bytes serum_program = 8;
+  bytes serum_market = 9;
+  bytes serum_coin_vault = 10;
+  bytes serum_pc_vault = 11;
+  bytes serum_vault_signer = 12;
+  bytes serum_event_queue = 13;
+  bytes serum_bids = 14;
+  bytes serum_asks = 15;
+  bytes amm_admin_account = 16;
+}
+    
+message SetParamsArgs {
+  uint32 param = 1;
+  optional uint64 value = 2;
+  optional bytes new_pubkey = 3;
+  optional Fees fees = 4;
+  optional LastOrderDistance last_order_distance = 5;
+  optional NeedTake need_take_amounts = 6;
+}
+    
+message SetParams {
+  optional SetParamsAccounts accounts = 1;
+  optional SetParamsArgs args = 2;
+}
+    
+message WithdrawPnlAccounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_config = 3;
+  bytes amm_authority = 4;
+  bytes amm_open_orders = 5;
+  bytes pool_coin_token_account = 6;
+  bytes pool_pc_token_account = 7;
+  bytes coin_pnl_token_account = 8;
+  bytes pc_pnl_token_account = 9;
+  bytes pnl_owner_account = 10;
+  bytes amm_target_orders = 11;
+  bytes serum_program = 12;
+  bytes serum_market = 13;
+  bytes serum_event_queue = 14;
+  bytes serum_coin_vault_account = 15;
+  bytes serum_pc_vault_account = 16;
+  bytes serum_vault_signer = 17;
+}
+    
+message WithdrawPnlArgs {
+}
+    
+message WithdrawPnl {
+  optional WithdrawPnlAccounts accounts = 1;
+  optional WithdrawPnlArgs args = 2;
+}
+    
+message WithdrawSrmAccounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_owner_account = 3;
+  bytes amm_authority = 4;
+  bytes srm_token = 5;
+  bytes dest_srm_token = 6;
+}
+    
+message WithdrawSrmArgs {
+  uint64 amount = 1;
+}
+    
+message WithdrawSrm {
+  optional WithdrawSrmAccounts accounts = 1;
+  optional WithdrawSrmArgs args = 2;
+}
+    
+message SwapBaseInAccounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_authority = 3;
+  bytes amm_open_orders = 4;
+  bytes amm_target_orders_deprecated = 5;
+  bytes pool_coin_token_account = 6;
+  bytes pool_pc_token_account = 7;
+  bytes serum_program = 8;
+  bytes serum_market = 9;
+  bytes serum_bids = 10;
+  bytes serum_asks = 11;
+  bytes serum_event_queue = 12;
+  bytes serum_coin_vault_account = 13;
+  bytes serum_pc_vault_account = 14;
+  bytes serum_vault_signer = 15;
+  bytes user_source_token_account = 16;
+  bytes user_destination_token_account = 17;
+  bytes user_source_owner = 18;
+}
+    
+message SwapBaseInArgs {
+  uint64 amount_in = 1;
+  uint64 minimum_amount_out = 2;
+}
+    
+message SwapBaseIn {
+  optional SwapBaseInAccounts accounts = 1;
+  optional SwapBaseInArgs args = 2;
+}
+    
+message PreInitializeAccounts {
+  bytes token_program = 1;
+  bytes system_program = 2;
+  bytes rent = 3;
+  bytes amm_target_orders = 4;
+  bytes pool_withdraw_queue = 5;
+  bytes amm_authority = 6;
+  bytes lp_mint_address = 7;
+  bytes coin_mint_address = 8;
+  bytes pc_mint_address = 9;
+  bytes pool_coin_token_account = 10;
+  bytes pool_pc_token_account = 11;
+  bytes pool_temp_lp_token_account = 12;
+  bytes serum_market = 13;
+  bytes user_wallet = 14;
+}
+    
+message PreInitializeArgs {
+  uint32 nonce = 1;
+}
+    
+message PreInitialize {
+  optional PreInitializeAccounts accounts = 1;
+  optional PreInitializeArgs args = 2;
+}
+    
+message SwapBaseOutAccounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_authority = 3;
+  bytes amm_open_orders = 4;
+  bytes amm_target_orders = 5;
+  bytes pool_coin_token_account = 6;
+  bytes pool_pc_token_account = 7;
+  bytes serum_program = 8;
+  bytes serum_market = 9;
+  bytes serum_bids = 10;
+  bytes serum_asks = 11;
+  bytes serum_event_queue = 12;
+  bytes serum_coin_vault_account = 13;
+  bytes serum_pc_vault_account = 14;
+  bytes serum_vault_signer = 15;
+  bytes user_source_token_account = 16;
+  bytes user_destination_token_account = 17;
+  bytes user_source_owner = 18;
+}
+    
+message SwapBaseOutArgs {
+  uint64 max_amount_in = 1;
+  uint64 amount_out = 2;
+}
+    
+message SwapBaseOut {
+  optional SwapBaseOutAccounts accounts = 1;
+  optional SwapBaseOutArgs args = 2;
+}
+    
+message SimulateInfoAccounts {
+  bytes amm = 1;
+  bytes amm_authority = 2;
+  bytes amm_open_orders = 3;
+  bytes pool_coin_token_account = 4;
+  bytes pool_pc_token_account = 5;
+  bytes lp_mint_address = 6;
+  bytes serum_market = 7;
+  bytes serum_event_queue = 8;
+}
+    
+message SimulateInfoArgs {
+  uint32 param = 1;
+  optional SwapInstructionBaseIn swap_base_in_value = 2;
+  optional SwapInstructionBaseOut swap_base_out_value = 3;
+}
+    
+message SimulateInfo {
+  optional SimulateInfoAccounts accounts = 1;
+  optional SimulateInfoArgs args = 2;
+}
+    
+message AdminCancelOrdersAccounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_authority = 3;
+  bytes amm_open_orders = 4;
+  bytes amm_target_orders = 5;
+  bytes pool_coin_token_account = 6;
+  bytes pool_pc_token_account = 7;
+  bytes amm_owner_account = 8;
+  bytes amm_config = 9;
+  bytes serum_program = 10;
+  bytes serum_market = 11;
+  bytes serum_coin_vault_account = 12;
+  bytes serum_pc_vault_account = 13;
+  bytes serum_vault_signer = 14;
+  bytes serum_event_q = 15;
+  bytes serum_bids = 16;
+  bytes serum_asks = 17;
+}
+    
+message AdminCancelOrdersArgs {
+  uint32 limit = 1;
+}
+    
+message AdminCancelOrders {
+  optional AdminCancelOrdersAccounts accounts = 1;
+  optional AdminCancelOrdersArgs args = 2;
+}
+    
+message CreateConfigAccountAccounts {
+  bytes admin = 1;
+  bytes amm_config = 2;
+  bytes owner = 3;
+  bytes system_program = 4;
+  bytes rent = 5;
+}
+    
+message CreateConfigAccountArgs {
+}
+    
+message CreateConfigAccount {
+  optional CreateConfigAccountAccounts accounts = 1;
+  optional CreateConfigAccountArgs args = 2;
+}
+    
+message UpdateConfigAccountAccounts {
+  bytes admin = 1;
+  bytes amm_config = 2;
+}
+    
+message UpdateConfigAccountArgs {
+  uint32 param = 1;
+  bytes owner = 2;
+}
+    
+message UpdateConfigAccount {
+  optional UpdateConfigAccountAccounts accounts = 1;
+  optional UpdateConfigAccountArgs args = 2;
+}
+    
+message SwapBaseInV2Accounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_authority = 3;
+  bytes amm_coin_vault = 4;
+  bytes amm_pc_vault = 5;
+  bytes user_source_token_account = 6;
+  bytes user_destination_token_account = 7;
+  bytes user_wallet_account = 8;
+}
+    
+message SwapBaseInV2Args {
+  uint64 amount_in = 1;
+  uint64 minimum_amount_out = 2;
+}
+    
+message SwapBaseInV2 {
+  optional SwapBaseInV2Accounts accounts = 1;
+  optional SwapBaseInV2Args args = 2;
+}
+    
+message SwapBaseOutV2Accounts {
+  bytes token_program = 1;
+  bytes amm = 2;
+  bytes amm_authority = 3;
+  bytes amm_coin_vault = 4;
+  bytes amm_pc_vault = 5;
+  bytes user_source_token_account = 6;
+  bytes user_destination_token_account = 7;
+  bytes user_wallet_account = 8;
+}
+    
+message SwapBaseOutV2Args {
+  uint64 max_amount_in = 1;
+  uint64 amount_out = 2;
+}
+    
+message SwapBaseOutV2 {
+  optional SwapBaseOutV2Accounts accounts = 1;
+  optional SwapBaseOutV2Args args = 2;
+}
+    
+message RaydiumAmmAccount {
+  oneof account {
+    TargetOrders target_orders = 1;
+    Fees fees = 2;
+    AmmInfo amm_info = 3;
+  }
+}
+message Instructions {
+  oneof instruction {
+    Initialize initialize = 1;
+    Initialize2 initialize2 = 2;
+    MonitorStep monitor_step = 3;
+    Deposit deposit = 4;
+    Withdraw withdraw = 5;
+    MigrateToOpenBook migrate_to_open_book = 6;
+    SetParams set_params = 7;
+    WithdrawPnl withdraw_pnl = 8;
+    WithdrawSrm withdraw_srm = 9;
+    SwapBaseIn swap_base_in = 10;
+    PreInitialize pre_initialize = 11;
+    SwapBaseOut swap_base_out = 12;
+    SimulateInfo simulate_info = 13;
+    AdminCancelOrders admin_cancel_orders = 14;
+    CreateConfigAccount create_config_account = 15;
+    UpdateConfigAccount update_config_account = 16;
+    SwapBaseInV2 swap_base_in_v2 = 17;
+    SwapBaseOutV2 swap_base_out_v2 = 18;
+  }
+}

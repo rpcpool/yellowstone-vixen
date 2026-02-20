@@ -1,131 +1,216 @@
-use spl_token_metadata_interface::instruction::{
-    Emit, Initialize, RemoveKey, TokenMetadataInstruction as SplTokenMetadataInstruction,
-    UpdateAuthority, UpdateField,
-};
-use yellowstone_vixen_core::{instruction::InstructionUpdate, Pubkey};
+use spl_token_metadata_interface::instruction::TokenMetadataInstruction as SplTokenMetadataInstruction;
+use yellowstone_vixen_core::instruction::InstructionUpdate;
 use yellowstone_vixen_parser::{check_min_accounts_req, Result, ResultExt};
+use yellowstone_vixen_proc_macro::vixen_proto;
 
 use super::extension::ExtensionInstructionParser;
+use crate::PubkeyBytes;
 
-#[derive(Debug, Clone, Copy)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct InitializeAccounts {
-    pub metadata: Pubkey,
-    pub update_authority: Pubkey,
-    pub mint: Pubkey,
-    pub mint_authority: Pubkey,
+    pub metadata: PubkeyBytes,
+    pub update_authority: PubkeyBytes,
+    pub mint: PubkeyBytes,
+    pub mint_authority: PubkeyBytes,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct UpdateFieldAccounts {
-    pub metadata: Pubkey,
-    pub update_authority: Pubkey,
+    pub metadata: PubkeyBytes,
+    pub update_authority: PubkeyBytes,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct RmoveKeyAccounts {
-    pub metadata: Pubkey,
-    pub update_authority: Pubkey,
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
+pub struct RemoveKeyAccounts {
+    pub metadata: PubkeyBytes,
+    pub update_authority: PubkeyBytes,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct UpdateAuthorityAccounts {
-    pub metadata: Pubkey,
-    pub current_update_authority: Pubkey,
+    pub metadata: PubkeyBytes,
+    pub current_update_authority: PubkeyBytes,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
 pub struct EmitAccounts {
-    pub metadata: Pubkey,
+    pub metadata: PubkeyBytes,
 }
 
-#[derive(Debug, Clone)]
-pub enum TokenMetadataInstruction {
-    Initialize {
-        accounts: InitializeAccounts,
-        args: Initialize,
-    },
-    UpdateField {
-        accounts: UpdateFieldAccounts,
-        args: UpdateField,
-    },
-    RemoveKey {
-        accounts: RmoveKeyAccounts,
-        args: RemoveKey,
-    },
-    UpdateAuthority {
-        accounts: UpdateAuthorityAccounts,
-        args: UpdateAuthority,
-    },
-    Emit {
-        accounts: EmitAccounts,
-        args: Emit,
-    },
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
+pub struct InitializeArgs {
+    pub raw: Vec<u8>,
 }
 
-impl ExtensionInstructionParser for TokenMetadataInstruction {
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
+pub struct UpdateFieldArgs {
+    pub raw: Vec<u8>,
+}
+
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
+pub struct RemoveKeyArgs {
+    pub raw: Vec<u8>,
+}
+
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
+pub struct UpdateAuthorityArgs {
+    pub raw: Vec<u8>,
+}
+
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
+pub struct EmitArgs {
+    pub raw: Vec<u8>,
+}
+
+#[vixen_proto]
+#[derive(Clone, PartialEq)]
+pub struct TokenMetadataIx {
+    #[vixen_proto_hint(
+        oneof = "token_metadata_instruction::Instruction",
+        tags = "1, 2, 3, 4, 5"
+    )]
+    pub instruction: Option<token_metadata_instruction::Instruction>,
+}
+
+pub mod token_metadata_instruction {
+    use super::vixen_proto;
+
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
+    pub struct Initialize {
+        pub accounts: Option<super::InitializeAccounts>,
+        pub args: Option<super::InitializeArgs>,
+    }
+
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
+    pub struct UpdateField {
+        pub accounts: Option<super::UpdateFieldAccounts>,
+        pub args: Option<super::UpdateFieldArgs>,
+    }
+
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
+    pub struct RemoveKey {
+        pub accounts: Option<super::RemoveKeyAccounts>,
+        pub args: Option<super::RemoveKeyArgs>,
+    }
+
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
+    pub struct UpdateAuthority {
+        pub accounts: Option<super::UpdateAuthorityAccounts>,
+        pub args: Option<super::UpdateAuthorityArgs>,
+    }
+
+    #[vixen_proto]
+    #[derive(Clone, PartialEq)]
+    pub struct Emit {
+        pub accounts: Option<super::EmitAccounts>,
+        pub args: Option<super::EmitArgs>,
+    }
+
+    #[vixen_proto(oneof)]
+    #[derive(Clone, PartialEq)]
+    pub enum Instruction {
+        Initialize(Initialize),
+        UpdateField(UpdateField),
+        RemoveKey(RemoveKey),
+        UpdateAuthority(UpdateAuthority),
+        Emit(Emit),
+    }
+}
+
+impl ExtensionInstructionParser for TokenMetadataIx {
     fn try_parse(ix: &InstructionUpdate) -> Result<Self> {
         let accounts_len = ix.accounts.len();
 
         let ix_type = SplTokenMetadataInstruction::unpack(&ix.data)
             .parse_err("Error unpacking token metadata instruction data")?;
 
-        match ix_type {
-            SplTokenMetadataInstruction::Initialize(args) => {
+        use token_metadata_instruction as oneof;
+
+        let msg = match ix_type {
+            SplTokenMetadataInstruction::Initialize(_args) => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                Ok(TokenMetadataInstruction::Initialize {
-                    accounts: InitializeAccounts {
-                        metadata: ix.accounts[0],
-                        update_authority: ix.accounts[1],
-                        mint: ix.accounts[2],
-                        mint_authority: ix.accounts[3],
-                    },
-                    args,
+                oneof::Instruction::Initialize(oneof::Initialize {
+                    accounts: Some(InitializeAccounts {
+                        metadata: ix.accounts[0].to_vec(),
+                        update_authority: ix.accounts[1].to_vec(),
+                        mint: ix.accounts[2].to_vec(),
+                        mint_authority: ix.accounts[3].to_vec(),
+                    }),
+                    args: Some(InitializeArgs {
+                        raw: ix.data.clone(),
+                    }),
                 })
             },
-            SplTokenMetadataInstruction::UpdateField(args) => {
+            SplTokenMetadataInstruction::UpdateField(_args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Ok(TokenMetadataInstruction::UpdateField {
-                    accounts: UpdateFieldAccounts {
-                        metadata: ix.accounts[0],
-                        update_authority: ix.accounts[1],
-                    },
-                    args,
+                oneof::Instruction::UpdateField(oneof::UpdateField {
+                    accounts: Some(UpdateFieldAccounts {
+                        metadata: ix.accounts[0].to_vec(),
+                        update_authority: ix.accounts[1].to_vec(),
+                    }),
+                    args: Some(UpdateFieldArgs {
+                        raw: ix.data.clone(),
+                    }),
                 })
             },
-            SplTokenMetadataInstruction::RemoveKey(args) => {
+            SplTokenMetadataInstruction::RemoveKey(_args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Ok(TokenMetadataInstruction::RemoveKey {
-                    accounts: RmoveKeyAccounts {
-                        metadata: ix.accounts[0],
-                        update_authority: ix.accounts[1],
-                    },
-                    args,
+                oneof::Instruction::RemoveKey(oneof::RemoveKey {
+                    accounts: Some(RemoveKeyAccounts {
+                        metadata: ix.accounts[0].to_vec(),
+                        update_authority: ix.accounts[1].to_vec(),
+                    }),
+                    args: Some(RemoveKeyArgs {
+                        raw: ix.data.clone(),
+                    }),
                 })
             },
-            SplTokenMetadataInstruction::UpdateAuthority(args) => {
+            SplTokenMetadataInstruction::UpdateAuthority(_args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                Ok(TokenMetadataInstruction::UpdateAuthority {
-                    accounts: UpdateAuthorityAccounts {
-                        metadata: ix.accounts[0],
-                        current_update_authority: ix.accounts[1],
-                    },
-                    args,
+                oneof::Instruction::UpdateAuthority(oneof::UpdateAuthority {
+                    accounts: Some(UpdateAuthorityAccounts {
+                        metadata: ix.accounts[0].to_vec(),
+                        current_update_authority: ix.accounts[1].to_vec(),
+                    }),
+                    args: Some(UpdateAuthorityArgs {
+                        raw: ix.data.clone(),
+                    }),
                 })
             },
-            SplTokenMetadataInstruction::Emit(args) => {
+            SplTokenMetadataInstruction::Emit(_args) => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                Ok(TokenMetadataInstruction::Emit {
-                    accounts: EmitAccounts {
-                        metadata: ix.accounts[0],
-                    },
-                    args,
+                oneof::Instruction::Emit(oneof::Emit {
+                    accounts: Some(EmitAccounts {
+                        metadata: ix.accounts[0].to_vec(),
+                    }),
+                    args: Some(EmitArgs {
+                        raw: ix.data.clone(),
+                    }),
                 })
             },
-        }
+        };
+
+        Ok(TokenMetadataIx {
+            instruction: Some(msg),
+        })
     }
 }

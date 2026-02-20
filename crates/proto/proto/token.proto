@@ -1,401 +1,383 @@
 syntax = "proto3";
 
-// import "solana-token/accounts.proto";
-// import "solana-token/ixs.proto";
-
 package vixen.parser.token;
 
-
-enum AccountStateProto {
-  Uninitialized = 0;
-  Initialized = 1;
-  Frozen = 2;
-}
-
-message TokenAccountProto {
-  string mint = 1;
-  string owner = 2;
-  uint64 amount = 3;
-  optional string delegate = 4;
-  AccountStateProto state = 5;
-  optional uint64 is_native = 6;
-  uint64 delegated_amount = 7;
-  optional string close_authority = 8;
-}
-
-message MintProto {
-  optional string mint_authority = 1;
-  uint64 supply = 2;
-  uint64 decimals = 4;
-  bool is_initialized = 5;
-  optional string freeze_authority = 6;
-}
-
-message MultisigProto {
-  uint64 m = 1;
-  uint64 n = 2;
-  bool is_initialized = 3;
-  repeated string signers = 4;
-}
-
-
-
-
-
 enum AuthorityType {
-  MINT_TOKEN = 0;
+  MINT_TOKENS = 0;
   FREEZE_ACCOUNT = 1;
   ACCOUNT_OWNER = 2;
   CLOSE_ACCOUNT = 3;
 }
 
-message TransferAccountsProto {
-  string source = 1;
-  string destination = 2;
-  string owner = 3;
-  repeated string multisig_signers = 4;
+// ── Account state ──────────────────────────────────────────────────
+
+message Mint {
+  optional bytes mint_authority = 1;
+  uint64 supply = 2;
+  uint32 decimals = 3;
+  bool is_initialized = 4;
+  optional bytes freeze_authority = 5;
 }
 
+message TokenAccount {
+  bytes mint = 1;
+  bytes owner = 2;
+  uint64 amount = 3;
+  optional bytes delegate = 4;
+  uint32 state = 5;
+  uint64 delegated_amount = 6;
+  optional uint64 is_native = 7;
+  optional bytes close_authority = 8;
+}
 
-message TransferDataProto {
+message Multisig {
+  uint32 m = 1;
+  uint32 n = 2;
+  bool is_initialized = 3;
+  repeated bytes signers = 4;
+}
+
+message TokenProgramState {
+  oneof state {
+    TokenAccount token_account = 1;
+    Mint mint = 2;
+    Multisig multisig = 3;
+  }
+}
+
+// ── Instruction accounts ───────────────────────────────────────────
+
+message TransferAccounts {
+  bytes source = 1;
+  bytes destination = 2;
+  bytes owner = 3;
+  repeated bytes multisig_signers = 4;
+}
+
+message InitializeMintAccounts {
+  bytes mint = 1;
+}
+
+message InitializeAccountAccounts {
+  bytes account = 1;
+  bytes mint = 2;
+  bytes owner = 3;
+}
+
+message InitializeAccount2Accounts {
+  bytes account = 1;
+  bytes mint = 2;
+}
+
+message InitializeMultisigAccounts {
+  bytes multisig = 1;
+  repeated bytes signers = 2;
+}
+
+message ApproveAccounts {
+  bytes source = 1;
+  bytes delegate = 2;
+  bytes owner = 3;
+  repeated bytes multisig_signers = 4;
+}
+
+message RevokeAccounts {
+  bytes source = 1;
+  bytes owner = 2;
+  repeated bytes multisig_signers = 3;
+}
+
+message SetAuthorityAccounts {
+  bytes current_authority = 1;
+  bytes account = 2;
+  repeated bytes multisig_signers = 3;
+}
+
+message MintToAccounts {
+  bytes mint = 1;
+  bytes account = 2;
+  bytes mint_authority = 3;
+  repeated bytes multisig_signers = 4;
+}
+
+message BurnAccounts {
+  bytes account = 1;
+  bytes mint = 2;
+  bytes owner = 3;
+  repeated bytes multisig_signers = 4;
+}
+
+message CloseAccountAccounts {
+  bytes account = 1;
+  bytes destination = 2;
+  bytes owner = 3;
+  repeated bytes multisig_signers = 4;
+}
+
+message FreezeAccountAccounts {
+  bytes account = 1;
+  bytes mint = 2;
+  bytes mint_freeze_authority = 3;
+  repeated bytes multisig_signers = 4;
+}
+
+message ThawAccountAccounts {
+  bytes account = 1;
+  bytes mint = 2;
+  bytes mint_freeze_authority = 3;
+  repeated bytes multisig_signers = 4;
+}
+
+message TransferCheckedAccounts {
+  bytes source = 1;
+  bytes mint = 2;
+  bytes destination = 3;
+  bytes owner = 4;
+  repeated bytes multisig_signers = 5;
+}
+
+message ApproveCheckedAccounts {
+  bytes source = 1;
+  bytes mint = 2;
+  bytes delegate = 3;
+  bytes owner = 4;
+  repeated bytes multisig_signers = 5;
+}
+
+message MintToCheckedAccounts {
+  bytes mint = 1;
+  bytes account = 2;
+  bytes mint_authority = 3;
+  repeated bytes multisig_signers = 4;
+}
+
+message BurnCheckedAccounts {
+  bytes account = 1;
+  bytes mint = 2;
+  bytes owner = 3;
+  repeated bytes multisig_signers = 4;
+}
+
+message SyncNativeAccounts {
+  bytes account = 1;
+}
+
+message GetAccountDataSizeAccounts {
+  bytes mint = 1;
+}
+
+message InitializeImmutableOwnerAccounts {
+  bytes account = 1;
+}
+
+message AmountToUiAmountAccounts {
+  bytes mint = 1;
+}
+
+message UiAmountToAmountAccounts {
+  bytes mint = 1;
+}
+
+// ── Instruction args ───────────────────────────────────────────────
+
+message TransferArgs {
   uint64 amount = 1;
 }
 
-message TransferIxProto {
-  TransferAccountsProto accounts = 1;
-  TransferDataProto data = 2;
+message InitializeMintArgs {
+  uint32 decimals = 1;
+  bytes mint_authority = 2;
+  optional bytes freeze_authority = 3;
 }
 
-message InitializeMintAccountsProto {
-  string mint = 1;
+message InitializeAccount2Args {
+  bytes owner = 1;
 }
 
-message InitializeMintDataProto {
-  uint64 decimals = 1;
-  optional string mint_authority = 2;
-  optional string freeze_authority = 3;
+message InitializeMultisigArgs {
+  uint32 m = 1;
 }
 
-message InitializeMintIxProto {
-  InitializeMintAccountsProto accounts = 1;
-  InitializeMintDataProto data = 2;
-}
-
-message InitializeAccountAccountsProto {
-  string account = 1;
-  string mint = 2;
-  string owner = 3;
-}
-
-message InitializeAccountDataProto {
+message ApproveArgs {
   uint64 amount = 1;
 }
 
-message InitializeAccountIxProto {
-  InitializeAccountAccountsProto accounts = 1;
-  InitializeAccountDataProto data = 2;
-}
-
-message InitializeAccount2AccountsProto {
-  string account = 1;
-  string mint = 2;
-}
-
-message InitializeAccountData2Proto {
-  string owner = 1;
-}
-
-message InitializeAccount2IxProto {
-  InitializeAccount2AccountsProto accounts = 1;
-  InitializeAccountData2Proto data = 2;
-}
-
-message InitializeAccount3IxProto {
-  InitializeAccount2AccountsProto accounts = 1;
-  InitializeAccountData2Proto data = 2;
-}
-
-message InitializeMultisigAccountsProto {
-  string multisig = 1;
-  repeated string signers = 2;
-}
-
-message InitializeMultisigDataProto {
-  uint64 m = 1;
-}
-
-message InitializeMultisigIxProto {
-  InitializeMultisigAccountsProto accounts = 1;
-  InitializeMultisigDataProto data = 2;
-}
-
-
-message ApproveAccountsProto {
-  string source = 1;
-  string delegate = 2;
-  string owner = 3;
-  repeated string multisig_signers = 4;
-}
-
-message ApproveDataProto {
-  uint64 amount = 1;
-}
-
-message ApproveIxProto {
-  ApproveAccountsProto accounts = 1;
-  ApproveDataProto data = 2;
-}
-
-message RevokeAccountsProto {
-  string source = 1;
-  string owner = 2;
-  repeated string multisig_signers = 3;
-}
-
-message RevokeIxProto {
-  RevokeAccountsProto accounts = 1;
-
-}
-
-message SetAuthorityAccountsProto {
-  string current_authority = 1;
-  string account = 2;
-  repeated string multisig_signers = 3;
-}
-
-message SetAuthorityDataProto {
+message SetAuthorityArgs {
   AuthorityType authority_type = 1;
-  optional string new_authority = 2;
+  optional bytes new_authority = 2;
 }
 
-message SetAuthorityIxProto {
-  SetAuthorityAccountsProto accounts = 1;
-  SetAuthorityDataProto data = 2;
-}
-
-message MintToAccountsProto {
-  string mint = 1;
-  string account = 2;
-  string mint_authority = 3;
-  repeated string multisig_signers = 4;
-}
-
-message MintToDataProto {
+message MintToArgs {
   uint64 amount = 1;
 }
 
-message MintToIxProto {
-  MintToAccountsProto accounts = 1;
-  MintToDataProto data = 2;
-}
-
-message BurnAccountsProto {
-  string account = 1;
-  string mint = 2;
-  string owner = 3;
-  repeated string multisig_signers = 4;
-}
-
-message BurnDataProto {
+message BurnArgs {
   uint64 amount = 1;
 }
 
-message BurnIxProto {
-  BurnAccountsProto accounts = 1;
-  BurnDataProto data = 2;
-}
-
-message CloseAccountAccountsProto {
-  string account = 1;
-  string destination = 2;
-  string owner = 3;
-  repeated string multisig_signers = 4;
-}
-
-message CloseAccountIxProto {
-  CloseAccountAccountsProto accounts = 1;
-}
-
-message FreezeAccountAccountsProto {
-  string account = 1;
-  string mint = 2;
-  string mint_freeze_authority = 3;
-  repeated string multisig_signers = 4;
-}
-
-message FreezeAccountIxProto {
-  FreezeAccountAccountsProto accounts = 1;
-}
-
-message ThawAccountAccountsProto {
-  string account = 1;
-  string mint = 2;
-  string mint_freeze_authority = 3;
-  repeated string multisig_signers = 4;
-}
-
-message ThawAccountIxProto {
-  ThawAccountAccountsProto accounts = 1;
-}
-
-message TransferCheckedAccountsProto {
-  string source = 1;
-  string mint = 2;
-  string destination = 3;
-  string owner = 4;
-  repeated string multisig_signers = 5;
-}
-
-message TransferCheckedDataProto {
+message TransferCheckedArgs {
   uint64 amount = 1;
-  uint64 decimals = 2;
+  uint32 decimals = 2;
 }
 
-message TransferCheckedIxProto {
-  TransferCheckedAccountsProto accounts = 1;
-  TransferCheckedDataProto data = 2;
-}
-
-message ApproveCheckedAccountsProto {
-  string source = 1;
-  string mint = 2;
-  string delegate = 3;
-  string owner = 4;
-  repeated string multisig_signers = 5;
-}
-
-message ApproveCheckedDataProto {
+message ApproveCheckedArgs {
   uint64 amount = 1;
-  uint64 decimals = 2;
+  uint32 decimals = 2;
 }
 
-message ApproveCheckedIxProto {
-  ApproveCheckedAccountsProto accounts = 1;
-  ApproveCheckedDataProto data = 2;
-}
-
-message MintToCheckedAccountsProto {
-  string mint = 1;
-  string account = 2;
-  string mint_authority = 3;
-  repeated string multisig_signers = 4;
-}
-
-message MintToCheckedDataProto {
+message MintToCheckedArgs {
   uint64 amount = 1;
-  uint64 decimals = 2;
+  uint32 decimals = 2;
 }
 
-message MintToCheckedIxProto {
-  MintToCheckedAccountsProto accounts = 1;
-  MintToCheckedDataProto data = 2;
-}
-
-message BurnCheckedAccountsProto {
-  string account = 1;
-  string mint = 2;
-  string owner = 3;
-  repeated string multisig_signers = 4;
-}
-
-message BurnCheckedDataProto {
+message BurnCheckedArgs {
   uint64 amount = 1;
-  uint64 decimals = 2;
+  uint32 decimals = 2;
 }
 
-message BurnCheckedIxProto {
-  BurnCheckedAccountsProto accounts = 1;
-  BurnCheckedDataProto data = 2;
-}
-
-message SyncNativeAccountsProto {
-  string account = 1;
-}
-
-message SyncNativeIxProto {
-  SyncNativeAccountsProto accounts = 1;
-}
-
-message GetAccountDataSizeAccountsProto {
-  string mint = 1;
-}
-
-message GetAccountDataSizeIxProto {
-  GetAccountDataSizeAccountsProto accounts = 1;
-}
-
-message InitializeImmutableOwnerAccountsProto {
-  string account = 1;
-}
-
-message InitializeImmutableOwnerIxProto {
-  InitializeImmutableOwnerAccountsProto accounts = 1;
-}
-
-
-message AmountToUiAmountAccountsProto {
-  string mint = 1;
-}
-
-message AmountToUiAmountDataProto {
+message AmountToUiAmountArgs {
   uint64 amount = 1;
 }
 
-message AmountToUiAmountIxProto {
-  AmountToUiAmountAccountsProto accounts = 1;
-  AmountToUiAmountDataProto data = 2;
-}
-
-message UiAmountToAmountAccountsProto {
-  string mint = 1;
-}
-
-message UiAmountToAmountDataProto {
+message UiAmountToAmountArgs {
   string ui_amount = 1;
 }
 
-message UiAmountToAmountIxProto {
-  UiAmountToAmountAccountsProto accounts = 1;
-  UiAmountToAmountDataProto data = 2;
+// ── Instruction wrappers ───────────────────────────────────────────
+
+message TransferInstruction {
+  TransferAccounts accounts = 1;
+  TransferArgs args = 2;
 }
 
+message InitializeMintInstruction {
+  InitializeMintAccounts accounts = 1;
+  InitializeMintArgs args = 2;
+}
 
+message InitializeAccountInstruction {
+  InitializeAccountAccounts accounts = 1;
+}
 
-// Token Program State
-message ProgramState {
-  oneof state_oneof {
-    TokenAccountProto token_account = 1;
-    MintProto mint = 2;
-    MultisigProto multisig = 3;
+message InitializeAccount2Instruction {
+  InitializeAccount2Accounts accounts = 1;
+  InitializeAccount2Args args = 2;
+}
+
+message InitializeAccount3Instruction {
+  InitializeAccount2Accounts accounts = 1;
+  InitializeAccount2Args args = 2;
+}
+
+message InitializeMultisigInstruction {
+  InitializeMultisigAccounts accounts = 1;
+  InitializeMultisigArgs args = 2;
+}
+
+message ApproveInstruction {
+  ApproveAccounts accounts = 1;
+  ApproveArgs args = 2;
+}
+
+message RevokeInstruction {
+  RevokeAccounts accounts = 1;
+}
+
+message SetAuthorityInstruction {
+  SetAuthorityAccounts accounts = 1;
+  SetAuthorityArgs args = 2;
+}
+
+message MintToInstruction {
+  MintToAccounts accounts = 1;
+  MintToArgs args = 2;
+}
+
+message BurnInstruction {
+  BurnAccounts accounts = 1;
+  BurnArgs args = 2;
+}
+
+message CloseAccountInstruction {
+  CloseAccountAccounts accounts = 1;
+}
+
+message FreezeAccountInstruction {
+  FreezeAccountAccounts accounts = 1;
+}
+
+message ThawAccountInstruction {
+  ThawAccountAccounts accounts = 1;
+}
+
+message TransferCheckedInstruction {
+  TransferCheckedAccounts accounts = 1;
+  TransferCheckedArgs args = 2;
+}
+
+message ApproveCheckedInstruction {
+  ApproveCheckedAccounts accounts = 1;
+  ApproveCheckedArgs args = 2;
+}
+
+message MintToCheckedInstruction {
+  MintToCheckedAccounts accounts = 1;
+  MintToCheckedArgs args = 2;
+}
+
+message BurnCheckedInstruction {
+  BurnCheckedAccounts accounts = 1;
+  BurnCheckedArgs args = 2;
+}
+
+message SyncNativeInstruction {
+  SyncNativeAccounts accounts = 1;
+}
+
+message GetAccountDataSizeInstruction {
+  GetAccountDataSizeAccounts accounts = 1;
+}
+
+message InitializeImmutableOwnerInstruction {
+  InitializeImmutableOwnerAccounts accounts = 1;
+}
+
+message AmountToUiAmountInstruction {
+  AmountToUiAmountAccounts accounts = 1;
+  AmountToUiAmountArgs args = 2;
+}
+
+message UiAmountToAmountInstruction {
+  UiAmountToAmountAccounts accounts = 1;
+  UiAmountToAmountArgs args = 2;
+}
+
+// ── Dispatch ───────────────────────────────────────────────────────
+
+message TokenProgram {
+  oneof instruction {
+    TransferInstruction transfer = 1;
+    InitializeMintInstruction initialize_mint = 2;
+    InitializeAccountInstruction initialize_account = 3;
+    InitializeAccount2Instruction initialize_account2 = 4;
+    InitializeAccount3Instruction initialize_account3 = 5;
+    InitializeMultisigInstruction initialize_multisig = 6;
+    ApproveInstruction approve = 7;
+    RevokeInstruction revoke = 8;
+    SetAuthorityInstruction set_authority = 9;
+    MintToInstruction mint_to = 10;
+    BurnInstruction burn = 11;
+    CloseAccountInstruction close_account = 12;
+    FreezeAccountInstruction freeze_account = 13;
+    ThawAccountInstruction thaw_account = 14;
+    TransferCheckedInstruction transfer_checked = 15;
+    ApproveCheckedInstruction approve_checked = 16;
+    MintToCheckedInstruction mint_to_checked = 17;
+    BurnCheckedInstruction burn_checked = 18;
+    SyncNativeInstruction sync_native = 19;
+    GetAccountDataSizeInstruction get_account_data_size = 20;
+    InitializeImmutableOwnerInstruction initialize_immutable_owner = 21;
+    AmountToUiAmountInstruction amount_to_ui_amount = 22;
+    UiAmountToAmountInstruction ui_amount_to_amount = 23;
   }
 }
-
-// Token Program Instructions
-message ProgramIxs {
-  oneof ix_oneof {
-    TransferIxProto transfer = 1;
-    InitializeMintIxProto initialize_mint = 2;
-    InitializeAccountIxProto initialize_account = 3;
-    InitializeAccount2IxProto initialize_account2 = 4;
-    InitializeAccount3IxProto initialize_account3 = 5;
-    InitializeMultisigIxProto initialize_multisig = 6;
-    ApproveIxProto approve = 7;
-    RevokeIxProto revoke = 8;
-    SetAuthorityIxProto set_authority = 9;
-    MintToIxProto mint_to = 10;
-    BurnIxProto burn = 11;
-    CloseAccountIxProto close_account = 12;
-    FreezeAccountIxProto freeze_account = 13;
-    ThawAccountIxProto thaw_account = 14;
-    TransferCheckedIxProto transfer_checked = 15;
-    ApproveCheckedIxProto approve_checked = 16;
-    MintToCheckedIxProto mint_to_checked = 17;
-    BurnCheckedIxProto burn_checked = 18;
-    SyncNativeIxProto sync_native = 19;
-    GetAccountDataSizeIxProto get_account_data_size = 20;
-    InitializeImmutableOwnerIxProto initialize_immutable_owner = 21;
-    AmountToUiAmountIxProto amount_to_ui_amount = 22;
-    UiAmountToAmountIxProto ui_amount_to_amount = 23;
-  }
-}
-

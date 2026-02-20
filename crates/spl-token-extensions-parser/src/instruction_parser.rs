@@ -11,17 +11,16 @@ use yellowstone_vixen_spl_token_parser::{
 
 use crate::{
     extensions::{
-        CommonExtensionInstructions, ConfidentialTransferFeeInstruction,
-        ConfidentialTransferInstruction, ExtensionWithCommonInstruction, TokenGroupInstruction,
-        TokenMetadataInstruction, TransferFeeInstruction,
+        CommonExtensionInstructions, ConfidentialTransferFeeIx, ConfidentialTransferIx,
+        ExtensionWithCommonInstruction, TokenGroupIx, TokenMetadataIx, TransferFeeIx,
     },
     instructions::{
         CreateNativeMintAccounts, InitializeMintCloseAuthorityAccounts,
         InitializeMintCloseAuthorityArgs, InitializeNonTransferableMintAccounts,
         InitializePermanentDelegateAccounts, InitializePermanentDelegateArgs, ReallocateAccounts,
-        ReallocateArgs, WithdrawExcessLamportsAccounts,
+        ReallocateArgs, SetAuthorityArgs, WithdrawExcessLamportsAccounts,
     },
-    ExtensionInstructionParser, SetAuthorityArgs, TokenExtensionProgramInstruction,
+    AuthorityType, ExtensionInstructionParser, TokenExtensionProgram,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -29,7 +28,7 @@ pub struct InstructionParser;
 
 impl Parser for InstructionParser {
     type Input = InstructionUpdate;
-    type Output = TokenExtensionProgramInstruction;
+    type Output = TokenExtensionProgram;
 
     fn id(&self) -> std::borrow::Cow<'static, str> { "token_extensions::InstructionParser".into() }
 
@@ -51,204 +50,319 @@ impl ProgramParser for InstructionParser {
 
 impl InstructionParser {
     #[allow(clippy::too_many_lines)]
-    fn parse_impl(ix: &InstructionUpdate) -> Result<TokenExtensionProgramInstruction> {
+    fn parse_impl(ix: &InstructionUpdate) -> Result<TokenExtensionProgram> {
         let accounts_len = ix.accounts.len();
+
+        macro_rules! envelope {
+            ($ix:expr) => {
+                TokenExtensionProgram {
+                    instruction: Some($ix),
+                }
+            };
+        }
+
         match SplTokenInstruction::unpack(&ix.data) {
             Ok(token_ix) => match token_ix {
                 SplTokenInstruction::TransferFeeExtension => {
-                    Ok(TokenExtensionProgramInstruction::TransferFee(
-                        TransferFeeInstruction::try_parse(ix)?,
-                    ))
+                    let parsed = TransferFeeIx::try_parse(ix)?;
+
+                    Ok(envelope!(crate::instruction::Instruction::TransferFee(
+                        crate::instruction::TransferFee {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
+
                 SplTokenInstruction::ConfidentialTransferExtension => {
-                    Ok(TokenExtensionProgramInstruction::ConfidentialTransfer(
-                        ConfidentialTransferInstruction::try_parse(ix)?,
-                    ))
+                    let parsed = ConfidentialTransferIx::try_parse(ix)?;
+
+                    Ok(envelope!(crate::instruction::Instruction::ConfidentialTransfer(
+                        crate::instruction::ConfidentialTransfer {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
+
                 SplTokenInstruction::ConfidentialTransferFeeExtension => {
-                    Ok(TokenExtensionProgramInstruction::ConfidentialTransferFee(
-                        ConfidentialTransferFeeInstruction::try_parse(ix)?,
-                    ))
+                    let parsed = ConfidentialTransferFeeIx::try_parse(ix)?;
+
+                    Ok(envelope!(crate::instruction::Instruction::ConfidentialTransferFee(
+                        crate::instruction::ConfidentialTransferFee {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
+
                 SplTokenInstruction::CpiGuardExtension => {
-                    Ok(TokenExtensionProgramInstruction::CpiGuard(
-                        CommonExtensionInstructions::try_parse_extension_instruction(
-                            ExtensionWithCommonInstruction::CpiGuard,
-                            ix,
-                        )?,
-                    ))
+                    let parsed = CommonExtensionInstructions::try_parse_extension_instruction(
+                        ExtensionWithCommonInstruction::CpiGuard,
+                        ix,
+                    )?;
+
+                    Ok(envelope!(crate::instruction::Instruction::CpiGuard(
+                        crate::instruction::CpiGuard {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
 
                 SplTokenInstruction::DefaultAccountStateExtension => {
-                    Ok(TokenExtensionProgramInstruction::DefaultAccountState(
-                        CommonExtensionInstructions::try_parse_extension_instruction(
-                            ExtensionWithCommonInstruction::DefaultAccountState,
-                            ix,
-                        )?,
-                    ))
+                    let parsed = CommonExtensionInstructions::try_parse_extension_instruction(
+                        ExtensionWithCommonInstruction::DefaultAccountState,
+                        ix,
+                    )?;
+
+                    Ok(envelope!(crate::instruction::Instruction::DefaultAccountState(
+                        crate::instruction::DefaultAccountState {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
+
                 SplTokenInstruction::InterestBearingMintExtension => {
-                    Ok(TokenExtensionProgramInstruction::InterestBearingMint(
-                        CommonExtensionInstructions::try_parse_extension_instruction(
-                            ExtensionWithCommonInstruction::InterestBearingMint,
-                            ix,
-                        )?,
-                    ))
+                    let parsed = CommonExtensionInstructions::try_parse_extension_instruction(
+                        ExtensionWithCommonInstruction::InterestBearingMint,
+                        ix,
+                    )?;
+
+                    Ok(envelope!(crate::instruction::Instruction::InterestBearingMint(
+                        crate::instruction::InterestBearingMint {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
+
                 SplTokenInstruction::MemoTransferExtension => {
-                    Ok(TokenExtensionProgramInstruction::MemoTransfer(
-                        CommonExtensionInstructions::try_parse_extension_instruction(
-                            ExtensionWithCommonInstruction::MemoTransfer,
-                            ix,
-                        )?,
-                    ))
+                    let parsed = CommonExtensionInstructions::try_parse_extension_instruction(
+                        ExtensionWithCommonInstruction::MemoTransfer,
+                        ix,
+                    )?;
+
+                    Ok(envelope!(crate::instruction::Instruction::MemoTransfer(
+                        crate::instruction::MemoTransfer {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
 
                 SplTokenInstruction::GroupMemberPointerExtension => {
-                    Ok(TokenExtensionProgramInstruction::GroupMemberPointer(
-                        CommonExtensionInstructions::try_parse_extension_instruction(
-                            ExtensionWithCommonInstruction::GroupMemberPointer,
-                            ix,
-                        )?,
-                    ))
+                    let parsed = CommonExtensionInstructions::try_parse_extension_instruction(
+                        ExtensionWithCommonInstruction::GroupMemberPointer,
+                        ix,
+                    )?;
+
+                    Ok(envelope!(crate::instruction::Instruction::GroupMemberPointer(
+                        crate::instruction::GroupMemberPointer {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
 
                 SplTokenInstruction::GroupPointerExtension => {
-                    Ok(TokenExtensionProgramInstruction::GroupPointer(
-                        CommonExtensionInstructions::try_parse_extension_instruction(
-                            ExtensionWithCommonInstruction::GroupPointer,
-                            ix,
-                        )?,
-                    ))
+                    let parsed = CommonExtensionInstructions::try_parse_extension_instruction(
+                        ExtensionWithCommonInstruction::GroupPointer,
+                        ix,
+                    )?;
+
+                    Ok(envelope!(crate::instruction::Instruction::GroupPointer(
+                        crate::instruction::GroupPointer {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
 
                 SplTokenInstruction::MetadataPointerExtension => {
-                    Ok(TokenExtensionProgramInstruction::MetadataPointer(
-                        CommonExtensionInstructions::try_parse_extension_instruction(
-                            ExtensionWithCommonInstruction::MetadataPointer,
-                            ix,
-                        )?,
-                    ))
+                    let parsed = CommonExtensionInstructions::try_parse_extension_instruction(
+                        ExtensionWithCommonInstruction::MetadataPointer,
+                        ix,
+                    )?;
+
+                    Ok(envelope!(crate::instruction::Instruction::MetadataPointer(
+                        crate::instruction::MetadataPointer {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
 
                 SplTokenInstruction::TransferHookExtension => {
-                    Ok(TokenExtensionProgramInstruction::TransferHook(
-                        CommonExtensionInstructions::try_parse_extension_instruction(
-                            ExtensionWithCommonInstruction::TransferHook,
-                            ix,
-                        )?,
-                    ))
+                    let parsed = CommonExtensionInstructions::try_parse_extension_instruction(
+                        ExtensionWithCommonInstruction::TransferHook,
+                        ix,
+                    )?;
+
+                    Ok(envelope!(crate::instruction::Instruction::TransferHook(
+                        crate::instruction::TransferHook {
+                            instruction: Some(parsed),
+                        },
+                    )))
                 },
+
                 SplTokenInstruction::SetAuthority {
                     authority_type,
                     new_authority,
                 } => {
                     check_min_accounts_req(accounts_len, 2)?;
-                    Ok(TokenExtensionProgramInstruction::SetAuthority {
-                        accounts: SetAuthorityAccounts {
-                            account: ix.accounts[0],
-                            current_authority: ix.accounts[1],
-                            multisig_signers: ix.accounts[2..].to_vec(),
+
+                    // IMPORTANT: ix.accounts are Pubkey (bytes), and your proto structs want Vec<u8>
+                    let accounts = SetAuthorityAccounts {
+                        account: ix.accounts[0].to_vec(),
+                        current_authority: ix.accounts[1].to_vec(),
+                        multisig_signers: ix.accounts[2..].iter().map(|pk| pk.to_vec()).collect(),
+                    };
+
+                    let args = SetAuthorityArgs {
+                        authority_type: AuthorityType::from(authority_type) as i32,
+                        new_authority: new_authority.map(|pk| pk.to_bytes().to_vec()).into(),
+                    };
+
+                    Ok(envelope!(crate::instruction::Instruction::SetAuthority(
+                        crate::instruction::SetAuthority {
+                            accounts: Some(accounts),
+                            args: Some(args),
                         },
-                        args: SetAuthorityArgs {
-                            authority_type,
-                            new_authority: new_authority.map(|p| p.to_bytes().into()).into(),
-                        },
-                    })
+                    )))
                 },
+
                 SplTokenInstruction::CreateNativeMint => {
                     check_min_accounts_req(accounts_len, 2)?;
-                    Ok(TokenExtensionProgramInstruction::CreateNativeMint {
-                        accounts: CreateNativeMintAccounts {
-                            funding_account: ix.accounts[0],
-                            mint: ix.accounts[1],
+
+                    let accounts = CreateNativeMintAccounts {
+                        funding_account: ix.accounts[0].to_vec(),
+                        mint: ix.accounts[1].to_vec(),
+                    };
+
+                    Ok(envelope!(crate::instruction::Instruction::CreateNativeMint(
+                        crate::instruction::CreateNativeMint {
+                            accounts: Some(accounts),
                         },
-                    })
+                    )))
                 },
 
                 SplTokenInstruction::InitializeMintCloseAuthority { close_authority } => {
                     check_min_accounts_req(accounts_len, 1)?;
-                    Ok(
-                        TokenExtensionProgramInstruction::InitializeMintCloseAuthority {
-                            accounts: InitializeMintCloseAuthorityAccounts {
-                                mint: ix.accounts[0],
-                            },
-                            args: InitializeMintCloseAuthorityArgs {
-                                close_authority: close_authority
-                                    .map(|p| p.to_bytes().into())
-                                    .into(),
-                            },
+
+                    let accounts = InitializeMintCloseAuthorityAccounts {
+                        mint: ix.accounts[0].to_vec(),
+                    };
+
+                    let args = InitializeMintCloseAuthorityArgs {
+                        close_authority: close_authority.map(|pk| pk.to_bytes().to_vec()).into(),
+                    };
+
+                    Ok(envelope!(crate::instruction::Instruction::InitializeMintCloseAuthority(
+                        crate::instruction::InitializeMintCloseAuthority {
+                            accounts: Some(accounts),
+                            args: Some(args),
                         },
-                    )
+                    )))
                 },
 
                 SplTokenInstruction::InitializeNonTransferableMint => {
                     check_min_accounts_req(accounts_len, 1)?;
-                    Ok(
-                        TokenExtensionProgramInstruction::InitializeNonTransferableMint {
-                            accounts: InitializeNonTransferableMintAccounts {
-                                mint: ix.accounts[0],
-                            },
+
+                    let accounts = InitializeNonTransferableMintAccounts {
+                        mint: ix.accounts[0].to_vec(),
+                    };
+
+                    Ok(envelope!(crate::instruction::Instruction::InitializeNonTransferableMint(
+                        crate::instruction::InitializeNonTransferableMint {
+                            accounts: Some(accounts),
                         },
-                    )
+                    )))
                 },
 
                 SplTokenInstruction::Reallocate { extension_types } => {
                     check_min_accounts_req(accounts_len, 4)?;
-                    Ok(TokenExtensionProgramInstruction::Reallocate {
-                        accounts: ReallocateAccounts {
-                            account: ix.accounts[0],
-                            payer: ix.accounts[1],
-                            owner: ix.accounts[3],
-                            multisig_signers: ix.accounts[4..].to_vec(),
+
+                    let accounts = ReallocateAccounts {
+                        account: ix.accounts[0].to_vec(),
+                        payer: ix.accounts[1].to_vec(),
+                        owner: ix.accounts[3].to_vec(),
+                        multisig_signers: ix.accounts[4..].iter().map(|pk| pk.to_vec()).collect(),
+                    };
+
+                    let args = ReallocateArgs {
+                        extension_types: extension_types.into_iter().map(|t| t as u32).collect(),
+                    };
+
+                    Ok(envelope!(crate::instruction::Instruction::Reallocate(
+                        crate::instruction::Reallocate {
+                            accounts: Some(accounts),
+                            args: Some(args),
                         },
-                        args: ReallocateArgs { extension_types },
-                    })
+                    )))
                 },
 
                 SplTokenInstruction::InitializePermanentDelegate { delegate } => {
                     check_min_accounts_req(accounts_len, 1)?;
-                    Ok(
-                        TokenExtensionProgramInstruction::InitializePermanentDelegate {
-                            accounts: InitializePermanentDelegateAccounts {
-                                account: ix.accounts[0],
-                            },
-                            args: InitializePermanentDelegateArgs {
-                                delegate: delegate.to_bytes().into(),
-                            },
+
+                    let accounts = InitializePermanentDelegateAccounts {
+                        account: ix.accounts[0].to_vec(),
+                    };
+
+                    let args = InitializePermanentDelegateArgs {
+                        delegate: delegate.to_bytes().to_vec(),
+                    };
+
+                    Ok(envelope!(crate::instruction::Instruction::InitializePermanentDelegate(
+                        crate::instruction::InitializePermanentDelegate {
+                            accounts: Some(accounts),
+                            args: Some(args),
                         },
-                    )
+                    )))
                 },
 
                 SplTokenInstruction::WithdrawExcessLamports => {
                     check_min_accounts_req(accounts_len, 3)?;
-                    Ok(TokenExtensionProgramInstruction::WithdrawExcessLamports {
-                        accounts: WithdrawExcessLamportsAccounts {
-                            source_account: ix.accounts[0],
-                            destination_account: ix.accounts[1],
-                            authority: ix.accounts[2],
-                            multisig_signers: ix.accounts[3..].to_vec(),
+
+                    let accounts = WithdrawExcessLamportsAccounts {
+                        source_account: ix.accounts[0].to_vec(),
+                        destination_account: ix.accounts[1].to_vec(),
+                        authority: ix.accounts[2].to_vec(),
+                        multisig_signers: ix.accounts[3..].iter().map(|pk| pk.to_vec()).collect(),
+                    };
+
+                    Ok(envelope!(crate::instruction::Instruction::WithdrawExcessLamports(
+                        crate::instruction::WithdrawExcessLamports {
+                            accounts: Some(accounts),
                         },
-                    })
+                    )))
                 },
 
-                _ => Ok(TokenExtensionProgramInstruction::TokenProgram(
-                    TokenProgramInstructionParser::parse_impl(ix).parse_err(
-                        "Error parsing token extension instruction as token instruction",
-                    )?,
-                )),
+                // Anything else: fallback to SPL token parser
+                _ => {
+                    let token_instruction = TokenProgramInstructionParser::parse_impl(ix)
+                        .parse_err(
+                            "Error parsing token extension instruction as token instruction",
+                        )?;
+
+                    Ok(envelope!(crate::instruction::Instruction::TokenProgram(
+                        crate::instruction::TokenProgram {
+                            instruction: Some(token_instruction),
+                        },
+                    )))
+                },
             },
+
             Err(e) => {
                 if SplTokenMetadataInstruction::unpack(&ix.data).is_ok() {
-                    return Ok(TokenExtensionProgramInstruction::TokenMetadata(
-                        TokenMetadataInstruction::try_parse(ix)?,
-                    ));
+                    let parsed = TokenMetadataIx::try_parse(ix)?;
+
+                    return Ok(envelope!(crate::instruction::Instruction::TokenMetadata(
+                        crate::instruction::TokenMetadata {
+                            instruction: Some(parsed),
+                        },
+                    )));
                 }
 
                 if SplTokenGroupInstruction::unpack(&ix.data).is_ok() {
-                    return Ok(TokenExtensionProgramInstruction::TokenGroup(
-                        TokenGroupInstruction::try_parse(ix)?,
-                    ));
+                    let parsed = TokenGroupIx::try_parse(ix)?;
+
+                    return Ok(envelope!(crate::instruction::Instruction::TokenGroup(
+                        crate::instruction::TokenGroup {
+                            instruction: Some(parsed),
+                        },
+                    )));
                 }
 
                 Err(Error::from_inner("Error unpacking instruction data", e))
@@ -262,24 +376,36 @@ mod tests {
     use std::ops::Mul;
 
     use yellowstone_vixen_mock::tx_fixture;
-    use yellowstone_vixen_spl_token_parser::TokenProgramInstruction;
 
-    use super::{InstructionParser, Parser, TokenExtensionProgramInstruction};
+    use super::{InstructionParser, Parser, TokenExtensionProgram};
 
     #[tokio::test]
     async fn test_mint_to_checked_ix_parsing() {
         let parser = InstructionParser;
 
-        let ixs = tx_fixture!("44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt",&parser);
+        let ixs = tx_fixture!(
+            "44gWEyKUkeUabtJr4eT3CQEkFGrD4jMdwUV6Ew5MR5K3RGizs9iwbkb5Q4T3gnAaSgHxn3ERQ8g5YTXuLP1FrWnt",
+            &parser
+        );
 
-        let TokenExtensionProgramInstruction::TokenProgram(
-            TokenProgramInstruction::MintToChecked { args, .. },
-        ) = &ixs[0]
+        let Some(TokenExtensionProgram {
+            instruction:
+                Some(crate::instruction::Instruction::TokenProgram(
+                    crate::instruction::TokenProgram {
+                        instruction:
+                            Some(yellowstone_vixen_spl_token_parser::TokenProgram {
+                                instruction: Some(yellowstone_vixen_spl_token_parser::instruction::Instruction::MintToChecked(
+                                    yellowstone_vixen_spl_token_parser::instruction::MintToChecked { args: Some(args), .. }
+                                )),
+                            }),
+                    },
+                )),
+        }) = &ixs[0]
         else {
             panic!("Invalid Instruction");
         };
 
         assert_eq!(args.decimals, 9);
-        assert_eq!(args.amount, 100.mul(10u64.pow(args.decimals.into())));
+        assert_eq!(args.amount, 100.mul(10u64.pow(args.decimals)));
     }
 }
