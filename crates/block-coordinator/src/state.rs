@@ -15,12 +15,14 @@ pub enum CoordinatorEvent<R> {
     SlotConfirmed { slot: Slot },
     /// Slot discarded (dead, forked, or untracked).
     SlotDiscarded { slot: Slot, reason: DiscardReason },
-    /// A parsed record from a handler.
+    /// A parsed instruction record from a handler (sorted by key).
     RecordParsed {
         slot: Slot,
         key: RecordSortKey,
         record: R,
     },
+    /// A parsed account record from a handler 
+    AccountRecordParsed { slot: Slot, record: R },
     /// A handler finished parsing a transaction.
     TransactionParsed { slot: Slot },
 }
@@ -74,6 +76,15 @@ impl<R> CoordinatorState<R> {
                     .entry(slot)
                     .or_default()
                     .insert_record(key, record);
+            },
+            CoordinatorEvent::AccountRecordParsed { slot, record } => {
+                if !self.validate_slot(slot)? {
+                    return Ok(());
+                }
+                self.buffer
+                    .entry(slot)
+                    .or_default()
+                    .insert_account_record(record);
             },
             CoordinatorEvent::TransactionParsed { slot } => {
                 if !self.validate_slot(slot)? {

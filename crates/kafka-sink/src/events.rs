@@ -44,6 +44,15 @@ pub struct SlotCommitEvent {
     pub transaction_count: u64,
     /// Number of successfully decoded instructions.
     pub decoded_instruction_count: u64,
+    /// Number of successfully decoded accounts.
+    pub decoded_account_count: u64,
+}
+
+/// Distinguishes instruction records from account records.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RecordKind {
+    Instruction,
+    Account,
 }
 
 /// A prepared Kafka record ready for batch publishing.
@@ -53,15 +62,17 @@ pub struct PreparedRecord {
     pub topic: String,
     /// Protobuf-encoded payload (via prost::Message::encode).
     pub payload: Vec<u8>,
-    /// Unique key for deduplication: `{signature}:{ix_index}`.
-    /// Enables Kafka log compaction to handle reprocessing.
+    /// Unique key for deduplication.
+    /// Instructions: `{slot}:{signature}:{ix_index}`, Accounts: `{slot}:{pubkey}`.
     pub key: String,
     /// Kafka headers for metadata (readable without decoding payload).
     pub headers: Vec<RecordHeader>,
     /// Label for logging (instruction name or program id).
     pub label: String,
-    /// Whether this is a decoded instruction (true) or sink/unknown (false).
+    /// Whether this is a decoded record (true) or fallback/unknown (false).
     pub is_decoded: bool,
+    /// Whether this record is an instruction or account record.
+    pub kind: RecordKind,
 }
 
 /// A Kafka record header (key-value pair).

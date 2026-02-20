@@ -2,12 +2,12 @@ use yellowstone_vixen::{self as vixen, HandlerResult};
 use yellowstone_vixen_block_coordinator::{CoordinatorHandle, RecordSortKey};
 use yellowstone_vixen_core::{
     instruction::{InstructionUpdate, Path},
-    TransactionUpdate,
+    AccountUpdate, TransactionUpdate,
 };
 
 use crate::{
     events::PreparedRecord,
-    sink::{ConfiguredParsers, ParsedInstruction},
+    sink::{KafkaSink, ParsedOutput},
 };
 
 /// Handler that parses transaction instructions eagerly (at processed commitment)
@@ -15,9 +15,11 @@ use crate::{
 ///
 /// After processing all instructions in a transaction, signals `TransactionParsed`
 /// so the coordinator can track the fully-parsed gate.
+///
+/// Also handles account updates when registered as a handler for `AccountUpdate`.
 #[derive(Clone)]
 pub struct BufferingHandler {
-    parsers: ConfiguredParsers,
+    parsers: KafkaSink,
     handle: CoordinatorHandle<PreparedRecord>,
 }
 
@@ -35,22 +37,22 @@ fn sort_key(tx_index: u64, path: &Path) -> RecordSortKey {
 }
 
 impl BufferingHandler {
-    pub fn new(parsers: ConfiguredParsers, handle: CoordinatorHandle<PreparedRecord>) -> Self {
+    pub fn new(parsers: KafkaSink, handle: CoordinatorHandle<PreparedRecord>) -> Self {
         Self { parsers, handle }
     }
 
     /// Run secondary filters on an instruction and send any additional records to the coordinator.
-    async fn apply_secondary_filters(
+    async fn apply_secondary_filters_to_transaction(
         &self,
         slot: u64,
         tx_index: u64,
         path: &Path,
         ix: &InstructionUpdate,
-        primary_parsed: Option<&ParsedInstruction>,
+        primary_parsed: Option<&ParsedOutput>,
     ) {
         for filter in self.parsers.secondary_filters() {
             if let Some(filtered) = filter.filter(ix, primary_parsed).await {
-                let record = self.parsers.prepare_decoded_record(
+                let record = self.parsers.prepare_decoded_instruction_record(
                     slot,
                     &ix.shared.signature,
                     path,
@@ -108,13 +110,31 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                     tracing::error!(?e, slot, tx_index, "Failed to send parsed record");
                 }
 
-                self.apply_secondary_filters(slot, tx_index, &ix.path, ix, primary_parsed.as_ref())
+                self.apply_secondary_filters_to_transaction(slot, tx_index, &ix.path, ix, primary_parsed.as_ref())
                     .await;
             }
         }
 
         // Signal this transaction is fully parsed.
         let _ = self.handle.send_transaction_parsed(slot).await;
+        Ok(())
+    }
+}
+
+impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
+    async fn handle(
+        &self,
+        update: &AccountUpdate,
+        _raw: &AccountUpdate,
+    ) -> HandlerResult<()> {
+        let slot = update.slot;
+
+        if let Some(record) = self.parsers.parse_account(slot, update).await {
+            if let Err(e) = self.handle.send_account_parsed(slot, record).await {
+                tracing::error!(?e, slot, "Failed to send account parsed record");
+            }
+        }
+        // No send_transaction_parsed — accounts don't affect the TX gate.
         Ok(())
     }
 }

@@ -67,12 +67,14 @@ impl std::error::Error for CoordinatorError {}
 
 /// Messages from handlers back to the coordinator.
 pub enum CoordinatorMessage<R> {
-    /// A parsed record ready to buffer.
+    /// A parsed record ready to buffer (instruction records with sort key).
     Parsed {
         slot: Slot,
         key: RecordSortKey,
         record: R,
     },
+    /// A parsed account record ready to buffer (no sort key needed).
+    AccountParsed { slot: Slot, record: R },
     /// Signal that a transaction has been fully parsed by the handler.
     /// Coordinator counts these to determine when a slot is fully parsed.
     TransactionParsed { slot: Slot },
@@ -81,7 +83,9 @@ pub enum CoordinatorMessage<R> {
 impl<R> CoordinatorMessage<R> {
     pub fn slot(&self) -> Slot {
         match self {
-            Self::Parsed { slot, .. } | Self::TransactionParsed { slot } => *slot,
+            Self::Parsed { slot, .. }
+            | Self::AccountParsed { slot, .. }
+            | Self::TransactionParsed { slot } => *slot,
         }
     }
 }
@@ -151,6 +155,16 @@ impl<R: Send> CoordinatorHandle<R> {
     ) -> Result<(), tokio::sync::mpsc::error::SendError<CoordinatorMessage<R>>> {
         self.tx
             .send(CoordinatorMessage::Parsed { slot, key, record })
+            .await
+    }
+
+    pub async fn send_account_parsed(
+        &self,
+        slot: Slot,
+        record: R,
+    ) -> Result<(), tokio::sync::mpsc::error::SendError<CoordinatorMessage<R>>> {
+        self.tx
+            .send(CoordinatorMessage::AccountParsed { slot, record })
             .await
     }
 
