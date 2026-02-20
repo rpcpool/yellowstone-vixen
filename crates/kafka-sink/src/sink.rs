@@ -235,7 +235,7 @@ pub struct KafkaSinkBuilder {
     instruction_parsers: Vec<Arc<dyn DynInstructionParser>>,
     account_parsers: Vec<Arc<dyn DynAccountParser>>,
     secondary_filters: Vec<Arc<dyn SecondaryFilter>>,
-    fallback_topic: String,
+    fallback_topic: Option<String>,
 }
 
 impl Default for KafkaSinkBuilder {
@@ -248,7 +248,7 @@ impl KafkaSinkBuilder {
             instruction_parsers: Vec::new(),
             account_parsers: Vec::new(),
             secondary_filters: Vec::new(),
-            fallback_topic: "unknown.instructions".to_string(),
+            fallback_topic: None,
         }
     }
 
@@ -301,8 +301,9 @@ impl KafkaSinkBuilder {
     }
 
     /// Set the fallback topic for instructions that no parser handles.
+    /// If not set, unmatched instructions are silently dropped.
     pub fn fallback_topic(mut self, topic: &str) -> Self {
-        self.fallback_topic = topic.to_string();
+        self.fallback_topic = Some(topic.to_string());
         self
     }
 
@@ -339,7 +340,7 @@ impl KafkaSinkBuilder {
                     }),
             )
             .chain(self.secondary_filters.iter().map(|f| f.topic()))
-            .chain(std::iter::once(self.fallback_topic.as_str()))
+            .chain(self.fallback_topic.as_deref())
             .collect::<BTreeSet<_>>()
             .into_iter()
             .collect()
@@ -353,7 +354,7 @@ pub struct KafkaSink {
     instruction_parsers: Vec<Arc<dyn DynInstructionParser>>,
     account_parsers: Vec<Arc<dyn DynAccountParser>>,
     secondary_filters: Vec<Arc<dyn SecondaryFilter>>,
-    fallback_topic: String,
+    fallback_topic: Option<String>,
     /// Map of topic -> schema info for encoding with Confluent wire format.
     schema_ids: HashMap<String, RegisteredSchema>,
 }
@@ -364,7 +365,7 @@ impl Default for KafkaSink {
             instruction_parsers: Vec::new(),
             account_parsers: Vec::new(),
             secondary_filters: Vec::new(),
-            fallback_topic: "unknown.instructions".to_string(),
+            fallback_topic: None,
             schema_ids: HashMap::new(),
         }
     }
@@ -385,13 +386,13 @@ impl KafkaSink {
                     }),
             )
             .chain(self.secondary_filters.iter().map(|f| f.topic()))
-            .chain(std::iter::once(self.fallback_topic.as_str()))
+            .chain(self.fallback_topic.as_deref())
             .collect::<BTreeSet<_>>()
             .into_iter()
             .collect()
     }
 
-    pub fn fallback_topic(&self) -> &str { &self.fallback_topic }
+    pub fn fallback_topic(&self) -> Option<&str> { self.fallback_topic.as_deref() }
 
     /// Returns true if any account parsers are registered.
     pub fn has_account_parsers(&self) -> bool { !self.account_parsers.is_empty() }
@@ -445,15 +446,15 @@ impl KafkaSink {
     /// Parse an instruction and prepare a Kafka record.
     ///
     /// Tries each registered parser in order. If one matches, builds a decoded record;
-    /// otherwise builds a fallback record with raw instruction data.
-    /// Returns the record and the parsed result (if any) for secondary filters.
+    /// if none match and a fallback topic is configured, builds a fallback record.
+    /// Returns `None` if no parser matched and no fallback topic is set.
     pub async fn parse_instruction(
         &self,
         slot: u64,
         signature: &[u8],
         path: &Path,
         ix: &InstructionUpdate,
-    ) -> (PreparedRecord, Option<ParsedOutput>) {
+    ) -> Option<(PreparedRecord, Option<ParsedOutput>)> {
         match self.try_parse_instruction(ix).await {
             Some((parsed, topic)) => {
                 let record = self.prepare_decoded_instruction_record(
@@ -463,11 +464,13 @@ impl KafkaSink {
                     parsed.clone(),
                     topic,
                 );
-                (record, Some(parsed))
+                Some((record, Some(parsed)))
             },
             None => {
-                let record = self.prepare_fallback_instruction_record(slot, signature, path, ix);
-                (record, None)
+                let fallback = self.fallback_topic.as_deref()?;
+                let record =
+                    self.prepare_fallback_instruction_record(slot, signature, path, ix, fallback);
+                Some((record, None))
             },
         }
     }
@@ -547,6 +550,7 @@ impl KafkaSink {
         signature: &[u8],
         path: &Path,
         ix: &InstructionUpdate,
+        fallback_topic: &str,
     ) -> PreparedRecord {
         let (key, mut headers) = Self::instruction_base_record(slot, signature, path);
         let program_id = bs58::encode(ix.program).into_string();
@@ -557,7 +561,7 @@ impl KafkaSink {
         });
 
         PreparedRecord {
-            topic: self.fallback_topic.clone(),
+            topic: fallback_topic.to_string(),
             payload: ix.data.clone(),
             key,
             headers,
