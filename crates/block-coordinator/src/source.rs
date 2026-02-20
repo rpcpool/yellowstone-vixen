@@ -21,7 +21,7 @@ use yellowstone_vixen::{
     sources::{SourceExitStatus, SourceTrait},
     Error as VixenError,
 };
-use yellowstone_vixen_core::Filters;
+use yellowstone_vixen_core::{CommitmentLevel, Filters};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
 
 use crate::fixtures::FixtureWriter;
@@ -62,6 +62,10 @@ trait CoordinatorSubscription {
 
     /// Set the starting slot for the gRPC stream.
     fn with_from_slot(self, from_slot: Option<u64>) -> Self;
+
+    /// Set commitment to Processed — required for the two-gate flush pattern
+    /// so the coordinator sees all transactions before confirmation.
+    fn with_commitment_processed(self) -> Self;
 }
 
 impl CoordinatorSubscription for SubscribeRequest {
@@ -82,6 +86,11 @@ impl CoordinatorSubscription for SubscribeRequest {
 
     fn with_from_slot(mut self, from_slot: Option<u64>) -> Self {
         self.from_slot = from_slot.or(self.from_slot);
+        self
+    }
+
+    fn with_commitment_processed(mut self) -> Self {
+        self.commitment = Some(CommitmentLevel::Processed as i32);
         self
     }
 }
@@ -137,7 +146,8 @@ impl SourceTrait for CoordinatorSource {
 
         let subscribe_request = SubscribeRequest::from(self.filters.clone())
             .with_coordinator_subscriptions()
-            .with_from_slot(config.from_slot);
+            .with_from_slot(config.from_slot)
+            .with_commitment_processed();
 
         tracing::info!(
             has_transactions = !subscribe_request.transactions.is_empty(),
