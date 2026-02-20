@@ -17,13 +17,13 @@ use syn::LitStr;
 /// ```rust, ignore
 /// #[derive(Clone, PartialEq, ::prost::Message)]
 /// pub struct {ProgramName}Account {
-///     #[prost(oneof = "{program_name}_account::Kind", tags = "1, 2, 3")]
-///     pub kind: Option<{program_name}_account::Kind>,
+///     #[prost(oneof = "account::Account", tags = "1, 2, 3")]
+///     pub account: Option<account::Account>,
 /// }
 ///
-/// pub mod {program_name}_account {
+/// pub mod account {
 ///     #[derive(Clone, PartialEq, ::prost::Oneof)]
-///     pub enum Kind {
+///     pub enum Account {
 ///         #[prost(message, tag = 1)]
 ///         AccountA(super::AccountA),
 ///         #[prost(message, tag = 2)]
@@ -36,12 +36,12 @@ use syn::LitStr;
 /// ```rust, ignore
 /// #[derive(Clone, Debug, PartialEq)]
 /// pub struct {ProgramName}Account {
-///     pub kind: Option<{program_name}_account::Kind>,
+///     pub account: Option<account::Account>,
 /// }
 ///
-/// pub mod {program_name}_account {
+/// pub mod account {
 ///     #[derive(Clone, Debug, PartialEq)]
-///     pub enum Kind {
+///     pub enum Account {
 ///         AccountA(super::AccountA),
 ///         AccountB(super::AccountB),
 ///     }
@@ -56,15 +56,10 @@ pub fn account_parser(
 
     let account_struct_ident = format_ident!("{}Account", program_name);
 
-    let account_mod_name = format!(
-        "{}_account",
-        crate::utils::to_snake_case(program_name_camel)
-    );
+    let account_mod_ident = format_ident!("account");
 
-    let account_mod_ident = format_ident!("{}", account_mod_name);
-
-    // prost oneof attribute requires a string literal like "module::Kind"
-    let oneof_path_lit = LitStr::new(&format!("{}::Kind", account_mod_name), Span::call_site());
+    // prost oneof attribute requires a string literal like "account::Account"
+    let oneof_path_lit = LitStr::new("account::Account", Span::call_site());
 
     let parser_id = format!("{}::AccountParser", program_name);
 
@@ -122,7 +117,7 @@ pub fn account_parser(
                             match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
                                 Ok(parsed) => {
                                     return Ok(#account_struct_ident {
-                                        kind: Some(#account_mod_ident::Kind::#account_ident(parsed))
+                                        account: Some(#account_mod_ident::Account::#account_ident(parsed))
                                     });
                                 }
                                 Err(e) => {
@@ -188,7 +183,7 @@ pub fn account_parser(
                             match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[#end..]) {
                                 Ok(parsed) => {
                                     return Ok(#account_struct_ident {
-                                        kind: Some(#account_mod_ident::Kind::#account_ident(parsed))
+                                        account: Some(#account_mod_ident::Account::#account_ident(parsed))
                                     });
                                 }
                                 Err(e) => {
@@ -209,7 +204,7 @@ pub fn account_parser(
                         match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
                             Ok(parsed) => {
                                 return Ok(#account_struct_ident {
-                                    kind: Some(#account_mod_ident::Kind::#account_ident(parsed))
+                                    account: Some(#account_mod_ident::Account::#account_ident(parsed))
                                 });
                             }
                             Err(e) => {
@@ -244,12 +239,12 @@ pub fn account_parser(
             #[derive(Clone, PartialEq, ::prost::Message)]
             pub struct #account_struct_ident {
                 #[prost(oneof = #oneof_path_lit, tags = #tags_lit)]
-                pub kind: ::core::option::Option<#account_mod_ident::Kind>,
+                pub account: ::core::option::Option<#account_mod_ident::Account>,
             }
 
             pub mod #account_mod_ident {
                 #[derive(Clone, PartialEq, ::prost::Oneof)]
-                pub enum Kind {
+                pub enum Account {
                     #(#oneof_variants),*
                 }
             }
@@ -259,12 +254,12 @@ pub fn account_parser(
             /// Wrapper struct for program accounts.
             #[derive(Clone, Debug, PartialEq)]
             pub struct #account_struct_ident {
-                pub kind: ::core::option::Option<#account_mod_ident::Kind>,
+                pub account: ::core::option::Option<#account_mod_ident::Account>,
             }
 
             pub mod #account_mod_ident {
                 #[derive(Clone, Debug, PartialEq)]
-                pub enum Kind {
+                pub enum Account {
                     #(#oneof_variants),*
                 }
             }

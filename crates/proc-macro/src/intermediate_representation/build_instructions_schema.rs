@@ -119,7 +119,7 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
 
     let accounts_name = format!("{ix_name}Accounts");
     let args_name = format!("{ix_name}Args");
-    let payload_name = format!("{ix_name}Instruction");
+    let payload_name = ix_name.clone();
 
     let account_fields: Vec<FieldIr> = ix
         .accounts
@@ -133,7 +133,12 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
         })
         .collect();
 
-    ir.push_unique_type(TypeIr {
+    // Use `types.push()` instead of `push_unique_type()` because instruction
+    // wrapper names (after dropping the `Instruction` suffix) can collide with
+    // defined types or accounts that were pushed earlier. We always want the
+    // Instruction-kind entry in the schema; the renderer routes types to the
+    // correct scope based on `kind`, so duplicates with different kinds are fine.
+    ir.types.push(TypeIr {
         name: accounts_name.clone(),
         fields: account_fields,
         kind: TypeKindIr::Instruction,
@@ -141,13 +146,13 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
 
     let arg_fields = build_fields_ir(&args_name, &ix.arguments, ir, TypeKindIr::Helper);
 
-    ir.push_unique_type(TypeIr {
+    ir.types.push(TypeIr {
         name: args_name.clone(),
         fields: arg_fields,
         kind: TypeKindIr::Instruction,
     });
 
-    ir.push_unique_type(TypeIr {
+    ir.types.push(TypeIr {
         name: payload_name,
         fields: vec![
             FieldIr {
@@ -186,7 +191,7 @@ fn build_instruction_dispatch_oneof(
             OneofVariantIr {
                 tag: (i + 1) as u32,
                 variant_name: ix_name.clone(),
-                message_type: format!("{ix_name}Instruction"),
+                message_type: ix_name.clone(),
             }
         })
         .collect();

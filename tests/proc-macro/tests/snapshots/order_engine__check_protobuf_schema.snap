@@ -26,13 +26,13 @@ message FillArgs {
   int64 expire_at = 3;
 }
     
-message FillInstruction {
+message Fill {
   optional FillAccounts accounts = 1;
   optional FillArgs args = 2;
 }
     
 message Instructions {
   oneof instruction {
-    FillInstruction fill = 1;
+    Fill fill = 1;
   }
 }

@@ -545,7 +545,7 @@ message ClaimCreatorTradingFeeArgs {
   uint64 max_quote_amount = 2;
 }
     
-message ClaimCreatorTradingFeeInstruction {
+message ClaimCreatorTradingFee {
   optional ClaimCreatorTradingFeeAccounts accounts = 1;
   optional ClaimCreatorTradingFeeArgs args = 2;
 }
@@ -562,7 +562,7 @@ message ClaimPartnerPoolCreationFeeAccounts {
 message ClaimPartnerPoolCreationFeeArgs {
 }
     
-message ClaimPartnerPoolCreationFeeInstruction {
+message ClaimPartnerPoolCreationFee {
   optional ClaimPartnerPoolCreationFeeAccounts accounts = 1;
   optional ClaimPartnerPoolCreationFeeArgs args = 2;
 }
@@ -590,7 +590,7 @@ message ClaimProtocolFeeArgs {
   uint64 max_quote_amount = 2;
 }
     
-message ClaimProtocolFeeInstruction {
+message ClaimProtocolFee {
   optional ClaimProtocolFeeAccounts accounts = 1;
   optional ClaimProtocolFeeArgs args = 2;
 }
@@ -608,7 +608,7 @@ message ClaimProtocolPoolCreationFeeAccounts {
 message ClaimProtocolPoolCreationFeeArgs {
 }
     
-message ClaimProtocolPoolCreationFeeInstruction {
+message ClaimProtocolPoolCreationFee {
   optional ClaimProtocolPoolCreationFeeAccounts accounts = 1;
   optional ClaimProtocolPoolCreationFeeArgs args = 2;
 }
@@ -635,7 +635,7 @@ message ClaimTradingFeeArgs {
   uint64 max_amount_b = 2;
 }
     
-message ClaimTradingFeeInstruction {
+message ClaimTradingFee {
   optional ClaimTradingFeeAccounts accounts = 1;
   optional ClaimTradingFeeArgs args = 2;
 }
@@ -651,7 +651,7 @@ message CloseClaimProtocolFeeOperatorAccounts {
 message CloseClaimProtocolFeeOperatorArgs {
 }
     
-message CloseClaimProtocolFeeOperatorInstruction {
+message CloseClaimProtocolFeeOperator {
   optional CloseClaimProtocolFeeOperatorAccounts accounts = 1;
   optional CloseClaimProtocolFeeOperatorArgs args = 2;
 }
@@ -669,7 +669,7 @@ message CreateClaimProtocolFeeOperatorAccounts {
 message CreateClaimProtocolFeeOperatorArgs {
 }
     
-message CreateClaimProtocolFeeOperatorInstruction {
+message CreateClaimProtocolFeeOperator {
   optional CreateClaimProtocolFeeOperatorAccounts accounts = 1;
   optional CreateClaimProtocolFeeOperatorArgs args = 2;
 }
@@ -689,7 +689,7 @@ message CreateConfigArgs {
   ConfigParameters config_parameters = 1;
 }
     
-message CreateConfigInstruction {
+message CreateConfig {
   optional CreateConfigAccounts accounts = 1;
   optional CreateConfigArgs args = 2;
 }
@@ -714,7 +714,7 @@ message CreateLockerAccounts {
 message CreateLockerArgs {
 }
     
-message CreateLockerInstruction {
+message CreateLocker {
   optional CreateLockerAccounts accounts = 1;
   optional CreateLockerArgs args = 2;
 }
@@ -735,7 +735,7 @@ message CreatePartnerMetadataArgs {
   string logo = 4;
 }
     
-message CreatePartnerMetadataInstruction {
+message CreatePartnerMetadata {
   optional CreatePartnerMetadataAccounts accounts = 1;
   optional CreatePartnerMetadataArgs args = 2;
 }
@@ -757,7 +757,7 @@ message CreateVirtualPoolMetadataArgs {
   string logo = 4;
 }
     
-message CreateVirtualPoolMetadataInstruction {
+message CreateVirtualPoolMetadata {
   optional CreateVirtualPoolMetadataAccounts accounts = 1;
   optional CreateVirtualPoolMetadataArgs args = 2;
 }
@@ -778,7 +778,7 @@ message CreatorWithdrawSurplusAccounts {
 message CreatorWithdrawSurplusArgs {
 }
     
-message CreatorWithdrawSurplusInstruction {
+message CreatorWithdrawSurplus {
   optional CreatorWithdrawSurplusAccounts accounts = 1;
   optional CreatorWithdrawSurplusArgs args = 2;
 }
@@ -806,7 +806,7 @@ message InitializeVirtualPoolWithSplTokenArgs {
   InitializePoolParameters params = 1;
 }
     
-message InitializeVirtualPoolWithSplTokenInstruction {
+message InitializeVirtualPoolWithSplToken {
   optional InitializeVirtualPoolWithSplTokenAccounts accounts = 1;
   optional InitializeVirtualPoolWithSplTokenArgs args = 2;
 }
@@ -832,7 +832,7 @@ message InitializeVirtualPoolWithToken2022Args {
   InitializePoolParameters params = 1;
 }
     
-message InitializeVirtualPoolWithToken2022Instruction {
+message InitializeVirtualPoolWithToken2022 {
   optional InitializeVirtualPoolWithToken2022Accounts accounts = 1;
   optional InitializeVirtualPoolWithToken2022Args args = 2;
 }
@@ -874,7 +874,7 @@ message MigrateMeteoraDammAccounts {
 message MigrateMeteoraDammArgs {
 }
     
-message MigrateMeteoraDammInstruction {
+message MigrateMeteoraDamm {
   optional MigrateMeteoraDammAccounts accounts = 1;
   optional MigrateMeteoraDammArgs args = 2;
 }
@@ -894,7 +894,7 @@ message MigrateMeteoraDammClaimLpTokenAccounts {
 message MigrateMeteoraDammClaimLpTokenArgs {
 }
     
-message MigrateMeteoraDammClaimLpTokenInstruction {
+message MigrateMeteoraDammClaimLpToken {
   optional MigrateMeteoraDammClaimLpTokenAccounts accounts = 1;
   optional MigrateMeteoraDammClaimLpTokenArgs args = 2;
 }
@@ -922,7 +922,7 @@ message MigrateMeteoraDammLockLpTokenAccounts {
 message MigrateMeteoraDammLockLpTokenArgs {
 }
     
-message MigrateMeteoraDammLockLpTokenInstruction {
+message MigrateMeteoraDammLockLpToken {
   optional MigrateMeteoraDammLockLpTokenAccounts accounts = 1;
   optional MigrateMeteoraDammLockLpTokenArgs args = 2;
 }
@@ -958,7 +958,7 @@ message MigrationDammV2Accounts {
 message MigrationDammV2Args {
 }
     
-message MigrationDammV2Instruction {
+message MigrationDammV2 {
   optional MigrationDammV2Accounts accounts = 1;
   optional MigrationDammV2Args args = 2;
 }
@@ -976,7 +976,7 @@ message MigrationDammV2CreateMetadataAccounts {
 message MigrationDammV2CreateMetadataArgs {
 }
     
-message MigrationDammV2CreateMetadataInstruction {
+message MigrationDammV2CreateMetadata {
   optional MigrationDammV2CreateMetadataAccounts accounts = 1;
   optional MigrationDammV2CreateMetadataArgs args = 2;
 }
@@ -994,7 +994,7 @@ message MigrationMeteoraDammCreateMetadataAccounts {
 message MigrationMeteoraDammCreateMetadataArgs {
 }
     
-message MigrationMeteoraDammCreateMetadataInstruction {
+message MigrationMeteoraDammCreateMetadata {
   optional MigrationMeteoraDammCreateMetadataAccounts accounts = 1;
   optional MigrationMeteoraDammCreateMetadataArgs args = 2;
 }
@@ -1015,7 +1015,7 @@ message PartnerWithdrawSurplusAccounts {
 message PartnerWithdrawSurplusArgs {
 }
     
-message PartnerWithdrawSurplusInstruction {
+message PartnerWithdrawSurplus {
   optional PartnerWithdrawSurplusAccounts accounts = 1;
   optional PartnerWithdrawSurplusArgs args = 2;
 }
@@ -1042,7 +1042,7 @@ message SwapArgs {
   SwapParameters params = 1;
 }
     
-message SwapInstruction {
+message Swap {
   optional SwapAccounts accounts = 1;
   optional SwapArgs args = 2;
 }
@@ -1069,7 +1069,7 @@ message Swap2Args {
   SwapParameters2 params = 1;
 }
     
-message Swap2Instruction {
+message Swap2 {
   optional Swap2Accounts accounts = 1;
   optional Swap2Args args = 2;
 }
@@ -1086,7 +1086,7 @@ message TransferPoolCreatorAccounts {
 message TransferPoolCreatorArgs {
 }
     
-message TransferPoolCreatorInstruction {
+message TransferPoolCreator {
   optional TransferPoolCreatorAccounts accounts = 1;
   optional TransferPoolCreatorArgs args = 2;
 }
@@ -1107,7 +1107,7 @@ message WithdrawLeftoverAccounts {
 message WithdrawLeftoverArgs {
 }
     
-message WithdrawLeftoverInstruction {
+message WithdrawLeftover {
   optional WithdrawLeftoverAccounts accounts = 1;
   optional WithdrawLeftoverArgs args = 2;
 }
@@ -1129,38 +1129,38 @@ message WithdrawMigrationFeeArgs {
   uint32 flag = 1;
 }
     
-message WithdrawMigrationFeeInstruction {
+message WithdrawMigrationFee {
   optional WithdrawMigrationFeeAccounts accounts = 1;
   optional WithdrawMigrationFeeArgs args = 2;
 }
     
 message Instructions {
   oneof instruction {
-    ClaimCreatorTradingFeeInstruction claim_creator_trading_fee = 1;
-    ClaimPartnerPoolCreationFeeInstruction claim_partner_pool_creation_fee = 2;
-    ClaimProtocolFeeInstruction claim_protocol_fee = 3;
-    ClaimProtocolPoolCreationFeeInstruction claim_protocol_pool_creation_fee = 4;
-    ClaimTradingFeeInstruction claim_trading_fee = 5;
-    CloseClaimProtocolFeeOperatorInstruction close_claim_protocol_fee_operator = 6;
-    CreateClaimProtocolFeeOperatorInstruction create_claim_protocol_fee_operator = 7;
-    CreateConfigInstruction create_config = 8;
-    CreateLockerInstruction create_locker = 9;
-    CreatePartnerMetadataInstruction create_partner_metadata = 10;
-    CreateVirtualPoolMetadataInstruction create_virtual_pool_metadata = 11;
-    CreatorWithdrawSurplusInstruction creator_withdraw_surplus = 12;
-    InitializeVirtualPoolWithSplTokenInstruction initialize_virtual_pool_with_spl_token = 13;
-    InitializeVirtualPoolWithToken2022Instruction initialize_virtual_pool_with_token2022 = 14;
-    MigrateMeteoraDammInstruction migrate_meteora_damm = 15;
-    MigrateMeteoraDammClaimLpTokenInstruction migrate_meteora_damm_claim_lp_token = 16;
-    MigrateMeteoraDammLockLpTokenInstruction migrate_meteora_damm_lock_lp_token = 17;
-    MigrationDammV2Instruction migration_damm_v2 = 18;
-    MigrationDammV2CreateMetadataInstruction migration_damm_v2_create_metadata = 19;
-    MigrationMeteoraDammCreateMetadataInstruction migration_meteora_damm_create_metadata = 20;
-    PartnerWithdrawSurplusInstruction partner_withdraw_surplus = 21;
-    SwapInstruction swap = 22;
-    Swap2Instruction swap2 = 23;
-    TransferPoolCreatorInstruction transfer_pool_creator = 24;
-    WithdrawLeftoverInstruction withdraw_leftover = 25;
-    WithdrawMigrationFeeInstruction withdraw_migration_fee = 26;
+    ClaimCreatorTradingFee claim_creator_trading_fee = 1;
+    ClaimPartnerPoolCreationFee claim_partner_pool_creation_fee = 2;
+    ClaimProtocolFee claim_protocol_fee = 3;
+    ClaimProtocolPoolCreationFee claim_protocol_pool_creation_fee = 4;
+    ClaimTradingFee claim_trading_fee = 5;
+    CloseClaimProtocolFeeOperator close_claim_protocol_fee_operator = 6;
+    CreateClaimProtocolFeeOperator create_claim_protocol_fee_operator = 7;
+    CreateConfig create_config = 8;
+    CreateLocker create_locker = 9;
+    CreatePartnerMetadata create_partner_metadata = 10;
+    CreateVirtualPoolMetadata create_virtual_pool_metadata = 11;
+    CreatorWithdrawSurplus creator_withdraw_surplus = 12;
+    InitializeVirtualPoolWithSplToken initialize_virtual_pool_with_spl_token = 13;
+    InitializeVirtualPoolWithToken2022 initialize_virtual_pool_with_token2022 = 14;
+    MigrateMeteoraDamm migrate_meteora_damm = 15;
+    MigrateMeteoraDammClaimLpToken migrate_meteora_damm_claim_lp_token = 16;
+    MigrateMeteoraDammLockLpToken migrate_meteora_damm_lock_lp_token = 17;
+    MigrationDammV2 migration_damm_v2 = 18;
+    MigrationDammV2CreateMetadata migration_damm_v2_create_metadata = 19;
+    MigrationMeteoraDammCreateMetadata migration_meteora_damm_create_metadata = 20;
+    PartnerWithdrawSurplus partner_withdraw_surplus = 21;
+    Swap swap = 22;
+    Swap2 swap2 = 23;
+    TransferPoolCreator transfer_pool_creator = 24;
+    WithdrawLeftover withdraw_leftover = 25;
+    WithdrawMigrationFee withdraw_migration_fee = 26;
   }
 }

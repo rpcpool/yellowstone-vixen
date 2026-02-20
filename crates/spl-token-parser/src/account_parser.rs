@@ -52,16 +52,16 @@ pub struct Multisig {
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
 pub struct TokenProgramState {
-    #[vixen_proto_hint(oneof = "token_program_state::State", tags = "1, 2, 3")]
-    pub state: ::core::option::Option<token_program_state::State>,
+    #[vixen_proto_hint(oneof = "account::Account", tags = "1, 2, 3")]
+    pub account: ::core::option::Option<account::Account>,
 }
 
-pub mod token_program_state {
+pub mod account {
     use super::vixen_proto;
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum State {
+    pub enum Account {
         TokenAccount(super::TokenAccount),
         Mint(super::Mint),
         Multisig(super::Multisig),
@@ -147,20 +147,20 @@ impl Parser for AccountParser {
         let state = match data.len() {
             SplMint::LEN => {
                 let m = SplMint::unpack_from_slice(data).map_err(ParseError::from)?;
-                token_program_state::State::Mint(Mint::from(m))
+                account::Account::Mint(Mint::from(m))
             },
             SplAccount::LEN => {
                 let a = SplAccount::unpack_from_slice(data).map_err(ParseError::from)?;
-                token_program_state::State::TokenAccount(TokenAccount::from(a))
+                account::Account::TokenAccount(TokenAccount::from(a))
             },
             SplMultisig::LEN => {
                 let ms = SplMultisig::unpack_from_slice(data).map_err(ParseError::from)?;
-                token_program_state::State::Multisig(Multisig::from(ms))
+                account::Account::Multisig(Multisig::from(ms))
             },
             _ => return Err(ParseError::Filtered),
         };
 
-        Ok(TokenProgramState { state: Some(state) })
+        Ok(TokenProgramState { account: Some(state) })
     }
 }
 
@@ -173,7 +173,7 @@ impl ProgramParser for AccountParser {
 mod tests {
     use yellowstone_vixen_mock::account_fixture;
 
-    use super::{token_program_state, AccountParser, Parser, TokenProgramState};
+    use super::{account, AccountParser, Parser, TokenProgramState};
 
     #[tokio::test]
     async fn test_mint_account_parsing() {
@@ -182,7 +182,7 @@ mod tests {
         let account = account_fixture!("3SmPYPvZfEmroktLiJsgaNENuPEud3Z52zSfLQ1zJdkK", &parser);
 
         let TokenProgramState {
-            state: Some(token_program_state::State::Mint(mint)),
+            account: Some(account::Account::Mint(mint)),
         } = account
         else {
             panic!("Invalid Account");

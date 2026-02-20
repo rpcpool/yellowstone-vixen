@@ -171,7 +171,7 @@ message InitializeArgs {
   uint64 open_time = 2;
 }
     
-message InitializeInstruction {
+message Initialize {
   optional InitializeAccounts accounts = 1;
   optional InitializeArgs args = 2;
 }
@@ -207,7 +207,7 @@ message Initialize2Args {
   uint64 init_coin_amount = 4;
 }
     
-message Initialize2Instruction {
+message Initialize2 {
   optional Initialize2Accounts accounts = 1;
   optional Initialize2Args args = 2;
 }
@@ -240,7 +240,7 @@ message MonitorStepArgs {
   uint32 cancel_order_limit = 3;
 }
     
-message MonitorStepInstruction {
+message MonitorStep {
   optional MonitorStepAccounts accounts = 1;
   optional MonitorStepArgs args = 2;
 }
@@ -268,7 +268,7 @@ message DepositArgs {
   uint64 base_side = 3;
 }
     
-message DepositInstruction {
+message Deposit {
   optional DepositAccounts accounts = 1;
   optional DepositArgs args = 2;
 }
@@ -302,7 +302,7 @@ message WithdrawArgs {
   uint64 amount = 1;
 }
     
-message WithdrawInstruction {
+message Withdraw {
   optional WithdrawAccounts accounts = 1;
   optional WithdrawArgs args = 2;
 }
@@ -334,7 +334,7 @@ message MigrateToOpenBookAccounts {
 message MigrateToOpenBookArgs {
 }
     
-message MigrateToOpenBookInstruction {
+message MigrateToOpenBook {
   optional MigrateToOpenBookAccounts accounts = 1;
   optional MigrateToOpenBookArgs args = 2;
 }
@@ -367,7 +367,7 @@ message SetParamsArgs {
   optional NeedTake need_take_amounts = 6;
 }
     
-message SetParamsInstruction {
+message SetParams {
   optional SetParamsAccounts accounts = 1;
   optional SetParamsArgs args = 2;
 }
@@ -395,7 +395,7 @@ message WithdrawPnlAccounts {
 message WithdrawPnlArgs {
 }
     
-message WithdrawPnlInstruction {
+message WithdrawPnl {
   optional WithdrawPnlAccounts accounts = 1;
   optional WithdrawPnlArgs args = 2;
 }
@@ -413,7 +413,7 @@ message WithdrawSrmArgs {
   uint64 amount = 1;
 }
     
-message WithdrawSrmInstruction {
+message WithdrawSrm {
   optional WithdrawSrmAccounts accounts = 1;
   optional WithdrawSrmArgs args = 2;
 }
@@ -444,7 +444,7 @@ message SwapBaseInArgs {
   uint64 minimum_amount_out = 2;
 }
     
-message SwapBaseInInstruction {
+message SwapBaseIn {
   optional SwapBaseInAccounts accounts = 1;
   optional SwapBaseInArgs args = 2;
 }
@@ -470,7 +470,7 @@ message PreInitializeArgs {
   uint32 nonce = 1;
 }
     
-message PreInitializeInstruction {
+message PreInitialize {
   optional PreInitializeAccounts accounts = 1;
   optional PreInitializeArgs args = 2;
 }
@@ -501,7 +501,7 @@ message SwapBaseOutArgs {
   uint64 amount_out = 2;
 }
     
-message SwapBaseOutInstruction {
+message SwapBaseOut {
   optional SwapBaseOutAccounts accounts = 1;
   optional SwapBaseOutArgs args = 2;
 }
@@ -523,7 +523,7 @@ message SimulateInfoArgs {
   optional SwapInstructionBaseOut swap_base_out_value = 3;
 }
     
-message SimulateInfoInstruction {
+message SimulateInfo {
   optional SimulateInfoAccounts accounts = 1;
   optional SimulateInfoArgs args = 2;
 }
@@ -552,7 +552,7 @@ message AdminCancelOrdersArgs {
   uint32 limit = 1;
 }
     
-message AdminCancelOrdersInstruction {
+message AdminCancelOrders {
   optional AdminCancelOrdersAccounts accounts = 1;
   optional AdminCancelOrdersArgs args = 2;
 }
@@ -568,7 +568,7 @@ message CreateConfigAccountAccounts {
 message CreateConfigAccountArgs {
 }
     
-message CreateConfigAccountInstruction {
+message CreateConfigAccount {
   optional CreateConfigAccountAccounts accounts = 1;
   optional CreateConfigAccountArgs args = 2;
 }
@@ -583,7 +583,7 @@ message UpdateConfigAccountArgs {
   bytes owner = 2;
 }
     
-message UpdateConfigAccountInstruction {
+message UpdateConfigAccount {
   optional UpdateConfigAccountAccounts accounts = 1;
   optional UpdateConfigAccountArgs args = 2;
 }
@@ -604,7 +604,7 @@ message SwapBaseInV2Args {
   uint64 minimum_amount_out = 2;
 }
     
-message SwapBaseInV2Instruction {
+message SwapBaseInV2 {
   optional SwapBaseInV2Accounts accounts = 1;
   optional SwapBaseInV2Args args = 2;
 }
@@ -625,30 +625,30 @@ message SwapBaseOutV2Args {
   uint64 amount_out = 2;
 }
     
-message SwapBaseOutV2Instruction {
+message SwapBaseOutV2 {
   optional SwapBaseOutV2Accounts accounts = 1;
   optional SwapBaseOutV2Args args = 2;
 }
     
 message Instructions {
   oneof instruction {
-    InitializeInstruction initialize = 1;
-    Initialize2Instruction initialize2 = 2;
-    MonitorStepInstruction monitor_step = 3;
-    DepositInstruction deposit = 4;
-    WithdrawInstruction withdraw = 5;
-    MigrateToOpenBookInstruction migrate_to_open_book = 6;
-    SetParamsInstruction set_params = 7;
-    WithdrawPnlInstruction withdraw_pnl = 8;
-    WithdrawSrmInstruction withdraw_srm = 9;
-    SwapBaseInInstruction swap_base_in = 10;
-    PreInitializeInstruction pre_initialize = 11;
-    SwapBaseOutInstruction swap_base_out = 12;
-    SimulateInfoInstruction simulate_info = 13;
-    AdminCancelOrdersInstruction admin_cancel_orders = 14;
-    CreateConfigAccountInstruction create_config_account = 15;
-    UpdateConfigAccountInstruction update_config_account = 16;
-    SwapBaseInV2Instruction swap_base_in_v2 = 17;
-    SwapBaseOutV2Instruction swap_base_out_v2 = 18;
+    Initialize initialize = 1;
+    Initialize2 initialize2 = 2;
+    MonitorStep monitor_step = 3;
+    Deposit deposit = 4;
+    Withdraw withdraw = 5;
+    MigrateToOpenBook migrate_to_open_book = 6;
+    SetParams set_params = 7;
+    WithdrawPnl withdraw_pnl = 8;
+    WithdrawSrm withdraw_srm = 9;
+    SwapBaseIn swap_base_in = 10;
+    PreInitialize pre_initialize = 11;
+    SwapBaseOut swap_base_out = 12;
+    SimulateInfo simulate_info = 13;
+    AdminCancelOrders admin_cancel_orders = 14;
+    CreateConfigAccount create_config_account = 15;
+    UpdateConfigAccount update_config_account = 16;
+    SwapBaseInV2 swap_base_in_v2 = 17;
+    SwapBaseOutV2 swap_base_out_v2 = 18;
   }
 }

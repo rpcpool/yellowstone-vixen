@@ -335,7 +335,7 @@ message InitArgs {
   bool allow_liquidate_position = 7;
 }
     
-message InitInstruction {
+message Init {
   optional InitAccounts accounts = 1;
   optional InitArgs args = 2;
 }
@@ -358,7 +358,7 @@ message AddPoolArgs {
   int64 max_request_execution_sec = 4;
 }
     
-message AddPoolInstruction {
+message AddPool {
   optional AddPoolAccounts accounts = 1;
   optional AddPoolArgs args = 2;
 }
@@ -395,7 +395,7 @@ message AddCustodyArgs {
   bytes doves_ag_oracle = 16;
 }
     
-message AddCustodyInstruction {
+message AddCustody {
   optional AddCustodyAccounts accounts = 1;
   optional AddCustodyArgs args = 2;
 }
@@ -434,7 +434,7 @@ message SetCustodyConfigArgs {
   uint64 withdrawal_limit_token_amount = 25;
 }
     
-message SetCustodyConfigInstruction {
+message SetCustodyConfig {
   optional SetCustodyConfigAccounts accounts = 1;
   optional SetCustodyConfigArgs args = 2;
 }
@@ -455,7 +455,7 @@ message SetPoolConfigArgs {
   uint64 max_lp_token_price_change_bps = 7;
 }
     
-message SetPoolConfigInstruction {
+message SetPoolConfig {
   optional SetPoolConfigAccounts accounts = 1;
   optional SetPoolConfigArgs args = 2;
 }
@@ -469,7 +469,7 @@ message SetPerpetualsConfigArgs {
   Permissions permissions = 1;
 }
     
-message SetPerpetualsConfigInstruction {
+message SetPerpetualsConfig {
   optional SetPerpetualsConfigAccounts accounts = 1;
   optional SetPerpetualsConfigArgs args = 2;
 }
@@ -483,7 +483,7 @@ message TransferAdminAccounts {
 message TransferAdminArgs {
 }
     
-message TransferAdminInstruction {
+message TransferAdmin {
   optional TransferAdminAccounts accounts = 1;
   optional TransferAdminArgs args = 2;
 }
@@ -504,7 +504,7 @@ message WithdrawFees2Accounts {
 message WithdrawFees2Args {
 }
     
-message WithdrawFees2Instruction {
+message WithdrawFees2 {
   optional WithdrawFees2Accounts accounts = 1;
   optional WithdrawFees2Args args = 2;
 }
@@ -527,7 +527,7 @@ message CreateTokenMetadataArgs {
   string uri = 3;
 }
     
-message CreateTokenMetadataInstruction {
+message CreateTokenMetadata {
   optional CreateTokenMetadataAccounts accounts = 1;
   optional CreateTokenMetadataArgs args = 2;
 }
@@ -541,7 +541,7 @@ message CreateTokenLedgerAccounts {
 message CreateTokenLedgerArgs {
 }
     
-message CreateTokenLedgerInstruction {
+message CreateTokenLedger {
   optional CreateTokenLedgerAccounts accounts = 1;
   optional CreateTokenLedgerArgs args = 2;
 }
@@ -556,7 +556,7 @@ message ReallocCustodyAccounts {
 message ReallocCustodyArgs {
 }
     
-message ReallocCustodyInstruction {
+message ReallocCustody {
   optional ReallocCustodyAccounts accounts = 1;
   optional ReallocCustodyArgs args = 2;
 }
@@ -571,7 +571,7 @@ message ReallocPoolAccounts {
 message ReallocPoolArgs {
 }
     
-message ReallocPoolInstruction {
+message ReallocPool {
   optional ReallocPoolAccounts accounts = 1;
   optional ReallocPoolArgs args = 2;
 }
@@ -602,7 +602,7 @@ message CreateAndDelegateStakeAccountArgs {
   uint64 stake_amount_lamports = 2;
 }
     
-message CreateAndDelegateStakeAccountInstruction {
+message CreateAndDelegateStakeAccount {
   optional CreateAndDelegateStakeAccountAccounts accounts = 1;
   optional CreateAndDelegateStakeAccountArgs args = 2;
 }
@@ -622,7 +622,7 @@ message UnstakeAccounts {
 message UnstakeArgs {
 }
     
-message UnstakeInstruction {
+message Unstake {
   optional UnstakeAccounts accounts = 1;
   optional UnstakeArgs args = 2;
 }
@@ -646,7 +646,7 @@ message WithdrawStakeAccounts {
 message WithdrawStakeArgs {
 }
     
-message WithdrawStakeInstruction {
+message WithdrawStake {
   optional WithdrawStakeAccounts accounts = 1;
   optional WithdrawStakeArgs args = 2;
 }
@@ -663,7 +663,7 @@ message RedeemStakeAccounts {
 message RedeemStakeArgs {
 }
     
-message RedeemStakeInstruction {
+message RedeemStake {
   optional RedeemStakeAccounts accounts = 1;
   optional RedeemStakeArgs args = 2;
 }
@@ -697,7 +697,7 @@ message OperatorSetCustodyConfigArgs {
   uint64 withdrawal_limit_interval_seconds = 21;
 }
     
-message OperatorSetCustodyConfigInstruction {
+message OperatorSetCustodyConfig {
   optional OperatorSetCustodyConfigAccounts accounts = 1;
   optional OperatorSetCustodyConfigArgs args = 2;
 }
@@ -716,7 +716,7 @@ message OperatorSetPoolConfigArgs {
   uint64 max_lp_token_price_change_bps = 6;
 }
     
-message OperatorSetPoolConfigInstruction {
+message OperatorSetPoolConfig {
   optional OperatorSetPoolConfigAccounts accounts = 1;
   optional OperatorSetPoolConfigArgs args = 2;
 }
@@ -740,7 +740,7 @@ message TestInitArgs {
   bool allow_liquidate_position = 7;
 }
     
-message TestInitInstruction {
+message TestInit {
   optional TestInitAccounts accounts = 1;
   optional TestInitArgs args = 2;
 }
@@ -754,7 +754,7 @@ message SetTestTimeArgs {
   int64 time = 1;
 }
     
-message SetTestTimeInstruction {
+message SetTestTime {
   optional SetTestTimeAccounts accounts = 1;
   optional SetTestTimeArgs args = 2;
 }
@@ -768,7 +768,7 @@ message SetTokenLedgerAccounts {
 message SetTokenLedgerArgs {
 }
     
-message SetTokenLedgerInstruction {
+message SetTokenLedger {
   optional SetTokenLedgerAccounts accounts = 1;
   optional SetTokenLedgerArgs args = 2;
 }
@@ -798,7 +798,7 @@ message Swap2Args {
   uint64 min_amount_out = 2;
 }
     
-message Swap2Instruction {
+message Swap2 {
   optional Swap2Accounts accounts = 1;
   optional Swap2Args args = 2;
 }
@@ -827,7 +827,7 @@ message SwapWithTokenLedgerArgs {
   uint64 min_amount_out = 1;
 }
     
-message SwapWithTokenLedgerInstruction {
+message SwapWithTokenLedger {
   optional SwapWithTokenLedgerAccounts accounts = 1;
   optional SwapWithTokenLedgerArgs args = 2;
 }
@@ -856,7 +856,7 @@ message InstantIncreasePositionPreSwapArgs {
   uint64 min_amount_out = 2;
 }
     
-message InstantIncreasePositionPreSwapInstruction {
+message InstantIncreasePositionPreSwap {
   optional InstantIncreasePositionPreSwapAccounts accounts = 1;
   optional InstantIncreasePositionPreSwapArgs args = 2;
 }
@@ -884,7 +884,7 @@ message AddLiquidity2Args {
   optional uint64 token_amount_pre_swap = 3;
 }
     
-message AddLiquidity2Instruction {
+message AddLiquidity2 {
   optional AddLiquidity2Accounts accounts = 1;
   optional AddLiquidity2Args args = 2;
 }
@@ -911,7 +911,7 @@ message RemoveLiquidity2Args {
   uint64 min_amount_out = 2;
 }
     
-message RemoveLiquidity2Instruction {
+message RemoveLiquidity2 {
   optional RemoveLiquidity2Accounts accounts = 1;
   optional RemoveLiquidity2Args args = 2;
 }
@@ -944,7 +944,7 @@ message CreateIncreasePositionMarketRequestArgs {
   uint64 counter = 6;
 }
     
-message CreateIncreasePositionMarketRequestInstruction {
+message CreateIncreasePositionMarketRequest {
   optional CreateIncreasePositionMarketRequestAccounts accounts = 1;
   optional CreateIncreasePositionMarketRequestArgs args = 2;
 }
@@ -982,7 +982,7 @@ message CreateDecreasePositionRequest2Args {
   uint64 counter = 9;
 }
     
-message CreateDecreasePositionRequest2Instruction {
+message CreateDecreasePositionRequest2 {
   optional CreateDecreasePositionRequest2Accounts accounts = 1;
   optional CreateDecreasePositionRequest2Args args = 2;
 }
@@ -1015,7 +1015,7 @@ message CreateDecreasePositionMarketRequestArgs {
   uint64 counter = 6;
 }
     
-message CreateDecreasePositionMarketRequestInstruction {
+message CreateDecreasePositionMarketRequest {
   optional CreateDecreasePositionMarketRequestAccounts accounts = 1;
   optional CreateDecreasePositionMarketRequestArgs args = 2;
 }
@@ -1036,7 +1036,7 @@ message UpdateDecreasePositionRequest2Args {
   uint64 trigger_price = 2;
 }
     
-message UpdateDecreasePositionRequest2Instruction {
+message UpdateDecreasePositionRequest2 {
   optional UpdateDecreasePositionRequest2Accounts accounts = 1;
   optional UpdateDecreasePositionRequest2Args args = 2;
 }
@@ -1060,7 +1060,7 @@ message ClosePositionRequest2Accounts {
 message ClosePositionRequest2Args {
 }
     
-message ClosePositionRequest2Instruction {
+message ClosePositionRequest2 {
   optional ClosePositionRequest2Accounts accounts = 1;
   optional ClosePositionRequest2Args args = 2;
 }
@@ -1085,7 +1085,7 @@ message ClosePositionRequest3Accounts {
 message ClosePositionRequest3Args {
 }
     
-message ClosePositionRequest3Instruction {
+message ClosePositionRequest3 {
   optional ClosePositionRequest3Accounts accounts = 1;
   optional ClosePositionRequest3Args args = 2;
 }
@@ -1112,7 +1112,7 @@ message IncreasePosition4Accounts {
 message IncreasePosition4Args {
 }
     
-message IncreasePosition4Instruction {
+message IncreasePosition4 {
   optional IncreasePosition4Accounts accounts = 1;
   optional IncreasePosition4Args args = 2;
 }
@@ -1134,7 +1134,7 @@ message IncreasePositionPreSwapAccounts {
 message IncreasePositionPreSwapArgs {
 }
     
-message IncreasePositionPreSwapInstruction {
+message IncreasePositionPreSwap {
   optional IncreasePositionPreSwapAccounts accounts = 1;
   optional IncreasePositionPreSwapArgs args = 2;
 }
@@ -1165,7 +1165,7 @@ message IncreasePositionWithInternalSwapAccounts {
 message IncreasePositionWithInternalSwapArgs {
 }
     
-message IncreasePositionWithInternalSwapInstruction {
+message IncreasePositionWithInternalSwap {
   optional IncreasePositionWithInternalSwapAccounts accounts = 1;
   optional IncreasePositionWithInternalSwapArgs args = 2;
 }
@@ -1194,7 +1194,7 @@ message DecreasePosition4Accounts {
 message DecreasePosition4Args {
 }
     
-message DecreasePosition4Instruction {
+message DecreasePosition4 {
   optional DecreasePosition4Accounts accounts = 1;
   optional DecreasePosition4Args args = 2;
 }
@@ -1227,7 +1227,7 @@ message DecreasePositionWithInternalSwapAccounts {
 message DecreasePositionWithInternalSwapArgs {
 }
     
-message DecreasePositionWithInternalSwapInstruction {
+message DecreasePositionWithInternalSwap {
   optional DecreasePositionWithInternalSwapAccounts accounts = 1;
   optional DecreasePositionWithInternalSwapArgs args = 2;
 }
@@ -1254,7 +1254,7 @@ message DecreasePositionWithTpslAccounts {
 message DecreasePositionWithTpslArgs {
 }
     
-message DecreasePositionWithTpslInstruction {
+message DecreasePositionWithTpsl {
   optional DecreasePositionWithTpslAccounts accounts = 1;
   optional DecreasePositionWithTpslArgs args = 2;
 }
@@ -1284,7 +1284,7 @@ message DecreasePositionWithTpslAndInternalSwapAccounts {
 message DecreasePositionWithTpslAndInternalSwapArgs {
 }
     
-message DecreasePositionWithTpslAndInternalSwapInstruction {
+message DecreasePositionWithTpslAndInternalSwap {
   optional DecreasePositionWithTpslAndInternalSwapAccounts accounts = 1;
   optional DecreasePositionWithTpslAndInternalSwapArgs args = 2;
 }
@@ -1308,7 +1308,7 @@ message LiquidateFullPosition4Accounts {
 message LiquidateFullPosition4Args {
 }
     
-message LiquidateFullPosition4Instruction {
+message LiquidateFullPosition4 {
   optional LiquidateFullPosition4Accounts accounts = 1;
   optional LiquidateFullPosition4Args args = 2;
 }
@@ -1323,7 +1323,7 @@ message RefreshAssetsUnderManagementAccounts {
 message RefreshAssetsUnderManagementArgs {
 }
     
-message RefreshAssetsUnderManagementInstruction {
+message RefreshAssetsUnderManagement {
   optional RefreshAssetsUnderManagementAccounts accounts = 1;
   optional RefreshAssetsUnderManagementArgs args = 2;
 }
@@ -1343,7 +1343,7 @@ message SetMaxGlobalSizesArgs {
   uint64 timestamp = 6;
 }
     
-message SetMaxGlobalSizesInstruction {
+message SetMaxGlobalSizes {
   optional SetMaxGlobalSizesAccounts accounts = 1;
   optional SetMaxGlobalSizesArgs args = 2;
 }
@@ -1381,7 +1381,7 @@ message InstantCreateTpslArgs {
   int64 request_time = 7;
 }
     
-message InstantCreateTpslInstruction {
+message InstantCreateTpsl {
   optional InstantCreateTpslAccounts accounts = 1;
   optional InstantCreateTpslArgs args = 2;
 }
@@ -1419,7 +1419,7 @@ message InstantCreateLimitOrderArgs {
   int64 request_time = 7;
 }
     
-message InstantCreateLimitOrderInstruction {
+message InstantCreateLimitOrder {
   optional InstantCreateLimitOrderAccounts accounts = 1;
   optional InstantCreateLimitOrderArgs args = 2;
 }
@@ -1455,7 +1455,7 @@ message InstantIncreasePositionArgs {
   int64 request_time = 5;
 }
     
-message InstantIncreasePositionInstruction {
+message InstantIncreasePosition {
   optional InstantIncreasePositionAccounts accounts = 1;
   optional InstantIncreasePositionArgs args = 2;
 }
@@ -1493,7 +1493,7 @@ message InstantDecreasePositionArgs {
   int64 request_time = 5;
 }
     
-message InstantDecreasePositionInstruction {
+message InstantDecreasePosition {
   optional InstantDecreasePositionAccounts accounts = 1;
   optional InstantDecreasePositionArgs args = 2;
 }
@@ -1532,7 +1532,7 @@ message InstantDecreasePosition2Args {
   uint64 counter = 6;
 }
     
-message InstantDecreasePosition2Instruction {
+message InstantDecreasePosition2 {
   optional InstantDecreasePosition2Accounts accounts = 1;
   optional InstantDecreasePosition2Args args = 2;
 }
@@ -1556,7 +1556,7 @@ message InstantUpdateLimitOrderArgs {
   int64 request_time = 3;
 }
     
-message InstantUpdateLimitOrderInstruction {
+message InstantUpdateLimitOrder {
   optional InstantUpdateLimitOrderAccounts accounts = 1;
   optional InstantUpdateLimitOrderArgs args = 2;
 }
@@ -1582,7 +1582,7 @@ message InstantUpdateTpslArgs {
   int64 request_time = 3;
 }
     
-message InstantUpdateTpslInstruction {
+message InstantUpdateTpsl {
   optional InstantUpdateTpslAccounts accounts = 1;
   optional InstantUpdateTpslArgs args = 2;
 }
@@ -1600,7 +1600,7 @@ message GetAddLiquidityAmountAndFee2Args {
   uint64 token_amount_in = 1;
 }
     
-message GetAddLiquidityAmountAndFee2Instruction {
+message GetAddLiquidityAmountAndFee2 {
   optional GetAddLiquidityAmountAndFee2Accounts accounts = 1;
   optional GetAddLiquidityAmountAndFee2Args args = 2;
 }
@@ -1618,7 +1618,7 @@ message GetRemoveLiquidityAmountAndFee2Args {
   uint64 lp_amount_in = 1;
 }
     
-message GetRemoveLiquidityAmountAndFee2Instruction {
+message GetRemoveLiquidityAmountAndFee2 {
   optional GetRemoveLiquidityAmountAndFee2Accounts accounts = 1;
   optional GetRemoveLiquidityAmountAndFee2Args args = 2;
 }
@@ -1632,7 +1632,7 @@ message GetAssetsUnderManagement2Args {
   optional PriceCalcMode mode = 1;
 }
     
-message GetAssetsUnderManagement2Instruction {
+message GetAssetsUnderManagement2 {
   optional GetAssetsUnderManagement2Accounts accounts = 1;
   optional GetAssetsUnderManagement2Args args = 2;
 }
@@ -1656,7 +1656,7 @@ message BorrowFromCustodyArgs {
   uint64 amount = 1;
 }
     
-message BorrowFromCustodyInstruction {
+message BorrowFromCustody {
   optional BorrowFromCustodyAccounts accounts = 1;
   optional BorrowFromCustodyArgs args = 2;
 }
@@ -1678,7 +1678,7 @@ message RepayToCustodyArgs {
   uint64 amount = 1;
 }
     
-message RepayToCustodyInstruction {
+message RepayToCustody {
   optional RepayToCustodyAccounts accounts = 1;
   optional RepayToCustodyArgs args = 2;
 }
@@ -1703,7 +1703,7 @@ message DepositCollateralForBorrowsArgs {
   uint64 amount = 1;
 }
     
-message DepositCollateralForBorrowsInstruction {
+message DepositCollateralForBorrows {
   optional DepositCollateralForBorrowsAccounts accounts = 1;
   optional DepositCollateralForBorrowsArgs args = 2;
 }
@@ -1727,7 +1727,7 @@ message WithdrawCollateralForBorrowsArgs {
   uint64 amount = 1;
 }
     
-message WithdrawCollateralForBorrowsInstruction {
+message WithdrawCollateralForBorrows {
   optional WithdrawCollateralForBorrowsAccounts accounts = 1;
   optional WithdrawCollateralForBorrowsArgs args = 2;
 }
@@ -1749,7 +1749,7 @@ message LiquidateBorrowPositionAccounts {
 message LiquidateBorrowPositionArgs {
 }
     
-message LiquidateBorrowPositionInstruction {
+message LiquidateBorrowPosition {
   optional LiquidateBorrowPositionAccounts accounts = 1;
   optional LiquidateBorrowPositionArgs args = 2;
 }
@@ -1771,7 +1771,7 @@ message PartialLiquidateBorrowPositionAccounts {
 message PartialLiquidateBorrowPositionArgs {
 }
     
-message PartialLiquidateBorrowPositionInstruction {
+message PartialLiquidateBorrowPosition {
   optional PartialLiquidateBorrowPositionAccounts accounts = 1;
   optional PartialLiquidateBorrowPositionArgs args = 2;
 }
@@ -1787,7 +1787,7 @@ message CloseBorrowPositionAccounts {
 message CloseBorrowPositionArgs {
 }
     
-message CloseBorrowPositionInstruction {
+message CloseBorrowPosition {
   optional CloseBorrowPositionAccounts accounts = 1;
   optional CloseBorrowPositionArgs args = 2;
 }
@@ -1846,64 +1846,64 @@ message Side {
 }
 message Instructions {
   oneof instruction {
-    InitInstruction init = 1;
-    AddPoolInstruction add_pool = 2;
-    AddCustodyInstruction add_custody = 3;
-    SetCustodyConfigInstruction set_custody_config = 4;
-    SetPoolConfigInstruction set_pool_config = 5;
-    SetPerpetualsConfigInstruction set_perpetuals_config = 6;
-    TransferAdminInstruction transfer_admin = 7;
-    WithdrawFees2Instruction withdraw_fees2 = 8;
-    CreateTokenMetadataInstruction create_token_metadata = 9;
-    CreateTokenLedgerInstruction create_token_ledger = 10;
-    ReallocCustodyInstruction realloc_custody = 11;
-    ReallocPoolInstruction realloc_pool = 12;
-    CreateAndDelegateStakeAccountInstruction create_and_delegate_stake_account = 13;
-    UnstakeInstruction unstake = 14;
-    WithdrawStakeInstruction withdraw_stake = 15;
-    RedeemStakeInstruction redeem_stake = 16;
-    OperatorSetCustodyConfigInstruction operator_set_custody_config = 17;
-    OperatorSetPoolConfigInstruction operator_set_pool_config = 18;
-    TestInitInstruction test_init = 19;
-    SetTestTimeInstruction set_test_time = 20;
-    SetTokenLedgerInstruction set_token_ledger = 21;
-    Swap2Instruction swap2 = 22;
-    SwapWithTokenLedgerInstruction swap_with_token_ledger = 23;
-    InstantIncreasePositionPreSwapInstruction instant_increase_position_pre_swap = 24;
-    AddLiquidity2Instruction add_liquidity2 = 25;
-    RemoveLiquidity2Instruction remove_liquidity2 = 26;
-    CreateIncreasePositionMarketRequestInstruction create_increase_position_market_request = 27;
-    CreateDecreasePositionRequest2Instruction create_decrease_position_request2 = 28;
-    CreateDecreasePositionMarketRequestInstruction create_decrease_position_market_request = 29;
-    UpdateDecreasePositionRequest2Instruction update_decrease_position_request2 = 30;
-    ClosePositionRequest2Instruction close_position_request2 = 31;
-    ClosePositionRequest3Instruction close_position_request3 = 32;
-    IncreasePosition4Instruction increase_position4 = 33;
-    IncreasePositionPreSwapInstruction increase_position_pre_swap = 34;
-    IncreasePositionWithInternalSwapInstruction increase_position_with_internal_swap = 35;
-    DecreasePosition4Instruction decrease_position4 = 36;
-    DecreasePositionWithInternalSwapInstruction decrease_position_with_internal_swap = 37;
-    DecreasePositionWithTpslInstruction decrease_position_with_tpsl = 38;
-    DecreasePositionWithTpslAndInternalSwapInstruction decrease_position_with_tpsl_and_internal_swap = 39;
-    LiquidateFullPosition4Instruction liquidate_full_position4 = 40;
-    RefreshAssetsUnderManagementInstruction refresh_assets_under_management = 41;
-    SetMaxGlobalSizesInstruction set_max_global_sizes = 42;
-    InstantCreateTpslInstruction instant_create_tpsl = 43;
-    InstantCreateLimitOrderInstruction instant_create_limit_order = 44;
-    InstantIncreasePositionInstruction instant_increase_position = 45;
-    InstantDecreasePositionInstruction instant_decrease_position = 46;
-    InstantDecreasePosition2Instruction instant_decrease_position2 = 47;
-    InstantUpdateLimitOrderInstruction instant_update_limit_order = 48;
-    InstantUpdateTpslInstruction instant_update_tpsl = 49;
-    GetAddLiquidityAmountAndFee2Instruction get_add_liquidity_amount_and_fee2 = 50;
-    GetRemoveLiquidityAmountAndFee2Instruction get_remove_liquidity_amount_and_fee2 = 51;
-    GetAssetsUnderManagement2Instruction get_assets_under_management2 = 52;
-    BorrowFromCustodyInstruction borrow_from_custody = 53;
-    RepayToCustodyInstruction repay_to_custody = 54;
-    DepositCollateralForBorrowsInstruction deposit_collateral_for_borrows = 55;
-    WithdrawCollateralForBorrowsInstruction withdraw_collateral_for_borrows = 56;
-    LiquidateBorrowPositionInstruction liquidate_borrow_position = 57;
-    PartialLiquidateBorrowPositionInstruction partial_liquidate_borrow_position = 58;
-    CloseBorrowPositionInstruction close_borrow_position = 59;
+    Init init = 1;
+    AddPool add_pool = 2;
+    AddCustody add_custody = 3;
+    SetCustodyConfig set_custody_config = 4;
+    SetPoolConfig set_pool_config = 5;
+    SetPerpetualsConfig set_perpetuals_config = 6;
+    TransferAdmin transfer_admin = 7;
+    WithdrawFees2 withdraw_fees2 = 8;
+    CreateTokenMetadata create_token_metadata = 9;
+    CreateTokenLedger create_token_ledger = 10;
+    ReallocCustody realloc_custody = 11;
+    ReallocPool realloc_pool = 12;
+    CreateAndDelegateStakeAccount create_and_delegate_stake_account = 13;
+    Unstake unstake = 14;
+    WithdrawStake withdraw_stake = 15;
+    RedeemStake redeem_stake = 16;
+    OperatorSetCustodyConfig operator_set_custody_config = 17;
+    OperatorSetPoolConfig operator_set_pool_config = 18;
+    TestInit test_init = 19;
+    SetTestTime set_test_time = 20;
+    SetTokenLedger set_token_ledger = 21;
+    Swap2 swap2 = 22;
+    SwapWithTokenLedger swap_with_token_ledger = 23;
+    InstantIncreasePositionPreSwap instant_increase_position_pre_swap = 24;
+    AddLiquidity2 add_liquidity2 = 25;
+    RemoveLiquidity2 remove_liquidity2 = 26;
+    CreateIncreasePositionMarketRequest create_increase_position_market_request = 27;
+    CreateDecreasePositionRequest2 create_decrease_position_request2 = 28;
+    CreateDecreasePositionMarketRequest create_decrease_position_market_request = 29;
+    UpdateDecreasePositionRequest2 update_decrease_position_request2 = 30;
+    ClosePositionRequest2 close_position_request2 = 31;
+    ClosePositionRequest3 close_position_request3 = 32;
+    IncreasePosition4 increase_position4 = 33;
+    IncreasePositionPreSwap increase_position_pre_swap = 34;
+    IncreasePositionWithInternalSwap increase_position_with_internal_swap = 35;
+    DecreasePosition4 decrease_position4 = 36;
+    DecreasePositionWithInternalSwap decrease_position_with_internal_swap = 37;
+    DecreasePositionWithTpsl decrease_position_with_tpsl = 38;
+    DecreasePositionWithTpslAndInternalSwap decrease_position_with_tpsl_and_internal_swap = 39;
+    LiquidateFullPosition4 liquidate_full_position4 = 40;
+    RefreshAssetsUnderManagement refresh_assets_under_management = 41;
+    SetMaxGlobalSizes set_max_global_sizes = 42;
+    InstantCreateTpsl instant_create_tpsl = 43;
+    InstantCreateLimitOrder instant_create_limit_order = 44;
+    InstantIncreasePosition instant_increase_position = 45;
+    InstantDecreasePosition instant_decrease_position = 46;
+    InstantDecreasePosition2 instant_decrease_position2 = 47;
+    InstantUpdateLimitOrder instant_update_limit_order = 48;
+    InstantUpdateTpsl instant_update_tpsl = 49;
+    GetAddLiquidityAmountAndFee2 get_add_liquidity_amount_and_fee2 = 50;
+    GetRemoveLiquidityAmountAndFee2 get_remove_liquidity_amount_and_fee2 = 51;
+    GetAssetsUnderManagement2 get_assets_under_management2 = 52;
+    BorrowFromCustody borrow_from_custody = 53;
+    RepayToCustody repay_to_custody = 54;
+    DepositCollateralForBorrows deposit_collateral_for_borrows = 55;
+    WithdrawCollateralForBorrows withdraw_collateral_for_borrows = 56;
+    LiquidateBorrowPosition liquidate_borrow_position = 57;
+    PartialLiquidateBorrowPosition partial_liquidate_borrow_position = 58;
+    CloseBorrowPosition close_borrow_position = 59;
   }
 }

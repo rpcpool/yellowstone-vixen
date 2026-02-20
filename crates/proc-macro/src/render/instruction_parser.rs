@@ -14,7 +14,7 @@ pub fn single_instruction_parser(
     let ix_name_pascal = crate::utils::to_pascal_case(&instruction.name);
 
     let variant_ident: syn::Ident = format_ident!("{}", ix_name_pascal);
-    let payload_ident: syn::Ident = format_ident!("{}Instruction", ix_name_pascal);
+    let payload_ident: syn::Ident = format_ident!("{}", ix_name_pascal);
     let accounts_ident = format_ident!("{}Accounts", ix_name_pascal);
     let args_ident = format_ident!("{}Args", ix_name_pascal);
 
@@ -39,31 +39,17 @@ pub fn single_instruction_parser(
             quote! { #field_name: accounts.get(#idx).ok_or(ParseError::from(#error_msg))?.to_vec() }
         });
 
-        quote! { #accounts_ident { #(#accounts_fields),* } }
+        quote! { instruction::#accounts_ident { #(#accounts_fields),* } }
     };
 
     let has_args = !instruction.arguments.is_empty();
 
     let build_payload = |args_expr: TokenStream| {
         quote! {
-            //
-            // Example:
-            //
-            // PumpFun {
-            //  instruction: Some(
-            //      Instruction::Create(
-            //          CreateInstruction {
-            //              accounts: Some(CreateAccounts { ... }),
-            //              args: Some(CreateArgs { ... }),
-            //          }
-            //      )
-            //  )
-            // }
-            //
             return Ok(#wrapper_ident {
                 instruction: ::core::option::Option::Some(
-                    Instruction::#variant_ident(
-                        #payload_ident {
+                    instruction::Instruction::#variant_ident(
+                        instruction::#payload_ident {
                             accounts: ::core::option::Option::Some(#accounts_value),
                             args: #args_expr,
                         }
@@ -89,7 +75,7 @@ pub fn single_instruction_parser(
             let args_expr = if has_args {
                 quote! {
                     ::core::option::Option::Some(
-                        <#args_ident as ::borsh::BorshDeserialize>::try_from_slice(
+                        <instruction::#args_ident as ::borsh::BorshDeserialize>::try_from_slice(
                             data.get((#offset + 1)..).ok_or(ParseError::from("Missing args bytes"))?
                         ).map_err(|e| ParseError::Other(e.into()))?
                     )
@@ -148,7 +134,7 @@ pub fn single_instruction_parser(
             let args_expr = if has_args {
                 quote! {
                     ::core::option::Option::Some(
-                        <#args_ident as ::borsh::BorshDeserialize>::try_from_slice(
+                        <instruction::#args_ident as ::borsh::BorshDeserialize>::try_from_slice(
                             data.get(#end..).ok_or(ParseError::from("Missing args bytes"))?
                         ).map_err(|e| ParseError::Other(e.into()))?
                     )
@@ -177,7 +163,7 @@ pub fn single_instruction_parser(
             let args_expr = if has_args {
                 quote! {
                     ::core::option::Option::Some(
-                        <#args_ident as ::borsh::BorshDeserialize>::try_from_slice(data)
+                        <instruction::#args_ident as ::borsh::BorshDeserialize>::try_from_slice(data)
                             .map_err(|e| ParseError::Other(e.into()))?
                     )
                 }
@@ -215,7 +201,7 @@ pub fn instruction_parser(
         pub struct InstructionParser;
 
         impl Parser for InstructionParser {
-            type Input = instruction::InstructionUpdate;
+            type Input = ::yellowstone_vixen_core::instruction::InstructionUpdate;
             type Output = #wrapper_ident;
 
             fn id(&self) -> std::borrow::Cow<'static, str> {
@@ -231,7 +217,7 @@ pub fn instruction_parser(
 
             async fn parse(
                 &self,
-                ix_update: &instruction::InstructionUpdate,
+                ix_update: &::yellowstone_vixen_core::instruction::InstructionUpdate,
             ) -> ParseResult<Self::Output> {
                 // TODO: this is a fix because everything gets parsed by the proc macro
                 // Check program ID first to avoid parsing unrelated instructions

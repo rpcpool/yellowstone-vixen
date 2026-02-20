@@ -14,16 +14,16 @@ use crate::PubkeyBytes;
 #[vixen_proto]
 #[derive(Clone, PartialEq)]
 pub struct TokenExtensionState {
-    #[vixen_proto_hint(oneof = "token_extension_state::State", tags = "1, 2, 3")]
-    pub state: Option<token_extension_state::State>,
+    #[vixen_proto_hint(oneof = "account::Account", tags = "1, 2, 3")]
+    pub account: Option<account::Account>,
 }
 
-pub mod token_extension_state {
+pub mod account {
     use super::vixen_proto;
 
     #[vixen_proto(oneof)]
     #[derive(Clone, PartialEq)]
-    pub enum State {
+    pub enum Account {
         ExtendedTokenAccount(super::ExtendedTokenAccount),
         ExtendedMint(super::ExtendedMint),
         Multisig(super::Multisig),
@@ -207,7 +207,7 @@ impl TokenExtensionState {
                 let extensions = build_extensions_for_mint(&unpacked)?;
 
                 Ok(TokenExtensionState {
-                    state: Some(token_extension_state::State::ExtendedMint(ExtendedMint {
+                    account: Some(account::Account::ExtendedMint(ExtendedMint {
                         base_account: Some(mint_to_proto(&unpacked.base)),
                         extensions,
                     })),
@@ -218,7 +218,7 @@ impl TokenExtensionState {
                 let extensions = build_extensions_for_account(&unpacked)?;
 
                 Ok(TokenExtensionState {
-                    state: Some(token_extension_state::State::ExtendedTokenAccount(
+                    account: Some(account::Account::ExtendedTokenAccount(
                         ExtendedTokenAccount {
                             base_account: Some(account_to_proto(&unpacked.base)),
                             extensions,
@@ -230,7 +230,7 @@ impl TokenExtensionState {
                 let multisig = SplMultisig::unpack(data_bytes)?;
 
                 Ok(TokenExtensionState {
-                    state: Some(token_extension_state::State::Multisig(multisig_to_proto(
+                    account: Some(account::Account::Multisig(multisig_to_proto(
                         &multisig,
                     ))),
                 })
@@ -273,7 +273,7 @@ mod tests {
     use yellowstone_vixen_core::Parser;
     use yellowstone_vixen_mock::account_fixture;
 
-    use super::{token_extension_state, AccountParser};
+    use super::{account, AccountParser};
 
     #[tokio::test]
     async fn test_mint_account_parsing_proto() {
@@ -281,9 +281,9 @@ mod tests {
 
         let account = account_fixture!("BtSLwAFDsMX4bhamtyggn2xsdFKQvpaSzw9jEL7BNuyu", &parser);
 
-        let state = account.state.expect("missing state");
+        let state = account.account.expect("missing account");
 
-        let token_extension_state::State::ExtendedMint(ext_mint) = state else {
+        let account::Account::ExtendedMint(ext_mint) = state else {
             panic!("Invalid Account");
         };
 

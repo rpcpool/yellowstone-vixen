@@ -60,7 +60,7 @@ impl InstructionParser {
             SplTokenInstruction::Transfer { amount } => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::Transfer(crate::TransferInstruction {
+                crate::instruction::Instruction::Transfer(crate::instruction::Transfer {
                     accounts: Some(crate::TransferAccounts {
                         source: ix.accounts[0].to_vec(),
                         destination: ix.accounts[1].to_vec(),
@@ -74,7 +74,7 @@ impl InstructionParser {
             SplTokenInstruction::InitializeAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::InitializeAccount(crate::InitializeAccountInstruction {
+                crate::instruction::Instruction::InitializeAccount(crate::instruction::InitializeAccount {
                     accounts: Some(crate::InitializeAccountAccounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -95,7 +95,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                crate::Instruction::InitializeMint(crate::InitializeMintInstruction {
+                crate::instruction::Instruction::InitializeMint(crate::instruction::InitializeMint {
                     accounts: Some(crate::InitializeMintAccounts {
                         mint: ix.accounts[0].to_vec(),
                     }),
@@ -110,7 +110,7 @@ impl InstructionParser {
             SplTokenInstruction::InitializeAccount2 { owner } => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                crate::Instruction::InitializeAccount2(crate::InitializeAccount2Instruction {
+                crate::instruction::Instruction::InitializeAccount2(crate::instruction::InitializeAccount2 {
                     accounts: Some(crate::InitializeAccount2Accounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -124,7 +124,7 @@ impl InstructionParser {
             SplTokenInstruction::InitializeAccount3 { owner } => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                crate::Instruction::InitializeAccount3(crate::InitializeAccount3Instruction {
+                crate::instruction::Instruction::InitializeAccount3(crate::instruction::InitializeAccount3 {
                     accounts: Some(crate::InitializeAccount2Accounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -138,7 +138,7 @@ impl InstructionParser {
             SplTokenInstruction::InitializeMultisig { m } => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::InitializeMultisig(crate::InitializeMultisigInstruction {
+                crate::instruction::Instruction::InitializeMultisig(crate::instruction::InitializeMultisig {
                     accounts: Some(crate::InitializeMultisigAccounts {
                         multisig: ix.accounts[0].to_vec(),
                         signers: ix.accounts[2..].iter().map(|pk| pk.to_vec()).collect(),
@@ -150,7 +150,7 @@ impl InstructionParser {
             SplTokenInstruction::InitializeMultisig2 { m } => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                crate::Instruction::InitializeMultisig(crate::InitializeMultisigInstruction {
+                crate::instruction::Instruction::InitializeMultisig(crate::instruction::InitializeMultisig {
                     accounts: Some(crate::InitializeMultisigAccounts {
                         multisig: ix.accounts[0].to_vec(),
                         signers: ix.accounts[1..].iter().map(|pk| pk.to_vec()).collect(),
@@ -162,7 +162,7 @@ impl InstructionParser {
             SplTokenInstruction::Approve { amount } => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::Approve(crate::ApproveInstruction {
+                crate::instruction::Instruction::Approve(crate::instruction::Approve {
                     accounts: Some(crate::ApproveAccounts {
                         source: ix.accounts[0].to_vec(),
                         delegate: ix.accounts[1].to_vec(),
@@ -176,7 +176,7 @@ impl InstructionParser {
             SplTokenInstruction::Revoke => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                crate::Instruction::Revoke(crate::RevokeInstruction {
+                crate::instruction::Instruction::Revoke(crate::instruction::Revoke {
                     accounts: Some(crate::RevokeAccounts {
                         source: ix.accounts[0].to_vec(),
                         owner: ix.accounts[1].to_vec(),
@@ -191,7 +191,7 @@ impl InstructionParser {
             } => {
                 check_min_accounts_req(accounts_len, 2)?;
 
-                crate::Instruction::SetAuthority(crate::SetAuthorityInstruction {
+                crate::instruction::Instruction::SetAuthority(crate::instruction::SetAuthority {
                     accounts: Some(crate::SetAuthorityAccounts {
                         account: ix.accounts[0].to_vec(),
                         current_authority: ix.accounts[1].to_vec(),
@@ -207,7 +207,7 @@ impl InstructionParser {
             SplTokenInstruction::MintTo { amount } => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::MintTo(crate::MintToInstruction {
+                crate::instruction::Instruction::MintTo(crate::instruction::MintTo {
                     accounts: Some(crate::MintToAccounts {
                         mint: ix.accounts[0].to_vec(),
                         account: ix.accounts[1].to_vec(),
@@ -221,7 +221,7 @@ impl InstructionParser {
             SplTokenInstruction::Burn { amount } => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::Burn(crate::BurnInstruction {
+                crate::instruction::Instruction::Burn(crate::instruction::Burn {
                     accounts: Some(crate::BurnAccounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -235,7 +235,7 @@ impl InstructionParser {
             SplTokenInstruction::CloseAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::CloseAccount(crate::CloseAccountInstruction {
+                crate::instruction::Instruction::CloseAccount(crate::instruction::CloseAccount {
                     accounts: Some(crate::CloseAccountAccounts {
                         account: ix.accounts[0].to_vec(),
                         destination: ix.accounts[1].to_vec(),
@@ -248,7 +248,7 @@ impl InstructionParser {
             SplTokenInstruction::FreezeAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::FreezeAccount(crate::FreezeAccountInstruction {
+                crate::instruction::Instruction::FreezeAccount(crate::instruction::FreezeAccount {
                     accounts: Some(crate::FreezeAccountAccounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -261,7 +261,7 @@ impl InstructionParser {
             SplTokenInstruction::ThawAccount => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::ThawAccount(crate::ThawAccountInstruction {
+                crate::instruction::Instruction::ThawAccount(crate::instruction::ThawAccount {
                     accounts: Some(crate::ThawAccountAccounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -274,7 +274,7 @@ impl InstructionParser {
             SplTokenInstruction::TransferChecked { amount, decimals } => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                crate::Instruction::TransferChecked(crate::TransferCheckedInstruction {
+                crate::instruction::Instruction::TransferChecked(crate::instruction::TransferChecked {
                     accounts: Some(crate::TransferCheckedAccounts {
                         source: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -292,7 +292,7 @@ impl InstructionParser {
             SplTokenInstruction::ApproveChecked { amount, decimals } => {
                 check_min_accounts_req(accounts_len, 4)?;
 
-                crate::Instruction::ApproveChecked(crate::ApproveCheckedInstruction {
+                crate::instruction::Instruction::ApproveChecked(crate::instruction::ApproveChecked {
                     accounts: Some(crate::ApproveCheckedAccounts {
                         source: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -310,7 +310,7 @@ impl InstructionParser {
             SplTokenInstruction::MintToChecked { amount, decimals } => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::MintToChecked(crate::MintToCheckedInstruction {
+                crate::instruction::Instruction::MintToChecked(crate::instruction::MintToChecked {
                     accounts: Some(crate::MintToCheckedAccounts {
                         mint: ix.accounts[0].to_vec(),
                         account: ix.accounts[1].to_vec(),
@@ -327,7 +327,7 @@ impl InstructionParser {
             SplTokenInstruction::BurnChecked { amount, decimals } => {
                 check_min_accounts_req(accounts_len, 3)?;
 
-                crate::Instruction::BurnChecked(crate::BurnCheckedInstruction {
+                crate::instruction::Instruction::BurnChecked(crate::instruction::BurnChecked {
                     accounts: Some(crate::BurnCheckedAccounts {
                         account: ix.accounts[0].to_vec(),
                         mint: ix.accounts[1].to_vec(),
@@ -344,7 +344,7 @@ impl InstructionParser {
             SplTokenInstruction::SyncNative => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                crate::Instruction::SyncNative(crate::SyncNativeInstruction {
+                crate::instruction::Instruction::SyncNative(crate::instruction::SyncNative {
                     accounts: Some(crate::SyncNativeAccounts {
                         account: ix.accounts[0].to_vec(),
                     }),
@@ -354,7 +354,7 @@ impl InstructionParser {
             SplTokenInstruction::GetAccountDataSize => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                crate::Instruction::GetAccountDataSize(crate::GetAccountDataSizeInstruction {
+                crate::instruction::Instruction::GetAccountDataSize(crate::instruction::GetAccountDataSize {
                     accounts: Some(crate::GetAccountDataSizeAccounts {
                         mint: ix.accounts[0].to_vec(),
                     }),
@@ -364,7 +364,7 @@ impl InstructionParser {
             SplTokenInstruction::InitializeImmutableOwner => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                crate::Instruction::InitializeImmutableOwner(crate::InitializeImmutableOwnerInstruction {
+                crate::instruction::Instruction::InitializeImmutableOwner(crate::instruction::InitializeImmutableOwner {
                     accounts: Some(crate::InitializeImmutableOwnerAccounts {
                         account: ix.accounts[0].to_vec(),
                     }),
@@ -374,7 +374,7 @@ impl InstructionParser {
             SplTokenInstruction::AmountToUiAmount { amount } => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                crate::Instruction::AmountToUiAmount(crate::AmountToUiAmountInstruction {
+                crate::instruction::Instruction::AmountToUiAmount(crate::instruction::AmountToUiAmount {
                     accounts: Some(crate::AmountToUiAmountAccounts {
                         mint: ix.accounts[0].to_vec(),
                     }),
@@ -385,7 +385,7 @@ impl InstructionParser {
             SplTokenInstruction::UiAmountToAmount { ui_amount } => {
                 check_min_accounts_req(accounts_len, 1)?;
 
-                crate::Instruction::UiAmountToAmount(crate::UiAmountToAmountInstruction {
+                crate::instruction::Instruction::UiAmountToAmount(crate::instruction::UiAmountToAmount {
                     accounts: Some(crate::UiAmountToAmountAccounts {
                         mint: ix.accounts[0].to_vec(),
                     }),
@@ -419,7 +419,7 @@ mod tests {
 
         let ix0 = &ixs[0];
 
-        let Some(crate::Instruction::MintToChecked(mtc)) =
+        let Some(crate::instruction::Instruction::MintToChecked(mtc)) =
             ix0.as_ref().and_then(|i| i.instruction.as_ref())
         else {
             panic!("Invalid Instruction");

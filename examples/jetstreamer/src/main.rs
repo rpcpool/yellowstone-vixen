@@ -9,7 +9,9 @@ use yellowstone_vixen::{
 };
 use yellowstone_vixen_core::{instruction::InstructionUpdate, ParserId};
 use yellowstone_vixen_jetstream_source::{JetstreamSource, JetstreamSourceConfig, SlotRangeConfig};
-use yellowstone_vixen_spl_token_parser::{Instruction, InstructionParser, TokenProgram};
+use yellowstone_vixen_spl_token_parser::{
+    instruction::Instruction, InstructionParser, TokenProgram,
+};
 
 fn pk(bytes: &[u8]) -> String { bs58::encode(bytes).into_string() }
 
