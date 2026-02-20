@@ -147,6 +147,9 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
             CoordinatorMessage::Parsed { slot, key, record } => {
                 vec![CoordinatorEvent::RecordParsed { slot, key, record }]
             },
+            CoordinatorMessage::AccountParsed { slot, record } => {
+                vec![CoordinatorEvent::AccountRecordParsed { slot, record }]
+            },
             CoordinatorMessage::TransactionParsed { slot } => {
                 vec![CoordinatorEvent::TransactionParsed { slot }]
             },

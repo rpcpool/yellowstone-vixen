@@ -14,7 +14,7 @@ use yellowstone_vixen_block_coordinator::ConfirmedSlot;
 
 use crate::{
     config::KafkaSinkConfig,
-    events::{PreparedRecord, RecordHeader, SlotCommitEvent},
+    events::{PreparedRecord, RecordHeader, RecordKind, SlotCommitEvent},
 };
 
 fn to_kafka_headers(headers: &[RecordHeader]) -> OwnedHeaders {
@@ -120,13 +120,23 @@ impl ConfirmedSlotSink {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let slot = confirmed.slot;
         let record_count = confirmed.records.len();
-        let decoded_count = confirmed.records.iter().filter(|r| r.is_decoded).count() as u64;
+        let decoded_instruction_count = confirmed
+            .records
+            .iter()
+            .filter(|r| r.is_decoded && r.kind == RecordKind::Instruction)
+            .count() as u64;
+        let decoded_account_count = confirmed
+            .records
+            .iter()
+            .filter(|r| r.is_decoded && r.kind == RecordKind::Account)
+            .count() as u64;
 
         let event = SlotCommitEvent {
             slot,
             blockhash: confirmed.blockhash.to_string(),
             transaction_count: confirmed.executed_transaction_count,
-            decoded_instruction_count: decoded_count,
+            decoded_instruction_count,
+            decoded_account_count,
         };
 
         let payload = serde_json::to_string(&event)?;
@@ -144,7 +154,13 @@ impl ConfirmedSlotSink {
                 format!("Kafka: failed to commit slot {slot}: {e}").into()
             })?;
 
-        tracing::info!(slot, decoded_count, record_count, "Kafka: committed slot");
+        tracing::info!(
+            slot,
+            decoded_instruction_count,
+            decoded_account_count,
+            record_count,
+            "Kafka: committed slot"
+        );
         Ok(())
     }
 }

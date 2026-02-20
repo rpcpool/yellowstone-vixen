@@ -14,8 +14,10 @@ use crate::types::{BlockMetadata, ConfirmedSlot, RecordSortKey};
 /// A slot flushes only when BOTH gates are satisfied.
 #[derive(Debug)]
 pub struct SlotRecordBuffer<R> {
-    /// Records sorted by (tx_index, ix_path) for ordered flush.
-    records: BTreeMap<RecordSortKey, R>,
+    /// Instruction records sorted by (tx_index, ix_path) for ordered flush.
+    instruction_records: BTreeMap<RecordSortKey, R>,
+    /// Account records (no ordering needed — different topics).
+    account_records: Vec<R>,
     /// Block metadata from FrozenBlock.
     metadata: Option<BlockMetadata>,
     /// Gate 1: fully parsed.
@@ -27,7 +29,8 @@ pub struct SlotRecordBuffer<R> {
 impl<R> Default for SlotRecordBuffer<R> {
     fn default() -> Self {
         Self {
-            records: BTreeMap::new(),
+            instruction_records: BTreeMap::new(),
+            account_records: Vec::new(),
             metadata: None,
             parsed_tx_count: 0,
             confirmed: false,
@@ -37,13 +40,17 @@ impl<R> Default for SlotRecordBuffer<R> {
 
 impl<R> SlotRecordBuffer<R> {
     pub fn insert_record(&mut self, key: RecordSortKey, record: R) {
-        if self.records.contains_key(&key) {
+        if self.instruction_records.contains_key(&key) {
             tracing::warn!(
                 ?key,
                 "Duplicate RecordSortKey — previous record overwritten"
             );
         }
-        self.records.insert(key, record);
+        self.instruction_records.insert(key, record);
+    }
+
+    pub fn insert_account_record(&mut self, record: R) {
+        self.account_records.push(record);
     }
 
     /// Set all block metadata from a FrozenBlock in one atomic operation.
@@ -95,7 +102,9 @@ impl<R> SlotRecordBuffer<R> {
 
     pub fn is_confirmed(&self) -> bool { self.confirmed }
 
-    pub fn record_count(&self) -> usize { self.records.len() }
+    pub fn record_count(&self) -> usize {
+        self.instruction_records.len() + self.account_records.len()
+    }
 
     /// Consume this buffer and produce a ConfirmedSlot.
     /// Returns None if metadata is missing.
@@ -106,13 +115,16 @@ impl<R> SlotRecordBuffer<R> {
             parent_slot: metadata.parent_slot,
             blockhash: metadata.blockhash,
             executed_transaction_count: metadata.expected_tx_count,
-            records: self.drain_sorted_records(),
+            records: self.drain_all_records(),
         })
     }
 
-    /// Drain all records in sorted order (by tx_index, then ix_path).
-    fn drain_sorted_records(&mut self) -> Vec<R> {
-        std::mem::take(&mut self.records).into_values().collect()
+    /// Drain all records: instruction records in sorted order first, then account records appended.
+    fn drain_all_records(&mut self) -> Vec<R> {
+        let mut records: Vec<R> =
+            std::mem::take(&mut self.instruction_records).into_values().collect();
+        records.append(&mut self.account_records);
+        records
     }
 }
 
