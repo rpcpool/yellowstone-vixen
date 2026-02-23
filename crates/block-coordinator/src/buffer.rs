@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use solana_clock::Slot;
 
-use crate::types::{BlockMetadata, ConfirmedSlot, RecordSortKey};
+use crate::types::{BlockMetadata, ConfirmedSlot, ParseStatsKind, RecordSortKey};
 
 /// Per-slot buffer that collects parsed records and tracks the two-gate flush condition.
 ///
@@ -24,6 +24,11 @@ pub struct SlotRecordBuffer<R> {
     parsed_tx_count: u64,
     /// Gate 2: confirmed by cluster consensus.
     confirmed: bool,
+    /// Parse stats counters.
+    filtered_instruction_count: u64,
+    failed_instruction_count: u64,
+    filtered_account_count: u64,
+    failed_account_count: u64,
 }
 
 impl<R> Default for SlotRecordBuffer<R> {
@@ -34,6 +39,10 @@ impl<R> Default for SlotRecordBuffer<R> {
             metadata: None,
             parsed_tx_count: 0,
             confirmed: false,
+            filtered_instruction_count: 0,
+            failed_instruction_count: 0,
+            filtered_account_count: 0,
+            failed_account_count: 0,
         }
     }
 }
@@ -83,6 +92,15 @@ impl<R> SlotRecordBuffer<R> {
         }
     }
 
+    pub fn increment_parse_stat(&mut self, kind: ParseStatsKind) {
+        match kind {
+            ParseStatsKind::InstructionFiltered => self.filtered_instruction_count += 1,
+            ParseStatsKind::InstructionError => self.failed_instruction_count += 1,
+            ParseStatsKind::AccountFiltered => self.filtered_account_count += 1,
+            ParseStatsKind::AccountError => self.failed_account_count += 1,
+        }
+    }
+
     pub fn mark_as_confirmed(&mut self) { self.confirmed = true; }
 
     pub fn is_fully_parsed(&self) -> bool {
@@ -116,6 +134,10 @@ impl<R> SlotRecordBuffer<R> {
             blockhash: metadata.blockhash,
             executed_transaction_count: metadata.expected_tx_count,
             records: self.drain_all_records(),
+            filtered_instruction_count: self.filtered_instruction_count,
+            failed_instruction_count: self.failed_instruction_count,
+            filtered_account_count: self.filtered_account_count,
+            failed_account_count: self.failed_account_count,
         })
     }
 

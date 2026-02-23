@@ -65,6 +65,15 @@ impl fmt::Display for CoordinatorError {
 
 impl std::error::Error for CoordinatorError {}
 
+/// Categorizes parse outcomes for stats tracking.
+#[derive(Debug, Clone, Copy)]
+pub enum ParseStatsKind {
+    InstructionFiltered,
+    InstructionError,
+    AccountFiltered,
+    AccountError,
+}
+
 /// Messages from handlers back to the coordinator.
 pub enum CoordinatorMessage<R> {
     /// A parsed record ready to buffer (instruction records with sort key).
@@ -78,6 +87,8 @@ pub enum CoordinatorMessage<R> {
     /// Signal that a transaction has been fully parsed by the handler.
     /// Coordinator counts these to determine when a slot is fully parsed.
     TransactionParsed { slot: Slot },
+    /// A parse stat event (filtered or error) for aggregate tracking.
+    ParseStats { slot: Slot, kind: ParseStatsKind },
 }
 
 impl<R> CoordinatorMessage<R> {
@@ -85,7 +96,8 @@ impl<R> CoordinatorMessage<R> {
         match self {
             Self::Parsed { slot, .. }
             | Self::AccountParsed { slot, .. }
-            | Self::TransactionParsed { slot } => *slot,
+            | Self::TransactionParsed { slot }
+            | Self::ParseStats { slot, .. } => *slot,
         }
     }
 }
@@ -136,6 +148,10 @@ pub struct ConfirmedSlot<R> {
     pub blockhash: Hash,
     pub executed_transaction_count: u64,
     pub records: Vec<R>,
+    pub filtered_instruction_count: u64,
+    pub failed_instruction_count: u64,
+    pub filtered_account_count: u64,
+    pub failed_account_count: u64,
 }
 
 /// Clonable handle for handlers to send messages to the coordinator.
@@ -174,6 +190,16 @@ impl<R: Send> CoordinatorHandle<R> {
     ) -> Result<(), tokio::sync::mpsc::error::SendError<CoordinatorMessage<R>>> {
         self.tx
             .send(CoordinatorMessage::TransactionParsed { slot })
+            .await
+    }
+
+    pub async fn send_parse_stats(
+        &self,
+        slot: Slot,
+        kind: ParseStatsKind,
+    ) -> Result<(), tokio::sync::mpsc::error::SendError<CoordinatorMessage<R>>> {
+        self.tx
+            .send(CoordinatorMessage::ParseStats { slot, kind })
             .await
     }
 }

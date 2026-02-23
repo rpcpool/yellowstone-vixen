@@ -42,6 +42,14 @@ pub struct SlotCommitEvent {
     pub decoded_instruction_count: u64,
     /// Number of successfully decoded accounts.
     pub decoded_account_count: u64,
+    /// Number of instructions that no parser matched (expected).
+    pub filtered_instruction_count: u64,
+    /// Number of instructions where a parser failed (unexpected).
+    pub failed_instruction_count: u64,
+    /// Number of accounts that no parser matched (expected).
+    pub filtered_account_count: u64,
+    /// Number of accounts where a parser failed (unexpected).
+    pub failed_account_count: u64,
 }
 
 /// Distinguishes instruction records from account records.

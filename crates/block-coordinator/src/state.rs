@@ -4,7 +4,10 @@ use solana_clock::Slot;
 
 use crate::{
     buffer::SlotRecordBuffer,
-    types::{BlockMetadata, ConfirmedSlot, CoordinatorError, DiscardReason, RecordSortKey},
+    types::{
+        BlockMetadata, ConfirmedSlot, CoordinatorError, DiscardReason, ParseStatsKind,
+        RecordSortKey,
+    },
 };
 
 /// All inputs to the coordinator state machine.
@@ -21,10 +24,12 @@ pub enum CoordinatorEvent<R> {
         key: RecordSortKey,
         record: R,
     },
-    /// A parsed account record from a handler 
+    /// A parsed account record from a handler
     AccountRecordParsed { slot: Slot, record: R },
     /// A handler finished parsing a transaction.
     TransactionParsed { slot: Slot },
+    /// A parse stat event (filtered or error).
+    ParseStats { slot: Slot, kind: ParseStatsKind },
 }
 
 /// Pure-ish coordinator state (no channels, no wrapper).
@@ -94,6 +99,15 @@ impl<R> CoordinatorState<R> {
                     .entry(slot)
                     .or_default()
                     .increment_parsed_tx_count();
+            },
+            CoordinatorEvent::ParseStats { slot, kind } => {
+                if !self.validate_slot(slot)? {
+                    return Ok(());
+                }
+                self.buffer
+                    .entry(slot)
+                    .or_default()
+                    .increment_parse_stat(kind);
             },
         }
         Ok(())

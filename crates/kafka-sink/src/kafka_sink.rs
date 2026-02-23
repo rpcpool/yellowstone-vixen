@@ -152,12 +152,21 @@ impl ConfirmedSlotSink {
             .filter(|r| r.is_decoded && r.kind == RecordKind::Account)
             .count() as u64;
 
+        let filtered_instruction_count = confirmed.filtered_instruction_count;
+        let failed_instruction_count = confirmed.failed_instruction_count;
+        let filtered_account_count = confirmed.filtered_account_count;
+        let failed_account_count = confirmed.failed_account_count;
+
         let event = SlotCommitEvent {
             slot,
             blockhash: confirmed.blockhash.to_string(),
             transaction_count: confirmed.executed_transaction_count,
             decoded_instruction_count,
             decoded_account_count,
+            filtered_instruction_count,
+            failed_instruction_count,
+            filtered_account_count,
+            failed_account_count,
         };
 
         let payload = serde_json::to_string(&event)?;
@@ -179,6 +188,10 @@ impl ConfirmedSlotSink {
             slot,
             decoded_instruction_count,
             decoded_account_count,
+            filtered_instruction_count,
+            failed_instruction_count,
+            filtered_account_count,
+            failed_account_count,
             record_count,
             "Kafka: committed slot"
         );

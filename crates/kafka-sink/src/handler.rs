@@ -1,5 +1,5 @@
 use yellowstone_vixen::{self as vixen, HandlerResult};
-use yellowstone_vixen_block_coordinator::{CoordinatorHandle, RecordSortKey};
+use yellowstone_vixen_block_coordinator::{CoordinatorHandle, ParseStatsKind, RecordSortKey};
 use yellowstone_vixen_core::{
     instruction::{InstructionUpdate, Path},
     AccountUpdate, TransactionUpdate,
@@ -96,7 +96,7 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
 
         for ix_update in &instructions {
             for ix in ix_update.visit_all() {
-                let result = self
+                let (result, had_error) = self
                     .parsers
                     .parse_instruction(slot, &ix.shared.signature, &ix.path, ix)
                     .await;
@@ -111,6 +111,12 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                     }
                     parsed
                 } else {
+                    let kind = if had_error {
+                        ParseStatsKind::InstructionError
+                    } else {
+                        ParseStatsKind::InstructionFiltered
+                    };
+                    let _ = self.handle.send_parse_stats(slot, kind).await;
                     None
                 };
 
@@ -133,10 +139,18 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
     ) -> HandlerResult<()> {
         let slot = update.slot;
 
-        if let Some(record) = self.parsers.parse_account(slot, update).await {
+        let (record, had_error) = self.parsers.parse_account(slot, update).await;
+        if let Some(record) = record {
             if let Err(e) = self.handle.send_account_parsed(slot, record).await {
                 tracing::error!(?e, slot, "Failed to send account parsed record");
             }
+        } else {
+            let kind = if had_error {
+                ParseStatsKind::AccountError
+            } else {
+                ParseStatsKind::AccountFiltered
+            };
+            let _ = self.handle.send_parse_stats(slot, kind).await;
         }
         // No send_transaction_parsed — accounts don't affect the TX gate.
         Ok(())

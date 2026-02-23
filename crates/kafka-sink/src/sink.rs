@@ -41,16 +41,24 @@ impl ParsedOutput {
     }
 }
 
+/// Outcome of a single parse attempt. Distinguishes successful parse from
+/// filtered (expected, parser doesn't handle this input) and error (unexpected failure).
+pub enum ParseOutcome {
+    Parsed(ParsedOutput),
+    Filtered,
+    Error,
+}
+
 // --- DynInstructionParser ---
 
 /// Type-erased instruction parser trait.
 /// This allows storing different parser types in a collection.
 pub trait DynInstructionParser: Send + Sync {
-    /// Try to parse an instruction. Returns None if this parser doesn't handle it.
+    /// Try to parse an instruction.
     fn try_parse<'a>(
         &'a self,
         ix: &'a InstructionUpdate,
-    ) -> Pin<Box<dyn Future<Output = Option<ParsedOutput>> + Send + 'a>>;
+    ) -> Pin<Box<dyn Future<Output = ParseOutcome> + Send + 'a>>;
 
     fn topic(&self) -> &str;
 
@@ -87,14 +95,14 @@ where
     fn try_parse<'a>(
         &'a self,
         ix: &'a InstructionUpdate,
-    ) -> Pin<Box<dyn Future<Output = Option<ParsedOutput>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = ParseOutcome> + Send + 'a>> {
         Box::pin(async move {
             match self.parser.parse(ix).await {
-                Ok(output) => Some(ParsedOutput::from_proto(&output)),
-                Err(ParseError::Filtered) => None,
+                Ok(output) => ParseOutcome::Parsed(ParsedOutput::from_proto(&output)),
+                Err(ParseError::Filtered) => ParseOutcome::Filtered,
                 Err(e) => {
                     tracing::warn!(?e, program = %self.program_name, "Error parsing instruction");
-                    None
+                    ParseOutcome::Error
                 },
             }
         })
@@ -112,11 +120,11 @@ where
 /// Type-erased account parser trait.
 /// This allows storing different account parser types in a collection.
 pub trait DynAccountParser: Send + Sync {
-    /// Try to parse an account. Returns None if this parser doesn't handle it.
+    /// Try to parse an account.
     fn try_parse<'a>(
         &'a self,
         acct: &'a AccountUpdate,
-    ) -> Pin<Box<dyn Future<Output = Option<ParsedOutput>> + Send + 'a>>;
+    ) -> Pin<Box<dyn Future<Output = ParseOutcome> + Send + 'a>>;
 
     fn topic(&self) -> &str;
 
@@ -143,14 +151,14 @@ where
     fn try_parse<'a>(
         &'a self,
         acct: &'a AccountUpdate,
-    ) -> Pin<Box<dyn Future<Output = Option<ParsedOutput>> + Send + 'a>> {
+    ) -> Pin<Box<dyn Future<Output = ParseOutcome> + Send + 'a>> {
         Box::pin(async move {
             match self.parser.parse(acct).await {
-                Ok(output) => Some(ParsedOutput::from_proto(&output)),
-                Err(ParseError::Filtered) => None,
+                Ok(output) => ParseOutcome::Parsed(ParsedOutput::from_proto(&output)),
+                Err(ParseError::Filtered) => ParseOutcome::Filtered,
                 Err(e) => {
                     tracing::warn!(?e, program = %self.program_name, "Error parsing account");
-                    None
+                    ParseOutcome::Error
                 },
             }
         })
@@ -407,31 +415,40 @@ impl KafkaSink {
 
     // --- Instruction parsing ---
 
+    /// Try each registered parser in order. Returns the first successful parse
+    /// and a flag indicating whether any parser errored.
     async fn try_parse_instruction(
         &self,
         ix: &InstructionUpdate,
-    ) -> Option<(ParsedOutput, &str)> {
+    ) -> (Option<(ParsedOutput, &str)>, bool) {
+        let mut had_error = false;
         for parser in &self.instruction_parsers {
-            if let Some(parsed) = parser.try_parse(ix).await {
-                return Some((parsed, parser.topic()));
+            match parser.try_parse(ix).await {
+                ParseOutcome::Parsed(parsed) => return (Some((parsed, parser.topic())), false),
+                ParseOutcome::Error => {
+                    had_error = true;
+                },
+                ParseOutcome::Filtered => {},
             }
         }
-        None
+        (None, had_error)
     }
 
     /// Parse an instruction and prepare a Kafka record.
     ///
     /// Tries each registered parser in order. If one matches, builds a decoded record;
     /// if none match and a fallback topic is configured, builds a fallback record.
-    /// Returns `None` if no parser matched and no fallback topic is set.
+    /// Returns the record (if any) and a `had_error` flag indicating whether any
+    /// parser encountered an unexpected failure (vs expected filtering).
     pub async fn parse_instruction(
         &self,
         slot: u64,
         signature: &[u8],
         path: &Path,
         ix: &InstructionUpdate,
-    ) -> Option<(PreparedRecord, Option<ParsedOutput>)> {
-        match self.try_parse_instruction(ix).await {
+    ) -> (Option<(PreparedRecord, Option<ParsedOutput>)>, bool) {
+        let (try_result, had_error) = self.try_parse_instruction(ix).await;
+        match try_result {
             Some((parsed, topic)) => {
                 let record = self.prepare_decoded_instruction_record(
                     slot,
@@ -440,13 +457,15 @@ impl KafkaSink {
                     parsed.clone(),
                     topic,
                 );
-                Some((record, Some(parsed)))
+                (Some((record, Some(parsed))), false)
             },
             None => {
-                let fallback = self.fallback_topic.as_deref()?;
-                let record =
-                    self.prepare_fallback_instruction_record(slot, signature, path, ix, fallback);
-                Some((record, None))
+                let record = self.fallback_topic.as_deref().map(|fallback| {
+                    let record =
+                        self.prepare_fallback_instruction_record(slot, signature, path, ix, fallback);
+                    (record, None)
+                });
+                (record, had_error)
             },
         }
     }
@@ -564,44 +583,67 @@ impl KafkaSink {
     /// Parse an account update and prepare a Kafka record.
     ///
     /// Tries each registered account parser. On match, builds a decoded account record.
-    /// On `Filtered` (no match from a specific parser), checks if that parser has a
-    /// fallback_topic. If no parser matches at all, returns `None` (silently skip).
+    /// On `Filtered`, checks if that parser has a fallback_topic.
+    /// Returns the record (if any) and a `had_error` flag.
     pub async fn parse_account(
         &self,
         slot: u64,
         acct: &AccountUpdate,
-    ) -> Option<PreparedRecord> {
-        let inner = acct.account.as_ref()?;
+    ) -> (Option<PreparedRecord>, bool) {
+        let inner = match acct.account.as_ref() {
+            Some(inner) => inner,
+            None => return (None, false),
+        };
         let pubkey_str = bs58::encode(&inner.pubkey).into_string();
         let owner_str = bs58::encode(&inner.owner).into_string();
 
+        let mut had_error = false;
         for parser in &self.account_parsers {
             match parser.try_parse(acct).await {
-                Some(parsed) => {
-                    return Some(self.prepare_decoded_account_record(
-                        slot,
-                        &pubkey_str,
-                        &owner_str,
-                        parsed,
-                        parser.topic(),
-                    ));
-                },
-                None => {
-                    // Parser filtered this account — check for per-parser fallback
-                    if let Some(fallback) = parser.fallback_topic() {
-                        return Some(self.prepare_fallback_account_record(
+                ParseOutcome::Parsed(parsed) => {
+                    return (
+                        Some(self.prepare_decoded_account_record(
                             slot,
                             &pubkey_str,
                             &owner_str,
-                            &inner.data,
-                            fallback,
-                        ));
+                            parsed,
+                            parser.topic(),
+                        )),
+                        false,
+                    );
+                },
+                ParseOutcome::Filtered => {
+                    if let Some(fallback) = parser.fallback_topic() {
+                        return (
+                            Some(self.prepare_fallback_account_record(
+                                slot,
+                                &pubkey_str,
+                                &owner_str,
+                                &inner.data,
+                                fallback,
+                            )),
+                            false,
+                        );
+                    }
+                },
+                ParseOutcome::Error => {
+                    had_error = true;
+                    if let Some(fallback) = parser.fallback_topic() {
+                        return (
+                            Some(self.prepare_fallback_account_record(
+                                slot,
+                                &pubkey_str,
+                                &owner_str,
+                                &inner.data,
+                                fallback,
+                            )),
+                            true,
+                        );
                     }
                 },
             }
         }
-        // No parser matched and no fallback configured — silently skip.
-        None
+        (None, had_error)
     }
 
     /// Prepare a record for a successfully decoded account.
