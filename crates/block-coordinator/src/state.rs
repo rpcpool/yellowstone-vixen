@@ -1,12 +1,12 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use solana_clock::Slot;
 
 use crate::{
     buffer::SlotRecordBuffer,
     types::{
-        BlockMetadata, ConfirmedSlot, CoordinatorError, DiscardReason, ParseStatsKind,
-        RecordSortKey,
+        AccountInstructionRecordSortKey, BlockMetadata, ConfirmedSlot, CoordinatorError, DiscardReason,
+        ParseStatsKind, InstructionRecordSortKey,
     },
 };
 
@@ -18,14 +18,21 @@ pub enum CoordinatorEvent<R> {
     SlotConfirmed { slot: Slot },
     /// Slot discarded (dead, forked, or untracked).
     SlotDiscarded { slot: Slot, reason: DiscardReason },
+    /// A raw Account event was seen on the geyser stream.
+    /// Counted internally; frozen as expected_account_count at SlotConfirmed.
+    AccountEventSeen { slot: Slot },
     /// A parsed instruction record from a handler (sorted by key).
-    RecordParsed {
+    InstructionRecordParsed {
         slot: Slot,
-        key: RecordSortKey,
+        key: InstructionRecordSortKey,
         record: R,
     },
-    /// A parsed account record from a handler
-    AccountRecordParsed { slot: Slot, record: R },
+    /// A parsed account record from a handler (sorted by write_version:pubkey).
+    AccountRecordParsed {
+        slot: Slot,
+        key: AccountInstructionRecordSortKey,
+        record: R,
+    },
     /// A handler finished parsing a transaction.
     TransactionParsed { slot: Slot },
     /// A parse stat event (filtered or error).
@@ -37,6 +44,9 @@ pub struct CoordinatorState<R> {
     buffer: BTreeMap<Slot, SlotRecordBuffer<R>>,
     discarded_slots: BTreeSet<Slot>,
     last_flushed_slot: Option<Slot>,
+    /// Running count of AccountEventSeen signals per slot.
+    /// Frozen as expected_account_count when SlotConfirmed fires.
+    account_event_counts: HashMap<Slot, u64>,
 }
 
 impl<R> CoordinatorState<R> {
@@ -59,37 +69,50 @@ impl<R> CoordinatorState<R> {
                 if self.is_already_flushed(slot) {
                     return Ok(());
                 }
-                self.buffer
-                    .entry(slot)
-                    .or_default()
-                    .set_block_metadata(metadata);
+                let buf = self.buffer.entry(slot).or_default();
+                buf.set_block_metadata(metadata);
             },
             CoordinatorEvent::SlotConfirmed { slot } => {
                 if self.is_already_flushed(slot) {
                     return Ok(());
                 }
-                self.buffer.entry(slot).or_default().mark_as_confirmed();
+                let count = self.account_event_counts.remove(&slot).unwrap_or(0);
+                let buf = self.buffer.entry(slot).or_default();
+                buf.mark_as_confirmed();
+                buf.set_expected_account_count(count);
             },
             CoordinatorEvent::SlotDiscarded { slot, reason } => {
                 self.discard_slot(slot, reason);
             },
-            CoordinatorEvent::RecordParsed { slot, key, record } => {
-                if !self.validate_slot(slot)? {
+            CoordinatorEvent::AccountEventSeen { slot } => {
+                if self.is_already_flushed(slot) {
                     return Ok(());
                 }
-                self.buffer
-                    .entry(slot)
-                    .or_default()
-                    .insert_record(key, record);
+                if self.discarded_slots.contains(&slot) {
+                    return Ok(());
+                }
+                // Strict: account events must never arrive after slot is confirmed.
+                if self.buffer.get(&slot).is_some_and(|buf| buf.is_confirmed()) {
+                    return Err(CoordinatorError::AccountAfterConfirmed { slot });
+                }
+                *self.account_event_counts.entry(slot).or_default() += 1;
             },
-            CoordinatorEvent::AccountRecordParsed { slot, record } => {
+            CoordinatorEvent::InstructionRecordParsed { slot, key, record } => {
                 if !self.validate_slot(slot)? {
                     return Ok(());
                 }
                 self.buffer
                     .entry(slot)
                     .or_default()
-                    .insert_account_record(record);
+                    .insert_instruction_record(key, record);
+            },
+            CoordinatorEvent::AccountRecordParsed { slot, key, record } => {
+                if !self.validate_slot(slot)? {
+                    return Ok(());
+                }
+                let buf = self.buffer.entry(slot).or_default();
+                buf.insert_account_record(key, record);
+                buf.increment_account_processed_count();
             },
             CoordinatorEvent::TransactionParsed { slot } => {
                 if !self.validate_slot(slot)? {
@@ -104,10 +127,11 @@ impl<R> CoordinatorState<R> {
                 if !self.validate_slot(slot)? {
                     return Ok(());
                 }
-                self.buffer
-                    .entry(slot)
-                    .or_default()
-                    .increment_parse_stat(kind);
+                let buf = self.buffer.entry(slot).or_default();
+                buf.increment_parse_stat(kind);
+                if matches!(kind, ParseStatsKind::AccountFiltered | ParseStatsKind::AccountError) {
+                    buf.increment_account_processed_count();
+                }
             },
         }
         Ok(())
@@ -147,6 +171,10 @@ impl<R> CoordinatorState<R> {
         }
         if !flushed.is_empty() {
             self.prune_discarded_slots();
+            // Prune stale pending account counts that are behind last_flushed_slot.
+            if let Some(last) = self.last_flushed_slot {
+                self.account_event_counts.retain(|&s, _| s > last);
+            }
         }
         Ok(flushed)
     }
@@ -182,6 +210,7 @@ impl<R> CoordinatorState<R> {
 
     fn discard_slot(&mut self, slot: Slot, reason: DiscardReason) {
         self.discarded_slots.insert(slot);
+        self.account_event_counts.remove(&slot);
         self.prune_discarded_slots();
         if let Some(buf) = self.buffer.remove(&slot) {
             tracing::warn!(slot, %reason, records = buf.record_count(), "Discarding slot");
@@ -219,6 +248,7 @@ impl<R> Default for CoordinatorState<R> {
             buffer: BTreeMap::new(),
             discarded_slots: BTreeSet::new(),
             last_flushed_slot: None,
+            account_event_counts: HashMap::new(),
         }
     }
 }
@@ -256,6 +286,7 @@ mod tests {
                 .unwrap();
         }
 
+        // Gate 3: SlotConfirmed freezes account_event_counts (0 for these simple test slots).
         state
             .apply(CoordinatorEvent::SlotConfirmed { slot })
             .unwrap();
@@ -332,16 +363,16 @@ mod tests {
             .unwrap();
 
         state
-            .apply(CoordinatorEvent::RecordParsed {
+            .apply(CoordinatorEvent::InstructionRecordParsed {
                 slot,
-                key: RecordSortKey::new(1, vec![0]),
+                key: InstructionRecordSortKey::new(1, vec![0]),
                 record: "b".to_string(),
             })
             .unwrap();
         state
-            .apply(CoordinatorEvent::RecordParsed {
+            .apply(CoordinatorEvent::InstructionRecordParsed {
                 slot,
-                key: RecordSortKey::new(0, vec![0]),
+                key: InstructionRecordSortKey::new(0, vec![0]),
                 record: "a".to_string(),
             })
             .unwrap();
@@ -389,9 +420,9 @@ mod tests {
         let _ = state.drain_flushable().unwrap();
 
         let err = state
-            .apply(CoordinatorEvent::RecordParsed {
+            .apply(CoordinatorEvent::InstructionRecordParsed {
                 slot: 100,
-                key: RecordSortKey::new(0, vec![0]),
+                key: InstructionRecordSortKey::new(0, vec![0]),
                 record: "late".to_string(),
             })
             .unwrap_err();
@@ -489,6 +520,148 @@ mod tests {
         assert_eq!(state.oldest_pending_slot(), Some(102));
         // Discard for slot 50 was pruned (50 < last_flushed 100).
         assert_eq!(state.discarded_slot_count(), 0);
+    }
+
+    #[test]
+    fn gate3_blocks_flush_until_all_accounts_processed() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+        // 2 account events seen before confirmed.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        // Gate 1 + Gate 2 satisfied, but Gate 3 needs 2 accounts processed → no flush.
+        let flushed = state.drain_flushable().unwrap();
+        assert!(flushed.is_empty());
+
+        // Process 1 account → still blocked.
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountInstructionRecordSortKey::new(1, [1; 32]),
+                record: "a".to_string(),
+            })
+            .unwrap();
+        let flushed = state.drain_flushable().unwrap();
+        assert!(flushed.is_empty());
+
+        // Process 2nd account → all gates satisfied.
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountInstructionRecordSortKey::new(2, [2; 32]),
+                record: "b".to_string(),
+            })
+            .unwrap();
+        let flushed = state.drain_flushable().unwrap();
+        assert_eq!(flushed.len(), 1);
+        assert_eq!(flushed[0].slot, slot);
+    }
+
+    #[test]
+    fn gate3_ready_with_all_three_gates() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 1),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountInstructionRecordSortKey::new(42, [1; 32]),
+                record: "acct".to_string(),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::TransactionParsed { slot })
+            .unwrap();
+        // AccountEventSeen before confirmed → frozen as expected_account_count=1.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        let flushed = state.drain_flushable().unwrap();
+        assert_eq!(flushed.len(), 1);
+        assert_eq!(flushed[0].records, vec!["acct".to_string()]);
+    }
+
+    #[test]
+    fn gate3_account_events_before_block_frozen_counted() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        // AccountEventSeen arrives before BlockFrozen — counted in account_event_counts.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        assert!(state.account_event_counts.contains_key(&slot));
+
+        // BlockFrozen creates the buffer (does not consume account_event_counts).
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+        assert!(state.account_event_counts.contains_key(&slot));
+
+        // Process the account record.
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountInstructionRecordSortKey::new(1, [1; 32]),
+                record: "acct".to_string(),
+            })
+            .unwrap();
+
+        // SlotConfirmed freezes count=1.
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+        assert!(!state.account_event_counts.contains_key(&slot));
+
+        let flushed = state.drain_flushable().unwrap();
+        assert_eq!(flushed.len(), 1);
+    }
+
+    #[test]
+    fn gate3_account_event_for_never_frozen_slot_does_not_stall() {
+        let mut state = CoordinatorState::<String>::default();
+
+        // AccountEventSeen for slot 100 (which never gets BlockFrozen).
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot: 100 })
+            .unwrap();
+
+        // Slot 200 is fully ready and should flush without being blocked.
+        apply_ready_slot(&mut state, 200, 199, 0);
+        let flushed = state.drain_flushable().unwrap();
+        assert_eq!(flushed.len(), 1);
+        assert_eq!(flushed[0].slot, 200);
+
+        // The stale account_event_counts for slot 100 was pruned (100 < last_flushed 200).
+        assert!(!state.account_event_counts.contains_key(&100));
     }
 
     // ReadySlotMissingMetadata is defensive and should be unreachable with current invariants.

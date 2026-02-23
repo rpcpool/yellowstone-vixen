@@ -7,8 +7,8 @@ use yellowstone_grpc_proto::geyser::{subscribe_update::UpdateOneof, SubscribeUpd
 use crate::{
     state::{CoordinatorEvent, CoordinatorState},
     types::{
-        BlockMetadata, ColorSlot, ConfirmedSlot, CoordinatorError, CoordinatorMessage,
-        DiscardReason,
+        BlockMetadata, ColorSlot, ConfirmedSlot, CoordinatorError, CoordinatorInput,
+        CoordinatorMessage, DiscardReason,
     },
 };
 
@@ -17,14 +17,14 @@ use crate::{
 pub struct BlockMachineCoordinator<R> {
     wrapper: BlocksStateMachineWrapper,
     state: CoordinatorState<R>,
-    input_rx: mpsc::Receiver<SubscribeUpdate>,
+    input_rx: mpsc::Receiver<CoordinatorInput>,
     parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
     output_tx: mpsc::Sender<ConfirmedSlot<R>>,
 }
 
 impl<R: Send + 'static> BlockMachineCoordinator<R> {
     pub fn new(
-        input_rx: mpsc::Receiver<SubscribeUpdate>,
+        input_rx: mpsc::Receiver<CoordinatorInput>,
         parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
         output_tx: mpsc::Sender<ConfirmedSlot<R>>,
     ) -> Self {
@@ -41,8 +41,15 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
     pub async fn run(mut self) -> Result<(), CoordinatorError> {
         loop {
             let events: Vec<CoordinatorEvent<R>> = tokio::select! {
-                Some(update) = self.input_rx.recv() => {
-                    self.convert_geyser_update(&update)
+                Some(input) = self.input_rx.recv() => {
+                    match input {
+                        CoordinatorInput::GeyserUpdate(update) => {
+                            self.convert_geyser_update(&update)
+                        }
+                        CoordinatorInput::AccountEventSeen { slot } => {
+                            vec![CoordinatorEvent::AccountEventSeen { slot }]
+                        }
+                    }
                 }
                 Some(msg) = self.parsed_rx.recv() => {
                     Self::convert_parsed_message(msg)
@@ -144,11 +151,11 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
 
     fn convert_parsed_message(msg: CoordinatorMessage<R>) -> Vec<CoordinatorEvent<R>> {
         match msg {
-            CoordinatorMessage::Parsed { slot, key, record } => {
-                vec![CoordinatorEvent::RecordParsed { slot, key, record }]
+            CoordinatorMessage::InstructionParsed { slot, key, record } => {
+                vec![CoordinatorEvent::InstructionRecordParsed { slot, key, record }]
             },
-            CoordinatorMessage::AccountParsed { slot, record } => {
-                vec![CoordinatorEvent::AccountRecordParsed { slot, record }]
+            CoordinatorMessage::AccountParsed { slot, key, record } => {
+                vec![CoordinatorEvent::AccountRecordParsed { slot, key, record }]
             },
             CoordinatorMessage::TransactionParsed { slot } => {
                 vec![CoordinatorEvent::TransactionParsed { slot }]

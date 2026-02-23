@@ -24,7 +24,7 @@ use yellowstone_vixen::{
 use yellowstone_vixen_core::{CommitmentLevel, Filters};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
 
-use crate::fixtures::FixtureWriter;
+use crate::{fixtures::FixtureWriter, types::CoordinatorInput};
 
 /// Config for CoordinatorSource.
 ///
@@ -37,10 +37,10 @@ pub struct CoordinatorSourceConfig {
     #[serde(flatten)]
     pub source: YellowstoneGrpcConfig,
 
-    /// Channel to send raw SubscribeUpdate events to the coordinator.
+    /// Channel to send CoordinatorInput events to the coordinator.
     #[serde(skip)]
     #[arg(skip)]
-    pub coordinator_input_tx: Option<Sender<SubscribeUpdate>>,
+    pub coordinator_input_tx: Option<Sender<CoordinatorInput>>,
 
     /// Path to write captured fixture data (length-delimited protobuf).
     #[serde(skip)]
@@ -189,6 +189,20 @@ impl SourceTrait for CoordinatorSource {
                         }
                     }
 
+                    // Send lightweight AccountEventSeen for each Account event.
+                    if let Some(UpdateOneof::Account(acct)) = &subscribe_update.update_oneof {
+                        if coordinator_tx
+                            .send(CoordinatorInput::AccountEventSeen { slot: acct.slot })
+                            .await
+                            .is_err()
+                        {
+                            tracing::error!("Coordinator input channel closed");
+                            break 'stream SourceExitStatus::Error(
+                                "Coordinator input channel closed".to_string(),
+                            );
+                        }
+                    }
+
                     // Forward BlockSM-relevant events to the coordinator.
                     // Entry, Slot, and BlockMeta events are needed for block reconstruction.
                     let is_block_sm_event = matches!(
@@ -202,7 +216,11 @@ impl SourceTrait for CoordinatorSource {
 
                     if is_block_sm_event {
                         // Clone for coordinator (Account/Transaction events go to Runtime uncloned)
-                        if coordinator_tx.send(subscribe_update.clone()).await.is_err() {
+                        if coordinator_tx
+                            .send(CoordinatorInput::GeyserUpdate(subscribe_update.clone()))
+                            .await
+                            .is_err()
+                        {
                             tracing::error!("Coordinator input channel closed");
                             break 'stream SourceExitStatus::Error(
                                 "Coordinator input channel closed".to_string(),

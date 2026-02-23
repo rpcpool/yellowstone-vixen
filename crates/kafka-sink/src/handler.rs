@@ -1,5 +1,7 @@
 use yellowstone_vixen::{self as vixen, HandlerResult};
-use yellowstone_vixen_block_coordinator::{CoordinatorHandle, ParseStatsKind, RecordSortKey};
+use yellowstone_vixen_block_coordinator::{
+    AccountInstructionRecordSortKey, CoordinatorHandle, ParseStatsKind, InstructionRecordSortKey,
+};
 use yellowstone_vixen_core::{
     instruction::{InstructionUpdate, Path},
     AccountUpdate, TransactionUpdate,
@@ -29,8 +31,8 @@ impl std::fmt::Debug for BufferingHandler {
     }
 }
 
-fn sort_key(tx_index: u64, path: &Path) -> RecordSortKey {
-    RecordSortKey::new(
+fn sort_key(tx_index: u64, path: &Path) -> InstructionRecordSortKey {
+    InstructionRecordSortKey::new(
         tx_index,
         path.as_slice().iter().map(|&i| i as usize).collect(),
     )
@@ -61,7 +63,7 @@ impl BufferingHandler {
                 );
                 if let Err(e) = self
                     .handle
-                    .send_parsed(slot, sort_key(tx_index, path), record)
+                    .send_instruction_parsed(slot, sort_key(tx_index, path), record)
                     .await
                 {
                     tracing::error!(?e, slot, "Failed to send secondary record");
@@ -104,7 +106,7 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                 let primary_parsed = if let Some((record, parsed)) = result {
                     if let Err(e) = self
                         .handle
-                        .send_parsed(slot, sort_key(tx_index, &ix.path), record)
+                        .send_instruction_parsed(slot, sort_key(tx_index, &ix.path), record)
                         .await
                     {
                         tracing::error!(?e, slot, tx_index, "Failed to send parsed record");
@@ -139,9 +141,24 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
     ) -> HandlerResult<()> {
         let slot = update.slot;
 
+        // Extract write_version and pubkey for account record ordering.
+        let (write_version, pubkey) = update
+            .account
+            .as_ref()
+            .map(|info| {
+                let pubkey: [u8; 32] = info
+                    .pubkey
+                    .as_slice()
+                    .try_into()
+                    .unwrap_or([0u8; 32]);
+                (info.write_version, pubkey)
+            })
+            .unwrap_or((0, [0u8; 32]));
+
         let (record, had_error) = self.parsers.parse_account(slot, update).await;
         if let Some(record) = record {
-            if let Err(e) = self.handle.send_account_parsed(slot, record).await {
+            let key = AccountInstructionRecordSortKey::new(write_version, pubkey);
+            if let Err(e) = self.handle.send_account_parsed(slot, key, record).await {
                 tracing::error!(?e, slot, "Failed to send account parsed record");
             }
         } else {

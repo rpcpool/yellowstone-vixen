@@ -12,7 +12,7 @@ use std::{collections::HashMap, env, path::PathBuf};
 use tokio::sync::mpsc;
 use yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof;
 use yellowstone_vixen_block_coordinator::{
-    BlockMachineCoordinator, ConfirmedSlot, CoordinatorMessage, FixtureReader,
+    BlockMachineCoordinator, ConfirmedSlot, CoordinatorInput, CoordinatorMessage, FixtureReader,
 };
 
 fn fixture_path() -> PathBuf {
@@ -83,6 +83,14 @@ async fn run_coordinator_with_updates(
     tokio::spawn(BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx).run());
 
     for update in updates {
+        // Send AccountEventSeen for Account events.
+        if let Some(UpdateOneof::Account(acct)) = &update.update_oneof {
+            input_tx
+                .send(CoordinatorInput::AccountEventSeen { slot: acct.slot })
+                .await
+                .unwrap();
+        }
+
         // Forward BlockSM-relevant events to the coordinator
         let is_block_sm_event = matches!(
             update.update_oneof,
@@ -90,7 +98,10 @@ async fn run_coordinator_with_updates(
         );
 
         if is_block_sm_event {
-            input_tx.send(update.clone()).await.unwrap();
+            input_tx
+                .send(CoordinatorInput::GeyserUpdate(update.clone()))
+                .await
+                .unwrap();
         }
 
         // Simulate all transactions being parsed for this slot
