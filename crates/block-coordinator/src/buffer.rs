@@ -37,6 +37,8 @@ pub struct SlotRecordBuffer<R> {
     failed_instruction_count: u64,
     filtered_account_count: u64,
     failed_account_count: u64,
+    transaction_status_failed_count: u64,
+    transaction_status_succeeded_count: u64,
 }
 
 impl<R> Default for SlotRecordBuffer<R> {
@@ -53,6 +55,8 @@ impl<R> Default for SlotRecordBuffer<R> {
             failed_instruction_count: 0,
             filtered_account_count: 0,
             failed_account_count: 0,
+            transaction_status_failed_count: 0,
+            transaction_status_succeeded_count: 0,
         }
     }
 }
@@ -114,6 +118,8 @@ impl<R> SlotRecordBuffer<R> {
             ParseStatsKind::InstructionError => self.failed_instruction_count += 1,
             ParseStatsKind::AccountFiltered => self.filtered_account_count += 1,
             ParseStatsKind::AccountError => self.failed_account_count += 1,
+            ParseStatsKind::TransactionStatusFailed => self.transaction_status_failed_count += 1,
+            ParseStatsKind::TransactionStatusSucceeded => self.transaction_status_succeeded_count += 1,
         }
     }
 
@@ -201,6 +207,8 @@ impl<R> SlotRecordBuffer<R> {
             failed_instruction_count: self.failed_instruction_count,
             filtered_account_count: self.filtered_account_count,
             failed_account_count: self.failed_account_count,
+            transaction_status_failed_count: self.transaction_status_failed_count,
+            transaction_status_succeeded_count: self.transaction_status_succeeded_count,
         })
     }
 

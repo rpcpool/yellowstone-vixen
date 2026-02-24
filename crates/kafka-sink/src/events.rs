@@ -50,6 +50,10 @@ pub struct SlotCommitEvent {
     pub filtered_account_count: u64,
     /// Number of accounts where a parser failed (unexpected).
     pub failed_account_count: u64,
+    /// Number of transactions that failed on-chain execution.
+    pub transaction_status_failed_count: u64,
+    /// Number of transactions that succeeded on-chain execution.
+    pub transaction_status_succeeded_count: u64,
 }
 
 /// Distinguishes instruction records from account records.

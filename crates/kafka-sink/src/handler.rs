@@ -87,6 +87,15 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
         };
         let tx_index = tx_info.index;
 
+        // Skip failed transactions — no instruction parsing, no records to Kafka.
+        if tx_info.meta.as_ref().and_then(|m| m.err.as_ref()).is_some() {
+            let _ = self.handle.send_parse_stats(slot, ParseStatsKind::TransactionStatusFailed).await;
+            let _ = self.handle.send_transaction_parsed(slot).await;
+            return Ok(());
+        }
+
+        let _ = self.handle.send_parse_stats(slot, ParseStatsKind::TransactionStatusSucceeded).await;
+
         let instructions = match InstructionUpdate::parse_from_txn(update) {
             Ok(ixs) => ixs,
             Err(e) => {

@@ -82,6 +82,8 @@ pub enum ParseStatsKind {
     InstructionError,
     AccountFiltered,
     AccountError,
+    TransactionStatusFailed,
+    TransactionStatusSucceeded,
 }
 
 /// Messages from handlers back to the coordinator.
@@ -195,6 +197,8 @@ pub struct ConfirmedSlot<R> {
     pub failed_instruction_count: u64,
     pub filtered_account_count: u64,
     pub failed_account_count: u64,
+    pub transaction_status_failed_count: u64,
+    pub transaction_status_succeeded_count: u64,
 }
 
 /// Clonable handle for handlers to send messages to the coordinator.
