@@ -984,26 +984,23 @@ async fn gate3_account_event_for_never_frozen_slot_does_not_stall() {
 async fn account_after_confirmed_returns_error() {
     let (input_tx, input_rx) = mpsc::channel::<CoordinatorInput>(256);
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
-    let (output_tx, mut output_rx) = mpsc::channel(64);
+    let (output_tx, _output_rx) = mpsc::channel(64);
 
     let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
     let handle = tokio::spawn(coordinator.run());
 
-    // Create a slot, send lifecycle + freeze, confirm it.
+    // Create a slot with 1 AccountEventSeen before confirm so Gate 3 blocks flush
+    // (expected_account_count=1, account_processed_count=0 → slot stays in buffer).
     let slot = SlotBuilder::new(input_tx.clone(), parsed_tx.clone(), 100)
         .parent(99)
         .empty()
         .await;
 
-    slot.confirm().await;
+    // 1 account event before confirm — slot confirmed but NOT flushed (Gate 3 blocks).
+    slot.confirm_with_accounts(1).await;
+    tokio::time::sleep(Duration::from_millis(10)).await;
 
-    let flushed = tokio::time::timeout(Duration::from_secs(2), output_rx.recv())
-        .await
-        .expect("Timed out")
-        .expect("Channel closed");
-    assert_eq!(flushed.slot, 100);
-
-    // Send AccountEventSeen after confirmed — should be a strict error.
+    // Send another AccountEventSeen after confirmed — triggers AccountAfterConfirmed.
     input_tx
         .send(CoordinatorInput::AccountEventSeen { slot: 100 })
         .await
