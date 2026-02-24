@@ -596,6 +596,7 @@ impl KafkaSink {
         };
         let pubkey_str = bs58::encode(&inner.pubkey).into_string();
         let owner_str = bs58::encode(&inner.owner).into_string();
+        let write_version = inner.write_version;
 
         let mut had_error = false;
         for parser in &self.account_parsers {
@@ -604,6 +605,7 @@ impl KafkaSink {
                     return (
                         Some(self.prepare_decoded_account_record(
                             slot,
+                            write_version,
                             &pubkey_str,
                             &owner_str,
                             parsed,
@@ -617,6 +619,7 @@ impl KafkaSink {
                         return (
                             Some(self.prepare_fallback_account_record(
                                 slot,
+                                write_version,
                                 &pubkey_str,
                                 &owner_str,
                                 &inner.data,
@@ -632,6 +635,7 @@ impl KafkaSink {
                         return (
                             Some(self.prepare_fallback_account_record(
                                 slot,
+                                write_version,
                                 &pubkey_str,
                                 &owner_str,
                                 &inner.data,
@@ -650,18 +654,23 @@ impl KafkaSink {
     fn prepare_decoded_account_record(
         &self,
         slot: u64,
+        write_version: u64,
         pubkey: &str,
         owner: &str,
         parsed: ParsedOutput,
         topic: &str,
     ) -> PreparedRecord {
-        let key = make_account_record_key(slot, pubkey);
+        let key = make_account_record_key(slot, write_version, pubkey);
         let payload = self.encode_payload_for_topic(topic, parsed.data);
 
         let headers = vec![
             RecordHeader {
                 key: "slot",
                 value: slot.to_string(),
+            },
+            RecordHeader {
+                key: "write_version",
+                value: write_version.to_string(),
             },
             RecordHeader {
                 key: "pubkey",
@@ -687,17 +696,22 @@ impl KafkaSink {
     fn prepare_fallback_account_record(
         &self,
         slot: u64,
+        write_version: u64,
         pubkey: &str,
         owner: &str,
         data: &[u8],
         fallback_topic: &str,
     ) -> PreparedRecord {
-        let key = make_account_record_key(slot, pubkey);
+        let key = make_account_record_key(slot, write_version, pubkey);
 
         let headers = vec![
             RecordHeader {
                 key: "slot",
                 value: slot.to_string(),
+            },
+            RecordHeader {
+                key: "write_version",
+                value: write_version.to_string(),
             },
             RecordHeader {
                 key: "pubkey",
