@@ -20,7 +20,7 @@
 //! │    account_processed_count: u64           // from AccountRecordParsed /     │
 //! │                                           //   AccountFiltered / Error      │
 //! │    instruction_records: BTreeMap<InstructionRecordSortKey, R>               │
-//! │    account_records: BTreeMap<AccountInstructionRecordSortKey, R>            │
+//! │    account_records: BTreeMap<AccountRecordSortKey, R>               │
 //! │    parent_slot, blockhash                                                   │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
@@ -940,7 +940,7 @@ async fn gate3_blocks_flush_until_account_count_received() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountInstructionRecordSortKey::new(1, [1; 32]),
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
             record: "acct1".to_string(),
         })
         .await
@@ -949,7 +949,7 @@ async fn gate3_blocks_flush_until_account_count_received() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountInstructionRecordSortKey::new(2, [2; 32]),
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(2, [2; 32]),
             record: "acct2".to_string(),
         })
         .await
@@ -1035,7 +1035,7 @@ async fn duplicate_confirm_does_not_change_frozen_count() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountInstructionRecordSortKey::new(
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(
                 1,
                 [1; 32],
             ),
@@ -1047,7 +1047,7 @@ async fn duplicate_confirm_does_not_change_frozen_count() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountInstructionRecordSortKey::new(
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(
                 2,
                 [2; 32],
             ),

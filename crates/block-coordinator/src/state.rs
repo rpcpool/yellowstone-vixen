@@ -5,7 +5,7 @@ use solana_clock::Slot;
 use crate::{
     buffer::SlotRecordBuffer,
     types::{
-        AccountInstructionRecordSortKey, BlockMetadata, ConfirmedSlot, CoordinatorError, DiscardReason,
+        AccountRecordSortKey, BlockMetadata, ConfirmedSlot, CoordinatorError, DiscardReason,
         ParseStatsKind, InstructionRecordSortKey,
     },
 };
@@ -27,10 +27,10 @@ pub enum CoordinatorEvent<R> {
         key: InstructionRecordSortKey,
         record: R,
     },
-    /// A parsed account record from a handler (sorted by write_version:pubkey).
+    /// A parsed account record from a handler (sorted by ingress_seq:pubkey).
     AccountRecordParsed {
         slot: Slot,
-        key: AccountInstructionRecordSortKey,
+        key: AccountRecordSortKey,
         record: R,
     },
     /// A handler finished parsing a transaction.
@@ -552,7 +552,7 @@ mod tests {
         state
             .apply(CoordinatorEvent::AccountRecordParsed {
                 slot,
-                key: AccountInstructionRecordSortKey::new(1, [1; 32]),
+                key: AccountRecordSortKey::new(1, [1; 32]),
                 record: "a".to_string(),
             })
             .unwrap();
@@ -563,7 +563,7 @@ mod tests {
         state
             .apply(CoordinatorEvent::AccountRecordParsed {
                 slot,
-                key: AccountInstructionRecordSortKey::new(2, [2; 32]),
+                key: AccountRecordSortKey::new(2, [2; 32]),
                 record: "b".to_string(),
             })
             .unwrap();
@@ -586,7 +586,7 @@ mod tests {
         state
             .apply(CoordinatorEvent::AccountRecordParsed {
                 slot,
-                key: AccountInstructionRecordSortKey::new(42, [1; 32]),
+                key: AccountRecordSortKey::new(42, [1; 32]),
                 record: "acct".to_string(),
             })
             .unwrap();
@@ -630,7 +630,7 @@ mod tests {
         state
             .apply(CoordinatorEvent::AccountRecordParsed {
                 slot,
-                key: AccountInstructionRecordSortKey::new(1, [1; 32]),
+                key: AccountRecordSortKey::new(1, [1; 32]),
                 record: "acct".to_string(),
             })
             .unwrap();
@@ -662,6 +662,89 @@ mod tests {
 
         // The stale account_event_counts for slot 100 was pruned (100 < last_flushed 200).
         assert!(!state.account_event_counts.contains_key(&100));
+    }
+
+    #[test]
+    fn malformed_pubkey_account_error_still_flushes() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+
+        // 1 account event seen.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+
+        // Handler hit bad pubkey → sends AccountError (increments account_processed_count).
+        state
+            .apply(CoordinatorEvent::ParseStats {
+                slot,
+                kind: ParseStatsKind::AccountError,
+            })
+            .unwrap();
+
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        let flushed = state.drain_flushable().unwrap();
+        assert_eq!(flushed.len(), 1);
+        assert_eq!(flushed[0].slot, slot);
+        assert!(flushed[0].records.is_empty());
+    }
+
+    #[test]
+    fn same_pubkey_multiple_updates_preserves_ingress_seq_order() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+
+        // Two account events seen.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+
+        // Same pubkey [1; 32], different ingress_seq values.
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(5, [1; 32]),
+                record: "first".to_string(),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(10, [1; 32]),
+                record: "second".to_string(),
+            })
+            .unwrap();
+
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        let flushed = state.drain_flushable().unwrap();
+        assert_eq!(flushed.len(), 1);
+        assert_eq!(
+            flushed[0].records,
+            vec!["first".to_string(), "second".to_string()]
+        );
     }
 
     // ReadySlotMissingMetadata is defensive and should be unreachable with current invariants.

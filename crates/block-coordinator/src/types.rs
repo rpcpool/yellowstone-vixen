@@ -92,10 +92,10 @@ pub enum CoordinatorMessage<R> {
         key: InstructionRecordSortKey,
         record: R,
     },
-    /// A parsed account record ready to buffer, sorted by write_version:pubkey.
+    /// A parsed account record ready to buffer, sorted by ingress_seq:pubkey.
     AccountParsed {
         slot: Slot,
-        key: AccountInstructionRecordSortKey,
+        key: AccountRecordSortKey,
         record: R,
     },
     /// Signal that a transaction has been fully parsed by the handler.
@@ -137,19 +137,19 @@ impl InstructionRecordSortKey {
 }
 
 /// Sort key for account records within a slot.
-/// Ordered by write_version (execution order within slot), then pubkey
-/// (discriminate multiple accounts affected by the same write_version).
-/// write_version resets per slot — slot is implicit (it's the buffer's key).
+/// Ordered by ingress_seq (source-assigned monotonic sequence number for
+/// deterministic ordering), then pubkey (discriminate multiple accounts
+/// in the same update). Slot is implicit (it's the buffer's key).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct AccountInstructionRecordSortKey {
-    write_version: u64,
+pub struct AccountRecordSortKey {
+    ingress_seq: u64,
     pubkey: [u8; 32],
 }
 
-impl AccountInstructionRecordSortKey {
-    pub fn new(write_version: u64, pubkey: [u8; 32]) -> Self {
+impl AccountRecordSortKey {
+    pub fn new(ingress_seq: u64, pubkey: [u8; 32]) -> Self {
         Self {
-            write_version,
+            ingress_seq,
             pubkey,
         }
     }
@@ -220,7 +220,7 @@ impl<R: Send> CoordinatorHandle<R> {
     pub async fn send_account_parsed(
         &self,
         slot: Slot,
-        key: AccountInstructionRecordSortKey,
+        key: AccountRecordSortKey,
         record: R,
     ) -> Result<(), tokio::sync::mpsc::error::SendError<CoordinatorMessage<R>>> {
         self.tx

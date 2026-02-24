@@ -1,6 +1,6 @@
 use yellowstone_vixen::{self as vixen, HandlerResult};
 use yellowstone_vixen_block_coordinator::{
-    AccountInstructionRecordSortKey, CoordinatorHandle, ParseStatsKind, InstructionRecordSortKey,
+    AccountRecordSortKey, CoordinatorHandle, ParseStatsKind, InstructionRecordSortKey,
 };
 use yellowstone_vixen_core::{
     instruction::{InstructionUpdate, Path},
@@ -141,23 +141,19 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
     ) -> HandlerResult<()> {
         let slot = update.slot;
 
-        // Extract write_version and pubkey for account record ordering.
-        let (write_version, pubkey) = update
-            .account
-            .as_ref()
-            .map(|info| {
-                let pubkey: [u8; 32] = info
-                    .pubkey
-                    .as_slice()
-                    .try_into()
-                    .unwrap_or([0u8; 32]);
-                (info.write_version, pubkey)
-            })
-            .unwrap_or((0, [0u8; 32]));
-
         let (record, had_error) = self.parsers.parse_account(slot, update).await;
         if let Some(record) = record {
-            let key = AccountInstructionRecordSortKey::new(write_version, pubkey);
+            let info = update.account.as_ref().expect("parse_account returned Some so account must exist");
+            let pubkey: [u8; 32] = match info.pubkey.as_slice().try_into() {
+                Ok(pk) => pk,
+                Err(_) => {
+                    tracing::warn!(slot, pubkey_len = info.pubkey.len(), "Malformed pubkey in account update");
+                    let _ = self.handle.send_parse_stats(slot, ParseStatsKind::AccountError).await;
+                    return Ok(());
+                },
+            };
+            let ingress_seq = info.write_version;
+            let key = AccountRecordSortKey::new(ingress_seq, pubkey);
             if let Err(e) = self.handle.send_account_parsed(slot, key, record).await {
                 tracing::error!(?e, slot, "Failed to send account parsed record");
             }

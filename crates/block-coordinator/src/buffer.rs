@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use solana_clock::Slot;
 
-use crate::types::{AccountInstructionRecordSortKey, BlockMetadata, ConfirmedSlot, ParseStatsKind, InstructionRecordSortKey};
+use crate::types::{AccountRecordSortKey, BlockMetadata, ConfirmedSlot, ParseStatsKind, InstructionRecordSortKey};
 
 /// Per-slot buffer that collects parsed records and tracks the three-gate flush condition.
 ///
@@ -20,8 +20,8 @@ use crate::types::{AccountInstructionRecordSortKey, BlockMetadata, ConfirmedSlot
 pub struct SlotRecordBuffer<R> {
     /// Instruction records sorted by (tx_index, ix_path) for ordered flush.
     instruction_records: BTreeMap<InstructionRecordSortKey, R>,
-    /// Account records sorted by (write_version, pubkey) for ordered flush.
-    account_records: BTreeMap<AccountInstructionRecordSortKey, R>,
+    /// Account records sorted by (ingress_seq, pubkey) for ordered flush.
+    account_records: BTreeMap<AccountRecordSortKey, R>,
     /// Block metadata from FrozenBlock.
     metadata: Option<BlockMetadata>,
     /// Gate 1: fully parsed.
@@ -68,11 +68,11 @@ impl<R> SlotRecordBuffer<R> {
         self.instruction_records.insert(key, record);
     }
 
-    pub fn insert_account_record(&mut self, key: AccountInstructionRecordSortKey, record: R) {
+    pub fn insert_account_record(&mut self, key: AccountRecordSortKey, record: R) {
         if self.account_records.contains_key(&key) {
             tracing::warn!(
                 ?key,
-                "Duplicate AccountInstructionRecordSortKey — previous record overwritten"
+                "Duplicate AccountRecordSortKey — previous record overwritten"
             );
         }
         self.account_records.insert(key, record);
@@ -205,7 +205,7 @@ impl<R> SlotRecordBuffer<R> {
     }
 
     /// Drain all records: instruction records in sorted order first, then account records
-    /// (sorted by write_version:pubkey) appended.
+    /// (sorted by ingress_seq:pubkey) appended.
     fn drain_all_records(&mut self) -> Vec<R> {
         let mut records: Vec<R> =
             std::mem::take(&mut self.instruction_records).into_values().collect();
@@ -413,7 +413,7 @@ mod tests {
 
         // 1 successful record
         buf.insert_account_record(
-            AccountInstructionRecordSortKey::new(100, [1; 32]),
+            AccountRecordSortKey::new(100, [1; 32]),
             "acct1".into(),
         );
         buf.increment_account_processed_count();
@@ -443,7 +443,7 @@ mod tests {
         assert!(!buf.is_fully_account_processed());
         for i in 0..5 {
             buf.insert_account_record(
-                AccountInstructionRecordSortKey::new(i, [i as u8; 32]),
+                AccountRecordSortKey::new(i, [i as u8; 32]),
                 format!("acct{i}"),
             );
             buf.increment_account_processed_count();
@@ -461,15 +461,15 @@ mod tests {
         });
         // Insert out of order
         buf.insert_account_record(
-            AccountInstructionRecordSortKey::new(300, [3; 32]),
+            AccountRecordSortKey::new(300, [3; 32]),
             "wv300".into(),
         );
         buf.insert_account_record(
-            AccountInstructionRecordSortKey::new(100, [1; 32]),
+            AccountRecordSortKey::new(100, [1; 32]),
             "wv100".into(),
         );
         buf.insert_account_record(
-            AccountInstructionRecordSortKey::new(200, [2; 32]),
+            AccountRecordSortKey::new(200, [2; 32]),
             "wv200".into(),
         );
 
