@@ -80,7 +80,7 @@ async fn run_coordinator_with_updates(
     let (parsed_tx, parsed_rx) = mpsc::channel::<CoordinatorMessage<()>>(4096);
     let (output_tx, mut output_rx) = mpsc::channel::<ConfirmedSlot<()>>(256);
 
-    tokio::spawn(BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx).run());
+    tokio::spawn(BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, true).run());
 
     for update in updates {
         // Send AccountEventSeen for Account events.

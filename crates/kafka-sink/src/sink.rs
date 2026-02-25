@@ -67,19 +67,6 @@ pub trait DynInstructionParser: Send + Sync {
     fn fallback_topic(&self) -> Option<&str>;
 }
 
-/// Secondary filter that can emit additional records for instructions.
-/// Runs after the main parser, allowing the same instruction to be routed
-/// to multiple topics without modifying the primary flow.
-pub trait SecondaryFilter: Send + Sync {
-    fn filter<'a>(
-        &'a self,
-        ix: &'a InstructionUpdate,
-        primary_parsed: Option<&'a ParsedOutput>,
-    ) -> Pin<Box<dyn Future<Output = Option<ParsedOutput>> + Send + 'a>>;
-
-    fn topic(&self) -> &str;
-}
-
 struct InstructionParserWrapper<P> {
     parser: P,
     topic: String,
@@ -176,8 +163,6 @@ where
 pub struct KafkaSinkBuilder {
     instruction_parsers: Vec<Arc<dyn DynInstructionParser>>,
     account_parsers: Vec<Arc<dyn DynAccountParser>>,
-    secondary_filters: Vec<Arc<dyn SecondaryFilter>>,
-    fallback_topic: Option<String>,
 }
 
 impl Default for KafkaSinkBuilder {
@@ -189,8 +174,6 @@ impl KafkaSinkBuilder {
         Self {
             instruction_parsers: Vec::new(),
             account_parsers: Vec::new(),
-            secondary_filters: Vec::new(),
-            fallback_topic: None,
         }
     }
 
@@ -284,28 +267,10 @@ impl KafkaSinkBuilder {
         self
     }
 
-    /// Set the fallback topic for instructions that no parser handles.
-    /// If not set, unmatched instructions are silently dropped.
-    pub fn fallback_topic(mut self, topic: &str) -> Self {
-        self.fallback_topic = Some(topic.to_string());
-        self
-    }
-
-    /// Add a secondary filter that can emit additional records.
-    /// Secondary filters run after the main parser and can route
-    /// matching instructions to additional topics.
-    pub fn secondary_filter<F>(mut self, filter: F) -> Self
-    where F: SecondaryFilter + 'static {
-        self.secondary_filters.push(Arc::new(filter));
-        self
-    }
-
     pub fn build(self) -> KafkaSink {
         KafkaSink {
             instruction_parsers: self.instruction_parsers,
             account_parsers: self.account_parsers,
-            secondary_filters: self.secondary_filters,
-            fallback_topic: self.fallback_topic,
             schema_ids: HashMap::new(),
         }
     }
@@ -323,8 +288,6 @@ impl KafkaSinkBuilder {
                         std::iter::once(p.topic()).chain(p.fallback_topic())
                     }),
             )
-            .chain(self.secondary_filters.iter().map(|f| f.topic()))
-            .chain(self.fallback_topic.as_deref())
             .collect::<BTreeSet<_>>()
             .into_iter()
             .collect()
@@ -337,8 +300,6 @@ impl KafkaSinkBuilder {
 pub struct KafkaSink {
     instruction_parsers: Vec<Arc<dyn DynInstructionParser>>,
     account_parsers: Vec<Arc<dyn DynAccountParser>>,
-    secondary_filters: Vec<Arc<dyn SecondaryFilter>>,
-    fallback_topic: Option<String>,
     /// Map of topic -> schema info for encoding with Confluent wire format.
     schema_ids: HashMap<String, RegisteredSchema>,
 }
@@ -348,8 +309,6 @@ impl Default for KafkaSink {
         Self {
             instruction_parsers: Vec::new(),
             account_parsers: Vec::new(),
-            secondary_filters: Vec::new(),
-            fallback_topic: None,
             schema_ids: HashMap::new(),
         }
     }
@@ -369,14 +328,15 @@ impl KafkaSink {
                         std::iter::once(p.topic()).chain(p.fallback_topic())
                     }),
             )
-            .chain(self.secondary_filters.iter().map(|f| f.topic()))
-            .chain(self.fallback_topic.as_deref())
             .collect::<BTreeSet<_>>()
             .into_iter()
             .collect()
     }
 
-    pub fn fallback_topic(&self) -> Option<&str> { self.fallback_topic.as_deref() }
+    /// Returns true if any transaction-derived work is configured.
+    pub fn has_transaction_work(&self) -> bool {
+        !self.instruction_parsers.is_empty()
+    }
 
     /// Returns true if any account parsers are registered.
     pub fn has_account_parsers(&self) -> bool { !self.account_parsers.is_empty() }
@@ -415,29 +375,10 @@ impl KafkaSink {
 
     // --- Instruction parsing ---
 
-    /// Try each registered parser in order. Returns the first successful parse
-    /// and a flag indicating whether any parser errored.
-    async fn try_parse_instruction(
-        &self,
-        ix: &InstructionUpdate,
-    ) -> (Option<(ParsedOutput, &str)>, bool) {
-        let mut had_error = false;
-        for parser in &self.instruction_parsers {
-            match parser.try_parse(ix).await {
-                ParseOutcome::Parsed(parsed) => return (Some((parsed, parser.topic())), false),
-                ParseOutcome::Error => {
-                    had_error = true;
-                },
-                ParseOutcome::Filtered => {},
-            }
-        }
-        (None, had_error)
-    }
-
     /// Parse an instruction and prepare a Kafka record.
     ///
-    /// Tries each registered parser in order. If one matches, builds a decoded record;
-    /// if none match and a fallback topic is configured, builds a fallback record.
+    /// Tries each registered parser in order. If one matches, builds a decoded record.
+    /// If parser-level fallback is configured, filtered/error outcomes may be routed there.
     /// Returns the record (if any) and a `had_error` flag indicating whether any
     /// parser encountered an unexpected failure (vs expected filtering).
     pub async fn parse_instruction(
@@ -446,31 +387,49 @@ impl KafkaSink {
         signature: &[u8],
         path: &Path,
         ix: &InstructionUpdate,
-    ) -> (Option<(PreparedRecord, Option<ParsedOutput>)>, bool) {
-        let (try_result, had_error) = self.try_parse_instruction(ix).await;
-        match try_result {
-            Some((parsed, topic)) => {
-                let record = self.prepare_decoded_instruction_record(
-                    slot,
-                    signature,
-                    path,
-                    parsed.clone(),
-                    topic,
-                );
-                (Some((record, Some(parsed))), false)
-            },
-            None => {
-                let record = self.fallback_topic.as_deref().map(|fallback| {
-                    let record =
-                        self.prepare_fallback_instruction_record(slot, signature, path, ix, fallback);
-                    (record, None)
-                });
-                (record, had_error)
-            },
+    ) -> (Option<PreparedRecord>, bool) {
+        let mut had_error = false;
+        for parser in &self.instruction_parsers {
+            match parser.try_parse(ix).await {
+                ParseOutcome::Parsed(parsed) => {
+                    let record = self.prepare_decoded_instruction_record(
+                        slot,
+                        signature,
+                        path,
+                        parsed,
+                        parser.topic(),
+                    );
+                    return (Some(record), false);
+                },
+                ParseOutcome::Filtered => {
+                    if let Some(fallback) = parser.fallback_topic() {
+                        let record = self.prepare_fallback_instruction_record(
+                            slot,
+                            signature,
+                            path,
+                            ix,
+                            fallback,
+                        );
+                        return (Some(record), false);
+                    }
+                },
+                ParseOutcome::Error => {
+                    had_error = true;
+                    if let Some(fallback) = parser.fallback_topic() {
+                        let record = self.prepare_fallback_instruction_record(
+                            slot,
+                            signature,
+                            path,
+                            ix,
+                            fallback,
+                        );
+                        return (Some(record), true);
+                    }
+                },
+            }
         }
+        (None, had_error)
     }
-
-    pub fn secondary_filters(&self) -> &[Arc<dyn SecondaryFilter>] { &self.secondary_filters }
 
     /// Build the base headers and key shared by all instruction record types.
     fn instruction_base_record(
@@ -567,9 +526,13 @@ impl KafkaSink {
 
     // --- Subscription constructors ---
 
-    /// Create a TransactionSubscription for this sink.
-    pub fn transaction_subscription(&self) -> crate::parsers::TransactionSubscription {
-        crate::parsers::TransactionSubscription
+    /// Create a TransactionSubscription for this sink, if transaction-derived work exists.
+    pub fn transaction_subscription(&self) -> Option<crate::parsers::TransactionSubscription> {
+        if self.has_transaction_work() {
+            Some(crate::parsers::TransactionSubscription)
+        } else {
+            None
+        }
     }
 
     /// Create an AccountSubscription for this sink, if any account parsers are registered.

@@ -212,12 +212,15 @@ struct TestHarness {
 }
 
 impl TestHarness {
-    fn spawn() -> Self {
+    fn spawn() -> Self { Self::spawn_with_require_tx_gate(true) }
+
+    fn spawn_with_require_tx_gate(require_tx_gate: bool) -> Self {
         let (input_tx, input_rx) = mpsc::channel(256);
         let (parsed_tx, parsed_rx) = mpsc::channel(256);
         let (output_tx, output_rx) = mpsc::channel(64);
 
-        let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
+        let coordinator =
+            BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, require_tx_gate);
         tokio::spawn(coordinator.run());
 
         Self {
@@ -863,7 +866,7 @@ async fn late_message_for_flushed_slot_errors() {
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, mut output_rx) = mpsc::channel(64);
 
-    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
+    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, true);
     let handle = tokio::spawn(coordinator.run());
 
     // Create and flush slot 100
@@ -900,7 +903,7 @@ async fn output_channel_closed_returns_error() {
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, output_rx) = mpsc::channel(64);
 
-    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
+    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, true);
     let handle = tokio::spawn(coordinator.run());
 
     // Drop the output receiver — the coordinator can't send flushed slots.
@@ -963,6 +966,31 @@ async fn gate3_blocks_flush_until_account_count_received() {
 }
 
 #[tokio::test]
+async fn account_only_mode_flushes_without_transaction_parsed_messages() {
+    let mut harness = TestHarness::spawn_with_require_tx_gate(false);
+
+    // Slot has non-zero tx count from Entry/BlockMeta but sends no TransactionParsed events.
+    let slot = harness.slot(100).parent(99).pending(3).await;
+
+    // Freeze Gate 3 with one account event.
+    slot.confirm_with_accounts(1).await;
+    harness.expect_no_flush().await;
+
+    // Satisfy Gate 3 with one parsed account record.
+    harness
+        .parsed_tx
+        .send(CoordinatorMessage::AccountParsed {
+            slot: 100,
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            record: "acct1".to_string(),
+        })
+        .await
+        .unwrap();
+
+    harness.expect_flush(100).await.tx_count(0).records(&["acct1"]);
+}
+
+#[tokio::test]
 async fn gate3_account_event_for_never_frozen_slot_does_not_stall() {
     let mut harness = TestHarness::spawn();
 
@@ -986,7 +1014,7 @@ async fn account_after_confirmed_returns_error() {
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, _output_rx) = mpsc::channel(64);
 
-    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
+    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, true);
     let handle = tokio::spawn(coordinator.run());
 
     // Create a slot with 1 AccountEventSeen before confirm so Gate 3 blocks flush

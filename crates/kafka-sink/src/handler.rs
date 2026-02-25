@@ -9,16 +9,15 @@ use yellowstone_vixen_core::{
 
 use crate::{
     events::PreparedRecord,
-    sink::{KafkaSink, ParsedOutput},
+    sink::KafkaSink,
 };
 
-/// Handler that parses transaction instructions eagerly (at processed commitment)
-/// and sends the resulting `PreparedRecord`s to the `BlockMachineCoordinator`.
+/// Handler that parses transaction instructions and account updates eagerly
+/// (at processed commitment) and sends the resulting `PreparedRecord`s to the
+/// `BlockMachineCoordinator`.
 ///
 /// After processing all instructions in a transaction, signals `TransactionParsed`
 /// so the coordinator can track the fully-parsed gate.
-///
-/// Also handles account updates when registered as a handler for `AccountUpdate`.
 #[derive(Clone)]
 pub struct BufferingHandler {
     parsers: KafkaSink,
@@ -41,35 +40,6 @@ fn sort_key(tx_index: u64, path: &Path) -> InstructionRecordSortKey {
 impl BufferingHandler {
     pub fn new(parsers: KafkaSink, handle: CoordinatorHandle<PreparedRecord>) -> Self {
         Self { parsers, handle }
-    }
-
-    /// Run secondary filters on an instruction and send any additional records to the coordinator.
-    async fn apply_secondary_filters_to_transaction(
-        &self,
-        slot: u64,
-        tx_index: u64,
-        path: &Path,
-        ix: &InstructionUpdate,
-        primary_parsed: Option<&ParsedOutput>,
-    ) {
-        for filter in self.parsers.secondary_filters() {
-            if let Some(filtered) = filter.filter(ix, primary_parsed).await {
-                let record = self.parsers.prepare_decoded_instruction_record(
-                    slot,
-                    &ix.shared.signature,
-                    path,
-                    filtered,
-                    filter.topic(),
-                );
-                if let Err(e) = self
-                    .handle
-                    .send_instruction_parsed(slot, sort_key(tx_index, path), record)
-                    .await
-                {
-                    tracing::error!(?e, slot, "Failed to send secondary record");
-                }
-            }
-        }
     }
 }
 
@@ -112,7 +82,7 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                     .parse_instruction(slot, &ix.shared.signature, &ix.path, ix)
                     .await;
 
-                let primary_parsed = if let Some((record, parsed)) = result {
+                if let Some(record) = result {
                     if let Err(e) = self
                         .handle
                         .send_instruction_parsed(slot, sort_key(tx_index, &ix.path), record)
@@ -120,7 +90,6 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                     {
                         tracing::error!(?e, slot, tx_index, "Failed to send parsed record");
                     }
-                    parsed
                 } else {
                     let kind = if had_error {
                         ParseStatsKind::InstructionError
@@ -128,11 +97,7 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                         ParseStatsKind::InstructionFiltered
                     };
                     let _ = self.handle.send_parse_stats(slot, kind).await;
-                    None
-                };
-
-                self.apply_secondary_filters_to_transaction(slot, tx_index, &ix.path, ix, primary_parsed.as_ref())
-                    .await;
+                }
             }
         }
 

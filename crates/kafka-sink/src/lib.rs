@@ -25,6 +25,6 @@ pub use schema_registry::{
     ensure_schemas_registered, wrap_payload_with_confluent_wire_format, RegisteredSchema,
     SchemaDefinition,
 };
-pub use sink::{DynAccountParser, KafkaSink, KafkaSinkBuilder, ParsedOutput, SecondaryFilter};
+pub use sink::{DynAccountParser, KafkaSink, KafkaSinkBuilder, ParsedOutput};
 pub use topics::{read_last_committed_block, LastCommitted};
 pub use utils::{make_account_record_key, make_instruction_record_key};

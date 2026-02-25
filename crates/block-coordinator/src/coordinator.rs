@@ -20,6 +20,8 @@ pub struct BlockMachineCoordinator<R> {
     input_rx: mpsc::Receiver<CoordinatorInput>,
     parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
     output_tx: mpsc::Sender<ConfirmedSlot<R>>,
+    /// When false, Gate 1 is disabled by forcing expected_tx_count to 0.
+    require_tx_gate: bool,
 }
 
 impl<R: Send + 'static> BlockMachineCoordinator<R> {
@@ -27,6 +29,7 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
         input_rx: mpsc::Receiver<CoordinatorInput>,
         parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
         output_tx: mpsc::Sender<ConfirmedSlot<R>>,
+        require_tx_gate: bool,
     ) -> Self {
         Self {
             wrapper: BlocksStateMachineWrapper::default(),
@@ -34,11 +37,17 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
             input_rx,
             parsed_rx,
             output_tx,
+            require_tx_gate,
         }
     }
 
     /// Main event loop. Any CoordinatorError terminates the coordinator.
     pub async fn run(mut self) -> Result<(), CoordinatorError> {
+        if !self.require_tx_gate {
+            tracing::info!(
+                "require_tx_gate=false: tx gate disabled, transaction status stats will not be reported"
+            );
+        }
         loop {
             let events: Vec<CoordinatorEvent<R>> = tokio::select! {
                 Some(input) = self.input_rx.recv() => {
@@ -110,14 +119,19 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
         while let Some(output) = self.wrapper.pop_next_state_machine_output() {
             match output {
                 BlockStateMachineOutput::FrozenBlock(frozen) => {
-                    let metadata = BlockMetadata {
-                        parent_slot: frozen.parent_slot,
-                        blockhash: frozen.blockhash,
-                        expected_tx_count: frozen
+                    let expected_tx_count = if self.require_tx_gate {
+                        frozen
                             .entries
                             .iter()
                             .map(|e| e.executed_txn_count)
-                            .sum(),
+                            .sum()
+                    } else {
+                        0
+                    };
+                    let metadata = BlockMetadata {
+                        parent_slot: frozen.parent_slot,
+                        blockhash: frozen.blockhash,
+                        expected_tx_count,
                     };
                     events.push(CoordinatorEvent::BlockFrozen {
                         slot: frozen.slot,
