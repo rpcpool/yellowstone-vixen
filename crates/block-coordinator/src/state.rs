@@ -107,14 +107,14 @@ impl<R> CoordinatorState<R> {
     pub fn apply(&mut self, event: CoordinatorEvent<R>) -> Result<(), CoordinatorError> {
         match event {
             CoordinatorEvent::BlockFrozen { slot, metadata } => {
-                if self.is_already_flushed(slot) {
+                if self.is_already_flushed(slot, "BlockFrozen") {
                     return Ok(());
                 }
                 let buf = self.buffer.entry(slot).or_default();
                 buf.set_block_metadata(metadata);
             },
             CoordinatorEvent::SlotConfirmed { slot } => {
-                if self.is_already_flushed(slot) {
+                if self.is_already_flushed(slot, "SlotConfirmed") {
                     return Ok(());
                 }
                 let buf = self.buffer.entry(slot).or_default();
@@ -124,7 +124,11 @@ impl<R> CoordinatorState<R> {
                 }
             },
             CoordinatorEvent::SlotFinalized { slot } => {
-                if self.is_already_flushed(slot) {
+                // Finalized is only relevant when account commit is configured at finalized.
+                if self.account_commit_at != AccountCommitAt::Finalized {
+                    return Ok(());
+                }
+                if self.is_already_flushed(slot, "SlotFinalized") {
                     return Ok(());
                 }
                 let buf = self.buffer.entry(slot).or_default();
@@ -137,7 +141,7 @@ impl<R> CoordinatorState<R> {
                 self.discard_slot(slot, reason);
             },
             CoordinatorEvent::AccountEventSeen { slot } => {
-                if self.is_already_flushed(slot) {
+                if self.is_already_flushed(slot, "AccountEventSeen") {
                     return Ok(());
                 }
                 if self.discarded_slots.contains(&slot) {
@@ -295,7 +299,7 @@ impl<R> CoordinatorState<R> {
 
     /// Guard for BlockFrozen/SlotConfirmed/SlotFinalized — drop stale lifecycle events
     /// for slots that have already been fully flushed.
-    fn is_already_flushed(&self, slot: Slot) -> bool {
+    fn is_already_flushed(&self, slot: Slot, event: &'static str) -> bool {
         let both_flushed = self
             .last_instruction_flushed_slot
             .is_some_and(|last| slot <= last)
@@ -305,6 +309,7 @@ impl<R> CoordinatorState<R> {
         if both_flushed {
             tracing::error!(
                 slot,
+                event,
                 last_instruction_flushed = ?self.last_instruction_flushed_slot,
                 last_account_flushed = ?self.last_account_flushed_slot,
                 "Lifecycle event for already-flushed slot — investigate immediately"
@@ -772,6 +777,18 @@ mod tests {
         let acct_flushed = state.drain_account_flushable();
         assert_eq!(acct_flushed.len(), 1);
         assert_eq!(acct_flushed[0].records, vec!["acct".to_string()]);
+    }
+
+    #[test]
+    fn finalized_event_is_ignored_when_account_commitment_is_confirmed() {
+        let mut state = CoordinatorState::<String>::default();
+
+        state
+            .apply(CoordinatorEvent::SlotFinalized { slot: 123 })
+            .unwrap();
+
+        assert_eq!(state.pending_slot_count(), 0);
+        assert_eq!(state.oldest_pending_slot(), None);
     }
 
     #[test]
