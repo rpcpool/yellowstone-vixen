@@ -31,6 +31,18 @@ pub struct RawInstructionEvent {
     pub data: String,
 }
 
+/// Event published for unparsed/unknown accounts.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RawAccountEvent {
+    pub slot: u64,
+    /// Account pubkey (base58).
+    pub pubkey: String,
+    /// Owner program ID (base58).
+    pub owner: String,
+    /// Raw account data (base58).
+    pub data: String,
+}
+
 /// Event published when an instruction slot is fully committed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionSlotCommitEvent {
@@ -40,10 +52,12 @@ pub struct TransactionSlotCommitEvent {
     pub transaction_count: u64,
     /// Number of successfully decoded instructions.
     pub decoded_instruction_count: u64,
-    /// Number of instructions that no parser matched (expected).
-    pub filtered_instruction_count: u64,
-    /// Number of instructions where a parser failed (unexpected).
-    pub failed_instruction_count: u64,
+    /// Number of instructions that were not decoded because no parser matched.
+    pub decode_filtered_instruction_count: u64,
+    /// Number of instructions that were not decoded because parser execution failed.
+    pub decode_error_instruction_count: u64,
+    /// Number of undecoded instructions published to fallback topics.
+    pub fallback_instruction_count: u64,
     /// Number of transactions that failed on-chain execution.
     pub transaction_status_failed_count: u64,
     /// Number of transactions that succeeded on-chain execution.
@@ -56,10 +70,12 @@ pub struct AccountSlotCommitEvent {
     pub slot: u64,
     /// Number of successfully decoded accounts.
     pub decoded_account_count: u64,
-    /// Number of accounts that no parser matched (expected).
-    pub filtered_account_count: u64,
-    /// Number of accounts where a parser failed (unexpected).
-    pub failed_account_count: u64,
+    /// Number of accounts that were not decoded because no parser matched.
+    pub decode_filtered_account_count: u64,
+    /// Number of accounts that were not decoded because parser execution failed.
+    pub decode_error_account_count: u64,
+    /// Number of undecoded accounts published to fallback topics.
+    pub fallback_account_count: u64,
 }
 
 /// Distinguishes instruction records from account records.
@@ -74,7 +90,9 @@ pub enum RecordKind {
 pub struct PreparedRecord {
     /// Target Kafka topic.
     pub topic: String,
-    /// Protobuf-encoded payload (via prost::Message::encode).
+    /// Payload bytes.
+    /// Decoded records use protobuf (Confluent wire format when configured).
+    /// Fallback records use plain JSON payloads.
     pub payload: Vec<u8>,
     /// Unique key for deduplication.
     /// Instructions: `{slot}:{signature}:{ix_index}`, Accounts: `{slot}:{pubkey}`.

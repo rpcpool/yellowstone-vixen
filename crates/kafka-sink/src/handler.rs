@@ -84,12 +84,23 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                     .await;
 
                 if let Some(record) = result {
+                    let is_decoded = record.is_decoded;
                     if let Err(e) = self
                         .handle
                         .send_instruction_parsed(slot, sort_key(tx_index, &ix.path), record)
                         .await
                     {
                         tracing::error!(?e, slot, tx_index, "Failed to send parsed record");
+                    }
+                    // Fallback instruction records are still filtered/error outcomes.
+                    // Count them so slot stats reflect decode quality.
+                    if !is_decoded {
+                        let kind = if had_error {
+                            ParseStatsKind::InstructionError
+                        } else {
+                            ParseStatsKind::InstructionFiltered
+                        };
+                        let _ = self.handle.send_parse_stats(slot, kind).await;
                     }
                 } else {
                     let kind = if had_error {

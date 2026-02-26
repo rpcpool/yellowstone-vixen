@@ -121,22 +121,7 @@ impl TransactionSlotSink {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let slot = ix_slot.slot;
         let record_count = ix_slot.records.len();
-        let decoded_instruction_count = ix_slot
-            .records
-            .iter()
-            .filter(|r| r.is_decoded && r.kind == RecordKind::Instruction)
-            .count() as u64;
-
-        let event = TransactionSlotCommitEvent {
-            slot,
-            blockhash: ix_slot.blockhash.to_string(),
-            transaction_count: ix_slot.executed_transaction_count,
-            decoded_instruction_count,
-            filtered_instruction_count: ix_slot.filtered_instruction_count,
-            failed_instruction_count: ix_slot.failed_instruction_count,
-            transaction_status_failed_count: ix_slot.transaction_status_failed_count,
-            transaction_status_succeeded_count: ix_slot.transaction_status_succeeded_count,
-        };
+        let event = build_transaction_slot_commit_event(ix_slot);
 
         let payload = serde_json::to_string(&event)?;
         let slot_key = slot.to_string();
@@ -155,9 +140,10 @@ impl TransactionSlotSink {
 
         tracing::info!(
             slot,
-            decoded_instruction_count,
-            filtered_instruction_count = ix_slot.filtered_instruction_count,
-            failed_instruction_count = ix_slot.failed_instruction_count,
+            decoded_instruction_count = event.decoded_instruction_count,
+            decode_filtered_instruction_count = ix_slot.filtered_instruction_count,
+            decode_error_instruction_count = ix_slot.failed_instruction_count,
+            fallback_instruction_count = event.fallback_instruction_count,
             transaction_status_failed_count = ix_slot.transaction_status_failed_count,
             transaction_status_succeeded_count = ix_slot.transaction_status_succeeded_count,
             record_count,
@@ -225,18 +211,7 @@ impl AccountSink {
             }
 
             // Commit account slot marker.
-            let decoded_account_count = acct_slot
-                .records
-                .iter()
-                .filter(|r| r.is_decoded && r.kind == RecordKind::Account)
-                .count() as u64;
-
-            let event = AccountSlotCommitEvent {
-                slot,
-                decoded_account_count,
-                filtered_account_count: acct_slot.filtered_account_count,
-                failed_account_count: acct_slot.failed_account_count,
-            };
+            let event = build_account_slot_commit_event(&acct_slot);
 
             let payload = serde_json::to_string(&event)?;
             let slot_key = slot.to_string();
@@ -255,9 +230,10 @@ impl AccountSink {
 
             tracing::info!(
                 slot,
-                decoded_account_count,
-                filtered_account_count = acct_slot.filtered_account_count,
-                failed_account_count = acct_slot.failed_account_count,
+                decoded_account_count = event.decoded_account_count,
+                decode_filtered_account_count = acct_slot.filtered_account_count,
+                decode_error_account_count = acct_slot.failed_account_count,
+                fallback_account_count = event.fallback_account_count,
                 record_count = acct_slot.records.len(),
                 "Kafka: committed account slot"
             );
@@ -327,8 +303,9 @@ impl AccountSink {
         let event = AccountSlotCommitEvent {
             slot,
             decoded_account_count: 0,
-            filtered_account_count: 0,
-            failed_account_count: 0,
+            decode_filtered_account_count: 0,
+            decode_error_account_count: 0,
+            fallback_account_count: 0,
         };
         let payload = serde_json::to_string(&event)?;
         let slot_key = slot.to_string();
@@ -347,5 +324,124 @@ impl AccountSink {
 
         tracing::debug!(slot, "Emitted account watermark");
         Ok(())
+    }
+}
+
+fn build_transaction_slot_commit_event(
+    ix_slot: &InstructionSlot<PreparedRecord>,
+) -> TransactionSlotCommitEvent {
+    let decoded_instruction_count = ix_slot
+        .records
+        .iter()
+        .filter(|r| r.is_decoded && r.kind == RecordKind::Instruction)
+        .count() as u64;
+    let fallback_instruction_count = ix_slot
+        .records
+        .iter()
+        .filter(|r| !r.is_decoded && r.kind == RecordKind::Instruction)
+        .count() as u64;
+
+    TransactionSlotCommitEvent {
+        slot: ix_slot.slot,
+        blockhash: ix_slot.blockhash.to_string(),
+        transaction_count: ix_slot.executed_transaction_count,
+        decoded_instruction_count,
+        decode_filtered_instruction_count: ix_slot.filtered_instruction_count,
+        decode_error_instruction_count: ix_slot.failed_instruction_count,
+        fallback_instruction_count,
+        transaction_status_failed_count: ix_slot.transaction_status_failed_count,
+        transaction_status_succeeded_count: ix_slot.transaction_status_succeeded_count,
+    }
+}
+
+fn build_account_slot_commit_event(acct_slot: &AccountSlot<PreparedRecord>) -> AccountSlotCommitEvent {
+    let decoded_account_count = acct_slot
+        .records
+        .iter()
+        .filter(|r| r.is_decoded && r.kind == RecordKind::Account)
+        .count() as u64;
+    let fallback_account_count = acct_slot
+        .records
+        .iter()
+        .filter(|r| !r.is_decoded && r.kind == RecordKind::Account)
+        .count() as u64;
+
+    AccountSlotCommitEvent {
+        slot: acct_slot.slot,
+        decoded_account_count,
+        decode_filtered_account_count: acct_slot.filtered_account_count,
+        decode_error_account_count: acct_slot.failed_account_count,
+        fallback_account_count,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use yellowstone_vixen_block_coordinator::{AccountSlot, InstructionSlot};
+
+    use super::*;
+
+    fn record(topic: &str, kind: RecordKind, is_decoded: bool) -> PreparedRecord {
+        PreparedRecord {
+            topic: topic.to_string(),
+            payload: vec![],
+            key: "k".to_string(),
+            headers: vec![],
+            is_decoded,
+            kind,
+        }
+    }
+
+    #[test]
+    fn transaction_commit_event_counts_decode_and_fallback_explicitly() {
+        let ix_slot = InstructionSlot {
+            slot: 42,
+            parent_slot: 41,
+            blockhash: Default::default(),
+            executed_transaction_count: 10,
+            records: vec![
+                record("decoded.instructions", RecordKind::Instruction, true),
+                record("failed.instructions", RecordKind::Instruction, false),
+                // Defensive: non-instruction record must not affect instruction counters.
+                record("decoded.accounts", RecordKind::Account, true),
+            ],
+            filtered_instruction_count: 7,
+            failed_instruction_count: 3,
+            transaction_status_failed_count: 2,
+            transaction_status_succeeded_count: 8,
+        };
+
+        let event = build_transaction_slot_commit_event(&ix_slot);
+        assert_eq!(event.slot, 42);
+        assert_eq!(event.transaction_count, 10);
+        assert_eq!(event.decoded_instruction_count, 1);
+        assert_eq!(event.decode_filtered_instruction_count, 7);
+        assert_eq!(event.decode_error_instruction_count, 3);
+        assert_eq!(event.fallback_instruction_count, 1);
+        assert_eq!(event.transaction_status_failed_count, 2);
+        assert_eq!(event.transaction_status_succeeded_count, 8);
+    }
+
+    #[test]
+    fn account_commit_event_counts_decode_and_fallback_explicitly() {
+        let acct_slot = AccountSlot {
+            slot: 55,
+            records: vec![
+                record("decoded.accounts", RecordKind::Account, true),
+                record("failed.accounts", RecordKind::Account, false),
+                // Defensive: non-account record must not affect account counters.
+                record("decoded.instructions", RecordKind::Instruction, true),
+            ],
+            decoded_account_count: 0, // event computes this from records, not this field.
+            filtered_account_count: 4,
+            failed_account_count: 2,
+        };
+
+        let event = build_account_slot_commit_event(&acct_slot);
+        assert_eq!(event.slot, 55);
+        assert_eq!(event.decoded_account_count, 1);
+        assert_eq!(event.decode_filtered_account_count, 4);
+        assert_eq!(event.decode_error_account_count, 2);
+        assert_eq!(event.fallback_account_count, 1);
     }
 }

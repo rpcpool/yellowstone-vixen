@@ -20,7 +20,7 @@ use yellowstone_vixen_core::{
 };
 
 use crate::{
-    events::{PreparedRecord, RecordHeader, RecordKind},
+    events::{PreparedRecord, RawAccountEvent, RawInstructionEvent, RecordHeader, RecordKind},
     schema_registry::{wrap_payload_with_confluent_wire_format, RegisteredSchema},
     utils::{make_account_record_key, make_instruction_record_key},
 };
@@ -395,7 +395,7 @@ impl KafkaSink {
     /// Parse an instruction and prepare a Kafka record.
     ///
     /// Tries each registered parser in order. If one matches, builds a decoded record.
-    /// If parser-level fallback is configured, filtered/error outcomes may be routed there.
+    /// If parser-level fallback is configured, parse errors may be routed there.
     /// Returns the record (if any) and a `had_error` flag indicating whether any
     /// parser encountered an unexpected failure (vs expected filtering).
     pub async fn parse_instruction(
@@ -423,16 +423,7 @@ impl KafkaSink {
                     return (Some(record), false);
                 },
                 ParseOutcome::Filtered => {
-                    if let Some(fallback) = parser.fallback_topic() {
-                        let record = self.prepare_fallback_instruction_record(
-                            slot,
-                            signature,
-                            path,
-                            ix,
-                            fallback,
-                        );
-                        return (Some(record), false);
-                    }
+                    // Filtered means "not decoded" but not an error, so no fallback emission.
                 },
                 ParseOutcome::Error => {
                     had_error = true;
@@ -518,7 +509,7 @@ impl KafkaSink {
     }
 
     /// Prepare a fallback record for unrecognized instructions.
-    /// Payload is the raw instruction data, metadata in headers.
+    /// Payload is plain JSON (`RawInstructionEvent`), metadata in headers.
     pub fn prepare_fallback_instruction_record(
         &self,
         slot: u64,
@@ -532,12 +523,29 @@ impl KafkaSink {
 
         headers.push(RecordHeader {
             key: "program_id",
-            value: program_id,
+            value: program_id.clone(),
+        });
+
+        let fallback_event = RawInstructionEvent {
+            slot,
+            signature: bs58::encode(signature).into_string(),
+            ix_index: format!("{path:?}"),
+            program_id: program_id.clone(),
+            data: bs58::encode(&ix.data).into_string(),
+        };
+        let payload = serde_json::to_vec(&fallback_event).unwrap_or_else(|e| {
+            tracing::error!(
+                ?e,
+                slot,
+                program_id,
+                "Failed to encode instruction fallback JSON, using raw bytes"
+            );
+            ix.data.clone()
         });
 
         PreparedRecord {
             topic: fallback_topic.to_string(),
-            payload: ix.data.clone(),
+            payload,
             key,
             headers,
             is_decoded: false,
@@ -567,7 +575,7 @@ impl KafkaSink {
     /// Parse an account update and prepare a Kafka record.
     ///
     /// Tries each registered account parser. On match, builds a decoded account record.
-    /// On `Filtered`, checks if that parser has a fallback_topic.
+    /// On `Error`, checks if that parser has a fallback_topic.
     /// Returns the record (if any) and a `had_error` flag.
     pub async fn parse_account(
         &self,
@@ -597,18 +605,7 @@ impl KafkaSink {
                     );
                 },
                 ParseOutcome::Filtered => {
-                    if let Some(fallback) = parser.fallback_topic() {
-                        return (
-                            Some(self.prepare_fallback_account_record(
-                                slot,
-                                &pubkey_str,
-                                &owner_str,
-                                &inner.data,
-                                fallback,
-                            )),
-                            false,
-                        );
-                    }
+                    // Filtered means "not decoded" but not an error, so no fallback emission.
                 },
                 ParseOutcome::Error => {
                     had_error = true;
@@ -668,6 +665,7 @@ impl KafkaSink {
     }
 
     /// Prepare a fallback record for accounts that a parser filtered out.
+    /// Payload is plain JSON (`RawAccountEvent`), metadata in headers.
     fn prepare_fallback_account_record(
         &self,
         slot: u64,
@@ -693,9 +691,26 @@ impl KafkaSink {
             },
         ];
 
+        let fallback_event = RawAccountEvent {
+            slot,
+            pubkey: pubkey.to_string(),
+            owner: owner.to_string(),
+            data: bs58::encode(data).into_string(),
+        };
+        let payload = serde_json::to_vec(&fallback_event).unwrap_or_else(|e| {
+            tracing::error!(
+                ?e,
+                slot,
+                pubkey,
+                owner,
+                "Failed to encode account fallback JSON, using raw bytes"
+            );
+            data.to_vec()
+        });
+
         PreparedRecord {
             topic: fallback_topic.to_string(),
-            payload: data.to_vec(),
+            payload,
             key,
             headers,
             is_decoded: false,
@@ -717,10 +732,12 @@ mod tests {
     use prost::Message;
     use yellowstone_vixen_core::{
         instruction::{InstructionShared, InstructionUpdate, Path},
-        ParseError, ParseResult, Parser, Prefilter, ProgramParser, Pubkey,
+        AccountUpdate, AccountUpdateInfo, ParseError, ParseResult, Parser, Prefilter,
+        ProgramParser, Pubkey,
     };
 
     use super::KafkaSinkBuilder;
+    use crate::events::{RawAccountEvent, RawInstructionEvent};
 
     #[derive(Clone, Copy)]
     enum TestInstructionOutcome {
@@ -766,6 +783,56 @@ mod tests {
         fn program_id(&self) -> Pubkey { self.program_id }
     }
 
+    #[derive(Clone, Copy)]
+    enum TestAccountOutcome {
+        Parsed,
+        Filtered,
+        Error,
+    }
+
+    #[derive(Clone)]
+    struct TestAccountParser {
+        program_id: Pubkey,
+        outcome: TestAccountOutcome,
+    }
+
+    #[derive(Clone, PartialEq, Message)]
+    struct TestAccountMessage {
+        #[prost(uint64, tag = "1")]
+        value: u64,
+    }
+
+    impl Parser for TestAccountParser {
+        type Input = AccountUpdate;
+        type Output = TestAccountMessage;
+
+        fn id(&self) -> Cow<'static, str> { "test-account-parser".into() }
+
+        fn prefilter(&self) -> Prefilter { Prefilter::default() }
+
+        async fn parse(&self, value: &Self::Input) -> ParseResult<Self::Output> {
+            let owner = value
+                .account
+                .as_ref()
+                .map(|a| a.owner.as_slice())
+                .unwrap_or_default();
+            if owner != self.program_id.0 {
+                return Err(ParseError::Filtered);
+            }
+            match self.outcome {
+                TestAccountOutcome::Parsed => Ok(TestAccountMessage { value: 7 }),
+                TestAccountOutcome::Filtered => Err(ParseError::Filtered),
+                TestAccountOutcome::Error => {
+                    Err(ParseError::from(std::io::Error::other("test account parser error")))
+                },
+            }
+        }
+    }
+
+    impl ProgramParser for TestAccountParser {
+        fn program_id(&self) -> Pubkey { self.program_id }
+    }
+
     fn instruction_with_program(program: Pubkey) -> InstructionUpdate {
         InstructionUpdate {
             program,
@@ -774,6 +841,23 @@ mod tests {
             shared: Arc::new(InstructionShared::default()),
             inner: vec![],
             path: Path::new_single(0),
+        }
+    }
+
+    fn account_with_owner(owner: Pubkey) -> AccountUpdate {
+        AccountUpdate {
+            slot: 100,
+            is_startup: false,
+            account: Some(AccountUpdateInfo {
+                txn_signature: None,
+                write_version: 11,
+                pubkey: vec![2_u8; 32],
+                data: vec![9_u8, 8, 7].into(),
+                executable: false,
+                lamports: 1,
+                owner: owner.0.to_vec(),
+                rent_epoch: 0,
+            }),
         }
     }
 
@@ -808,7 +892,7 @@ mod tests {
     }
 
     #[test]
-    fn related_filtered_instruction_routes_to_fallback_topic() {
+    fn related_filtered_instruction_does_not_route_to_fallback_topic() {
         let parser = TestInstructionParser {
             program_id: [1; 32].into(),
             outcome: TestInstructionOutcome::Filtered,
@@ -831,8 +915,7 @@ mod tests {
             &ix,
         ));
 
-        let record = record.expect("expected fallback record");
-        assert_eq!(record.topic, "failed.test.instructions");
+        assert!(record.is_none(), "filtered decode should not emit fallback");
         assert!(!had_error);
     }
 
@@ -863,6 +946,22 @@ mod tests {
         let record = record.expect("expected fallback record");
         assert_eq!(record.topic, "failed.test.instructions");
         assert!(had_error);
+        let event: RawInstructionEvent =
+            serde_json::from_slice(&record.payload).expect("fallback payload must be JSON");
+        assert_eq!(event.slot, 100);
+        assert_eq!(
+            event.signature,
+            yellowstone_vixen_core::bs58::encode(b"sig").into_string()
+        );
+        assert_eq!(event.ix_index, "1");
+        assert_eq!(
+            event.program_id,
+            yellowstone_vixen_core::bs58::encode([1_u8; 32]).into_string()
+        );
+        assert_eq!(
+            event.data,
+            yellowstone_vixen_core::bs58::encode([1_u8, 2, 3]).into_string()
+        );
     }
 
     #[test]
@@ -891,6 +990,83 @@ mod tests {
 
         let record = record.expect("expected decoded record");
         assert_eq!(record.topic, "test.instructions");
+        assert!(!had_error);
+        assert!(record.is_decoded);
+    }
+
+    #[test]
+    fn related_filtered_account_does_not_route_to_fallback_topic() {
+        let parser = TestAccountParser {
+            program_id: [1; 32].into(),
+            outcome: TestAccountOutcome::Filtered,
+        };
+        let sink = KafkaSinkBuilder::new()
+            .account_parser_with_fallback(
+                parser,
+                "test",
+                "test.accounts",
+                "failed.test.accounts",
+            )
+            .build();
+
+        let acct = account_with_owner([1; 32].into());
+        let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
+
+        assert!(record.is_none(), "filtered decode should not emit fallback");
+        assert!(!had_error);
+    }
+
+    #[test]
+    fn related_parse_error_account_routes_to_fallback_and_marks_error() {
+        let parser = TestAccountParser {
+            program_id: [1; 32].into(),
+            outcome: TestAccountOutcome::Error,
+        };
+        let sink = KafkaSinkBuilder::new()
+            .account_parser_with_fallback(
+                parser,
+                "test",
+                "test.accounts",
+                "failed.test.accounts",
+            )
+            .build();
+
+        let acct = account_with_owner([1; 32].into());
+        let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
+
+        let record = record.expect("expected fallback record");
+        assert_eq!(record.topic, "failed.test.accounts");
+        assert!(had_error);
+        let event: RawAccountEvent =
+            serde_json::from_slice(&record.payload).expect("fallback payload must be JSON");
+        assert_eq!(event.slot, 100);
+        assert_eq!(
+            event.owner,
+            yellowstone_vixen_core::bs58::encode([1_u8; 32]).into_string()
+        );
+        assert_eq!(event.data, yellowstone_vixen_core::bs58::encode([9_u8, 8, 7]).into_string());
+    }
+
+    #[test]
+    fn related_parsed_account_uses_primary_topic() {
+        let parser = TestAccountParser {
+            program_id: [1; 32].into(),
+            outcome: TestAccountOutcome::Parsed,
+        };
+        let sink = KafkaSinkBuilder::new()
+            .account_parser_with_fallback(
+                parser,
+                "test",
+                "test.accounts",
+                "failed.test.accounts",
+            )
+            .build();
+
+        let acct = account_with_owner([1; 32].into());
+        let (record, had_error) = futures::executor::block_on(sink.parse_account(100, &acct));
+
+        let record = record.expect("expected decoded record");
+        assert_eq!(record.topic, "test.accounts");
         assert!(!had_error);
         assert!(record.is_decoded);
     }
