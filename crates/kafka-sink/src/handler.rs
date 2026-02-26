@@ -9,6 +9,7 @@ use yellowstone_vixen_core::{
 
 use crate::{
     events::PreparedRecord,
+    kafka_sink::AccountMsg,
     sink::KafkaSink,
 };
 
@@ -126,8 +127,8 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
                     return Ok(());
                 },
             };
-            let ingress_seq = info.write_version;
-            let key = AccountRecordSortKey::new(ingress_seq, pubkey);
+            let write_version = info.write_version;
+            let key = AccountRecordSortKey::new(write_version, pubkey);
             if let Err(e) = self.handle.send_account_parsed(slot, key, record).await {
                 tracing::error!(?e, slot, "Failed to send account parsed record");
             }
@@ -140,6 +141,50 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
             let _ = self.handle.send_parse_stats(slot, kind).await;
         }
         // No send_transaction_parsed — accounts don't affect the TX gate.
+        Ok(())
+    }
+}
+
+/// Mode B handler: parses accounts at finalized commitment and sends directly
+/// to the AccountSink via a channel (no coordinator buffering).
+#[derive(Clone)]
+pub struct PassthroughAccountHandler {
+    parsers: KafkaSink,
+    tx: tokio::sync::mpsc::Sender<AccountMsg>,
+}
+
+impl std::fmt::Debug for PassthroughAccountHandler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PassthroughAccountHandler").finish()
+    }
+}
+
+impl PassthroughAccountHandler {
+    pub fn new(parsers: KafkaSink, tx: tokio::sync::mpsc::Sender<AccountMsg>) -> Self {
+        Self { parsers, tx }
+    }
+}
+
+impl vixen::Handler<AccountUpdate, AccountUpdate> for PassthroughAccountHandler {
+    async fn handle(
+        &self,
+        update: &AccountUpdate,
+        _raw: &AccountUpdate,
+    ) -> HandlerResult<()> {
+        let slot = update.slot;
+        let (record, had_error) = self.parsers.parse_account(slot, update).await;
+
+        if let Err(e) = self
+            .tx
+            .send(AccountMsg::Record {
+                slot,
+                record,
+                had_error,
+            })
+            .await
+        {
+            tracing::error!(?e, slot, "Failed to send passthrough account msg");
+        }
         Ok(())
     }
 }

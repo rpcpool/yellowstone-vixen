@@ -167,10 +167,8 @@ impl SourceTrait for CoordinatorSource {
 
         tracing::info!("CoordinatorSource gRPC stream started");
 
-        let mut account_seq: u64 = 0;
-
         let exit_status = 'stream: loop {
-            let Some(mut update) = stream.next().await else {
+            let Some(update) = stream.next().await else {
                 break SourceExitStatus::StreamEnded;
             };
 
@@ -192,16 +190,6 @@ impl SourceTrait for CoordinatorSource {
                     }
                 }
                 _ => {}
-            }
-
-            // Repurpose write_version as ingress sequence number for deterministic ordering
-            if let Ok(su) = &mut update {
-                if let Some(UpdateOneof::Account(acct)) = su.update_oneof.as_mut() {
-                    if let Some(info) = acct.account.as_mut() {
-                        info.write_version = account_seq;
-                        account_seq = account_seq.wrapping_add(1);
-                    }
-                }
             }
 
             match &update {

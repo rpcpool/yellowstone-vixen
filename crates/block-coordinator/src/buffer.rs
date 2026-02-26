@@ -2,36 +2,44 @@ use std::collections::BTreeMap;
 
 use solana_clock::Slot;
 
-use crate::types::{AccountRecordSortKey, BlockMetadata, ConfirmedSlot, ParseStatsKind, InstructionRecordSortKey};
+use crate::types::{AccountRecordSortKey, AccountSlot, BlockMetadata, ConfirmedSlot, InstructionSlot, ParseStatsKind, InstructionRecordSortKey};
 
-/// Per-slot buffer that collects parsed records and tracks the three-gate flush condition.
+/// Per-slot buffer that collects parsed records and tracks two independent readiness paths.
 ///
-/// Gate 1 (is_fully_parsed): All transactions have been parsed by handlers.
-///   Determined by comparing `parsed_tx_count` against `expected_tx_count` from FrozenBlock.
+/// **Instruction readiness** (`is_instruction_ready`):
+///   Gate 1 (is_fully_parsed): `parsed_tx_count >= expected_tx_count` from FrozenBlock.
+///   Gate 2 (confirmed): BlockSM confirmed the slot via cluster consensus.
 ///
-/// Gate 2 (confirmed): BlockSM confirmed the slot via cluster consensus.
+/// **Account readiness** (`is_account_ready`):
+///   All account updates processed (`is_fully_account_processed`) AND
+///   `account_committed` (set at the configured commitment: confirmed or finalized).
 ///
-/// Gate 3 (is_fully_account_processed): All account updates have been processed.
-///   expected_account_count is frozen from the coordinator's account event counter
-///   when the slot is confirmed by the block state machine.
-///
-/// A slot flushes only when ALL THREE gates are satisfied.
+/// Instructions and accounts flush independently — a slot is removed from the buffer
+/// only when both drains are complete (`instructions_drained && accounts_drained`).
 #[derive(Debug)]
 pub struct SlotRecordBuffer<R> {
     /// Instruction records sorted by (tx_index, ix_path) for ordered flush.
     instruction_records: BTreeMap<InstructionRecordSortKey, R>,
-    /// Account records sorted by (ingress_seq, pubkey) for ordered flush.
+    /// Account records sorted by (write_version, pubkey) for ordered flush.
     account_records: BTreeMap<AccountRecordSortKey, R>,
     /// Block metadata from FrozenBlock.
     metadata: Option<BlockMetadata>,
     /// Gate 1: fully parsed.
     parsed_tx_count: u64,
-    /// Gate 2: confirmed by cluster consensus.
+    /// Confirmed by cluster consensus (instruction gate 2).
     confirmed: bool,
-    /// Gate 3: expected account count from source (None = not yet received, blocks flush).
+    /// Finalized by cluster consensus.
+    finalized: bool,
+    /// Account commitment reached (set at configured commitment level).
+    account_committed: bool,
+    /// Expected account count from source (None = not yet frozen, blocks account flush).
     expected_account_count: Option<u64>,
-    /// Gate 3: number of account events fully processed (records + filtered + failed).
+    /// Number of account events fully processed (records + filtered + failed).
     account_processed_count: u64,
+    /// Whether instruction records have been drained from this buffer.
+    instructions_drained: bool,
+    /// Whether account records have been drained from this buffer.
+    accounts_drained: bool,
     /// Parse stats counters.
     filtered_instruction_count: u64,
     failed_instruction_count: u64,
@@ -49,8 +57,12 @@ impl<R> Default for SlotRecordBuffer<R> {
             metadata: None,
             parsed_tx_count: 0,
             confirmed: false,
+            finalized: false,
+            account_committed: false,
             expected_account_count: None,
             account_processed_count: 0,
+            instructions_drained: false,
+            accounts_drained: false,
             filtered_instruction_count: 0,
             failed_instruction_count: 0,
             filtered_account_count: 0,
@@ -138,6 +150,12 @@ impl<R> SlotRecordBuffer<R> {
 
     pub fn mark_as_confirmed(&mut self) { self.confirmed = true; }
 
+    pub fn mark_as_finalized(&mut self) { self.finalized = true; }
+
+    pub fn mark_account_committed(&mut self) { self.account_committed = true; }
+
+    pub fn is_finalized(&self) -> bool { self.finalized }
+
     /// Set the expected account count for Gate 3. First-write-wins: if already
     /// set, subsequent calls are ignored (prevents duplicate Slot(Confirmed)
     /// from overwriting a non-zero count with 0).
@@ -176,9 +194,28 @@ impl<R> SlotRecordBuffer<R> {
             .is_some_and(|n| self.account_processed_count() >= n)
     }
 
-    /// All three gates must be satisfied for flush.
+    /// Instruction readiness: Gate 1 (fully parsed) + Gate 2 (confirmed).
+    pub fn is_instruction_ready(&self) -> bool {
+        self.is_fully_parsed() && self.confirmed
+    }
+
+    /// Account readiness: all accounts processed + account commitment reached.
+    pub fn is_account_ready(&self) -> bool {
+        self.is_fully_account_processed() && self.account_committed
+    }
+
+    /// Legacy: all gates satisfied (both instruction and account ready).
     pub fn is_ready(&self) -> bool {
-        self.is_fully_parsed() && self.is_fully_account_processed() && self.confirmed
+        self.is_instruction_ready() && self.is_account_ready()
+    }
+
+    pub fn instructions_drained(&self) -> bool { self.instructions_drained }
+
+    pub fn accounts_drained(&self) -> bool { self.accounts_drained }
+
+    /// True when both instruction and account drains are complete.
+    pub fn is_fully_drained(&self) -> bool {
+        self.instructions_drained && self.accounts_drained
     }
 
     pub fn parent_slot(&self) -> Option<Slot> {
@@ -193,7 +230,40 @@ impl<R> SlotRecordBuffer<R> {
         self.instruction_records.len() + self.account_records.len()
     }
 
-    /// Consume this buffer and produce a ConfirmedSlot.
+    /// Drain instruction records and produce an InstructionSlot.
+    /// Returns None if metadata is missing.
+    pub fn drain_instruction_records(&mut self, slot: Slot) -> Option<InstructionSlot<R>> {
+        let metadata = self.metadata.as_ref()?;
+        let result = InstructionSlot {
+            slot,
+            parent_slot: metadata.parent_slot,
+            blockhash: metadata.blockhash,
+            executed_transaction_count: metadata.expected_tx_count,
+            records: std::mem::take(&mut self.instruction_records).into_values().collect(),
+            filtered_instruction_count: self.filtered_instruction_count,
+            failed_instruction_count: self.failed_instruction_count,
+            transaction_status_failed_count: self.transaction_status_failed_count,
+            transaction_status_succeeded_count: self.transaction_status_succeeded_count,
+        };
+        self.instructions_drained = true;
+        Some(result)
+    }
+
+    /// Drain account records and produce an AccountSlot.
+    pub fn drain_account_records(&mut self, slot: Slot) -> AccountSlot<R> {
+        let decoded_account_count = self.account_records.len() as u64;
+        let result = AccountSlot {
+            slot,
+            records: std::mem::take(&mut self.account_records).into_values().collect(),
+            decoded_account_count,
+            filtered_account_count: self.filtered_account_count,
+            failed_account_count: self.failed_account_count,
+        };
+        self.accounts_drained = true;
+        result
+    }
+
+    /// Consume this buffer and produce a ConfirmedSlot (legacy, used by tests).
     /// Returns None if metadata is missing.
     pub fn into_confirmed_slot(mut self, slot: Slot) -> Option<ConfirmedSlot<R>> {
         let metadata = self.metadata.take()?;
@@ -212,8 +282,7 @@ impl<R> SlotRecordBuffer<R> {
         })
     }
 
-    /// Drain all records: instruction records in sorted order first, then account records
-    /// (sorted by ingress_seq:pubkey) appended.
+    /// Drain all records: instruction records in sorted order first, then account records appended.
     fn drain_all_records(&mut self) -> Vec<R> {
         let mut records: Vec<R> =
             std::mem::take(&mut self.instruction_records).into_values().collect();
@@ -298,6 +367,7 @@ mod tests {
         buf.increment_parsed_tx_count();
         buf.set_expected_account_count(0);
         buf.mark_as_confirmed();
+        buf.mark_account_committed();
         assert!(buf.is_ready());
     }
 
@@ -352,6 +422,7 @@ mod tests {
         buf.increment_parsed_tx_count(); // overshoot
         buf.set_expected_account_count(0);
         buf.mark_as_confirmed();
+        buf.mark_account_committed();
 
         // Overshoot doesn't prevent readiness — the slot still flushes.
         // (The tracing::error fires at runtime to flag the handler bug.)
@@ -383,6 +454,7 @@ mod tests {
         buf.increment_parsed_tx_count();
         buf.set_expected_account_count(0);
         buf.mark_as_confirmed();
+        buf.mark_account_committed();
         assert!(buf.is_ready());
 
         let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");

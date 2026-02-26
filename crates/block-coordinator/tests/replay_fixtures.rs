@@ -12,7 +12,8 @@ use std::{collections::HashMap, env, path::PathBuf};
 use tokio::sync::mpsc;
 use yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof;
 use yellowstone_vixen_block_coordinator::{
-    BlockMachineCoordinator, ConfirmedSlot, CoordinatorInput, CoordinatorMessage, FixtureReader,
+    AccountCommitAt, BlockMachineCoordinator, CoordinatorInput, CoordinatorMessage, FixtureReader,
+    InstructionSlot,
 };
 
 fn fixture_path() -> PathBuf {
@@ -75,12 +76,22 @@ impl ExpectedState {
 
 async fn run_coordinator_with_updates(
     updates: &[yellowstone_grpc_proto::geyser::SubscribeUpdate],
-) -> Vec<ConfirmedSlot<()>> {
+) -> Vec<InstructionSlot<()>> {
     let (input_tx, input_rx) = mpsc::channel(4096);
     let (parsed_tx, parsed_rx) = mpsc::channel::<CoordinatorMessage<()>>(4096);
-    let (output_tx, mut output_rx) = mpsc::channel::<ConfirmedSlot<()>>(256);
+    let (output_tx, mut output_rx) = mpsc::channel::<InstructionSlot<()>>(256);
 
-    tokio::spawn(BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, true).run());
+    tokio::spawn(
+        BlockMachineCoordinator::new(
+            input_rx,
+            parsed_rx,
+            output_tx,
+            None,
+            AccountCommitAt::Confirmed,
+            true,
+        )
+        .run(),
+    );
 
     for update in updates {
         // Send AccountEventSeen for Account events.
@@ -126,7 +137,7 @@ async fn run_coordinator_with_updates(
     confirmed
 }
 
-fn assert_strictly_ascending(slots: &[ConfirmedSlot<()>]) {
+fn assert_strictly_ascending(slots: &[InstructionSlot<()>]) {
     for pair in slots.windows(2) {
         assert!(
             pair[0].slot < pair[1].slot,
@@ -137,7 +148,7 @@ fn assert_strictly_ascending(slots: &[ConfirmedSlot<()>]) {
     }
 }
 
-fn assert_slot_metadata(slot: &ConfirmedSlot<()>, expected: &ExpectedState) {
+fn assert_slot_metadata(slot: &InstructionSlot<()>, expected: &ExpectedState) {
     assert_ne!(
         slot.blockhash,
         solana_hash::Hash::default(),

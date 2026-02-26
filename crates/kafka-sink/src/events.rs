@@ -31,29 +31,35 @@ pub struct RawInstructionEvent {
     pub data: String,
 }
 
-/// Event published when a slot is fully committed.
+/// Event published when an instruction slot is fully committed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SlotCommitEvent {
+pub struct TransactionSlotCommitEvent {
     pub slot: u64,
     pub blockhash: String,
     /// Total transactions in the block.
     pub transaction_count: u64,
     /// Number of successfully decoded instructions.
     pub decoded_instruction_count: u64,
-    /// Number of successfully decoded accounts.
-    pub decoded_account_count: u64,
     /// Number of instructions that no parser matched (expected).
     pub filtered_instruction_count: u64,
     /// Number of instructions where a parser failed (unexpected).
     pub failed_instruction_count: u64,
-    /// Number of accounts that no parser matched (expected).
-    pub filtered_account_count: u64,
-    /// Number of accounts where a parser failed (unexpected).
-    pub failed_account_count: u64,
     /// Number of transactions that failed on-chain execution.
     pub transaction_status_failed_count: u64,
     /// Number of transactions that succeeded on-chain execution.
     pub transaction_status_succeeded_count: u64,
+}
+
+/// Event published when an account slot is committed.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccountSlotCommitEvent {
+    pub slot: u64,
+    /// Number of successfully decoded accounts.
+    pub decoded_account_count: u64,
+    /// Number of accounts that no parser matched (expected).
+    pub filtered_account_count: u64,
+    /// Number of accounts where a parser failed (unexpected).
+    pub failed_account_count: u64,
 }
 
 /// Distinguishes instruction records from account records.

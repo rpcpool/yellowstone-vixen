@@ -197,8 +197,8 @@ use yellowstone_grpc_proto::{
     prelude::{BlockHeight, UnixTimestamp},
 };
 use yellowstone_vixen_block_coordinator::{
-    BlockMachineCoordinator, ConfirmedSlot, CoordinatorError, CoordinatorInput, CoordinatorMessage,
-    InstructionRecordSortKey,
+    AccountCommitAt, AccountSlot, BlockMachineCoordinator, CoordinatorError, CoordinatorInput,
+    CoordinatorMessage, InstructionRecordSortKey, InstructionSlot,
 };
 
 // =============================================================================
@@ -208,25 +208,38 @@ use yellowstone_vixen_block_coordinator::{
 struct TestHarness {
     input_tx: mpsc::Sender<CoordinatorInput>,
     parsed_tx: mpsc::Sender<CoordinatorMessage<String>>,
-    output_rx: mpsc::Receiver<ConfirmedSlot<String>>,
+    output_rx: mpsc::Receiver<InstructionSlot<String>>,
+    account_output_rx: mpsc::Receiver<AccountSlot<String>>,
 }
 
 impl TestHarness {
-    fn spawn() -> Self { Self::spawn_with_require_tx_gate(true) }
+    fn spawn() -> Self { Self::spawn_with_options(true, AccountCommitAt::Confirmed) }
 
     fn spawn_with_require_tx_gate(require_tx_gate: bool) -> Self {
+        Self::spawn_with_options(require_tx_gate, AccountCommitAt::Confirmed)
+    }
+
+    fn spawn_with_options(require_tx_gate: bool, account_commit_at: AccountCommitAt) -> Self {
         let (input_tx, input_rx) = mpsc::channel(256);
         let (parsed_tx, parsed_rx) = mpsc::channel(256);
         let (output_tx, output_rx) = mpsc::channel(64);
+        let (account_output_tx, account_output_rx) = mpsc::channel(64);
 
-        let coordinator =
-            BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, require_tx_gate);
+        let coordinator = BlockMachineCoordinator::new(
+            input_rx,
+            parsed_rx,
+            output_tx,
+            Some(account_output_tx),
+            account_commit_at,
+            require_tx_gate,
+        );
         tokio::spawn(coordinator.run());
 
         Self {
             input_tx,
             parsed_tx,
             output_rx,
+            account_output_rx,
         }
     }
 
@@ -245,18 +258,37 @@ impl TestHarness {
     }
 
     async fn expect_flush(&mut self, slot: u64) -> FlushAssertion {
-        let confirmed = tokio::time::timeout(Duration::from_secs(2), self.output_rx.recv())
+        let ix_slot = tokio::time::timeout(Duration::from_secs(2), self.output_rx.recv())
             .await
             .expect("Timed out waiting for flush")
             .expect("Channel closed");
 
-        assert_eq!(confirmed.slot, slot, "Expected slot {slot} to flush");
-        FlushAssertion(confirmed)
+        assert_eq!(ix_slot.slot, slot, "Expected slot {slot} to flush");
+        FlushAssertion(ix_slot)
+    }
+
+    async fn expect_account_flush(&mut self, slot: u64) -> AccountFlushAssertion {
+        let acct_slot =
+            tokio::time::timeout(Duration::from_secs(2), self.account_output_rx.recv())
+                .await
+                .expect("Timed out waiting for account flush")
+                .expect("Account channel closed");
+
+        assert_eq!(acct_slot.slot, slot, "Expected account slot {slot} to flush");
+        AccountFlushAssertion(acct_slot)
     }
 
     async fn expect_no_flush(&mut self) {
         tokio::time::sleep(Duration::from_millis(10)).await;
         assert!(self.output_rx.try_recv().is_err(), "Unexpected flush");
+    }
+
+    async fn expect_no_account_flush(&mut self) {
+        tokio::time::sleep(Duration::from_millis(10)).await;
+        assert!(
+            self.account_output_rx.try_recv().is_err(),
+            "Unexpected account flush"
+        );
     }
 }
 
@@ -323,7 +355,7 @@ fn make_block_meta_update(
 // Flush Assertion
 // =============================================================================
 
-struct FlushAssertion(ConfirmedSlot<String>);
+struct FlushAssertion(InstructionSlot<String>);
 
 impl FlushAssertion {
     fn records(self, expected: &[&str]) {
@@ -347,6 +379,15 @@ impl FlushAssertion {
     fn empty(self) {
         assert!(self.0.records.is_empty(), "Expected no records");
         assert_eq!(self.0.executed_transaction_count, 0, "Tx count mismatch");
+    }
+}
+
+struct AccountFlushAssertion(AccountSlot<String>);
+
+impl AccountFlushAssertion {
+    fn records(self, expected: &[&str]) {
+        let expected: Vec<String> = expected.iter().map(|s| s.to_string()).collect();
+        assert_eq!(self.0.records, expected, "Account records mismatch");
     }
 }
 
@@ -866,7 +907,14 @@ async fn late_message_for_flushed_slot_errors() {
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, mut output_rx) = mpsc::channel(64);
 
-    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, true);
+    let coordinator = BlockMachineCoordinator::new(
+        input_rx,
+        parsed_rx,
+        output_tx,
+        None,
+        AccountCommitAt::Confirmed,
+        true,
+    );
     let handle = tokio::spawn(coordinator.run());
 
     // Create and flush slot 100
@@ -903,7 +951,14 @@ async fn output_channel_closed_returns_error() {
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, output_rx) = mpsc::channel(64);
 
-    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, true);
+    let coordinator = BlockMachineCoordinator::new(
+        input_rx,
+        parsed_rx,
+        output_tx,
+        None,
+        AccountCommitAt::Confirmed,
+        true,
+    );
     let handle = tokio::spawn(coordinator.run());
 
     // Drop the output receiver — the coordinator can't send flushed slots.
@@ -921,9 +976,9 @@ async fn output_channel_closed_returns_error() {
     assert!(
         matches!(
             result,
-            Err(CoordinatorError::OutputChannelClosed { slot: 100 })
+            Err(CoordinatorError::InstructionOutputChannelClosed { slot: 100 })
         ),
-        "Expected OutputChannelClosed, got: {result:?}"
+        "Expected InstructionOutputChannelClosed, got: {result:?}"
     );
 }
 
@@ -958,11 +1013,14 @@ async fn gate3_blocks_flush_until_account_count_received() {
         .await
         .unwrap();
 
-    // Confirm with account_count=2 — now all 3 gates satisfied.
+    // Confirm with account_count=2 — now all gates satisfied.
     slot.confirm_with_accounts(2).await;
 
-    let flushed = harness.expect_flush(100).await;
-    flushed.records(&["acct1", "acct2"]);
+    // Instructions flush immediately (no instruction records, 0 tx).
+    harness.expect_flush(100).await;
+    // Accounts flush with the 2 records.
+    let acct_flushed = harness.expect_account_flush(100).await;
+    acct_flushed.records(&["acct1", "acct2"]);
 }
 
 #[tokio::test]
@@ -972,11 +1030,16 @@ async fn account_only_mode_flushes_without_transaction_parsed_messages() {
     // Slot has non-zero tx count from Entry/BlockMeta but sends no TransactionParsed events.
     let slot = harness.slot(100).parent(99).pending(3).await;
 
-    // Freeze Gate 3 with one account event.
+    // Freeze account gate with one account event.
     slot.confirm_with_accounts(1).await;
-    harness.expect_no_flush().await;
 
-    // Satisfy Gate 3 with one parsed account record.
+    // Instructions flush immediately (require_tx_gate=false → expected_tx_count=0).
+    harness.expect_flush(100).await.tx_count(0);
+
+    // Accounts wait for the 1 expected account to be processed.
+    harness.expect_no_account_flush().await;
+
+    // Satisfy with one parsed account record.
     harness
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
@@ -987,7 +1050,8 @@ async fn account_only_mode_flushes_without_transaction_parsed_messages() {
         .await
         .unwrap();
 
-    harness.expect_flush(100).await.tx_count(0).records(&["acct1"]);
+    let acct = harness.expect_account_flush(100).await;
+    acct.records(&["acct1"]);
 }
 
 #[tokio::test]
@@ -1009,39 +1073,41 @@ async fn gate3_account_event_for_never_frozen_slot_does_not_stall() {
 }
 
 #[tokio::test]
-async fn account_after_confirmed_returns_error() {
-    let (input_tx, input_rx) = mpsc::channel::<CoordinatorInput>(256);
-    let (parsed_tx, parsed_rx) = mpsc::channel(256);
-    let (output_tx, _output_rx) = mpsc::channel(64);
+async fn account_event_after_confirmed_is_warn_not_error() {
+    let mut harness = TestHarness::spawn();
 
-    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx, true);
-    let handle = tokio::spawn(coordinator.run());
-
-    // Create a slot with 1 AccountEventSeen before confirm so Gate 3 blocks flush
-    // (expected_account_count=1, account_processed_count=0 → slot stays in buffer).
-    let slot = SlotBuilder::new(input_tx.clone(), parsed_tx.clone(), 100)
-        .parent(99)
-        .empty()
-        .await;
-
-    // 1 account event before confirm — slot confirmed but NOT flushed (Gate 3 blocks).
+    // Create a slot with 1 account event before confirm, so account gate is frozen.
+    let slot = harness.slot(100).parent(99).empty().await;
     slot.confirm_with_accounts(1).await;
-    tokio::time::sleep(Duration::from_millis(10)).await;
 
-    // Send another AccountEventSeen after confirmed — triggers AccountAfterConfirmed.
-    input_tx
+    // Instructions flush immediately (no tx).
+    harness.expect_flush(100).await;
+
+    // Accounts NOT flushed yet (1 expected, 0 processed).
+    harness.expect_no_account_flush().await;
+
+    // Send another AccountEventSeen after confirmed — should be warn + drop, not error.
+    // (Account gate is frozen at confirm.)
+    harness
+        .input_tx
         .send(CoordinatorInput::AccountEventSeen { slot: 100 })
         .await
         .unwrap();
+    tokio::time::sleep(Duration::from_millis(10)).await;
 
-    let result = handle.await.expect("task join");
-    assert!(
-        matches!(
-            result,
-            Err(CoordinatorError::AccountAfterConfirmed { .. })
-        ),
-        "Expected AccountAfterConfirmed, got: {result:?}"
-    );
+    // The coordinator should still be alive — process the 1 expected account.
+    harness
+        .parsed_tx
+        .send(CoordinatorMessage::AccountParsed {
+            slot: 100,
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            record: "acct1".to_string(),
+        })
+        .await
+        .unwrap();
+
+    let acct = harness.expect_account_flush(100).await;
+    acct.records(&["acct1"]);
 }
 
 #[tokio::test]
@@ -1052,18 +1118,18 @@ async fn duplicate_confirm_does_not_change_frozen_count() {
     let slot = harness.slot(100).parent(99).empty().await;
     slot.confirm_with_accounts(2).await;
 
+    // Instructions flush immediately.
+    harness.expect_flush(100).await;
+
     // Confirm again (duplicate) — first-write-wins in set_expected_account_count.
     slot.confirm().await;
 
-    // Send 2 AccountRecordParsed → slot flushes (count matches 2).
+    // Send 2 AccountRecordParsed → account slot flushes (count matches 2).
     harness
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(
-                1,
-                [1; 32],
-            ),
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
             record: "acct1".to_string(),
         })
         .await
@@ -1072,14 +1138,12 @@ async fn duplicate_confirm_does_not_change_frozen_count() {
         .parsed_tx
         .send(CoordinatorMessage::AccountParsed {
             slot: 100,
-            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(
-                2,
-                [2; 32],
-            ),
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(2, [2; 32]),
             record: "acct2".to_string(),
         })
         .await
         .unwrap();
 
-    harness.expect_flush(100).await.records(&["acct1", "acct2"]);
+    let acct = harness.expect_account_flush(100).await;
+    acct.records(&["acct1", "acct2"]);
 }

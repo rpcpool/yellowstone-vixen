@@ -12,11 +12,11 @@ pub mod utils;
 // Re-export main types
 pub use config::KafkaSinkConfig;
 pub use events::{
-    DecodedInstructionEvent, PreparedRecord, RawInstructionEvent, RecordHeader, RecordKind,
-    SlotCommitEvent,
+    AccountSlotCommitEvent, DecodedInstructionEvent, PreparedRecord, RawInstructionEvent,
+    RecordHeader, RecordKind, TransactionSlotCommitEvent,
 };
-pub use handler::BufferingHandler;
-pub use kafka_sink::ConfirmedSlotSink;
+pub use handler::{BufferingHandler, PassthroughAccountHandler};
+pub use kafka_sink::{AccountMsg, AccountSink, TransactionSlotSink};
 pub use parsers::{AccountSubscription, TransactionSubscription};
 pub use producer::create_producer;
 // Re-export rdkafka types for convenience
@@ -26,5 +26,5 @@ pub use schema_registry::{
     SchemaDefinition,
 };
 pub use sink::{DynAccountParser, KafkaSink, KafkaSinkBuilder, ParsedOutput};
-pub use topics::{read_last_committed_block, LastCommitted};
+pub use topics::{read_last_committed_account_block, read_last_committed_transaction_block, LastCommitted};
 pub use utils::{make_account_record_key, make_instruction_record_key};

@@ -42,10 +42,10 @@ pub enum CoordinatorError {
     ReadySlotMissingMetadata {
         slot: Slot,
     },
-    OutputChannelClosed {
+    InstructionOutputChannelClosed {
         slot: Slot,
     },
-    AccountAfterConfirmed {
+    AccountOutputChannelClosed {
         slot: Slot,
     },
 }
@@ -60,13 +60,16 @@ impl fmt::Display for CoordinatorError {
             Self::ReadySlotMissingMetadata { slot } => {
                 write!(f, "Ready slot missing metadata: slot {slot}")
             },
-            Self::OutputChannelClosed { slot } => {
-                write!(f, "Output channel closed while sending slot {slot}")
-            },
-            Self::AccountAfterConfirmed { slot } => {
+            Self::InstructionOutputChannelClosed { slot } => {
                 write!(
                     f,
-                    "Account event after slot {slot} confirmed — geyser contract violation"
+                    "Instruction output channel closed while sending slot {slot}"
+                )
+            },
+            Self::AccountOutputChannelClosed { slot } => {
+                write!(
+                    f,
+                    "Account output channel closed while sending slot {slot}"
                 )
             },
         }
@@ -139,19 +142,19 @@ impl InstructionRecordSortKey {
 }
 
 /// Sort key for account records within a slot.
-/// Ordered by ingress_seq (source-assigned monotonic sequence number for
+/// Ordered by write_version (geyser-assigned version number for
 /// deterministic ordering), then pubkey (discriminate multiple accounts
 /// in the same update). Slot is implicit (it's the buffer's key).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct AccountRecordSortKey {
-    ingress_seq: u64,
+    write_version: u64,
     pubkey: [u8; 32],
 }
 
 impl AccountRecordSortKey {
-    pub fn new(ingress_seq: u64, pubkey: [u8; 32]) -> Self {
+    pub fn new(write_version: u64, pubkey: [u8; 32]) -> Self {
         Self {
-            ingress_seq,
+            write_version,
             pubkey,
         }
     }
@@ -186,7 +189,55 @@ impl fmt::Display for ColorSlot {
     }
 }
 
-/// A confirmed slot ready for downstream consumption (e.g., Kafka write).
+/// Account commitment configuration.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum AccountCommitAt {
+    /// Accounts flush when the slot is confirmed (same timing as instructions).
+    Confirmed,
+    /// Accounts flush when the slot is finalized.
+    Finalized,
+}
+
+impl Default for AccountCommitAt {
+    fn default() -> Self { Self::Confirmed }
+}
+
+/// How accounts are processed and output.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum AccountMode {
+    /// Accounts in the same processed subscription. Commit triggered by a specific event.
+    Processed { commit_at: AccountCommitAt },
+    /// Separate finalized subscription, pass-through writes (no buffering).
+    FinalizedPassthrough,
+}
+
+impl Default for AccountMode {
+    fn default() -> Self { Self::FinalizedPassthrough }
+}
+
+/// An instruction slot ready for downstream consumption (e.g., Kafka write).
+pub struct InstructionSlot<R> {
+    pub slot: Slot,
+    pub parent_slot: Slot,
+    pub blockhash: Hash,
+    pub executed_transaction_count: u64,
+    pub records: Vec<R>,
+    pub filtered_instruction_count: u64,
+    pub failed_instruction_count: u64,
+    pub transaction_status_failed_count: u64,
+    pub transaction_status_succeeded_count: u64,
+}
+
+/// An account slot ready for downstream consumption.
+pub struct AccountSlot<R> {
+    pub slot: Slot,
+    pub records: Vec<R>,
+    pub decoded_account_count: u64,
+    pub filtered_account_count: u64,
+    pub failed_account_count: u64,
+}
+
+/// Legacy alias — kept for existing test usage.
 pub struct ConfirmedSlot<R> {
     pub slot: Slot,
     pub parent_slot: Slot,
