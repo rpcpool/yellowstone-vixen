@@ -68,6 +68,13 @@ pub struct TransactionSlotCommitEvent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountSlotCommitEvent {
     pub slot: u64,
+    /// Marker semantics for this slot event.
+    /// Values: "completed" | "watermark".
+    pub marker_type: String,
+    /// Commitment/scope of this account slot marker.
+    /// - completed: "confirmed" | "finalized"
+    /// - watermark: "stream"
+    pub account_commit_at: String,
     /// Number of successfully decoded accounts.
     pub decoded_account_count: u64,
     /// Number of accounts that were not decoded because no parser matched.

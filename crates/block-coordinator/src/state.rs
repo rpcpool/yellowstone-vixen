@@ -291,8 +291,13 @@ impl<R> CoordinatorState<R> {
             self.buffer.remove(&slot);
         }
         self.prune_discarded_slots();
-        // Prune stale pending account counts behind the minimum flush frontier.
-        if let Some(last) = self.last_flushed_slot() {
+        // Prune stale pending account counts behind the account flush frontier.
+        //
+        // IMPORTANT: do not use the instruction frontier here. In finalized
+        // account mode, instruction slots can flush much earlier than account
+        // gate freeze; pruning by instruction frontier can drop valid pending
+        // account-event counts and later freeze slots with expected_account_count=0.
+        if let Some(last) = self.last_account_flushed_slot {
             self.account_event_counts.retain(|&s, _| s > last);
         }
     }
@@ -815,6 +820,62 @@ mod tests {
             .apply(CoordinatorEvent::AccountEventSeen { slot })
             .unwrap();
         assert_eq!(state.late_account_event_drops(), 1);
+    }
+
+    #[test]
+    fn account_event_counts_are_not_pruned_by_instruction_frontier() {
+        let mut state = CoordinatorState::<String>::new(AccountCommitAt::Finalized);
+
+        // Account event arrives for slot 100, but account gate won't freeze
+        // until finalized.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot: 100 })
+            .unwrap();
+
+        // A later slot advances only the instruction frontier.
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot: 200,
+                metadata: metadata(199, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot: 200 })
+            .unwrap();
+        let ix_flushed = state.drain_instruction_flushable().unwrap();
+        assert_eq!(ix_flushed.len(), 1);
+        assert_eq!(ix_flushed[0].slot, 200);
+
+        // Now freeze account gate for slot 100 at finalized.
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot: 100,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot: 100 })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotFinalized { slot: 100 })
+            .unwrap();
+
+        // Should not flush yet: expected_account_count must still be 1.
+        let acct_flushed = state.drain_account_flushable();
+        assert!(acct_flushed.is_empty());
+
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot: 100,
+                key: AccountRecordSortKey::new(1, [1; 32]),
+                record: "acct".to_string(),
+            })
+            .unwrap();
+
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+        assert_eq!(acct_flushed[0].slot, 100);
+        assert_eq!(acct_flushed[0].records, vec!["acct".to_string()]);
     }
 
     #[test]

@@ -13,7 +13,9 @@ use rdkafka::{
 };
 use tokio::sync::mpsc;
 use tokio::time::sleep;
-use yellowstone_vixen_block_coordinator::{AccountSlot, InstructionSlot};
+use yellowstone_vixen_block_coordinator::{
+    AccountCommitAt, AccountMode, AccountSlot, InstructionSlot,
+};
 
 use crate::{
     config::KafkaSinkConfig,
@@ -172,6 +174,7 @@ pub enum AccountMsg {
 pub struct AccountSink {
     producer: Arc<FutureProducer>,
     account_slots_topic: String,
+    account_mode: AccountMode,
     max_attempts: u32,
     retry_backoff: Duration,
 }
@@ -180,12 +183,14 @@ impl AccountSink {
     pub fn new(
         producer: Arc<FutureProducer>,
         account_slots_topic: String,
+        account_mode: AccountMode,
         max_attempts: u32,
         retry_backoff_ms: u64,
     ) -> Self {
         Self {
             producer,
             account_slots_topic,
+            account_mode,
             max_attempts: max_attempts.max(1),
             retry_backoff: Duration::from_millis(retry_backoff_ms),
         }
@@ -324,7 +329,7 @@ impl AccountSink {
         }
 
         // Commit account slot marker.
-        let event = build_account_slot_commit_event(acct_slot);
+        let event = build_account_slot_commit_event(acct_slot, &self.account_mode);
 
         let payload = serde_json::to_string(&event)?;
         let slot_key = slot.to_string();
@@ -343,6 +348,8 @@ impl AccountSink {
 
         tracing::info!(
             slot,
+            marker_type = %event.marker_type,
+            account_commit_at = %event.account_commit_at,
             decoded_account_count = event.decoded_account_count,
             decode_filtered_account_count = acct_slot.filtered_account_count,
             decode_error_account_count = acct_slot.failed_account_count,
@@ -408,6 +415,8 @@ impl AccountSink {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let event = AccountSlotCommitEvent {
             slot,
+            marker_type: "watermark".to_string(),
+            account_commit_at: "stream".to_string(),
             decoded_account_count: 0,
             decode_filtered_account_count: 0,
             decode_error_account_count: 0,
@@ -462,6 +471,7 @@ fn build_transaction_slot_commit_event(
 
 fn build_account_slot_commit_event(
     acct_slot: &AccountSlot<PreparedRecord>,
+    account_mode: &AccountMode,
 ) -> AccountSlotCommitEvent {
     let decoded_account_count = acct_slot
         .records
@@ -476,6 +486,8 @@ fn build_account_slot_commit_event(
 
     AccountSlotCommitEvent {
         slot: acct_slot.slot,
+        marker_type: "completed".to_string(),
+        account_commit_at: account_commit_at_tag(account_mode).to_string(),
         decoded_account_count,
         decode_filtered_account_count: acct_slot.filtered_account_count,
         decode_error_account_count: acct_slot.failed_account_count,
@@ -483,9 +495,25 @@ fn build_account_slot_commit_event(
     }
 }
 
+fn account_commit_at(mode: &AccountMode) -> AccountCommitAt {
+    match mode {
+        AccountMode::Processed { commit_at } => *commit_at,
+        AccountMode::FinalizedPassthrough => AccountCommitAt::Finalized,
+    }
+}
+
+fn account_commit_at_tag(mode: &AccountMode) -> &'static str {
+    match account_commit_at(mode) {
+        AccountCommitAt::Confirmed => "confirmed",
+        AccountCommitAt::Finalized => "finalized",
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_block_coordinator::{AccountSlot, InstructionSlot};
+    use yellowstone_vixen_block_coordinator::{
+        AccountCommitAt, AccountMode, AccountSlot, InstructionSlot,
+    };
 
     use super::*;
 
@@ -545,11 +573,35 @@ mod tests {
             failed_account_count: 2,
         };
 
-        let event = build_account_slot_commit_event(&acct_slot);
+        let event = build_account_slot_commit_event(
+            &acct_slot,
+            &AccountMode::Processed {
+                commit_at: AccountCommitAt::Confirmed,
+            },
+        );
         assert_eq!(event.slot, 55);
+        assert_eq!(event.marker_type, "completed");
+        assert_eq!(event.account_commit_at, "confirmed");
         assert_eq!(event.decoded_account_count, 1);
         assert_eq!(event.decode_filtered_account_count, 4);
         assert_eq!(event.decode_error_account_count, 2);
         assert_eq!(event.fallback_account_count, 1);
+    }
+
+    #[test]
+    fn passthrough_mode_commits_as_finalized() {
+        let acct_slot = AccountSlot {
+            slot: 99,
+            records: vec![],
+            decoded_account_count: 0,
+            filtered_account_count: 0,
+            failed_account_count: 0,
+        };
+        let event = build_account_slot_commit_event(
+            &acct_slot,
+            &AccountMode::FinalizedPassthrough,
+        );
+        assert_eq!(event.marker_type, "completed");
+        assert_eq!(event.account_commit_at, "finalized");
     }
 }
