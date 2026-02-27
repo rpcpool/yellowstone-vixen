@@ -16,7 +16,7 @@ use prost::Message;
 use yellowstone_vixen_core::{
     bs58,
     instruction::{InstructionUpdate, Path},
-    AccountUpdate, ParseError, Parser,
+    AccountUpdate, ParseError, Parser, ProgramParser, Pubkey,
 };
 
 use crate::{
@@ -123,18 +123,21 @@ pub trait DynAccountParser: Send + Sync {
     fn program_name(&self) -> &str;
 
     fn fallback_topic(&self) -> Option<&str>;
+
+    fn program_id(&self) -> Pubkey;
 }
 
 struct AccountParserWrapper<P> {
     parser: P,
     topic: String,
     program_name: String,
+    program_id: Pubkey,
     fallback_topic: Option<String>,
 }
 
 impl<P, O> DynAccountParser for AccountParserWrapper<P>
 where
-    P: Parser<Input = AccountUpdate, Output = O> + Send + Sync,
+    P: Parser<Input = AccountUpdate, Output = O> + ProgramParser + Send + Sync,
     O: Message + Send + Sync,
 {
     fn try_parse<'a>(
@@ -158,78 +161,9 @@ where
     fn program_name(&self) -> &str { &self.program_name }
 
     fn fallback_topic(&self) -> Option<&str> { self.fallback_topic.as_deref() }
+
+    fn program_id(&self) -> Pubkey { self.program_id }
 }
-
-// --- Sealed SinkInput trait ---
-
-mod sealed {
-    pub trait Sealed {}
-}
-
-/// Trait that dispatches parser registration to the right internal vec.
-/// Sealed so only `InstructionUpdate` and `AccountUpdate` can implement it.
-pub trait SinkInput: sealed::Sealed {
-    #[doc(hidden)]
-    fn add_parser<P, O>(
-        parser: P,
-        name: String,
-        topic: String,
-        fallback_topic: Option<String>,
-        builder: &mut KafkaSinkBuilder,
-    ) where
-        P: Parser<Input = Self, Output = O> + Send + Sync + 'static,
-        O: Message + Send + Sync + 'static;
-}
-
-impl sealed::Sealed for InstructionUpdate {}
-
-impl SinkInput for InstructionUpdate {
-    fn add_parser<P, O>(
-        parser: P,
-        name: String,
-        topic: String,
-        fallback_topic: Option<String>,
-        builder: &mut KafkaSinkBuilder,
-    ) where
-        P: Parser<Input = Self, Output = O> + Send + Sync + 'static,
-        O: Message + Send + Sync + 'static,
-    {
-        builder
-            .instruction_parsers
-            .push(Arc::new(InstructionParserWrapper {
-                parser,
-                topic,
-                program_name: name,
-                fallback_topic,
-            }));
-    }
-}
-
-impl sealed::Sealed for AccountUpdate {}
-
-impl SinkInput for AccountUpdate {
-    fn add_parser<P, O>(
-        parser: P,
-        name: String,
-        topic: String,
-        fallback_topic: Option<String>,
-        builder: &mut KafkaSinkBuilder,
-    ) where
-        P: Parser<Input = Self, Output = O> + Send + Sync + 'static,
-        O: Message + Send + Sync + 'static,
-    {
-        builder
-            .account_parsers
-            .push(Arc::new(AccountParserWrapper {
-                parser,
-                topic,
-                program_name: name,
-                fallback_topic,
-            }));
-    }
-}
-
-// --- KafkaSinkBuilder ---
 
 pub struct KafkaSinkBuilder {
     instruction_parsers: Vec<Arc<dyn DynInstructionParser>>,
@@ -252,32 +186,52 @@ impl KafkaSinkBuilder {
         }
     }
 
-    /// Add a Vixen parser with its program name and Kafka topic.
-    ///
-    /// Accepts both `Parser<Input=InstructionUpdate>` and `Parser<Input=AccountUpdate>`
-    /// via the sealed `SinkInput` trait, dispatching to the right internal collection.
-    pub fn parser<P, O>(mut self, parser: P, program_name: &str, topic: &str) -> Self
+    /// Add an instruction parser with its program name and Kafka topic.
+    pub fn instruction_parser<P, O>(
+        mut self,
+        parser: P,
+        program_name: &str,
+        topic: &str,
+    ) -> Self
     where
-        P: Parser + Send + Sync + 'static,
-        P::Input: SinkInput,
+        P: Parser<Input = InstructionUpdate, Output = O> + Send + Sync + 'static,
         O: Message + Send + Sync + 'static,
-        P: Parser<Output = O>,
     {
-        P::Input::add_parser(
-            parser,
-            program_name.to_string(),
-            topic.to_string(),
-            None,
-            &mut self,
-        );
+        self.instruction_parsers
+            .push(Arc::new(InstructionParserWrapper {
+                parser,
+                topic: topic.to_string(),
+                program_name: program_name.to_string(),
+                fallback_topic: None,
+            }));
         self
     }
 
-    /// Add a Vixen parser with a per-parser fallback topic.
-    ///
-    /// When parsing returns `Filtered`, the raw data is sent to the fallback topic
-    /// instead of being silently dropped.
-    pub fn parser_with_fallback<P, O>(
+    /// Add an account parser with its program name and Kafka topic.
+    pub fn account_parser<P, O>(
+        mut self,
+        parser: P,
+        program_name: &str,
+        topic: &str,
+    ) -> Self
+    where
+        P: Parser<Input = AccountUpdate, Output = O> + ProgramParser + Send + Sync + 'static,
+        O: Message + Send + Sync + 'static,
+    {
+        let program_id = parser.program_id();
+        self.account_parsers
+            .push(Arc::new(AccountParserWrapper {
+                parser,
+                topic: topic.to_string(),
+                program_name: program_name.to_string(),
+                program_id,
+                fallback_topic: None,
+            }));
+        self
+    }
+
+    /// Add an instruction parser with a per-parser fallback topic.
+    pub fn instruction_parser_with_fallback<P, O>(
         mut self,
         parser: P,
         program_name: &str,
@@ -285,18 +239,40 @@ impl KafkaSinkBuilder {
         fallback_topic: &str,
     ) -> Self
     where
-        P: Parser + Send + Sync + 'static,
-        P::Input: SinkInput,
+        P: Parser<Input = InstructionUpdate, Output = O> + Send + Sync + 'static,
         O: Message + Send + Sync + 'static,
-        P: Parser<Output = O>,
     {
-        P::Input::add_parser(
-            parser,
-            program_name.to_string(),
-            topic.to_string(),
-            Some(fallback_topic.to_string()),
-            &mut self,
-        );
+        self.instruction_parsers
+            .push(Arc::new(InstructionParserWrapper {
+                parser,
+                topic: topic.to_string(),
+                program_name: program_name.to_string(),
+                fallback_topic: Some(fallback_topic.to_string()),
+            }));
+        self
+    }
+
+    /// Add an account parser with a per-parser fallback topic.
+    pub fn account_parser_with_fallback<P, O>(
+        mut self,
+        parser: P,
+        program_name: &str,
+        topic: &str,
+        fallback_topic: &str,
+    ) -> Self
+    where
+        P: Parser<Input = AccountUpdate, Output = O> + ProgramParser + Send + Sync + 'static,
+        O: Message + Send + Sync + 'static,
+    {
+        let program_id = parser.program_id();
+        self.account_parsers
+            .push(Arc::new(AccountParserWrapper {
+                parser,
+                topic: topic.to_string(),
+                program_name: program_name.to_string(),
+                program_id,
+                fallback_topic: Some(fallback_topic.to_string()),
+            }));
         self
     }
 

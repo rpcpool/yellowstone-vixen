@@ -6,10 +6,10 @@
 //! AccountSubscription: Forwards account updates as-is, subscribing to the union of all
 //! account_owners from registered account parsers.
 
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashSet};
 
 use yellowstone_vixen_core::{
-    AccountPrefilter, AccountUpdate, ParseResult, Parser, Prefilter, TransactionPrefilter,
+    AccountUpdate, ParseResult, Parser, Prefilter, Pubkey, TransactionPrefilter,
     TransactionUpdate,
 };
 
@@ -53,25 +53,31 @@ impl Parser for TransactionSubscription {
 /// Real filtering/parsing happens in the DynAccountParser dispatch.
 #[derive(Debug, Clone)]
 pub struct AccountSubscription {
-    owners: Vec<[u8; 32]>,
+    owners: Vec<Pubkey>,
 }
 
 impl AccountSubscription {
     /// Construct from a KafkaSink.
     /// Returns `None` if no account parsers are registered.
     ///
-    /// Subscribes to all accounts (empty owner filter). The individual
-    /// `DynAccountParser::try_parse()` handles the actual program-level filtering,
-    /// since the type-erased trait doesn't expose `prefilter()`.
+    /// Collects program IDs from all registered account parsers to build the
+    /// gRPC owner prefilter, so only accounts owned by known programs are streamed.
     pub fn new(sink: &KafkaSink) -> Option<Self> {
         if !sink.has_account_parsers() {
             return None;
         }
-        Some(Self { owners: Vec::new() })
+        let owners: Vec<Pubkey> = sink
+            .account_parsers()
+            .iter()
+            .map(|p| p.program_id())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect();
+        Some(Self { owners })
     }
 
     /// Construct with explicit owner program IDs.
-    pub fn with_owners(owners: Vec<[u8; 32]>) -> Self { Self { owners } }
+    pub fn with_owners(owners: Vec<Pubkey>) -> Self { Self { owners } }
 }
 
 impl Parser for AccountSubscription {
@@ -81,18 +87,10 @@ impl Parser for AccountSubscription {
     fn id(&self) -> Cow<'static, str> { "kafka-sink::AccountSubscription".into() }
 
     fn prefilter(&self) -> Prefilter {
-        let prefilter = if self.owners.is_empty() {
-            // Subscribe to all accounts when owners aren't known at construction time.
-            Prefilter {
-                account: Some(AccountPrefilter::default()),
-                ..Default::default()
-            }
-        } else {
-            Prefilter::builder()
-                .account_owners(self.owners.iter().map(|o| o.as_slice()))
-                .build()
-                .unwrap()
-        };
+        let prefilter = Prefilter::builder()
+            .account_owners(self.owners.iter().map(|o| o.as_slice()))
+            .build()
+            .unwrap();
 
         tracing::info!(
             parser_id = %self.id(),
