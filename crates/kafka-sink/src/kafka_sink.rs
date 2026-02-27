@@ -11,8 +11,7 @@ use rdkafka::{
     message::OwnedHeaders,
     producer::{FutureProducer, FutureRecord},
 };
-use tokio::sync::mpsc;
-use tokio::time::sleep;
+use tokio::{sync::mpsc, time::sleep};
 use yellowstone_vixen_block_coordinator::{
     AccountCommitAt, AccountMode, AccountSlot, InstructionSlot,
 };
@@ -262,7 +261,8 @@ impl AccountSink {
                                 },
                                 Err(e) => {
                                     return Err(format!(
-                                        "Passthrough account write for slot {slot} failed after {attempt} attempts: {e}"
+                                        "Passthrough account write for slot {slot} failed after \
+                                         {attempt} attempts: {e}"
                                     )
                                     .into());
                                 },
@@ -400,7 +400,8 @@ impl AccountSink {
                 },
                 Err(e) => {
                     return Err(format!(
-                        "Failed to emit account watermark for slot {slot} after {attempt} attempts: {e}"
+                        "Failed to emit account watermark for slot {slot} after {attempt} \
+                         attempts: {e}"
                     )
                     .into());
                 },
@@ -573,12 +574,9 @@ mod tests {
             failed_account_count: 2,
         };
 
-        let event = build_account_slot_commit_event(
-            &acct_slot,
-            &AccountMode::Processed {
-                commit_at: AccountCommitAt::Confirmed,
-            },
-        );
+        let event = build_account_slot_commit_event(&acct_slot, &AccountMode::Processed {
+            commit_at: AccountCommitAt::Confirmed,
+        });
         assert_eq!(event.slot, 55);
         assert_eq!(event.marker_type, "completed");
         assert_eq!(event.account_commit_at, "confirmed");
@@ -597,10 +595,7 @@ mod tests {
             filtered_account_count: 0,
             failed_account_count: 0,
         };
-        let event = build_account_slot_commit_event(
-            &acct_slot,
-            &AccountMode::FinalizedPassthrough,
-        );
+        let event = build_account_slot_commit_event(&acct_slot, &AccountMode::FinalizedPassthrough);
         assert_eq!(event.marker_type, "completed");
         assert_eq!(event.account_commit_at, "finalized");
     }

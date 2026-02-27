@@ -13,8 +13,7 @@ pub mod utils;
 pub use config::KafkaSinkConfig;
 pub use events::{
     AccountSlotCommitEvent, DecodedInstructionEvent, PreparedRecord, RawAccountEvent,
-    RawInstructionEvent,
-    RecordHeader, RecordKind, TransactionSlotCommitEvent,
+    RawInstructionEvent, RecordHeader, RecordKind, TransactionSlotCommitEvent,
 };
 pub use handler::{BufferingHandler, PassthroughAccountHandler};
 pub use kafka_sink::{AccountMsg, AccountSink, TransactionSlotSink};
@@ -27,5 +26,7 @@ pub use schema_registry::{
     SchemaDefinition,
 };
 pub use sink::{DynAccountParser, KafkaSink, KafkaSinkBuilder, ParsedOutput};
-pub use topics::{read_last_committed_account_block, read_last_committed_transaction_block, LastCommitted};
+pub use topics::{
+    read_last_committed_account_block, read_last_committed_transaction_block, LastCommitted,
+};
 pub use utils::{make_account_record_key, make_instruction_record_key};

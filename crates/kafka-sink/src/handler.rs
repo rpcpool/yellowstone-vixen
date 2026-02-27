@@ -1,17 +1,13 @@
 use yellowstone_vixen::{self as vixen, HandlerResult};
 use yellowstone_vixen_block_coordinator::{
-    AccountRecordSortKey, CoordinatorHandle, ParseStatsKind, InstructionRecordSortKey,
+    AccountRecordSortKey, CoordinatorHandle, InstructionRecordSortKey, ParseStatsKind,
 };
 use yellowstone_vixen_core::{
     instruction::{InstructionUpdate, Path},
     AccountUpdate, TransactionUpdate,
 };
 
-use crate::{
-    events::PreparedRecord,
-    kafka_sink::AccountMsg,
-    sink::KafkaSink,
-};
+use crate::{events::PreparedRecord, kafka_sink::AccountMsg, sink::KafkaSink};
 
 /// Handler that parses transaction instructions and account updates eagerly
 /// (at processed commitment) and sends the resulting `PreparedRecord`s to the
@@ -60,12 +56,18 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
 
         // Skip failed transactions — no instruction parsing, no records to Kafka.
         if tx_info.meta.as_ref().and_then(|m| m.err.as_ref()).is_some() {
-            let _ = self.handle.send_parse_stats(slot, ParseStatsKind::TransactionStatusFailed).await;
+            let _ = self
+                .handle
+                .send_parse_stats(slot, ParseStatsKind::TransactionStatusFailed)
+                .await;
             let _ = self.handle.send_transaction_parsed(slot).await;
             return Ok(());
         }
 
-        let _ = self.handle.send_parse_stats(slot, ParseStatsKind::TransactionStatusSucceeded).await;
+        let _ = self
+            .handle
+            .send_parse_stats(slot, ParseStatsKind::TransactionStatusSucceeded)
+            .await;
 
         let instructions = match InstructionUpdate::parse_from_txn(update) {
             Ok(ixs) => ixs,
@@ -120,21 +122,27 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
 }
 
 impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
-    async fn handle(
-        &self,
-        update: &AccountUpdate,
-        _raw: &AccountUpdate,
-    ) -> HandlerResult<()> {
+    async fn handle(&self, update: &AccountUpdate, _raw: &AccountUpdate) -> HandlerResult<()> {
         let slot = update.slot;
 
         let (record, had_error) = self.parsers.parse_account(slot, update).await;
         if let Some(record) = record {
-            let info = update.account.as_ref().expect("parse_account returned Some so account must exist");
+            let info = update
+                .account
+                .as_ref()
+                .expect("parse_account returned Some so account must exist");
             let pubkey: [u8; 32] = match info.pubkey.as_slice().try_into() {
                 Ok(pk) => pk,
                 Err(_) => {
-                    tracing::warn!(slot, pubkey_len = info.pubkey.len(), "Malformed pubkey in account update");
-                    let _ = self.handle.send_parse_stats(slot, ParseStatsKind::AccountError).await;
+                    tracing::warn!(
+                        slot,
+                        pubkey_len = info.pubkey.len(),
+                        "Malformed pubkey in account update"
+                    );
+                    let _ = self
+                        .handle
+                        .send_parse_stats(slot, ParseStatsKind::AccountError)
+                        .await;
                     return Ok(());
                 },
             };
@@ -177,11 +185,7 @@ impl PassthroughAccountHandler {
 }
 
 impl vixen::Handler<AccountUpdate, AccountUpdate> for PassthroughAccountHandler {
-    async fn handle(
-        &self,
-        update: &AccountUpdate,
-        _raw: &AccountUpdate,
-    ) -> HandlerResult<()> {
+    async fn handle(&self, update: &AccountUpdate, _raw: &AccountUpdate) -> HandlerResult<()> {
         let slot = update.slot;
         let (record, had_error) = self.parsers.parse_account(slot, update).await;
 

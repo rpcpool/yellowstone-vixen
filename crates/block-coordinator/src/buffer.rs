@@ -2,7 +2,10 @@ use std::collections::BTreeMap;
 
 use solana_clock::Slot;
 
-use crate::types::{AccountRecordSortKey, AccountSlot, BlockMetadata, ConfirmedSlot, InstructionSlot, ParseStatsKind, InstructionRecordSortKey};
+use crate::types::{
+    AccountRecordSortKey, AccountSlot, BlockMetadata, ConfirmedSlot, InstructionRecordSortKey,
+    InstructionSlot, ParseStatsKind,
+};
 
 /// Per-slot buffer that collects parsed records and tracks two independent readiness paths.
 ///
@@ -131,7 +134,9 @@ impl<R> SlotRecordBuffer<R> {
             ParseStatsKind::AccountFiltered => self.filtered_account_count += 1,
             ParseStatsKind::AccountError => self.failed_account_count += 1,
             ParseStatsKind::TransactionStatusFailed => self.transaction_status_failed_count += 1,
-            ParseStatsKind::TransactionStatusSucceeded => self.transaction_status_succeeded_count += 1,
+            ParseStatsKind::TransactionStatusSucceeded => {
+                self.transaction_status_succeeded_count += 1
+            },
         }
     }
 
@@ -178,9 +183,7 @@ impl<R> SlotRecordBuffer<R> {
         self.expected_account_count = Some(count);
     }
 
-    pub fn account_processed_count(&self) -> u64 {
-        self.account_processed_count
-    }
+    pub fn account_processed_count(&self) -> u64 { self.account_processed_count }
 
     pub fn is_fully_parsed(&self) -> bool {
         self.metadata
@@ -195,9 +198,7 @@ impl<R> SlotRecordBuffer<R> {
     }
 
     /// Instruction readiness: Gate 1 (fully parsed) + Gate 2 (confirmed).
-    pub fn is_instruction_ready(&self) -> bool {
-        self.is_fully_parsed() && self.confirmed
-    }
+    pub fn is_instruction_ready(&self) -> bool { self.is_fully_parsed() && self.confirmed }
 
     /// Account readiness: all accounts processed + account commitment reached.
     pub fn is_account_ready(&self) -> bool {
@@ -205,18 +206,14 @@ impl<R> SlotRecordBuffer<R> {
     }
 
     /// Legacy: all gates satisfied (both instruction and account ready).
-    pub fn is_ready(&self) -> bool {
-        self.is_instruction_ready() && self.is_account_ready()
-    }
+    pub fn is_ready(&self) -> bool { self.is_instruction_ready() && self.is_account_ready() }
 
     pub fn instructions_drained(&self) -> bool { self.instructions_drained }
 
     pub fn accounts_drained(&self) -> bool { self.accounts_drained }
 
     /// True when both instruction and account drains are complete.
-    pub fn is_fully_drained(&self) -> bool {
-        self.instructions_drained && self.accounts_drained
-    }
+    pub fn is_fully_drained(&self) -> bool { self.instructions_drained && self.accounts_drained }
 
     pub fn parent_slot(&self) -> Option<Slot> {
         self.metadata.as_ref().map(|meta| meta.parent_slot)
@@ -239,7 +236,9 @@ impl<R> SlotRecordBuffer<R> {
             parent_slot: metadata.parent_slot,
             blockhash: metadata.blockhash,
             executed_transaction_count: metadata.expected_tx_count,
-            records: std::mem::take(&mut self.instruction_records).into_values().collect(),
+            records: std::mem::take(&mut self.instruction_records)
+                .into_values()
+                .collect(),
             filtered_instruction_count: self.filtered_instruction_count,
             failed_instruction_count: self.failed_instruction_count,
             transaction_status_failed_count: self.transaction_status_failed_count,
@@ -254,7 +253,9 @@ impl<R> SlotRecordBuffer<R> {
         let decoded_account_count = self.account_records.len() as u64;
         let result = AccountSlot {
             slot,
-            records: std::mem::take(&mut self.account_records).into_values().collect(),
+            records: std::mem::take(&mut self.account_records)
+                .into_values()
+                .collect(),
             decoded_account_count,
             filtered_account_count: self.filtered_account_count,
             failed_account_count: self.failed_account_count,
@@ -284,8 +285,9 @@ impl<R> SlotRecordBuffer<R> {
 
     /// Drain all records: instruction records in sorted order first, then account records appended.
     fn drain_all_records(&mut self) -> Vec<R> {
-        let mut records: Vec<R> =
-            std::mem::take(&mut self.instruction_records).into_values().collect();
+        let mut records: Vec<R> = std::mem::take(&mut self.instruction_records)
+            .into_values()
+            .collect();
         records.extend(std::mem::take(&mut self.account_records).into_values());
         records
     }
@@ -307,7 +309,10 @@ mod tests {
         });
         // Insert out of order
         buf.insert_instruction_record(InstructionRecordSortKey::new(1, vec![0]), "tx1-ix0".into());
-        buf.insert_instruction_record(InstructionRecordSortKey::new(0, vec![0, 1]), "tx0-ix0.1".into());
+        buf.insert_instruction_record(
+            InstructionRecordSortKey::new(0, vec![0, 1]),
+            "tx0-ix0.1".into(),
+        );
         buf.insert_instruction_record(InstructionRecordSortKey::new(0, vec![0]), "tx0-ix0".into());
 
         let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");
@@ -382,7 +387,10 @@ mod tests {
         // Simulate: tx0 has main ix [0] with two CPIs [0,0] and [0,1]
         // And [0,0] has a nested CPI [0,0,0]
         buf.insert_instruction_record(InstructionRecordSortKey::new(0, vec![0, 1]), "cpi-1".into());
-        buf.insert_instruction_record(InstructionRecordSortKey::new(0, vec![0, 0, 0]), "nested-cpi".into());
+        buf.insert_instruction_record(
+            InstructionRecordSortKey::new(0, vec![0, 0, 0]),
+            "nested-cpi".into(),
+        );
         buf.insert_instruction_record(InstructionRecordSortKey::new(0, vec![0]), "main".into());
         buf.insert_instruction_record(InstructionRecordSortKey::new(0, vec![0, 0]), "cpi-0".into());
 
@@ -492,10 +500,7 @@ mod tests {
         assert!(!buf.is_fully_account_processed());
 
         // 1 successful record
-        buf.insert_account_record(
-            AccountRecordSortKey::new(100, [1; 32]),
-            "acct1".into(),
-        );
+        buf.insert_account_record(AccountRecordSortKey::new(100, [1; 32]), "acct1".into());
         buf.increment_account_processed_count();
         assert_eq!(buf.account_processed_count(), 1);
         assert!(!buf.is_fully_account_processed());
@@ -540,18 +545,9 @@ mod tests {
             expected_tx_count: 0,
         });
         // Insert out of order
-        buf.insert_account_record(
-            AccountRecordSortKey::new(300, [3; 32]),
-            "wv300".into(),
-        );
-        buf.insert_account_record(
-            AccountRecordSortKey::new(100, [1; 32]),
-            "wv100".into(),
-        );
-        buf.insert_account_record(
-            AccountRecordSortKey::new(200, [2; 32]),
-            "wv200".into(),
-        );
+        buf.insert_account_record(AccountRecordSortKey::new(300, [3; 32]), "wv300".into());
+        buf.insert_account_record(AccountRecordSortKey::new(100, [1; 32]), "wv100".into());
+        buf.insert_account_record(AccountRecordSortKey::new(200, [2; 32]), "wv200".into());
 
         buf.set_expected_account_count(3);
         let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");

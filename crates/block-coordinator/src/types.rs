@@ -67,10 +67,7 @@ impl fmt::Display for CoordinatorError {
                 )
             },
             Self::AccountOutputChannelClosed { slot } => {
-                write!(
-                    f,
-                    "Account output channel closed while sending slot {slot}"
-                )
+                write!(f, "Account output channel closed while sending slot {slot}")
             },
         }
     }

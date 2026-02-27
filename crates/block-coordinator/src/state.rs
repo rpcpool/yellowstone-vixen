@@ -187,8 +187,10 @@ impl<R> CoordinatorState<R> {
                     .increment_parsed_tx_count();
             },
             CoordinatorEvent::ParseStats { slot, kind } => {
-                let is_account_stat =
-                    matches!(kind, ParseStatsKind::AccountFiltered | ParseStatsKind::AccountError);
+                let is_account_stat = matches!(
+                    kind,
+                    ParseStatsKind::AccountFiltered | ParseStatsKind::AccountError
+                );
                 if is_account_stat {
                     if !self.validate_account_slot(slot) {
                         return Ok(());
@@ -1074,10 +1076,10 @@ mod tests {
 
         let acct_flushed = state.drain_account_flushable();
         assert_eq!(acct_flushed.len(), 1);
-        assert_eq!(
-            acct_flushed[0].records,
-            vec!["first".to_string(), "second".to_string()]
-        );
+        assert_eq!(acct_flushed[0].records, vec![
+            "first".to_string(),
+            "second".to_string()
+        ]);
     }
 
     #[test]

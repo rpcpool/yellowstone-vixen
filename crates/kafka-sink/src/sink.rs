@@ -183,18 +183,9 @@ impl KafkaSinkBuilder {
     }
 
     /// Add an instruction parser with its program name and Kafka topic.
-    pub fn instruction_parser<P, O>(
-        mut self,
-        parser: P,
-        program_name: &str,
-        topic: &str,
-    ) -> Self
+    pub fn instruction_parser<P, O>(mut self, parser: P, program_name: &str, topic: &str) -> Self
     where
-        P: Parser<Input = InstructionUpdate, Output = O>
-            + ProgramParser
-            + Send
-            + Sync
-            + 'static,
+        P: Parser<Input = InstructionUpdate, Output = O> + ProgramParser + Send + Sync + 'static,
         O: Message + Send + Sync + 'static,
     {
         let program_id = parser.program_id();
@@ -210,25 +201,19 @@ impl KafkaSinkBuilder {
     }
 
     /// Add an account parser with its program name and Kafka topic.
-    pub fn account_parser<P, O>(
-        mut self,
-        parser: P,
-        program_name: &str,
-        topic: &str,
-    ) -> Self
+    pub fn account_parser<P, O>(mut self, parser: P, program_name: &str, topic: &str) -> Self
     where
         P: Parser<Input = AccountUpdate, Output = O> + ProgramParser + Send + Sync + 'static,
         O: Message + Send + Sync + 'static,
     {
         let program_id = parser.program_id();
-        self.account_parsers
-            .push(Arc::new(AccountParserWrapper {
-                parser,
-                topic: topic.to_string(),
-                program_name: program_name.to_string(),
-                program_id,
-                fallback_topic: None,
-            }));
+        self.account_parsers.push(Arc::new(AccountParserWrapper {
+            parser,
+            topic: topic.to_string(),
+            program_name: program_name.to_string(),
+            program_id,
+            fallback_topic: None,
+        }));
         self
     }
 
@@ -241,11 +226,7 @@ impl KafkaSinkBuilder {
         fallback_topic: &str,
     ) -> Self
     where
-        P: Parser<Input = InstructionUpdate, Output = O>
-            + ProgramParser
-            + Send
-            + Sync
-            + 'static,
+        P: Parser<Input = InstructionUpdate, Output = O> + ProgramParser + Send + Sync + 'static,
         O: Message + Send + Sync + 'static,
     {
         let program_id = parser.program_id();
@@ -273,14 +254,13 @@ impl KafkaSinkBuilder {
         O: Message + Send + Sync + 'static,
     {
         let program_id = parser.program_id();
-        self.account_parsers
-            .push(Arc::new(AccountParserWrapper {
-                parser,
-                topic: topic.to_string(),
-                program_name: program_name.to_string(),
-                program_id,
-                fallback_topic: Some(fallback_topic.to_string()),
-            }));
+        self.account_parsers.push(Arc::new(AccountParserWrapper {
+            parser,
+            topic: topic.to_string(),
+            program_name: program_name.to_string(),
+            program_id,
+            fallback_topic: Some(fallback_topic.to_string()),
+        }));
         self
     }
 
@@ -295,15 +275,11 @@ impl KafkaSinkBuilder {
     pub fn topics(&self) -> Vec<&str> {
         self.instruction_parsers
             .iter()
-            .flat_map(|p| {
-                std::iter::once(p.topic()).chain(p.fallback_topic())
-            })
+            .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic()))
             .chain(
                 self.account_parsers
                     .iter()
-                    .flat_map(|p| {
-                        std::iter::once(p.topic()).chain(p.fallback_topic())
-                    }),
+                    .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic())),
             )
             .collect::<BTreeSet<_>>()
             .into_iter()
@@ -335,15 +311,11 @@ impl KafkaSink {
     pub fn topics(&self) -> Vec<&str> {
         self.instruction_parsers
             .iter()
-            .flat_map(|p| {
-                std::iter::once(p.topic()).chain(p.fallback_topic())
-            })
+            .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic()))
             .chain(
                 self.account_parsers
                     .iter()
-                    .flat_map(|p| {
-                        std::iter::once(p.topic()).chain(p.fallback_topic())
-                    }),
+                    .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic())),
             )
             .collect::<BTreeSet<_>>()
             .into_iter()
@@ -351,9 +323,7 @@ impl KafkaSink {
     }
 
     /// Returns true if any transaction-derived work is configured.
-    pub fn has_transaction_work(&self) -> bool {
-        !self.instruction_parsers.is_empty()
-    }
+    pub fn has_transaction_work(&self) -> bool { !self.instruction_parsers.is_empty() }
 
     /// Returns true if any account parsers are registered.
     pub fn has_account_parsers(&self) -> bool { !self.account_parsers.is_empty() }
@@ -429,11 +399,7 @@ impl KafkaSink {
                     had_error = true;
                     if let Some(fallback) = parser.fallback_topic() {
                         let record = self.prepare_fallback_instruction_record(
-                            slot,
-                            signature,
-                            path,
-                            ix,
-                            fallback,
+                            slot, signature, path, ix, fallback,
                         );
                         return (Some(record), true);
                     }
@@ -772,9 +738,9 @@ mod tests {
             match self.outcome {
                 TestInstructionOutcome::Parsed => Ok(TestInstructionMessage { value: 42 }),
                 TestInstructionOutcome::Filtered => Err(ParseError::Filtered),
-                TestInstructionOutcome::Error => Err(ParseError::from(std::io::Error::other(
-                    "test parser error",
-                ))),
+                TestInstructionOutcome::Error => {
+                    Err(ParseError::from(std::io::Error::other("test parser error")))
+                },
             }
         }
     }
@@ -822,9 +788,9 @@ mod tests {
             match self.outcome {
                 TestAccountOutcome::Parsed => Ok(TestAccountMessage { value: 7 }),
                 TestAccountOutcome::Filtered => Err(ParseError::Filtered),
-                TestAccountOutcome::Error => {
-                    Err(ParseError::from(std::io::Error::other("test account parser error")))
-                },
+                TestAccountOutcome::Error => Err(ParseError::from(std::io::Error::other(
+                    "test account parser error",
+                ))),
             }
         }
     }
@@ -879,14 +845,13 @@ mod tests {
             .build();
 
         let ix = instruction_with_program([9; 32].into());
-        let (record, had_error) = futures::executor::block_on(sink.parse_instruction(
-            100,
-            b"sig",
-            &ix.path,
-            &ix,
-        ));
+        let (record, had_error) =
+            futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
 
-        assert!(record.is_none(), "unexpected fallback for unrelated instruction");
+        assert!(
+            record.is_none(),
+            "unexpected fallback for unrelated instruction"
+        );
         assert!(!had_error);
         assert_eq!(calls.load(Ordering::Relaxed), 0);
     }
@@ -908,12 +873,8 @@ mod tests {
             .build();
 
         let ix = instruction_with_program([1; 32].into());
-        let (record, had_error) = futures::executor::block_on(sink.parse_instruction(
-            100,
-            b"sig",
-            &ix.path,
-            &ix,
-        ));
+        let (record, had_error) =
+            futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
 
         assert!(record.is_none(), "filtered decode should not emit fallback");
         assert!(!had_error);
@@ -936,12 +897,8 @@ mod tests {
             .build();
 
         let ix = instruction_with_program([1; 32].into());
-        let (record, had_error) = futures::executor::block_on(sink.parse_instruction(
-            100,
-            b"sig",
-            &ix.path,
-            &ix,
-        ));
+        let (record, had_error) =
+            futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
 
         let record = record.expect("expected fallback record");
         assert_eq!(record.topic, "failed.test.instructions");
@@ -981,12 +938,8 @@ mod tests {
             .build();
 
         let ix = instruction_with_program([1; 32].into());
-        let (record, had_error) = futures::executor::block_on(sink.parse_instruction(
-            100,
-            b"sig",
-            &ix.path,
-            &ix,
-        ));
+        let (record, had_error) =
+            futures::executor::block_on(sink.parse_instruction(100, b"sig", &ix.path, &ix));
 
         let record = record.expect("expected decoded record");
         assert_eq!(record.topic, "test.instructions");
@@ -1001,12 +954,7 @@ mod tests {
             outcome: TestAccountOutcome::Filtered,
         };
         let sink = KafkaSinkBuilder::new()
-            .account_parser_with_fallback(
-                parser,
-                "test",
-                "test.accounts",
-                "failed.test.accounts",
-            )
+            .account_parser_with_fallback(parser, "test", "test.accounts", "failed.test.accounts")
             .build();
 
         let acct = account_with_owner([1; 32].into());
@@ -1023,12 +971,7 @@ mod tests {
             outcome: TestAccountOutcome::Error,
         };
         let sink = KafkaSinkBuilder::new()
-            .account_parser_with_fallback(
-                parser,
-                "test",
-                "test.accounts",
-                "failed.test.accounts",
-            )
+            .account_parser_with_fallback(parser, "test", "test.accounts", "failed.test.accounts")
             .build();
 
         let acct = account_with_owner([1; 32].into());
@@ -1044,7 +987,10 @@ mod tests {
             event.owner,
             yellowstone_vixen_core::bs58::encode([1_u8; 32]).into_string()
         );
-        assert_eq!(event.data, yellowstone_vixen_core::bs58::encode([9_u8, 8, 7]).into_string());
+        assert_eq!(
+            event.data,
+            yellowstone_vixen_core::bs58::encode([9_u8, 8, 7]).into_string()
+        );
     }
 
     #[test]
@@ -1054,12 +1000,7 @@ mod tests {
             outcome: TestAccountOutcome::Parsed,
         };
         let sink = KafkaSinkBuilder::new()
-            .account_parser_with_fallback(
-                parser,
-                "test",
-                "test.accounts",
-                "failed.test.accounts",
-            )
+            .account_parser_with_fallback(parser, "test", "test.accounts", "failed.test.accounts")
             .build();
 
         let acct = account_with_owner([1; 32].into());

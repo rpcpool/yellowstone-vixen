@@ -49,7 +49,8 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
     pub async fn run(mut self) -> Result<(), CoordinatorError> {
         if !self.require_tx_gate {
             tracing::info!(
-                "require_tx_gate=false: tx gate disabled, transaction status stats will not be reported"
+                "require_tx_gate=false: tx gate disabled, transaction status stats will not be \
+                 reported"
             );
         }
         loop {
@@ -143,11 +144,7 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
             match output {
                 BlockStateMachineOutput::FrozenBlock(frozen) => {
                     let expected_tx_count = if self.require_tx_gate {
-                        frozen
-                            .entries
-                            .iter()
-                            .map(|e| e.executed_txn_count)
-                            .sum()
+                        frozen.entries.iter().map(|e| e.executed_txn_count).sum()
                     } else {
                         0
                     };

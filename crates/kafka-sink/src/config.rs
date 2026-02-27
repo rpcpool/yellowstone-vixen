@@ -45,41 +45,23 @@ pub struct KafkaSinkConfig {
     pub kafka_retry_backoff_ms: u64,
 }
 
-fn default_schema_registry_url() -> String {
-    "http://localhost:8081".to_string()
-}
+fn default_schema_registry_url() -> String { "http://localhost:8081".to_string() }
 
-fn default_transaction_slots_topic() -> String {
-    "transaction.slots".to_string()
-}
+fn default_transaction_slots_topic() -> String { "transaction.slots".to_string() }
 
-fn default_account_slots_topic() -> String {
-    "account.slots".to_string()
-}
+fn default_account_slots_topic() -> String { "account.slots".to_string() }
 
-fn default_buffer_size() -> usize {
-    100
-}
+fn default_buffer_size() -> usize { 100 }
 
-fn default_message_timeout_ms() -> u32 {
-    5000
-}
+fn default_message_timeout_ms() -> u32 { 5000 }
 
-fn default_queue_buffering_max_messages() -> u32 {
-    100000
-}
+fn default_queue_buffering_max_messages() -> u32 { 100000 }
 
-fn default_batch_num_messages() -> u32 {
-    1000
-}
+fn default_batch_num_messages() -> u32 { 1000 }
 
-fn default_kafka_write_max_attempts() -> u32 {
-    3
-}
+fn default_kafka_write_max_attempts() -> u32 { 3 }
 
-fn default_kafka_retry_backoff_ms() -> u64 {
-    200
-}
+fn default_kafka_retry_backoff_ms() -> u64 { 200 }
 
 impl Default for KafkaSinkConfig {
     fn default() -> Self {
@@ -111,8 +93,9 @@ impl KafkaSinkConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use yellowstone_vixen_block_coordinator::AccountCommitAt;
+
+    use super::*;
 
     #[test]
     fn account_mode_defaults_to_finalized_passthrough() {

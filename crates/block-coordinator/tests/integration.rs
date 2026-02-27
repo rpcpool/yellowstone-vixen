@@ -268,13 +268,15 @@ impl TestHarness {
     }
 
     async fn expect_account_flush(&mut self, slot: u64) -> AccountFlushAssertion {
-        let acct_slot =
-            tokio::time::timeout(Duration::from_secs(2), self.account_output_rx.recv())
-                .await
-                .expect("Timed out waiting for account flush")
-                .expect("Account channel closed");
+        let acct_slot = tokio::time::timeout(Duration::from_secs(2), self.account_output_rx.recv())
+            .await
+            .expect("Timed out waiting for account flush")
+            .expect("Account channel closed");
 
-        assert_eq!(acct_slot.slot, slot, "Expected account slot {slot} to flush");
+        assert_eq!(
+            acct_slot.slot, slot,
+            "Expected account slot {slot} to flush"
+        );
         AccountFlushAssertion(acct_slot)
     }
 
@@ -425,14 +427,18 @@ impl SlotBuilder {
 
     fn record(mut self, value: &str) -> Self {
         let tx_index = self.records.len() as u64;
-        self.records
-            .push((InstructionRecordSortKey::new(tx_index, vec![0]), value.to_string()));
+        self.records.push((
+            InstructionRecordSortKey::new(tx_index, vec![0]),
+            value.to_string(),
+        ));
         self
     }
 
     fn record_at(mut self, tx_index: u64, ix_path: Vec<usize>, value: &str) -> Self {
-        self.records
-            .push((InstructionRecordSortKey::new(tx_index, ix_path), value.to_string()));
+        self.records.push((
+            InstructionRecordSortKey::new(tx_index, ix_path),
+            value.to_string(),
+        ));
         self
     }
 

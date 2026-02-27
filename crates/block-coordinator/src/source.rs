@@ -188,8 +188,8 @@ impl SourceTrait for CoordinatorSource {
                             },
                         }
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
 
             match &update {
