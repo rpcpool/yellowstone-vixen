@@ -12,8 +12,8 @@ pub mod utils;
 // Re-export main types
 pub use config::KafkaSinkConfig;
 pub use events::{
-    AccountSlotCommitEvent, DecodedInstructionEvent, PreparedRecord, RawAccountEvent,
-    RawInstructionEvent, RecordHeader, RecordKind, TransactionSlotCommitEvent,
+    AccountSlotCommitEvent, PreparedRecord, RawAccountEvent, RawInstructionEvent, RecordHeader,
+    RecordKind, TransactionSlotCommitEvent,
 };
 pub use handler::{BufferingHandler, PassthroughAccountHandler};
 pub use kafka_sink::{AccountMsg, AccountSink, TransactionSlotSink};

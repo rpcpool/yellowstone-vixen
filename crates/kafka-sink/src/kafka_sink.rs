@@ -33,6 +33,44 @@ fn to_kafka_headers(headers: &[RecordHeader]) -> OwnedHeaders {
     })
 }
 
+async fn batch_publish_records(
+    producer: &FutureProducer,
+    slot: u64,
+    records: &[PreparedRecord],
+    timeout: Duration,
+    error_prefix: &'static str,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let futures: Vec<_> = records
+        .iter()
+        .map(|record| {
+            let headers = to_kafka_headers(&record.headers);
+            producer.send(
+                FutureRecord::to(&record.topic)
+                    .payload(&record.payload)
+                    .key(&record.key)
+                    .headers(headers),
+                timeout,
+            )
+        })
+        .collect();
+
+    let results = futures::future::join_all(futures).await;
+    for (i, result) in results.into_iter().enumerate() {
+        result.map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
+            tracing::error!(
+                ?e,
+                slot,
+                topic = %records[i].topic,
+                error_prefix,
+                "Kafka write failed"
+            );
+            format!("{error_prefix} for slot {slot}: {e}").into()
+        })?;
+    }
+
+    Ok(())
+}
+
 /// Consumes instruction slots from the coordinator and writes them to Kafka.
 pub struct TransactionSlotSink {
     config: KafkaSinkConfig,
@@ -85,41 +123,15 @@ impl TransactionSlotSink {
         &self,
         ix_slot: &InstructionSlot<PreparedRecord>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        self.batch_publish_records(ix_slot.slot, &ix_slot.records)
-            .await?;
+        batch_publish_records(
+            self.producer.as_ref(),
+            ix_slot.slot,
+            &ix_slot.records,
+            Duration::ZERO,
+            "Kafka write failed",
+        )
+        .await?;
         self.commit_transaction_slot_checkpoint(ix_slot).await
-    }
-
-    async fn batch_publish_records(
-        &self,
-        slot: u64,
-        records: &[PreparedRecord],
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let futures: Vec<_> = records
-            .iter()
-            .map(|record| {
-                let headers = to_kafka_headers(&record.headers);
-                self.producer.send(
-                    FutureRecord::to(&record.topic)
-                        .payload(&record.payload)
-                        .key(&record.key)
-                        .headers(headers),
-                    // Do not retry when a send fail. Returns an RDKafkaErrorCode::QueueFull error instead so the slot retries, ensuring we never lose the ordering
-                    Duration::ZERO,
-                )
-            })
-            .collect();
-
-        let results = futures::future::join_all(futures).await;
-
-        for (i, result) in results.into_iter().enumerate() {
-            result.map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
-                tracing::error!(?e, slot, topic = %records[i].topic, "Kafka write failed");
-                format!("Kafka write failed for slot {slot}: {e}").into()
-            })?;
-        }
-
-        Ok(())
     }
 
     async fn commit_transaction_slot_checkpoint(
@@ -299,34 +311,15 @@ impl AccountSink {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let slot = acct_slot.slot;
 
-        // Batch-publish all account records.
-        let futures: Vec<_> = acct_slot
-            .records
-            .iter()
-            .map(|record| {
-                let headers = to_kafka_headers(&record.headers);
-                self.producer.send(
-                    FutureRecord::to(&record.topic)
-                        .payload(&record.payload)
-                        .key(&record.key)
-                        .headers(headers),
-                    Duration::ZERO,
-                )
-            })
-            .collect();
-
-        let results = futures::future::join_all(futures).await;
-        for (i, result) in results.into_iter().enumerate() {
-            result.map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
-                tracing::error!(
-                    ?e,
-                    slot,
-                    topic = %acct_slot.records[i].topic,
-                    "Account Kafka write failed"
-                );
-                format!("Account Kafka write failed for slot {slot}: {e}").into()
-            })?;
-        }
+        batch_publish_records(
+            self.producer.as_ref(),
+            slot,
+            &acct_slot.records,
+            // Do not retry in send; QueueFull bubbles up so the slot retries as a unit.
+            Duration::ZERO,
+            "Account Kafka write failed",
+        )
+        .await?;
 
         // Commit account slot marker.
         let event = build_account_slot_commit_event(acct_slot, &self.account_mode);
@@ -350,10 +343,10 @@ impl AccountSink {
             slot,
             marker_type = %event.marker_type,
             account_commit_at = %event.account_commit_at,
-            decoded_account_count = event.decoded_account_count,
-            decode_filtered_account_count = acct_slot.filtered_account_count,
-            decode_error_account_count = acct_slot.failed_account_count,
-            fallback_account_count = event.fallback_account_count,
+            decoded_account_count = event.decoded_account_count.unwrap_or(0),
+            decode_filtered_account_count = event.decode_filtered_account_count.unwrap_or(0),
+            decode_error_account_count = event.decode_error_account_count.unwrap_or(0),
+            fallback_account_count = event.fallback_account_count.unwrap_or(0),
             record_count = acct_slot.records.len(),
             "Kafka: committed account slot"
         );
@@ -418,10 +411,10 @@ impl AccountSink {
             slot,
             marker_type: "watermark".to_string(),
             account_commit_at: "stream".to_string(),
-            decoded_account_count: 0,
-            decode_filtered_account_count: 0,
-            decode_error_account_count: 0,
-            fallback_account_count: 0,
+            decoded_account_count: None,
+            decode_filtered_account_count: None,
+            decode_error_account_count: None,
+            fallback_account_count: None,
         };
         let payload = serde_json::to_string(&event)?;
         let slot_key = slot.to_string();
@@ -489,10 +482,10 @@ fn build_account_slot_commit_event(
         slot: acct_slot.slot,
         marker_type: "completed".to_string(),
         account_commit_at: account_commit_at_tag(account_mode).to_string(),
-        decoded_account_count,
-        decode_filtered_account_count: acct_slot.filtered_account_count,
-        decode_error_account_count: acct_slot.failed_account_count,
-        fallback_account_count,
+        decoded_account_count: Some(decoded_account_count),
+        decode_filtered_account_count: Some(acct_slot.filtered_account_count),
+        decode_error_account_count: Some(acct_slot.failed_account_count),
+        fallback_account_count: Some(fallback_account_count),
     }
 }
 
@@ -580,10 +573,10 @@ mod tests {
         assert_eq!(event.slot, 55);
         assert_eq!(event.marker_type, "completed");
         assert_eq!(event.account_commit_at, "confirmed");
-        assert_eq!(event.decoded_account_count, 1);
-        assert_eq!(event.decode_filtered_account_count, 4);
-        assert_eq!(event.decode_error_account_count, 2);
-        assert_eq!(event.fallback_account_count, 1);
+        assert_eq!(event.decoded_account_count, Some(1));
+        assert_eq!(event.decode_filtered_account_count, Some(4));
+        assert_eq!(event.decode_error_account_count, Some(2));
+        assert_eq!(event.fallback_account_count, Some(1));
     }
 
     #[test]
@@ -598,5 +591,63 @@ mod tests {
         let event = build_account_slot_commit_event(&acct_slot, &AccountMode::FinalizedPassthrough);
         assert_eq!(event.marker_type, "completed");
         assert_eq!(event.account_commit_at, "finalized");
+    }
+
+    #[test]
+    fn watermark_json_omits_account_count_fields() {
+        let event = AccountSlotCommitEvent {
+            slot: 77,
+            marker_type: "watermark".to_string(),
+            account_commit_at: "stream".to_string(),
+            decoded_account_count: None,
+            decode_filtered_account_count: None,
+            decode_error_account_count: None,
+            fallback_account_count: None,
+        };
+
+        let value = serde_json::to_value(&event).expect("serialize watermark");
+        let obj = value.as_object().expect("object");
+        assert!(!obj.contains_key("decoded_account_count"));
+        assert!(!obj.contains_key("decode_filtered_account_count"));
+        assert!(!obj.contains_key("decode_error_account_count"));
+        assert!(!obj.contains_key("fallback_account_count"));
+    }
+
+    #[test]
+    fn completed_json_includes_account_count_fields() {
+        let acct_slot = AccountSlot {
+            slot: 88,
+            records: vec![
+                record("decoded.accounts", RecordKind::Account, true),
+                record("failed.accounts", RecordKind::Account, false),
+            ],
+            decoded_account_count: 0,
+            filtered_account_count: 9,
+            failed_account_count: 3,
+        };
+        let event = build_account_slot_commit_event(&acct_slot, &AccountMode::Processed {
+            commit_at: AccountCommitAt::Confirmed,
+        });
+
+        let value = serde_json::to_value(&event).expect("serialize completed marker");
+        let obj = value.as_object().expect("object");
+        assert_eq!(
+            obj.get("decoded_account_count").and_then(|v| v.as_u64()),
+            Some(1)
+        );
+        assert_eq!(
+            obj.get("decode_filtered_account_count")
+                .and_then(|v| v.as_u64()),
+            Some(9)
+        );
+        assert_eq!(
+            obj.get("decode_error_account_count")
+                .and_then(|v| v.as_u64()),
+            Some(3)
+        );
+        assert_eq!(
+            obj.get("fallback_account_count").and_then(|v| v.as_u64()),
+            Some(1)
+        );
     }
 }

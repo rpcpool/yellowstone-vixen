@@ -1,22 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-/// Event published for each decoded instruction.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DecodedInstructionEvent {
-    /// Slot number where this instruction was processed.
-    pub slot: u64,
-    /// Transaction signature (base58).
-    pub signature: String,
-    /// Instruction path within the transaction.
-    /// Format: "0" for top-level, "0.1" for first inner instruction, "0.1.2" for nested, etc.
-    /// Solana supports up to 5 levels of CPI depth.
-    pub ix_index: String,
-    /// Program name (e.g., "spl-token").
-    pub program: String,
-    /// Full instruction data (debug format).
-    pub data: String,
-}
-
 /// Event published for unparsed/unknown instructions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RawInstructionEvent {
@@ -76,13 +59,17 @@ pub struct AccountSlotCommitEvent {
     /// - watermark: "stream"
     pub account_commit_at: String,
     /// Number of successfully decoded accounts.
-    pub decoded_account_count: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub decoded_account_count: Option<u64>,
     /// Number of accounts that were not decoded because no parser matched.
-    pub decode_filtered_account_count: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub decode_filtered_account_count: Option<u64>,
     /// Number of accounts that were not decoded because parser execution failed.
-    pub decode_error_account_count: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub decode_error_account_count: Option<u64>,
     /// Number of undecoded accounts published to fallback topics.
-    pub fallback_account_count: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fallback_account_count: Option<u64>,
 }
 
 /// Distinguishes instruction records from account records.

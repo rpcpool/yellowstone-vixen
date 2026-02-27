@@ -170,6 +170,23 @@ pub struct KafkaSinkBuilder {
     account_parsers: Vec<Arc<dyn DynAccountParser>>,
 }
 
+fn collect_topics<'a>(
+    instruction_parsers: &'a [Arc<dyn DynInstructionParser>],
+    account_parsers: &'a [Arc<dyn DynAccountParser>],
+) -> Vec<&'a str> {
+    instruction_parsers
+        .iter()
+        .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic()))
+        .chain(
+            account_parsers
+                .iter()
+                .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic())),
+        )
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect()
+}
+
 impl Default for KafkaSinkBuilder {
     fn default() -> Self { Self::new() }
 }
@@ -273,17 +290,7 @@ impl KafkaSinkBuilder {
     }
 
     pub fn topics(&self) -> Vec<&str> {
-        self.instruction_parsers
-            .iter()
-            .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic()))
-            .chain(
-                self.account_parsers
-                    .iter()
-                    .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic())),
-            )
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .collect()
+        collect_topics(&self.instruction_parsers, &self.account_parsers)
     }
 }
 
@@ -299,17 +306,7 @@ pub struct KafkaSink {
 
 impl KafkaSink {
     pub fn topics(&self) -> Vec<&str> {
-        self.instruction_parsers
-            .iter()
-            .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic()))
-            .chain(
-                self.account_parsers
-                    .iter()
-                    .flat_map(|p| std::iter::once(p.topic()).chain(p.fallback_topic())),
-            )
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .collect()
+        collect_topics(&self.instruction_parsers, &self.account_parsers)
     }
 
     /// Returns true if any transaction-derived work is configured.
@@ -489,15 +486,8 @@ impl KafkaSink {
             program_id: program_id.clone(),
             data: bs58::encode(&ix.data).into_string(),
         };
-        let payload = serde_json::to_vec(&fallback_event).unwrap_or_else(|e| {
-            tracing::error!(
-                ?e,
-                slot,
-                program_id,
-                "Failed to encode instruction fallback JSON, using raw bytes"
-            );
-            ix.data.clone()
-        });
+        let payload = serde_json::to_vec(&fallback_event)
+            .expect("RawInstructionEvent serialization is infallible");
 
         PreparedRecord {
             topic: fallback_topic.to_string(),
@@ -653,16 +643,8 @@ impl KafkaSink {
             owner: owner.to_string(),
             data: bs58::encode(data).into_string(),
         };
-        let payload = serde_json::to_vec(&fallback_event).unwrap_or_else(|e| {
-            tracing::error!(
-                ?e,
-                slot,
-                pubkey,
-                owner,
-                "Failed to encode account fallback JSON, using raw bytes"
-            );
-            data.to_vec()
-        });
+        let payload = serde_json::to_vec(&fallback_event)
+            .expect("RawAccountEvent serialization is infallible");
 
         PreparedRecord {
             topic: fallback_topic.to_string(),
