@@ -9,13 +9,13 @@ use crate::types::{
 
 /// Per-slot buffer that collects parsed records and tracks two independent readiness paths.
 ///
-/// **Instruction readiness** (`is_instruction_ready`):
-///   Gate 1 (is_fully_parsed): `parsed_tx_count >= expected_tx_count` from FrozenBlock.
-///   Gate 2 (confirmed): BlockSM confirmed the slot via cluster consensus.
+/// **Instruction readiness** (`instruction_gate_reached`):
+///   `tx_parse_complete`: `parsed_tx_count >= expected_tx_count` from FrozenBlock.
+///   `instruction_commitment_reached`: BlockSM confirmed the slot via cluster consensus.
 ///
-/// **Account readiness** (`is_account_ready`):
-///   All account updates processed (`is_fully_account_processed`) AND
-///   `account_committed` (set at the configured commitment: confirmed or finalized).
+/// **Account gate** (`account_gate_reached`):
+///   All account updates processed (`account_parse_complete`) AND
+///   `account_commitment_reached` (set at the configured commitment: confirmed or finalized).
 ///
 /// Instructions and accounts flush independently — a slot is removed from the buffer
 /// only when both drains are complete (`instructions_drained && accounts_drained`).
@@ -29,12 +29,12 @@ pub struct SlotRecordBuffer<R> {
     metadata: Option<BlockMetadata>,
     /// Gate 1: fully parsed.
     parsed_tx_count: u64,
-    /// Confirmed by cluster consensus (instruction gate 2).
-    confirmed: bool,
+    /// Instruction commitment reached (confirmed by cluster consensus).
+    instruction_commitment_reached: bool,
     /// Finalized by cluster consensus.
     finalized: bool,
     /// Account commitment reached (set at configured commitment level).
-    account_committed: bool,
+    account_commitment_reached: bool,
     /// Expected account count from source (None = not yet frozen, blocks account flush).
     expected_account_count: Option<u64>,
     /// Number of account events fully processed (records + filtered + failed).
@@ -59,9 +59,9 @@ impl<R> Default for SlotRecordBuffer<R> {
             account_records: BTreeMap::new(),
             metadata: None,
             parsed_tx_count: 0,
-            confirmed: false,
+            instruction_commitment_reached: false,
             finalized: false,
-            account_committed: false,
+            account_commitment_reached: false,
             expected_account_count: None,
             account_processed_count: 0,
             instructions_drained: false,
@@ -153,15 +153,21 @@ impl<R> SlotRecordBuffer<R> {
         }
     }
 
-    pub fn mark_as_confirmed(&mut self) { self.confirmed = true; }
+    pub fn mark_instruction_commitment_reached(&mut self) {
+        self.instruction_commitment_reached = true;
+    }
 
     pub fn mark_as_finalized(&mut self) { self.finalized = true; }
 
-    pub fn mark_account_committed(&mut self) { self.account_committed = true; }
+    pub fn mark_account_commitment_reached(&mut self) { self.account_commitment_reached = true; }
+
+    pub fn instruction_commitment_reached(&self) -> bool { self.instruction_commitment_reached }
+
+    pub fn account_commitment_reached(&self) -> bool { self.account_commitment_reached }
 
     pub fn is_finalized(&self) -> bool { self.finalized }
 
-    /// Set the expected account count for Gate 3. First-write-wins: if already
+    /// Set the expected account count for the account-count gate. First-write-wins: if already
     /// set, subsequent calls are ignored (prevents duplicate Slot(Confirmed)
     /// from overwriting a non-zero count with 0).
     pub fn set_expected_account_count(&mut self, count: u64) {
@@ -185,28 +191,38 @@ impl<R> SlotRecordBuffer<R> {
 
     pub fn account_processed_count(&self) -> u64 { self.account_processed_count }
 
-    pub fn is_fully_parsed(&self) -> bool {
+    pub fn tx_parse_complete(&self) -> bool {
         self.metadata
             .as_ref()
             .is_some_and(|meta| self.parsed_tx_count >= meta.expected_tx_count)
     }
 
-    /// Gate 3: all account updates processed. None = not yet received, blocks flush.
-    pub fn is_fully_account_processed(&self) -> bool {
+    /// Account-count gate: all account updates processed.
+    /// None = not yet received, blocks account readiness.
+    pub fn account_parse_complete(&self) -> bool {
         self.expected_account_count
             .is_some_and(|n| self.account_processed_count() >= n)
     }
 
-    /// Instruction readiness: Gate 1 (fully parsed) + Gate 2 (confirmed).
-    pub fn is_instruction_ready(&self) -> bool { self.is_fully_parsed() && self.confirmed }
+    /// Instruction gate: tx parse complete + instruction commitment reached.
+    pub fn instruction_gate_reached(&self) -> bool {
+        self.tx_parse_complete() && self.instruction_commitment_reached()
+    }
 
-    /// Account readiness: all accounts processed + account commitment reached.
-    pub fn is_account_ready(&self) -> bool {
-        self.is_fully_account_processed() && self.account_committed
+    /// Account gate: account parse complete + account commitment reached.
+    pub fn account_gate_reached(&self) -> bool {
+        self.account_parse_complete() && self.account_commitment_reached()
+    }
+
+    /// True once the account gate has been frozen for this slot.
+    pub fn is_account_gate_frozen(&self) -> bool {
+        self.account_commitment_reached() && self.expected_account_count.is_some()
     }
 
     /// Legacy: all gates satisfied (both instruction and account ready).
-    pub fn is_ready(&self) -> bool { self.is_instruction_ready() && self.is_account_ready() }
+    pub fn slot_ready(&self) -> bool {
+        self.instruction_gate_reached() && self.account_gate_reached()
+    }
 
     pub fn instructions_drained(&self) -> bool { self.instructions_drained }
 
@@ -220,8 +236,6 @@ impl<R> SlotRecordBuffer<R> {
     }
 
     pub fn parsed_tx_count(&self) -> u64 { self.parsed_tx_count }
-
-    pub fn is_confirmed(&self) -> bool { self.confirmed }
 
     pub fn record_count(&self) -> usize {
         self.instruction_records.len() + self.account_records.len()
@@ -324,14 +338,14 @@ mod tests {
     }
 
     #[test]
-    fn three_gate_not_ready_by_default() {
+    fn account_gate_not_ready_by_default() {
         let buf = SlotRecordBuffer::<String>::default();
-        assert!(!buf.is_ready());
+        assert!(!buf.slot_ready());
     }
 
     #[test]
-    fn three_gate_each_required() {
-        // Only Gate 1 (fully_parsed) + Gate 3 (account count)
+    fn account_gate_each_requirement_enforced() {
+        // instruction gate check 1 + account parse check
         let mut buf = SlotRecordBuffer::<String>::default();
         buf.set_block_metadata(BlockMetadata {
             parent_slot: 0,
@@ -340,15 +354,15 @@ mod tests {
         });
         buf.increment_parsed_tx_count();
         buf.set_expected_account_count(0);
-        assert!(!buf.is_ready()); // missing Gate 2 (confirmed)
+        assert!(!buf.slot_ready()); // missing instruction_commitment_reached
 
-        // Only Gate 2 (confirmed) + Gate 3
+        // instruction commitment + account parse, but tx parse is incomplete
         let mut buf2 = SlotRecordBuffer::<String>::default();
-        buf2.mark_as_confirmed();
+        buf2.mark_instruction_commitment_reached();
         buf2.set_expected_account_count(0);
-        assert!(!buf2.is_ready()); // missing Gate 1
+        assert!(!buf2.slot_ready()); // missing tx_parse_complete
 
-        // Only Gate 1 + Gate 2
+        // instruction gate complete, but account gate incomplete
         let mut buf3 = SlotRecordBuffer::<String>::default();
         buf3.set_block_metadata(BlockMetadata {
             parent_slot: 0,
@@ -356,12 +370,12 @@ mod tests {
             expected_tx_count: 1,
         });
         buf3.increment_parsed_tx_count();
-        buf3.mark_as_confirmed();
-        assert!(!buf3.is_ready()); // missing Gate 3 (expected_account_count is None)
+        buf3.mark_instruction_commitment_reached();
+        assert!(!buf3.slot_ready()); // missing account_parse_complete (expected_account_count is None)
     }
 
     #[test]
-    fn three_gate_ready_when_all() {
+    fn account_gate_ready_when_all_requirements_met() {
         let mut buf = SlotRecordBuffer::<String>::default();
         buf.set_block_metadata(BlockMetadata {
             parent_slot: 0,
@@ -371,9 +385,9 @@ mod tests {
         buf.increment_parsed_tx_count();
         buf.increment_parsed_tx_count();
         buf.set_expected_account_count(0);
-        buf.mark_as_confirmed();
-        buf.mark_account_committed();
-        assert!(buf.is_ready());
+        buf.mark_instruction_commitment_reached();
+        buf.mark_account_commitment_reached();
+        assert!(buf.slot_ready());
     }
 
     #[test]
@@ -429,12 +443,12 @@ mod tests {
         buf.increment_parsed_tx_count();
         buf.increment_parsed_tx_count(); // overshoot
         buf.set_expected_account_count(0);
-        buf.mark_as_confirmed();
-        buf.mark_account_committed();
+        buf.mark_instruction_commitment_reached();
+        buf.mark_account_commitment_reached();
 
         // Overshoot doesn't prevent readiness — the slot still flushes.
         // (The tracing::error fires at runtime to flag the handler bug.)
-        assert!(buf.is_ready());
+        assert!(buf.slot_ready());
         assert_eq!(buf.parsed_tx_count(), 2);
     }
 
@@ -461,9 +475,9 @@ mod tests {
         buf.increment_parsed_tx_count();
         buf.increment_parsed_tx_count();
         buf.set_expected_account_count(0);
-        buf.mark_as_confirmed();
-        buf.mark_account_committed();
-        assert!(buf.is_ready());
+        buf.mark_instruction_commitment_reached();
+        buf.mark_account_commitment_reached();
+        assert!(buf.slot_ready());
 
         let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");
         assert_eq!(confirmed.parent_slot, 20);
@@ -472,60 +486,60 @@ mod tests {
     }
 
     #[test]
-    fn gate3_none_blocks_flush() {
+    fn account_count_gate_none_blocks_readiness() {
         let mut buf = SlotRecordBuffer::<String>::default();
         buf.set_block_metadata(BlockMetadata {
             parent_slot: 0,
             blockhash: Hash::default(),
             expected_tx_count: 0,
         });
-        buf.mark_as_confirmed();
-        // Gate 1 + Gate 2 satisfied, but Gate 3 is None → not ready.
-        assert!(!buf.is_fully_account_processed());
-        assert!(!buf.is_ready());
+        buf.mark_instruction_commitment_reached();
+        // Instruction gate satisfied, but account_parse_complete is false (None) -> not ready.
+        assert!(!buf.account_parse_complete());
+        assert!(!buf.slot_ready());
     }
 
     #[test]
-    fn gate3_some_zero_passes() {
+    fn account_count_gate_zero_expected_passes() {
         let mut buf = SlotRecordBuffer::<String>::default();
         buf.set_expected_account_count(0);
-        // No accounts expected, none processed → Gate 3 satisfied.
-        assert!(buf.is_fully_account_processed());
+        // No accounts expected, none processed → account-count gate satisfied.
+        assert!(buf.account_parse_complete());
     }
 
     #[test]
-    fn gate3_mixed_account_processing() {
+    fn account_count_gate_mixed_account_processing() {
         let mut buf = SlotRecordBuffer::<String>::default();
         buf.set_expected_account_count(3);
-        assert!(!buf.is_fully_account_processed());
+        assert!(!buf.account_parse_complete());
 
         // 1 successful record
         buf.insert_account_record(AccountRecordSortKey::new(100, [1; 32]), "acct1".into());
         buf.increment_account_processed_count();
         assert_eq!(buf.account_processed_count(), 1);
-        assert!(!buf.is_fully_account_processed());
+        assert!(!buf.account_parse_complete());
 
         // 1 filtered
         buf.increment_parse_stat(ParseStatsKind::AccountFiltered);
         buf.increment_account_processed_count();
         assert_eq!(buf.account_processed_count(), 2);
-        assert!(!buf.is_fully_account_processed());
+        assert!(!buf.account_parse_complete());
 
         // 1 error
         buf.increment_parse_stat(ParseStatsKind::AccountError);
         buf.increment_account_processed_count();
         assert_eq!(buf.account_processed_count(), 3);
-        assert!(buf.is_fully_account_processed());
+        assert!(buf.account_parse_complete());
     }
 
     #[test]
-    fn gate3_first_write_wins() {
+    fn account_count_gate_first_write_wins() {
         let mut buf = SlotRecordBuffer::<String>::default();
         buf.set_expected_account_count(5);
         // Second call is ignored (first-write-wins).
         buf.set_expected_account_count(0);
         // Still expects 5, not 0.
-        assert!(!buf.is_fully_account_processed());
+        assert!(!buf.account_parse_complete());
         for i in 0..5 {
             buf.insert_account_record(
                 AccountRecordSortKey::new(i, [i as u8; 32]),
@@ -533,7 +547,7 @@ mod tests {
             );
             buf.increment_account_processed_count();
         }
-        assert!(buf.is_fully_account_processed());
+        assert!(buf.account_parse_complete());
     }
 
     #[test]

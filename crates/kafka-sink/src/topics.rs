@@ -28,12 +28,22 @@ pub fn read_last_committed_account_block(config: &KafkaSinkConfig) -> Option<Las
 /// Read the last committed slot from a Kafka topic by scanning the highest offset.
 /// Tries to parse as a slot commit event, falls back to any JSON with a "slot" field.
 fn read_last_slot_from_topic(brokers: &str, topic: &str) -> Option<LastCommitted> {
-    let consumer: BaseConsumer = ClientConfig::new()
+    let consumer: BaseConsumer = match ClientConfig::new()
         .set("bootstrap.servers", brokers)
         .set("group.id", "vixen-startup-reader")
         .set("enable.auto.commit", "false")
         .create()
-        .expect("Failed to create Kafka consumer for startup");
+    {
+        Ok(consumer) => consumer,
+        Err(e) => {
+            tracing::warn!(
+                ?e,
+                topic,
+                "Failed to create startup Kafka consumer — starting fresh"
+            );
+            return None;
+        },
+    };
 
     let metadata = match consumer.fetch_metadata(Some(topic), Duration::from_secs(5)) {
         Ok(m) => m,

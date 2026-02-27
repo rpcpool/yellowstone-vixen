@@ -15,7 +15,7 @@
 //! │  SLOT BUFFER:                                                               │
 //! │    expected_tx_count: Option<u64>         // from FrozenBlock               │
 //! │    parsed_tx_count: u64                   // from TransactionParsed         │
-//! │    confirmed: bool                        // from Confirmed event           │
+//! │    instruction_commitment_reached: bool   // from Confirmed event           │
 //! │    expected_account_count: Option<u64>    // from AccountEventSeen          │
 //! │    account_processed_count: u64           // from AccountRecordParsed /     │
 //! │                                           //   AccountFiltered / Error      │
@@ -39,9 +39,10 @@
 //! │  └────────┬───────────┘        │ [discarded_slot_ignores_parsed] │          │
 //! │           │ NO                 └─────────────────────────────────┘          │
 //! │           ▼                                                                 │
-//! │  ┌────────────────────┐  YES   ┌─────────────────────────────────┐          │
-//! │  │ slot <= last_flush?├───────►│ PANIC (two-gate invariant!)     │          │
-//! │  └────────┬───────────┘        │ Should never happen if healthy  │          │
+//! │  ┌──────────────────────────────┐YES┌──────────────────────────────────────┐│
+//! │  │ slot <= last_instruction_    ├──►│ ERROR (TwoGateInvariantViolation)    ││
+//! │  │ flushed_slot?                │   │ Instruction event after flush frontier││
+//! │  └────────┬─────────────────────┘   └──────────────────────────────────────┘│
 //! │           │ NO                 └─────────────────────────────────┘          │
 //! │           ▼                                                                 │
 //! │  ┌────────────────────┐                                                     │
@@ -56,12 +57,13 @@
 //! │                           FLUSH DECISION TREE                               │
 //! ├─────────────────────────────────────────────────────────────────────────────┤
 //! │                                                                             │
-//! │  drain_flushable() — called once per event batch in run()                   │
+//! │  drain_instruction_flushable() then drain_account_flushable()               │
+//! │  called once per event batch in run()                                       │
 //! │                                                                             │
 //! │  FOR each slot in buffer (ascending order):                                 │
 //! │                                                                             │
 //! │  ┌──────────────────────────────────────────────┐                           │
-//! │  │ GATE 1: is_fully_parsed?                     │                           │
+//! │  │ INSTRUCTION CHECK: tx_parse_complete?        │                           │
 //! │  │ (parsed_tx_count >= expected_tx_count)       │                           │
 //! │  └──────────────────────┬───────────────────────┘                           │
 //! │                         │                                                   │
@@ -69,16 +71,16 @@
 //! │              │                    │                                         │
 //! │              ▼                    ▼                                         │
 //! │  ┌─────────────────┐    ┌──────────────────────────────────────────────┐    │
-//! │  │ STOP            │    │ GATE 2: confirmed?                          │    │
-//! │  │ [incomplete     │    │ (SlotConfirmed from BlockSM)                │    │
+//! │  │ STOP            │    │ INSTRUCTION CHECK:                           │    │
+//! │  │ [incomplete     │    │ instruction_commitment_reached?              │    │
 //! │  │  _blocks_       │    └──────────────────────┬───────────────────────┘    │
 //! │  │  subsequent]    │                           │                           │
 //! │  └─────────────────┘                NO ◄───────┴───────► YES               │
 //! │                                     │                    │                  │
 //! │                                     ▼                    ▼                  │
 //! │                     ┌─────────────────┐    ┌───────────────────────────┐    │
-//! │                     │ STOP            │    │ GATE 3: all accounts      │    │
-//! │                     │ [sequential     │    │ processed?                │    │
+//! │                     │ STOP            │    │ ACCOUNT CHECK:            │    │
+//! │                     │ [sequential     │    │ account_parse_complete?   │    │
 //! │                     │  _flush_order]  │    │ (account_processed_count  │    │
 //! │                     └─────────────────┘    │  >= expected_account_cnt) │    │
 //! │                                            └─────────────┬─────────────┘    │
@@ -87,11 +89,12 @@
 //! │                                               │                    │        │
 //! │                                               ▼                    ▼        │
 //! │                                  ┌─────────────────┐  ┌────────────────┐    │
-//! │                                  │ STOP            │  │ GAP CHECK:     │    │
-//! │                                  │ [gate3_blocks_  │  │ parent flushed │    │
-//! │                                  │  flush_without  │  │ or discarded?  │    │
-//! │                                  │  _account_cnt]  │  └───────┬────────┘    │
-//! │                                  └─────────────────┘          │             │
+//! │                                  │ STOP            │  │ INSTRUCTION    │    │
+//! │                                  │ [account_gate_  │  │ GAP CHECK:     │    │
+//! │                                  │  flush_without  │  │ parent flushed │    │
+//! │                                  │  _account_cnt]  │  │ or discarded?  │    │
+//! │                                  └─────────────────┘  └───────┬────────┘    │
+//! │                                                               │             │
 //! │                                                    NO ◄───────┴───────► YES │
 //! │                                                    │                    │   │
 //! │                                                    ▼                    ▼   │
@@ -104,6 +107,13 @@
 //! │                                                                └─────────┘  │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
+//!
+//! NOTE:
+//!   The implementation uses two independent drains. Instruction path applies
+//!   gap/parent checks. Account path does not use parent-gap checks; it only
+//!   requires account_gate_reached and ascending slot order.
+//!   When `require_tx_gate=false`, `expected_tx_count` is forced to 0, so
+//!   `tx_parse_complete` is immediately true once BlockFrozen is seen.
 //!
 //! ┌─────────────────────────────────────────────────────────────────────────────┐
 //! │                           DISCARD SCENARIOS                                 │
@@ -121,7 +131,7 @@
 //! │  discard_slot() actions:                                                    │
 //! │    • Add to discarded_slots set                                             │
 //! │    • Remove from buffer                                                     │
-//! │    • drain_flushable called in run() after event                            │
+//! │    • both drain_* functions called in run() after event                     │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //!
@@ -129,11 +139,11 @@
 //! │                           TEST COVERAGE MATRIX                              │
 //! ├─────────────────────────────────────────────────────────────────────────────┤
 //! │                                                                             │
-//! │  THREE-GATE SYSTEM:                                                         │
-//! │    ✓ two_gate_flush_end_to_end      Gate 1 + Gate 2 + Gate 3 required       │
-//! │    ✓ empty_slot_flushes             Gate 1 satisfied with 0 transactions    │
-//! │    ✓ incomplete_slot_blocks_subsequent  Gate 1 not satisfied blocks flush   │
-//! │    ✓ gate3_blocks_flush_until_account_count_received  Gate 3 blocks flush   │
+//! │  READINESS SYSTEM:                                                          │
+//! │    ✓ two_gate_flush_end_to_end      instruction gate + account gate required │
+//! │    ✓ empty_slot_flushes             tx_parse_complete satisfied with 0 tx   │
+//! │    ✓ incomplete_slot_blocks_subsequent  tx_parse_complete not satisfied      │
+//! │    ✓ account_gate_blocks_flush_until_account_count_received  Account gate blocks flush │
 //! │                                                                             │
 //! │  SEQUENTIAL ORDERING:                                                       │
 //! │    ✓ sequential_flush_order         Earlier slot blocks later ones          │
@@ -556,7 +566,7 @@ struct Slot {
 }
 
 impl Slot {
-    /// Confirm with Gate 3: sends Slot(Confirmed) which freezes the account event count.
+    /// Confirm and freeze account count for the account gate.
     async fn confirm(&self) {
         tokio::time::sleep(Duration::from_millis(5)).await;
         self.send_commitment(SlotStatus::SlotConfirmed).await;
@@ -986,11 +996,11 @@ async fn output_channel_closed_returns_error() {
 }
 
 // =============================================================================
-// Gate 3 Tests
+// Account Gate Tests
 // =============================================================================
 
 #[tokio::test]
-async fn gate3_blocks_flush_until_account_count_received() {
+async fn account_gate_blocks_flush_until_account_count_received() {
     let mut harness = TestHarness::spawn();
 
     // Slot with 2 expected accounts — won't flush until account count is delivered.
@@ -1058,7 +1068,7 @@ async fn account_only_mode_flushes_without_transaction_parsed_messages() {
 }
 
 #[tokio::test]
-async fn gate3_account_event_for_never_frozen_slot_does_not_stall() {
+async fn account_event_for_never_frozen_slot_does_not_stall_flush() {
     let mut harness = TestHarness::spawn();
 
     // Send AccountEventSeen for slot 100 (which never gets BlockFrozen).

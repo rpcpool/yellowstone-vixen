@@ -118,7 +118,7 @@ impl<R> CoordinatorState<R> {
                     return Ok(());
                 }
                 let buf = self.buffer.entry(slot).or_default();
-                buf.mark_as_confirmed();
+                buf.mark_instruction_commitment_reached();
                 if self.account_commit_at == AccountCommitAt::Confirmed {
                     self.freeze_account_gate(slot);
                 }
@@ -149,7 +149,7 @@ impl<R> CoordinatorState<R> {
                 }
                 // If account gate is already frozen for this slot, warn + skip.
                 if let Some(buf) = self.buffer.get(&slot)
-                    && (buf.is_account_ready() || self.is_account_gate_frozen(slot))
+                    && (buf.account_gate_reached() || self.is_account_gate_frozen(slot))
                 {
                     tracing::warn!(
                         slot,
@@ -221,7 +221,7 @@ impl<R> CoordinatorState<R> {
         let slots_to_check: Vec<Slot> = self.buffer.keys().copied().collect();
         for slot in slots_to_check {
             let buf = self.buffer.get(&slot).unwrap();
-            if buf.instructions_drained() || !buf.is_instruction_ready() {
+            if buf.instructions_drained() || !buf.instruction_gate_reached() {
                 // Stop at the first non-ready slot to maintain ordering.
                 if !buf.instructions_drained() {
                     break;
@@ -263,7 +263,7 @@ impl<R> CoordinatorState<R> {
         let slots_to_check: Vec<Slot> = self.buffer.keys().copied().collect();
         for slot in slots_to_check {
             let buf = self.buffer.get(&slot).unwrap();
-            if buf.accounts_drained() || !buf.is_account_ready() {
+            if buf.accounts_drained() || !buf.account_gate_reached() {
                 if !buf.accounts_drained() {
                     break;
                 }
@@ -372,19 +372,19 @@ impl<R> CoordinatorState<R> {
     }
 
     /// Freeze the account gate for a slot: move account_event_counts into expected_account_count
-    /// and mark account_committed.
+    /// and mark account_commitment_reached.
     fn freeze_account_gate(&mut self, slot: Slot) {
         let count = self.account_event_counts.remove(&slot).unwrap_or(0);
         let buf = self.buffer.entry(slot).or_default();
         buf.set_expected_account_count(count);
-        buf.mark_account_committed();
+        buf.mark_account_commitment_reached();
     }
 
     /// Check if the account gate has been frozen for a slot (expected_account_count is set).
     fn is_account_gate_frozen(&self, slot: Slot) -> bool {
         self.buffer
             .get(&slot)
-            .is_some_and(|buf| buf.is_fully_account_processed() || buf.accounts_drained())
+            .is_some_and(|buf| buf.is_account_gate_frozen())
     }
 
     fn discard_slot(&mut self, slot: Slot, reason: DiscardReason) {
@@ -825,6 +825,45 @@ mod tests {
     }
 
     #[test]
+    fn account_event_after_gate_frozen_before_ready_is_dropped() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 101;
+
+        // Count one account event before freeze.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(100, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        // Gate is frozen with expected_account_count=1, but not yet ready.
+        // Another AccountEventSeen must be treated as late and dropped.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        assert_eq!(state.late_account_event_drops(), 1);
+
+        // One processed account should still be enough to flush.
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(1, [1; 32]),
+                record: "acct".to_string(),
+            })
+            .unwrap();
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+        assert_eq!(acct_flushed[0].slot, slot);
+    }
+
+    #[test]
     fn account_event_counts_are_not_pruned_by_instruction_frontier() {
         let mut state = CoordinatorState::<String>::new(AccountCommitAt::Finalized);
 
@@ -926,7 +965,7 @@ mod tests {
     }
 
     #[test]
-    fn gate3_ready_with_all_gates() {
+    fn account_gate_ready_with_all_readiness_checks() {
         let mut state = CoordinatorState::<String>::default();
         let slot = 100;
 
@@ -959,7 +998,7 @@ mod tests {
     }
 
     #[test]
-    fn gate3_account_events_before_block_frozen_counted() {
+    fn account_events_before_block_frozen_are_counted() {
         let mut state = CoordinatorState::<String>::default();
         let slot = 100;
 
@@ -994,7 +1033,7 @@ mod tests {
     }
 
     #[test]
-    fn gate3_account_event_for_never_frozen_slot_does_not_stall() {
+    fn account_event_for_never_frozen_slot_does_not_stall_flush() {
         let mut state = CoordinatorState::<String>::default();
 
         state
