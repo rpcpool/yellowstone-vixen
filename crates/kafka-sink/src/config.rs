@@ -35,21 +35,51 @@ pub struct KafkaSinkConfig {
 
     #[serde(default = "default_batch_num_messages")]
     pub batch_num_messages: u32,
+
+    /// Max attempts for Kafka writes before surfacing an error.
+    #[serde(default = "default_kafka_write_max_attempts")]
+    pub kafka_write_max_attempts: u32,
+
+    /// Delay between Kafka write retry attempts.
+    #[serde(default = "default_kafka_retry_backoff_ms")]
+    pub kafka_retry_backoff_ms: u64,
 }
 
-fn default_schema_registry_url() -> String { "http://localhost:8081".to_string() }
+fn default_schema_registry_url() -> String {
+    "http://localhost:8081".to_string()
+}
 
-fn default_transaction_slots_topic() -> String { "transaction.slots".to_string() }
+fn default_transaction_slots_topic() -> String {
+    "transaction.slots".to_string()
+}
 
-fn default_account_slots_topic() -> String { "account.slots".to_string() }
+fn default_account_slots_topic() -> String {
+    "account.slots".to_string()
+}
 
-fn default_buffer_size() -> usize { 100 }
+fn default_buffer_size() -> usize {
+    100
+}
 
-fn default_message_timeout_ms() -> u32 { 5000 }
+fn default_message_timeout_ms() -> u32 {
+    5000
+}
 
-fn default_queue_buffering_max_messages() -> u32 { 100000 }
+fn default_queue_buffering_max_messages() -> u32 {
+    100000
+}
 
-fn default_batch_num_messages() -> u32 { 1000 }
+fn default_batch_num_messages() -> u32 {
+    1000
+}
+
+fn default_kafka_write_max_attempts() -> u32 {
+    3
+}
+
+fn default_kafka_retry_backoff_ms() -> u64 {
+    200
+}
 
 impl Default for KafkaSinkConfig {
     fn default() -> Self {
@@ -63,6 +93,8 @@ impl Default for KafkaSinkConfig {
             message_timeout_ms: default_message_timeout_ms(),
             queue_buffering_max_messages: default_queue_buffering_max_messages(),
             batch_num_messages: default_batch_num_messages(),
+            kafka_write_max_attempts: default_kafka_write_max_attempts(),
+            kafka_retry_backoff_ms: default_kafka_retry_backoff_ms(),
         }
     }
 }
@@ -85,7 +117,10 @@ mod tests {
     #[test]
     fn account_mode_defaults_to_finalized_passthrough() {
         let config = KafkaSinkConfig::default();
-        assert!(matches!(config.account_mode, AccountMode::FinalizedPassthrough));
+        assert!(matches!(
+            config.account_mode,
+            AccountMode::FinalizedPassthrough
+        ));
     }
 
     #[test]
@@ -114,5 +149,12 @@ mod tests {
         let config = KafkaSinkConfig::default();
         assert_eq!(config.transaction_slots_topic, "transaction.slots");
         assert_eq!(config.account_slots_topic, "account.slots");
+    }
+
+    #[test]
+    fn kafka_retry_defaults() {
+        let config = KafkaSinkConfig::default();
+        assert_eq!(config.kafka_write_max_attempts, 3);
+        assert_eq!(config.kafka_retry_backoff_ms, 200);
     }
 }

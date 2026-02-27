@@ -12,11 +12,15 @@ use rdkafka::{
     producer::{FutureProducer, FutureRecord},
 };
 use tokio::sync::mpsc;
+use tokio::time::sleep;
 use yellowstone_vixen_block_coordinator::{AccountSlot, InstructionSlot};
 
 use crate::{
     config::KafkaSinkConfig,
-    events::{AccountSlotCommitEvent, PreparedRecord, RecordHeader, RecordKind, TransactionSlotCommitEvent},
+    events::{
+        AccountSlotCommitEvent, PreparedRecord, RecordHeader, RecordKind,
+        TransactionSlotCommitEvent,
+    },
 };
 
 fn to_kafka_headers(headers: &[RecordHeader]) -> OwnedHeaders {
@@ -35,8 +39,6 @@ pub struct TransactionSlotSink {
 }
 
 impl TransactionSlotSink {
-    const MAX_ATTEMPTS: u32 = 3;
-
     pub fn new(config: KafkaSinkConfig, producer: Arc<FutureProducer>) -> Self {
         Self { config, producer }
     }
@@ -46,18 +48,22 @@ impl TransactionSlotSink {
         mut rx: mpsc::Receiver<InstructionSlot<PreparedRecord>>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         tracing::info!("TransactionSlotSink started, waiting for instruction slots...");
+        let max_attempts = self.config.kafka_write_max_attempts.max(1);
+        let retry_backoff = Duration::from_millis(self.config.kafka_retry_backoff_ms);
 
         while let Some(ix_slot) = rx.recv().await {
-            for attempt in 1..=Self::MAX_ATTEMPTS {
+            for attempt in 1..=max_attempts {
                 match self.write_instruction_slot(&ix_slot).await {
                     Ok(()) => break,
-                    Err(e) if attempt < Self::MAX_ATTEMPTS => {
+                    Err(e) if attempt < max_attempts => {
                         tracing::warn!(
                             ?e,
                             slot = ix_slot.slot,
                             attempt,
+                            max_attempts,
                             "Kafka write failed, retrying"
                         );
+                        sleep(retry_backoff).await;
                     },
                     Err(e) => {
                         return Err(format!(
@@ -166,13 +172,22 @@ pub enum AccountMsg {
 pub struct AccountSink {
     producer: Arc<FutureProducer>,
     account_slots_topic: String,
+    max_attempts: u32,
+    retry_backoff: Duration,
 }
 
 impl AccountSink {
-    pub fn new(producer: Arc<FutureProducer>, account_slots_topic: String) -> Self {
+    pub fn new(
+        producer: Arc<FutureProducer>,
+        account_slots_topic: String,
+        max_attempts: u32,
+        retry_backoff_ms: u64,
+    ) -> Self {
         Self {
             producer,
             account_slots_topic,
+            max_attempts: max_attempts.max(1),
+            retry_backoff: Duration::from_millis(retry_backoff_ms),
         }
     }
 
@@ -184,59 +199,28 @@ impl AccountSink {
         tracing::info!("AccountSink (buffered) started");
 
         while let Some(acct_slot) = rx.recv().await {
-            let slot = acct_slot.slot;
-
-            // Batch-publish all account records.
-            let futures: Vec<_> = acct_slot
-                .records
-                .iter()
-                .map(|record| {
-                    let headers = to_kafka_headers(&record.headers);
-                    self.producer.send(
-                        FutureRecord::to(&record.topic)
-                            .payload(&record.payload)
-                            .key(&record.key)
-                            .headers(headers),
-                        Duration::ZERO,
-                    )
-                })
-                .collect();
-
-            let results = futures::future::join_all(futures).await;
-            for (i, result) in results.into_iter().enumerate() {
-                result.map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
-                    tracing::error!(?e, slot, topic = %acct_slot.records[i].topic, "Account Kafka write failed");
-                    format!("Account Kafka write failed for slot {slot}: {e}").into()
-                })?;
+            for attempt in 1..=self.max_attempts {
+                match self.write_account_slot(&acct_slot).await {
+                    Ok(()) => break,
+                    Err(e) if attempt < self.max_attempts => {
+                        tracing::warn!(
+                            ?e,
+                            slot = acct_slot.slot,
+                            attempt,
+                            max_attempts = self.max_attempts,
+                            "Account slot write failed, retrying"
+                        );
+                        sleep(self.retry_backoff).await;
+                    },
+                    Err(e) => {
+                        return Err(format!(
+                            "Account slot {} failed after {attempt} attempts: {e}",
+                            acct_slot.slot
+                        )
+                        .into());
+                    },
+                }
             }
-
-            // Commit account slot marker.
-            let event = build_account_slot_commit_event(&acct_slot);
-
-            let payload = serde_json::to_string(&event)?;
-            let slot_key = slot.to_string();
-
-            self.producer
-                .send(
-                    FutureRecord::to(&self.account_slots_topic)
-                        .payload(&payload)
-                        .key(&slot_key),
-                    Duration::from_secs(5),
-                )
-                .await
-                .map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
-                    format!("Kafka: failed to commit account slot {slot}: {e}").into()
-                })?;
-
-            tracing::info!(
-                slot,
-                decoded_account_count = event.decoded_account_count,
-                decode_filtered_account_count = acct_slot.filtered_account_count,
-                decode_error_account_count = acct_slot.failed_account_count,
-                fallback_account_count = event.fallback_account_count,
-                record_count = acct_slot.records.len(),
-                "Kafka: committed account slot"
-            );
         }
 
         tracing::warn!("AccountSink (buffered) channel closed, shutting down");
@@ -257,26 +241,34 @@ impl AccountSink {
                 AccountMsg::Record { slot, record, .. } => {
                     // Produce to Kafka immediately if we have a record.
                     if let Some(record) = record {
-                        let headers = to_kafka_headers(&record.headers);
-                        self.producer
-                            .send(
-                                FutureRecord::to(&record.topic)
-                                    .payload(&record.payload)
-                                    .key(&record.key)
-                                    .headers(headers),
-                                Duration::from_secs(5),
-                            )
-                            .await
-                            .map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
-                                format!("Passthrough Kafka write failed for slot {slot}: {e}")
-                                    .into()
-                            })?;
+                        for attempt in 1..=self.max_attempts {
+                            match self.publish_passthrough_record(slot, &record).await {
+                                Ok(()) => break,
+                                Err(e) if attempt < self.max_attempts => {
+                                    tracing::warn!(
+                                        ?e,
+                                        slot,
+                                        attempt,
+                                        max_attempts = self.max_attempts,
+                                        topic = %record.topic,
+                                        "Passthrough account write failed, retrying"
+                                    );
+                                    sleep(self.retry_backoff).await;
+                                },
+                                Err(e) => {
+                                    return Err(format!(
+                                        "Passthrough account write for slot {slot} failed after {attempt} attempts: {e}"
+                                    )
+                                    .into());
+                                },
+                            }
+                        }
                     }
 
                     // Emit marker when slot advances (monotonic).
                     if let Some(prev) = current_slot {
                         if slot > prev {
-                            self.emit_watermark(prev).await?;
+                            self.emit_watermark_with_retry(prev).await?;
                             current_slot = Some(slot);
                         }
                         // Straggler for old slot — record written, marker NOT moved backward.
@@ -289,11 +281,125 @@ impl AccountSink {
 
         // Emit final marker on channel close.
         if let Some(slot) = current_slot {
-            self.emit_watermark(slot).await?;
+            self.emit_watermark_with_retry(slot).await?;
         }
 
         tracing::warn!("AccountSink (passthrough) channel closed, shutting down");
         Ok(())
+    }
+
+    async fn write_account_slot(
+        &self,
+        acct_slot: &AccountSlot<PreparedRecord>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let slot = acct_slot.slot;
+
+        // Batch-publish all account records.
+        let futures: Vec<_> = acct_slot
+            .records
+            .iter()
+            .map(|record| {
+                let headers = to_kafka_headers(&record.headers);
+                self.producer.send(
+                    FutureRecord::to(&record.topic)
+                        .payload(&record.payload)
+                        .key(&record.key)
+                        .headers(headers),
+                    Duration::ZERO,
+                )
+            })
+            .collect();
+
+        let results = futures::future::join_all(futures).await;
+        for (i, result) in results.into_iter().enumerate() {
+            result.map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
+                tracing::error!(
+                    ?e,
+                    slot,
+                    topic = %acct_slot.records[i].topic,
+                    "Account Kafka write failed"
+                );
+                format!("Account Kafka write failed for slot {slot}: {e}").into()
+            })?;
+        }
+
+        // Commit account slot marker.
+        let event = build_account_slot_commit_event(acct_slot);
+
+        let payload = serde_json::to_string(&event)?;
+        let slot_key = slot.to_string();
+
+        self.producer
+            .send(
+                FutureRecord::to(&self.account_slots_topic)
+                    .payload(&payload)
+                    .key(&slot_key),
+                Duration::from_secs(5),
+            )
+            .await
+            .map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
+                format!("Kafka: failed to commit account slot {slot}: {e}").into()
+            })?;
+
+        tracing::info!(
+            slot,
+            decoded_account_count = event.decoded_account_count,
+            decode_filtered_account_count = acct_slot.filtered_account_count,
+            decode_error_account_count = acct_slot.failed_account_count,
+            fallback_account_count = event.fallback_account_count,
+            record_count = acct_slot.records.len(),
+            "Kafka: committed account slot"
+        );
+        Ok(())
+    }
+
+    async fn publish_passthrough_record(
+        &self,
+        slot: u64,
+        record: &PreparedRecord,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let headers = to_kafka_headers(&record.headers);
+        self.producer
+            .send(
+                FutureRecord::to(&record.topic)
+                    .payload(&record.payload)
+                    .key(&record.key)
+                    .headers(headers),
+                Duration::from_secs(5),
+            )
+            .await
+            .map_err(|(e, _)| -> Box<dyn std::error::Error + Send + Sync> {
+                format!("Passthrough Kafka write failed for slot {slot}: {e}").into()
+            })?;
+        Ok(())
+    }
+
+    async fn emit_watermark_with_retry(
+        &self,
+        slot: u64,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        for attempt in 1..=self.max_attempts {
+            match self.emit_watermark(slot).await {
+                Ok(()) => return Ok(()),
+                Err(e) if attempt < self.max_attempts => {
+                    tracing::warn!(
+                        ?e,
+                        slot,
+                        attempt,
+                        max_attempts = self.max_attempts,
+                        "Failed to emit account watermark, retrying"
+                    );
+                    sleep(self.retry_backoff).await;
+                },
+                Err(e) => {
+                    return Err(format!(
+                        "Failed to emit account watermark for slot {slot} after {attempt} attempts: {e}"
+                    )
+                    .into());
+                },
+            }
+        }
+        Err(format!("Failed to emit account watermark for slot {slot}").into())
     }
 
     async fn emit_watermark(
@@ -354,7 +460,9 @@ fn build_transaction_slot_commit_event(
     }
 }
 
-fn build_account_slot_commit_event(acct_slot: &AccountSlot<PreparedRecord>) -> AccountSlotCommitEvent {
+fn build_account_slot_commit_event(
+    acct_slot: &AccountSlot<PreparedRecord>,
+) -> AccountSlotCommitEvent {
     let decoded_account_count = acct_slot
         .records
         .iter()
