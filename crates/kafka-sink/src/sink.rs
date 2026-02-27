@@ -289,22 +289,12 @@ impl KafkaSinkBuilder {
 
 // --- KafkaSink (formerly ConfiguredParsers) ---
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct KafkaSink {
     instruction_parsers: Vec<Arc<dyn DynInstructionParser>>,
     account_parsers: Vec<Arc<dyn DynAccountParser>>,
     /// Map of topic -> schema info for encoding with Confluent wire format.
     schema_ids: HashMap<String, RegisteredSchema>,
-}
-
-impl Default for KafkaSink {
-    fn default() -> Self {
-        Self {
-            instruction_parsers: Vec::new(),
-            account_parsers: Vec::new(),
-            schema_ids: HashMap::new(),
-        }
-    }
 }
 
 impl KafkaSink {

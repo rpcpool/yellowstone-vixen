@@ -110,7 +110,7 @@ async fn run_coordinator_with_updates(
 
         if is_block_sm_event {
             input_tx
-                .send(CoordinatorInput::GeyserUpdate(update.clone()))
+                .send(CoordinatorInput::GeyserUpdate(Box::new(update.clone())))
                 .await
                 .unwrap();
         }

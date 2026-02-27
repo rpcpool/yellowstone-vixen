@@ -148,15 +148,15 @@ impl<R> CoordinatorState<R> {
                     return Ok(());
                 }
                 // If account gate is already frozen for this slot, warn + skip.
-                if let Some(buf) = self.buffer.get(&slot) {
-                    if buf.is_account_ready() || self.is_account_gate_frozen(slot) {
-                        tracing::warn!(
-                            slot,
-                            "AccountEventSeen after account gate frozen — dropping"
-                        );
-                        self.late_account_event_drops += 1;
-                        return Ok(());
-                    }
+                if let Some(buf) = self.buffer.get(&slot)
+                    && (buf.is_account_ready() || self.is_account_gate_frozen(slot))
+                {
+                    tracing::warn!(
+                        slot,
+                        "AccountEventSeen after account gate frozen — dropping"
+                    );
+                    self.late_account_event_drops += 1;
+                    return Ok(());
                 }
                 *self.account_event_counts.entry(slot).or_default() += 1;
             },
@@ -361,12 +361,12 @@ impl<R> CoordinatorState<R> {
             return false;
         }
         // Also drop if accounts already drained for this specific slot.
-        if let Some(buf) = self.buffer.get(&slot) {
-            if buf.accounts_drained() {
-                tracing::warn!(slot, "Account event after accounts drained — dropping");
-                self.late_account_record_drops += 1;
-                return false;
-            }
+        if let Some(buf) = self.buffer.get(&slot)
+            && buf.accounts_drained()
+        {
+            tracing::warn!(slot, "Account event after accounts drained — dropping");
+            self.late_account_record_drops += 1;
+            return false;
         }
         true
     }

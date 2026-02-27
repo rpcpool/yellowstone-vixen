@@ -172,40 +172,36 @@ impl SourceTrait for CoordinatorSource {
                 break SourceExitStatus::StreamEnded;
             };
 
-            match &update {
-                Ok(subscribe_update) => {
-                    // Capture raw protobuf to fixture file if enabled.
-                    if let Some(ref mut writer) = fixture_writer {
-                        match writer.write(subscribe_update) {
-                            Ok(true) => {},
-                            Ok(false) => {
-                                tracing::info!(path = ?self.config.fixture_path, "Fixture capture complete");
-                                break SourceExitStatus::Completed;
-                            },
-                            Err(e) => {
-                                tracing::error!(?e, "Fixture write failed");
-                                break SourceExitStatus::Error(e.to_string());
-                            },
-                        }
+            if let Ok(subscribe_update) = &update {
+                // Capture raw protobuf to fixture file if enabled.
+                if let Some(ref mut writer) = fixture_writer {
+                    match writer.write(subscribe_update) {
+                        Ok(true) => {},
+                        Ok(false) => {
+                            tracing::info!(path = ?self.config.fixture_path, "Fixture capture complete");
+                            break SourceExitStatus::Completed;
+                        },
+                        Err(e) => {
+                            tracing::error!(?e, "Fixture write failed");
+                            break SourceExitStatus::Error(e.to_string());
+                        },
                     }
-                },
-                _ => {},
+                }
             }
 
             match &update {
                 Ok(subscribe_update) => {
                     // Send lightweight AccountEventSeen for each Account event.
-                    if let Some(UpdateOneof::Account(acct)) = &subscribe_update.update_oneof {
-                        if coordinator_tx
+                    if let Some(UpdateOneof::Account(acct)) = &subscribe_update.update_oneof
+                        && coordinator_tx
                             .send(CoordinatorInput::AccountEventSeen { slot: acct.slot })
                             .await
                             .is_err()
-                        {
-                            tracing::error!("Coordinator input channel closed");
-                            break 'stream SourceExitStatus::Error(
-                                "Coordinator input channel closed".to_string(),
-                            );
-                        }
+                    {
+                        tracing::error!("Coordinator input channel closed");
+                        break 'stream SourceExitStatus::Error(
+                            "Coordinator input channel closed".to_string(),
+                        );
                     }
 
                     // Forward BlockSM-relevant events to the coordinator.
@@ -222,7 +218,9 @@ impl SourceTrait for CoordinatorSource {
                     if is_block_sm_event {
                         // Clone for coordinator (Account/Transaction events go to Runtime uncloned)
                         if coordinator_tx
-                            .send(CoordinatorInput::GeyserUpdate(subscribe_update.clone()))
+                            .send(CoordinatorInput::GeyserUpdate(Box::new(
+                                subscribe_update.clone(),
+                            )))
                             .await
                             .is_err()
                         {

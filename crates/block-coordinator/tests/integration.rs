@@ -250,8 +250,8 @@ impl TestHarness {
     async fn send_orphan_block_summary(&self, slot: u64, parent: u64) {
         let blockhash = Hash::new_unique();
         self.input_tx
-            .send(CoordinatorInput::GeyserUpdate(make_block_meta_update(
-                slot, parent, 1, &blockhash,
+            .send(CoordinatorInput::GeyserUpdate(Box::new(
+                make_block_meta_update(slot, parent, 1, &blockhash),
             )))
             .await
             .unwrap();
@@ -464,37 +464,34 @@ impl SlotBuilder {
             SlotStatus::SlotCreatedBank,
         ] {
             self.input_tx
-                .send(CoordinatorInput::GeyserUpdate(make_slot_update(
+                .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
                     self.slot,
                     self.parent,
                     status,
-                )))
+                ))))
                 .await
                 .unwrap();
         }
 
         self.input_tx
-            .send(CoordinatorInput::GeyserUpdate(make_entry_update(
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_entry_update(
                 self.slot, 0, tx_count,
-            )))
+            ))))
             .await
             .unwrap();
 
         self.input_tx
-            .send(CoordinatorInput::GeyserUpdate(make_slot_update(
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
                 self.slot,
                 self.parent,
                 SlotStatus::SlotCompleted,
-            )))
+            ))))
             .await
             .unwrap();
 
         self.input_tx
-            .send(CoordinatorInput::GeyserUpdate(make_block_meta_update(
-                self.slot,
-                self.parent,
-                tx_count,
-                &blockhash,
+            .send(CoordinatorInput::GeyserUpdate(Box::new(
+                make_block_meta_update(self.slot, self.parent, tx_count, &blockhash),
             )))
             .await
             .unwrap();
@@ -584,22 +581,22 @@ impl Slot {
 
     async fn send_commitment(&self, status: SlotStatus) {
         self.input_tx
-            .send(CoordinatorInput::GeyserUpdate(make_slot_update(
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
                 self.slot,
                 self.parent,
                 status,
-            )))
+            ))))
             .await
             .unwrap();
     }
 
     async fn kill(&self) {
         self.input_tx
-            .send(CoordinatorInput::GeyserUpdate(make_slot_update(
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
                 self.slot,
                 self.parent,
                 SlotStatus::SlotDead,
-            )))
+            ))))
             .await
             .unwrap();
         tokio::time::sleep(Duration::from_millis(5)).await;

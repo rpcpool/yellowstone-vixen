@@ -161,7 +161,7 @@ impl AccountRecordSortKey {
 /// Wraps raw gRPC events plus synthetic messages injected by the source.
 pub enum CoordinatorInput {
     /// A raw geyser SubscribeUpdate (Entry, Slot, BlockMeta).
-    GeyserUpdate(SubscribeUpdate),
+    GeyserUpdate(Box<SubscribeUpdate>),
     /// A raw Account event was seen on the geyser stream for this slot.
     /// Lightweight signal — only the slot, no protobuf payload.
     AccountEventSeen { slot: Slot },

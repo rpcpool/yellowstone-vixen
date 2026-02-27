@@ -58,7 +58,7 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
                 Some(input) = self.input_rx.recv() => {
                     match input {
                         CoordinatorInput::GeyserUpdate(update) => {
-                            self.convert_geyser_update(&update)
+                            self.convert_geyser_update(update.as_ref())
                         }
                         CoordinatorInput::AccountEventSeen { slot } => {
                             vec![CoordinatorEvent::AccountEventSeen { slot }]
