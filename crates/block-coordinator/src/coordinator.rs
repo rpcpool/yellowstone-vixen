@@ -19,7 +19,7 @@ pub struct BlockMachineCoordinator<R> {
     state: CoordinatorState<R>,
     input_rx: mpsc::Receiver<CoordinatorInput>,
     parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
-    instruction_output_tx: mpsc::Sender<InstructionSlot<R>>,
+    instruction_output_tx: Option<mpsc::Sender<InstructionSlot<R>>>,
     account_output_tx: Option<mpsc::Sender<AccountSlot<R>>>,
     /// When false, Gate 1 is disabled by forcing expected_tx_count to 0.
     require_tx_gate: bool,
@@ -29,7 +29,7 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
     pub fn new(
         input_rx: mpsc::Receiver<CoordinatorInput>,
         parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
-        instruction_output_tx: mpsc::Sender<InstructionSlot<R>>,
+        instruction_output_tx: Option<mpsc::Sender<InstructionSlot<R>>>,
         account_output_tx: Option<mpsc::Sender<AccountSlot<R>>>,
         account_commit_at: AccountCommitAt,
         require_tx_gate: bool,
@@ -78,20 +78,22 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
                 self.state.apply(event)?;
             }
 
-            for ix_slot in self.state.drain_instruction_flushable()? {
-                tracing::info!(
-                    slot = %ColorSlot(ix_slot.slot),
-                    tx_count = ix_slot.executed_transaction_count,
-                    record_count = ix_slot.records.len(),
-                    parent_slot = ix_slot.parent_slot,
-                    "Flushing instruction slot"
-                );
-                self.instruction_output_tx
-                    .send(ix_slot)
-                    .await
-                    .map_err(|e| CoordinatorError::InstructionOutputChannelClosed {
-                        slot: e.0.slot,
+            if let Some(ref instruction_tx) = self.instruction_output_tx {
+                for ix_slot in self.state.drain_instruction_flushable()? {
+                    tracing::info!(
+                        slot = %ColorSlot(ix_slot.slot),
+                        tx_count = ix_slot.executed_transaction_count,
+                        record_count = ix_slot.records.len(),
+                        parent_slot = ix_slot.parent_slot,
+                        "Flushing instruction slot"
+                    );
+                    instruction_tx.send(ix_slot).await.map_err(|e| {
+                        CoordinatorError::InstructionOutputChannelClosed { slot: e.0.slot }
                     })?;
+                }
+            } else {
+                // No instruction output channel — still drain to release buffer entries.
+                let _ = self.state.drain_instruction_flushable()?;
             }
 
             if let Some(ref account_tx) = self.account_output_tx {

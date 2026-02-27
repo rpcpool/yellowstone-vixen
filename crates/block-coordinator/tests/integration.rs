@@ -238,7 +238,7 @@ impl TestHarness {
         let coordinator = BlockMachineCoordinator::new(
             input_rx,
             parsed_rx,
-            output_tx,
+            Some(output_tx),
             Some(account_output_tx),
             account_commit_at,
             require_tx_gate,
@@ -923,7 +923,7 @@ async fn late_message_for_flushed_slot_errors() {
     let coordinator = BlockMachineCoordinator::new(
         input_rx,
         parsed_rx,
-        output_tx,
+        Some(output_tx),
         None,
         AccountCommitAt::Confirmed,
         true,
@@ -967,7 +967,7 @@ async fn output_channel_closed_returns_error() {
     let coordinator = BlockMachineCoordinator::new(
         input_rx,
         parsed_rx,
-        output_tx,
+        Some(output_tx),
         None,
         AccountCommitAt::Confirmed,
         true,

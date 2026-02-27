@@ -85,7 +85,7 @@ async fn run_coordinator_with_updates(
         BlockMachineCoordinator::new(
             input_rx,
             parsed_rx,
-            output_tx,
+            Some(output_tx),
             None,
             AccountCommitAt::Confirmed,
             true,
