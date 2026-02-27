@@ -3,8 +3,8 @@ use std::collections::BTreeMap;
 use solana_clock::Slot;
 
 use crate::types::{
-    AccountRecordSortKey, AccountSlot, BlockMetadata, ConfirmedSlot, InstructionRecordSortKey,
-    InstructionSlot, ParseStatsKind,
+    AccountRecordSortKey, AccountSlot, BlockMetadata, InstructionRecordSortKey, InstructionSlot,
+    ParseStatsKind,
 };
 
 /// Per-slot buffer that collects parsed records and tracks two independent readiness paths.
@@ -278,33 +278,6 @@ impl<R> SlotRecordBuffer<R> {
         result
     }
 
-    /// Consume this buffer and produce a ConfirmedSlot (legacy, used by tests).
-    /// Returns None if metadata is missing.
-    pub fn into_confirmed_slot(mut self, slot: Slot) -> Option<ConfirmedSlot<R>> {
-        let metadata = self.metadata.take()?;
-        Some(ConfirmedSlot {
-            slot,
-            parent_slot: metadata.parent_slot,
-            blockhash: metadata.blockhash,
-            executed_transaction_count: metadata.expected_tx_count,
-            records: self.drain_all_records(),
-            filtered_instruction_count: self.filtered_instruction_count,
-            failed_instruction_count: self.failed_instruction_count,
-            filtered_account_count: self.filtered_account_count,
-            failed_account_count: self.failed_account_count,
-            transaction_status_failed_count: self.transaction_status_failed_count,
-            transaction_status_succeeded_count: self.transaction_status_succeeded_count,
-        })
-    }
-
-    /// Drain all records: instruction records in sorted order first, then account records appended.
-    fn drain_all_records(&mut self) -> Vec<R> {
-        let mut records: Vec<R> = std::mem::take(&mut self.instruction_records)
-            .into_values()
-            .collect();
-        records.extend(std::mem::take(&mut self.account_records).into_values());
-        records
-    }
 }
 
 #[cfg(test)]
@@ -314,13 +287,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn insert_and_sorted_drain() {
+    fn instruction_records_drain_in_sorted_order() {
         let mut buf = SlotRecordBuffer::<String>::default();
         buf.set_block_metadata(BlockMetadata {
             parent_slot: 0,
             blockhash: Hash::default(),
             expected_tx_count: 0,
         });
+
         // Insert out of order
         buf.insert_instruction_record(InstructionRecordSortKey::new(1, vec![0]), "tx1-ix0".into());
         buf.insert_instruction_record(
@@ -329,11 +303,28 @@ mod tests {
         );
         buf.insert_instruction_record(InstructionRecordSortKey::new(0, vec![0]), "tx0-ix0".into());
 
-        let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");
-        assert_eq!(confirmed.records, vec![
+        let ix_slot = buf.drain_instruction_records(42).expect("instruction slot");
+        assert_eq!(ix_slot.records, vec![
             "tx0-ix0".to_string(),
             "tx0-ix0.1".to_string(),
             "tx1-ix0".to_string(),
+        ]);
+    }
+
+    #[test]
+    fn account_records_drain_in_sorted_order() {
+        let mut buf = SlotRecordBuffer::<String>::default();
+
+        // Insert out of order
+        buf.insert_account_record(AccountRecordSortKey::new(300, [3; 32]), "wv300".into());
+        buf.insert_account_record(AccountRecordSortKey::new(100, [1; 32]), "wv100".into());
+        buf.insert_account_record(AccountRecordSortKey::new(200, [2; 32]), "wv200".into());
+
+        let acct_slot = buf.drain_account_records(42);
+        assert_eq!(acct_slot.records, vec![
+            "wv100".to_string(),
+            "wv200".to_string(),
+            "wv300".to_string(),
         ]);
     }
 
@@ -408,8 +399,8 @@ mod tests {
         buf.insert_instruction_record(InstructionRecordSortKey::new(0, vec![0]), "main".into());
         buf.insert_instruction_record(InstructionRecordSortKey::new(0, vec![0, 0]), "cpi-0".into());
 
-        let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");
-        assert_eq!(confirmed.records, vec![
+        let ix_slot = buf.drain_instruction_records(42).expect("instruction slot");
+        assert_eq!(ix_slot.records, vec![
             "main".to_string(),
             "cpi-0".to_string(),
             "nested-cpi".to_string(),
@@ -428,8 +419,9 @@ mod tests {
             blockhash: Hash::default(),
             expected_tx_count: 0,
         });
-        let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");
-        assert_eq!(confirmed.records.len(), 1);
+        let ix_slot = buf.drain_instruction_records(42).expect("instruction slot");
+        assert_eq!(ix_slot.records.len(), 1);
+        assert_eq!(buf.record_count(), 0);
     }
 
     #[test]
@@ -479,10 +471,10 @@ mod tests {
         buf.mark_account_commitment_reached();
         assert!(buf.slot_ready());
 
-        let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");
-        assert_eq!(confirmed.parent_slot, 20);
-        assert_eq!(confirmed.blockhash, new_hash);
-        assert_eq!(confirmed.executed_transaction_count, 3);
+        let ix_slot = buf.drain_instruction_records(42).expect("instruction slot");
+        assert_eq!(ix_slot.parent_slot, 20);
+        assert_eq!(ix_slot.blockhash, new_hash);
+        assert_eq!(ix_slot.executed_transaction_count, 3);
     }
 
     #[test]
@@ -553,19 +545,14 @@ mod tests {
     #[test]
     fn account_records_drain_in_write_version_order() {
         let mut buf = SlotRecordBuffer::<String>::default();
-        buf.set_block_metadata(BlockMetadata {
-            parent_slot: 0,
-            blockhash: Hash::default(),
-            expected_tx_count: 0,
-        });
+
         // Insert out of order
         buf.insert_account_record(AccountRecordSortKey::new(300, [3; 32]), "wv300".into());
         buf.insert_account_record(AccountRecordSortKey::new(100, [1; 32]), "wv100".into());
         buf.insert_account_record(AccountRecordSortKey::new(200, [2; 32]), "wv200".into());
 
-        buf.set_expected_account_count(3);
-        let confirmed = buf.into_confirmed_slot(42).expect("confirmed slot");
-        assert_eq!(confirmed.records, vec![
+        let acct_slot = buf.drain_account_records(42);
+        assert_eq!(acct_slot.records, vec![
             "wv100".to_string(),
             "wv200".to_string(),
             "wv300".to_string(),

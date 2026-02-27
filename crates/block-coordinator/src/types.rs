@@ -234,21 +234,6 @@ pub struct AccountSlot<R> {
     pub failed_account_count: u64,
 }
 
-/// Legacy alias — kept for existing test usage.
-pub struct ConfirmedSlot<R> {
-    pub slot: Slot,
-    pub parent_slot: Slot,
-    pub blockhash: Hash,
-    pub executed_transaction_count: u64,
-    pub records: Vec<R>,
-    pub filtered_instruction_count: u64,
-    pub failed_instruction_count: u64,
-    pub filtered_account_count: u64,
-    pub failed_account_count: u64,
-    pub transaction_status_failed_count: u64,
-    pub transaction_status_succeeded_count: u64,
-}
-
 /// Clonable handle for handlers to send messages to the coordinator.
 #[derive(Clone)]
 pub struct CoordinatorHandle<R> {
