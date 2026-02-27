@@ -277,7 +277,6 @@ impl<R> SlotRecordBuffer<R> {
         self.accounts_drained = true;
         result
     }
-
 }
 
 #[cfg(test)]

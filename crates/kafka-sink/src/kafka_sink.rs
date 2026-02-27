@@ -48,10 +48,10 @@ where
                 sleep(backoff).await;
             },
             Err(e) => {
-                return Err(
-                    format!("{context} for slot {slot} failed after {attempt} attempts: {e}")
-                        .into(),
-                );
+                return Err(format!(
+                    "{context} for slot {slot} failed after {attempt} attempts: {e}"
+                )
+                .into());
             },
         }
     }
@@ -140,8 +140,13 @@ impl TransactionSlotSink {
                 ix_slot.slot,
                 || self.write_instruction_slot(&ix_slot),
                 |e, attempt, max| {
-                    tracing::warn!(?e, slot = ix_slot.slot, attempt, max_attempts = max,
-                        "Kafka write failed, retrying");
+                    tracing::warn!(
+                        ?e,
+                        slot = ix_slot.slot,
+                        attempt,
+                        max_attempts = max,
+                        "Kafka write failed, retrying"
+                    );
                 },
             )
             .await?;
@@ -252,8 +257,13 @@ impl AccountSink {
                 acct_slot.slot,
                 || self.write_account_slot(&acct_slot),
                 |e, attempt, max| {
-                    tracing::warn!(?e, slot = acct_slot.slot, attempt, max_attempts = max,
-                        "Account slot write failed, retrying");
+                    tracing::warn!(
+                        ?e,
+                        slot = acct_slot.slot,
+                        attempt,
+                        max_attempts = max,
+                        "Account slot write failed, retrying"
+                    );
                 },
             )
             .await?;
@@ -388,17 +398,19 @@ impl AccountSink {
             slot,
             || self.emit_watermark(slot),
             |e, attempt, max| {
-                tracing::warn!(?e, slot, attempt, max_attempts = max,
-                    "Failed to emit account watermark, retrying");
+                tracing::warn!(
+                    ?e,
+                    slot,
+                    attempt,
+                    max_attempts = max,
+                    "Failed to emit account watermark, retrying"
+                );
             },
         )
         .await
     }
 
-    async fn emit_watermark(
-        &self,
-        slot: u64,
-    ) -> Result<(), SinkError> {
+    async fn emit_watermark(&self, slot: u64) -> Result<(), SinkError> {
         let event = AccountSlotCommitEvent {
             slot,
             marker_type: MARKER_WATERMARK.to_string(),
