@@ -80,7 +80,7 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
 
             if let Some(ref instruction_tx) = self.instruction_output_tx {
                 for ix_slot in self.state.drain_instruction_flushable()? {
-                    tracing::info!(
+                    tracing::debug!(
                         slot = %ColorSlot(ix_slot.slot),
                         tx_count = ix_slot.executed_transaction_count,
                         record_count = ix_slot.records.len(),
@@ -98,7 +98,7 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
 
             if let Some(ref account_tx) = self.account_output_tx {
                 for acct_slot in self.state.drain_account_flushable() {
-                    tracing::info!(
+                    tracing::debug!(
                         slot = %ColorSlot(acct_slot.slot),
                         record_count = acct_slot.records.len(),
                         decoded_account_count = acct_slot.decoded_account_count,

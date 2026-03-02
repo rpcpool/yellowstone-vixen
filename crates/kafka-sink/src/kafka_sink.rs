@@ -192,7 +192,7 @@ impl TransactionSlotSink {
             .await
             .map_err(|(e, _)| kafka_send_error("Failed to commit slot", slot, e))?;
 
-        tracing::info!(
+        tracing::debug!(
             slot,
             decoded_instruction_count = event.decoded_instruction_count,
             decode_filtered_instruction_count = ix_slot.filtered_instruction_count,
@@ -357,7 +357,7 @@ impl AccountSink {
             .await
             .map_err(|(e, _)| kafka_send_error("Failed to commit account slot", slot, e))?;
 
-        tracing::info!(
+        tracing::debug!(
             slot,
             marker_type = %event.marker_type,
             account_commit_at = %event.account_commit_at,

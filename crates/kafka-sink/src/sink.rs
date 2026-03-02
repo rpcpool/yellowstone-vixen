@@ -322,7 +322,7 @@ impl KafkaSink {
     /// The key should be the subject name (e.g., "spl-token.instructions-value").
     pub fn set_schema_ids(&mut self, schemas: HashMap<String, RegisteredSchema>) {
         for (subject, schema) in &schemas {
-            tracing::info!(
+            tracing::debug!(
                 subject,
                 schema_id = schema.schema_id,
                 message_index = schema.message_index,
