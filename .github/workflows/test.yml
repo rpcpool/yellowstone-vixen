@@ -46,7 +46,7 @@ jobs:
       # Project toolchain + clippy are auto-installed from rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly
+          toolchain: nightly-2026-02-25
           components: rustfmt
 
       - name: cargo tree
