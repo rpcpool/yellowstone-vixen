@@ -46,7 +46,7 @@ jobs:
       # Project toolchain + clippy are auto-installed from rust-toolchain.toml
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly
+          toolchain: nightly-2026-02-25
           components: rustfmt
 
       - name: cargo tree
@@ -56,7 +56,7 @@ jobs:
           cargo tree --frozen --offline
 
       - name: Run fmt
-        run: cargo +nightly fmt --all -- --check
+        run: cargo +nightly-2026-02-25 fmt --all -- --check
 
       - name: cargo deny check advisories
         uses: EmbarkStudios/cargo-deny-action@v2
