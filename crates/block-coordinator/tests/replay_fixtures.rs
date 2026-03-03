@@ -126,7 +126,14 @@ async fn run_coordinator_with_updates(
 
     let mut confirmed = Vec::new();
 
-    finish_coordinator_and_drain_remaining_instructions(input_tx, parsed_tx, coordinator_task, &mut output_rx, &mut confirmed).await;
+    finish_coordinator_and_drain_remaining_instructions(
+        input_tx,
+        parsed_tx,
+        coordinator_task,
+        &mut output_rx,
+        &mut confirmed,
+    )
+    .await;
 
     confirmed
 }

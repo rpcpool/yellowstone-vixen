@@ -20,10 +20,10 @@ use yellowstone_vixen_core::{
 };
 
 use crate::{
-    Pubkey,
     events::{PreparedRecord, RawAccountEvent, RawInstructionEvent, RecordHeader, RecordKind},
     schema_registry::{wrap_payload_with_confluent_wire_format, RegisteredSchema},
     utils::{make_account_record_key, make_instruction_record_key},
+    Pubkey,
 };
 
 /// Parsed output result with protobuf-encoded bytes.
@@ -676,7 +676,10 @@ mod tests {
     };
 
     use super::KafkaSinkBuilder;
-    use crate::{Pubkey, events::{RawAccountEvent, RawInstructionEvent}};
+    use crate::{
+        events::{RawAccountEvent, RawInstructionEvent},
+        Pubkey,
+    };
 
     #[derive(Clone, Copy)]
     enum TestInstructionOutcome {
