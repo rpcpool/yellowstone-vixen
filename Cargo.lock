@@ -1176,6 +1176,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bpf-loader-parser-test"
+version = "0.7.0"
+dependencies = [
+ "regex",
+ "tokio",
+ "yellowstone-vixen-bpf-loader-parser",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-mock",
+]
+
+[[package]]
 name = "brotli"
 version = "8.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13812,6 +13823,22 @@ dependencies = [
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-proc-macro",
+]
+
+[[package]]
+name = "yellowstone-vixen-bpf-loader-parser"
+version = "0.7.0"
+dependencies = [
+ "bincode",
+ "prost 0.14.1",
+ "prost-types 0.14.1",
+ "solana-loader-v3-interface 6.1.0",
+ "solana-sdk-ids 3.1.0",
+ "thiserror 1.0.69",
+ "yellowstone-vixen-core",
+ "yellowstone-vixen-parser",
+ "yellowstone-vixen-proc-macro",
+ "yellowstone-vixen-proto",
 ]
 
 [[package]]

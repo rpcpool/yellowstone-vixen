@@ -21,6 +21,11 @@ fn main() {
             .compile_protos(&["proto/token_extensions.proto"], &["proto"])
             .unwrap();
 
+        tonic_prost_build::configure()
+            .file_descriptor_set_path(out_dir.join("vixen.parser.bpf_loader.bin"))
+            .compile_protos(&["proto/bpf_loader.proto"], &["proto"])
+            .unwrap();
+
         // Generate a self-contained schema for token_extensions that bundles
         // the token.proto dependency inline, so consumers of PROTOBUF_SCHEMA
         // don't need to resolve the `import "token.proto"` themselves.

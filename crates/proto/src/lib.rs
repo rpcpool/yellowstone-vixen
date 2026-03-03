@@ -36,6 +36,26 @@ mod vixen {
             pub const INSTRUCTION_DISPATCH_MESSAGE_INDEX: Option<usize> = Some(64);
         }
 
+        pub mod bpf_loader {
+            #![allow(clippy::all)]
+            include!(concat!(env!("OUT_DIR"), "/vixen.parser.bpf_loader.rs"));
+
+            pub const DESCRIPTOR_SET: &[u8] =
+                include_bytes!(concat!(env!("OUT_DIR"), "/vixen.parser.bpf_loader.bin"));
+
+            /// Raw `.proto` schema text for the BPF loader parser.
+            pub const PROTOBUF_SCHEMA: &str = include_str!("../proto/bpf_loader.proto");
+
+            ///
+            /// IMPORTANT - If you update the .proto files, make sure to update the dispatch message indices below if needed
+            ///
+
+            /// 0-based index of the account dispatch message (`BpfLoaderState`) in the proto file descriptor.
+            pub const ACCOUNT_DISPATCH_MESSAGE_INDEX: Option<usize> = Some(4);
+            /// 0-based index of the instruction dispatch message (`BpfLoaderProgram`) in the proto file descriptor.
+            pub const INSTRUCTION_DISPATCH_MESSAGE_INDEX: Option<usize> = Some(24);
+        }
+
         pub mod token_extensions {
             #![allow(clippy::all)]
             include!(concat!(
@@ -135,6 +155,30 @@ mod dispatch_index_tests {
             messages[instruction_idx], "TokenProgram",
             "INSTRUCTION_DISPATCH_MESSAGE_INDEX ({instruction_idx}) should point to TokenProgram, \
              found {}",
+            messages[instruction_idx],
+        );
+    }
+
+    #[test]
+    fn bpf_loader_dispatch_indices_match_proto() {
+        let proto = include_str!("../proto/bpf_loader.proto");
+        let messages = top_level_message_names(proto);
+
+        let account_idx = crate::parser::bpf_loader::ACCOUNT_DISPATCH_MESSAGE_INDEX
+            .expect("ACCOUNT_DISPATCH_MESSAGE_INDEX should be Some for bpf_loader");
+        let instruction_idx = crate::parser::bpf_loader::INSTRUCTION_DISPATCH_MESSAGE_INDEX
+            .expect("INSTRUCTION_DISPATCH_MESSAGE_INDEX should be Some for bpf_loader");
+
+        assert_eq!(
+            messages[account_idx], "BpfLoaderState",
+            "ACCOUNT_DISPATCH_MESSAGE_INDEX ({account_idx}) should point to BpfLoaderState, \
+             found {}",
+            messages[account_idx],
+        );
+        assert_eq!(
+            messages[instruction_idx], "BpfLoaderProgram",
+            "INSTRUCTION_DISPATCH_MESSAGE_INDEX ({instruction_idx}) should point to \
+             BpfLoaderProgram, found {}",
             messages[instruction_idx],
         );
     }
