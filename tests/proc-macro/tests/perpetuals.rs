@@ -441,7 +441,6 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
 async fn parse_borrow_from_custody_ix() {
     let parser = perpetuals::InstructionParser;
 
-    // parse error: Other(Custom { kind: InvalidData, error: "Not all bytes read" })
     let ixs = tx_fixture!(
         "5mYEUYXCZisS8CChCG8mL8N3NEWHUA81Rr7kLA28P5upSzDStLq1f4QKhFLY7R8GsRNB27gM6YzvKerxejtLQxCj",
         &parser
