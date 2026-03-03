@@ -235,15 +235,14 @@ impl TestHarness {
         let (output_tx, output_rx) = mpsc::channel(64);
         let (account_output_tx, account_output_rx) = mpsc::channel(64);
 
-        let coordinator = BlockMachineCoordinator::new(
+        tokio::spawn(BlockMachineCoordinator::run(
             input_rx,
             parsed_rx,
             Some(output_tx),
             Some(account_output_tx),
             account_commit_at,
             require_tx_gate,
-        );
-        tokio::spawn(coordinator.run());
+        ));
 
         Self {
             input_tx,
@@ -920,15 +919,14 @@ async fn late_message_for_flushed_slot_errors() {
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, mut output_rx) = mpsc::channel(64);
 
-    let coordinator = BlockMachineCoordinator::new(
+    let handle = tokio::spawn(BlockMachineCoordinator::run(
         input_rx,
         parsed_rx,
         Some(output_tx),
         None,
         AccountCommitAt::Confirmed,
         true,
-    );
-    let handle = tokio::spawn(coordinator.run());
+    ));
 
     // Create and flush slot 100
     let slot = SlotBuilder::new(input_tx.clone(), parsed_tx.clone(), 100)
@@ -964,15 +962,14 @@ async fn output_channel_closed_returns_error() {
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, output_rx) = mpsc::channel(64);
 
-    let coordinator = BlockMachineCoordinator::new(
+    let handle = tokio::spawn(BlockMachineCoordinator::run(
         input_rx,
         parsed_rx,
         Some(output_tx),
         None,
         AccountCommitAt::Confirmed,
         true,
-    );
-    let handle = tokio::spawn(coordinator.run());
+    ));
 
     // Drop the output receiver — the coordinator can't send flushed slots.
     drop(output_rx);

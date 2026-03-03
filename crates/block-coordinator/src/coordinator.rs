@@ -26,7 +26,7 @@ pub struct BlockMachineCoordinator<R> {
 }
 
 impl<R: Send + 'static> BlockMachineCoordinator<R> {
-    pub fn new(
+    fn new(
         input_rx: mpsc::Receiver<CoordinatorInput>,
         parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
         instruction_output_tx: Option<mpsc::Sender<InstructionSlot<R>>>,
@@ -46,7 +46,27 @@ impl<R: Send + 'static> BlockMachineCoordinator<R> {
     }
 
     /// Main event loop. Any CoordinatorError terminates the coordinator.
-    pub async fn run(mut self) -> Result<(), CoordinatorError> {
+    pub async fn run(
+        input_rx: mpsc::Receiver<CoordinatorInput>,
+        parsed_rx: mpsc::Receiver<CoordinatorMessage<R>>,
+        instruction_output_tx: Option<mpsc::Sender<InstructionSlot<R>>>,
+        account_output_tx: Option<mpsc::Sender<AccountSlot<R>>>,
+        account_commit_at: AccountCommitAt,
+        require_tx_gate: bool,
+    ) -> Result<(), CoordinatorError> {
+        Self::new(
+            input_rx,
+            parsed_rx,
+            instruction_output_tx,
+            account_output_tx,
+            account_commit_at,
+            require_tx_gate,
+        )
+        .run_inner()
+        .await
+    }
+
+    async fn run_inner(mut self) -> Result<(), CoordinatorError> {
         if !self.require_tx_gate {
             tracing::info!(
                 "require_tx_gate=false: tx gate disabled, transaction status stats will not be \

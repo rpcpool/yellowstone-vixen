@@ -47,17 +47,50 @@ pub struct TransactionSlotCommitEvent {
     pub transaction_status_succeeded_count: u64,
 }
 
+/// Marker semantics for account slot events.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MarkerType {
+    Completed,
+    Watermark,
+}
+
+impl std::fmt::Display for MarkerType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Completed => f.write_str("completed"),
+            Self::Watermark => f.write_str("watermark"),
+        }
+    }
+}
+
+/// Commitment scope for account slot markers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CommitScope {
+    Confirmed,
+    Finalized,
+    Stream,
+}
+
+impl std::fmt::Display for CommitScope {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Confirmed => f.write_str("confirmed"),
+            Self::Finalized => f.write_str("finalized"),
+            Self::Stream => f.write_str("stream"),
+        }
+    }
+}
+
 /// Event published when an account slot is committed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountSlotCommitEvent {
     pub slot: u64,
-    /// Marker semantics for this slot event.
-    /// Values: "completed" | "watermark".
-    pub marker_type: String,
-    /// Commitment/scope of this account slot marker.
-    /// - completed: "confirmed" | "finalized"
-    /// - watermark: "stream"
-    pub account_commit_at: String,
+    /// See [`MarkerType`].
+    pub marker_type: MarkerType,
+    /// See [`CommitScope`].
+    pub account_commit_at: CommitScope,
     /// Number of successfully decoded accounts.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub decoded_account_count: Option<u64>,

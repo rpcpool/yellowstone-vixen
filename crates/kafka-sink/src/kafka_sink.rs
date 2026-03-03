@@ -16,10 +16,6 @@ use yellowstone_vixen_block_coordinator::{
     AccountCommitAt, AccountMode, AccountSlot, InstructionSlot,
 };
 
-const MARKER_WATERMARK: &str = "watermark";
-const MARKER_COMPLETED: &str = "completed";
-const COMMIT_STREAM: &str = "stream";
-
 type SinkError = Box<dyn std::error::Error + Send + Sync>;
 
 fn kafka_send_error(context: &str, slot: u64, err: impl std::fmt::Display) -> SinkError {
@@ -61,7 +57,7 @@ where
 use crate::{
     config::KafkaSinkConfig,
     events::{
-        AccountSlotCommitEvent, PreparedRecord, RecordHeader, RecordKind,
+        AccountSlotCommitEvent, CommitScope, MarkerType, PreparedRecord, RecordHeader, RecordKind,
         TransactionSlotCommitEvent,
     },
 };
@@ -413,8 +409,8 @@ impl AccountSink {
     async fn emit_watermark(&self, slot: u64) -> Result<(), SinkError> {
         let event = AccountSlotCommitEvent {
             slot,
-            marker_type: MARKER_WATERMARK.to_string(),
-            account_commit_at: COMMIT_STREAM.to_string(),
+            marker_type: MarkerType::Watermark,
+            account_commit_at: CommitScope::Stream,
             decoded_account_count: None,
             decode_filtered_account_count: None,
             decode_error_account_count: None,
@@ -482,8 +478,8 @@ fn build_account_slot_commit_event(
 
     AccountSlotCommitEvent {
         slot: acct_slot.slot,
-        marker_type: MARKER_COMPLETED.to_string(),
-        account_commit_at: account_commit_at_tag(account_mode).to_string(),
+        marker_type: MarkerType::Completed,
+        account_commit_at: CommitScope::from(account_mode),
         decoded_account_count: Some(decoded_account_count),
         decode_filtered_account_count: Some(acct_slot.filtered_account_count),
         decode_error_account_count: Some(acct_slot.failed_account_count),
@@ -491,17 +487,15 @@ fn build_account_slot_commit_event(
     }
 }
 
-fn account_commit_at(mode: &AccountMode) -> AccountCommitAt {
-    match mode {
-        AccountMode::Processed { commit_at } => *commit_at,
-        AccountMode::FinalizedPassthrough => AccountCommitAt::Finalized,
-    }
-}
-
-fn account_commit_at_tag(mode: &AccountMode) -> &'static str {
-    match account_commit_at(mode) {
-        AccountCommitAt::Confirmed => "confirmed",
-        AccountCommitAt::Finalized => "finalized",
+impl From<&AccountMode> for CommitScope {
+    fn from(mode: &AccountMode) -> Self {
+        match mode {
+            AccountMode::Processed { commit_at } => match commit_at {
+                AccountCommitAt::Confirmed => Self::Confirmed,
+                AccountCommitAt::Finalized => Self::Finalized,
+            },
+            AccountMode::FinalizedPassthrough => Self::Finalized,
+        }
     }
 }
 
@@ -573,8 +567,8 @@ mod tests {
             commit_at: AccountCommitAt::Confirmed,
         });
         assert_eq!(event.slot, 55);
-        assert_eq!(event.marker_type, MARKER_COMPLETED);
-        assert_eq!(event.account_commit_at, "confirmed");
+        assert_eq!(event.marker_type, MarkerType::Completed);
+        assert_eq!(event.account_commit_at, CommitScope::Confirmed);
         assert_eq!(event.decoded_account_count, Some(1));
         assert_eq!(event.decode_filtered_account_count, Some(4));
         assert_eq!(event.decode_error_account_count, Some(2));
@@ -591,16 +585,16 @@ mod tests {
             failed_account_count: 0,
         };
         let event = build_account_slot_commit_event(&acct_slot, &AccountMode::FinalizedPassthrough);
-        assert_eq!(event.marker_type, MARKER_COMPLETED);
-        assert_eq!(event.account_commit_at, "finalized");
+        assert_eq!(event.marker_type, MarkerType::Completed);
+        assert_eq!(event.account_commit_at, CommitScope::Finalized);
     }
 
     #[test]
     fn watermark_json_omits_account_count_fields() {
         let event = AccountSlotCommitEvent {
             slot: 77,
-            marker_type: MARKER_WATERMARK.to_string(),
-            account_commit_at: COMMIT_STREAM.to_string(),
+            marker_type: MarkerType::Watermark,
+            account_commit_at: CommitScope::Stream,
             decoded_account_count: None,
             decode_filtered_account_count: None,
             decode_error_account_count: None,

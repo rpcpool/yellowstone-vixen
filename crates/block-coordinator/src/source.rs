@@ -254,6 +254,12 @@ impl SourceTrait for CoordinatorSource {
             }
         };
 
+        if let Some(writer) = fixture_writer {
+            if let Err(e) = writer.finish() {
+                tracing::error!(?e, "Failed to flush fixture writer on shutdown");
+            }
+        }
+
         tracing::debug!("CoordinatorSource gRPC stream ended");
 
         let _ = status_tx.send(exit_status);
