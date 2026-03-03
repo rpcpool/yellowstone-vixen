@@ -12,8 +12,8 @@ use std::{collections::HashMap, env, path::PathBuf};
 use tokio::sync::mpsc;
 use yellowstone_grpc_proto::geyser::subscribe_update::UpdateOneof;
 use yellowstone_vixen_block_coordinator::{
-    AccountCommitAt, BlockMachineCoordinator, CoordinatorInput, CoordinatorMessage, FixtureReader,
-    InstructionSlot,
+    AccountCommitAt, BlockMachineCoordinator, CoordinatorError, CoordinatorInput,
+    CoordinatorMessage, FixtureReader, InstructionSlot,
 };
 
 fn fixture_path() -> PathBuf {
@@ -81,7 +81,7 @@ async fn run_coordinator_with_updates(
     let (parsed_tx, parsed_rx) = mpsc::channel::<CoordinatorMessage<()>>(4096);
     let (output_tx, mut output_rx) = mpsc::channel::<InstructionSlot<()>>(256);
 
-    tokio::spawn(BlockMachineCoordinator::run(
+    let coordinator_task = tokio::spawn(BlockMachineCoordinator::run(
         input_rx,
         parsed_rx,
         Some(output_tx),
@@ -124,14 +124,31 @@ async fn run_coordinator_with_updates(
         }
     }
 
+    let mut confirmed = Vec::new();
+
+    finish_coordinator_and_drain_remaining_instructions(input_tx, parsed_tx, coordinator_task, &mut output_rx, &mut confirmed).await;
+
+    confirmed
+}
+
+async fn finish_coordinator_and_drain_remaining_instructions(
+    input_tx: mpsc::Sender<CoordinatorInput>,
+    parsed_tx: mpsc::Sender<CoordinatorMessage<()>>,
+    coordinator_task: tokio::task::JoinHandle<Result<(), CoordinatorError>>,
+    output_rx: &mut mpsc::Receiver<InstructionSlot<()>>,
+    confirmed: &mut Vec<InstructionSlot<()>>,
+) {
     drop(input_tx);
     drop(parsed_tx);
 
-    let mut confirmed = Vec::new();
     while let Some(slot) = output_rx.recv().await {
         confirmed.push(slot);
     }
-    confirmed
+
+    coordinator_task
+        .await
+        .expect("coordinator task panicked")
+        .expect("coordinator failed");
 }
 
 fn assert_strictly_ascending(slots: &[InstructionSlot<()>]) {
