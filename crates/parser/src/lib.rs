@@ -16,7 +16,7 @@ pub use error::*;
 
 pub mod prelude;
 
-pub use yellowstone_vixen_core::Pubkey;
+pub use yellowstone_vixen_core::KeyBytes;
 yellowstone_vixen_core::pubkey_convert_helpers!(solana_pubkey::Pubkey);
 
 pub fn check_min_accounts_req(actual: usize, expected: usize) -> Result<()> {

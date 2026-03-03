@@ -16,7 +16,7 @@ tokio = { version = "1.39.3", features = ["rt", "rt-multi-thread"] }
 yellowstone-vixen-parser = { workspace = true }
 borsh = { workspace = true, features = ["derive"] }
 yellowstone-vixen-yellowstone-fumarole-source = { workspace = true }
-yellowstone-vixen-spl-token-parser = { workspace = true }
-yellowstone-vixen-spl-token-extensions-parser = { workspace = true }
+yellowstone-vixen-spl-token-parser = { workspace = true, features = ["proto"] }
+yellowstone-vixen-spl-token-extensions-parser = { workspace = true, features = ["proto"] }
 rustls = { workspace = true }
 prost = { workspace = true, features = ["derive"] }

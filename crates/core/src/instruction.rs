@@ -11,7 +11,7 @@ use yellowstone_grpc_proto::{
     },
 };
 
-use crate::{Pubkey, TransactionUpdate};
+use crate::{KeyBytes, TransactionUpdate};
 
 /// Errors that can occur when parsing a transaction update into instructions.
 #[derive(Debug, Clone, Copy, thiserror::Error)]
@@ -101,9 +101,9 @@ pub struct InstructionShared {
 #[derive(Debug, Clone)]
 pub struct InstructionUpdate {
     /// The program ID of the instruction.
-    pub program: Pubkey,
+    pub program: KeyBytes<32>,
     /// The accounts passed to the instruction.
-    pub accounts: Vec<Pubkey>,
+    pub accounts: Vec<KeyBytes<32>>,
     /// The serialized binary instruction payload.
     pub data: Vec<u8>,
     /// Shared data between all instructions in this transaction.
@@ -218,7 +218,7 @@ impl AccountKeys {
     ///
     /// # Errors
     /// Returns an error if the index is invalid.
-    pub fn get<I: TryInto<usize>>(&self, idx: I) -> Result<Pubkey, AccountKeyError>
+    pub fn get<I: TryInto<usize>>(&self, idx: I) -> Result<KeyBytes<32>, AccountKeyError>
     where I::Error: Into<std::num::TryFromIntError> {
         let idx = idx
             .try_into()

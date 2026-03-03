@@ -35,7 +35,7 @@ use yellowstone_vixen::{
     sources::{SourceExitStatus, SourceTrait},
     Error as VixenError,
 };
-use yellowstone_vixen_core::{Filters, Pubkey};
+use yellowstone_vixen_core::{Filters, KeyBytes};
 
 const MAX_GENESIS_ARCHIVE_UNPACKED_SIZE: u64 = 10485760;
 
@@ -152,11 +152,11 @@ pub struct SolanaSnapshotSource {
 }
 
 #[derive(Clone)]
-struct FilterOwnerKeyLookup(Arc<HashMap<Pubkey, Vec<String>>>);
+struct FilterOwnerKeyLookup(Arc<HashMap<KeyBytes<32>, Vec<String>>>);
 
 impl FilterOwnerKeyLookup {
     fn new(filters: &Filters) -> Self {
-        let mut lookup: HashMap<Pubkey, Vec<String>> = HashMap::new();
+        let mut lookup: HashMap<KeyBytes<32>, Vec<String>> = HashMap::new();
 
         for (key, parser_filter) in filters.parsers_filters.iter() {
             if let Some(account_filter) = parser_filter.account.as_ref() {
@@ -169,9 +169,11 @@ impl FilterOwnerKeyLookup {
         Self(Arc::new(lookup))
     }
 
-    fn lookup_by_owner(&self, owner: &Pubkey) -> Option<Vec<String>> { self.0.get(owner).cloned() }
+    fn lookup_by_owner(&self, owner: &KeyBytes<32>) -> Option<Vec<String>> {
+        self.0.get(owner).cloned()
+    }
 
-    fn owners(&self) -> Vec<Pubkey> { self.0.keys().copied().collect() }
+    fn owners(&self) -> Vec<KeyBytes<32>> { self.0.keys().copied().collect() }
 }
 
 #[async_trait]
@@ -288,7 +290,7 @@ impl SourceTrait for SolanaSnapshotSource {
                                         is_startup: true,
                                     },
                                     filters: filter_owner_key_lookup
-                                        .lookup_by_owner(&Pubkey::from(owner.to_bytes()))
+                                        .lookup_by_owner(&KeyBytes::<32>::from(owner.to_bytes()))
                                         .unwrap_or_default(),
                                 };
 

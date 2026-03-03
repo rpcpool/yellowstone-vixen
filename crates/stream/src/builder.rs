@@ -8,8 +8,8 @@ use yellowstone_vixen::{
     util,
 };
 use yellowstone_vixen_core::{
-    instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, Parser, ProgramParser, Pubkey,
-    TransactionUpdate,
+    instruction::InstructionUpdate, AccountUpdate, BlockMetaUpdate, KeyBytes, Parser,
+    ProgramParser, TransactionUpdate,
 };
 use yellowstone_vixen_proto::{
     prost::{Message, Name},
@@ -27,7 +27,7 @@ use super::{
 pub enum BuilderError {
     /// Two program parsers were registered with the same program ID.
     #[error("Parser with duplicate ID {1:?} and duplicate program ID {0} registered")]
-    DuplicateId(Pubkey, String),
+    DuplicateId(KeyBytes<32>, String),
     /// An error occurred while building the underlying Vixen runtime.
     #[error("Error building Vixen runtime")]
     Runtime(#[from] yellowstone_vixen::builder::BuilderError),

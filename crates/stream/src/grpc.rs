@@ -6,7 +6,7 @@ use tokio::{
     task::{JoinError, JoinHandle},
 };
 use yellowstone_vixen::{stop, Handler, HandlerResult};
-use yellowstone_vixen_core::Pubkey;
+use yellowstone_vixen_core::KeyBytes;
 use yellowstone_vixen_proto::{
     prost::{Message, Name},
     prost_types::Any,
@@ -40,7 +40,7 @@ impl<T: Message + Name + Sync, R: Sync> Handler<T, R> for GrpcHandler {
 }
 
 pub type Receiver = broadcast::Receiver<Any>;
-pub type Channels<V = Box<[Receiver]>> = HashMap<Pubkey, V>;
+pub type Channels<V = Box<[Receiver]>> = HashMap<KeyBytes<32>, V>;
 
 pub(super) struct Service(Channels);
 
@@ -53,7 +53,7 @@ impl ProgramStreams for Service {
         &self,
         request: Request<SubscribeRequest>,
     ) -> Result<Response<Self::SubscribeStream>, Status> {
-        let pubkey: Pubkey = request.into_inner().program.parse().map_err(
+        let pubkey: KeyBytes<32> = request.into_inner().program.parse().map_err(
             |e: yellowstone_vixen_core::KeyFromStrError| {
                 Status::new(tonic::Code::InvalidArgument, e.to_string())
             },
@@ -73,7 +73,7 @@ impl ProgramStreams for Service {
         &self,
         request: Request<SubscribeManyRequest>,
     ) -> Result<Response<Self::SubscribeManyStream>, Status> {
-        let pubkeys: Vec<Pubkey> = request
+        let pubkeys: Vec<KeyBytes<32>> = request
             .into_inner()
             .programs
             .iter()

@@ -13,7 +13,7 @@ use clap::Parser;
 use yellowstone_vixen::{
     self as vixen,
     filter_pipeline::FilterPipeline,
-    vixen_core::{instruction::InstructionUpdate, Prefilter, Pubkey},
+    vixen_core::{instruction::InstructionUpdate, KeyBytes, Prefilter},
 };
 use yellowstone_vixen_spl_token_parser::InstructionParser;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
@@ -48,7 +48,7 @@ fn main() {
         .instruction(FilterPipeline::new(
             InstructionParser,
             [Logger],
-            Prefilter::builder().transaction_accounts_include([Pubkey::from_str(
+            Prefilter::builder().transaction_accounts_include([KeyBytes::<32>::from_str(
                 "So11111111111111111111111111111111111111112",
             )
             .unwrap()]),
