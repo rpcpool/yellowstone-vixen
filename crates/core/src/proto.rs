@@ -74,7 +74,7 @@ impl<T: ParseProto + ProgramParser + Sync> ProgramParser for Proto<T>
 where T::Input: Sync
 {
     #[inline]
-    fn program_id(&self) -> crate::Pubkey { self.0.program_id() }
+    fn program_id(&self) -> crate::KeyBytes<32> { self.0.program_id() }
 }
 
 impl<T: ParseProto + Sync> Parser for Proto<T>

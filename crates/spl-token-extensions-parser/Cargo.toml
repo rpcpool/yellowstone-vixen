@@ -11,6 +11,8 @@ readme = "./../../README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+prost = { workspace = true, optional = true }
+prost-types = { workspace = true, optional = true }
 spl-pod = { workspace = true }
 spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
 spl-type-length-value = { workspace = true }
@@ -18,17 +20,30 @@ spl-token-group-interface = { workspace = true }
 spl-token-metadata-interface = { workspace = true }
 solana-program-pack = { workspace = true }
 solana-program-error = { workspace = true }
-yellowstone-grpc-proto = { workspace = true }
 yellowstone-vixen-core = { workspace = true }
+yellowstone-vixen-proc-macro = { workspace = true }
 yellowstone-vixen-parser = { workspace = true }
 yellowstone-vixen-spl-token-parser = { workspace = true }
+yellowstone-vixen-proto = { workspace = true, features = [
+  "parser",
+], optional = true }
 thiserror.workspace = true
 bs58.workspace = true
 bytemuck = { workspace = true }
+borsh = { workspace = true }
 
 [dev-dependencies]
 yellowstone-vixen-mock = { workspace = true }
 tokio.workspace = true
 
 [features]
-default = []
+default = ["proto"]
+proto = [
+  "dep:prost",
+  "dep:prost-types",
+  "dep:yellowstone-vixen-proto",
+  "yellowstone-vixen-core/proto",
+  "yellowstone-vixen-proc-macro/proto",
+  "yellowstone-vixen-proto/parser",
+  "yellowstone-vixen-parser/proto",
+]

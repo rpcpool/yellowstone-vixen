@@ -97,7 +97,15 @@ pub struct InstructionUpdateOutput<T> {
 pub trait Parser {
     /// The input update type for this parser.
     type Input;
+
     /// The type of the parsed value produced by this parser.
+    /// When the `proto` feature is enabled, this type must implement `prost::Message`
+    /// for protobuf serialization compatibility.
+    #[cfg(feature = "proto")]
+    type Output: ::prost::Message;
+
+    /// The type of the parsed value produced by this parser.
+    #[cfg(not(feature = "proto"))]
     type Output;
 
     /// A unique ID for this parser.  Used to associate the parser with its
@@ -122,7 +130,7 @@ pub trait Parser {
 /// A parser that parses all relevant updates for a particular program ID.
 pub trait ProgramParser: Parser {
     /// The program ID that this parser is associated with.
-    fn program_id(&self) -> Pubkey;
+    fn program_id(&self) -> KeyBytes<32>;
 }
 
 /// Helper trait for getting the ID of a parser.
@@ -221,9 +229,9 @@ impl FromIterator<Prefilter> for Prefilter {
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct AccountPrefilter {
     /// The accounts that this prefilter will match.
-    pub accounts: HashSet<Pubkey>,
+    pub accounts: HashSet<KeyBytes<32>>,
     /// The owners that this prefilter will match.
-    pub owners: HashSet<Pubkey>,
+    pub owners: HashSet<KeyBytes<32>>,
 }
 
 impl AccountPrefilter {
@@ -241,11 +249,11 @@ impl AccountPrefilter {
 pub struct TransactionPrefilter {
     /// The transaction **must** include at least **ONE** of these accounts. Otherwise, the transaction
     ///  won't be retrieved.
-    pub accounts_include: HashSet<Pubkey>,
+    pub accounts_include: HashSet<KeyBytes<32>>,
     /// These accounts **must** be present in the transaction.
     ///  That means if any of the accounts are not included in the transaction, the transaction
     ///  won't be retrieved.
-    pub accounts_required: HashSet<Pubkey>,
+    pub accounts_required: HashSet<KeyBytes<32>>,
     /// Filter by transaction success/failure status.
     /// - `None`: Include all transactions (required for "any" filter in Richat)
     /// - `Some(false)`: Only successful transactions (default)
@@ -296,7 +304,7 @@ impl BlockMetaPrefilter {
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct BlockPrefilter {
     /// filter transactions and accounts that use any account from the list
-    pub accounts_include: HashSet<Pubkey>,
+    pub accounts_include: HashSet<KeyBytes<32>>,
     /// include all transactions
     pub include_transactions: bool,
     /// include all account updates
@@ -348,15 +356,15 @@ impl SlotPrefilter {
     }
 }
 
-/// Helper macro for converting Vixen's [`Pubkey`] to a Solana ed25519 public
-/// key.
+/// Helper macro for converting Vixen's [`KeyBytes<32>`] to a Solana ed25519
+/// public key.
 ///
 /// Invoking the macro with the name of a publicly-exported Solana `Pubkey`
 /// type (e.g. `pubkey_convert_helpers!(solana_sdk::pubkey::Pubkey);`) will
 /// define two functions:
 ///
-/// - `pub(crate) fn into_vixen_pubkey(`<Solana Pubkey>`) -> yellowstone_vixen_core::Pubkey;`
-/// - `pub(crate) fn from_vixen_pubkey(yellowstone_vixen_core::Pubkey) -> <Solana Pubkey>;`
+/// - `pub(crate) fn into_vixen_pubkey(`<Solana Pubkey>`) -> yellowstone_vixen_core::KeyBytes<32>;`
+/// - `pub(crate) fn from_vixen_pubkey(yellowstone_vixen_core::KeyBytes<32>) -> <Solana Pubkey>;`
 ///
 /// These can be used as a convenience for quickly converting between Solana
 /// public keys and their representation in Vixen.  Vixen does not use the
@@ -366,20 +374,38 @@ impl SlotPrefilter {
 #[macro_export]
 macro_rules! pubkey_convert_helpers {
     ($ty:ty) => {
-        pub(crate) fn into_vixen_pubkey(value: $ty) -> $crate::Pubkey { value.to_bytes().into() }
+        pub(crate) fn into_vixen_pubkey(value: $ty) -> $crate::KeyBytes<32> {
+            value.to_bytes().into()
+        }
 
-        pub(crate) fn from_vixen_pubkey(value: $crate::Pubkey) -> $ty { value.into_bytes().into() }
+        pub(crate) fn from_vixen_pubkey(value: $crate::KeyBytes<32>) -> $ty {
+            value.into_bytes().into()
+        }
     };
 }
 
-/// Helper type representing a Solana public key.
+/// Protobuf wrapper for a 32-byte public key.
 ///
-/// This type is functionally equivalent to the `Pubkey` type from the Solana
-/// SDK, and it can be trivially converted to or from one by passing the
-/// underlying `[u8; 32]` array.  Vixen uses this `Pubkey` type to avoid
-/// depending on the Solana SDK, as this can lead to version conflicts when
-/// working with Solana program crates.
-pub type Pubkey = KeyBytes<32>;
+/// This struct wraps raw public key bytes for protobuf serialization.  When the
+/// `proto` feature is enabled it derives [`prost::Message`] so it can be used
+/// as a nested message field (`message PublicKey { bytes value = 1; }`).
+#[derive(Clone, PartialEq)]
+#[cfg_attr(feature = "proto", derive(::prost::Message))]
+#[cfg_attr(not(feature = "proto"), derive(Debug, Default))]
+pub struct PublicKey {
+    /// The raw bytes of the public key.
+    #[cfg_attr(feature = "proto", prost(bytes = "vec", tag = "1"))]
+    pub value: Vec<u8>,
+}
+
+impl PublicKey {
+    /// Creates a new `PublicKey` from any type convertible to `Vec<u8>`.
+    pub fn new(value: impl Into<Vec<u8>>) -> Self {
+        Self {
+            value: value.into(),
+        }
+    }
+}
 
 /// Generic wrapper for a fixed-length array of cryptographic key bytes,
 /// convertible to or from a base58-encoded string.
@@ -547,7 +573,7 @@ pub enum PrefilterError {
     /// A value was already set for a field that can only be set once.
     #[error("Value already given for field {0}")]
     AlreadySet(&'static str),
-    /// An error occurred while parsing a public key as a [`Pubkey`].
+    /// An error occurred while parsing a public key as a [`KeyBytes<32>`].
     #[error("Invalid pubkey {}", bs58::encode(.0).into_string())]
     BadPubkey(Vec<u8>, std::array::TryFromSliceError),
 }
@@ -561,7 +587,7 @@ pub struct PrefilterBuilder {
     slots: bool,
     block_metas: bool,
     /// Matching [`BlockPrefilter::accounts`]
-    block_accounts_include: Option<HashSet<Pubkey>>,
+    block_accounts_include: Option<HashSet<KeyBytes<32>>>,
     /// Matching [`BlockPrefilter::include_accounts`]
     block_include_accounts: bool,
     /// Matching [`BlockPrefilter::include_transactions`]
@@ -571,13 +597,13 @@ pub struct PrefilterBuilder {
     /// Including all accounts
     accounts_include_all: bool,
     /// Matching [`AccountPrefilter::accounts`]
-    accounts: Option<HashSet<Pubkey>>,
+    accounts: Option<HashSet<KeyBytes<32>>>,
     /// Matching [`AccountPrefilter::account_owners`]
-    account_owners: Option<HashSet<Pubkey>>,
+    account_owners: Option<HashSet<KeyBytes<32>>>,
     /// Matching [`TransactionPrefilter::accounts_include`]
-    transaction_accounts_include: Option<HashSet<Pubkey>>,
+    transaction_accounts_include: Option<HashSet<KeyBytes<32>>>,
     /// Matching [`TransactionPrefilter::accounts_required`]
-    transaction_accounts_required: Option<HashSet<Pubkey>>,
+    transaction_accounts_required: Option<HashSet<KeyBytes<32>>>,
 }
 
 fn set_opt<T>(opt: &mut Option<T>, field: &'static str, val: T) -> Result<(), PrefilterError> {
@@ -590,7 +616,7 @@ fn set_opt<T>(opt: &mut Option<T>, field: &'static str, val: T) -> Result<(), Pr
 }
 
 // TODO: if Solana ever adds Into<[u8; 32]> for Pubkey this can be simplified
-fn collect_pubkeys<I: IntoIterator>(it: I) -> Result<HashSet<Pubkey>, PrefilterError>
+fn collect_pubkeys<I: IntoIterator>(it: I) -> Result<HashSet<KeyBytes<32>>, PrefilterError>
 where I::Item: AsRef<[u8]> {
     it.into_iter()
         .map(|p| {
@@ -1071,8 +1097,8 @@ mod tests {
 
     #[test]
     fn test_block_prefilter_merge_hashset_union() {
-        let key1: Pubkey = [1u8; 32].into();
-        let key2: Pubkey = [2u8; 32].into();
+        let key1: KeyBytes<32> = [1u8; 32].into();
+        let key2: KeyBytes<32> = [2u8; 32].into();
 
         let mut a = BlockPrefilter {
             accounts_include: [key1].into_iter().collect(),
