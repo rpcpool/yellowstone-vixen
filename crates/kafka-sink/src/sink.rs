@@ -16,10 +16,11 @@ use prost::Message;
 use yellowstone_vixen_core::{
     bs58,
     instruction::{InstructionUpdate, Path},
-    AccountUpdate, ParseError, Parser, ProgramParser, Pubkey,
+    AccountUpdate, ParseError, Parser, ProgramParser,
 };
 
 use crate::{
+    Pubkey,
     events::{PreparedRecord, RawAccountEvent, RawInstructionEvent, RecordHeader, RecordKind},
     schema_registry::{wrap_payload_with_confluent_wire_format, RegisteredSchema},
     utils::{make_account_record_key, make_instruction_record_key},
@@ -671,11 +672,11 @@ mod tests {
     use yellowstone_vixen_core::{
         instruction::{InstructionShared, InstructionUpdate, Path},
         AccountUpdate, AccountUpdateInfo, ParseError, ParseResult, Parser, Prefilter,
-        ProgramParser, Pubkey,
+        ProgramParser,
     };
 
     use super::KafkaSinkBuilder;
-    use crate::events::{RawAccountEvent, RawInstructionEvent};
+    use crate::{Pubkey, events::{RawAccountEvent, RawInstructionEvent}};
 
     #[derive(Clone, Copy)]
     enum TestInstructionOutcome {

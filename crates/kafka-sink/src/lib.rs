@@ -9,6 +9,9 @@ pub mod sink;
 pub mod topics;
 pub mod utils;
 
+/// Solana public key — 32-byte key alias used throughout this crate.
+pub type Pubkey = yellowstone_vixen_core::KeyBytes<32>;
+
 // Re-export main types
 pub use config::KafkaSinkConfig;
 pub use events::{
