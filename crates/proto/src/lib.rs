@@ -171,8 +171,8 @@ mod dispatch_index_tests {
 
         assert_eq!(
             messages[account_idx], "BpfLoaderState",
-            "ACCOUNT_DISPATCH_MESSAGE_INDEX ({account_idx}) should point to BpfLoaderState, \
-             found {}",
+            "ACCOUNT_DISPATCH_MESSAGE_INDEX ({account_idx}) should point to BpfLoaderState, found \
+             {}",
             messages[account_idx],
         );
         assert_eq!(
