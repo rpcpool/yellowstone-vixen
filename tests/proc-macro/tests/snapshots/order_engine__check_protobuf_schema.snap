@@ -22,6 +22,7 @@ message FillAccounts {
   PublicKey output_mint = 9;
   PublicKey output_token_program = 10;
   PublicKey system_program = 11;
+  repeated PublicKey remaining_accounts = 12;
 }
     
 message FillArgs {

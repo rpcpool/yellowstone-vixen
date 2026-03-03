@@ -141,6 +141,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
                 176, 95, 246, 195, 86, 53, 120, 198, 18, 165, 226, 150, 82, 137, 102, 66, 10, 246,
                 22, 81, 25, 252, 64, 213, 90, 126, 143, 13, 211, 224, 58, 130,
             ]),
+            remaining_accounts: vec![],
         }),
         args: Some(raydium_amm::instruction::SwapBaseInCompactArgs {
             amount_in: 820_106_078_370,

@@ -542,6 +542,7 @@ message ClaimCreatorTradingFeeAccounts {
   PublicKey token_quote_program = 11;
   PublicKey event_authority = 12;
   PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
 }
     
 message ClaimCreatorTradingFeeArgs {
@@ -561,6 +562,7 @@ message ClaimPartnerPoolCreationFeeAccounts {
   PublicKey fee_receiver = 4;
   PublicKey event_authority = 5;
   PublicKey program = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message ClaimPartnerPoolCreationFeeArgs {
@@ -587,6 +589,7 @@ message ClaimProtocolFeeAccounts {
   PublicKey token_quote_program = 13;
   PublicKey event_authority = 14;
   PublicKey program = 15;
+  repeated PublicKey remaining_accounts = 16;
 }
     
 message ClaimProtocolFeeArgs {
@@ -607,6 +610,7 @@ message ClaimProtocolPoolCreationFeeAccounts {
   PublicKey treasury = 5;
   PublicKey event_authority = 6;
   PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
 }
     
 message ClaimProtocolPoolCreationFeeArgs {
@@ -632,6 +636,7 @@ message ClaimTradingFeeAccounts {
   PublicKey token_quote_program = 12;
   PublicKey event_authority = 13;
   PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message ClaimTradingFeeArgs {
@@ -650,6 +655,7 @@ message CloseClaimProtocolFeeOperatorAccounts {
   PublicKey signer = 3;
   PublicKey event_authority = 4;
   PublicKey program = 5;
+  repeated PublicKey remaining_accounts = 6;
 }
     
 message CloseClaimProtocolFeeOperatorArgs {
@@ -668,6 +674,7 @@ message CreateClaimProtocolFeeOperatorAccounts {
   PublicKey system_program = 5;
   PublicKey event_authority = 6;
   PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
 }
     
 message CreateClaimProtocolFeeOperatorArgs {
@@ -687,6 +694,7 @@ message CreateConfigAccounts {
   PublicKey system_program = 6;
   PublicKey event_authority = 7;
   PublicKey program = 8;
+  repeated PublicKey remaining_accounts = 9;
 }
     
 message CreateConfigArgs {
@@ -713,6 +721,7 @@ message CreateLockerAccounts {
   PublicKey locker_program = 12;
   PublicKey locker_event_authority = 13;
   PublicKey system_program = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message CreateLockerArgs {
@@ -730,6 +739,7 @@ message CreatePartnerMetadataAccounts {
   PublicKey system_program = 4;
   PublicKey event_authority = 5;
   PublicKey program = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message CreatePartnerMetadataArgs {
@@ -752,6 +762,7 @@ message CreateVirtualPoolMetadataAccounts {
   PublicKey system_program = 5;
   PublicKey event_authority = 6;
   PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
 }
     
 message CreateVirtualPoolMetadataArgs {
@@ -777,6 +788,7 @@ message CreatorWithdrawSurplusAccounts {
   PublicKey token_quote_program = 8;
   PublicKey event_authority = 9;
   PublicKey program = 10;
+  repeated PublicKey remaining_accounts = 11;
 }
     
 message CreatorWithdrawSurplusArgs {
@@ -804,6 +816,7 @@ message InitializeVirtualPoolWithSplTokenAccounts {
   PublicKey system_program = 14;
   PublicKey event_authority = 15;
   PublicKey program = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message InitializeVirtualPoolWithSplTokenArgs {
@@ -830,6 +843,7 @@ message InitializeVirtualPoolWithToken2022Accounts {
   PublicKey system_program = 12;
   PublicKey event_authority = 13;
   PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message InitializeVirtualPoolWithToken2022Args {
@@ -873,6 +887,7 @@ message MigrateMeteoraDammAccounts {
   PublicKey token_program = 29;
   PublicKey associated_token_program = 30;
   PublicKey system_program = 31;
+  repeated PublicKey remaining_accounts = 32;
 }
     
 message MigrateMeteoraDammArgs {
@@ -893,6 +908,7 @@ message MigrateMeteoraDammClaimLpTokenAccounts {
   PublicKey owner = 7;
   PublicKey sender = 8;
   PublicKey token_program = 9;
+  repeated PublicKey remaining_accounts = 10;
 }
     
 message MigrateMeteoraDammClaimLpTokenArgs {
@@ -921,6 +937,7 @@ message MigrateMeteoraDammLockLpTokenAccounts {
   PublicKey a_vault_lp_mint = 15;
   PublicKey b_vault_lp_mint = 16;
   PublicKey token_program = 17;
+  repeated PublicKey remaining_accounts = 18;
 }
     
 message MigrateMeteoraDammLockLpTokenArgs {
@@ -957,6 +974,7 @@ message MigrationDammV2Accounts {
   PublicKey token2022_program = 23;
   PublicKey damm_event_authority = 24;
   PublicKey system_program = 25;
+  repeated PublicKey remaining_accounts = 26;
 }
     
 message MigrationDammV2Args {
@@ -975,6 +993,7 @@ message MigrationDammV2CreateMetadataAccounts {
   PublicKey system_program = 5;
   PublicKey event_authority = 6;
   PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
 }
     
 message MigrationDammV2CreateMetadataArgs {
@@ -993,6 +1012,7 @@ message MigrationMeteoraDammCreateMetadataAccounts {
   PublicKey system_program = 5;
   PublicKey event_authority = 6;
   PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
 }
     
 message MigrationMeteoraDammCreateMetadataArgs {
@@ -1014,6 +1034,7 @@ message PartnerWithdrawSurplusAccounts {
   PublicKey token_quote_program = 8;
   PublicKey event_authority = 9;
   PublicKey program = 10;
+  repeated PublicKey remaining_accounts = 11;
 }
     
 message PartnerWithdrawSurplusArgs {
@@ -1040,6 +1061,7 @@ message SwapAccounts {
   PublicKey referral_token_account = 13;
   PublicKey event_authority = 14;
   PublicKey program = 15;
+  repeated PublicKey remaining_accounts = 16;
 }
     
 message SwapArgs {
@@ -1067,6 +1089,7 @@ message Swap2Accounts {
   PublicKey referral_token_account = 13;
   PublicKey event_authority = 14;
   PublicKey program = 15;
+  repeated PublicKey remaining_accounts = 16;
 }
     
 message Swap2Args {
@@ -1085,6 +1108,7 @@ message TransferPoolCreatorAccounts {
   PublicKey new_creator = 4;
   PublicKey event_authority = 5;
   PublicKey program = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message TransferPoolCreatorArgs {
@@ -1106,6 +1130,7 @@ message WithdrawLeftoverAccounts {
   PublicKey token_base_program = 8;
   PublicKey event_authority = 9;
   PublicKey program = 10;
+  repeated PublicKey remaining_accounts = 11;
 }
     
 message WithdrawLeftoverArgs {
@@ -1127,6 +1152,7 @@ message WithdrawMigrationFeeAccounts {
   PublicKey token_quote_program = 8;
   PublicKey event_authority = 9;
   PublicKey program = 10;
+  repeated PublicKey remaining_accounts = 11;
 }
     
 message WithdrawMigrationFeeArgs {

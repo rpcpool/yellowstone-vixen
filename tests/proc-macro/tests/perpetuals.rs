@@ -360,6 +360,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                     148, 134, 231, 7, 116, 227, 98, 240, 124, 71, 211, 219, 57, 210, 145,
                 ]),
                 program: perpetuals::PublicKey::new(perpetuals::PROGRAM_ID.to_vec()),
+                remaining_accounts: vec![],
             }),
             args: Some(perpetuals::instruction::DecreasePositionWithTpslArgs {}),
         };
@@ -427,10 +428,132 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                     148, 134, 231, 7, 116, 227, 98, 240, 124, 71, 211, 219, 57, 210, 145,
                 ]),
                 program: perpetuals::PublicKey::new(perpetuals::PROGRAM_ID.to_vec()),
+                remaining_accounts: vec![],
             }),
             args: Some(perpetuals::instruction::ClosePositionRequest2Args {}),
         };
 
         assert_eq!(close, &expected);
     }
+}
+
+#[tokio::test]
+async fn parse_borrow_from_custody_ix() {
+    let parser = perpetuals::InstructionParser;
+
+    // parse error: Other(Custom { kind: InvalidData, error: "Not all bytes read" })
+    let ixs = tx_fixture!(
+        "5mYEUYXCZisS8CChCG8mL8N3NEWHUA81Rr7kLA28P5upSzDStLq1f4QKhFLY7R8GsRNB27gM6YzvKerxejtLQxCj",
+        &parser
+    );
+
+    let borrow_ix = ixs
+        .iter()
+        .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+            perpetuals::instruction::Instruction::BorrowFromCustody(s) => Some(s),
+            _ => None,
+        })
+        .expect("no borrow from custody ix found");
+
+    use yellowstone_vixen_core::PublicKey;
+
+    let expected = perpetuals::instruction::BorrowFromCustody {
+        accounts: Some(perpetuals::instruction::BorrowFromCustodyAccounts {
+            owner: PublicKey::new(vec![
+                193, 141, 200, 224, 246, 201, 5, 150, 208, 94, 178, 61, 237, 45, 230, 117, 221,
+                127, 66, 219, 18, 153, 140, 155, 9, 12, 15, 17, 113, 249, 167, 29,
+            ]),
+            perpetuals: PublicKey::new(vec![
+                238, 151, 183, 0, 48, 24, 63, 163, 2, 12, 13, 6, 188, 207, 70, 162, 238, 235, 177,
+                159, 189, 77, 24, 177, 204, 63, 21, 61, 126, 170, 228, 30,
+            ]),
+            pool: PublicKey::new(vec![
+                62, 30, 36, 115, 199, 52, 6, 84, 235, 135, 41, 0, 53, 21, 28, 64, 43, 208, 227,
+                201, 124, 180, 36, 72, 134, 231, 32, 52, 179, 11, 77, 252,
+            ]),
+            custody: PublicKey::new(vec![
+                222, 232, 11, 52, 19, 162, 211, 16, 128, 98, 107, 146, 108, 56, 175, 52, 190, 209,
+                134, 219, 54, 142, 151, 127, 58, 191, 75, 213, 69, 68, 154, 109,
+            ]),
+            transfer_authority: PublicKey::new(vec![
+                141, 38, 83, 12, 155, 36, 127, 146, 136, 234, 206, 55, 84, 75, 38, 56, 128, 192,
+                44, 173, 4, 211, 33, 80, 237, 29, 1, 248, 251, 221, 35, 134,
+            ]),
+            borrow_position: PublicKey::new(vec![
+                10, 160, 117, 35, 217, 119, 94, 32, 82, 76, 97, 73, 104, 24, 124, 173, 193, 25, 42,
+                175, 214, 77, 58, 21, 186, 216, 174, 34, 147, 19, 160, 188,
+            ]),
+            custody_token_account: PublicKey::new(vec![
+                7, 174, 222, 70, 130, 196, 60, 168, 189, 35, 161, 245, 194, 169, 200, 148, 174,
+                246, 253, 87, 63, 45, 82, 20, 43, 171, 167, 194, 196, 86, 70, 241,
+            ]),
+            user_token_account: PublicKey::new(vec![
+                147, 87, 35, 84, 159, 192, 21, 171, 32, 132, 213, 96, 177, 150, 71, 166, 115, 202,
+                122, 55, 70, 4, 210, 126, 106, 102, 181, 28, 158, 43, 25, 180,
+            ]),
+            lp_token_mint: PublicKey::new(vec![
+                16, 118, 70, 156, 16, 65, 217, 233, 179, 159, 194, 237, 225, 19, 51, 151, 59, 62,
+                149, 115, 42, 68, 57, 32, 113, 147, 166, 28, 196, 16, 141, 67,
+            ]),
+            token_program: PublicKey::new(vec![
+                6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28,
+                180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
+            ]),
+            event_authority: PublicKey::new(vec![
+                31, 110, 107, 244, 132, 55, 71, 222, 35, 151, 202, 112, 75, 230, 84, 146, 147, 148,
+                134, 231, 7, 116, 227, 98, 240, 124, 71, 211, 219, 57, 210, 145,
+            ]),
+            program: PublicKey::new(vec![
+                5, 177, 243, 202, 241, 148, 98, 239, 135, 96, 240, 171, 222, 117, 205, 61, 158,
+                227, 27, 58, 50, 198, 32, 232, 148, 18, 46, 156, 155, 129, 69, 250,
+            ]),
+            remaining_accounts: vec![
+                PublicKey::new(vec![
+                    103, 89, 93, 216, 70, 192, 7, 242, 104, 150, 242, 174, 211, 27, 167, 181, 95,
+                    209, 44, 204, 21, 142, 11, 0, 122, 157, 143, 232, 70, 182, 159, 233,
+                ]),
+                PublicKey::new(vec![
+                    139, 170, 74, 72, 100, 34, 108, 192, 34, 72, 77, 200, 40, 30, 26, 22, 143, 92,
+                    244, 232, 5, 63, 26, 229, 6, 109, 145, 106, 136, 185, 223, 159,
+                ]),
+                PublicKey::new(vec![
+                    65, 77, 129, 72, 106, 241, 62, 110, 236, 158, 45, 91, 207, 69, 145, 50, 227,
+                    164, 102, 71, 9, 182, 109, 56, 208, 100, 119, 145, 36, 198, 206, 62,
+                ]),
+                PublicKey::new(vec![
+                    222, 232, 11, 52, 19, 162, 211, 16, 128, 98, 107, 146, 108, 56, 175, 52, 190,
+                    209, 134, 219, 54, 142, 151, 127, 58, 191, 75, 213, 69, 68, 154, 109,
+                ]),
+                PublicKey::new(vec![
+                    58, 87, 226, 203, 202, 208, 40, 131, 80, 35, 204, 171, 74, 216, 123, 210, 118,
+                    78, 143, 193, 50, 214, 142, 152, 102, 9, 235, 19, 75, 215, 134, 249,
+                ]),
+                PublicKey::new(vec![
+                    216, 42, 235, 57, 188, 70, 146, 145, 46, 181, 242, 170, 224, 18, 127, 36, 173,
+                    176, 246, 182, 107, 253, 118, 9, 80, 73, 48, 236, 108, 178, 99, 136,
+                ]),
+                PublicKey::new(vec![
+                    137, 116, 97, 3, 147, 40, 78, 117, 140, 2, 181, 4, 182, 212, 160, 110, 102, 27,
+                    143, 113, 202, 107, 86, 209, 96, 133, 161, 98, 37, 143, 145, 100,
+                ]),
+                PublicKey::new(vec![
+                    10, 94, 179, 70, 66, 54, 72, 77, 64, 8, 213, 215, 209, 243, 166, 61, 96, 115,
+                    62, 141, 88, 106, 109, 125, 75, 165, 76, 227, 23, 48, 183, 59,
+                ]),
+                PublicKey::new(vec![
+                    78, 218, 125, 88, 17, 150, 201, 61, 3, 86, 34, 155, 16, 119, 115, 97, 205, 50,
+                    105, 36, 150, 113, 51, 95, 56, 96, 94, 195, 58, 201, 132, 30,
+                ]),
+                PublicKey::new(vec![
+                    218, 40, 255, 246, 50, 152, 165, 14, 79, 147, 195, 1, 198, 238, 170, 100, 214,
+                    237, 61, 60, 80, 25, 129, 231, 40, 254, 0, 125, 174, 143, 186, 20,
+                ]),
+            ],
+        }),
+        args: Some(perpetuals::instruction::BorrowFromCustodyArgs {
+            amount: 8_463_144_037,
+        }),
+    };
+
+    assert_eq!(borrow_ix, &expected);
 }

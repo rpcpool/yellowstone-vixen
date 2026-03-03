@@ -327,6 +327,7 @@ message InitAccounts {
   PublicKey perpetuals_program_data = 6;
   PublicKey system_program = 7;
   PublicKey token_program = 8;
+  repeated PublicKey remaining_accounts = 9;
 }
     
 message InitArgs {
@@ -353,6 +354,7 @@ message AddPoolAccounts {
   PublicKey system_program = 6;
   PublicKey token_program = 7;
   PublicKey rent = 8;
+  repeated PublicKey remaining_accounts = 9;
 }
     
 message AddPoolArgs {
@@ -378,6 +380,7 @@ message AddCustodyAccounts {
   PublicKey system_program = 8;
   PublicKey token_program = 9;
   PublicKey rent = 10;
+  repeated PublicKey remaining_accounts = 11;
 }
     
 message AddCustodyArgs {
@@ -408,6 +411,7 @@ message SetCustodyConfigAccounts {
   PublicKey admin = 1;
   PublicKey perpetuals = 2;
   PublicKey custody = 3;
+  repeated PublicKey remaining_accounts = 4;
 }
     
 message SetCustodyConfigArgs {
@@ -447,6 +451,7 @@ message SetPoolConfigAccounts {
   PublicKey admin = 1;
   PublicKey perpetuals = 2;
   PublicKey pool = 3;
+  repeated PublicKey remaining_accounts = 4;
 }
     
 message SetPoolConfigArgs {
@@ -467,6 +472,7 @@ message SetPoolConfig {
 message SetPerpetualsConfigAccounts {
   PublicKey admin = 1;
   PublicKey perpetuals = 2;
+  repeated PublicKey remaining_accounts = 3;
 }
     
 message SetPerpetualsConfigArgs {
@@ -482,6 +488,7 @@ message TransferAdminAccounts {
   PublicKey admin = 1;
   PublicKey new_admin = 2;
   PublicKey perpetuals = 3;
+  repeated PublicKey remaining_accounts = 4;
 }
     
 message TransferAdminArgs {
@@ -503,6 +510,7 @@ message WithdrawFees2Accounts {
   PublicKey custody_pythnet_price_account = 8;
   PublicKey receiving_token_account = 9;
   PublicKey token_program = 10;
+  repeated PublicKey remaining_accounts = 11;
 }
     
 message WithdrawFees2Args {
@@ -523,6 +531,7 @@ message CreateTokenMetadataAccounts {
   PublicKey token_metadata_program = 7;
   PublicKey system_program = 8;
   PublicKey rent = 9;
+  repeated PublicKey remaining_accounts = 10;
 }
     
 message CreateTokenMetadataArgs {
@@ -540,6 +549,7 @@ message CreateTokenLedgerAccounts {
   PublicKey token_ledger = 1;
   PublicKey payer = 2;
   PublicKey system_program = 3;
+  repeated PublicKey remaining_accounts = 4;
 }
     
 message CreateTokenLedgerArgs {
@@ -555,6 +565,7 @@ message ReallocCustodyAccounts {
   PublicKey custody = 2;
   PublicKey system_program = 3;
   PublicKey rent = 4;
+  repeated PublicKey remaining_accounts = 5;
 }
     
 message ReallocCustodyArgs {
@@ -570,6 +581,7 @@ message ReallocPoolAccounts {
   PublicKey pool = 2;
   PublicKey system_program = 3;
   PublicKey rent = 4;
+  repeated PublicKey remaining_accounts = 5;
 }
     
 message ReallocPoolArgs {
@@ -599,6 +611,7 @@ message CreateAndDelegateStakeAccountAccounts {
   PublicKey stake_program = 16;
   PublicKey system_program = 17;
   PublicKey token_program = 18;
+  repeated PublicKey remaining_accounts = 19;
 }
     
 message CreateAndDelegateStakeAccountArgs {
@@ -621,6 +634,7 @@ message UnstakeAccounts {
   PublicKey stake_info = 7;
   PublicKey clock = 8;
   PublicKey stake_program = 9;
+  repeated PublicKey remaining_accounts = 10;
 }
     
 message UnstakeArgs {
@@ -645,6 +659,7 @@ message WithdrawStakeAccounts {
   PublicKey stake_program = 11;
   PublicKey system_program = 12;
   PublicKey token_program = 13;
+  repeated PublicKey remaining_accounts = 14;
 }
     
 message WithdrawStakeArgs {
@@ -662,6 +677,7 @@ message RedeemStakeAccounts {
   PublicKey custody = 4;
   PublicKey stake_account = 5;
   PublicKey stake_info = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message RedeemStakeArgs {
@@ -675,6 +691,7 @@ message RedeemStake {
 message OperatorSetCustodyConfigAccounts {
   PublicKey operator = 1;
   PublicKey custody = 2;
+  repeated PublicKey remaining_accounts = 3;
 }
     
 message OperatorSetCustodyConfigArgs {
@@ -709,6 +726,7 @@ message OperatorSetCustodyConfig {
 message OperatorSetPoolConfigAccounts {
   PublicKey operator = 1;
   PublicKey pool = 2;
+  repeated PublicKey remaining_accounts = 3;
 }
     
 message OperatorSetPoolConfigArgs {
@@ -732,6 +750,7 @@ message TestInitAccounts {
   PublicKey perpetuals = 4;
   PublicKey system_program = 5;
   PublicKey token_program = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message TestInitArgs {
@@ -752,6 +771,7 @@ message TestInit {
 message SetTestTimeAccounts {
   PublicKey admin = 1;
   PublicKey perpetuals = 2;
+  repeated PublicKey remaining_accounts = 3;
 }
     
 message SetTestTimeArgs {
@@ -767,6 +787,7 @@ message SetTokenLedgerAccounts {
   PublicKey token_ledger = 1;
   PublicKey token_account = 2;
   PublicKey token_program = 3;
+  repeated PublicKey remaining_accounts = 4;
 }
     
 message SetTokenLedgerArgs {
@@ -795,6 +816,7 @@ message Swap2Accounts {
   PublicKey token_program = 15;
   PublicKey event_authority = 16;
   PublicKey program = 17;
+  repeated PublicKey remaining_accounts = 18;
 }
     
 message Swap2Args {
@@ -825,6 +847,7 @@ message SwapWithTokenLedgerAccounts {
   PublicKey instruction = 15;
   PublicKey event_authority = 16;
   PublicKey program = 17;
+  repeated PublicKey remaining_accounts = 18;
 }
     
 message SwapWithTokenLedgerArgs {
@@ -853,6 +876,7 @@ message InstantIncreasePositionPreSwapAccounts {
   PublicKey instruction = 14;
   PublicKey event_authority = 15;
   PublicKey program = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message InstantIncreasePositionPreSwapArgs {
@@ -880,6 +904,7 @@ message AddLiquidity2Accounts {
   PublicKey token_program = 12;
   PublicKey event_authority = 13;
   PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message AddLiquidity2Args {
@@ -908,6 +933,7 @@ message RemoveLiquidity2Accounts {
   PublicKey token_program = 12;
   PublicKey event_authority = 13;
   PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message RemoveLiquidity2Args {
@@ -937,6 +963,7 @@ message CreateIncreasePositionMarketRequestAccounts {
   PublicKey system_program = 14;
   PublicKey event_authority = 15;
   PublicKey program = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message CreateIncreasePositionMarketRequestArgs {
@@ -972,6 +999,7 @@ message CreateDecreasePositionRequest2Accounts {
   PublicKey system_program = 16;
   PublicKey event_authority = 17;
   PublicKey program = 18;
+  repeated PublicKey remaining_accounts = 19;
 }
     
 message CreateDecreasePositionRequest2Args {
@@ -1008,6 +1036,7 @@ message CreateDecreasePositionMarketRequestAccounts {
   PublicKey system_program = 14;
   PublicKey event_authority = 15;
   PublicKey program = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message CreateDecreasePositionMarketRequestArgs {
@@ -1033,6 +1062,7 @@ message UpdateDecreasePositionRequest2Accounts {
   PublicKey custody = 6;
   PublicKey custody_doves_price_account = 7;
   PublicKey custody_pythnet_price_account = 8;
+  repeated PublicKey remaining_accounts = 9;
 }
     
 message UpdateDecreasePositionRequest2Args {
@@ -1059,6 +1089,7 @@ message ClosePositionRequest2Accounts {
   PublicKey associated_token_program = 11;
   PublicKey event_authority = 12;
   PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
 }
     
 message ClosePositionRequest2Args {
@@ -1084,6 +1115,7 @@ message ClosePositionRequest3Accounts {
   PublicKey associated_token_program = 12;
   PublicKey event_authority = 13;
   PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message ClosePositionRequest3Args {
@@ -1111,6 +1143,7 @@ message IncreasePosition4Accounts {
   PublicKey token_program = 14;
   PublicKey event_authority = 15;
   PublicKey program = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message IncreasePosition4Args {
@@ -1133,6 +1166,7 @@ message IncreasePositionPreSwapAccounts {
   PublicKey token_program = 9;
   PublicKey event_authority = 10;
   PublicKey program = 11;
+  repeated PublicKey remaining_accounts = 12;
 }
     
 message IncreasePositionPreSwapArgs {
@@ -1164,6 +1198,7 @@ message IncreasePositionWithInternalSwapAccounts {
   PublicKey token_program = 18;
   PublicKey event_authority = 19;
   PublicKey program = 20;
+  repeated PublicKey remaining_accounts = 21;
 }
     
 message IncreasePositionWithInternalSwapArgs {
@@ -1193,6 +1228,7 @@ message DecreasePosition4Accounts {
   PublicKey token_program = 16;
   PublicKey event_authority = 17;
   PublicKey program = 18;
+  repeated PublicKey remaining_accounts = 19;
 }
     
 message DecreasePosition4Args {
@@ -1226,6 +1262,7 @@ message DecreasePositionWithInternalSwapAccounts {
   PublicKey token_program = 20;
   PublicKey event_authority = 21;
   PublicKey program = 22;
+  repeated PublicKey remaining_accounts = 23;
 }
     
 message DecreasePositionWithInternalSwapArgs {
@@ -1253,6 +1290,7 @@ message DecreasePositionWithTpslAccounts {
   PublicKey token_program = 14;
   PublicKey event_authority = 15;
   PublicKey program = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message DecreasePositionWithTpslArgs {
@@ -1283,6 +1321,7 @@ message DecreasePositionWithTpslAndInternalSwapAccounts {
   PublicKey token_program = 17;
   PublicKey event_authority = 18;
   PublicKey program = 19;
+  repeated PublicKey remaining_accounts = 20;
 }
     
 message DecreasePositionWithTpslAndInternalSwapArgs {
@@ -1307,6 +1346,7 @@ message LiquidateFullPosition4Accounts {
   PublicKey collateral_custody_token_account = 11;
   PublicKey event_authority = 12;
   PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
 }
     
 message LiquidateFullPosition4Args {
@@ -1322,6 +1362,7 @@ message RefreshAssetsUnderManagementAccounts {
   PublicKey perpetuals = 2;
   PublicKey pool = 3;
   PublicKey lp_token_mint = 4;
+  repeated PublicKey remaining_accounts = 5;
 }
     
 message RefreshAssetsUnderManagementArgs {
@@ -1336,6 +1377,7 @@ message SetMaxGlobalSizesAccounts {
   PublicKey keeper = 1;
   PublicKey custody = 2;
   PublicKey pool = 3;
+  repeated PublicKey remaining_accounts = 4;
 }
     
 message SetMaxGlobalSizesArgs {
@@ -1373,6 +1415,7 @@ message InstantCreateTpslAccounts {
   PublicKey system_program = 18;
   PublicKey event_authority = 19;
   PublicKey program = 20;
+  repeated PublicKey remaining_accounts = 21;
 }
     
 message InstantCreateTpslArgs {
@@ -1411,6 +1454,7 @@ message InstantCreateLimitOrderAccounts {
   PublicKey system_program = 18;
   PublicKey event_authority = 19;
   PublicKey program = 20;
+  repeated PublicKey remaining_accounts = 21;
 }
     
 message InstantCreateLimitOrderArgs {
@@ -1449,6 +1493,7 @@ message InstantIncreasePositionAccounts {
   PublicKey system_program = 18;
   PublicKey event_authority = 19;
   PublicKey program = 20;
+  repeated PublicKey remaining_accounts = 21;
 }
     
 message InstantIncreasePositionArgs {
@@ -1487,6 +1532,7 @@ message InstantDecreasePositionAccounts {
   PublicKey system_program = 20;
   PublicKey event_authority = 21;
   PublicKey program = 22;
+  repeated PublicKey remaining_accounts = 23;
 }
     
 message InstantDecreasePositionArgs {
@@ -1525,6 +1571,7 @@ message InstantDecreasePosition2Accounts {
   PublicKey system_program = 20;
   PublicKey event_authority = 21;
   PublicKey program = 22;
+  repeated PublicKey remaining_accounts = 23;
 }
     
 message InstantDecreasePosition2Args {
@@ -1552,6 +1599,7 @@ message InstantUpdateLimitOrderAccounts {
   PublicKey custody = 8;
   PublicKey custody_doves_price_account = 9;
   PublicKey custody_pythnet_price_account = 10;
+  repeated PublicKey remaining_accounts = 11;
 }
     
 message InstantUpdateLimitOrderArgs {
@@ -1578,6 +1626,7 @@ message InstantUpdateTpslAccounts {
   PublicKey custody_pythnet_price_account = 10;
   PublicKey event_authority = 11;
   PublicKey program = 12;
+  repeated PublicKey remaining_accounts = 13;
 }
     
 message InstantUpdateTpslArgs {
@@ -1598,6 +1647,7 @@ message GetAddLiquidityAmountAndFee2Accounts {
   PublicKey custody_doves_price_account = 4;
   PublicKey custody_pythnet_price_account = 5;
   PublicKey lp_token_mint = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message GetAddLiquidityAmountAndFee2Args {
@@ -1616,6 +1666,7 @@ message GetRemoveLiquidityAmountAndFee2Accounts {
   PublicKey custody_doves_price_account = 4;
   PublicKey custody_pythnet_price_account = 5;
   PublicKey lp_token_mint = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message GetRemoveLiquidityAmountAndFee2Args {
@@ -1630,6 +1681,7 @@ message GetRemoveLiquidityAmountAndFee2 {
 message GetAssetsUnderManagement2Accounts {
   PublicKey perpetuals = 1;
   PublicKey pool = 2;
+  repeated PublicKey remaining_accounts = 3;
 }
     
 message GetAssetsUnderManagement2Args {
@@ -1654,6 +1706,7 @@ message BorrowFromCustodyAccounts {
   PublicKey token_program = 10;
   PublicKey event_authority = 11;
   PublicKey program = 12;
+  repeated PublicKey remaining_accounts = 13;
 }
     
 message BorrowFromCustodyArgs {
@@ -1676,6 +1729,7 @@ message RepayToCustodyAccounts {
   PublicKey token_program = 8;
   PublicKey event_authority = 9;
   PublicKey program = 10;
+  repeated PublicKey remaining_accounts = 11;
 }
     
 message RepayToCustodyArgs {
@@ -1701,6 +1755,7 @@ message DepositCollateralForBorrowsAccounts {
   PublicKey system_program = 11;
   PublicKey event_authority = 12;
   PublicKey program = 13;
+  repeated PublicKey remaining_accounts = 14;
 }
     
 message DepositCollateralForBorrowsArgs {
@@ -1725,6 +1780,7 @@ message WithdrawCollateralForBorrowsAccounts {
   PublicKey token_program = 10;
   PublicKey event_authority = 11;
   PublicKey program = 12;
+  repeated PublicKey remaining_accounts = 13;
 }
     
 message WithdrawCollateralForBorrowsArgs {
@@ -1748,6 +1804,7 @@ message LiquidateBorrowPositionAccounts {
   PublicKey token_program = 9;
   PublicKey event_authority = 10;
   PublicKey program = 11;
+  repeated PublicKey remaining_accounts = 12;
 }
     
 message LiquidateBorrowPositionArgs {
@@ -1770,6 +1827,7 @@ message PartialLiquidateBorrowPositionAccounts {
   PublicKey token_program = 9;
   PublicKey event_authority = 10;
   PublicKey program = 11;
+  repeated PublicKey remaining_accounts = 12;
 }
     
 message PartialLiquidateBorrowPositionArgs {
@@ -1786,6 +1844,7 @@ message CloseBorrowPositionAccounts {
   PublicKey system_program = 3;
   PublicKey event_authority = 4;
   PublicKey program = 5;
+  repeated PublicKey remaining_accounts = 6;
 }
     
 message CloseBorrowPositionArgs {

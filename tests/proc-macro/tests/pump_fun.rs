@@ -85,6 +85,7 @@ async fn parse_sell_ix() {
                 12, 53, 255, 169, 5, 90, 142, 86, 141, 168, 247, 188, 7, 86, 21, 39, 76, 241, 201,
                 44, 164, 31, 64, 0, 156, 81, 106, 164, 20, 194, 124, 112,
             ]),
+            remaining_accounts: vec![],
         }),
         args: Some(pump_fun::instruction::SellArgs {
             amount: 3_878_351_170_692,
@@ -175,6 +176,7 @@ async fn parse_buy_ix() {
                 12, 53, 255, 169, 5, 90, 142, 86, 141, 168, 247, 188, 7, 86, 21, 39, 76, 241, 201,
                 44, 164, 31, 64, 0, 156, 81, 106, 164, 20, 194, 124, 112,
             ]),
+            remaining_accounts: vec![],
         }),
         args: Some(pump_fun::instruction::BuyArgs {
             amount: 693_868_985_905,
