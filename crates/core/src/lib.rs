@@ -135,8 +135,7 @@ pub trait WithProgramId {
 
 /// A parser that parses all relevant updates for a particular program ID.
 pub trait ProgramParser: Parser + WithProgramId {
-    /// The program ID that this parser is associated with.
-    fn program_id(&self) -> KeyBytes<32>;
+    // export program_id from WithProgramId
 }
 
 /// Helper trait for getting the ID of a parser.

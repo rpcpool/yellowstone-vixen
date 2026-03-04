@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use yellowstone_vixen_core::{KeyBytes, ParseResult, Parser, Prefilter, ProgramParser, SlotUpdate};
+use yellowstone_vixen_core::{KeyBytes, ParseResult, Parser, Prefilter, ProgramParser, SlotUpdate, WithProgramId};
 
 #[derive(Debug, Clone, Copy)]
 pub struct SlotParser;
@@ -16,7 +16,7 @@ impl Parser for SlotParser {
     async fn parse(&self, slot: &SlotUpdate) -> ParseResult<Self::Output> { Ok(slot.to_owned()) }
 }
 
-impl ProgramParser for SlotParser {
+impl WithProgramId for SlotParser {
     /// "S111111111111111111111111111111111111111112"
     #[inline]
     fn program_id(&self) -> KeyBytes<32> {

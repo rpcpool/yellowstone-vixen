@@ -3,7 +3,7 @@
 
 use yellowstone_vixen_proto::prost::{Message, Name};
 
-use super::{Parser, ProgramParser};
+use super::{Parser, WithProgramId};
 
 /// Defines a crate-local helper extension trait for implementing conversions
 /// from foreign types into foreign Protobuf message types
@@ -70,7 +70,7 @@ impl<T> std::ops::DerefMut for Proto<T> {
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
-impl<T: ParseProto + ProgramParser + Sync> ProgramParser for Proto<T>
+impl<T: ParseProto + WithProgramId + Sync> WithProgramId for Proto<T>
 where T::Input: Sync
 {
     #[inline]
