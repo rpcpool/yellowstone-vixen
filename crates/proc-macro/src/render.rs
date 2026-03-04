@@ -495,6 +495,10 @@ fn render_instruction_parser(
                 let data = &ix_update.data;
                 let accounts = &ix_update.accounts;
 
+                if ix_update.program != ID {
+                    return Err(ParseError::Filtered);
+                }
+
                 #(#instruction_matches)*
 
                 Err(ParseError::from(
