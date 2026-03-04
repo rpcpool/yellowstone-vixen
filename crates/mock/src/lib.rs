@@ -31,10 +31,7 @@ use solana_transaction_status::{
     UiInnerInstructions, UiInstruction, UiMessage,
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
-use yellowstone_vixen_core::{
-    instruction::{InstructionShared, InstructionUpdate},
-    KeyBytes, WithProgramId,
-};
+use yellowstone_vixen_core::{instruction::{InstructionShared, InstructionUpdate}, WithProgramId, Pubkey as VixenPubkey};
 
 //TODO: Look these up from the Vixen.toml config file
 const RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
