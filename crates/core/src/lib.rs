@@ -119,8 +119,12 @@ pub trait Parser {
     fn parse(&self, value: &Self::Input) -> impl Future<Output = ParseResult<Self::Output>> + Send;
 }
 
+pub trait WithProgramId {
+    fn program_id(&self) -> Pubkey;
+}
+
 /// A parser that parses all relevant updates for a particular program ID.
-pub trait ProgramParser: Parser {
+pub trait ProgramParser: Parser + WithProgramId {
     /// The program ID that this parser is associated with.
     fn program_id(&self) -> Pubkey;
 }
