@@ -203,6 +203,7 @@ impl TransactionSlotSink {
     }
 }
 
+#[cfg(feature = "experimental-account-parser")]
 /// Messages from the passthrough account pipeline.
 pub enum AccountMsg {
     Record {
@@ -212,6 +213,7 @@ pub enum AccountMsg {
     },
 }
 
+#[cfg(feature = "experimental-account-parser")]
 /// Writes account records to Kafka and commits to the account.slots topic.
 pub struct AccountSink {
     producer: Arc<FutureProducer>,
@@ -221,6 +223,7 @@ pub struct AccountSink {
     retry_backoff: Duration,
 }
 
+#[cfg(feature = "experimental-account-parser")]
 impl AccountSink {
     pub fn new(
         producer: Arc<FutureProducer>,

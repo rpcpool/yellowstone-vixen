@@ -7,7 +7,10 @@ use yellowstone_vixen_core::{
     AccountUpdate, TransactionUpdate,
 };
 
-use crate::{events::PreparedRecord, kafka_sink::AccountMsg, sink::KafkaSink};
+use crate::{events::PreparedRecord, sink::KafkaSink};
+
+#[cfg(feature = "experimental-account-parser")]
+use crate::kafka_sink::AccountMsg;
 
 /// Handler that parses transaction instructions and account updates eagerly
 /// (at processed commitment) and sends the resulting `PreparedRecord`s to the
@@ -164,6 +167,7 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
     }
 }
 
+#[cfg(feature = "experimental-account-parser")]
 /// Mode B handler: parses accounts at finalized commitment and sends directly
 /// to the AccountSink via a channel (no coordinator buffering).
 #[derive(Clone)]
@@ -172,18 +176,21 @@ pub struct PassthroughAccountHandler {
     tx: tokio::sync::mpsc::Sender<AccountMsg>,
 }
 
+#[cfg(feature = "experimental-account-parser")]
 impl std::fmt::Debug for PassthroughAccountHandler {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PassthroughAccountHandler").finish()
     }
 }
 
+#[cfg(feature = "experimental-account-parser")]
 impl PassthroughAccountHandler {
     pub fn new(parsers: KafkaSink, tx: tokio::sync::mpsc::Sender<AccountMsg>) -> Self {
         Self { parsers, tx }
     }
 }
 
+#[cfg(feature = "experimental-account-parser")]
 impl vixen::Handler<AccountUpdate, AccountUpdate> for PassthroughAccountHandler {
     async fn handle(&self, update: &AccountUpdate, _raw: &AccountUpdate) -> HandlerResult<()> {
         let slot = update.slot;

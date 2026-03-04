@@ -18,8 +18,12 @@ pub use events::{
     AccountSlotCommitEvent, CommitScope, MarkerType, PreparedRecord, RawAccountEvent,
     RawInstructionEvent, RecordHeader, RecordKind, TransactionSlotCommitEvent,
 };
-pub use handler::{BufferingHandler, PassthroughAccountHandler};
-pub use kafka_sink::{AccountMsg, AccountSink, TransactionSlotSink};
+pub use handler::BufferingHandler;
+#[cfg(feature = "experimental-account-parser")]
+pub use handler::PassthroughAccountHandler;
+pub use kafka_sink::TransactionSlotSink;
+#[cfg(feature = "experimental-account-parser")]
+pub use kafka_sink::{AccountMsg, AccountSink};
 pub use parsers::{AccountSubscription, TransactionSubscription};
 pub use producer::create_producer;
 // Re-export rdkafka types for convenience
