@@ -455,7 +455,7 @@ async fn fetch_fixture<P: ProgramParser>(
 }
 
 
-pub async fn fetch_fixture_multiple_programs<P: ProgramParser>(
+pub async fn fetch_fixture_multiple_programs(
     fixture: &str,
     program_ids: &[yellowstone_vixen_core::Pubkey],
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
