@@ -416,7 +416,7 @@ trait ProgramFilter {
 }
 
 #[derive(Debug, Clone)]
-pub struct ProgramParserFilter {
+struct ProgramParserFilter {
     program_id: String,
 }
 
@@ -430,7 +430,7 @@ impl ProgramFilter for ProgramParserFilter{
 }
 
 #[derive(Debug, Clone)]
-pub struct MultipleProgramsFilter {
+struct MultipleProgramsFilter {
     filters: Vec<yellowstone_vixen_core::Pubkey>,
 }
 
@@ -451,6 +451,15 @@ async fn fetch_fixture<P: ProgramParser>(
     parser: &P,
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
     let filter = ProgramParserFilter::new(parser);
+    fetch_fixture_inner(fixture, &filter).await
+}
+
+
+pub async fn fetch_fixture_multiple_programs<P: ProgramParser>(
+    fixture: &str,
+    parsers: &[&P],
+) -> Result<FixtureData, Box<dyn std::error::Error>> {
+    let filter = MultipleProgramsFilter::new(parsers.iter().map(|parser| parser.program_id()).collect());
     fetch_fixture_inner(fixture, &filter).await
 }
 
