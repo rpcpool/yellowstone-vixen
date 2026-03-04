@@ -128,6 +128,7 @@ pub trait DynAccountParser: Send + Sync {
     fn program_id(&self) -> Pubkey;
 }
 
+#[cfg(feature = "experimental-account-parser")]
 struct AccountParserWrapper<P> {
     parser: P,
     topic: String,
@@ -136,6 +137,7 @@ struct AccountParserWrapper<P> {
     fallback_topic: Option<String>,
 }
 
+#[cfg(feature = "experimental-account-parser")]
 impl<P, O> DynAccountParser for AccountParserWrapper<P>
 where
     P: Parser<Input = AccountUpdate, Output = O> + ProgramParser + Send + Sync,
@@ -673,15 +675,15 @@ mod tests {
     use prost::Message;
     use yellowstone_vixen_core::{
         instruction::{InstructionShared, InstructionUpdate, Path},
-        AccountUpdate, AccountUpdateInfo, ParseError, ParseResult, Parser, Prefilter,
-        ProgramParser,
+        ParseError, ParseResult, Parser, Prefilter, ProgramParser,
     };
+    #[cfg(feature = "experimental-account-parser")]
+    use yellowstone_vixen_core::{AccountUpdate, AccountUpdateInfo};
 
     use super::KafkaSinkBuilder;
-    use crate::{
-        events::{RawAccountEvent, RawInstructionEvent},
-        Pubkey,
-    };
+    #[cfg(feature = "experimental-account-parser")]
+    use crate::events::RawAccountEvent;
+    use crate::{events::RawInstructionEvent, Pubkey};
 
     #[derive(Clone, Copy)]
     enum TestInstructionOutcome {

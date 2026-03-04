@@ -12,9 +12,9 @@ use rdkafka::{
     producer::{FutureProducer, FutureRecord},
 };
 use tokio::{sync::mpsc, time::sleep};
-use yellowstone_vixen_block_coordinator::{
-    AccountCommitAt, AccountMode, AccountSlot, InstructionSlot,
-};
+#[cfg(feature = "experimental-account-parser")]
+use yellowstone_vixen_block_coordinator::AccountSlot;
+use yellowstone_vixen_block_coordinator::{AccountCommitAt, AccountMode, InstructionSlot};
 
 type SinkError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -54,12 +54,11 @@ where
     unreachable!("max_attempts >= 1")
 }
 
+#[cfg(feature = "experimental-account-parser")]
+use crate::events::{AccountSlotCommitEvent, MarkerType};
 use crate::{
     config::KafkaSinkConfig,
-    events::{
-        AccountSlotCommitEvent, CommitScope, MarkerType, PreparedRecord, RecordHeader, RecordKind,
-        TransactionSlotCommitEvent,
-    },
+    events::{CommitScope, PreparedRecord, RecordHeader, RecordKind, TransactionSlotCommitEvent},
 };
 
 fn to_kafka_headers(headers: &[RecordHeader]) -> OwnedHeaders {
@@ -464,6 +463,7 @@ fn build_transaction_slot_commit_event(
     }
 }
 
+#[cfg(feature = "experimental-account-parser")]
 fn build_account_slot_commit_event(
     acct_slot: &AccountSlot<PreparedRecord>,
     account_mode: &AccountMode,
@@ -504,11 +504,12 @@ impl From<&AccountMode> for CommitScope {
 
 #[cfg(test)]
 mod tests {
-    use yellowstone_vixen_block_coordinator::{
-        AccountCommitAt, AccountMode, AccountSlot, InstructionSlot,
-    };
+    use yellowstone_vixen_block_coordinator::InstructionSlot;
+    #[cfg(feature = "experimental-account-parser")]
+    use yellowstone_vixen_block_coordinator::{AccountCommitAt, AccountMode, AccountSlot};
 
     use super::*;
+    use crate::events::{AccountSlotCommitEvent, MarkerType};
 
     fn record(topic: &str, kind: RecordKind, is_decoded: bool) -> PreparedRecord {
         PreparedRecord {
@@ -551,6 +552,7 @@ mod tests {
         assert_eq!(event.transaction_status_succeeded_count, 8);
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     #[test]
     fn account_commit_event_counts_decode_and_fallback_explicitly() {
         let acct_slot = AccountSlot {
@@ -578,6 +580,7 @@ mod tests {
         assert_eq!(event.fallback_account_count, Some(1));
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     #[test]
     fn passthrough_mode_commits_as_finalized() {
         let acct_slot = AccountSlot {
@@ -612,6 +615,7 @@ mod tests {
         assert!(!obj.contains_key("fallback_account_count"));
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     #[test]
     fn completed_json_includes_account_count_fields() {
         let acct_slot = AccountSlot {

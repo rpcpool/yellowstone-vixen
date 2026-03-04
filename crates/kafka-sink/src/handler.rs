@@ -7,10 +7,9 @@ use yellowstone_vixen_core::{
     AccountUpdate, TransactionUpdate,
 };
 
-use crate::{events::PreparedRecord, sink::KafkaSink};
-
 #[cfg(feature = "experimental-account-parser")]
 use crate::kafka_sink::AccountMsg;
+use crate::{events::PreparedRecord, sink::KafkaSink};
 
 /// Handler that parses transaction instructions and account updates eagerly
 /// (at processed commitment) and sends the resulting `PreparedRecord`s to the
