@@ -502,7 +502,7 @@ fn render_instruction_parser(
                 #(#instruction_matches)*
 
                 Err(ParseError::from(
-                    "Invalid Instruction discriminator".to_owned(),
+                    format!("Invalid Instruction discriminator {:?}", ix_update.path),
                 ))
             }
         }
