@@ -30,6 +30,18 @@ pub fn render_vixen_parser(idl: &RootNode) -> TokenStream {
             #instructions
             #account_parser
             #instruction_parser
+
+            impl yellowstone_vixen::vixen_core::ProgramParser for AccountParser {
+                fn program_id(&self) -> yellowstone_vixen_parser::Pubkey {
+                    ID
+                }
+            }
+
+            impl yellowstone_vixen::vixen_core::ProgramParser for InstructionParser {
+                fn program_id(&self) -> yellowstone_vixen_parser::Pubkey {
+                    ID
+                }
+            }
         }
     }
 }

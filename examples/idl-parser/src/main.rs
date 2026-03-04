@@ -5,6 +5,7 @@ use yellowstone_vixen::Pipeline;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcSource;
 
+
 include_vixen_parser!("pump_fun.json");
 
 #[derive(clap::Parser)]
