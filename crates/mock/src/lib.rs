@@ -31,7 +31,10 @@ use solana_transaction_status::{
     UiInnerInstructions, UiInstruction, UiMessage,
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
-use yellowstone_vixen_core::{instruction::{InstructionShared, InstructionUpdate}, KeyBytes, WithProgramId};
+use yellowstone_vixen_core::{
+    instruction::{InstructionShared, InstructionUpdate},
+    KeyBytes, WithProgramId,
+};
 
 const DEFAULT_RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
 
