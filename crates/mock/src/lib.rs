@@ -193,10 +193,10 @@ pub fn get_account_pubkey_from_index(
     )
 }
 
-fn try_from_ui_instructions(
+fn try_from_ui_instructions<F: ProgramFilter>(
     ui_ixs: &[UiCompiledInstruction],
     accounts: &[String],
-    program_id: &str,
+    filter: &F,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
     for (idx, ix) in ui_ixs.iter().enumerate() {
@@ -217,13 +217,13 @@ fn try_from_ui_instructions(
 
         ixs.push(ix);
     }
-    Ok(filter_ixs(ixs, program_id))
+    Ok(filter_ixs(ixs, filter))
 }
 
-fn try_from_ui_inner_ixs(
+fn try_from_ui_inner_ixs<F: ProgramFilter>(
     ui_inner_ixs: &UiInnerInstructions,
     accounts: &[String],
-    program_id: &str,
+    filter: &F,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
     for (idx, ix) in ui_inner_ixs.instructions.iter().enumerate() {
@@ -248,22 +248,22 @@ fn try_from_ui_inner_ixs(
             return Err("Invalid inner instruction".into());
         }
     }
-    Ok(filter_ixs(ixs, program_id))
+    Ok(filter_ixs(ixs, filter))
 }
 
-fn filter_ixs(
+fn filter_ixs<F: ProgramFilter>(
     ixs: Vec<SerializableInstructionUpdate>,
-    program_id: &str,
+    filter: &F,
 ) -> Vec<SerializableInstructionUpdate> {
     // Filter out instructions that matches the program
     ixs.into_iter()
-        .filter(|ix| ix.program.to_string().eq(program_id))
+        .filter(|ix| filter.matches(&ix.program.to_string()))
         .collect::<Vec<SerializableInstructionUpdate>>()
 }
 
-fn try_from_tx_meta<P: ProgramParser>(
+fn try_from_tx_meta<F: ProgramFilter>(
     value: EncodedConfirmedTransactionWithStatusMeta,
-    parser: &P,
+    filter: &F
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let EncodedConfirmedTransactionWithStatusMeta {
         transaction,
@@ -278,7 +278,6 @@ fn try_from_tx_meta<P: ProgramParser>(
     let mut inner_ixs: Option<Vec<UiInnerInstructions>> = None;
 
     let mut account_keys: Vec<String> = Vec::new();
-    let program_id = parser.program_id().to_string();
 
     if let EncodedTransaction::Json(tx_data) = transaction {
         if let UiMessage::Raw(raw_message) = tx_data.message {
@@ -300,7 +299,7 @@ fn try_from_tx_meta<P: ProgramParser>(
 
             // filtering outer instructions by program id
             let mut program_filtered_ixs =
-                try_from_ui_instructions(&raw_message.instructions, &account_keys, &program_id)?;
+                try_from_ui_instructions(&raw_message.instructions, &account_keys, filter)?;
 
             // filtering inner instructions by program id
             if let Some(inner_ixs) = inner_ixs {
@@ -309,7 +308,7 @@ fn try_from_tx_meta<P: ProgramParser>(
                 }
 
                 for ixs in inner_ixs {
-                    let inner_ixs = try_from_ui_inner_ixs(&ixs, &account_keys, &program_id)?;
+                    let inner_ixs = try_from_ui_inner_ixs(&ixs, &account_keys, filter)?;
                     if inner_ixs.is_empty() {
                         continue;
                     }
@@ -411,9 +410,53 @@ pub enum FixtureData {
     Instructions(Vec<SerializableInstructionUpdate>),
 }
 
+
+trait ProgramFilter {
+    fn matches(&self, program_id: &str) -> bool;
+}
+
+#[derive(Debug, Clone)]
+pub struct ProgramParserFilter {
+    program_id: String,
+}
+
+impl ProgramParserFilter {
+    // TODO implement Into
+    pub fn new<P: ProgramParser>(parser: &P) -> Self { Self { program_id: parser.program_id().to_string() } }
+}
+
+impl ProgramFilter for ProgramParserFilter{
+    fn matches(&self, program_id: &str) -> bool { self.program_id == program_id }
+}
+
+#[derive(Debug, Clone)]
+pub struct MultipleProgramsFilter {
+    filters: Vec<yellowstone_vixen_core::Pubkey>,
+}
+
+impl MultipleProgramsFilter {
+    pub fn new(program_ids: Vec<yellowstone_vixen_core::Pubkey>) -> Self { Self { filters: program_ids } }
+}
+
+impl ProgramFilter for MultipleProgramsFilter {
+    fn matches(&self, program_id: &str) -> bool {
+        self.filters
+            .iter()
+            .any(|filter| filter.to_string() == program_id)
+    }
+}
+
 async fn fetch_fixture<P: ProgramParser>(
     fixture: &str,
     parser: &P,
+) -> Result<FixtureData, Box<dyn std::error::Error>> {
+    let filter = ProgramParserFilter::new(parser);
+    fetch_fixture_inner(fixture, &filter).await
+}
+
+async fn fetch_fixture_inner<F: ProgramFilter>(
+    fixture: &str,
+    filter: &F,
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
     let fixture_type = get_fixture_type(fixture);
 
@@ -445,7 +488,7 @@ async fn fetch_fixture<P: ProgramParser>(
                 .await
                 .map_err(|e| format!("Error fetching tx: {e:?}"))?;
 
-            let instructions = try_from_tx_meta(tx, parser)?;
+            let instructions = try_from_tx_meta(tx, filter)?;
 
             Ok(FixtureData::Instructions(instructions))
         },
