@@ -36,11 +36,11 @@ use yellowstone_vixen_core::{
     ProgramParser, Pubkey as VixenPubkey,
 };
 
-//TODO: Look these up from the Vixen.toml config file
-const RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
+const DEFAULT_RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
 const FIXTURES_PATH: &str = "./fixtures";
 const PUBKEY_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{32,44}$";
 const TX_SIGNATURE_REGEX: &str = r"^[1-9A-HJ-NP-Za-km-z]{64,90}$";
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountInfo {
@@ -398,7 +398,12 @@ fn convert_account_info(pubkey: Pubkey) -> impl Fn(Account) -> ClientResult<Acco
 }
 
 #[must_use]
-pub fn get_rpc_client() -> RpcClient { RpcClient::new(RPC_ENDPOINT.to_string()) }
+pub fn get_rpc_client() -> RpcClient {
+    let endpoint =
+        std::env::var("RPC_ENDPOINT").unwrap_or_else(|_| DEFAULT_RPC_ENDPOINT.to_string());
+
+    RpcClient::new(endpoint)
+}
 
 #[derive(Debug, Clone)]
 pub enum FixtureData {
