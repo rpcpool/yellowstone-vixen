@@ -457,9 +457,9 @@ async fn fetch_fixture<P: ProgramParser>(
 
 pub async fn fetch_fixture_multiple_programs<P: ProgramParser>(
     fixture: &str,
-    parsers: &[&P],
+    program_ids: &[yellowstone_vixen_core::Pubkey],
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
-    let filter = MultipleProgramsFilter::new(parsers.iter().map(|parser| parser.program_id()).collect());
+    let filter = MultipleProgramsFilter::new(program_ids.to_vec());
     fetch_fixture_inner(fixture, &filter).await
 }
 
