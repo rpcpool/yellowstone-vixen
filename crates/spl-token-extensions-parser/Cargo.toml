@@ -46,4 +46,5 @@ proto = [
   "yellowstone-vixen-proc-macro/proto",
   "yellowstone-vixen-proto/parser",
   "yellowstone-vixen-parser/proto",
+  "yellowstone-vixen-spl-token-parser/proto",
 ]

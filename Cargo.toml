@@ -111,10 +111,10 @@ yellowstone-vixen-parser = { path = "crates/parser", version = "0.7.0" }
 yellowstone-vixen-proto = { path = "crates/proto", version = "0.7.0" }
 
 # Parsers
-yellowstone-vixen-spl-token-extensions-parser = { path = "crates/spl-token-extensions-parser", version = "0.7.0" }
-yellowstone-vixen-spl-token-parser = { path = "crates/spl-token-parser", version = "0.7.0" }
-yellowstone-vixen-block-meta-parser = { path = "crates/block-meta-parser", version = "0.7.0" }
-yellowstone-vixen-slot-parser = { path = "crates/slot-parser", version = "0.7.0" }
+yellowstone-vixen-spl-token-extensions-parser = { path = "crates/spl-token-extensions-parser", version = "0.7.0", default-features = false }
+yellowstone-vixen-spl-token-parser = { path = "crates/spl-token-parser", version = "0.7.0", default-features = false }
+yellowstone-vixen-block-meta-parser = { path = "crates/block-meta-parser", version = "0.7.0", default-features = false }
+yellowstone-vixen-slot-parser = { path = "crates/slot-parser", version = "0.7.0", default-features = false }
 
 # Sources
 yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.7.0" }

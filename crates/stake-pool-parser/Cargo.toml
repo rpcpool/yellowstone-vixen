@@ -22,6 +22,10 @@ bs58.workspace = true
 prost = { workspace = true, optional = true }
 prost-types = { workspace = true, optional = true }
 
+[dev-dependencies]
+yellowstone-vixen-mock = { workspace = true }
+tokio.workspace = true
+
 [features]
 default = ["proto"]
 proto = [
@@ -30,7 +34,3 @@ proto = [
   "yellowstone-vixen-core/proto",
   "yellowstone-vixen-proc-macro/proto",
 ]
-
-[dev-dependencies]
-yellowstone-vixen-mock = { workspace = true }
-tokio.workspace = true
