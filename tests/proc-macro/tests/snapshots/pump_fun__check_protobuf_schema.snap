@@ -265,6 +265,7 @@ message AdminSetCreatorAccounts {
   PublicKey bonding_curve = 4;
   PublicKey event_authority = 5;
   PublicKey program = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message AdminSetCreatorArgs {
@@ -284,6 +285,7 @@ message AdminSetIdlAuthorityAccounts {
   PublicKey program_signer = 5;
   PublicKey event_authority = 6;
   PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
 }
     
 message AdminSetIdlAuthorityArgs {
@@ -306,6 +308,7 @@ message AdminUpdateTokenIncentivesAccounts {
   PublicKey token_program = 8;
   PublicKey event_authority = 9;
   PublicKey program = 10;
+  repeated PublicKey remaining_accounts = 11;
 }
     
 message AdminUpdateTokenIncentivesArgs {
@@ -338,6 +341,7 @@ message BuyAccounts {
   PublicKey user_volume_accumulator = 14;
   PublicKey fee_config = 15;
   PublicKey fee_program = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message BuyArgs {
@@ -368,6 +372,7 @@ message BuyExactSolInAccounts {
   PublicKey user_volume_accumulator = 14;
   PublicKey fee_config = 15;
   PublicKey fee_program = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message BuyExactSolInArgs {
@@ -394,6 +399,7 @@ message ClaimTokenIncentivesAccounts {
   PublicKey event_authority = 10;
   PublicKey program = 11;
   PublicKey payer = 12;
+  repeated PublicKey remaining_accounts = 13;
 }
     
 message ClaimTokenIncentivesArgs {
@@ -409,6 +415,7 @@ message CloseUserVolumeAccumulatorAccounts {
   PublicKey user_volume_accumulator = 2;
   PublicKey event_authority = 3;
   PublicKey program = 4;
+  repeated PublicKey remaining_accounts = 5;
 }
     
 message CloseUserVolumeAccumulatorArgs {
@@ -425,6 +432,7 @@ message CollectCreatorFeeAccounts {
   PublicKey system_program = 3;
   PublicKey event_authority = 4;
   PublicKey program = 5;
+  repeated PublicKey remaining_accounts = 6;
 }
     
 message CollectCreatorFeeArgs {
@@ -450,6 +458,7 @@ message CreateAccounts {
   PublicKey rent = 12;
   PublicKey event_authority = 13;
   PublicKey program = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message CreateArgs {
@@ -481,6 +490,7 @@ message CreateV2Accounts {
   PublicKey mayhem_token_vault = 14;
   PublicKey event_authority = 15;
   PublicKey program = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message CreateV2Args {
@@ -502,6 +512,7 @@ message ExtendAccountAccounts {
   PublicKey system_program = 3;
   PublicKey event_authority = 4;
   PublicKey program = 5;
+  repeated PublicKey remaining_accounts = 6;
 }
     
 message ExtendAccountArgs {
@@ -519,6 +530,7 @@ message InitUserVolumeAccumulatorAccounts {
   PublicKey system_program = 4;
   PublicKey event_authority = 5;
   PublicKey program = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message InitUserVolumeAccumulatorArgs {
@@ -533,6 +545,7 @@ message InitializeAccounts {
   PublicKey global = 1;
   PublicKey user = 2;
   PublicKey system_program = 3;
+  repeated PublicKey remaining_accounts = 4;
 }
     
 message InitializeArgs {
@@ -568,6 +581,7 @@ message MigrateAccounts {
   PublicKey pump_amm_event_authority = 22;
   PublicKey event_authority = 23;
   PublicKey program = 24;
+  repeated PublicKey remaining_accounts = 25;
 }
     
 message MigrateArgs {
@@ -593,6 +607,7 @@ message SellAccounts {
   PublicKey program = 12;
   PublicKey fee_config = 13;
   PublicKey fee_program = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message SellArgs {
@@ -613,6 +628,7 @@ message SetCreatorAccounts {
   PublicKey bonding_curve = 5;
   PublicKey event_authority = 6;
   PublicKey program = 7;
+  repeated PublicKey remaining_accounts = 8;
 }
     
 message SetCreatorArgs {
@@ -630,6 +646,7 @@ message SetMetaplexCreatorAccounts {
   PublicKey bonding_curve = 3;
   PublicKey event_authority = 4;
   PublicKey program = 5;
+  repeated PublicKey remaining_accounts = 6;
 }
     
 message SetMetaplexCreatorArgs {
@@ -645,6 +662,7 @@ message SetParamsAccounts {
   PublicKey authority = 2;
   PublicKey event_authority = 3;
   PublicKey program = 4;
+  repeated PublicKey remaining_accounts = 5;
 }
     
 message SetParamsArgs {
@@ -671,6 +689,7 @@ message SetReservedFeeRecipientsAccounts {
   PublicKey authority = 2;
   PublicKey event_authority = 3;
   PublicKey program = 4;
+  repeated PublicKey remaining_accounts = 5;
 }
     
 message SetReservedFeeRecipientsArgs {
@@ -688,6 +707,7 @@ message SyncUserVolumeAccumulatorAccounts {
   PublicKey user_volume_accumulator = 3;
   PublicKey event_authority = 4;
   PublicKey program = 5;
+  repeated PublicKey remaining_accounts = 6;
 }
     
 message SyncUserVolumeAccumulatorArgs {
@@ -703,6 +723,7 @@ message ToggleCreateV2Accounts {
   PublicKey authority = 2;
   PublicKey event_authority = 3;
   PublicKey program = 4;
+  repeated PublicKey remaining_accounts = 5;
 }
     
 message ToggleCreateV2Args {
@@ -719,6 +740,7 @@ message ToggleMayhemModeAccounts {
   PublicKey authority = 2;
   PublicKey event_authority = 3;
   PublicKey program = 4;
+  repeated PublicKey remaining_accounts = 5;
 }
     
 message ToggleMayhemModeArgs {
@@ -736,6 +758,7 @@ message UpdateGlobalAuthorityAccounts {
   PublicKey new_authority = 3;
   PublicKey event_authority = 4;
   PublicKey program = 5;
+  repeated PublicKey remaining_accounts = 6;
 }
     
 message UpdateGlobalAuthorityArgs {

@@ -168,6 +168,7 @@ message InitializeAccounts {
   PublicKey serum_program = 16;
   PublicKey serum_market = 17;
   PublicKey user_wallet = 18;
+  repeated PublicKey remaining_accounts = 19;
 }
     
 message InitializeArgs {
@@ -202,6 +203,7 @@ message Initialize2Accounts {
   PublicKey user_token_coin = 19;
   PublicKey user_token_pc = 20;
   PublicKey user_lp_token_account = 21;
+  repeated PublicKey remaining_accounts = 22;
 }
     
 message Initialize2Args {
@@ -236,6 +238,7 @@ message MonitorStepAccounts {
   PublicKey serum_event_q = 17;
   PublicKey serum_bids = 18;
   PublicKey serum_asks = 19;
+  repeated PublicKey remaining_accounts = 20;
 }
     
 message MonitorStepArgs {
@@ -264,6 +267,7 @@ message DepositAccounts {
   PublicKey user_lp_token_account = 12;
   PublicKey user_owner = 13;
   PublicKey serum_event_queue = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message DepositArgs {
@@ -300,6 +304,7 @@ message WithdrawAccounts {
   PublicKey serum_event_q = 20;
   PublicKey serum_bids = 21;
   PublicKey serum_asks = 22;
+  repeated PublicKey remaining_accounts = 23;
 }
     
 message WithdrawArgs {
@@ -333,6 +338,7 @@ message MigrateToOpenBookAccounts {
   PublicKey new_serum_program = 19;
   PublicKey new_serum_market = 20;
   PublicKey admin = 21;
+  repeated PublicKey remaining_accounts = 22;
 }
     
 message MigrateToOpenBookArgs {
@@ -360,6 +366,7 @@ message SetParamsAccounts {
   PublicKey serum_bids = 14;
   PublicKey serum_asks = 15;
   PublicKey amm_admin_account = 16;
+  repeated PublicKey remaining_accounts = 17;
 }
     
 message SetParamsArgs {
@@ -394,6 +401,7 @@ message WithdrawPnlAccounts {
   PublicKey serum_coin_vault_account = 15;
   PublicKey serum_pc_vault_account = 16;
   PublicKey serum_vault_signer = 17;
+  repeated PublicKey remaining_accounts = 18;
 }
     
 message WithdrawPnlArgs {
@@ -411,6 +419,7 @@ message WithdrawSrmAccounts {
   PublicKey amm_authority = 4;
   PublicKey srm_token = 5;
   PublicKey dest_srm_token = 6;
+  repeated PublicKey remaining_accounts = 7;
 }
     
 message WithdrawSrmArgs {
@@ -441,6 +450,7 @@ message SwapBaseInAccounts {
   PublicKey user_source_token_account = 16;
   PublicKey user_destination_token_account = 17;
   PublicKey user_source_owner = 18;
+  repeated PublicKey remaining_accounts = 19;
 }
     
 message SwapBaseInArgs {
@@ -471,6 +481,7 @@ message SwapBaseInCompactAccounts {
   PublicKey user_source_token_account = 15;
   PublicKey user_destination_token_account = 16;
   PublicKey user_source_owner = 17;
+  repeated PublicKey remaining_accounts = 18;
 }
     
 message SwapBaseInCompactArgs {
@@ -498,6 +509,7 @@ message PreInitializeAccounts {
   PublicKey pool_temp_lp_token_account = 12;
   PublicKey serum_market = 13;
   PublicKey user_wallet = 14;
+  repeated PublicKey remaining_accounts = 15;
 }
     
 message PreInitializeArgs {
@@ -528,6 +540,7 @@ message SwapBaseOutAccounts {
   PublicKey user_source_token_account = 16;
   PublicKey user_destination_token_account = 17;
   PublicKey user_source_owner = 18;
+  repeated PublicKey remaining_accounts = 19;
 }
     
 message SwapBaseOutArgs {
@@ -549,6 +562,7 @@ message SimulateInfoAccounts {
   PublicKey lp_mint_address = 6;
   PublicKey serum_market = 7;
   PublicKey serum_event_queue = 8;
+  repeated PublicKey remaining_accounts = 9;
 }
     
 message SimulateInfoArgs {
@@ -580,6 +594,7 @@ message AdminCancelOrdersAccounts {
   PublicKey serum_event_q = 15;
   PublicKey serum_bids = 16;
   PublicKey serum_asks = 17;
+  repeated PublicKey remaining_accounts = 18;
 }
     
 message AdminCancelOrdersArgs {
@@ -597,6 +612,7 @@ message CreateConfigAccountAccounts {
   PublicKey owner = 3;
   PublicKey system_program = 4;
   PublicKey rent = 5;
+  repeated PublicKey remaining_accounts = 6;
 }
     
 message CreateConfigAccountArgs {
@@ -610,6 +626,7 @@ message CreateConfigAccount {
 message UpdateConfigAccountAccounts {
   PublicKey admin = 1;
   PublicKey amm_config = 2;
+  repeated PublicKey remaining_accounts = 3;
 }
     
 message UpdateConfigAccountArgs {
@@ -631,6 +648,7 @@ message SwapBaseInV2Accounts {
   PublicKey user_source_token_account = 6;
   PublicKey user_destination_token_account = 7;
   PublicKey user_wallet_account = 8;
+  repeated PublicKey remaining_accounts = 9;
 }
     
 message SwapBaseInV2Args {
@@ -652,6 +670,7 @@ message SwapBaseOutV2Accounts {
   PublicKey user_source_token_account = 6;
   PublicKey user_destination_token_account = 7;
   PublicKey user_wallet_account = 8;
+  repeated PublicKey remaining_accounts = 9;
 }
     
 message SwapBaseOutV2Args {

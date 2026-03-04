@@ -119,7 +119,7 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
     let args_name = format!("{ix_name}Args");
     let payload_name = ix_name.clone();
 
-    let account_fields: Vec<FieldIr> = ix
+    let mut account_fields: Vec<FieldIr> = ix
         .accounts
         .iter()
         .enumerate()
@@ -130,6 +130,13 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
             field_type: FieldTypeIr::Scalar(ScalarIr::PublicKey),
         })
         .collect();
+
+    account_fields.push(FieldIr {
+        name: "remaining_accounts".to_string(),
+        tag: (account_fields.len() + 1) as u32,
+        label: LabelIr::Repeated,
+        field_type: FieldTypeIr::Scalar(ScalarIr::PublicKey),
+    });
 
     // Use `types.push()` instead of `push_unique_type()` because instruction
     // wrapper names (after dropping the `Instruction` suffix) can collide with

@@ -102,11 +102,12 @@ fn extract_discriminator_info(
 
             let args_expr = if has_args {
                 quote! {
-                    ::core::option::Option::Some(
-                        <instruction::#args_ident as ::borsh::BorshDeserialize>::try_from_slice(
-                            data.get(#args_start..).ok_or(ParseError::from("Missing args bytes"))?
-                        ).map_err(|e| ParseError::Other(e.into()))?
-                    )
+                    ::core::option::Option::Some({
+                        let mut slice: &[u8] = data.get(#args_start..).ok_or(ParseError::from("Missing args bytes"))?;
+
+                        <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                            .map_err(|e| ParseError::Other(e.into()))?
+                    })
                 }
             } else {
                 quote! { ::core::option::Option::None }
@@ -146,11 +147,12 @@ fn extract_discriminator_info(
 
             let args_expr = if has_args {
                 quote! {
-                    ::core::option::Option::Some(
-                        <instruction::#args_ident as ::borsh::BorshDeserialize>::try_from_slice(
-                            data.get(#end..).ok_or(ParseError::from("Missing args bytes"))?
-                        ).map_err(|e| ParseError::Other(e.into()))?
-                    )
+                    ::core::option::Option::Some({
+                        let mut slice: &[u8] = data.get(#end..).ok_or(ParseError::from("Missing args bytes"))?;
+
+                        <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
+                            .map_err(|e| ParseError::Other(e.into()))?
+                    })
                 }
             } else {
                 quote! { ::core::option::Option::None }
@@ -173,10 +175,12 @@ fn extract_discriminator_info(
 
             let args_expr = if has_args {
                 quote! {
-                    ::core::option::Option::Some(
-                        <instruction::#args_ident as ::borsh::BorshDeserialize>::try_from_slice(data)
+                    ::core::option::Option::Some({
+                        let mut slice: &[u8] = data;
+
+                        <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
                             .map_err(|e| ParseError::Other(e.into()))?
-                    )
+                    })
                 }
             } else {
                 quote! { ::core::option::Option::None }
@@ -239,7 +243,19 @@ fn single_instruction_helper_fn(
             quote! { #field_name: ::yellowstone_vixen_core::PublicKey::new(accounts.get(#idx).ok_or(ParseError::from(#error_msg))?.to_vec()) }
         });
 
-    let accounts_value = quote! { instruction::#accounts_ident { #(#accounts_fields),* } };
+    let num_defined_accounts = instruction.accounts.len();
+
+    let accounts_value = quote! {
+        instruction::#accounts_ident {
+            #(#accounts_fields,)*
+            remaining_accounts: accounts
+                .get(#num_defined_accounts..)
+                .unwrap_or_default()
+                .iter()
+                .map(|a| ::yellowstone_vixen_core::PublicKey::new(a.to_vec()))
+                .collect(),
+        }
+    };
     let args_expr = info.args_expr;
 
     Some(quote! {
