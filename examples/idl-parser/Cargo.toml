@@ -22,5 +22,5 @@ prost-types = { workspace = true }
 bs58 = { workspace = true }
 
 [features]
-default = ["proto"]
+default = []
 proto = ["yellowstone-vixen-proc-macro/proto"]

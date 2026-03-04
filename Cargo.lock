@@ -5206,10 +5206,14 @@ dependencies = [
  "regex",
  "tokio",
  "yellowstone-vixen",
+ "yellowstone-vixen-block-meta-parser",
  "yellowstone-vixen-core",
  "yellowstone-vixen-mock",
  "yellowstone-vixen-parser",
  "yellowstone-vixen-proc-macro",
+ "yellowstone-vixen-spl-token-extensions-parser",
+ "yellowstone-vixen-spl-token-parser",
+ "yellowstone-vixen-stake-pool-parser",
 ]
 
 [[package]]
