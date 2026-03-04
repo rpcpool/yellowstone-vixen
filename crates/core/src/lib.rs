@@ -127,8 +127,14 @@ pub trait Parser {
     fn parse(&self, value: &Self::Input) -> impl Future<Output = ParseResult<Self::Output>> + Send;
 }
 
+/// Helper trait for parsers that are associated with a specific program ID, providing a method for retrieving the program ID.
+pub trait WithProgramId {
+    /// The program ID that this parser is associated with.
+    fn program_id(&self) -> KeyBytes<32>;
+}
+
 /// A parser that parses all relevant updates for a particular program ID.
-pub trait ProgramParser: Parser {
+pub trait ProgramParser: Parser + WithProgramId {
     /// The program ID that this parser is associated with.
     fn program_id(&self) -> KeyBytes<32>;
 }

@@ -31,10 +31,7 @@ use solana_transaction_status::{
     UiInnerInstructions, UiInstruction, UiMessage,
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
-use yellowstone_vixen_core::{
-    instruction::{InstructionShared, InstructionUpdate},
-    KeyBytes, ProgramParser,
-};
+use yellowstone_vixen_core::{instruction::{InstructionShared, InstructionUpdate}, KeyBytes, WithProgramId};
 
 const DEFAULT_RPC_ENDPOINT: &str = "https://api.devnet.solana.com";
 
@@ -262,7 +259,7 @@ fn filter_ixs(
         .collect::<Vec<SerializableInstructionUpdate>>()
 }
 
-fn try_from_tx_meta<P: ProgramParser>(
+fn try_from_tx_meta<P: WithProgramId>(
     value: EncodedConfirmedTransactionWithStatusMeta,
     parser: &P,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
@@ -375,7 +372,7 @@ macro_rules! run_ix_parse {
     };
 }
 
-pub async fn load_fixture<P: ProgramParser>(
+pub async fn load_fixture<P: WithProgramId>(
     fixture: &str,
     parser: &P,
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
@@ -419,7 +416,7 @@ pub enum FixtureData {
     Instructions(Vec<SerializableInstructionUpdate>),
 }
 
-async fn fetch_fixture<P: ProgramParser>(
+async fn fetch_fixture<P: WithProgramId>(
     fixture: &str,
     parser: &P,
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
