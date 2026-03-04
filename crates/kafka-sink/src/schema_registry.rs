@@ -204,7 +204,7 @@ pub fn ensure_schemas_registered(
 
         match schema_id {
             Ok(id) => {
-                tracing::info!(subject = %schema_def.subject, schema_id = id, "Schema ready");
+                tracing::debug!(subject = %schema_def.subject, schema_id = id, "Schema ready");
                 registered.insert(schema_def.subject.clone(), RegisteredSchema {
                     schema_id: id,
                     message_index: schema_def.message_index,

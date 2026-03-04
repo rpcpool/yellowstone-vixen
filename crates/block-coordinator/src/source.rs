@@ -24,7 +24,7 @@ use yellowstone_vixen::{
 use yellowstone_vixen_core::{CommitmentLevel, Filters};
 use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
 
-use crate::fixtures::FixtureWriter;
+use crate::{fixtures::FixtureWriter, types::CoordinatorInput};
 
 /// Config for CoordinatorSource.
 ///
@@ -37,10 +37,10 @@ pub struct CoordinatorSourceConfig {
     #[serde(flatten)]
     pub source: YellowstoneGrpcConfig,
 
-    /// Channel to send raw SubscribeUpdate events to the coordinator.
+    /// Channel to send CoordinatorInput events to the coordinator.
     #[serde(skip)]
     #[arg(skip)]
-    pub coordinator_input_tx: Option<Sender<SubscribeUpdate>>,
+    pub coordinator_input_tx: Option<Sender<CoordinatorInput>>,
 
     /// Path to write captured fixture data (length-delimited protobuf).
     #[serde(skip)]
@@ -172,21 +172,36 @@ impl SourceTrait for CoordinatorSource {
                 break SourceExitStatus::StreamEnded;
             };
 
+            if let Ok(subscribe_update) = &update {
+                // Capture raw protobuf to fixture file if enabled.
+                if let Some(ref mut writer) = fixture_writer {
+                    match writer.write(subscribe_update) {
+                        Ok(true) => {},
+                        Ok(false) => {
+                            tracing::info!(path = ?self.config.fixture_path, "Fixture capture complete");
+                            break SourceExitStatus::Completed;
+                        },
+                        Err(e) => {
+                            tracing::error!(?e, "Fixture write failed");
+                            break SourceExitStatus::Error(e.to_string());
+                        },
+                    }
+                }
+            }
+
             match &update {
                 Ok(subscribe_update) => {
-                    // Capture raw protobuf to fixture file if enabled.
-                    if let Some(ref mut writer) = fixture_writer {
-                        match writer.write(subscribe_update) {
-                            Ok(true) => {},
-                            Ok(false) => {
-                                tracing::info!(path = ?self.config.fixture_path, "Fixture capture complete");
-                                break SourceExitStatus::Completed;
-                            },
-                            Err(e) => {
-                                tracing::error!(?e, "Fixture write failed");
-                                break SourceExitStatus::Error(e.to_string());
-                            },
-                        }
+                    // Send lightweight AccountEventSeen for each Account event.
+                    if let Some(UpdateOneof::Account(acct)) = &subscribe_update.update_oneof
+                        && coordinator_tx
+                            .send(CoordinatorInput::AccountEventSeen { slot: acct.slot })
+                            .await
+                            .is_err()
+                    {
+                        tracing::error!("Coordinator input channel closed");
+                        break 'stream SourceExitStatus::Error(
+                            "Coordinator input channel closed".to_string(),
+                        );
                     }
 
                     // Forward BlockSM-relevant events to the coordinator.
@@ -202,7 +217,13 @@ impl SourceTrait for CoordinatorSource {
 
                     if is_block_sm_event {
                         // Clone for coordinator (Account/Transaction events go to Runtime uncloned)
-                        if coordinator_tx.send(subscribe_update.clone()).await.is_err() {
+                        if coordinator_tx
+                            .send(CoordinatorInput::GeyserUpdate(Box::new(
+                                subscribe_update.clone(),
+                            )))
+                            .await
+                            .is_err()
+                        {
                             tracing::error!("Coordinator input channel closed");
                             break 'stream SourceExitStatus::Error(
                                 "Coordinator input channel closed".to_string(),
@@ -232,6 +253,12 @@ impl SourceTrait for CoordinatorSource {
                 break SourceExitStatus::ReceiverDropped;
             }
         };
+
+        if let Some(writer) = fixture_writer
+            && let Err(e) = writer.finish()
+        {
+            tracing::error!(?e, "Failed to flush fixture writer on shutdown");
+        }
 
         tracing::debug!("CoordinatorSource gRPC stream ended");
 

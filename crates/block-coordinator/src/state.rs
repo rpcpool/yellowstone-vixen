@@ -1,10 +1,13 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use solana_clock::Slot;
 
 use crate::{
     buffer::SlotRecordBuffer,
-    types::{BlockMetadata, ConfirmedSlot, CoordinatorError, DiscardReason, RecordSortKey},
+    types::{
+        AccountCommitAt, AccountRecordSortKey, AccountSlot, BlockMetadata, CoordinatorError,
+        DiscardReason, InstructionRecordSortKey, InstructionSlot, ParseStatsKind,
+    },
 };
 
 /// All inputs to the coordinator state machine.
@@ -13,70 +16,169 @@ pub enum CoordinatorEvent<R> {
     BlockFrozen { slot: Slot, metadata: BlockMetadata },
     /// Slot confirmed by cluster consensus.
     SlotConfirmed { slot: Slot },
+    /// Slot finalized by cluster consensus.
+    SlotFinalized { slot: Slot },
     /// Slot discarded (dead, forked, or untracked).
     SlotDiscarded { slot: Slot, reason: DiscardReason },
-    /// A parsed record from a handler.
-    RecordParsed {
+    /// A raw Account event was seen on the geyser stream.
+    /// Counted internally; frozen as expected_account_count when account gate is frozen.
+    AccountEventSeen { slot: Slot },
+    /// A parsed instruction record from a handler (sorted by key).
+    InstructionRecordParsed {
         slot: Slot,
-        key: RecordSortKey,
+        key: InstructionRecordSortKey,
+        record: R,
+    },
+    /// A parsed account record from a handler (sorted by write_version:pubkey).
+    AccountRecordParsed {
+        slot: Slot,
+        key: AccountRecordSortKey,
         record: R,
     },
     /// A handler finished parsing a transaction.
     TransactionParsed { slot: Slot },
+    /// A parse stat event (filtered or error).
+    ParseStats { slot: Slot, kind: ParseStatsKind },
 }
 
 /// Pure-ish coordinator state (no channels, no wrapper).
 pub struct CoordinatorState<R> {
     buffer: BTreeMap<Slot, SlotRecordBuffer<R>>,
     discarded_slots: BTreeSet<Slot>,
-    last_flushed_slot: Option<Slot>,
+    last_instruction_flushed_slot: Option<Slot>,
+    last_account_flushed_slot: Option<Slot>,
+    /// Running count of AccountEventSeen signals per slot.
+    /// Frozen as expected_account_count when the account gate is frozen.
+    account_event_counts: HashMap<Slot, u64>,
+    /// When accounts commit (Confirmed or Finalized).
+    account_commit_at: AccountCommitAt,
+    /// Post-flush account record/stat drops (observability).
+    late_account_record_drops: u64,
+    /// Post-freeze AccountEventSeen drops (observability).
+    late_account_event_drops: u64,
 }
 
 impl<R> CoordinatorState<R> {
     /// arbitrary number
     const MAX_DISCARDED_SLOTS: usize = 100;
 
+    pub fn new(account_commit_at: AccountCommitAt) -> Self {
+        Self {
+            buffer: BTreeMap::new(),
+            discarded_slots: BTreeSet::new(),
+            last_instruction_flushed_slot: None,
+            last_account_flushed_slot: None,
+            account_event_counts: HashMap::new(),
+            account_commit_at,
+            late_account_record_drops: 0,
+            late_account_event_drops: 0,
+        }
+    }
+
     pub fn pending_slot_count(&self) -> usize { self.buffer.len() }
 
     pub fn discarded_slot_count(&self) -> usize { self.discarded_slots.len() }
 
-    pub fn last_flushed_slot(&self) -> Option<Slot> { self.last_flushed_slot }
+    pub fn last_instruction_flushed_slot(&self) -> Option<Slot> {
+        self.last_instruction_flushed_slot
+    }
+
+    pub fn last_account_flushed_slot(&self) -> Option<Slot> { self.last_account_flushed_slot }
+
+    /// For backwards compatibility / observability: the minimum of the two flush slots.
+    pub fn last_flushed_slot(&self) -> Option<Slot> {
+        match (
+            self.last_instruction_flushed_slot,
+            self.last_account_flushed_slot,
+        ) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        }
+    }
 
     pub fn oldest_pending_slot(&self) -> Option<Slot> {
         self.buffer.first_key_value().map(|(&s, _)| s)
     }
 
+    pub fn late_account_record_drops(&self) -> u64 { self.late_account_record_drops }
+
+    pub fn late_account_event_drops(&self) -> u64 { self.late_account_event_drops }
+
     pub fn apply(&mut self, event: CoordinatorEvent<R>) -> Result<(), CoordinatorError> {
         match event {
             CoordinatorEvent::BlockFrozen { slot, metadata } => {
-                if self.is_already_flushed(slot) {
+                if self.is_already_flushed(slot, "BlockFrozen") {
                     return Ok(());
                 }
-                self.buffer
-                    .entry(slot)
-                    .or_default()
-                    .set_block_metadata(metadata);
+                let buf = self.buffer.entry(slot).or_default();
+                buf.set_block_metadata(metadata);
             },
             CoordinatorEvent::SlotConfirmed { slot } => {
-                if self.is_already_flushed(slot) {
+                if self.is_already_flushed(slot, "SlotConfirmed") {
                     return Ok(());
                 }
-                self.buffer.entry(slot).or_default().mark_as_confirmed();
+                let buf = self.buffer.entry(slot).or_default();
+                buf.mark_instruction_commitment_reached();
+                if self.account_commit_at == AccountCommitAt::Confirmed {
+                    self.freeze_account_gate(slot);
+                }
+            },
+            CoordinatorEvent::SlotFinalized { slot } => {
+                // Finalized is only relevant when account commit is configured at finalized.
+                if self.account_commit_at != AccountCommitAt::Finalized {
+                    return Ok(());
+                }
+                if self.is_already_flushed(slot, "SlotFinalized") {
+                    return Ok(());
+                }
+                let buf = self.buffer.entry(slot).or_default();
+                buf.mark_as_finalized();
+                if self.account_commit_at == AccountCommitAt::Finalized {
+                    self.freeze_account_gate(slot);
+                }
             },
             CoordinatorEvent::SlotDiscarded { slot, reason } => {
                 self.discard_slot(slot, reason);
             },
-            CoordinatorEvent::RecordParsed { slot, key, record } => {
-                if !self.validate_slot(slot)? {
+            CoordinatorEvent::AccountEventSeen { slot } => {
+                if self.is_already_flushed(slot, "AccountEventSeen") {
+                    return Ok(());
+                }
+                if self.discarded_slots.contains(&slot) {
+                    return Ok(());
+                }
+                // If account gate is already frozen for this slot, warn + skip.
+                if let Some(buf) = self.buffer.get(&slot)
+                    && (buf.account_gate_reached() || self.is_account_gate_frozen(slot))
+                {
+                    tracing::warn!(
+                        slot,
+                        "AccountEventSeen after account gate frozen — dropping"
+                    );
+                    self.late_account_event_drops += 1;
+                    return Ok(());
+                }
+                *self.account_event_counts.entry(slot).or_default() += 1;
+            },
+            CoordinatorEvent::InstructionRecordParsed { slot, key, record } => {
+                if !self.validate_instruction_slot(slot)? {
                     return Ok(());
                 }
                 self.buffer
                     .entry(slot)
                     .or_default()
-                    .insert_record(key, record);
+                    .insert_instruction_record(key, record);
+            },
+            CoordinatorEvent::AccountRecordParsed { slot, key, record } => {
+                if !self.validate_account_slot(slot) {
+                    return Ok(());
+                }
+                let buf = self.buffer.entry(slot).or_default();
+                buf.insert_account_record(key, record);
+                buf.increment_account_processed_count();
             },
             CoordinatorEvent::TransactionParsed { slot } => {
-                if !self.validate_slot(slot)? {
+                if !self.validate_instruction_slot(slot)? {
                     return Ok(());
                 }
                 self.buffer
@@ -84,28 +186,56 @@ impl<R> CoordinatorState<R> {
                     .or_default()
                     .increment_parsed_tx_count();
             },
+            CoordinatorEvent::ParseStats { slot, kind } => {
+                let is_account_stat = matches!(
+                    kind,
+                    ParseStatsKind::AccountFiltered | ParseStatsKind::AccountError
+                );
+                if is_account_stat {
+                    if !self.validate_account_slot(slot) {
+                        return Ok(());
+                    }
+                    let buf = self.buffer.entry(slot).or_default();
+                    buf.increment_parse_stat(kind);
+                    buf.increment_account_processed_count();
+                } else {
+                    if !self.validate_instruction_slot(slot)? {
+                        return Ok(());
+                    }
+                    self.buffer
+                        .entry(slot)
+                        .or_default()
+                        .increment_parse_stat(kind);
+                }
+            },
         }
         Ok(())
     }
 
-    pub fn drain_flushable(&mut self) -> Result<Vec<ConfirmedSlot<R>>, CoordinatorError> {
+    /// Drain instruction-ready slots. Returns strictly ascending InstructionSlots.
+    pub fn drain_instruction_flushable(
+        &mut self,
+    ) -> Result<Vec<InstructionSlot<R>>, CoordinatorError> {
         let mut flushed = Vec::new();
 
-        while let Some((&slot, buf)) = self.buffer.first_key_value() {
-            if !buf.is_ready() {
-                break;
+        let slots_to_check: Vec<Slot> = self.buffer.keys().copied().collect();
+        for slot in slots_to_check {
+            let buf = self.buffer.get(&slot).unwrap();
+            if buf.instructions_drained() || !buf.instruction_gate_reached() {
+                // Stop at the first non-ready slot to maintain ordering.
+                if !buf.instructions_drained() {
+                    break;
+                }
+                continue;
             }
 
             let parent_slot = buf
                 .parent_slot()
                 .ok_or(CoordinatorError::ReadySlotMissingMetadata { slot })?;
 
-            // First-slot exemption: when no slot has been flushed yet, we have
-            // no parent chain to validate against. The very first ready slot
-            // flushes unconditionally to bootstrap the pipeline.
-            let is_first = self.last_flushed_slot.is_none();
+            let is_first = self.last_instruction_flushed_slot.is_none();
             let parent_ok = self
-                .last_flushed_slot
+                .last_instruction_flushed_slot
                 .is_some_and(|last| parent_slot <= last)
                 || self.discarded_slots.contains(&parent_slot);
 
@@ -113,28 +243,82 @@ impl<R> CoordinatorState<R> {
                 break;
             }
 
-            let (slot, buf) = self.buffer.pop_first().unwrap();
-            let confirmed = buf
-                .into_confirmed_slot(slot)
+            let buf = self.buffer.get_mut(&slot).unwrap();
+            let ix_slot = buf
+                .drain_instruction_records(slot)
                 .ok_or(CoordinatorError::ReadySlotMissingMetadata { slot })?;
-            self.last_flushed_slot = Some(slot);
-            flushed.push(confirmed);
+            self.last_instruction_flushed_slot = Some(slot);
+            flushed.push(ix_slot);
         }
         if !flushed.is_empty() {
-            self.prune_discarded_slots();
+            self.cleanup_fully_drained();
         }
         Ok(flushed)
     }
 
-    /// Guard for BlockFrozen/SlotConfirmed — drop stale lifecycle events
-    /// for slots that have already been flushed. Should never happen under
-    /// normal operation; if it does, a geyser/validator bug is sending
-    /// duplicate events.
-    fn is_already_flushed(&self, slot: Slot) -> bool {
-        if self.last_flushed_slot.is_some_and(|last| slot <= last) {
+    /// Drain account-ready slots. Returns strictly ascending AccountSlots.
+    pub fn drain_account_flushable(&mut self) -> Vec<AccountSlot<R>> {
+        let mut flushed = Vec::new();
+
+        let slots_to_check: Vec<Slot> = self.buffer.keys().copied().collect();
+        for slot in slots_to_check {
+            let buf = self.buffer.get(&slot).unwrap();
+            if buf.accounts_drained() || !buf.account_gate_reached() {
+                if !buf.accounts_drained() {
+                    break;
+                }
+                continue;
+            }
+
+            let buf = self.buffer.get_mut(&slot).unwrap();
+            let acct_slot = buf.drain_account_records(slot);
+            self.last_account_flushed_slot = Some(slot);
+            flushed.push(acct_slot);
+        }
+        if !flushed.is_empty() {
+            self.cleanup_fully_drained();
+        }
+        flushed
+    }
+
+    /// Remove buffer entries where both instructions and accounts are drained.
+    fn cleanup_fully_drained(&mut self) {
+        let drained: Vec<Slot> = self
+            .buffer
+            .iter()
+            .filter(|(_, buf)| buf.is_fully_drained())
+            .map(|(&s, _)| s)
+            .collect();
+        for slot in drained {
+            self.buffer.remove(&slot);
+        }
+        self.prune_discarded_slots();
+        // Prune stale pending account counts behind the account flush frontier.
+        //
+        // IMPORTANT: do not use the instruction frontier here. In finalized
+        // account mode, instruction slots can flush much earlier than account
+        // gate freeze; pruning by instruction frontier can drop valid pending
+        // account-event counts and later freeze slots with expected_account_count=0.
+        if let Some(last) = self.last_account_flushed_slot {
+            self.account_event_counts.retain(|&s, _| s > last);
+        }
+    }
+
+    /// Guard for BlockFrozen/SlotConfirmed/SlotFinalized — drop stale lifecycle events
+    /// for slots that have already been fully flushed.
+    fn is_already_flushed(&self, slot: Slot, event: &'static str) -> bool {
+        let both_flushed = self
+            .last_instruction_flushed_slot
+            .is_some_and(|last| slot <= last)
+            && self
+                .last_account_flushed_slot
+                .is_some_and(|last| slot <= last);
+        if both_flushed {
             tracing::error!(
                 slot,
-                last_flushed = ?self.last_flushed_slot,
+                event,
+                last_instruction_flushed = ?self.last_instruction_flushed_slot,
+                last_account_flushed = ?self.last_account_flushed_slot,
                 "Lifecycle event for already-flushed slot — investigate immediately"
             );
             return true;
@@ -142,21 +326,70 @@ impl<R> CoordinatorState<R> {
         false
     }
 
-    fn validate_slot(&self, slot: Slot) -> Result<bool, CoordinatorError> {
+    /// Strict validation for instruction events — TwoGateInvariantViolation if post-flush.
+    fn validate_instruction_slot(&self, slot: Slot) -> Result<bool, CoordinatorError> {
         if self.discarded_slots.contains(&slot) {
             return Ok(false);
         }
-        if self.last_flushed_slot.is_some_and(|last| slot <= last) {
+        if self
+            .last_instruction_flushed_slot
+            .is_some_and(|last| slot <= last)
+        {
             return Err(CoordinatorError::TwoGateInvariantViolation {
                 slot,
-                last_flushed: self.last_flushed_slot,
+                last_flushed: self.last_instruction_flushed_slot,
             });
         }
         Ok(true)
     }
 
+    /// Relaxed validation for account events — warn + drop if post-flush (not fatal).
+    fn validate_account_slot(&mut self, slot: Slot) -> bool {
+        if self.discarded_slots.contains(&slot) {
+            return false;
+        }
+        if self
+            .last_account_flushed_slot
+            .is_some_and(|last| slot <= last)
+        {
+            tracing::warn!(
+                slot,
+                last_account_flushed = ?self.last_account_flushed_slot,
+                "Late account event after flush — dropping"
+            );
+            self.late_account_record_drops += 1;
+            return false;
+        }
+        // Also drop if accounts already drained for this specific slot.
+        if let Some(buf) = self.buffer.get(&slot)
+            && buf.accounts_drained()
+        {
+            tracing::warn!(slot, "Account event after accounts drained — dropping");
+            self.late_account_record_drops += 1;
+            return false;
+        }
+        true
+    }
+
+    /// Freeze the account gate for a slot: move account_event_counts into expected_account_count
+    /// and mark account_commitment_reached.
+    fn freeze_account_gate(&mut self, slot: Slot) {
+        let count = self.account_event_counts.remove(&slot).unwrap_or(0);
+        let buf = self.buffer.entry(slot).or_default();
+        buf.set_expected_account_count(count);
+        buf.mark_account_commitment_reached();
+    }
+
+    /// Check if the account gate has been frozen for a slot (expected_account_count is set).
+    fn is_account_gate_frozen(&self, slot: Slot) -> bool {
+        self.buffer
+            .get(&slot)
+            .is_some_and(|buf| buf.is_account_gate_frozen())
+    }
+
     fn discard_slot(&mut self, slot: Slot, reason: DiscardReason) {
         self.discarded_slots.insert(slot);
+        self.account_event_counts.remove(&slot);
         self.prune_discarded_slots();
         if let Some(buf) = self.buffer.remove(&slot) {
             tracing::warn!(slot, %reason, records = buf.record_count(), "Discarding slot");
@@ -175,7 +408,7 @@ impl<R> CoordinatorState<R> {
     /// `last_flushed_slot`), we log a warning but do NOT evict — evicting could
     /// permanently stall the pipeline.
     fn prune_discarded_slots(&mut self) {
-        if let Some(last) = self.last_flushed_slot {
+        if let Some(last) = self.last_flushed_slot() {
             self.discarded_slots.retain(|&s| s > last);
         }
         if self.discarded_slots.len() > Self::MAX_DISCARDED_SLOTS {
@@ -189,13 +422,7 @@ impl<R> CoordinatorState<R> {
 }
 
 impl<R> Default for CoordinatorState<R> {
-    fn default() -> Self {
-        Self {
-            buffer: BTreeMap::new(),
-            discarded_slots: BTreeSet::new(),
-            last_flushed_slot: None,
-        }
-    }
+    fn default() -> Self { Self::new(AccountCommitAt::Confirmed) }
 }
 
 #[cfg(test)]
@@ -212,6 +439,7 @@ mod tests {
         }
     }
 
+    /// Helper: make a slot fully ready for both instruction and account drains.
     fn apply_ready_slot(
         state: &mut CoordinatorState<String>,
         slot: Slot,
@@ -236,17 +464,26 @@ mod tests {
             .unwrap();
     }
 
+    /// Drain both instruction and account for convenience in tests that don't
+    /// care about the split. Returns instruction slots only.
+    fn drain_both(
+        state: &mut CoordinatorState<String>,
+    ) -> Result<Vec<InstructionSlot<String>>, CoordinatorError> {
+        let ix = state.drain_instruction_flushable()?;
+        let _ = state.drain_account_flushable();
+        Ok(ix)
+    }
+
     #[test]
     fn monotonic_flush_order() {
         let mut state = CoordinatorState::<String>::default();
 
-        // Apply out of order to ensure ordering is enforced by flush.
         apply_ready_slot(&mut state, 102, 101, 1);
         apply_ready_slot(&mut state, 100, 99, 1);
         apply_ready_slot(&mut state, 103, 102, 1);
         apply_ready_slot(&mut state, 101, 100, 1);
 
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         let slots: Vec<_> = flushed.iter().map(|slot| slot.slot).collect();
         assert_eq!(slots, vec![100, 101, 102, 103]);
     }
@@ -258,7 +495,7 @@ mod tests {
         apply_ready_slot(&mut state, 100, 99, 1);
         apply_ready_slot(&mut state, 102, 101, 1);
 
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         assert_eq!(flushed.len(), 1);
         assert_eq!(flushed[0].slot, 100);
 
@@ -269,7 +506,7 @@ mod tests {
             })
             .unwrap();
 
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         assert_eq!(flushed.len(), 1);
         assert_eq!(flushed[0].slot, 102);
     }
@@ -289,7 +526,7 @@ mod tests {
             })
             .unwrap();
 
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         let slots: Vec<_> = flushed.iter().map(|slot| slot.slot).collect();
         assert_eq!(slots, vec![101, 102]);
     }
@@ -307,16 +544,16 @@ mod tests {
             .unwrap();
 
         state
-            .apply(CoordinatorEvent::RecordParsed {
+            .apply(CoordinatorEvent::InstructionRecordParsed {
                 slot,
-                key: RecordSortKey::new(1, vec![0]),
+                key: InstructionRecordSortKey::new(1, vec![0]),
                 record: "b".to_string(),
             })
             .unwrap();
         state
-            .apply(CoordinatorEvent::RecordParsed {
+            .apply(CoordinatorEvent::InstructionRecordParsed {
                 slot,
-                key: RecordSortKey::new(0, vec![0]),
+                key: InstructionRecordSortKey::new(0, vec![0]),
                 record: "a".to_string(),
             })
             .unwrap();
@@ -331,7 +568,7 @@ mod tests {
             .apply(CoordinatorEvent::SlotConfirmed { slot })
             .unwrap();
 
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = state.drain_instruction_flushable().unwrap();
         assert_eq!(flushed.len(), 1);
         assert_eq!(flushed[0].records, vec!["a".to_string(), "b".to_string()]);
     }
@@ -341,7 +578,7 @@ mod tests {
         let mut state = CoordinatorState::<String>::default();
         apply_ready_slot(&mut state, 100, 99, 0);
 
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         assert_eq!(flushed.len(), 1);
         assert_eq!(flushed[0].slot, 100);
 
@@ -350,9 +587,8 @@ mod tests {
             .apply(CoordinatorEvent::SlotConfirmed { slot: 100 })
             .unwrap();
 
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         assert!(flushed.is_empty());
-        // No zombie buffer entry — the guard prevents re-insertion.
         assert_eq!(state.pending_slot_count(), 0);
     }
 
@@ -361,12 +597,12 @@ mod tests {
         let mut state = CoordinatorState::<String>::default();
         apply_ready_slot(&mut state, 100, 99, 0);
 
-        let _ = state.drain_flushable().unwrap();
+        let _ = drain_both(&mut state).unwrap();
 
         let err = state
-            .apply(CoordinatorEvent::RecordParsed {
+            .apply(CoordinatorEvent::InstructionRecordParsed {
                 slot: 100,
-                key: RecordSortKey::new(0, vec![0]),
+                key: InstructionRecordSortKey::new(0, vec![0]),
                 record: "late".to_string(),
             })
             .unwrap_err();
@@ -383,15 +619,11 @@ mod tests {
     fn eviction_does_not_block_children() {
         let mut state = CoordinatorState::<String>::default();
 
-        // Establish a last_flushed_slot so parent/gap checks are enforced.
         apply_ready_slot(&mut state, 900, 899, 0);
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         assert_eq!(flushed.len(), 1);
         assert_eq!(state.last_flushed_slot(), Some(900));
 
-        // Discard more than MAX_DISCARDED_SLOTS slots (200 > 100).
-        // Under the old policy, the earliest discards would be evicted,
-        // potentially stranding children whose parent was evicted.
         for s in 1000..1200 {
             state
                 .apply(CoordinatorEvent::SlotDiscarded {
@@ -401,11 +633,9 @@ mod tests {
                 .unwrap();
         }
 
-        // Slot 1200 is a child of discarded slot 1000 (the first discard).
-        // It must still flush — the discard entry for 1000 must not be evicted.
         apply_ready_slot(&mut state, 1200, 1000, 0);
 
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         assert_eq!(flushed.len(), 1);
         assert_eq!(flushed[0].slot, 1200);
     }
@@ -414,7 +644,6 @@ mod tests {
     fn prune_removes_entries_below_last_flushed() {
         let mut state = CoordinatorState::<String>::default();
 
-        // Discard slots 50..60, then flush slot 100 (which advances last_flushed past them).
         for s in 50..60 {
             state
                 .apply(CoordinatorEvent::SlotDiscarded {
@@ -425,10 +654,9 @@ mod tests {
         }
 
         apply_ready_slot(&mut state, 100, 99, 0);
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         assert_eq!(flushed.len(), 1);
 
-        // After flushing past slot 100, discards 50..60 should be pruned.
         assert_eq!(state.discarded_slots.len(), 0);
     }
 
@@ -441,13 +669,11 @@ mod tests {
         assert_eq!(state.last_flushed_slot(), None);
         assert_eq!(state.oldest_pending_slot(), None);
 
-        // Add two pending slots.
         apply_ready_slot(&mut state, 100, 99, 0);
         apply_ready_slot(&mut state, 102, 101, 0);
         assert_eq!(state.pending_slot_count(), 2);
         assert_eq!(state.oldest_pending_slot(), Some(100));
 
-        // Discard a slot.
         state
             .apply(CoordinatorEvent::SlotDiscarded {
                 slot: 50,
@@ -456,15 +682,460 @@ mod tests {
             .unwrap();
         assert_eq!(state.discarded_slot_count(), 1);
 
-        // Flush slot 100.
-        let flushed = state.drain_flushable().unwrap();
+        let flushed = drain_both(&mut state).unwrap();
         assert_eq!(flushed.len(), 1);
         assert_eq!(state.last_flushed_slot(), Some(100));
         assert_eq!(state.pending_slot_count(), 1);
         assert_eq!(state.oldest_pending_slot(), Some(102));
-        // Discard for slot 50 was pruned (50 < last_flushed 100).
         assert_eq!(state.discarded_slot_count(), 0);
     }
 
-    // ReadySlotMissingMetadata is defensive and should be unreachable with current invariants.
+    #[test]
+    fn account_blocks_flush_until_all_processed() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        // Instruction flush ok, but accounts wait.
+        let ix_flushed = state.drain_instruction_flushable().unwrap();
+        assert_eq!(ix_flushed.len(), 1);
+        let acct_flushed = state.drain_account_flushable();
+        assert!(acct_flushed.is_empty());
+
+        // Process 1 account → still blocked.
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(1, [1; 32]),
+                record: "a".to_string(),
+            })
+            .unwrap();
+        let acct_flushed = state.drain_account_flushable();
+        assert!(acct_flushed.is_empty());
+
+        // Process 2nd account → accounts flush.
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(2, [2; 32]),
+                record: "b".to_string(),
+            })
+            .unwrap();
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+        assert_eq!(acct_flushed[0].slot, slot);
+    }
+
+    #[test]
+    fn independent_flush_instructions_at_confirmed_accounts_at_finalized() {
+        let mut state = CoordinatorState::new(AccountCommitAt::Finalized);
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 1),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::TransactionParsed { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(1, [1; 32]),
+                record: "acct".to_string(),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        // Instructions flush at confirmed.
+        let ix_flushed = state.drain_instruction_flushable().unwrap();
+        assert_eq!(ix_flushed.len(), 1);
+
+        // Accounts NOT ready yet (waiting for finalized).
+        let acct_flushed = state.drain_account_flushable();
+        assert!(acct_flushed.is_empty());
+
+        // Finalize → accounts flush.
+        state
+            .apply(CoordinatorEvent::SlotFinalized { slot })
+            .unwrap();
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+        assert_eq!(acct_flushed[0].records, vec!["acct".to_string()]);
+    }
+
+    #[test]
+    fn finalized_event_is_ignored_when_account_commitment_is_confirmed() {
+        let mut state = CoordinatorState::<String>::default();
+
+        state
+            .apply(CoordinatorEvent::SlotFinalized { slot: 123 })
+            .unwrap();
+
+        assert_eq!(state.pending_slot_count(), 0);
+        assert_eq!(state.oldest_pending_slot(), None);
+    }
+
+    #[test]
+    fn account_event_after_gate_frozen_is_warn_not_error() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        // Drain accounts (0 expected, 0 processed → immediately ready).
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+
+        // Late AccountEventSeen → warn + drop (not error).
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        assert_eq!(state.late_account_event_drops(), 1);
+    }
+
+    #[test]
+    fn account_event_after_gate_frozen_before_ready_is_dropped() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 101;
+
+        // Count one account event before freeze.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(100, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        // Gate is frozen with expected_account_count=1, but not yet ready.
+        // Another AccountEventSeen must be treated as late and dropped.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        assert_eq!(state.late_account_event_drops(), 1);
+
+        // One processed account should still be enough to flush.
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(1, [1; 32]),
+                record: "acct".to_string(),
+            })
+            .unwrap();
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+        assert_eq!(acct_flushed[0].slot, slot);
+    }
+
+    #[test]
+    fn account_event_counts_are_not_pruned_by_instruction_frontier() {
+        let mut state = CoordinatorState::<String>::new(AccountCommitAt::Finalized);
+
+        // Account event arrives for slot 100, but account gate won't freeze
+        // until finalized.
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot: 100 })
+            .unwrap();
+
+        // A later slot advances only the instruction frontier.
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot: 200,
+                metadata: metadata(199, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot: 200 })
+            .unwrap();
+        let ix_flushed = state.drain_instruction_flushable().unwrap();
+        assert_eq!(ix_flushed.len(), 1);
+        assert_eq!(ix_flushed[0].slot, 200);
+
+        // Now freeze account gate for slot 100 at finalized.
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot: 100,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot: 100 })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotFinalized { slot: 100 })
+            .unwrap();
+
+        // Should not flush yet: expected_account_count must still be 1.
+        let acct_flushed = state.drain_account_flushable();
+        assert!(acct_flushed.is_empty());
+
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot: 100,
+                key: AccountRecordSortKey::new(1, [1; 32]),
+                record: "acct".to_string(),
+            })
+            .unwrap();
+
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+        assert_eq!(acct_flushed[0].slot, 100);
+        assert_eq!(acct_flushed[0].records, vec!["acct".to_string()]);
+    }
+
+    #[test]
+    fn late_account_record_after_flush_increments_counter() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        apply_ready_slot(&mut state, slot, 99, 0);
+        let _ = state.drain_instruction_flushable().unwrap();
+        let _ = state.drain_account_flushable();
+
+        // Late account record → warn + drop.
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(1, [1; 32]),
+                record: "late".to_string(),
+            })
+            .unwrap();
+        assert_eq!(state.late_account_record_drops(), 1);
+
+        // Late AccountFiltered stat → warn + drop.
+        state
+            .apply(CoordinatorEvent::ParseStats {
+                slot,
+                kind: ParseStatsKind::AccountFiltered,
+            })
+            .unwrap();
+        assert_eq!(state.late_account_record_drops(), 2);
+    }
+
+    #[test]
+    fn drain_account_flushable_strictly_ascending() {
+        let mut state = CoordinatorState::<String>::default();
+
+        apply_ready_slot(&mut state, 102, 101, 0);
+        apply_ready_slot(&mut state, 100, 99, 0);
+        apply_ready_slot(&mut state, 101, 100, 0);
+
+        // Drain instructions first to not block account ordering.
+        let _ = state.drain_instruction_flushable().unwrap();
+
+        let acct_flushed = state.drain_account_flushable();
+        let slots: Vec<_> = acct_flushed.iter().map(|s| s.slot).collect();
+        assert_eq!(slots, vec![100, 101, 102]);
+    }
+
+    #[test]
+    fn account_gate_ready_with_all_readiness_checks() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 1),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(42, [1; 32]),
+                record: "acct".to_string(),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::TransactionParsed { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+        assert_eq!(acct_flushed[0].records, vec!["acct".to_string()]);
+    }
+
+    #[test]
+    fn account_events_before_block_frozen_are_counted() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        assert!(state.account_event_counts.contains_key(&slot));
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+        assert!(state.account_event_counts.contains_key(&slot));
+
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(1, [1; 32]),
+                record: "acct".to_string(),
+            })
+            .unwrap();
+
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+        assert!(!state.account_event_counts.contains_key(&slot));
+
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+    }
+
+    #[test]
+    fn account_event_for_never_frozen_slot_does_not_stall_flush() {
+        let mut state = CoordinatorState::<String>::default();
+
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot: 100 })
+            .unwrap();
+
+        apply_ready_slot(&mut state, 200, 199, 0);
+        let flushed = drain_both(&mut state).unwrap();
+        assert_eq!(flushed.len(), 1);
+        assert_eq!(flushed[0].slot, 200);
+
+        assert!(!state.account_event_counts.contains_key(&100));
+    }
+
+    #[test]
+    fn malformed_pubkey_account_error_still_flushes() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::ParseStats {
+                slot,
+                kind: ParseStatsKind::AccountError,
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+        assert_eq!(acct_flushed[0].slot, slot);
+        assert!(acct_flushed[0].records.is_empty());
+    }
+
+    #[test]
+    fn same_pubkey_multiple_updates_preserves_write_version_order() {
+        let mut state = CoordinatorState::<String>::default();
+        let slot = 100;
+
+        state
+            .apply(CoordinatorEvent::BlockFrozen {
+                slot,
+                metadata: metadata(99, 0),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountEventSeen { slot })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(5, [1; 32]),
+                record: "first".to_string(),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::AccountRecordParsed {
+                slot,
+                key: AccountRecordSortKey::new(10, [1; 32]),
+                record: "second".to_string(),
+            })
+            .unwrap();
+        state
+            .apply(CoordinatorEvent::SlotConfirmed { slot })
+            .unwrap();
+
+        let acct_flushed = state.drain_account_flushable();
+        assert_eq!(acct_flushed.len(), 1);
+        assert_eq!(acct_flushed[0].records, vec![
+            "first".to_string(),
+            "second".to_string()
+        ]);
+    }
+
+    #[test]
+    fn slot_removed_only_when_both_drained() {
+        let mut state = CoordinatorState::<String>::default();
+        apply_ready_slot(&mut state, 100, 99, 0);
+
+        // Drain instructions only.
+        let ix = state.drain_instruction_flushable().unwrap();
+        assert_eq!(ix.len(), 1);
+        // Buffer entry still present (accounts not drained).
+        assert_eq!(state.pending_slot_count(), 1);
+
+        // Drain accounts.
+        let acct = state.drain_account_flushable();
+        assert_eq!(acct.len(), 1);
+        // Now buffer entry removed.
+        assert_eq!(state.pending_slot_count(), 0);
+    }
 }

@@ -15,8 +15,12 @@
 //! │  SLOT BUFFER:                                                               │
 //! │    expected_tx_count: Option<u64>         // from FrozenBlock               │
 //! │    parsed_tx_count: u64                   // from TransactionParsed         │
-//! │    confirmed: bool                        // from Confirmed event           │
-//! │    records: BTreeMap<RecordSortKey, R>    // from Parsed messages           │
+//! │    instruction_commitment_reached: bool   // from Confirmed event           │
+//! │    expected_account_count: Option<u64>    // from AccountEventSeen          │
+//! │    account_processed_count: u64           // from AccountRecordParsed /     │
+//! │                                           //   AccountFiltered / Error      │
+//! │    instruction_records: BTreeMap<InstructionRecordSortKey, R>               │
+//! │    account_records: BTreeMap<AccountRecordSortKey, R>               │
 //! │    parent_slot, blockhash                                                   │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
@@ -35,9 +39,10 @@
 //! │  └────────┬───────────┘        │ [discarded_slot_ignores_parsed] │          │
 //! │           │ NO                 └─────────────────────────────────┘          │
 //! │           ▼                                                                 │
-//! │  ┌────────────────────┐  YES   ┌─────────────────────────────────┐          │
-//! │  │ slot <= last_flush?├───────►│ PANIC (two-gate invariant!)     │          │
-//! │  └────────┬───────────┘        │ Should never happen if healthy  │          │
+//! │  ┌──────────────────────────────┐YES┌──────────────────────────────────────┐│
+//! │  │ slot <= last_instruction_    ├──►│ ERROR (TwoGateInvariantViolation)    ││
+//! │  │ flushed_slot?                │   │ Instruction event after flush frontier││
+//! │  └────────┬─────────────────────┘   └──────────────────────────────────────┘│
 //! │           │ NO                 └─────────────────────────────────┘          │
 //! │           ▼                                                                 │
 //! │  ┌────────────────────┐                                                     │
@@ -52,41 +57,63 @@
 //! │                           FLUSH DECISION TREE                               │
 //! ├─────────────────────────────────────────────────────────────────────────────┤
 //! │                                                                             │
-//! │  drain_flushable() — called once per event batch in run()                   │
+//! │  drain_instruction_flushable() then drain_account_flushable()               │
+//! │  called once per event batch in run()                                       │
 //! │                                                                             │
 //! │  FOR each slot in buffer (ascending order):                                 │
 //! │                                                                             │
-//! │  ┌──────────────────────────────────────────┐                               │
-//! │  │ GATE 1: is_fully_parsed?                 │                               │
-//! │  │ (parsed_tx_count >= expected_tx_count)   │                               │
-//! │  └─────────────────┬────────────────────────┘                               │
-//! │                    │                                                        │
-//! │         NO ◄───────┴───────► YES                                            │
-//! │         │                    │                                              │
-//! │         ▼                    ▼                                              │
-//! │  ┌─────────────┐    ┌──────────────────────────────────┐                    │
-//! │  │ STOP        │    │ GATE 2: confirmed?               │                    │
-//! │  │ [incomplete │    └─────────────────┬────────────────┘                    │
-//! │  │  _blocks_   │                      │                                     │
-//! │  │  subsequent]│           NO ◄───────┴───────► YES                         │
-//! │  └─────────────┘           │                    │                           │
-//! │                            ▼                    ▼                           │
-//! │                     ┌─────────────┐    ┌──────────────────────────────────┐ │
-//! │                     │ STOP        │    │ GAP CHECK: parent flushed        │ │
-//! │                     │ [sequential │    │ or discarded?                    │ │
-//! │                     │  _flush_    │    └─────────────────┬────────────────┘ │
-//! │                     │  order]     │                      │                  │
-//! │                     └─────────────┘           NO ◄───────┴───────► YES      │
-//! │                                              │                    │         │
-//! │                                              ▼                    ▼         │
-//! │                                       ┌─────────────┐    ┌──────────────┐   │
-//! │                                       │ STOP        │    │ FLUSH SLOT   │   │
-//! │                                       │ [gap_in_    │    │ Update       │   │
-//! │                                       │  sequence_  │    │ last_flushed │   │
-//! │                                       │  blocks]    │    │ Continue loop│   │
-//! │                                       └─────────────┘    └──────────────┘   │
+//! │  ┌──────────────────────────────────────────────┐                           │
+//! │  │ INSTRUCTION CHECK: tx_parse_complete?        │                           │
+//! │  │ (parsed_tx_count >= expected_tx_count)       │                           │
+//! │  └──────────────────────┬───────────────────────┘                           │
+//! │                         │                                                   │
+//! │              NO ◄───────┴───────► YES                                       │
+//! │              │                    │                                         │
+//! │              ▼                    ▼                                         │
+//! │  ┌─────────────────┐    ┌──────────────────────────────────────────────┐    │
+//! │  │ STOP            │    │ INSTRUCTION CHECK:                           │    │
+//! │  │ [incomplete     │    │ instruction_commitment_reached?              │    │
+//! │  │  _blocks_       │    └──────────────────────┬───────────────────────┘    │
+//! │  │  subsequent]    │                           │                           │
+//! │  └─────────────────┘                NO ◄───────┴───────► YES               │
+//! │                                     │                    │                  │
+//! │                                     ▼                    ▼                  │
+//! │                     ┌─────────────────┐    ┌───────────────────────────┐    │
+//! │                     │ STOP            │    │ ACCOUNT CHECK:            │    │
+//! │                     │ [sequential     │    │ account_parse_complete?   │    │
+//! │                     │  _flush_order]  │    │ (account_processed_count  │    │
+//! │                     └─────────────────┘    │  >= expected_account_cnt) │    │
+//! │                                            └─────────────┬─────────────┘    │
+//! │                                                          │                  │
+//! │                                               NO ◄───────┴───────► YES      │
+//! │                                               │                    │        │
+//! │                                               ▼                    ▼        │
+//! │                                  ┌─────────────────┐  ┌────────────────┐    │
+//! │                                  │ STOP            │  │ INSTRUCTION    │    │
+//! │                                  │ [account_gate_  │  │ GAP CHECK:     │    │
+//! │                                  │  flush_without  │  │ parent flushed │    │
+//! │                                  │  _account_cnt]  │  │ or discarded?  │    │
+//! │                                  └─────────────────┘  └───────┬────────┘    │
+//! │                                                               │             │
+//! │                                                    NO ◄───────┴───────► YES │
+//! │                                                    │                    │   │
+//! │                                                    ▼                    ▼   │
+//! │                                             ┌─────────────┐    ┌─────────┐  │
+//! │                                             │ STOP        │    │ FLUSH   │  │
+//! │                                             │ [gap_in_    │    │ SLOT    │  │
+//! │                                             │  sequence_  │    │ Update  │  │
+//! │                                             │  blocks]    │    │ last_   │  │
+//! │                                             └─────────────┘    │ flushed │  │
+//! │                                                                └─────────┘  │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
+//!
+//! NOTE:
+//!   The implementation uses two independent drains. Instruction path applies
+//!   gap/parent checks. Account path does not use parent-gap checks; it only
+//!   requires account_gate_reached and ascending slot order.
+//!   When `require_tx_gate=false`, `expected_tx_count` is forced to 0, so
+//!   `tx_parse_complete` is immediately true once BlockFrozen is seen.
 //!
 //! ┌─────────────────────────────────────────────────────────────────────────────┐
 //! │                           DISCARD SCENARIOS                                 │
@@ -104,7 +131,7 @@
 //! │  discard_slot() actions:                                                    │
 //! │    • Add to discarded_slots set                                             │
 //! │    • Remove from buffer                                                     │
-//! │    • drain_flushable called in run() after event                            │
+//! │    • both drain_* functions called in run() after event                     │
 //! │                                                                             │
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //!
@@ -112,10 +139,11 @@
 //! │                           TEST COVERAGE MATRIX                              │
 //! ├─────────────────────────────────────────────────────────────────────────────┤
 //! │                                                                             │
-//! │  TWO-GATE SYSTEM:                                                           │
-//! │    ✓ two_gate_flush_end_to_end      Gate 1 + Gate 2 both required           │
-//! │    ✓ empty_slot_flushes             Gate 1 satisfied with 0 transactions    │
-//! │    ✓ incomplete_slot_blocks_subsequent  Gate 1 not satisfied blocks flush   │
+//! │  READINESS SYSTEM:                                                          │
+//! │    ✓ two_gate_flush_end_to_end      instruction gate + account gate required │
+//! │    ✓ empty_slot_flushes             tx_parse_complete satisfied with 0 tx   │
+//! │    ✓ incomplete_slot_blocks_subsequent  tx_parse_complete not satisfied      │
+//! │    ✓ account_gate_blocks_flush_until_account_count_received  Account gate blocks flush │
 //! │                                                                             │
 //! │  SEQUENTIAL ORDERING:                                                       │
 //! │    ✓ sequential_flush_order         Earlier slot blocks later ones          │
@@ -179,7 +207,8 @@ use yellowstone_grpc_proto::{
     prelude::{BlockHeight, UnixTimestamp},
 };
 use yellowstone_vixen_block_coordinator::{
-    BlockMachineCoordinator, ConfirmedSlot, CoordinatorError, CoordinatorMessage, RecordSortKey,
+    AccountCommitAt, AccountSlot, BlockMachineCoordinator, CoordinatorError, CoordinatorInput,
+    CoordinatorMessage, InstructionRecordSortKey, InstructionSlot,
 };
 
 // =============================================================================
@@ -187,24 +216,39 @@ use yellowstone_vixen_block_coordinator::{
 // =============================================================================
 
 struct TestHarness {
-    input_tx: mpsc::Sender<SubscribeUpdate>,
+    input_tx: mpsc::Sender<CoordinatorInput>,
     parsed_tx: mpsc::Sender<CoordinatorMessage<String>>,
-    output_rx: mpsc::Receiver<ConfirmedSlot<String>>,
+    output_rx: mpsc::Receiver<InstructionSlot<String>>,
+    account_output_rx: mpsc::Receiver<AccountSlot<String>>,
 }
 
 impl TestHarness {
-    fn spawn() -> Self {
+    fn spawn() -> Self { Self::spawn_with_options(true, AccountCommitAt::Confirmed) }
+
+    fn spawn_with_require_tx_gate(require_tx_gate: bool) -> Self {
+        Self::spawn_with_options(require_tx_gate, AccountCommitAt::Confirmed)
+    }
+
+    fn spawn_with_options(require_tx_gate: bool, account_commit_at: AccountCommitAt) -> Self {
         let (input_tx, input_rx) = mpsc::channel(256);
         let (parsed_tx, parsed_rx) = mpsc::channel(256);
         let (output_tx, output_rx) = mpsc::channel(64);
+        let (account_output_tx, account_output_rx) = mpsc::channel(64);
 
-        let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
-        tokio::spawn(coordinator.run());
+        tokio::spawn(BlockMachineCoordinator::run(
+            input_rx,
+            parsed_rx,
+            Some(output_tx),
+            Some(account_output_tx),
+            account_commit_at,
+            require_tx_gate,
+        ));
 
         Self {
             input_tx,
             parsed_tx,
             output_rx,
+            account_output_rx,
         }
     }
 
@@ -215,24 +259,47 @@ impl TestHarness {
     async fn send_orphan_block_summary(&self, slot: u64, parent: u64) {
         let blockhash = Hash::new_unique();
         self.input_tx
-            .send(make_block_meta_update(slot, parent, 1, &blockhash))
+            .send(CoordinatorInput::GeyserUpdate(Box::new(
+                make_block_meta_update(slot, parent, 1, &blockhash),
+            )))
             .await
             .unwrap();
     }
 
     async fn expect_flush(&mut self, slot: u64) -> FlushAssertion {
-        let confirmed = tokio::time::timeout(Duration::from_secs(2), self.output_rx.recv())
+        let ix_slot = tokio::time::timeout(Duration::from_secs(2), self.output_rx.recv())
             .await
             .expect("Timed out waiting for flush")
             .expect("Channel closed");
 
-        assert_eq!(confirmed.slot, slot, "Expected slot {slot} to flush");
-        FlushAssertion(confirmed)
+        assert_eq!(ix_slot.slot, slot, "Expected slot {slot} to flush");
+        FlushAssertion(ix_slot)
+    }
+
+    async fn expect_account_flush(&mut self, slot: u64) -> AccountFlushAssertion {
+        let acct_slot = tokio::time::timeout(Duration::from_secs(2), self.account_output_rx.recv())
+            .await
+            .expect("Timed out waiting for account flush")
+            .expect("Account channel closed");
+
+        assert_eq!(
+            acct_slot.slot, slot,
+            "Expected account slot {slot} to flush"
+        );
+        AccountFlushAssertion(acct_slot)
     }
 
     async fn expect_no_flush(&mut self) {
         tokio::time::sleep(Duration::from_millis(10)).await;
         assert!(self.output_rx.try_recv().is_err(), "Unexpected flush");
+    }
+
+    async fn expect_no_account_flush(&mut self) {
+        tokio::time::sleep(Duration::from_millis(10)).await;
+        assert!(
+            self.account_output_rx.try_recv().is_err(),
+            "Unexpected account flush"
+        );
     }
 }
 
@@ -299,7 +366,7 @@ fn make_block_meta_update(
 // Flush Assertion
 // =============================================================================
 
-struct FlushAssertion(ConfirmedSlot<String>);
+struct FlushAssertion(InstructionSlot<String>);
 
 impl FlushAssertion {
     fn records(self, expected: &[&str]) {
@@ -326,21 +393,30 @@ impl FlushAssertion {
     }
 }
 
+struct AccountFlushAssertion(AccountSlot<String>);
+
+impl AccountFlushAssertion {
+    fn records(self, expected: &[&str]) {
+        let expected: Vec<String> = expected.iter().map(|s| s.to_string()).collect();
+        assert_eq!(self.0.records, expected, "Account records mismatch");
+    }
+}
+
 // =============================================================================
 // Slot Builder
 // =============================================================================
 
 struct SlotBuilder {
-    input_tx: mpsc::Sender<SubscribeUpdate>,
+    input_tx: mpsc::Sender<CoordinatorInput>,
     parsed_tx: mpsc::Sender<CoordinatorMessage<String>>,
     slot: u64,
     parent: u64,
-    records: Vec<(RecordSortKey, String)>,
+    records: Vec<(InstructionRecordSortKey, String)>,
 }
 
 impl SlotBuilder {
     fn new(
-        input_tx: mpsc::Sender<SubscribeUpdate>,
+        input_tx: mpsc::Sender<CoordinatorInput>,
         parsed_tx: mpsc::Sender<CoordinatorMessage<String>>,
         slot: u64,
     ) -> Self {
@@ -360,14 +436,18 @@ impl SlotBuilder {
 
     fn record(mut self, value: &str) -> Self {
         let tx_index = self.records.len() as u64;
-        self.records
-            .push((RecordSortKey::new(tx_index, vec![0]), value.to_string()));
+        self.records.push((
+            InstructionRecordSortKey::new(tx_index, vec![0]),
+            value.to_string(),
+        ));
         self
     }
 
     fn record_at(mut self, tx_index: u64, ix_path: Vec<usize>, value: &str) -> Self {
-        self.records
-            .push((RecordSortKey::new(tx_index, ix_path), value.to_string()));
+        self.records.push((
+            InstructionRecordSortKey::new(tx_index, ix_path),
+            value.to_string(),
+        ));
         self
     }
 
@@ -393,32 +473,35 @@ impl SlotBuilder {
             SlotStatus::SlotCreatedBank,
         ] {
             self.input_tx
-                .send(make_slot_update(self.slot, self.parent, status))
+                .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
+                    self.slot,
+                    self.parent,
+                    status,
+                ))))
                 .await
                 .unwrap();
         }
 
         self.input_tx
-            .send(make_entry_update(self.slot, 0, tx_count))
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_entry_update(
+                self.slot, 0, tx_count,
+            ))))
             .await
             .unwrap();
 
         self.input_tx
-            .send(make_slot_update(
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
                 self.slot,
                 self.parent,
                 SlotStatus::SlotCompleted,
-            ))
+            ))))
             .await
             .unwrap();
 
         self.input_tx
-            .send(make_block_meta_update(
-                self.slot,
-                self.parent,
-                tx_count,
-                &blockhash,
-            ))
+            .send(CoordinatorInput::GeyserUpdate(Box::new(
+                make_block_meta_update(self.slot, self.parent, tx_count, &blockhash),
+            )))
             .await
             .unwrap();
     }
@@ -442,7 +525,7 @@ impl SlotBuilder {
         // Send parsed records
         for (key, record) in &self.records {
             self.parsed_tx
-                .send(CoordinatorMessage::Parsed {
+                .send(CoordinatorMessage::InstructionParsed {
                     slot: self.slot,
                     key: key.clone(),
                     record: record.clone(),
@@ -474,7 +557,7 @@ impl SlotBuilder {
 // =============================================================================
 
 struct Slot {
-    input_tx: mpsc::Sender<SubscribeUpdate>,
+    input_tx: mpsc::Sender<CoordinatorInput>,
     parsed_tx: mpsc::Sender<CoordinatorMessage<String>>,
     slot: u64,
     parent: u64,
@@ -482,8 +565,21 @@ struct Slot {
 }
 
 impl Slot {
+    /// Confirm and freeze account count for the account gate.
     async fn confirm(&self) {
         tokio::time::sleep(Duration::from_millis(5)).await;
+        self.send_commitment(SlotStatus::SlotConfirmed).await;
+    }
+
+    /// Send N AccountEventSeen signals then Slot(Confirmed).
+    async fn confirm_with_accounts(&self, account_count: u64) {
+        tokio::time::sleep(Duration::from_millis(5)).await;
+        for _ in 0..account_count {
+            self.input_tx
+                .send(CoordinatorInput::AccountEventSeen { slot: self.slot })
+                .await
+                .unwrap();
+        }
         self.send_commitment(SlotStatus::SlotConfirmed).await;
     }
 
@@ -494,18 +590,22 @@ impl Slot {
 
     async fn send_commitment(&self, status: SlotStatus) {
         self.input_tx
-            .send(make_slot_update(self.slot, self.parent, status))
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
+                self.slot,
+                self.parent,
+                status,
+            ))))
             .await
             .unwrap();
     }
 
     async fn kill(&self) {
         self.input_tx
-            .send(make_slot_update(
+            .send(CoordinatorInput::GeyserUpdate(Box::new(make_slot_update(
                 self.slot,
                 self.parent,
                 SlotStatus::SlotDead,
-            ))
+            ))))
             .await
             .unwrap();
         tokio::time::sleep(Duration::from_millis(5)).await;
@@ -516,9 +616,9 @@ impl Slot {
             .next_tx_index
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         self.parsed_tx
-            .send(CoordinatorMessage::Parsed {
+            .send(CoordinatorMessage::InstructionParsed {
                 slot: self.slot,
-                key: RecordSortKey::new(tx_index, vec![0]),
+                key: InstructionRecordSortKey::new(tx_index, vec![0]),
                 record: value.to_string(),
             })
             .await
@@ -538,9 +638,9 @@ async fn send_record_to_slot(
     value: &str,
 ) {
     parsed_tx
-        .send(CoordinatorMessage::Parsed {
+        .send(CoordinatorMessage::InstructionParsed {
             slot,
-            key: RecordSortKey::new(0, vec![0]),
+            key: InstructionRecordSortKey::new(0, vec![0]),
             record: value.to_string(),
         })
         .await
@@ -815,12 +915,18 @@ async fn gap_in_sequence_blocks_flush() {
 
 #[tokio::test]
 async fn late_message_for_flushed_slot_errors() {
-    let (input_tx, input_rx) = mpsc::channel(256);
+    let (input_tx, input_rx) = mpsc::channel::<CoordinatorInput>(256);
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, mut output_rx) = mpsc::channel(64);
 
-    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
-    let handle = tokio::spawn(coordinator.run());
+    let handle = tokio::spawn(BlockMachineCoordinator::run(
+        input_rx,
+        parsed_rx,
+        Some(output_tx),
+        None,
+        AccountCommitAt::Confirmed,
+        true,
+    ));
 
     // Create and flush slot 100
     let slot = SlotBuilder::new(input_tx.clone(), parsed_tx.clone(), 100)
@@ -852,12 +958,18 @@ async fn late_message_for_flushed_slot_errors() {
 
 #[tokio::test]
 async fn output_channel_closed_returns_error() {
-    let (input_tx, input_rx) = mpsc::channel(256);
+    let (input_tx, input_rx) = mpsc::channel::<CoordinatorInput>(256);
     let (parsed_tx, parsed_rx) = mpsc::channel(256);
     let (output_tx, output_rx) = mpsc::channel(64);
 
-    let coordinator = BlockMachineCoordinator::new(input_rx, parsed_rx, output_tx);
-    let handle = tokio::spawn(coordinator.run());
+    let handle = tokio::spawn(BlockMachineCoordinator::run(
+        input_rx,
+        parsed_rx,
+        Some(output_tx),
+        None,
+        AccountCommitAt::Confirmed,
+        true,
+    ));
 
     // Drop the output receiver — the coordinator can't send flushed slots.
     drop(output_rx);
@@ -874,8 +986,174 @@ async fn output_channel_closed_returns_error() {
     assert!(
         matches!(
             result,
-            Err(CoordinatorError::OutputChannelClosed { slot: 100 })
+            Err(CoordinatorError::InstructionOutputChannelClosed { slot: 100 })
         ),
-        "Expected OutputChannelClosed, got: {result:?}"
+        "Expected InstructionOutputChannelClosed, got: {result:?}"
     );
+}
+
+// =============================================================================
+// Account Gate Tests
+// =============================================================================
+
+#[tokio::test]
+async fn account_gate_blocks_flush_until_account_count_received() {
+    let mut harness = TestHarness::spawn();
+
+    // Slot with 2 expected accounts — won't flush until account count is delivered.
+    let slot = harness.slot(100).parent(99).empty().await;
+
+    // Simulate 2 account handler messages.
+    harness
+        .parsed_tx
+        .send(CoordinatorMessage::AccountParsed {
+            slot: 100,
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            record: "acct1".to_string(),
+        })
+        .await
+        .unwrap();
+    harness
+        .parsed_tx
+        .send(CoordinatorMessage::AccountParsed {
+            slot: 100,
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(2, [2; 32]),
+            record: "acct2".to_string(),
+        })
+        .await
+        .unwrap();
+
+    // Confirm with account_count=2 — now all gates satisfied.
+    slot.confirm_with_accounts(2).await;
+
+    // Instructions flush immediately (no instruction records, 0 tx).
+    harness.expect_flush(100).await;
+    // Accounts flush with the 2 records.
+    let acct_flushed = harness.expect_account_flush(100).await;
+    acct_flushed.records(&["acct1", "acct2"]);
+}
+
+#[tokio::test]
+async fn account_only_mode_flushes_without_transaction_parsed_messages() {
+    let mut harness = TestHarness::spawn_with_require_tx_gate(false);
+
+    // Slot has non-zero tx count from Entry/BlockMeta but sends no TransactionParsed events.
+    let slot = harness.slot(100).parent(99).pending(3).await;
+
+    // Freeze account gate with one account event.
+    slot.confirm_with_accounts(1).await;
+
+    // Instructions flush immediately (require_tx_gate=false → expected_tx_count=0).
+    harness.expect_flush(100).await.tx_count(0);
+
+    // Accounts wait for the 1 expected account to be processed.
+    harness.expect_no_account_flush().await;
+
+    // Satisfy with one parsed account record.
+    harness
+        .parsed_tx
+        .send(CoordinatorMessage::AccountParsed {
+            slot: 100,
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            record: "acct1".to_string(),
+        })
+        .await
+        .unwrap();
+
+    let acct = harness.expect_account_flush(100).await;
+    acct.records(&["acct1"]);
+}
+
+#[tokio::test]
+async fn account_event_for_never_frozen_slot_does_not_stall_flush() {
+    let mut harness = TestHarness::spawn();
+
+    // Send AccountEventSeen for slot 100 (which never gets BlockFrozen).
+    harness
+        .input_tx
+        .send(CoordinatorInput::AccountEventSeen { slot: 100 })
+        .await
+        .unwrap();
+
+    // Slot 200 is fully ready and should flush without being blocked.
+    let slot = harness.slot(200).parent(199).empty().await;
+    slot.confirm().await;
+
+    harness.expect_flush(200).await;
+}
+
+#[tokio::test]
+async fn account_event_after_confirmed_is_warn_not_error() {
+    let mut harness = TestHarness::spawn();
+
+    // Create a slot with 1 account event before confirm, so account gate is frozen.
+    let slot = harness.slot(100).parent(99).empty().await;
+    slot.confirm_with_accounts(1).await;
+
+    // Instructions flush immediately (no tx).
+    harness.expect_flush(100).await;
+
+    // Accounts NOT flushed yet (1 expected, 0 processed).
+    harness.expect_no_account_flush().await;
+
+    // Send another AccountEventSeen after confirmed — should be warn + drop, not error.
+    // (Account gate is frozen at confirm.)
+    harness
+        .input_tx
+        .send(CoordinatorInput::AccountEventSeen { slot: 100 })
+        .await
+        .unwrap();
+    tokio::time::sleep(Duration::from_millis(10)).await;
+
+    // The coordinator should still be alive — process the 1 expected account.
+    harness
+        .parsed_tx
+        .send(CoordinatorMessage::AccountParsed {
+            slot: 100,
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            record: "acct1".to_string(),
+        })
+        .await
+        .unwrap();
+
+    let acct = harness.expect_account_flush(100).await;
+    acct.records(&["acct1"]);
+}
+
+#[tokio::test]
+async fn duplicate_confirm_does_not_change_frozen_count() {
+    let mut harness = TestHarness::spawn();
+
+    // Create a slot, send 2 AccountEventSeen, confirm (freezes count=2).
+    let slot = harness.slot(100).parent(99).empty().await;
+    slot.confirm_with_accounts(2).await;
+
+    // Instructions flush immediately.
+    harness.expect_flush(100).await;
+
+    // Confirm again (duplicate) — first-write-wins in set_expected_account_count.
+    slot.confirm().await;
+
+    // Send 2 AccountRecordParsed → account slot flushes (count matches 2).
+    harness
+        .parsed_tx
+        .send(CoordinatorMessage::AccountParsed {
+            slot: 100,
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(1, [1; 32]),
+            record: "acct1".to_string(),
+        })
+        .await
+        .unwrap();
+    harness
+        .parsed_tx
+        .send(CoordinatorMessage::AccountParsed {
+            slot: 100,
+            key: yellowstone_vixen_block_coordinator::AccountRecordSortKey::new(2, [2; 32]),
+            record: "acct2".to_string(),
+        })
+        .await
+        .unwrap();
+
+    let acct = harness.expect_account_flush(100).await;
+    acct.records(&["acct1", "acct2"]);
 }
