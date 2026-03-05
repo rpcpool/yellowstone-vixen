@@ -171,8 +171,7 @@ async fn parse_swap_base_in_with_default_parser() {
 
     // This transaction has 17 accounts — the default resolver should route
     // to SwapBaseInCompact automatically.
-    let swap = ixs
-        .iter()
+    ixs.iter()
         .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
             raydium_amm::instruction::Instruction::SwapBaseInCompact(s) => Some(s),
             _ => None,
