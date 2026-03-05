@@ -26,6 +26,10 @@ use yellowstone_vixen_yellowstone_grpc_source::YellowstoneGrpcConfig;
 
 use crate::{fixtures::FixtureWriter, types::CoordinatorInput};
 
+const DEFAULT_STREAM_IDLE_WARN_SECS: u64 = 0;
+
+const fn default_stream_idle_warn_secs() -> u64 { DEFAULT_STREAM_IDLE_WARN_SECS }
+
 /// Config for CoordinatorSource.
 ///
 /// Wraps the real source config plus channels for coordinator inputs.
@@ -36,6 +40,12 @@ pub struct CoordinatorSourceConfig {
     #[command(flatten)]
     #[serde(flatten)]
     pub source: YellowstoneGrpcConfig,
+
+    /// Warn when no stream data has arrived for this many seconds.
+    /// Set to 0 to disable idle/resume logs.
+    #[serde(default = "default_stream_idle_warn_secs")]
+    #[arg(long, default_value_t = DEFAULT_STREAM_IDLE_WARN_SECS)]
+    pub stream_idle_warn_secs: u64,
 
     /// Channel to send CoordinatorInput events to the coordinator.
     #[serde(skip)]
@@ -167,36 +177,45 @@ impl SourceTrait for CoordinatorSource {
 
         tracing::info!("CoordinatorSource gRPC stream started");
 
-        const STREAM_IDLE_TIMEOUT: Duration = Duration::from_secs(2);
+        let idle_warn_secs = self.config.stream_idle_warn_secs;
+        let stream_idle_timeout = Duration::from_secs(idle_warn_secs);
         let mut last_seen_slot: Option<u64> = None;
         let mut idle_since: Option<std::time::Instant> = None;
 
         let exit_status = 'stream: loop {
-            let update = match tokio::time::timeout(STREAM_IDLE_TIMEOUT, stream.next()).await {
-                Ok(Some(update)) => {
-                    // Stream resumed after idle — log recovery.
-                    if let Some(since) = idle_since.take() {
-                        tracing::info!(
-                            idle_duration_ms = since.elapsed().as_millis() as u64,
-                            ?last_seen_slot,
-                            endpoint = %self.config.source.endpoint,
-                            "CoordinatorSource stream resumed"
-                        );
-                    }
-                    update
+            let update = if idle_warn_secs == 0 {
+                match stream.next().await {
+                    Some(update) => update,
+                    None => break SourceExitStatus::StreamEnded,
                 }
-                Ok(None) => break SourceExitStatus::StreamEnded,
-                Err(_) => {
-                    // Timeout — stream idle.
-                    if idle_since.is_none() {
-                        idle_since = Some(std::time::Instant::now());
-                        tracing::warn!(
-                            ?last_seen_slot,
-                            endpoint = %self.config.source.endpoint,
-                            "CoordinatorSource stream idle"
-                        );
+            } else {
+                match tokio::time::timeout(stream_idle_timeout, stream.next()).await {
+                    Ok(Some(update)) => {
+                        // Stream resumed after idle — log recovery.
+                        if let Some(since) = idle_since.take() {
+                            tracing::info!(
+                                idle_duration_ms = since.elapsed().as_millis() as u64,
+                                ?last_seen_slot,
+                                endpoint = %self.config.source.endpoint,
+                                "CoordinatorSource stream resumed"
+                            );
+                        }
+                        update
                     }
-                    continue;
+                    Ok(None) => break SourceExitStatus::StreamEnded,
+                    Err(_) => {
+                        // Timeout — stream idle.
+                        if idle_since.is_none() {
+                            idle_since = Some(std::time::Instant::now());
+                            tracing::warn!(
+                                idle_warn_secs,
+                                ?last_seen_slot,
+                                endpoint = %self.config.source.endpoint,
+                                "CoordinatorSource stream idle"
+                            );
+                        }
+                        continue;
+                    }
                 }
             };
 
