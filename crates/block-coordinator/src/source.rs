@@ -213,7 +213,7 @@ impl SourceTrait for CoordinatorSource {
                             );
                         }
                         update
-                    }
+                    },
                     Ok(None) => break SourceExitStatus::StreamEnded,
                     Err(_) => {
                         // Timeout — stream idle.
@@ -228,7 +228,7 @@ impl SourceTrait for CoordinatorSource {
                             );
                         }
                         continue;
-                    }
+                    },
                 }
             };
 
