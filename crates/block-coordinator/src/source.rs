@@ -167,9 +167,37 @@ impl SourceTrait for CoordinatorSource {
 
         tracing::info!("CoordinatorSource gRPC stream started");
 
+        const STREAM_IDLE_TIMEOUT: Duration = Duration::from_secs(2);
+        let mut last_seen_slot: Option<u64> = None;
+        let mut idle_since: Option<std::time::Instant> = None;
+
         let exit_status = 'stream: loop {
-            let Some(update) = stream.next().await else {
-                break SourceExitStatus::StreamEnded;
+            let update = match tokio::time::timeout(STREAM_IDLE_TIMEOUT, stream.next()).await {
+                Ok(Some(update)) => {
+                    // Stream resumed after idle — log recovery.
+                    if let Some(since) = idle_since.take() {
+                        tracing::info!(
+                            idle_duration_ms = since.elapsed().as_millis() as u64,
+                            ?last_seen_slot,
+                            endpoint = %self.config.source.endpoint,
+                            "CoordinatorSource stream resumed"
+                        );
+                    }
+                    update
+                }
+                Ok(None) => break SourceExitStatus::StreamEnded,
+                Err(_) => {
+                    // Timeout — stream idle.
+                    if idle_since.is_none() {
+                        idle_since = Some(std::time::Instant::now());
+                        tracing::warn!(
+                            ?last_seen_slot,
+                            endpoint = %self.config.source.endpoint,
+                            "CoordinatorSource stream idle"
+                        );
+                    }
+                    continue;
+                }
             };
 
             if let Ok(subscribe_update) = &update {
@@ -202,6 +230,18 @@ impl SourceTrait for CoordinatorSource {
                         break 'stream SourceExitStatus::Error(
                             "Coordinator input channel closed".to_string(),
                         );
+                    }
+
+                    // Track last seen slot for idle/resume logging.
+                    let event_slot = match &subscribe_update.update_oneof {
+                        Some(UpdateOneof::Slot(s)) => Some(s.slot),
+                        Some(UpdateOneof::BlockMeta(bm)) => Some(bm.slot),
+                        Some(UpdateOneof::Transaction(tx)) => Some(tx.slot),
+                        Some(UpdateOneof::Account(acct)) => Some(acct.slot),
+                        _ => None,
+                    };
+                    if let Some(slot) = event_slot {
+                        last_seen_slot = Some(slot);
                     }
 
                     // Forward BlockSM-relevant events to the coordinator.

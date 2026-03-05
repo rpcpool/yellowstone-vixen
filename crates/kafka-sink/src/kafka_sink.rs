@@ -113,21 +113,11 @@ async fn batch_publish_records(
 pub struct TransactionSlotSink {
     config: KafkaSinkConfig,
     producer: Arc<FutureProducer>,
-    on_commit: Option<Box<dyn Fn() + Send>>,
 }
 
 impl TransactionSlotSink {
     pub fn new(config: KafkaSinkConfig, producer: Arc<FutureProducer>) -> Self {
-        Self {
-            config,
-            producer,
-            on_commit: None,
-        }
-    }
-
-    pub fn with_on_commit(mut self, f: impl Fn() + Send + 'static) -> Self {
-        self.on_commit = Some(Box::new(f));
-        self
+        Self { config, producer }
     }
 
     pub async fn run(
@@ -210,10 +200,6 @@ impl TransactionSlotSink {
             "Kafka: committed instruction slot"
         );
 
-        if let Some(ref on_commit) = self.on_commit {
-            on_commit();
-        }
-
         Ok(())
     }
 }
@@ -234,7 +220,6 @@ pub struct AccountSink {
     account_mode: AccountMode,
     max_attempts: u32,
     retry_backoff: Duration,
-    on_commit: Option<Box<dyn Fn() + Send>>,
 }
 
 impl AccountSink {
@@ -251,13 +236,7 @@ impl AccountSink {
             account_mode,
             max_attempts: max_attempts.max(1),
             retry_backoff: Duration::from_millis(retry_backoff_ms),
-            on_commit: None,
         }
-    }
-
-    pub fn with_on_commit(mut self, f: impl Fn() + Send + 'static) -> Self {
-        self.on_commit = Some(Box::new(f));
-        self
     }
 
     /// Mode A: receives pre-batched `AccountSlot` from coordinator.
@@ -285,10 +264,6 @@ impl AccountSink {
                 },
             )
             .await?;
-
-            if let Some(ref on_commit) = self.on_commit {
-                on_commit();
-            }
         }
 
         tracing::warn!("AccountSink (buffered) channel closed, shutting down");
