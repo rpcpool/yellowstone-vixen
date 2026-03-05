@@ -178,7 +178,4 @@ async fn parse_swap_base_in_with_default_parser() {
             _ => None,
         })
         .expect("default parser should resolve SwapBaseInCompact by account count");
-
-    let _ = &swap.accounts;
-    let _ = &swap.args;
 }
