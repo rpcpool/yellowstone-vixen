@@ -41,6 +41,11 @@ pub struct CoordinatorSourceConfig {
     #[serde(flatten)]
     pub source: YellowstoneGrpcConfig,
 
+    /// Optional label used in logs to distinguish multiple coordinator sources in logs.
+    #[serde(default)]
+    #[arg(long)]
+    pub source_label: Option<String>,
+
     /// Warn when no stream data has arrived for this many seconds.
     /// Set to 0 to disable idle/resume logs.
     #[serde(default = "default_stream_idle_warn_secs")]
@@ -142,6 +147,11 @@ impl SourceTrait for CoordinatorSource {
         };
 
         let config = &self.config.source;
+        let source_label = self
+            .config
+            .source_label
+            .as_deref()
+            .unwrap_or("CoordinatorSource");
         let timeout = Duration::from_secs(config.timeout);
 
         let mut client = GeyserGrpcClient::build_from_shared(config.endpoint.clone())?
@@ -160,13 +170,14 @@ impl SourceTrait for CoordinatorSource {
             .with_commitment_processed();
 
         tracing::info!(
+            source_label,
             has_transactions = !subscribe_request.transactions.is_empty(),
             has_blocks_meta = !subscribe_request.blocks_meta.is_empty(),
             has_slots = !subscribe_request.slots.is_empty(),
             has_entries = !subscribe_request.entry.is_empty(),
             from_slot = ?subscribe_request.from_slot,
             commitment = ?subscribe_request.commitment,
-            "CoordinatorSource subscribing to gRPC stream"
+            "subscribing to gRPC stream"
         );
 
         let (_sub_tx, stream) = client
@@ -175,7 +186,7 @@ impl SourceTrait for CoordinatorSource {
 
         let mut stream = std::pin::pin!(stream);
 
-        tracing::info!("CoordinatorSource gRPC stream started");
+        tracing::info!(source_label, "gRPC stream started");
 
         let idle_warn_secs = self.config.stream_idle_warn_secs;
         let stream_idle_timeout = Duration::from_secs(idle_warn_secs);
@@ -194,10 +205,11 @@ impl SourceTrait for CoordinatorSource {
                         // Stream resumed after idle — log recovery.
                         if let Some(since) = idle_since.take() {
                             tracing::info!(
+                                source_label,
                                 idle_duration_ms = since.elapsed().as_millis() as u64,
                                 ?last_seen_slot,
                                 endpoint = %self.config.source.endpoint,
-                                "CoordinatorSource stream resumed"
+                                "stream resumed"
                             );
                         }
                         update
@@ -208,10 +220,11 @@ impl SourceTrait for CoordinatorSource {
                         if idle_since.is_none() {
                             idle_since = Some(std::time::Instant::now());
                             tracing::warn!(
+                                source_label,
                                 idle_warn_secs,
                                 ?last_seen_slot,
                                 endpoint = %self.config.source.endpoint,
-                                "CoordinatorSource stream idle"
+                                "stream idle"
                             );
                         }
                         continue;
