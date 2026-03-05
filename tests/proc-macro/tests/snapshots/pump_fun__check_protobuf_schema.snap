@@ -273,8 +273,8 @@ message AdminSetCreatorArgs {
 }
     
 message AdminSetCreator {
-  optional AdminSetCreatorAccounts accounts = 1;
-  optional AdminSetCreatorArgs args = 2;
+  AdminSetCreatorAccounts accounts = 1;
+  AdminSetCreatorArgs args = 2;
 }
     
 message AdminSetIdlAuthorityAccounts {
@@ -293,8 +293,8 @@ message AdminSetIdlAuthorityArgs {
 }
     
 message AdminSetIdlAuthority {
-  optional AdminSetIdlAuthorityAccounts accounts = 1;
-  optional AdminSetIdlAuthorityArgs args = 2;
+  AdminSetIdlAuthorityAccounts accounts = 1;
+  AdminSetIdlAuthorityArgs args = 2;
 }
     
 message AdminUpdateTokenIncentivesAccounts {
@@ -320,8 +320,8 @@ message AdminUpdateTokenIncentivesArgs {
 }
     
 message AdminUpdateTokenIncentives {
-  optional AdminUpdateTokenIncentivesAccounts accounts = 1;
-  optional AdminUpdateTokenIncentivesArgs args = 2;
+  AdminUpdateTokenIncentivesAccounts accounts = 1;
+  AdminUpdateTokenIncentivesArgs args = 2;
 }
     
 message BuyAccounts {
@@ -351,8 +351,8 @@ message BuyArgs {
 }
     
 message Buy {
-  optional BuyAccounts accounts = 1;
-  optional BuyArgs args = 2;
+  BuyAccounts accounts = 1;
+  BuyArgs args = 2;
 }
     
 message BuyExactSolInAccounts {
@@ -382,8 +382,8 @@ message BuyExactSolInArgs {
 }
     
 message BuyExactSolIn {
-  optional BuyExactSolInAccounts accounts = 1;
-  optional BuyExactSolInArgs args = 2;
+  BuyExactSolInAccounts accounts = 1;
+  BuyExactSolInArgs args = 2;
 }
     
 message ClaimTokenIncentivesAccounts {
@@ -406,8 +406,8 @@ message ClaimTokenIncentivesArgs {
 }
     
 message ClaimTokenIncentives {
-  optional ClaimTokenIncentivesAccounts accounts = 1;
-  optional ClaimTokenIncentivesArgs args = 2;
+  ClaimTokenIncentivesAccounts accounts = 1;
+  ClaimTokenIncentivesArgs args = 2;
 }
     
 message CloseUserVolumeAccumulatorAccounts {
@@ -422,8 +422,8 @@ message CloseUserVolumeAccumulatorArgs {
 }
     
 message CloseUserVolumeAccumulator {
-  optional CloseUserVolumeAccumulatorAccounts accounts = 1;
-  optional CloseUserVolumeAccumulatorArgs args = 2;
+  CloseUserVolumeAccumulatorAccounts accounts = 1;
+  CloseUserVolumeAccumulatorArgs args = 2;
 }
     
 message CollectCreatorFeeAccounts {
@@ -439,8 +439,8 @@ message CollectCreatorFeeArgs {
 }
     
 message CollectCreatorFee {
-  optional CollectCreatorFeeAccounts accounts = 1;
-  optional CollectCreatorFeeArgs args = 2;
+  CollectCreatorFeeAccounts accounts = 1;
+  CollectCreatorFeeArgs args = 2;
 }
     
 message CreateAccounts {
@@ -469,8 +469,8 @@ message CreateArgs {
 }
     
 message Create {
-  optional CreateAccounts accounts = 1;
-  optional CreateArgs args = 2;
+  CreateAccounts accounts = 1;
+  CreateArgs args = 2;
 }
     
 message CreateV2Accounts {
@@ -502,8 +502,8 @@ message CreateV2Args {
 }
     
 message CreateV2 {
-  optional CreateV2Accounts accounts = 1;
-  optional CreateV2Args args = 2;
+  CreateV2Accounts accounts = 1;
+  CreateV2Args args = 2;
 }
     
 message ExtendAccountAccounts {
@@ -519,8 +519,8 @@ message ExtendAccountArgs {
 }
     
 message ExtendAccount {
-  optional ExtendAccountAccounts accounts = 1;
-  optional ExtendAccountArgs args = 2;
+  ExtendAccountAccounts accounts = 1;
+  ExtendAccountArgs args = 2;
 }
     
 message InitUserVolumeAccumulatorAccounts {
@@ -537,8 +537,8 @@ message InitUserVolumeAccumulatorArgs {
 }
     
 message InitUserVolumeAccumulator {
-  optional InitUserVolumeAccumulatorAccounts accounts = 1;
-  optional InitUserVolumeAccumulatorArgs args = 2;
+  InitUserVolumeAccumulatorAccounts accounts = 1;
+  InitUserVolumeAccumulatorArgs args = 2;
 }
     
 message InitializeAccounts {
@@ -552,8 +552,8 @@ message InitializeArgs {
 }
     
 message Initialize {
-  optional InitializeAccounts accounts = 1;
-  optional InitializeArgs args = 2;
+  InitializeAccounts accounts = 1;
+  InitializeArgs args = 2;
 }
     
 message MigrateAccounts {
@@ -588,8 +588,8 @@ message MigrateArgs {
 }
     
 message Migrate {
-  optional MigrateAccounts accounts = 1;
-  optional MigrateArgs args = 2;
+  MigrateAccounts accounts = 1;
+  MigrateArgs args = 2;
 }
     
 message SellAccounts {
@@ -616,8 +616,8 @@ message SellArgs {
 }
     
 message Sell {
-  optional SellAccounts accounts = 1;
-  optional SellArgs args = 2;
+  SellAccounts accounts = 1;
+  SellArgs args = 2;
 }
     
 message SetCreatorAccounts {
@@ -636,8 +636,8 @@ message SetCreatorArgs {
 }
     
 message SetCreator {
-  optional SetCreatorAccounts accounts = 1;
-  optional SetCreatorArgs args = 2;
+  SetCreatorAccounts accounts = 1;
+  SetCreatorArgs args = 2;
 }
     
 message SetMetaplexCreatorAccounts {
@@ -653,8 +653,8 @@ message SetMetaplexCreatorArgs {
 }
     
 message SetMetaplexCreator {
-  optional SetMetaplexCreatorAccounts accounts = 1;
-  optional SetMetaplexCreatorArgs args = 2;
+  SetMetaplexCreatorAccounts accounts = 1;
+  SetMetaplexCreatorArgs args = 2;
 }
     
 message SetParamsAccounts {
@@ -680,8 +680,8 @@ message SetParamsArgs {
 }
     
 message SetParams {
-  optional SetParamsAccounts accounts = 1;
-  optional SetParamsArgs args = 2;
+  SetParamsAccounts accounts = 1;
+  SetParamsArgs args = 2;
 }
     
 message SetReservedFeeRecipientsAccounts {
@@ -697,8 +697,8 @@ message SetReservedFeeRecipientsArgs {
 }
     
 message SetReservedFeeRecipients {
-  optional SetReservedFeeRecipientsAccounts accounts = 1;
-  optional SetReservedFeeRecipientsArgs args = 2;
+  SetReservedFeeRecipientsAccounts accounts = 1;
+  SetReservedFeeRecipientsArgs args = 2;
 }
     
 message SyncUserVolumeAccumulatorAccounts {
@@ -714,8 +714,8 @@ message SyncUserVolumeAccumulatorArgs {
 }
     
 message SyncUserVolumeAccumulator {
-  optional SyncUserVolumeAccumulatorAccounts accounts = 1;
-  optional SyncUserVolumeAccumulatorArgs args = 2;
+  SyncUserVolumeAccumulatorAccounts accounts = 1;
+  SyncUserVolumeAccumulatorArgs args = 2;
 }
     
 message ToggleCreateV2Accounts {
@@ -731,8 +731,8 @@ message ToggleCreateV2Args {
 }
     
 message ToggleCreateV2 {
-  optional ToggleCreateV2Accounts accounts = 1;
-  optional ToggleCreateV2Args args = 2;
+  ToggleCreateV2Accounts accounts = 1;
+  ToggleCreateV2Args args = 2;
 }
     
 message ToggleMayhemModeAccounts {
@@ -748,8 +748,8 @@ message ToggleMayhemModeArgs {
 }
     
 message ToggleMayhemMode {
-  optional ToggleMayhemModeAccounts accounts = 1;
-  optional ToggleMayhemModeArgs args = 2;
+  ToggleMayhemModeAccounts accounts = 1;
+  ToggleMayhemModeArgs args = 2;
 }
     
 message UpdateGlobalAuthorityAccounts {
@@ -765,8 +765,8 @@ message UpdateGlobalAuthorityArgs {
 }
     
 message UpdateGlobalAuthority {
-  optional UpdateGlobalAuthorityAccounts accounts = 1;
-  optional UpdateGlobalAuthorityArgs args = 2;
+  UpdateGlobalAuthorityAccounts accounts = 1;
+  UpdateGlobalAuthorityArgs args = 2;
 }
     
 message PumpFunAccount {

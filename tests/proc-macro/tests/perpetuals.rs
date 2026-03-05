@@ -38,28 +38,28 @@ async fn parse_custody_account() {
         ]),
         decimals: 9,
         is_stable: false,
-        oracle: Some(perpetuals::OracleParams {
+        oracle: perpetuals::OracleParams {
             oracle_account: perpetuals::PublicKey::new(vec![
                 96, 49, 71, 4, 52, 13, 237, 223, 55, 31, 212, 36, 114, 20, 143, 36, 142, 157, 26,
                 109, 26, 94, 178, 172, 58, 205, 139, 127, 213, 214, 178, 67,
             ]),
-            oracle_type: Some(perpetuals::OracleType {
+            oracle_type: perpetuals::OracleType {
                 kind: Some(perpetuals::oracle_type::Kind::Pyth(
                     perpetuals::OracleTypePyth {},
                 )),
-            }),
+            },
             buffer: 50,
             max_price_age_sec: 5,
-        }),
-        pricing: Some(perpetuals::PricingParams {
+        },
+        pricing: perpetuals::PricingParams {
             trade_impact_fee_scalar: 3_750_000_000_000_000,
             buffer: 0,
             swap_spread: 0,
             max_leverage: 5_000_000,
             max_global_long_sizes: 410_000_000_000_000,
             max_global_short_sizes: 112_293_947_657_720,
-        }),
-        permissions: Some(perpetuals::Permissions {
+        },
+        permissions: perpetuals::Permissions {
             allow_swap: true,
             allow_add_liquidity: true,
             allow_remove_liquidity: true,
@@ -67,21 +67,21 @@ async fn parse_custody_account() {
             allow_decrease_position: true,
             allow_collateral_withdrawal: true,
             allow_liquidate_position: true,
-        }),
+        },
         target_ratio_bps: 4700,
-        assets: Some(perpetuals::Assets {
+        assets: perpetuals::Assets {
             fees_reserves: 466_896_904,
             owned: 6_368_829_939_225_389,
             locked: 398_908_550_717_247,
             guaranteed_usd: 24_953_150_512_329,
             global_short_sizes: 10_560_791_260_461,
             global_short_average_prices: 83_486_086,
-        }),
-        funding_rate_state: Some(perpetuals::FundingRateState {
+        },
+        funding_rate_state: perpetuals::FundingRateState {
             cumulative_interest_rate: vec![151, 179, 251, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             last_update: 1_771_834_760,
             hourly_funding_dbps: 0,
-        }),
+        },
         bump: 253,
         token_account_bump: 255,
         increase_position_bps: 6,
@@ -91,17 +91,17 @@ async fn parse_custody_account() {
             31, 236, 44, 187, 11, 175, 112, 110, 143, 105, 186, 138, 53, 218, 38, 247, 99, 111, 71,
             194, 119, 3, 29, 140, 62, 4, 86, 16, 146, 217, 76, 97,
         ]),
-        jump_rate_state: Some(perpetuals::JumpRateState {
+        jump_rate_state: perpetuals::JumpRateState {
             min_rate_bps: 1000,
             max_rate_bps: 15000,
             target_rate_bps: 3500,
             target_utilization_rate: 800_000_000,
-        }),
+        },
         doves_ag_oracle: perpetuals::PublicKey::new(vec![
             216, 42, 235, 57, 188, 70, 146, 145, 46, 181, 242, 170, 224, 18, 127, 36, 173, 176,
             246, 182, 107, 253, 118, 9, 80, 73, 48, 236, 108, 178, 99, 136,
         ]),
-        price_impact_buffer: Some(perpetuals::PriceImpactBuffer {
+        price_impact_buffer: perpetuals::PriceImpactBuffer {
             open_interest: vec![
                 0,
                 0,
@@ -169,21 +169,21 @@ async fn parse_custody_account() {
             exponent: 1.0,
             delta_imbalance_threshold_decimal: 1_500_000_000_000,
             max_fee_bps: 50,
-        }),
-        borrow_lend_parameters: Some(perpetuals::BorrowLendParams {
+        },
+        borrow_lend_parameters: perpetuals::BorrowLendParams {
             borrows_limit_in_bps: 0,
             maintainance_margin_bps: 0,
             protocol_fee_bps: 0,
             liquidation_margin: 0,
             liquidation_fee_bps: 0,
-        }),
-        borrows_funding_rate_state: Some(perpetuals::FundingRateState {
+        },
+        borrows_funding_rate_state: perpetuals::FundingRateState {
             cumulative_interest_rate: vec![
                 0, 0, 100, 167, 179, 182, 224, 13, 0, 0, 0, 0, 0, 0, 0, 0,
             ],
             last_update: 1_771_834_760,
             hourly_funding_dbps: 0,
-        }),
+        },
         debt: vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         borrow_lend_interests_accured: vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         borrow_limit_in_token_amount: 0,
@@ -237,12 +237,12 @@ async fn parse_pool_account() {
             ]),
         ],
         aum_usd: vec![42, 148, 219, 152, 238, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        limit: Some(perpetuals::Limit {
+        limit: perpetuals::Limit {
             max_aum_usd: vec![0, 128, 83, 238, 123, 168, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             token_weightage_buffer_bps: vec![232, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             buffer: 0,
-        }),
-        fees: Some(perpetuals::Fees {
+        },
+        fees: perpetuals::Fees {
             swap_multiplier: 100,
             stable_swap_multiplier: 100,
             add_remove_liquidity_bps: 20,
@@ -252,23 +252,23 @@ async fn parse_pool_account() {
             stable_swap_tax_bps: 5,
             liquidation_reward_bps: 150,
             protocol_share_bps: 2500,
-        }),
-        pool_apr: Some(perpetuals::PoolApr {
+        },
+        pool_apr: perpetuals::PoolApr {
             last_updated: 1771002900,
             fee_apr_bps: 1093,
             realized_fee_usd: 1250427617755,
-        }),
+        },
         max_request_execution_sec: 45,
         bump: 252,
         lp_token_bump: 254,
         inception_time: 1689677832,
-        parameter_update_oracle: Some(perpetuals::Secp256k1Pubkey {
+        parameter_update_oracle: perpetuals::Secp256k1Pubkey {
             prefix: 2,
             key: vec![
                 81, 186, 187, 169, 123, 155, 81, 29, 179, 83, 117, 14, 44, 57, 230, 19, 66, 46,
                 133, 49, 33, 164, 138, 181, 32, 132, 12, 0, 39, 52, 40, 92,
             ],
-        }),
+        },
         aum_usd_updated_at: 1771515604,
         max_trigger_price_diff_bps: 500,
         disable_close_position_request: false,
@@ -298,7 +298,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
             .expect("no decrease position ix found");
 
         let expected = perpetuals::instruction::DecreasePositionWithTpsl {
-            accounts: Some(perpetuals::instruction::DecreasePositionWithTpslAccounts {
+            accounts: perpetuals::instruction::DecreasePositionWithTpslAccounts {
                 keeper: perpetuals::PublicKey::new(vec![
                     238, 103, 24, 154, 146, 36, 183, 11, 249, 126, 171, 22, 248, 91, 126, 66, 80,
                     130, 214, 35, 46, 153, 237, 255, 229, 32, 219, 75, 135, 121, 46, 21,
@@ -361,8 +361,8 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                 ]),
                 program: perpetuals::PublicKey::new(perpetuals::PROGRAM_ID.to_vec()),
                 remaining_accounts: vec![],
-            }),
-            args: Some(perpetuals::instruction::DecreasePositionWithTpslArgs {}),
+            },
+            args: perpetuals::instruction::DecreasePositionWithTpslArgs {},
         };
 
         assert_eq!(decrease, &expected);
@@ -378,7 +378,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
             .expect("no close position request 2 ix found");
 
         let expected = perpetuals::instruction::ClosePositionRequest2 {
-            accounts: Some(perpetuals::instruction::ClosePositionRequest2Accounts {
+            accounts: perpetuals::instruction::ClosePositionRequest2Accounts {
                 keeper: perpetuals::PublicKey::new(vec![
                     238, 103, 24, 154, 146, 36, 183, 11, 249, 126, 171, 22, 248, 91, 126, 66, 80,
                     130, 214, 35, 46, 153, 237, 255, 229, 32, 219, 75, 135, 121, 46, 21,
@@ -429,8 +429,8 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                 ]),
                 program: perpetuals::PublicKey::new(perpetuals::PROGRAM_ID.to_vec()),
                 remaining_accounts: vec![],
-            }),
-            args: Some(perpetuals::instruction::ClosePositionRequest2Args {}),
+            },
+            args: perpetuals::instruction::ClosePositionRequest2Args {},
         };
 
         assert_eq!(close, &expected);
@@ -457,7 +457,7 @@ async fn parse_borrow_from_custody_ix() {
     use yellowstone_vixen_core::PublicKey;
 
     let expected = perpetuals::instruction::BorrowFromCustody {
-        accounts: Some(perpetuals::instruction::BorrowFromCustodyAccounts {
+        accounts: perpetuals::instruction::BorrowFromCustodyAccounts {
             owner: PublicKey::new(vec![
                 193, 141, 200, 224, 246, 201, 5, 150, 208, 94, 178, 61, 237, 45, 230, 117, 221,
                 127, 66, 219, 18, 153, 140, 155, 9, 12, 15, 17, 113, 249, 167, 29,
@@ -548,10 +548,10 @@ async fn parse_borrow_from_custody_ix() {
                     237, 61, 60, 80, 25, 129, 231, 40, 254, 0, 125, 174, 143, 186, 20,
                 ]),
             ],
-        }),
-        args: Some(perpetuals::instruction::BorrowFromCustodyArgs {
+        },
+        args: perpetuals::instruction::BorrowFromCustodyArgs {
             amount: 8_463_144_037,
-        }),
+        },
     };
 
     assert_eq!(borrow_ix, &expected);

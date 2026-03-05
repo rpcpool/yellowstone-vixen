@@ -364,7 +364,6 @@ enum FieldClassification {
     RepeatedScalar(ScalarKind),
     RepeatedBytes,
     RepeatedMessage,
-    Message,
     RequiredMessage,
 }
 
@@ -382,7 +381,7 @@ enum ScalarKind {
 
 fn classify_type(ty: &Type) -> FieldClassification {
     let Some(seg) = last_segment(ty) else {
-        return FieldClassification::Message;
+        return FieldClassification::RequiredMessage;
     };
 
     match seg.ident.to_string().as_str() {
@@ -397,7 +396,7 @@ fn classify_type(ty: &Type) -> FieldClassification {
         "Option" => classify_option(seg),
         "Vec" => classify_vec(seg),
         "PublicKey" => FieldClassification::RequiredMessage,
-        _ => FieldClassification::Message,
+        _ => FieldClassification::RequiredMessage,
     }
 }
 
@@ -480,7 +479,7 @@ fn prost_annotation(cls: &FieldClassification, tag: u32) -> TokenStream {
         FieldClassification::OptionalBytes => {
             quote!(bytes = "vec", optional, tag = #tag)
         },
-        FieldClassification::OptionalMessage | FieldClassification::Message => {
+        FieldClassification::OptionalMessage => {
             quote!(message, optional, tag = #tag)
         },
         FieldClassification::RequiredMessage => {

@@ -88,36 +88,36 @@ pub mod token_metadata_instruction {
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Initialize {
-        pub accounts: Option<super::InitializeAccounts>,
-        pub args: Option<super::InitializeArgs>,
+        pub accounts: super::InitializeAccounts,
+        pub args: super::InitializeArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct UpdateField {
-        pub accounts: Option<super::UpdateFieldAccounts>,
-        pub args: Option<super::UpdateFieldArgs>,
+        pub accounts: super::UpdateFieldAccounts,
+        pub args: super::UpdateFieldArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct RemoveKey {
-        pub accounts: Option<super::RemoveKeyAccounts>,
-        pub args: Option<super::RemoveKeyArgs>,
+        pub accounts: super::RemoveKeyAccounts,
+        pub args: super::RemoveKeyArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct UpdateAuthority {
-        pub accounts: Option<super::UpdateAuthorityAccounts>,
-        pub args: Option<super::UpdateAuthorityArgs>,
+        pub accounts: super::UpdateAuthorityAccounts,
+        pub args: super::UpdateAuthorityArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Emit {
-        pub accounts: Option<super::EmitAccounts>,
-        pub args: Option<super::EmitArgs>,
+        pub accounts: super::EmitAccounts,
+        pub args: super::EmitArgs,
     }
 
     #[vixen(oneof)]
@@ -145,66 +145,66 @@ impl ExtensionInstructionParser for TokenMetadataIx {
                 check_min_accounts_req(accounts_len, 4)?;
 
                 oneof::Instruction::Initialize(oneof::Initialize {
-                    accounts: Some(InitializeAccounts {
+                    accounts: InitializeAccounts {
                         metadata: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         update_authority: crate::PublicKey::new(ix.accounts[1].to_vec()),
                         mint: crate::PublicKey::new(ix.accounts[2].to_vec()),
                         mint_authority: crate::PublicKey::new(ix.accounts[3].to_vec()),
-                    }),
-                    args: Some(InitializeArgs {
+                    },
+                    args: InitializeArgs {
                         raw: ix.data.clone(),
-                    }),
+                    },
                 })
             },
             SplTokenMetadataInstruction::UpdateField(_args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 oneof::Instruction::UpdateField(oneof::UpdateField {
-                    accounts: Some(UpdateFieldAccounts {
+                    accounts: UpdateFieldAccounts {
                         metadata: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         update_authority: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                    }),
-                    args: Some(UpdateFieldArgs {
+                    },
+                    args: UpdateFieldArgs {
                         raw: ix.data.clone(),
-                    }),
+                    },
                 })
             },
             SplTokenMetadataInstruction::RemoveKey(_args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 oneof::Instruction::RemoveKey(oneof::RemoveKey {
-                    accounts: Some(RemoveKeyAccounts {
+                    accounts: RemoveKeyAccounts {
                         metadata: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         update_authority: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                    }),
-                    args: Some(RemoveKeyArgs {
+                    },
+                    args: RemoveKeyArgs {
                         raw: ix.data.clone(),
-                    }),
+                    },
                 })
             },
             SplTokenMetadataInstruction::UpdateAuthority(_args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 oneof::Instruction::UpdateAuthority(oneof::UpdateAuthority {
-                    accounts: Some(UpdateAuthorityAccounts {
+                    accounts: UpdateAuthorityAccounts {
                         metadata: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         current_update_authority: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                    }),
-                    args: Some(UpdateAuthorityArgs {
+                    },
+                    args: UpdateAuthorityArgs {
                         raw: ix.data.clone(),
-                    }),
+                    },
                 })
             },
             SplTokenMetadataInstruction::Emit(_args) => {
                 check_min_accounts_req(accounts_len, 1)?;
 
                 oneof::Instruction::Emit(oneof::Emit {
-                    accounts: Some(EmitAccounts {
+                    accounts: EmitAccounts {
                         metadata: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                    }),
-                    args: Some(EmitArgs {
+                    },
+                    args: EmitArgs {
                         raw: ix.data.clone(),
-                    }),
+                    },
                 })
             },
         };

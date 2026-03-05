@@ -57,7 +57,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 9)?;
 
                 Out::Initialize(InitializeInstruction {
-                    accounts: Some(InitializeAccounts {
+                    accounts: InitializeAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         manager: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         staker: crate::PublicKey::new(ix.accounts[2].into_bytes()),
@@ -73,14 +73,14 @@ impl InstructionParser {
                             .accounts
                             .get(9)
                             .map(|a| crate::PublicKey::new(a.into_bytes())),
-                    }),
-                    args: Some(InitializeArgs {
+                    },
+                    args: InitializeArgs {
                         fee: Some(fee_to_proto(fee)),
                         withdrawal_fee: Some(fee_to_proto(withdrawal_fee)),
                         deposit_fee: Some(fee_to_proto(deposit_fee)),
                         referral_fee: referral_fee as u32,
                         max_validators,
-                    }),
+                    },
                 })
             },
 
@@ -88,7 +88,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 13)?;
 
                 Out::AddValidatorToPool(AddValidatorToPoolInstruction {
-                    accounts: Some(AddValidatorToPoolAccounts {
+                    accounts: AddValidatorToPoolAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         staker: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         funder: crate::PublicKey::new(ix.accounts[2].into_bytes()),
@@ -102,8 +102,8 @@ impl InstructionParser {
                         stake_config: crate::PublicKey::new(ix.accounts[10].into_bytes()),
                         system_program: crate::PublicKey::new(ix.accounts[11].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[12].into_bytes()),
-                    }),
-                    args: Some(AddValidatorToPoolArgs { raw_validator_seed }),
+                    },
+                    args: AddValidatorToPoolArgs { raw_validator_seed },
                 })
             },
 
@@ -111,7 +111,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 8)?;
 
                 Out::RemoveValidatorFromPool(RemoveValidatorFromPoolInstruction {
-                    accounts: Some(RemoveValidatorFromPoolAccounts {
+                    accounts: RemoveValidatorFromPoolAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         staker: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_withdraw: crate::PublicKey::new(ix.accounts[2].into_bytes()),
@@ -120,7 +120,7 @@ impl InstructionParser {
                         transient_stake_account: crate::PublicKey::new(ix.accounts[5].into_bytes()),
                         clock: crate::PublicKey::new(ix.accounts[6].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[7].into_bytes()),
-                    }),
+                    },
                 })
             },
 
@@ -131,7 +131,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 10)?;
 
                 Out::DecreaseValidatorStake(DecreaseValidatorStakeInstruction {
-                    accounts: Some(DecreaseValidatorStakeAccounts {
+                    accounts: DecreaseValidatorStakeAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         staker: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
@@ -144,11 +144,11 @@ impl InstructionParser {
                         rent: crate::PublicKey::new(ix.accounts[7].into_bytes()),
                         system_program: crate::PublicKey::new(ix.accounts[8].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[9].into_bytes()),
-                    }),
-                    args: Some(DecreaseValidatorStakeArgs {
+                    },
+                    args: DecreaseValidatorStakeArgs {
                         lamports,
                         transient_stake_seed,
-                    }),
+                    },
                 })
             },
 
@@ -159,7 +159,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 14)?;
 
                 Out::IncreaseValidatorStake(IncreaseValidatorStakeInstruction {
-                    accounts: Some(IncreaseValidatorStakeAccounts {
+                    accounts: IncreaseValidatorStakeAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         staker: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
@@ -176,11 +176,11 @@ impl InstructionParser {
                         stake_config: crate::PublicKey::new(ix.accounts[11].into_bytes()),
                         system_program: crate::PublicKey::new(ix.accounts[12].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[13].into_bytes()),
-                    }),
-                    args: Some(IncreaseValidatorStakeArgs {
+                    },
+                    args: IncreaseValidatorStakeArgs {
                         lamports,
                         transient_stake_seed,
-                    }),
+                    },
                 })
             },
 
@@ -191,17 +191,17 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 3)?;
 
                 Out::SetPreferredValidator(SetPreferredValidatorInstruction {
-                    accounts: Some(SetPreferredValidatorAccounts {
+                    accounts: SetPreferredValidatorAccounts {
                         stake_pool_address: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         staker: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         validator_list_address: crate::PublicKey::new(ix.accounts[2].into_bytes()),
-                    }),
-                    args: Some(SetPreferredValidatorArgs {
+                    },
+                    args: SetPreferredValidatorArgs {
                         validator_type: preferred_validator_type_to_proto(validator_type) as i32,
                         // real Pubkey, not an account meta
                         validator_vote_address: validator_vote_address
                             .map(|p| crate::PublicKey::new(p.to_bytes())),
-                    }),
+                    },
                 })
             },
 
@@ -212,7 +212,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 7)?;
 
                 Out::UpdateValidatorListBalance(UpdateValidatorListBalanceInstruction {
-                    accounts: Some(UpdateValidatorListBalanceAccounts {
+                    accounts: UpdateValidatorListBalanceAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
                             ix.accounts[1].into_bytes(),
@@ -222,11 +222,11 @@ impl InstructionParser {
                         clock: crate::PublicKey::new(ix.accounts[4].into_bytes()),
                         sysvar_stake_history: crate::PublicKey::new(ix.accounts[5].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[6].into_bytes()),
-                    }),
-                    args: Some(UpdateValidatorListBalanceArgs {
+                    },
+                    args: UpdateValidatorListBalanceArgs {
                         start_index,
                         no_merge,
-                    }),
+                    },
                 })
             },
 
@@ -234,7 +234,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 7)?;
 
                 Out::UpdateStakePoolBalance(UpdateStakePoolBalanceInstruction {
-                    accounts: Some(UpdateStakePoolBalanceAccounts {
+                    accounts: UpdateStakePoolBalanceAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         withdraw_authority: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         validator_list_storage: crate::PublicKey::new(ix.accounts[2].into_bytes()),
@@ -242,7 +242,7 @@ impl InstructionParser {
                         manager_fee_account: crate::PublicKey::new(ix.accounts[4].into_bytes()),
                         stake_pool_mint: crate::PublicKey::new(ix.accounts[5].into_bytes()),
                         token_program: crate::PublicKey::new(ix.accounts[6].into_bytes()),
-                    }),
+                    },
                 })
             },
 
@@ -250,10 +250,10 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 Out::CleanupRemovedValidatorEntries(CleanupRemovedValidatorEntriesInstruction {
-                    accounts: Some(CleanupRemovedValidatorEntriesAccounts {
+                    accounts: CleanupRemovedValidatorEntriesAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         validator_list_storage: crate::PublicKey::new(ix.accounts[1].into_bytes()),
-                    }),
+                    },
                 })
             },
 
@@ -261,7 +261,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 15)?;
 
                 Out::DepositStake(DepositStakeInstruction {
-                    accounts: Some(DepositStakeAccounts {
+                    accounts: DepositStakeAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         validator_list_storage: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_deposit_authority: crate::PublicKey::new(
@@ -283,7 +283,7 @@ impl InstructionParser {
                         sysvar_stake_history: crate::PublicKey::new(ix.accounts[12].into_bytes()),
                         token_program: crate::PublicKey::new(ix.accounts[13].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[14].into_bytes()),
-                    }),
+                    },
                 })
             },
 
@@ -291,7 +291,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 13)?;
 
                 Out::WithdrawStake(WithdrawStakeInstruction {
-                    accounts: Some(WithdrawStakeAccounts {
+                    accounts: WithdrawStakeAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         validator_list_storage: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_withdraw: crate::PublicKey::new(ix.accounts[2].into_bytes()),
@@ -305,8 +305,8 @@ impl InstructionParser {
                         clock: crate::PublicKey::new(ix.accounts[10].into_bytes()),
                         token_program: crate::PublicKey::new(ix.accounts[11].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[12].into_bytes()),
-                    }),
-                    args: Some(WithdrawStakeArgs { amount }),
+                    },
+                    args: WithdrawStakeArgs { amount },
                 })
             },
 
@@ -314,12 +314,12 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 4)?;
 
                 Out::SetManager(SetManagerInstruction {
-                    accounts: Some(SetManagerAccounts {
+                    accounts: SetManagerAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         manager: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         new_manager: crate::PublicKey::new(ix.accounts[2].into_bytes()),
                         new_fee_receiver: crate::PublicKey::new(ix.accounts[3].into_bytes()),
-                    }),
+                    },
                 })
             },
 
@@ -327,13 +327,13 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 Out::SetFee(SetFeeInstruction {
-                    accounts: Some(SetFeeAccounts {
+                    accounts: SetFeeAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         manager: crate::PublicKey::new(ix.accounts[1].into_bytes()),
-                    }),
-                    args: Some(SetFeeArgs {
+                    },
+                    args: SetFeeArgs {
                         fee: Some(fee_type_to_proto(fee)),
-                    }),
+                    },
                 })
             },
 
@@ -341,11 +341,11 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 3)?;
 
                 Out::SetStaker(SetStakerInstruction {
-                    accounts: Some(SetStakerAccounts {
+                    accounts: SetStakerAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         set_staker_authority: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         new_staker: crate::PublicKey::new(ix.accounts[2].into_bytes()),
-                    }),
+                    },
                 })
             },
 
@@ -353,7 +353,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 10)?;
 
                 Out::DepositSol(DepositSolInstruction {
-                    accounts: Some(DepositSolAccounts {
+                    accounts: DepositSolAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
                             ix.accounts[1].into_bytes(),
@@ -372,8 +372,8 @@ impl InstructionParser {
                             .accounts
                             .get(10)
                             .map(|a| crate::PublicKey::new(a.into_bytes())),
-                    }),
-                    args: Some(DepositSolArgs { amount }),
+                    },
+                    args: DepositSolArgs { amount },
                 })
             },
 
@@ -381,17 +381,17 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 Out::SetFundingAuthority(SetFundingAuthorityInstruction {
-                    accounts: Some(SetFundingAuthorityAccounts {
+                    accounts: SetFundingAuthorityAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         manager: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         auth: ix
                             .accounts
                             .get(2)
                             .map(|a| crate::PublicKey::new(a.into_bytes())),
-                    }),
-                    args: Some(SetFundingAuthorityArgs {
+                    },
+                    args: SetFundingAuthorityArgs {
                         funding_type: funding_type_to_proto(funding_type) as i32,
-                    }),
+                    },
                 })
             },
 
@@ -399,7 +399,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 12)?;
 
                 Out::WithdrawSol(WithdrawSolInstruction {
-                    accounts: Some(WithdrawSolAccounts {
+                    accounts: WithdrawSolAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
                             ix.accounts[1].into_bytes(),
@@ -418,8 +418,8 @@ impl InstructionParser {
                             .accounts
                             .get(12)
                             .map(|a| crate::PublicKey::new(a.into_bytes())),
-                    }),
-                    args: Some(WithdrawSolArgs { amount }),
+                    },
+                    args: WithdrawSolArgs { amount },
                 })
             },
 
@@ -427,7 +427,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 8)?;
 
                 Out::CreateTokenMetadata(CreateTokenMetadataInstruction {
-                    accounts: Some(CreateTokenMetadataAccounts {
+                    accounts: CreateTokenMetadataAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         manager: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
@@ -438,8 +438,8 @@ impl InstructionParser {
                         token_metadata: crate::PublicKey::new(ix.accounts[5].into_bytes()),
                         mpl_token_metadata: crate::PublicKey::new(ix.accounts[6].into_bytes()),
                         system_program: crate::PublicKey::new(ix.accounts[7].into_bytes()),
-                    }),
-                    args: Some(CreateTokenMetadataArgs { name, symbol, uri }),
+                    },
+                    args: CreateTokenMetadataArgs { name, symbol, uri },
                 })
             },
 
@@ -447,7 +447,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 5)?;
 
                 Out::UpdateTokenMetadata(UpdateTokenMetadataInstruction {
-                    accounts: Some(UpdateTokenMetadataAccounts {
+                    accounts: UpdateTokenMetadataAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         manager: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
@@ -455,8 +455,8 @@ impl InstructionParser {
                         ),
                         token_metadata: crate::PublicKey::new(ix.accounts[3].into_bytes()),
                         mpl_token_metadata: crate::PublicKey::new(ix.accounts[4].into_bytes()),
-                    }),
-                    args: Some(UpdateTokenMetadataArgs { name, symbol, uri }),
+                    },
+                    args: UpdateTokenMetadataArgs { name, symbol, uri },
                 })
             },
 
@@ -468,7 +468,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 14)?;
 
                 Out::IncreaseAdditionalValidatorStake(IncreaseAdditionalValidatorStakeInstruction {
-                    accounts: Some(IncreaseAdditionalValidatorStakeAccounts {
+                    accounts: IncreaseAdditionalValidatorStakeAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         staker: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
@@ -485,12 +485,12 @@ impl InstructionParser {
                         stake_config: crate::PublicKey::new(ix.accounts[11].into_bytes()),
                         system_program: crate::PublicKey::new(ix.accounts[12].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[13].into_bytes()),
-                    }),
-                    args: Some(IncreaseAdditionalValidatorStakeArgs {
+                    },
+                    args: IncreaseAdditionalValidatorStakeArgs {
                         lamports,
                         transient_stake_seed,
                         ephemeral_stake_seed,
-                    }),
+                    },
                 })
             },
 
@@ -502,7 +502,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 12)?;
 
                 Out::DecreaseAdditionalValidatorStake(DecreaseAdditionalValidatorStakeInstruction {
-                    accounts: Some(DecreaseAdditionalValidatorStakeAccounts {
+                    accounts: DecreaseAdditionalValidatorStakeAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         staker: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
@@ -517,12 +517,12 @@ impl InstructionParser {
                         stake_history: crate::PublicKey::new(ix.accounts[9].into_bytes()),
                         system_program: crate::PublicKey::new(ix.accounts[10].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[11].into_bytes()),
-                    }),
-                    args: Some(DecreaseAdditionalValidatorStakeArgs {
+                    },
+                    args: DecreaseAdditionalValidatorStakeArgs {
                         lamports,
                         transient_stake_seed,
                         ephemeral_stake_seed,
-                    }),
+                    },
                 })
             },
 
@@ -534,7 +534,7 @@ impl InstructionParser {
 
                 Out::DecreaseValidatorStakeWithReserve(
                     DecreaseValidatorStakeWithReserveInstruction {
-                        accounts: Some(DecreaseValidatorStakeWithReserveAccounts {
+                        accounts: DecreaseValidatorStakeWithReserveAccounts {
                             stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                             staker: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                             stake_pool_withdraw_authority: crate::PublicKey::new(
@@ -548,11 +548,11 @@ impl InstructionParser {
                             stake_history: crate::PublicKey::new(ix.accounts[8].into_bytes()),
                             system_program: crate::PublicKey::new(ix.accounts[9].into_bytes()),
                             stake_program: crate::PublicKey::new(ix.accounts[10].into_bytes()),
-                        }),
-                        args: Some(DecreaseValidatorStakeWithReserveArgs {
+                        },
+                        args: DecreaseValidatorStakeWithReserveArgs {
                             lamports,
                             transient_stake_seed,
-                        }),
+                        },
                     },
                 )
             },
@@ -563,7 +563,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 15)?;
 
                 Out::DepositStakeWithSlippage(DepositStakeWithSlippageInstruction {
-                    accounts: Some(DepositStakeWithSlippageAccounts {
+                    accounts: DepositStakeWithSlippageAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         validator_list_storage: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_deposit_authority: crate::PublicKey::new(
@@ -585,10 +585,10 @@ impl InstructionParser {
                         sysvar_stake_history: crate::PublicKey::new(ix.accounts[12].into_bytes()),
                         token_program: crate::PublicKey::new(ix.accounts[13].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[14].into_bytes()),
-                    }),
-                    args: Some(DepositStakeWithSlippageArgs {
+                    },
+                    args: DepositStakeWithSlippageArgs {
                         minimum_pool_tokens_out,
-                    }),
+                    },
                 })
             },
 
@@ -599,7 +599,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 13)?;
 
                 Out::WithdrawStakeWithSlippage(WithdrawStakeWithSlippageInstruction {
-                    accounts: Some(WithdrawStakeWithSlippageAccounts {
+                    accounts: WithdrawStakeWithSlippageAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         validator_list_storage: crate::PublicKey::new(ix.accounts[1].into_bytes()),
                         stake_pool_withdraw: crate::PublicKey::new(ix.accounts[2].into_bytes()),
@@ -613,11 +613,11 @@ impl InstructionParser {
                         clock: crate::PublicKey::new(ix.accounts[10].into_bytes()),
                         token_program: crate::PublicKey::new(ix.accounts[11].into_bytes()),
                         stake_program: crate::PublicKey::new(ix.accounts[12].into_bytes()),
-                    }),
-                    args: Some(WithdrawStakeWithSlippageArgs {
+                    },
+                    args: WithdrawStakeWithSlippageArgs {
                         pool_tokens_in,
                         minimum_lamports_out,
-                    }),
+                    },
                 })
             },
 
@@ -628,7 +628,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 10)?;
 
                 Out::DepositSolWithSlippage(DepositSolWithSlippageInstruction {
-                    accounts: Some(DepositSolWithSlippageAccounts {
+                    accounts: DepositSolWithSlippageAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
                             ix.accounts[1].into_bytes(),
@@ -647,11 +647,11 @@ impl InstructionParser {
                             .accounts
                             .get(10)
                             .map(|a| crate::PublicKey::new(a.into_bytes())),
-                    }),
-                    args: Some(DepositSolWithSlippageArgs {
+                    },
+                    args: DepositSolWithSlippageArgs {
                         lamports_in,
                         minimum_pool_tokens_out,
-                    }),
+                    },
                 })
             },
 
@@ -662,7 +662,7 @@ impl InstructionParser {
                 check_min_accounts_req(accounts_len, 12)?;
 
                 Out::WithdrawSolWithSlippage(WithdrawSolWithSlippageInstruction {
-                    accounts: Some(WithdrawSolWithSlippageAccounts {
+                    accounts: WithdrawSolWithSlippageAccounts {
                         stake_pool: crate::PublicKey::new(ix.accounts[0].into_bytes()),
                         stake_pool_withdraw_authority: crate::PublicKey::new(
                             ix.accounts[1].into_bytes(),
@@ -681,11 +681,11 @@ impl InstructionParser {
                             .accounts
                             .get(12)
                             .map(|a| crate::PublicKey::new(a.into_bytes())),
-                    }),
-                    args: Some(WithdrawSolWithSlippageArgs {
+                    },
+                    args: WithdrawSolWithSlippageArgs {
                         pool_tokens_in,
                         minimum_lamports_out,
-                    }),
+                    },
                 })
             },
 

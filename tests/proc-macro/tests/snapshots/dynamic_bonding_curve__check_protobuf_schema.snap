@@ -551,8 +551,8 @@ message ClaimCreatorTradingFeeArgs {
 }
     
 message ClaimCreatorTradingFee {
-  optional ClaimCreatorTradingFeeAccounts accounts = 1;
-  optional ClaimCreatorTradingFeeArgs args = 2;
+  ClaimCreatorTradingFeeAccounts accounts = 1;
+  ClaimCreatorTradingFeeArgs args = 2;
 }
     
 message ClaimPartnerPoolCreationFeeAccounts {
@@ -569,8 +569,8 @@ message ClaimPartnerPoolCreationFeeArgs {
 }
     
 message ClaimPartnerPoolCreationFee {
-  optional ClaimPartnerPoolCreationFeeAccounts accounts = 1;
-  optional ClaimPartnerPoolCreationFeeArgs args = 2;
+  ClaimPartnerPoolCreationFeeAccounts accounts = 1;
+  ClaimPartnerPoolCreationFeeArgs args = 2;
 }
     
 message ClaimProtocolFeeAccounts {
@@ -598,8 +598,8 @@ message ClaimProtocolFeeArgs {
 }
     
 message ClaimProtocolFee {
-  optional ClaimProtocolFeeAccounts accounts = 1;
-  optional ClaimProtocolFeeArgs args = 2;
+  ClaimProtocolFeeAccounts accounts = 1;
+  ClaimProtocolFeeArgs args = 2;
 }
     
 message ClaimProtocolPoolCreationFeeAccounts {
@@ -617,8 +617,8 @@ message ClaimProtocolPoolCreationFeeArgs {
 }
     
 message ClaimProtocolPoolCreationFee {
-  optional ClaimProtocolPoolCreationFeeAccounts accounts = 1;
-  optional ClaimProtocolPoolCreationFeeArgs args = 2;
+  ClaimProtocolPoolCreationFeeAccounts accounts = 1;
+  ClaimProtocolPoolCreationFeeArgs args = 2;
 }
     
 message ClaimTradingFeeAccounts {
@@ -645,8 +645,8 @@ message ClaimTradingFeeArgs {
 }
     
 message ClaimTradingFee {
-  optional ClaimTradingFeeAccounts accounts = 1;
-  optional ClaimTradingFeeArgs args = 2;
+  ClaimTradingFeeAccounts accounts = 1;
+  ClaimTradingFeeArgs args = 2;
 }
     
 message CloseClaimProtocolFeeOperatorAccounts {
@@ -662,8 +662,8 @@ message CloseClaimProtocolFeeOperatorArgs {
 }
     
 message CloseClaimProtocolFeeOperator {
-  optional CloseClaimProtocolFeeOperatorAccounts accounts = 1;
-  optional CloseClaimProtocolFeeOperatorArgs args = 2;
+  CloseClaimProtocolFeeOperatorAccounts accounts = 1;
+  CloseClaimProtocolFeeOperatorArgs args = 2;
 }
     
 message CreateClaimProtocolFeeOperatorAccounts {
@@ -681,8 +681,8 @@ message CreateClaimProtocolFeeOperatorArgs {
 }
     
 message CreateClaimProtocolFeeOperator {
-  optional CreateClaimProtocolFeeOperatorAccounts accounts = 1;
-  optional CreateClaimProtocolFeeOperatorArgs args = 2;
+  CreateClaimProtocolFeeOperatorAccounts accounts = 1;
+  CreateClaimProtocolFeeOperatorArgs args = 2;
 }
     
 message CreateConfigAccounts {
@@ -702,8 +702,8 @@ message CreateConfigArgs {
 }
     
 message CreateConfig {
-  optional CreateConfigAccounts accounts = 1;
-  optional CreateConfigArgs args = 2;
+  CreateConfigAccounts accounts = 1;
+  CreateConfigArgs args = 2;
 }
     
 message CreateLockerAccounts {
@@ -728,8 +728,8 @@ message CreateLockerArgs {
 }
     
 message CreateLocker {
-  optional CreateLockerAccounts accounts = 1;
-  optional CreateLockerArgs args = 2;
+  CreateLockerAccounts accounts = 1;
+  CreateLockerArgs args = 2;
 }
     
 message CreatePartnerMetadataAccounts {
@@ -750,8 +750,8 @@ message CreatePartnerMetadataArgs {
 }
     
 message CreatePartnerMetadata {
-  optional CreatePartnerMetadataAccounts accounts = 1;
-  optional CreatePartnerMetadataArgs args = 2;
+  CreatePartnerMetadataAccounts accounts = 1;
+  CreatePartnerMetadataArgs args = 2;
 }
     
 message CreateVirtualPoolMetadataAccounts {
@@ -773,8 +773,8 @@ message CreateVirtualPoolMetadataArgs {
 }
     
 message CreateVirtualPoolMetadata {
-  optional CreateVirtualPoolMetadataAccounts accounts = 1;
-  optional CreateVirtualPoolMetadataArgs args = 2;
+  CreateVirtualPoolMetadataAccounts accounts = 1;
+  CreateVirtualPoolMetadataArgs args = 2;
 }
     
 message CreatorWithdrawSurplusAccounts {
@@ -795,8 +795,8 @@ message CreatorWithdrawSurplusArgs {
 }
     
 message CreatorWithdrawSurplus {
-  optional CreatorWithdrawSurplusAccounts accounts = 1;
-  optional CreatorWithdrawSurplusArgs args = 2;
+  CreatorWithdrawSurplusAccounts accounts = 1;
+  CreatorWithdrawSurplusArgs args = 2;
 }
     
 message InitializeVirtualPoolWithSplTokenAccounts {
@@ -824,8 +824,8 @@ message InitializeVirtualPoolWithSplTokenArgs {
 }
     
 message InitializeVirtualPoolWithSplToken {
-  optional InitializeVirtualPoolWithSplTokenAccounts accounts = 1;
-  optional InitializeVirtualPoolWithSplTokenArgs args = 2;
+  InitializeVirtualPoolWithSplTokenAccounts accounts = 1;
+  InitializeVirtualPoolWithSplTokenArgs args = 2;
 }
     
 message InitializeVirtualPoolWithToken2022Accounts {
@@ -851,8 +851,8 @@ message InitializeVirtualPoolWithToken2022Args {
 }
     
 message InitializeVirtualPoolWithToken2022 {
-  optional InitializeVirtualPoolWithToken2022Accounts accounts = 1;
-  optional InitializeVirtualPoolWithToken2022Args args = 2;
+  InitializeVirtualPoolWithToken2022Accounts accounts = 1;
+  InitializeVirtualPoolWithToken2022Args args = 2;
 }
     
 message MigrateMeteoraDammAccounts {
@@ -894,8 +894,8 @@ message MigrateMeteoraDammArgs {
 }
     
 message MigrateMeteoraDamm {
-  optional MigrateMeteoraDammAccounts accounts = 1;
-  optional MigrateMeteoraDammArgs args = 2;
+  MigrateMeteoraDammAccounts accounts = 1;
+  MigrateMeteoraDammArgs args = 2;
 }
     
 message MigrateMeteoraDammClaimLpTokenAccounts {
@@ -915,8 +915,8 @@ message MigrateMeteoraDammClaimLpTokenArgs {
 }
     
 message MigrateMeteoraDammClaimLpToken {
-  optional MigrateMeteoraDammClaimLpTokenAccounts accounts = 1;
-  optional MigrateMeteoraDammClaimLpTokenArgs args = 2;
+  MigrateMeteoraDammClaimLpTokenAccounts accounts = 1;
+  MigrateMeteoraDammClaimLpTokenArgs args = 2;
 }
     
 message MigrateMeteoraDammLockLpTokenAccounts {
@@ -944,8 +944,8 @@ message MigrateMeteoraDammLockLpTokenArgs {
 }
     
 message MigrateMeteoraDammLockLpToken {
-  optional MigrateMeteoraDammLockLpTokenAccounts accounts = 1;
-  optional MigrateMeteoraDammLockLpTokenArgs args = 2;
+  MigrateMeteoraDammLockLpTokenAccounts accounts = 1;
+  MigrateMeteoraDammLockLpTokenArgs args = 2;
 }
     
 message MigrationDammV2Accounts {
@@ -981,8 +981,8 @@ message MigrationDammV2Args {
 }
     
 message MigrationDammV2 {
-  optional MigrationDammV2Accounts accounts = 1;
-  optional MigrationDammV2Args args = 2;
+  MigrationDammV2Accounts accounts = 1;
+  MigrationDammV2Args args = 2;
 }
     
 message MigrationDammV2CreateMetadataAccounts {
@@ -1000,8 +1000,8 @@ message MigrationDammV2CreateMetadataArgs {
 }
     
 message MigrationDammV2CreateMetadata {
-  optional MigrationDammV2CreateMetadataAccounts accounts = 1;
-  optional MigrationDammV2CreateMetadataArgs args = 2;
+  MigrationDammV2CreateMetadataAccounts accounts = 1;
+  MigrationDammV2CreateMetadataArgs args = 2;
 }
     
 message MigrationMeteoraDammCreateMetadataAccounts {
@@ -1019,8 +1019,8 @@ message MigrationMeteoraDammCreateMetadataArgs {
 }
     
 message MigrationMeteoraDammCreateMetadata {
-  optional MigrationMeteoraDammCreateMetadataAccounts accounts = 1;
-  optional MigrationMeteoraDammCreateMetadataArgs args = 2;
+  MigrationMeteoraDammCreateMetadataAccounts accounts = 1;
+  MigrationMeteoraDammCreateMetadataArgs args = 2;
 }
     
 message PartnerWithdrawSurplusAccounts {
@@ -1041,8 +1041,8 @@ message PartnerWithdrawSurplusArgs {
 }
     
 message PartnerWithdrawSurplus {
-  optional PartnerWithdrawSurplusAccounts accounts = 1;
-  optional PartnerWithdrawSurplusArgs args = 2;
+  PartnerWithdrawSurplusAccounts accounts = 1;
+  PartnerWithdrawSurplusArgs args = 2;
 }
     
 message SwapAccounts {
@@ -1069,8 +1069,8 @@ message SwapArgs {
 }
     
 message Swap {
-  optional SwapAccounts accounts = 1;
-  optional SwapArgs args = 2;
+  SwapAccounts accounts = 1;
+  SwapArgs args = 2;
 }
     
 message Swap2Accounts {
@@ -1097,8 +1097,8 @@ message Swap2Args {
 }
     
 message Swap2 {
-  optional Swap2Accounts accounts = 1;
-  optional Swap2Args args = 2;
+  Swap2Accounts accounts = 1;
+  Swap2Args args = 2;
 }
     
 message TransferPoolCreatorAccounts {
@@ -1115,8 +1115,8 @@ message TransferPoolCreatorArgs {
 }
     
 message TransferPoolCreator {
-  optional TransferPoolCreatorAccounts accounts = 1;
-  optional TransferPoolCreatorArgs args = 2;
+  TransferPoolCreatorAccounts accounts = 1;
+  TransferPoolCreatorArgs args = 2;
 }
     
 message WithdrawLeftoverAccounts {
@@ -1137,8 +1137,8 @@ message WithdrawLeftoverArgs {
 }
     
 message WithdrawLeftover {
-  optional WithdrawLeftoverAccounts accounts = 1;
-  optional WithdrawLeftoverArgs args = 2;
+  WithdrawLeftoverAccounts accounts = 1;
+  WithdrawLeftoverArgs args = 2;
 }
     
 message WithdrawMigrationFeeAccounts {
@@ -1160,8 +1160,8 @@ message WithdrawMigrationFeeArgs {
 }
     
 message WithdrawMigrationFee {
-  optional WithdrawMigrationFeeAccounts accounts = 1;
-  optional WithdrawMigrationFeeArgs args = 2;
+  WithdrawMigrationFeeAccounts accounts = 1;
+  WithdrawMigrationFeeArgs args = 2;
 }
     
 message DynamicBondingCurveAccount {

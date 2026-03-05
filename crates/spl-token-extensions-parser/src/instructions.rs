@@ -150,47 +150,47 @@ pub mod instruction {
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct SetAuthority {
-        pub accounts: Option<SetAuthorityAccounts>,
-        pub args: Option<super::SetAuthorityArgs>,
+        pub accounts: SetAuthorityAccounts,
+        pub args: super::SetAuthorityArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct CreateNativeMint {
-        pub accounts: Option<super::CreateNativeMintAccounts>,
+        pub accounts: super::CreateNativeMintAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeMintCloseAuthority {
-        pub accounts: Option<super::InitializeMintCloseAuthorityAccounts>,
-        pub args: Option<super::InitializeMintCloseAuthorityArgs>,
+        pub accounts: super::InitializeMintCloseAuthorityAccounts,
+        pub args: super::InitializeMintCloseAuthorityArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeNonTransferableMint {
-        pub accounts: Option<super::InitializeNonTransferableMintAccounts>,
+        pub accounts: super::InitializeNonTransferableMintAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Reallocate {
-        pub accounts: Option<super::ReallocateAccounts>,
-        pub args: Option<super::ReallocateArgs>,
+        pub accounts: super::ReallocateAccounts,
+        pub args: super::ReallocateArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializePermanentDelegate {
-        pub accounts: Option<super::InitializePermanentDelegateAccounts>,
-        pub args: Option<super::InitializePermanentDelegateArgs>,
+        pub accounts: super::InitializePermanentDelegateAccounts,
+        pub args: super::InitializePermanentDelegateArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct WithdrawExcessLamports {
-        pub accounts: Option<super::WithdrawExcessLamportsAccounts>,
+        pub accounts: super::WithdrawExcessLamportsAccounts,
     }
 
     #[vixen]

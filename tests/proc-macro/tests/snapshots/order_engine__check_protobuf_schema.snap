@@ -32,8 +32,8 @@ message FillArgs {
 }
     
 message Fill {
-  optional FillAccounts accounts = 1;
-  optional FillArgs args = 2;
+  FillAccounts accounts = 1;
+  FillArgs args = 2;
 }
     
 message Instructions {

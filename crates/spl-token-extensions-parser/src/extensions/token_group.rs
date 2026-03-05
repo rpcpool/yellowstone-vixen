@@ -75,29 +75,29 @@ pub mod token_group_instruction {
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeGroup {
-        pub accounts: ::core::option::Option<super::InitializeGroupAccounts>,
-        pub args: ::core::option::Option<super::InitializeGroupArgs>,
+        pub accounts: super::InitializeGroupAccounts,
+        pub args: super::InitializeGroupArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct UpdateGroupMaxSize {
-        pub accounts: ::core::option::Option<super::UpdateGroupMaxSizeAccounts>,
-        pub args: ::core::option::Option<super::UpdateGroupMaxSizeArgs>,
+        pub accounts: super::UpdateGroupMaxSizeAccounts,
+        pub args: super::UpdateGroupMaxSizeArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct UpdateGroupAuthority {
-        pub accounts: ::core::option::Option<super::UpdateGroupAuthorityAccounts>,
-        pub args: ::core::option::Option<super::UpdateGroupAuthorityArgs>,
+        pub accounts: super::UpdateGroupAuthorityAccounts,
+        pub args: super::UpdateGroupAuthorityArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeMember {
-        pub accounts: ::core::option::Option<super::InitializeMemberAccounts>,
-        pub args: ::core::option::Option<super::InitializeMemberArgs>,
+        pub accounts: super::InitializeMemberAccounts,
+        pub args: super::InitializeMemberArgs,
     }
 
     #[vixen(oneof)]
@@ -143,55 +143,55 @@ impl ExtensionInstructionParser for TokenGroupIx {
                 check_min_accounts_req(accounts_len, 3)?;
 
                 oneof::Instruction::InitializeGroup(oneof::InitializeGroup {
-                    accounts: Some(InitializeGroupAccounts {
+                    accounts: InitializeGroupAccounts {
                         group: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         mint: crate::PublicKey::new(ix.accounts[1].to_vec()),
                         mint_authority: crate::PublicKey::new(ix.accounts[2].to_vec()),
-                    }),
-                    args: Some(InitializeGroupArgs {
+                    },
+                    args: InitializeGroupArgs {
                         max_size: pod_u64_to_u64(args.max_size),
                         update_authority: opt_nonzero_pubkey_to_bytes(args.update_authority),
-                    }),
+                    },
                 })
             },
             SplTokenGroupInstruction::UpdateGroupMaxSize(args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 oneof::Instruction::UpdateGroupMaxSize(oneof::UpdateGroupMaxSize {
-                    accounts: Some(UpdateGroupMaxSizeAccounts {
+                    accounts: UpdateGroupMaxSizeAccounts {
                         group: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         update_authority: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                    }),
-                    args: Some(UpdateGroupMaxSizeArgs {
+                    },
+                    args: UpdateGroupMaxSizeArgs {
                         max_size: pod_u64_to_u64(args.max_size),
-                    }),
+                    },
                 })
             },
             SplTokenGroupInstruction::UpdateGroupAuthority(args) => {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 oneof::Instruction::UpdateGroupAuthority(oneof::UpdateGroupAuthority {
-                    accounts: Some(UpdateGroupAuthorityAccounts {
+                    accounts: UpdateGroupAuthorityAccounts {
                         group: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         current_authority: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                    }),
-                    args: Some(UpdateGroupAuthorityArgs {
+                    },
+                    args: UpdateGroupAuthorityArgs {
                         new_authority: Some(crate::PublicKey::new(args.new_authority.0.to_bytes())),
-                    }),
+                    },
                 })
             },
             SplTokenGroupInstruction::InitializeMember(_args) => {
                 check_min_accounts_req(accounts_len, 5)?;
 
                 oneof::Instruction::InitializeMember(oneof::InitializeMember {
-                    accounts: Some(InitializeMemberAccounts {
+                    accounts: InitializeMemberAccounts {
                         member: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         member_mint: crate::PublicKey::new(ix.accounts[1].to_vec()),
                         member_mint_authority: crate::PublicKey::new(ix.accounts[2].to_vec()),
                         group: crate::PublicKey::new(ix.accounts[3].to_vec()),
                         group_update_authority: crate::PublicKey::new(ix.accounts[4].to_vec()),
-                    }),
-                    args: Some(InitializeMemberArgs {}),
+                    },
+                    args: InitializeMemberArgs {},
                 })
             },
         };
