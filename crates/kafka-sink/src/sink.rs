@@ -128,6 +128,7 @@ pub trait DynAccountParser: Send + Sync {
     fn program_id(&self) -> Pubkey;
 }
 
+#[cfg(feature = "experimental-account-parser")]
 struct AccountParserWrapper<P> {
     parser: P,
     topic: String,
@@ -136,6 +137,7 @@ struct AccountParserWrapper<P> {
     fallback_topic: Option<String>,
 }
 
+#[cfg(feature = "experimental-account-parser")]
 impl<P, O> DynAccountParser for AccountParserWrapper<P>
 where
     P: Parser<Input = AccountUpdate, Output = O> + ProgramParser + Send + Sync,
@@ -219,6 +221,7 @@ impl KafkaSinkBuilder {
     }
 
     /// Add an account parser with its program name and Kafka topic.
+    #[cfg(feature = "experimental-account-parser")]
     pub fn account_parser<P, O>(mut self, parser: P, program_name: &str, topic: &str) -> Self
     where
         P: Parser<Input = AccountUpdate, Output = O> + ProgramParser + Send + Sync + 'static,
@@ -260,6 +263,7 @@ impl KafkaSinkBuilder {
     }
 
     /// Add an account parser with a per-parser fallback topic.
+    #[cfg(feature = "experimental-account-parser")]
     pub fn account_parser_with_fallback<P, O>(
         mut self,
         parser: P,
@@ -671,15 +675,15 @@ mod tests {
     use prost::Message;
     use yellowstone_vixen_core::{
         instruction::{InstructionShared, InstructionUpdate, Path},
-        AccountUpdate, AccountUpdateInfo, ParseError, ParseResult, Parser, Prefilter,
-        ProgramParser,
+        ParseError, ParseResult, Parser, Prefilter, ProgramParser,
     };
+    #[cfg(feature = "experimental-account-parser")]
+    use yellowstone_vixen_core::{AccountUpdate, AccountUpdateInfo};
 
     use super::KafkaSinkBuilder;
-    use crate::{
-        events::{RawAccountEvent, RawInstructionEvent},
-        Pubkey,
-    };
+    #[cfg(feature = "experimental-account-parser")]
+    use crate::events::RawAccountEvent;
+    use crate::{events::RawInstructionEvent, Pubkey};
 
     #[derive(Clone, Copy)]
     enum TestInstructionOutcome {
@@ -725,6 +729,7 @@ mod tests {
         fn program_id(&self) -> Pubkey { self.program_id }
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     #[derive(Clone, Copy)]
     enum TestAccountOutcome {
         Parsed,
@@ -732,18 +737,21 @@ mod tests {
         Error,
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     #[derive(Clone)]
     struct TestAccountParser {
         program_id: Pubkey,
         outcome: TestAccountOutcome,
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     #[derive(Clone, PartialEq, Message)]
     struct TestAccountMessage {
         #[prost(uint64, tag = "1")]
         value: u64,
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     impl Parser for TestAccountParser {
         type Input = AccountUpdate;
         type Output = TestAccountMessage;
@@ -771,6 +779,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     impl ProgramParser for TestAccountParser {
         fn program_id(&self) -> Pubkey { self.program_id }
     }
@@ -786,6 +795,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     fn account_with_owner(owner: Pubkey) -> AccountUpdate {
         AccountUpdate {
             slot: 100,
@@ -923,6 +933,7 @@ mod tests {
         assert!(record.is_decoded);
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     #[test]
     fn related_filtered_account_does_not_route_to_fallback_topic() {
         let parser = TestAccountParser {
@@ -940,6 +951,7 @@ mod tests {
         assert!(!had_error);
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     #[test]
     fn related_parse_error_account_routes_to_fallback_and_marks_error() {
         let parser = TestAccountParser {
@@ -969,6 +981,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "experimental-account-parser")]
     #[test]
     fn related_parsed_account_uses_primary_topic() {
         let parser = TestAccountParser {

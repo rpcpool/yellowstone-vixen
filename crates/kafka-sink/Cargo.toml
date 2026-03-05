@@ -30,3 +30,6 @@ tracing = { workspace = true }
 
 # HTTP client for Schema Registry
 reqwest = { workspace = true }
+
+[features]
+experimental-account-parser = []
