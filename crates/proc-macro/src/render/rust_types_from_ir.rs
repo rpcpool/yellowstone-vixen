@@ -427,8 +427,6 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
         }
     };
 
-    let required_msg_attr = quote! {};
-
     // Resolve a Message type ident, adding `super::` when in a submodule and the type is external
     let resolve_msg = |msg: &str| -> TokenStream {
         let ident = format_ident!("{}", msg);
@@ -450,7 +448,7 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
             (LabelIr::Singular, FieldTypeIr::Message(msg)) => {
                 let ty = resolve_msg(msg);
 
-                quote! { #required_msg_attr pub #name: ::core::option::Option<#ty> }
+                quote! { #borsh_attr pub #name: #ty }
             },
             (LabelIr::Singular, _) if is_pubkey => {
                 let (_, rust_type) = map_ir_type_to_prost(&f.field_type, in_module);
