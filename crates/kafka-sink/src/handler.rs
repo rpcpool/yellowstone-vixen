@@ -109,9 +109,9 @@ impl vixen::Handler<TransactionUpdate, TransactionUpdate> for BufferingHandler {
                         .handle
                         .send_instruction_parsed(slot, sort_key(tx_index, &ix.path), record)
                         .await;
-                    if send_result.is_err() {
+                    if let Err(e) = send_result {
                         tracing::error!(slot, tx_index, "Failed to send parsed record");
-                        self.check_send(Err(send_result.unwrap_err()));
+                        self.check_send(Err(e));
                     }
                     // Fallback instruction records are still filtered/error outcomes.
                     // Count them so slot stats reflect decode quality.
@@ -169,9 +169,9 @@ impl vixen::Handler<AccountUpdate, AccountUpdate> for BufferingHandler {
             let write_version = info.write_version;
             let key = AccountRecordSortKey::new(write_version, pubkey);
             let send_result = self.handle.send_account_parsed(slot, key, record).await;
-            if send_result.is_err() {
+            if let Err(e) = send_result {
                 tracing::error!(slot, "Failed to send account parsed record");
-                self.check_send(Err(send_result.unwrap_err()));
+                self.check_send(Err(e));
             }
         } else {
             let kind = if had_error {
