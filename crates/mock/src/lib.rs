@@ -193,10 +193,10 @@ pub fn get_account_pubkey_from_index(
     )
 }
 
-fn try_from_ui_instructions<F: ProgramFilter>(
+fn try_from_ui_instructions(
     ui_ixs: &[UiCompiledInstruction],
     accounts: &[String],
-    filter: &F,
+    filter: &ProgramFilter,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
     for (idx, ix) in ui_ixs.iter().enumerate() {
@@ -220,10 +220,10 @@ fn try_from_ui_instructions<F: ProgramFilter>(
     Ok(filter_ixs(ixs, filter))
 }
 
-fn try_from_ui_inner_ixs<F: ProgramFilter>(
+fn try_from_ui_inner_ixs(
     ui_inner_ixs: &UiInnerInstructions,
     accounts: &[String],
-    filter: &F,
+    filter: &ProgramFilter,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let mut ixs: Vec<SerializableInstructionUpdate> = Vec::new();
     for (idx, ix) in ui_inner_ixs.instructions.iter().enumerate() {
@@ -251,9 +251,9 @@ fn try_from_ui_inner_ixs<F: ProgramFilter>(
     Ok(filter_ixs(ixs, filter))
 }
 
-fn filter_ixs<F: ProgramFilter>(
+fn filter_ixs(
     ixs: Vec<SerializableInstructionUpdate>,
-    filter: &F,
+    filter: &ProgramFilter,
 ) -> Vec<SerializableInstructionUpdate> {
     // Filter out instructions that matches the program
     ixs.into_iter()
@@ -261,9 +261,9 @@ fn filter_ixs<F: ProgramFilter>(
         .collect::<Vec<SerializableInstructionUpdate>>()
 }
 
-fn try_from_tx_meta<F: ProgramFilter>(
+fn try_from_tx_meta(
     value: EncodedConfirmedTransactionWithStatusMeta,
-    filter: &F
+    filter: &ProgramFilter,
 ) -> Result<Vec<SerializableInstructionUpdate>, String> {
     let EncodedConfirmedTransactionWithStatusMeta {
         transaction,
@@ -411,38 +411,26 @@ pub enum FixtureData {
 }
 
 
-trait ProgramFilter {
-    fn matches(&self, program_id: &str) -> bool;
-}
-
 #[derive(Debug, Clone)]
-struct ProgramParserFilter {
-    program_id: String,
+enum ProgramFilter {
+    Single(String),
+    Multiple(Vec<String>),
 }
 
-impl ProgramParserFilter {
-    // TODO implement Into
-    pub fn new<P: ProgramParser>(parser: &P) -> Self { Self { program_id: parser.program_id().to_string() } }
-}
+impl ProgramFilter {
+    fn from_parser<P: ProgramParser>(parser: &P) -> Self {
+        Self::Single(parser.program_id().to_string())
+    }
 
-impl ProgramFilter for ProgramParserFilter{
-    fn matches(&self, program_id: &str) -> bool { self.program_id == program_id }
-}
+    fn from_program_ids(program_ids: Vec<yellowstone_vixen_core::Pubkey>) -> Self {
+        Self::Multiple(program_ids.into_iter().map(|id| id.to_string()).collect())
+    }
 
-#[derive(Debug, Clone)]
-struct MultipleProgramsFilter {
-    filters: Vec<yellowstone_vixen_core::Pubkey>,
-}
-
-impl MultipleProgramsFilter {
-    pub fn new(program_ids: Vec<yellowstone_vixen_core::Pubkey>) -> Self { Self { filters: program_ids } }
-}
-
-impl ProgramFilter for MultipleProgramsFilter {
     fn matches(&self, program_id: &str) -> bool {
-        self.filters
-            .iter()
-            .any(|filter| filter.to_string() == program_id)
+        match self {
+            Self::Single(id) => id == program_id,
+            Self::Multiple(ids) => ids.iter().any(|id| id.to_string() == program_id),
+        }
     }
 }
 
@@ -450,7 +438,7 @@ async fn fetch_fixture<P: ProgramParser>(
     fixture: &str,
     parser: &P,
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
-    let filter = ProgramParserFilter::new(parser);
+    let filter = ProgramFilter::from_parser(parser);
     fetch_fixture_inner(fixture, &filter).await
 }
 
@@ -459,13 +447,13 @@ pub async fn fetch_fixture_multiple_programs(
     fixture: &str,
     program_ids: &[yellowstone_vixen_core::Pubkey],
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
-    let filter = MultipleProgramsFilter::new(program_ids.to_vec());
+    let filter = ProgramFilter::from_program_ids(program_ids.to_vec());
     fetch_fixture_inner(fixture, &filter).await
 }
 
-async fn fetch_fixture_inner<F: ProgramFilter>(
+async fn fetch_fixture_inner(
     fixture: &str,
-    filter: &F,
+    filter: &ProgramFilter,
 ) -> Result<FixtureData, Box<dyn std::error::Error>> {
     let fixture_type = get_fixture_type(fixture);
 
