@@ -427,10 +427,6 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
         }
     };
 
-    // Singular message fields used `prost(message, optional)` + `Option<T>` historically,
-    // requiring a custom borsh (de)serializer to bridge the mismatch.  Now that we emit
-    // `prost(message, required)` with bare `T`, the standard borsh derive handles them
-    // directly, so no special attribute is needed.
     let required_msg_attr = quote! {};
 
     // Resolve a Message type ident, adding `super::` when in a submodule and the type is external
