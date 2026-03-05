@@ -37,7 +37,7 @@ yellowstone-vixen-mock = { workspace = true }
 tokio.workspace = true
 
 [features]
-default = ["proto"]
+default = []
 proto = [
   "dep:prost",
   "dep:prost-types",
@@ -46,4 +46,5 @@ proto = [
   "yellowstone-vixen-proc-macro/proto",
   "yellowstone-vixen-proto/parser",
   "yellowstone-vixen-parser/proto",
+  "yellowstone-vixen-spl-token-parser/proto",
 ]

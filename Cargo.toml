@@ -115,6 +115,7 @@ yellowstone-vixen-spl-token-extensions-parser = { path = "crates/spl-token-exten
 yellowstone-vixen-spl-token-parser = { path = "crates/spl-token-parser", version = "0.7.0" }
 yellowstone-vixen-block-meta-parser = { path = "crates/block-meta-parser", version = "0.7.0" }
 yellowstone-vixen-slot-parser = { path = "crates/slot-parser", version = "0.7.0" }
+yellowstone-vixen-stake-pool-parser = { path = "crates/stake-pool-parser", version = "0.7.0" }
 
 # Sources
 yellowstone-vixen-solana-rpc-source = { path = "crates/solana-rpc-source", version = "0.7.0" }
