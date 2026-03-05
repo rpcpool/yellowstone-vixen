@@ -31,7 +31,7 @@ async fn parse_sell_ix() {
         .expect("no Sell found");
 
     let expected = pump_fun::instruction::Sell {
-        accounts: Some(pump_fun::instruction::SellAccounts {
+        accounts: pump_fun::instruction::SellAccounts {
             global: pump_fun::PublicKey::new(vec![
                 58, 134, 94, 105, 238, 15, 84, 128, 202, 188, 246, 99, 87, 228, 220, 47, 24, 213,
                 141, 69, 193, 234, 116, 137, 251, 55, 35, 217, 121, 60, 114, 166,
@@ -86,11 +86,11 @@ async fn parse_sell_ix() {
                 44, 164, 31, 64, 0, 156, 81, 106, 164, 20, 194, 124, 112,
             ]),
             remaining_accounts: vec![],
-        }),
-        args: Some(pump_fun::instruction::SellArgs {
+        },
+        args: pump_fun::instruction::SellArgs {
             amount: 3_878_351_170_692,
             min_sol_output: 522_403_143,
-        }),
+        },
     };
 
     assert_eq!(sell, &expected);
@@ -114,7 +114,7 @@ async fn parse_buy_ix() {
         .expect("no Buy found");
 
     let expected = pump_fun::instruction::Buy {
-        accounts: Some(pump_fun::instruction::BuyAccounts {
+        accounts: pump_fun::instruction::BuyAccounts {
             global: pump_fun::PublicKey::new(vec![
                 58, 134, 94, 105, 238, 15, 84, 128, 202, 188, 246, 99, 87, 228, 220, 47, 24, 213,
                 141, 69, 193, 234, 116, 137, 251, 55, 35, 217, 121, 60, 114, 166,
@@ -177,12 +177,12 @@ async fn parse_buy_ix() {
                 44, 164, 31, 64, 0, 156, 81, 106, 164, 20, 194, 124, 112,
             ]),
             remaining_accounts: vec![],
-        }),
-        args: Some(pump_fun::instruction::BuyArgs {
+        },
+        args: pump_fun::instruction::BuyArgs {
             amount: 693_868_985_905,
             max_sol_cost: 55_000_000,
-            track_volume: Some(pump_fun::OptionBool { item_0: false }),
-        }),
+            track_volume: pump_fun::OptionBool { item_0: false },
+        },
     };
 
     assert_eq!(buy, &expected);

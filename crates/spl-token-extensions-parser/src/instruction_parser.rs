@@ -232,10 +232,7 @@ impl InstructionParser {
                     };
 
                     Ok(envelope!(crate::instruction::Instruction::SetAuthority(
-                        crate::instruction::SetAuthority {
-                            accounts: Some(accounts),
-                            args: Some(args),
-                        },
+                        crate::instruction::SetAuthority { accounts, args },
                     )))
                 },
 
@@ -249,9 +246,7 @@ impl InstructionParser {
 
                     Ok(envelope!(
                         crate::instruction::Instruction::CreateNativeMint(
-                            crate::instruction::CreateNativeMint {
-                                accounts: Some(accounts),
-                            },
+                            crate::instruction::CreateNativeMint { accounts },
                         )
                     ))
                 },
@@ -271,10 +266,7 @@ impl InstructionParser {
 
                     Ok(envelope!(
                         crate::instruction::Instruction::InitializeMintCloseAuthority(
-                            crate::instruction::InitializeMintCloseAuthority {
-                                accounts: Some(accounts),
-                                args: Some(args),
-                            },
+                            crate::instruction::InitializeMintCloseAuthority { accounts, args },
                         )
                     ))
                 },
@@ -288,9 +280,7 @@ impl InstructionParser {
 
                     Ok(envelope!(
                         crate::instruction::Instruction::InitializeNonTransferableMint(
-                            crate::instruction::InitializeNonTransferableMint {
-                                accounts: Some(accounts),
-                            },
+                            crate::instruction::InitializeNonTransferableMint { accounts },
                         )
                     ))
                 },
@@ -313,10 +303,7 @@ impl InstructionParser {
                     };
 
                     Ok(envelope!(crate::instruction::Instruction::Reallocate(
-                        crate::instruction::Reallocate {
-                            accounts: Some(accounts),
-                            args: Some(args),
-                        },
+                        crate::instruction::Reallocate { accounts, args },
                     )))
                 },
 
@@ -333,10 +320,7 @@ impl InstructionParser {
 
                     Ok(envelope!(
                         crate::instruction::Instruction::InitializePermanentDelegate(
-                            crate::instruction::InitializePermanentDelegate {
-                                accounts: Some(accounts),
-                                args: Some(args),
-                            },
+                            crate::instruction::InitializePermanentDelegate { accounts, args },
                         )
                     ))
                 },
@@ -356,9 +340,7 @@ impl InstructionParser {
 
                     Ok(envelope!(
                         crate::instruction::Instruction::WithdrawExcessLamports(
-                            crate::instruction::WithdrawExcessLamports {
-                                accounts: Some(accounts),
-                            },
+                            crate::instruction::WithdrawExcessLamports { accounts },
                         )
                     ))
                 },
@@ -429,7 +411,7 @@ mod tests {
                         instruction:
                             Some(yellowstone_vixen_spl_token_parser::TokenProgram {
                                 instruction: Some(yellowstone_vixen_spl_token_parser::instruction::Instruction::MintToChecked(
-                                    yellowstone_vixen_spl_token_parser::instruction::MintToChecked { args: Some(args), .. }
+                                    yellowstone_vixen_spl_token_parser::instruction::MintToChecked { args, .. }
                                 )),
                             }),
                     },

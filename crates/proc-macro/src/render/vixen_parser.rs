@@ -267,35 +267,6 @@ pub fn vixen_parser(idl: &RootNode) -> TokenStream {
                 ::core::result::Result::Ok(())
             }
 
-            /// Borsh: deserialize a required message field that prost wraps in Option.
-            /// On-chain the struct is serialized directly (no Option tag byte),
-            /// but the Rust field is `Option<T>` for prost compatibility.
-            fn borsh_deserialize_required_msg<T: ::borsh::BorshDeserialize, R: ::borsh::io::Read>(
-                reader: &mut R,
-            ) -> ::core::result::Result<::core::option::Option<T>, ::borsh::io::Error> {
-                let val = <T as ::borsh::BorshDeserialize>::deserialize_reader(reader)?;
-
-                ::core::result::Result::Ok(::core::option::Option::Some(val))
-            }
-
-            fn borsh_serialize_required_msg<T: ::borsh::BorshSerialize, W: ::borsh::io::Write>(
-                val: &::core::option::Option<T>,
-                writer: &mut W,
-            ) -> ::core::result::Result<(), ::borsh::io::Error> {
-                match val {
-                    ::core::option::Option::Some(v) => {
-                        <T as ::borsh::BorshSerialize>::serialize(v, writer)
-                    }
-
-                    ::core::option::Option::None => {
-                        ::core::result::Result::Err(::borsh::io::Error::new(
-                            ::borsh::io::ErrorKind::InvalidData,
-                            "required message field is None",
-                        ))
-                    }
-                }
-            }
-
             #widen_helpers
 
             /// Borsh: deserialize a fixed-count array (no length prefix on-chain).

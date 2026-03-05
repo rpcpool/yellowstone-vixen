@@ -163,13 +163,13 @@ fn build_instruction_messages(ix: &InstructionNode, ir: &mut SchemaIr) {
             FieldIr {
                 name: "accounts".to_string(),
                 tag: 1,
-                label: LabelIr::Optional,
+                label: LabelIr::Singular,
                 field_type: FieldTypeIr::Message(accounts_name),
             },
             FieldIr {
                 name: "args".to_string(),
                 tag: 2,
-                label: LabelIr::Optional,
+                label: LabelIr::Singular,
                 field_type: FieldTypeIr::Message(args_name),
             },
         ],

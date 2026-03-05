@@ -72,37 +72,37 @@ pub mod confidential_transfer_fee_instruction {
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeConfidentialTransferFeeConfig {
-        pub accounts: Option<super::InitializeConfidentialTransferFeeConfigAccounts>,
+        pub accounts: super::InitializeConfidentialTransferFeeConfigAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct WithdrawWithheldTokensFromMint {
-        pub accounts: Option<super::ConfidentialWithdrawWithheldTokensFromMintAccounts>,
+        pub accounts: super::ConfidentialWithdrawWithheldTokensFromMintAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct WithdrawWithheldTokensFromAccounts {
-        pub accounts: Option<super::ConfidentialWithdrawWithheldTokensFromAccounts>,
+        pub accounts: super::ConfidentialWithdrawWithheldTokensFromAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct HarvestWithheldTokensToMint {
-        pub accounts: Option<super::ConfidentialHarvestWithheldTokensToMintAccounts>,
+        pub accounts: super::ConfidentialHarvestWithheldTokensToMintAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct EnableHarvestToMint {
-        pub accounts: Option<super::EnableHarvestToMintAccounts>,
+        pub accounts: super::EnableHarvestToMintAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct DisableHarvestToMint {
-        pub accounts: Option<super::DisableHarvestToMintAccounts>,
+        pub accounts: super::DisableHarvestToMintAccounts,
     }
 
     #[vixen(oneof)]
@@ -135,9 +135,9 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
 
                 oneof::Instruction::InitializeConfidentialTransferFeeConfig(
                     oneof::InitializeConfidentialTransferFeeConfig {
-                        accounts: Some(InitializeConfidentialTransferFeeConfigAccounts {
+                        accounts: InitializeConfidentialTransferFeeConfigAccounts {
                             mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                        }),
+                        },
                     },
                 )
             },
@@ -147,7 +147,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
 
                 oneof::Instruction::WithdrawWithheldTokensFromMint(
                     oneof::WithdrawWithheldTokensFromMint {
-                        accounts: Some(ConfidentialWithdrawWithheldTokensFromMintAccounts {
+                        accounts: ConfidentialWithdrawWithheldTokensFromMintAccounts {
                             mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
                             fee_recipient: crate::PublicKey::new(ix.accounts[1].to_vec()),
                             sysvar: crate::PublicKey::new(ix.accounts[2].to_vec()),
@@ -158,7 +158,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                                 .iter()
                                 .map(|a| crate::PublicKey::new(a.to_vec()))
                                 .collect(),
-                        }),
+                        },
                     },
                 )
             },
@@ -168,7 +168,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
 
                 oneof::Instruction::WithdrawWithheldTokensFromAccounts(
                     oneof::WithdrawWithheldTokensFromAccounts {
-                        accounts: Some(ConfidentialWithdrawWithheldTokensFromAccounts {
+                        accounts: ConfidentialWithdrawWithheldTokensFromAccounts {
                             mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
                             fee_recipient: crate::PublicKey::new(ix.accounts[1].to_vec()),
                             sysvar: crate::PublicKey::new(ix.accounts[2].to_vec()),
@@ -180,7 +180,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                                 .map(|a| crate::PublicKey::new(a.to_vec()))
                                 .collect(),
                             multisig_signers: Vec::new(),
-                        }),
+                        },
                     },
                 )
             },
@@ -190,13 +190,13 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
 
                 oneof::Instruction::HarvestWithheldTokensToMint(
                     oneof::HarvestWithheldTokensToMint {
-                        accounts: Some(ConfidentialHarvestWithheldTokensToMintAccounts {
+                        accounts: ConfidentialHarvestWithheldTokensToMintAccounts {
                             mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
                             source_accounts: ix.accounts[1..]
                                 .iter()
                                 .map(|a| crate::PublicKey::new(a.to_vec()))
                                 .collect(),
-                        }),
+                        },
                     },
                 )
             },
@@ -205,7 +205,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 oneof::Instruction::EnableHarvestToMint(oneof::EnableHarvestToMint {
-                    accounts: Some(EnableHarvestToMintAccounts {
+                    accounts: EnableHarvestToMintAccounts {
                         mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         confidential_transfer_fee_authority: crate::PublicKey::new(
                             ix.accounts[1].to_vec(),
@@ -214,7 +214,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                             .iter()
                             .map(|a| crate::PublicKey::new(a.to_vec()))
                             .collect(),
-                    }),
+                    },
                 })
             },
 
@@ -222,7 +222,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 oneof::Instruction::DisableHarvestToMint(oneof::DisableHarvestToMint {
-                    accounts: Some(DisableHarvestToMintAccounts {
+                    accounts: DisableHarvestToMintAccounts {
                         account: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         confidential_transfer_fee_authority: crate::PublicKey::new(
                             ix.accounts[1].to_vec(),
@@ -231,7 +231,7 @@ impl ExtensionInstructionParser for ConfidentialTransferFeeIx {
                             .iter()
                             .map(|a| crate::PublicKey::new(a.to_vec()))
                             .collect(),
-                    }),
+                    },
                 })
             },
         };

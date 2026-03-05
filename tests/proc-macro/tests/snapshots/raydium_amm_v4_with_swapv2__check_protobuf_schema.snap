@@ -177,8 +177,8 @@ message InitializeArgs {
 }
     
 message Initialize {
-  optional InitializeAccounts accounts = 1;
-  optional InitializeArgs args = 2;
+  InitializeAccounts accounts = 1;
+  InitializeArgs args = 2;
 }
     
 message Initialize2Accounts {
@@ -214,8 +214,8 @@ message Initialize2Args {
 }
     
 message Initialize2 {
-  optional Initialize2Accounts accounts = 1;
-  optional Initialize2Args args = 2;
+  Initialize2Accounts accounts = 1;
+  Initialize2Args args = 2;
 }
     
 message MonitorStepAccounts {
@@ -248,8 +248,8 @@ message MonitorStepArgs {
 }
     
 message MonitorStep {
-  optional MonitorStepAccounts accounts = 1;
-  optional MonitorStepArgs args = 2;
+  MonitorStepAccounts accounts = 1;
+  MonitorStepArgs args = 2;
 }
     
 message DepositAccounts {
@@ -277,8 +277,8 @@ message DepositArgs {
 }
     
 message Deposit {
-  optional DepositAccounts accounts = 1;
-  optional DepositArgs args = 2;
+  DepositAccounts accounts = 1;
+  DepositArgs args = 2;
 }
     
 message WithdrawAccounts {
@@ -312,8 +312,8 @@ message WithdrawArgs {
 }
     
 message Withdraw {
-  optional WithdrawAccounts accounts = 1;
-  optional WithdrawArgs args = 2;
+  WithdrawAccounts accounts = 1;
+  WithdrawArgs args = 2;
 }
     
 message MigrateToOpenBookAccounts {
@@ -345,8 +345,8 @@ message MigrateToOpenBookArgs {
 }
     
 message MigrateToOpenBook {
-  optional MigrateToOpenBookAccounts accounts = 1;
-  optional MigrateToOpenBookArgs args = 2;
+  MigrateToOpenBookAccounts accounts = 1;
+  MigrateToOpenBookArgs args = 2;
 }
     
 message SetParamsAccounts {
@@ -379,8 +379,8 @@ message SetParamsArgs {
 }
     
 message SetParams {
-  optional SetParamsAccounts accounts = 1;
-  optional SetParamsArgs args = 2;
+  SetParamsAccounts accounts = 1;
+  SetParamsArgs args = 2;
 }
     
 message WithdrawPnlAccounts {
@@ -408,8 +408,8 @@ message WithdrawPnlArgs {
 }
     
 message WithdrawPnl {
-  optional WithdrawPnlAccounts accounts = 1;
-  optional WithdrawPnlArgs args = 2;
+  WithdrawPnlAccounts accounts = 1;
+  WithdrawPnlArgs args = 2;
 }
     
 message WithdrawSrmAccounts {
@@ -427,8 +427,8 @@ message WithdrawSrmArgs {
 }
     
 message WithdrawSrm {
-  optional WithdrawSrmAccounts accounts = 1;
-  optional WithdrawSrmArgs args = 2;
+  WithdrawSrmAccounts accounts = 1;
+  WithdrawSrmArgs args = 2;
 }
     
 message SwapBaseInAccounts {
@@ -459,8 +459,8 @@ message SwapBaseInArgs {
 }
     
 message SwapBaseIn {
-  optional SwapBaseInAccounts accounts = 1;
-  optional SwapBaseInArgs args = 2;
+  SwapBaseInAccounts accounts = 1;
+  SwapBaseInArgs args = 2;
 }
     
 message SwapBaseInCompactAccounts {
@@ -490,8 +490,8 @@ message SwapBaseInCompactArgs {
 }
     
 message SwapBaseInCompact {
-  optional SwapBaseInCompactAccounts accounts = 1;
-  optional SwapBaseInCompactArgs args = 2;
+  SwapBaseInCompactAccounts accounts = 1;
+  SwapBaseInCompactArgs args = 2;
 }
     
 message PreInitializeAccounts {
@@ -517,8 +517,8 @@ message PreInitializeArgs {
 }
     
 message PreInitialize {
-  optional PreInitializeAccounts accounts = 1;
-  optional PreInitializeArgs args = 2;
+  PreInitializeAccounts accounts = 1;
+  PreInitializeArgs args = 2;
 }
     
 message SwapBaseOutAccounts {
@@ -549,8 +549,8 @@ message SwapBaseOutArgs {
 }
     
 message SwapBaseOut {
-  optional SwapBaseOutAccounts accounts = 1;
-  optional SwapBaseOutArgs args = 2;
+  SwapBaseOutAccounts accounts = 1;
+  SwapBaseOutArgs args = 2;
 }
     
 message SimulateInfoAccounts {
@@ -572,8 +572,8 @@ message SimulateInfoArgs {
 }
     
 message SimulateInfo {
-  optional SimulateInfoAccounts accounts = 1;
-  optional SimulateInfoArgs args = 2;
+  SimulateInfoAccounts accounts = 1;
+  SimulateInfoArgs args = 2;
 }
     
 message AdminCancelOrdersAccounts {
@@ -602,8 +602,8 @@ message AdminCancelOrdersArgs {
 }
     
 message AdminCancelOrders {
-  optional AdminCancelOrdersAccounts accounts = 1;
-  optional AdminCancelOrdersArgs args = 2;
+  AdminCancelOrdersAccounts accounts = 1;
+  AdminCancelOrdersArgs args = 2;
 }
     
 message CreateConfigAccountAccounts {
@@ -619,8 +619,8 @@ message CreateConfigAccountArgs {
 }
     
 message CreateConfigAccount {
-  optional CreateConfigAccountAccounts accounts = 1;
-  optional CreateConfigAccountArgs args = 2;
+  CreateConfigAccountAccounts accounts = 1;
+  CreateConfigAccountArgs args = 2;
 }
     
 message UpdateConfigAccountAccounts {
@@ -635,8 +635,8 @@ message UpdateConfigAccountArgs {
 }
     
 message UpdateConfigAccount {
-  optional UpdateConfigAccountAccounts accounts = 1;
-  optional UpdateConfigAccountArgs args = 2;
+  UpdateConfigAccountAccounts accounts = 1;
+  UpdateConfigAccountArgs args = 2;
 }
     
 message SwapBaseInV2Accounts {
@@ -657,8 +657,8 @@ message SwapBaseInV2Args {
 }
     
 message SwapBaseInV2 {
-  optional SwapBaseInV2Accounts accounts = 1;
-  optional SwapBaseInV2Args args = 2;
+  SwapBaseInV2Accounts accounts = 1;
+  SwapBaseInV2Args args = 2;
 }
     
 message SwapBaseOutV2Accounts {
@@ -679,8 +679,8 @@ message SwapBaseOutV2Args {
 }
     
 message SwapBaseOutV2 {
-  optional SwapBaseOutV2Accounts accounts = 1;
-  optional SwapBaseOutV2Args args = 2;
+  SwapBaseOutV2Accounts accounts = 1;
+  SwapBaseOutV2Args args = 2;
 }
     
 message RaydiumAmmAccount {

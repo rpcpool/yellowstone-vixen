@@ -70,7 +70,8 @@ fn extract_discriminator_key(
 /// Information extracted from a discriminator that's needed by both the match arm and helper fn.
 struct DiscriminatorInfo {
     /// TokenStream for the args expression inside the helper fn body.
-    args_expr: TokenStream,
+    /// `None` when the instruction has no arguments.
+    args_expr: Option<TokenStream>,
     /// TokenStream for the discriminator check in the match arm.
     check: TokenStream,
 }
@@ -101,16 +102,16 @@ fn extract_discriminator_info(
             let args_start = offset + 1;
 
             let args_expr = if has_args {
-                quote! {
-                    ::core::option::Option::Some({
+                Some(quote! {
+                    {
                         let mut slice: &[u8] = data.get(#args_start..).ok_or(ParseError::from("Missing args bytes"))?;
 
                         <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
                             .map_err(|e| ParseError::Other(e.into()))?
-                    })
-                }
+                    }
+                })
             } else {
-                quote! { ::core::option::Option::None }
+                None
             };
 
             let check = quote! {
@@ -146,16 +147,16 @@ fn extract_discriminator_info(
             let discriminator_bytes = decode_discriminator_field_bytes(bytes);
 
             let args_expr = if has_args {
-                quote! {
-                    ::core::option::Option::Some({
+                Some(quote! {
+                    {
                         let mut slice: &[u8] = data.get(#end..).ok_or(ParseError::from("Missing args bytes"))?;
 
                         <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
                             .map_err(|e| ParseError::Other(e.into()))?
-                    })
-                }
+                    }
+                })
             } else {
-                quote! { ::core::option::Option::None }
+                None
             };
 
             let check = quote! {
@@ -174,16 +175,16 @@ fn extract_discriminator_info(
             let size = node.size;
 
             let args_expr = if has_args {
-                quote! {
-                    ::core::option::Option::Some({
+                Some(quote! {
+                    {
                         let mut slice: &[u8] = data;
 
                         <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice)
                             .map_err(|e| ParseError::Other(e.into()))?
-                    })
-                }
+                    }
+                })
             } else {
-                quote! { ::core::option::Option::None }
+                None
             };
 
             let check = quote! {
@@ -256,7 +257,9 @@ fn single_instruction_helper_fn(
                 .collect(),
         }
     };
-    let args_expr = info.args_expr;
+    let args_field = info.args_expr.map(|expr| {
+        quote! { args: #expr, }
+    });
 
     Some(quote! {
         pub fn #fn_ident(
@@ -267,8 +270,8 @@ fn single_instruction_helper_fn(
                 instruction: ::core::option::Option::Some(
                     instruction::Instruction::#variant_ident(
                         instruction::#payload_ident {
-                            accounts: ::core::option::Option::Some(#accounts_value),
-                            args: #args_expr,
+                            accounts: #accounts_value,
+                            #args_field
                         }
                     )
                 ),

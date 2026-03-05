@@ -135,8 +135,8 @@ pub struct InitializeArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct InitializeInstruction {
-    pub accounts: Option<InitializeAccounts>,
-    pub args: Option<InitializeArgs>,
+    pub accounts: InitializeAccounts,
+    pub args: InitializeArgs,
 }
 
 #[vixen]
@@ -166,8 +166,8 @@ pub struct AddValidatorToPoolArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct AddValidatorToPoolInstruction {
-    pub accounts: Option<AddValidatorToPoolAccounts>,
-    pub args: Option<AddValidatorToPoolArgs>,
+    pub accounts: AddValidatorToPoolAccounts,
+    pub args: AddValidatorToPoolArgs,
 }
 
 #[vixen]
@@ -186,7 +186,7 @@ pub struct RemoveValidatorFromPoolAccounts {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct RemoveValidatorFromPoolInstruction {
-    pub accounts: Option<RemoveValidatorFromPoolAccounts>,
+    pub accounts: RemoveValidatorFromPoolAccounts,
 }
 
 #[vixen]
@@ -214,8 +214,8 @@ pub struct DecreaseValidatorStakeArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseValidatorStakeInstruction {
-    pub accounts: Option<DecreaseValidatorStakeAccounts>,
-    pub args: Option<DecreaseValidatorStakeArgs>,
+    pub accounts: DecreaseValidatorStakeAccounts,
+    pub args: DecreaseValidatorStakeArgs,
 }
 
 #[vixen]
@@ -247,8 +247,8 @@ pub struct IncreaseValidatorStakeArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct IncreaseValidatorStakeInstruction {
-    pub accounts: Option<IncreaseValidatorStakeAccounts>,
-    pub args: Option<IncreaseValidatorStakeArgs>,
+    pub accounts: IncreaseValidatorStakeAccounts,
+    pub args: IncreaseValidatorStakeArgs,
 }
 
 #[vixen]
@@ -270,8 +270,8 @@ pub struct SetPreferredValidatorArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct SetPreferredValidatorInstruction {
-    pub accounts: Option<SetPreferredValidatorAccounts>,
-    pub args: Option<SetPreferredValidatorArgs>,
+    pub accounts: SetPreferredValidatorAccounts,
+    pub args: SetPreferredValidatorArgs,
 }
 
 #[vixen]
@@ -296,8 +296,8 @@ pub struct UpdateValidatorListBalanceArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct UpdateValidatorListBalanceInstruction {
-    pub accounts: Option<UpdateValidatorListBalanceAccounts>,
-    pub args: Option<UpdateValidatorListBalanceArgs>,
+    pub accounts: UpdateValidatorListBalanceAccounts,
+    pub args: UpdateValidatorListBalanceArgs,
 }
 
 #[vixen]
@@ -315,7 +315,7 @@ pub struct UpdateStakePoolBalanceAccounts {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct UpdateStakePoolBalanceInstruction {
-    pub accounts: Option<UpdateStakePoolBalanceAccounts>,
+    pub accounts: UpdateStakePoolBalanceAccounts,
 }
 
 #[vixen]
@@ -328,7 +328,7 @@ pub struct CleanupRemovedValidatorEntriesAccounts {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct CleanupRemovedValidatorEntriesInstruction {
-    pub accounts: Option<CleanupRemovedValidatorEntriesAccounts>,
+    pub accounts: CleanupRemovedValidatorEntriesAccounts,
 }
 
 #[vixen]
@@ -354,7 +354,7 @@ pub struct DepositStakeAccounts {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct DepositStakeInstruction {
-    pub accounts: Option<DepositStakeAccounts>,
+    pub accounts: DepositStakeAccounts,
 }
 
 #[vixen]
@@ -384,8 +384,8 @@ pub struct WithdrawStakeArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawStakeInstruction {
-    pub accounts: Option<WithdrawStakeAccounts>,
-    pub args: Option<WithdrawStakeArgs>,
+    pub accounts: WithdrawStakeAccounts,
+    pub args: WithdrawStakeArgs,
 }
 
 #[vixen]
@@ -400,7 +400,7 @@ pub struct SetManagerAccounts {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct SetManagerInstruction {
-    pub accounts: Option<SetManagerAccounts>,
+    pub accounts: SetManagerAccounts,
 }
 
 #[vixen]
@@ -419,8 +419,8 @@ pub struct SetFeeArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct SetFeeInstruction {
-    pub accounts: Option<SetFeeAccounts>,
-    pub args: Option<SetFeeArgs>,
+    pub accounts: SetFeeAccounts,
+    pub args: SetFeeArgs,
 }
 
 #[vixen]
@@ -434,7 +434,7 @@ pub struct SetStakerAccounts {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct SetStakerInstruction {
-    pub accounts: Option<SetStakerAccounts>,
+    pub accounts: SetStakerAccounts,
 }
 
 #[vixen]
@@ -462,8 +462,8 @@ pub struct DepositSolArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct DepositSolInstruction {
-    pub accounts: Option<DepositSolAccounts>,
-    pub args: Option<DepositSolArgs>,
+    pub accounts: DepositSolAccounts,
+    pub args: DepositSolArgs,
 }
 
 #[vixen]
@@ -484,8 +484,8 @@ pub struct SetFundingAuthorityArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct SetFundingAuthorityInstruction {
-    pub accounts: Option<SetFundingAuthorityAccounts>,
-    pub args: Option<SetFundingAuthorityArgs>,
+    pub accounts: SetFundingAuthorityAccounts,
+    pub args: SetFundingAuthorityArgs,
 }
 
 #[vixen]
@@ -515,8 +515,8 @@ pub struct WithdrawSolArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawSolInstruction {
-    pub accounts: Option<WithdrawSolAccounts>,
-    pub args: Option<WithdrawSolArgs>,
+    pub accounts: WithdrawSolAccounts,
+    pub args: WithdrawSolArgs,
 }
 
 #[vixen]
@@ -543,8 +543,8 @@ pub struct CreateTokenMetadataArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct CreateTokenMetadataInstruction {
-    pub accounts: Option<CreateTokenMetadataAccounts>,
-    pub args: Option<CreateTokenMetadataArgs>,
+    pub accounts: CreateTokenMetadataAccounts,
+    pub args: CreateTokenMetadataArgs,
 }
 
 #[vixen]
@@ -568,8 +568,8 @@ pub struct UpdateTokenMetadataArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct UpdateTokenMetadataInstruction {
-    pub accounts: Option<UpdateTokenMetadataAccounts>,
-    pub args: Option<UpdateTokenMetadataArgs>,
+    pub accounts: UpdateTokenMetadataAccounts,
+    pub args: UpdateTokenMetadataArgs,
 }
 
 #[vixen]
@@ -602,8 +602,8 @@ pub struct IncreaseAdditionalValidatorStakeArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct IncreaseAdditionalValidatorStakeInstruction {
-    pub accounts: Option<IncreaseAdditionalValidatorStakeAccounts>,
-    pub args: Option<IncreaseAdditionalValidatorStakeArgs>,
+    pub accounts: IncreaseAdditionalValidatorStakeAccounts,
+    pub args: IncreaseAdditionalValidatorStakeArgs,
 }
 
 #[vixen]
@@ -634,8 +634,8 @@ pub struct DecreaseAdditionalValidatorStakeArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseAdditionalValidatorStakeInstruction {
-    pub accounts: Option<DecreaseAdditionalValidatorStakeAccounts>,
-    pub args: Option<DecreaseAdditionalValidatorStakeArgs>,
+    pub accounts: DecreaseAdditionalValidatorStakeAccounts,
+    pub args: DecreaseAdditionalValidatorStakeArgs,
 }
 
 #[vixen]
@@ -664,8 +664,8 @@ pub struct DecreaseValidatorStakeWithReserveArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct DecreaseValidatorStakeWithReserveInstruction {
-    pub accounts: Option<DecreaseValidatorStakeWithReserveAccounts>,
-    pub args: Option<DecreaseValidatorStakeWithReserveArgs>,
+    pub accounts: DecreaseValidatorStakeWithReserveAccounts,
+    pub args: DecreaseValidatorStakeWithReserveArgs,
 }
 
 #[vixen]
@@ -697,8 +697,8 @@ pub struct DepositStakeWithSlippageArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct DepositStakeWithSlippageInstruction {
-    pub accounts: Option<DepositStakeWithSlippageAccounts>,
-    pub args: Option<DepositStakeWithSlippageArgs>,
+    pub accounts: DepositStakeWithSlippageAccounts,
+    pub args: DepositStakeWithSlippageArgs,
 }
 
 #[vixen]
@@ -729,8 +729,8 @@ pub struct WithdrawStakeWithSlippageArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawStakeWithSlippageInstruction {
-    pub accounts: Option<WithdrawStakeWithSlippageAccounts>,
-    pub args: Option<WithdrawStakeWithSlippageArgs>,
+    pub accounts: WithdrawStakeWithSlippageAccounts,
+    pub args: WithdrawStakeWithSlippageArgs,
 }
 
 #[vixen]
@@ -759,8 +759,8 @@ pub struct DepositSolWithSlippageArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct DepositSolWithSlippageInstruction {
-    pub accounts: Option<DepositSolWithSlippageAccounts>,
-    pub args: Option<DepositSolWithSlippageArgs>,
+    pub accounts: DepositSolWithSlippageAccounts,
+    pub args: DepositSolWithSlippageArgs,
 }
 
 #[vixen]
@@ -791,8 +791,8 @@ pub struct WithdrawSolWithSlippageArgs {
 #[vixen]
 #[derive(Clone, PartialEq)]
 pub struct WithdrawSolWithSlippageInstruction {
-    pub accounts: Option<WithdrawSolWithSlippageAccounts>,
-    pub args: Option<WithdrawSolWithSlippageArgs>,
+    pub accounts: WithdrawSolWithSlippageAccounts,
+    pub args: WithdrawSolWithSlippageArgs,
 }
 
 // ── Conversion helpers ──────────────────────────────────────────────

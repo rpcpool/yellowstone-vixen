@@ -92,25 +92,25 @@ pub mod common_extension_instructions {
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Initialize {
-        pub accounts: Option<super::ExtInitializeAccounts>,
+        pub accounts: super::ExtInitializeAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Update {
-        pub accounts: Option<super::UpdateAccounts>,
+        pub accounts: super::UpdateAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Enable {
-        pub accounts: Option<super::EnableAccounts>,
+        pub accounts: super::EnableAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Disable {
-        pub accounts: Option<super::DisableAccounts>,
+        pub accounts: super::DisableAccounts,
     }
 
     #[vixen(oneof)]
@@ -140,9 +140,9 @@ impl CommonExtensionInstructions {
                     CommonExtensionInstructions {
                         extension: extension as i32,
                         instruction: Some(oneof::Instruction::Initialize(oneof::Initialize {
-                            accounts: Some(ExtInitializeAccounts {
+                            accounts: ExtInitializeAccounts {
                                 mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                            }),
+                            },
                         })),
                     }
                 },
@@ -151,14 +151,14 @@ impl CommonExtensionInstructions {
                     CommonExtensionInstructions {
                         extension: extension as i32,
                         instruction: Some(oneof::Instruction::Update(oneof::Update {
-                            accounts: Some(UpdateAccounts {
+                            accounts: UpdateAccounts {
                                 mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
                                 extension_authority: crate::PublicKey::new(ix.accounts[1].to_vec()),
                                 multisig_signers: ix.accounts[2..]
                                     .iter()
                                     .map(|a| crate::PublicKey::new(a.to_vec()))
                                     .collect(),
-                            }),
+                            },
                         })),
                     }
                 },
@@ -171,14 +171,14 @@ impl CommonExtensionInstructions {
                     CommonExtensionInstructions {
                         extension: extension as i32,
                         instruction: Some(oneof::Instruction::Enable(oneof::Enable {
-                            accounts: Some(EnableAccounts {
+                            accounts: EnableAccounts {
                                 account: crate::PublicKey::new(ix.accounts[0].to_vec()),
                                 owner: crate::PublicKey::new(ix.accounts[1].to_vec()),
                                 multisig_signers: ix.accounts[2..]
                                     .iter()
                                     .map(|a| crate::PublicKey::new(a.to_vec()))
                                     .collect(),
-                            }),
+                            },
                         })),
                     }
                 },
@@ -187,14 +187,14 @@ impl CommonExtensionInstructions {
                     CommonExtensionInstructions {
                         extension: extension as i32,
                         instruction: Some(oneof::Instruction::Disable(oneof::Disable {
-                            accounts: Some(DisableAccounts {
+                            accounts: DisableAccounts {
                                 account: crate::PublicKey::new(ix.accounts[0].to_vec()),
                                 owner: crate::PublicKey::new(ix.accounts[1].to_vec()),
                                 multisig_signers: ix.accounts[2..]
                                     .iter()
                                     .map(|a| crate::PublicKey::new(a.to_vec()))
                                     .collect(),
-                            }),
+                            },
                         })),
                     }
                 },

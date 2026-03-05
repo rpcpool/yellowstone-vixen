@@ -106,41 +106,41 @@ pub mod transfer_fee_instruction {
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct TransferCheckedWithFee {
-        pub accounts: Option<super::TransferCheckedWithFeeAccounts>,
-        pub args: Option<super::TransferCheckedWithFeeArgs>,
+        pub accounts: super::TransferCheckedWithFeeAccounts,
+        pub args: super::TransferCheckedWithFeeArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeTransferFeeConfig {
-        pub accounts: Option<super::InitializeTransferFeeConfigAccounts>,
-        pub args: Option<super::InitializeTransferFeeConfigArgs>,
+        pub accounts: super::InitializeTransferFeeConfigAccounts,
+        pub args: super::InitializeTransferFeeConfigArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct WithdrawWithheldTokensFromMint {
-        pub accounts: Option<super::WithdrawWithheldTokensFromMintAccounts>,
+        pub accounts: super::WithdrawWithheldTokensFromMintAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct WithdrawWithheldTokensFromAccounts {
-        pub accounts: Option<super::WithdrawWithheldTokensFromAccountsAccounts>,
-        pub args: Option<super::WithdrawWithheldTokensFromAccountsArgs>,
+        pub accounts: super::WithdrawWithheldTokensFromAccountsAccounts,
+        pub args: super::WithdrawWithheldTokensFromAccountsArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct HarvestWithheldTokensToMint {
-        pub accounts: Option<super::HarvestWithheldTokensToMintAccounts>,
+        pub accounts: super::HarvestWithheldTokensToMintAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct SetTransferFee {
-        pub accounts: Option<super::SetTransferFeeAccounts>,
-        pub args: Option<super::SetTransferFeeArgs>,
+        pub accounts: super::SetTransferFeeAccounts,
+        pub args: super::SetTransferFeeArgs,
     }
 
     #[vixen(oneof)]
@@ -174,7 +174,7 @@ impl ExtensionInstructionParser for TransferFeeIx {
                 check_min_accounts_req(accounts_len, 4)?;
 
                 oneof::Instruction::TransferCheckedWithFee(oneof::TransferCheckedWithFee {
-                    accounts: Some(TransferCheckedWithFeeAccounts {
+                    accounts: TransferCheckedWithFeeAccounts {
                         source: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         mint: crate::PublicKey::new(ix.accounts[1].to_vec()),
                         destination: crate::PublicKey::new(ix.accounts[2].to_vec()),
@@ -183,12 +183,12 @@ impl ExtensionInstructionParser for TransferFeeIx {
                             .iter()
                             .map(|a| crate::PublicKey::new(a.to_vec()))
                             .collect(),
-                    }),
-                    args: Some(TransferCheckedWithFeeArgs {
+                    },
+                    args: TransferCheckedWithFeeArgs {
                         amount,
                         fee_amount: fee,
                         decimals: decimals as u32,
-                    }),
+                    },
                 })
             },
 
@@ -202,10 +202,10 @@ impl ExtensionInstructionParser for TransferFeeIx {
 
                 oneof::Instruction::InitializeTransferFeeConfig(
                     oneof::InitializeTransferFeeConfig {
-                        accounts: Some(InitializeTransferFeeConfigAccounts {
+                        accounts: InitializeTransferFeeConfigAccounts {
                             mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
-                        }),
-                        args: Some(InitializeTransferFeeConfigArgs {
+                        },
+                        args: InitializeTransferFeeConfigArgs {
                             transfer_fee_config_authority: transfer_fee_config_authority
                                 .map(|p| crate::PublicKey::new(p.to_bytes()))
                                 .into(),
@@ -214,7 +214,7 @@ impl ExtensionInstructionParser for TransferFeeIx {
                                 .into(),
                             transfer_fee_basis_points: transfer_fee_basis_points as u32,
                             maximum_fee,
-                        }),
+                        },
                     },
                 )
             },
@@ -224,7 +224,7 @@ impl ExtensionInstructionParser for TransferFeeIx {
 
                 oneof::Instruction::WithdrawWithheldTokensFromMint(
                     oneof::WithdrawWithheldTokensFromMint {
-                        accounts: Some(WithdrawWithheldTokensFromMintAccounts {
+                        accounts: WithdrawWithheldTokensFromMintAccounts {
                             mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
                             fee_recipient: crate::PublicKey::new(ix.accounts[1].to_vec()),
                             withdraw_withheld_authority: crate::PublicKey::new(
@@ -234,7 +234,7 @@ impl ExtensionInstructionParser for TransferFeeIx {
                                 .iter()
                                 .map(|a| crate::PublicKey::new(a.to_vec()))
                                 .collect(),
-                        }),
+                        },
                     },
                 )
             },
@@ -248,7 +248,7 @@ impl ExtensionInstructionParser for TransferFeeIx {
 
                 oneof::Instruction::WithdrawWithheldTokensFromAccounts(
                     oneof::WithdrawWithheldTokensFromAccounts {
-                        accounts: Some(WithdrawWithheldTokensFromAccountsAccounts {
+                        accounts: WithdrawWithheldTokensFromAccountsAccounts {
                             mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
                             fee_recipient: crate::PublicKey::new(ix.accounts[1].to_vec()),
                             withdraw_withheld_authority: crate::PublicKey::new(
@@ -262,10 +262,10 @@ impl ExtensionInstructionParser for TransferFeeIx {
                                 .iter()
                                 .map(|a| crate::PublicKey::new(a.to_vec()))
                                 .collect(),
-                        }),
-                        args: Some(WithdrawWithheldTokensFromAccountsArgs {
+                        },
+                        args: WithdrawWithheldTokensFromAccountsArgs {
                             num_token_accounts: num_token_accounts as u32,
-                        }),
+                        },
                     },
                 )
             },
@@ -275,10 +275,10 @@ impl ExtensionInstructionParser for TransferFeeIx {
 
                 oneof::Instruction::HarvestWithheldTokensToMint(
                     oneof::HarvestWithheldTokensToMint {
-                        accounts: Some(HarvestWithheldTokensToMintAccounts {
+                        accounts: HarvestWithheldTokensToMintAccounts {
                             mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
                             mint_fee_acc_owner: crate::PublicKey::new(ix.accounts[1].to_vec()),
-                        }),
+                        },
                     },
                 )
             },
@@ -290,18 +290,18 @@ impl ExtensionInstructionParser for TransferFeeIx {
                 check_min_accounts_req(accounts_len, 2)?;
 
                 oneof::Instruction::SetTransferFee(oneof::SetTransferFee {
-                    accounts: Some(SetTransferFeeAccounts {
+                    accounts: SetTransferFeeAccounts {
                         mint: crate::PublicKey::new(ix.accounts[0].to_vec()),
                         mint_fee_acc_owner: crate::PublicKey::new(ix.accounts[1].to_vec()),
                         multisig_signers: ix.accounts[2..]
                             .iter()
                             .map(|a| crate::PublicKey::new(a.to_vec()))
                             .collect(),
-                    }),
-                    args: Some(SetTransferFeeArgs {
+                    },
+                    args: SetTransferFeeArgs {
                         transfer_fee_basis_points: transfer_fee_basis_points as u32,
                         maximum_fee,
-                    }),
+                    },
                 })
             },
         };

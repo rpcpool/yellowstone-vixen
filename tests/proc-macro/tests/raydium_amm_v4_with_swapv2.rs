@@ -72,7 +72,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
     use yellowstone_vixen_core::PublicKey;
 
     let expected = raydium_amm::instruction::SwapBaseInCompact {
-        accounts: Some(raydium_amm::instruction::SwapBaseInCompactAccounts {
+        accounts: raydium_amm::instruction::SwapBaseInCompactAccounts {
             token_program: PublicKey::new(vec![
                 6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28,
                 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
@@ -142,11 +142,11 @@ async fn parse_swap_base_in_with_custom_resolver() {
                 22, 81, 25, 252, 64, 213, 90, 126, 143, 13, 211, 224, 58, 130,
             ]),
             remaining_accounts: vec![],
-        }),
-        args: Some(raydium_amm::instruction::SwapBaseInCompactArgs {
+        },
+        args: raydium_amm::instruction::SwapBaseInCompactArgs {
             amount_in: 820_106_078_370,
             minimum_amount_out: 0,
-        }),
+        },
     };
 
     assert_eq!(swap, &expected);
@@ -179,6 +179,6 @@ async fn parse_swap_base_in_with_default_parser() {
         })
         .expect("default parser should resolve SwapBaseInCompact by account count");
 
-    assert!(swap.accounts.is_some());
-    assert!(swap.args.is_some());
+    let _ = &swap.accounts;
+    let _ = &swap.args;
 }

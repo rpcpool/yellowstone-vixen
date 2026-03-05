@@ -427,33 +427,11 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
         }
     };
 
-    // Singular Message fields: on-chain the struct is required (no Option tag byte),
-    // but prost requires `Option<T>` for message fields.
-    // Note: PublicKey singular fields use their own borsh_deserialize_pubkey helper
-    // which returns PublicKey directly (required), so they don't need required_msg_attr.
-    let required_msg_attr = if matches!(
-        (&f.label, &f.field_type),
-        (LabelIr::Singular, FieldTypeIr::Message(_))
-    ) {
-        let deserialize_path = LitStr::new(
-            &format!("{path_prefix}borsh_deserialize_required_msg"),
-            Span::call_site(),
-        );
-
-        let serialize_path = LitStr::new(
-            &format!("{path_prefix}borsh_serialize_required_msg"),
-            Span::call_site(),
-        );
-
-        quote! {
-            #[borsh(
-                deserialize_with = #deserialize_path,
-                serialize_with = #serialize_path
-            )]
-        }
-    } else {
-        quote! {}
-    };
+    // Singular message fields used `prost(message, optional)` + `Option<T>` historically,
+    // requiring a custom borsh (de)serializer to bridge the mismatch.  Now that we emit
+    // `prost(message, required)` with bare `T`, the standard borsh derive handles them
+    // directly, so no special attribute is needed.
+    let required_msg_attr = quote! {};
 
     // Resolve a Message type ident, adding `super::` when in a submodule and the type is external
     let resolve_msg = |msg: &str| -> TokenStream {
@@ -516,9 +494,9 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
             let ty = resolve_msg(msg);
 
             quote! {
-                #[prost(message, optional, tag = #tag)]
-                #required_msg_attr
-                pub #name: ::core::option::Option<#ty>
+                #[prost(message, required, tag = #tag)]
+                #borsh_attr
+                pub #name: #ty
             }
         },
 

@@ -294,154 +294,154 @@ pub mod instruction {
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Transfer {
-        pub accounts: Option<super::TransferAccounts>,
-        pub args: Option<super::TransferArgs>,
+        pub accounts: super::TransferAccounts,
+        pub args: super::TransferArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeMint {
-        pub accounts: Option<super::InitializeMintAccounts>,
-        pub args: Option<super::InitializeMintArgs>,
+        pub accounts: super::InitializeMintAccounts,
+        pub args: super::InitializeMintArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeAccount {
-        pub accounts: Option<super::InitializeAccountAccounts>,
+        pub accounts: super::InitializeAccountAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeAccount2 {
-        pub accounts: Option<super::InitializeAccount2Accounts>,
-        pub args: Option<super::InitializeAccount2Args>,
+        pub accounts: super::InitializeAccount2Accounts,
+        pub args: super::InitializeAccount2Args,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeAccount3 {
-        pub accounts: Option<super::InitializeAccount2Accounts>,
-        pub args: Option<super::InitializeAccount2Args>,
+        pub accounts: super::InitializeAccount2Accounts,
+        pub args: super::InitializeAccount2Args,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeMultisig {
-        pub accounts: Option<super::InitializeMultisigAccounts>,
-        pub args: Option<super::InitializeMultisigArgs>,
+        pub accounts: super::InitializeMultisigAccounts,
+        pub args: super::InitializeMultisigArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Approve {
-        pub accounts: Option<super::ApproveAccounts>,
-        pub args: Option<super::ApproveArgs>,
+        pub accounts: super::ApproveAccounts,
+        pub args: super::ApproveArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Revoke {
-        pub accounts: Option<super::RevokeAccounts>,
+        pub accounts: super::RevokeAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct SetAuthority {
-        pub accounts: Option<super::SetAuthorityAccounts>,
-        pub args: Option<super::SetAuthorityArgs>,
+        pub accounts: super::SetAuthorityAccounts,
+        pub args: super::SetAuthorityArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct MintTo {
-        pub accounts: Option<super::MintToAccounts>,
-        pub args: Option<super::MintToArgs>,
+        pub accounts: super::MintToAccounts,
+        pub args: super::MintToArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct Burn {
-        pub accounts: Option<super::BurnAccounts>,
-        pub args: Option<super::BurnArgs>,
+        pub accounts: super::BurnAccounts,
+        pub args: super::BurnArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct CloseAccount {
-        pub accounts: Option<super::CloseAccountAccounts>,
+        pub accounts: super::CloseAccountAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct FreezeAccount {
-        pub accounts: Option<super::FreezeAccountAccounts>,
+        pub accounts: super::FreezeAccountAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct ThawAccount {
-        pub accounts: Option<super::ThawAccountAccounts>,
+        pub accounts: super::ThawAccountAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct TransferChecked {
-        pub accounts: Option<super::TransferCheckedAccounts>,
-        pub args: Option<super::TransferCheckedArgs>,
+        pub accounts: super::TransferCheckedAccounts,
+        pub args: super::TransferCheckedArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct ApproveChecked {
-        pub accounts: Option<super::ApproveCheckedAccounts>,
-        pub args: Option<super::ApproveCheckedArgs>,
+        pub accounts: super::ApproveCheckedAccounts,
+        pub args: super::ApproveCheckedArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct MintToChecked {
-        pub accounts: Option<super::MintToCheckedAccounts>,
-        pub args: Option<super::MintToCheckedArgs>,
+        pub accounts: super::MintToCheckedAccounts,
+        pub args: super::MintToCheckedArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct BurnChecked {
-        pub accounts: Option<super::BurnCheckedAccounts>,
-        pub args: Option<super::BurnCheckedArgs>,
+        pub accounts: super::BurnCheckedAccounts,
+        pub args: super::BurnCheckedArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct SyncNative {
-        pub accounts: Option<super::SyncNativeAccounts>,
+        pub accounts: super::SyncNativeAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct GetAccountDataSize {
-        pub accounts: Option<super::GetAccountDataSizeAccounts>,
+        pub accounts: super::GetAccountDataSizeAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct InitializeImmutableOwner {
-        pub accounts: Option<super::InitializeImmutableOwnerAccounts>,
+        pub accounts: super::InitializeImmutableOwnerAccounts,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct AmountToUiAmount {
-        pub accounts: Option<super::AmountToUiAmountAccounts>,
-        pub args: Option<super::AmountToUiAmountArgs>,
+        pub accounts: super::AmountToUiAmountAccounts,
+        pub args: super::AmountToUiAmountArgs,
     }
 
     #[vixen]
     #[derive(Clone, PartialEq)]
     pub struct UiAmountToAmount {
-        pub accounts: Option<super::UiAmountToAmountAccounts>,
-        pub args: Option<super::UiAmountToAmountArgs>,
+        pub accounts: super::UiAmountToAmountAccounts,
+        pub args: super::UiAmountToAmountArgs,
     }
 
     #[vixen(oneof)]
