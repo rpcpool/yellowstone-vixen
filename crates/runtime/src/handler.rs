@@ -199,8 +199,9 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>>;
 
     /// optional callback to end of transaction
-    fn handle_tx_end<'h>(&'h self, _txn: &'h TransactionUpdate) {
+    fn handle_tx_end<'h>(&'h self, _txn: &'h TransactionUpdate,) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         // optional
+        Box::pin(async move {})
     }
 }
 
@@ -246,6 +247,16 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
         <dyn DynPipeline<T>>::handle(&**self, value)
     }
+
+    #[inline]
+    fn handle_tx_end<'h>(
+        &'h self,
+        txn: &'h TransactionUpdate,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        <dyn DynPipeline<T>>::handle_tx_end(&**self, txn)
+    }
+
+
 }
 
 #[derive(Debug)]

@@ -54,7 +54,7 @@ impl InstructionPipeline {
         }
 
         for pipe in &*self.0 {
-            pipe.handle_tx_end(txn);
+            pipe.handle_tx_end(txn).await;
         }
 
         if let Some(h) = err {
