@@ -44,9 +44,7 @@ async fn parse_custody_account() {
                 109, 26, 94, 178, 172, 58, 205, 139, 127, 213, 214, 178, 67,
             ]),
             oracle_type: perpetuals::OracleType {
-                kind: perpetuals::oracle_type::Kind::Pyth(
-                    perpetuals::OracleTypePyth {},
-                ),
+                kind: perpetuals::oracle_type::Kind::Pyth(perpetuals::OracleTypePyth {}),
             },
             buffer: 50,
             max_price_age_sec: 5,
