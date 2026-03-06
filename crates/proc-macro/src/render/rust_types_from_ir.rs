@@ -12,7 +12,8 @@ use crate::intermediate_representation::{
 /// Generate a manual `prost::Message` impl for a oneof wrapper struct.
 ///
 /// The struct has a single non-Option field (`field_ident`) of type `mod_ident::oneof_ident`
-/// which derives `prost::Oneof`. We implement Message by delegating to the Oneof methods (calling Oneof generated method using self.#field_ident).
+/// which derives `prost::Oneof`. We implement Message by delegating to the Oneof methods
+/// (calling Oneof generated methods via `self.field_ident`).
 ///
 fn manual_prost_message_impl(
     parent_ident: &syn::Ident,
@@ -41,6 +42,8 @@ fn manual_prost_message_impl(
                 buf: &mut impl ::prost::bytes::Buf,
                 ctx: ::prost::encoding::DecodeContext,
             ) -> ::core::result::Result<(), ::prost::DecodeError> {
+                // Oneof::merge() requires `&mut Option<Self>`, so we wrap our non-Option
+                // field into Some, call merge, then unwrap back.
                 let mut opt = ::core::option::Option::Some(self.#field_ident.clone());
 
                 #mod_ident::#oneof_ident::merge(&mut opt, tag, wire_type, buf, ctx)?;

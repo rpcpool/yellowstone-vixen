@@ -9,8 +9,9 @@ use quote::{format_ident, quote};
 /// Build the *account parser* for a program.
 ///
 /// Generates a wrapper struct with a non-Option oneof field and a manual
-/// `prost::Message` impl when `proto` is enabled (prost derives require
-/// `Option` for oneof fields, so we bypass them).
+/// `prost::Message` impl when `proto` is enabled. prost derives require
+/// `Option` for oneof fields, so we bypass them by implementing `Message`
+/// manually.
 ///
 /// Example output:
 ///
@@ -297,6 +298,8 @@ pub fn account_parser(
                         buf: &mut impl ::prost::bytes::Buf,
                         ctx: ::prost::encoding::DecodeContext,
                     ) -> ::core::result::Result<(), ::prost::DecodeError> {
+                        // Oneof::merge() requires `&mut Option<Self>`, so we wrap our non-Option
+                        // field into Some, call merge, then unwrap back.
                         let mut opt = ::core::option::Option::Some(self.#account_field.clone());
 
                         #account_mod_ident::#account_enum::merge(&mut opt, tag, wire_type, buf, ctx)?;
