@@ -1,0 +1,156 @@
+syntax = "proto3";
+
+package vixen.parser.bpf_loader;
+
+message PublicKey {
+  bytes value = 1;
+}
+
+// ── Account state ──────────────────────────────────────────────────
+
+message Buffer {
+  optional PublicKey authority = 1;
+}
+
+message Program {
+  PublicKey programdata_address = 1;
+}
+
+message ProgramData {
+  uint64 slot = 1;
+  optional PublicKey upgrade_authority = 2;
+}
+
+message BpfLoaderState {
+  oneof state {
+    Buffer buffer = 1;
+    Program program = 2;
+    ProgramData program_data = 3;
+  }
+}
+
+// ── Instruction accounts ───────────────────────────────────────────
+
+message InitializeBufferAccounts {
+  PublicKey buffer = 1;
+  PublicKey authority = 2;
+}
+
+message WriteAccounts {
+  PublicKey buffer = 1;
+  PublicKey authority = 2;
+}
+
+message DeployAccounts {
+  PublicKey payer = 1;
+  PublicKey program_data = 2;
+  PublicKey program = 3;
+  PublicKey buffer = 4;
+  PublicKey rent = 5;
+  PublicKey clock = 6;
+  PublicKey system_program = 7;
+  PublicKey authority = 8;
+}
+
+message UpgradeAccounts {
+  PublicKey program_data = 1;
+  PublicKey program = 2;
+  PublicKey buffer = 3;
+  PublicKey spill = 4;
+  PublicKey rent = 5;
+  PublicKey clock = 6;
+  PublicKey authority = 7;
+}
+
+message SetAuthorityAccounts {
+  PublicKey account = 1;
+  PublicKey current_authority = 2;
+  optional PublicKey new_authority = 3;
+}
+
+message CloseAccounts {
+  PublicKey close_target = 1;
+  PublicKey recipient = 2;
+  optional PublicKey authority = 3;
+  optional PublicKey program = 4;
+}
+
+message ExtendProgramAccounts {
+  PublicKey program_data = 1;
+  PublicKey program = 2;
+  optional PublicKey system_program = 3;
+  optional PublicKey payer = 4;
+}
+
+message SetAuthorityCheckedAccounts {
+  PublicKey account = 1;
+  PublicKey current_authority = 2;
+  PublicKey new_authority = 3;
+}
+
+// ── Instruction args ───────────────────────────────────────────────
+
+message WriteArgs {
+  uint32 offset = 1;
+  bytes bytes = 2;
+}
+
+message DeployArgs {
+  uint64 max_data_len = 1;
+}
+
+message ExtendProgramArgs {
+  uint32 additional_bytes = 1;
+}
+
+// ── Instruction wrappers ───────────────────────────────────────────
+
+message InitializeBufferInstruction {
+  InitializeBufferAccounts accounts = 1;
+}
+
+message WriteInstruction {
+  WriteAccounts accounts = 1;
+  WriteArgs args = 2;
+}
+
+message DeployInstruction {
+  DeployAccounts accounts = 1;
+  DeployArgs args = 2;
+}
+
+message UpgradeInstruction {
+  UpgradeAccounts accounts = 1;
+}
+
+message SetAuthorityInstruction {
+  SetAuthorityAccounts accounts = 1;
+}
+
+message CloseInstruction {
+  CloseAccounts accounts = 1;
+}
+
+message ExtendProgramInstruction {
+  ExtendProgramAccounts accounts = 1;
+  ExtendProgramArgs args = 2;
+}
+
+message SetAuthorityCheckedInstruction {
+  SetAuthorityCheckedAccounts accounts = 1;
+}
+
+// ── Dispatch ───────────────────────────────────────────────────────
+
+message BpfLoaderProgram {
+  oneof instruction {
+    InitializeBufferInstruction initialize_buffer = 1;
+    WriteInstruction write = 2;
+    DeployInstruction deploy = 3;
+    UpgradeInstruction upgrade = 4;
+    SetAuthorityInstruction set_authority = 5;
+    CloseInstruction close = 6;
+    ExtendProgramInstruction extend_program = 7;
+    SetAuthorityCheckedInstruction set_authority_checked = 8;
+  }
+}
