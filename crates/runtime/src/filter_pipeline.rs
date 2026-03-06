@@ -6,6 +6,8 @@ use futures_util::{Future, StreamExt};
 use smallvec::SmallVec;
 use vixen_core::{GetPrefilter, ParseError, Parser, ParserId, Prefilter, PrefilterBuilder};
 
+use vixen_core::TransactionUpdate;
+
 use crate::{
     handler::{DynPipeline, PipelineErrors},
     Handler,
@@ -104,6 +106,27 @@ where
 
         Ok(())
     }
+
+    /// Notify all handlers that the transaction has ended.
+    ///
+    /// # Errors
+    /// If any handler returns an error, all errors are collected and returned.
+    pub async fn handle_tx_end(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
+        let errs = self
+            .handlers
+            .into_iter()
+            .map(|h| async move { h.handle_tx_end(txn).await })
+            .collect::<futures_util::stream::FuturesUnordered<_>>()
+            .filter_map(|r| async move { r.err() })
+            .collect::<SmallVec<[_; 1]>>()
+            .await;
+
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(PipelineErrors::Handlers(errs))
+        }
+    }
 }
 
 impl<P, H> DynPipeline<P::Input> for FilterPipeline<P, H>
@@ -122,5 +145,16 @@ where
         Box<dyn Future<Output = Result<(), crate::handler::PipelineErrors>> + Send + 'h>,
     > {
         Box::pin(FilterPipeline::handle_value(self, value))
+    }
+
+    fn handle_tx_end<'h>(
+        &'h self,
+        txn: &'h TransactionUpdate,
+    ) -> std::pin::Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        Box::pin(async move {
+            if let Err(e) = FilterPipeline::handle_tx_end(self, txn).await {
+                e.handle::<P::Input>(&self.id()).as_unit();
+            }
+        })
     }
 }

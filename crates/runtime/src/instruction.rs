@@ -119,6 +119,8 @@ impl SingleInstructionPipeline {
             }
         }
 
+        pipe.handle_tx_end(txn).await;
+
         Ok(())
     }
 }

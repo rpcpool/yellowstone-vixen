@@ -25,6 +25,14 @@ where R: Sync
 {
     /// Consume the parsed value together with the raw event.
     fn handle(&self, value: &T, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send;
+
+    /// Called after all instructions in a transaction have been processed.
+    fn handle_tx_end(
+        &self,
+        _txn: &TransactionUpdate,
+    ) -> impl Future<Output = HandlerResult<()>> + Send {
+        async { Ok(()) }
+    }
 }
 
 impl<T: Handler<U, R>, U, R> Handler<U, R> for &T
@@ -33,6 +41,14 @@ where R: Sync
     #[inline]
     fn handle(&self, value: &U, raw_event: &R) -> impl Future<Output = HandlerResult<()>> + Send {
         <T as Handler<U, R>>::handle(self, value, raw_event)
+    }
+
+    #[inline]
+    fn handle_tx_end(
+        &self,
+        txn: &TransactionUpdate,
+    ) -> impl Future<Output = HandlerResult<()>> + Send {
+        <T as Handler<U, R>>::handle_tx_end(self, txn)
     }
 }
 
@@ -187,6 +203,26 @@ where
             Err(PipelineErrors::Handlers(errs))
         }
     }
+
+    /// Notify all handlers that the transaction has ended.
+    ///
+    /// # Errors
+    /// If any handler returns an error, all errors are collected and returned.
+    pub async fn handle_tx_end(&self, txn: &TransactionUpdate) -> Result<(), PipelineErrors> {
+        let errs = (&self.1)
+            .into_iter()
+            .map(|h| async move { h.handle_tx_end(txn).await })
+            .collect::<futures_util::stream::FuturesUnordered<_>>()
+            .filter_map(|r| async move { r.err() })
+            .collect::<SmallVec<[_; 1]>>()
+            .await;
+
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(PipelineErrors::Handlers(errs))
+        }
+    }
 }
 
 /// Object-safe trait for parsing and handling values.
@@ -228,6 +264,17 @@ where
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>> {
         Box::pin(Pipeline::handle(self, value))
     }
+
+    fn handle_tx_end<'h>(
+        &'h self,
+        txn: &'h TransactionUpdate,
+    ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
+        Box::pin(async move {
+            if let Err(e) = Pipeline::handle_tx_end(self, txn).await {
+                e.handle::<P::Input>(&self.id()).as_unit();
+            }
+        })
+    }
 }
 
 impl<T> ParserId for BoxPipeline<'_, T> {
@@ -255,8 +302,6 @@ impl<T> DynPipeline<T> for BoxPipeline<'_, T> {
     ) -> Pin<Box<dyn Future<Output = ()> + Send + 'h>> {
         <dyn DynPipeline<T>>::handle_tx_end(&**self, txn)
     }
-
-
 }
 
 #[derive(Debug)]
