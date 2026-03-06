@@ -63,7 +63,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
     // This transaction has 17 accounts, so the resolver routes to SwapBaseInCompact
     let swap = ixs
         .iter()
-        .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+        .find_map(|ix| match &ix.as_ref()?.instruction {
             raydium_amm::instruction::Instruction::SwapBaseInCompact(s) => Some(s),
             _ => None,
         })
@@ -172,7 +172,7 @@ async fn parse_swap_base_in_with_default_parser() {
     // This transaction has 17 accounts — the default resolver should route
     // to SwapBaseInCompact automatically.
     ixs.iter()
-        .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+        .find_map(|ix| match &ix.as_ref()?.instruction {
             raydium_amm::instruction::Instruction::SwapBaseInCompact(s) => Some(s),
             _ => None,
         })

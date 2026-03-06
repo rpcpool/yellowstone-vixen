@@ -8,6 +8,59 @@ use crate::intermediate_representation::{
     FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofKindIr, ScalarIr, TypeIr, TypeKindIr,
 };
 
+///
+/// Generate a manual `prost::Message` impl for a oneof wrapper struct.
+///
+/// The struct has a single non-Option field (`field_ident`) of type `mod_ident::oneof_ident`
+/// which derives `prost::Oneof`. We implement Message by delegating to the Oneof methods.
+///
+fn manual_prost_message_impl(
+    parent_ident: &syn::Ident,
+    field_ident: &syn::Ident,
+    mod_ident: &syn::Ident,
+    oneof_ident: &syn::Ident,
+) -> TokenStream {
+    quote! {
+        impl ::core::fmt::Debug for #parent_ident {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                f.debug_struct(stringify!(#parent_ident))
+                    .field(stringify!(#field_ident), &self.#field_ident)
+                    .finish()
+            }
+        }
+
+        impl ::prost::Message for #parent_ident {
+            fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
+                self.#field_ident.encode(buf);
+            }
+
+            fn merge_field(
+                &mut self,
+                tag: u32,
+                wire_type: ::prost::encoding::WireType,
+                buf: &mut impl ::prost::bytes::Buf,
+                ctx: ::prost::encoding::DecodeContext,
+            ) -> ::core::result::Result<(), ::prost::DecodeError> {
+                let mut opt = ::core::option::Option::Some(self.#field_ident.clone());
+
+                #mod_ident::#oneof_ident::merge(&mut opt, tag, wire_type, buf, ctx)?;
+
+                if let ::core::option::Option::Some(v) = opt {
+                    self.#field_ident = v;
+                }
+
+                ::core::result::Result::Ok(())
+            }
+
+            fn encoded_len(&self) -> usize {
+                self.#field_ident.encoded_len()
+            }
+
+            fn clear(&mut self) {}
+        }
+    }
+}
+
 pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::SchemaIr) -> TokenStream {
     let mut out = TokenStream::new();
 
@@ -97,8 +150,9 @@ fn render_struct_type(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> TokenS
 ///
 /// Generates:
 /// - `pub mod instruction { pub enum Instruction { ... } /* + payload types */ }`
-/// - Wrapper struct `Instructions` with `instruction: Option<instruction::Instruction>`
+/// - Wrapper struct `Instructions` with `instruction: instruction::Instruction` (non-Option)
 /// - Custom Borsh impls for `Instructions`
+/// - When proto: manual `prost::Message` impl (no prost derive on the wrapper)
 ///
 fn render_instruction_dispatch(
     oneof_ir: &OneofIr,
@@ -138,7 +192,7 @@ fn render_instruction_dispatch(
         let v_ident = format_ident!("{}", v.variant_name);
 
         quote! {
-            ::core::option::Option::Some(#mod_ident::#oneof_ident::#v_ident(v)) => {
+            #mod_ident::#oneof_ident::#v_ident(v) => {
                 ::borsh::BorshSerialize::serialize(&#disc, writer)?;
                 ::borsh::BorshSerialize::serialize(v, writer)
             }
@@ -153,61 +207,46 @@ fn render_instruction_dispatch(
             #disc => {
                 let v = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
 
-                ::core::option::Option::Some(#mod_ident::#oneof_ident::#v_ident(v))
+                #mod_ident::#oneof_ident::#v_ident(v)
             }
         }
     });
 
-    let struct_and_mod = if cfg!(feature = "proto") {
-        let tags_lit = {
-            let tags_list = oneof_ir
-                .variants
-                .iter()
-                .map(|v| v.tag.to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-
-            LitStr::new(&tags_list, Span::call_site())
-        };
-
-        let oneof_lit = LitStr::new("instruction::Instruction", Span::call_site());
-
-        quote! {
-            #[derive(Clone, PartialEq, ::prost::Message)]
-            pub struct #parent_ident {
-                #[prost(oneof = #oneof_lit, tags = #tags_lit)]
-                pub #field_ident: ::core::option::Option<#mod_ident::#oneof_ident>,
-            }
-
-            pub mod #mod_ident {
-                #(#module_types)*
-
-                #[derive(Clone, PartialEq, ::prost::Oneof)]
-                pub enum #oneof_ident {
-                    #(#variants),*
-                }
-            }
-        }
+    let enum_derive = if cfg!(feature = "proto") {
+        quote! { #[derive(Clone, PartialEq, ::prost::Oneof)] }
     } else {
-        quote! {
-            #[derive(Clone, Debug, PartialEq)]
-            pub struct #parent_ident {
-                pub #field_ident: ::core::option::Option<#mod_ident::#oneof_ident>,
-            }
+        quote! { #[derive(Clone, Debug, PartialEq)] }
+    };
 
-            pub mod #mod_ident {
-                #(#module_types)*
+    let proto_impls = if cfg!(feature = "proto") {
+        manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident)
+    } else {
+        quote! {}
+    };
 
-                #[derive(Clone, Debug, PartialEq)]
-                pub enum #oneof_ident {
-                    #(#variants),*
-                }
-            }
-        }
+    let debug_derive = if cfg!(feature = "proto") {
+        // Debug is provided by the manual impl above
+        quote! {}
+    } else {
+        quote! { Debug, }
     };
 
     quote! {
-        #struct_and_mod
+        #[derive(Clone, #debug_derive PartialEq)]
+        pub struct #parent_ident {
+            pub #field_ident: #mod_ident::#oneof_ident,
+        }
+
+        pub mod #mod_ident {
+            #(#module_types)*
+
+            #enum_derive
+            pub enum #oneof_ident {
+                #(#variants),*
+            }
+        }
+
+        #proto_impls
 
         impl ::borsh::BorshSerialize for #parent_ident {
             fn serialize<W: ::borsh::io::Write>(
@@ -216,13 +255,6 @@ fn render_instruction_dispatch(
             ) -> ::core::result::Result<(), ::borsh::io::Error> {
                 match &self.#field_ident {
                     #(#borsh_serialize_arms,)*
-
-                    ::core::option::Option::None => {
-                        ::core::result::Result::Err(::borsh::io::Error::new(
-                            ::borsh::io::ErrorKind::InvalidData,
-                            "oneof field is None"
-                        ))
-                    }
                 }
             }
         }
@@ -243,6 +275,7 @@ fn render_instruction_dispatch(
                         ));
                     }
                 };
+
                 ::core::result::Result::Ok(Self { #field_ident })
             }
         }
@@ -278,7 +311,7 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
         let v_ident = format_ident!("{}", v.variant_name);
 
         quote! {
-            ::core::option::Option::Some(#mod_ident::#oneof_ident::#v_ident(v)) => {
+            #mod_ident::#oneof_ident::#v_ident(v) => {
                 ::borsh::BorshSerialize::serialize(&#disc, writer)?;
                 ::borsh::BorshSerialize::serialize(v, writer)
             }
@@ -293,61 +326,62 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
             #disc => {
                 let v = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
 
-                ::core::option::Option::Some(#mod_ident::#oneof_ident::#v_ident(v))
+                #mod_ident::#oneof_ident::#v_ident(v)
             }
         }
     });
 
-    let struct_and_mod = if cfg!(feature = "proto") {
-        let tags_lit = {
-            let tags_list = oneof_ir
-                .variants
-                .iter()
-                .map(|v| v.tag.to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
+    let enum_derive = if cfg!(feature = "proto") {
+        quote! { #[derive(Clone, PartialEq, ::prost::Oneof)] }
+    } else {
+        quote! { #[derive(Clone, Debug, PartialEq)] }
+    };
 
-            LitStr::new(&tags_list, Span::call_site())
-        };
+    let proto_impls = if cfg!(feature = "proto") {
+        let first_variant = &oneof_ir.variants[0];
+        let first_variant_ident = format_ident!("{}", first_variant.variant_name);
+        let first_variant_msg = format_ident!("{}", first_variant.message_type);
 
-        let oneof_lit = {
-            let oneof_path = format!("{}::{}", mod_ident, oneof_ident);
-
-            LitStr::new(&oneof_path, Span::call_site())
-        };
+        let message_impl =
+            manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident);
 
         quote! {
-            #[derive(Clone, PartialEq, ::prost::Message)]
-            pub struct #parent_ident {
-                #[prost(oneof = #oneof_lit, tags = #tags_lit)]
-                pub #field_ident: ::core::option::Option<#mod_ident::#oneof_ident>,
-            }
+            #message_impl
 
-            pub mod #mod_ident {
-                #[derive(Clone, PartialEq, ::prost::Oneof)]
-                pub enum #oneof_ident {
-                    #(#variants),*
+            impl ::core::default::Default for #parent_ident {
+                fn default() -> Self {
+                    Self {
+                        #field_ident: #mod_ident::#oneof_ident::#first_variant_ident(
+                            <#first_variant_msg as ::core::default::Default>::default(),
+                        ),
+                    }
                 }
             }
         }
     } else {
-        quote! {
-            #[derive(Clone, Debug, PartialEq)]
-            pub struct #parent_ident {
-                pub #field_ident: ::core::option::Option<#mod_ident::#oneof_ident>,
-            }
+        quote! {}
+    };
 
-            pub mod #mod_ident {
-                #[derive(Clone, Debug, PartialEq)]
-                pub enum #oneof_ident {
-                    #(#variants),*
-                }
-            }
-        }
+    let debug_derive = if cfg!(feature = "proto") {
+        quote! {}
+    } else {
+        quote! { Debug, }
     };
 
     quote! {
-        #struct_and_mod
+        #[derive(Clone, #debug_derive PartialEq)]
+        pub struct #parent_ident {
+            pub #field_ident: #mod_ident::#oneof_ident,
+        }
+
+        pub mod #mod_ident {
+            #enum_derive
+            pub enum #oneof_ident {
+                #(#variants),*
+            }
+        }
+
+        #proto_impls
 
         impl ::borsh::BorshSerialize for #parent_ident {
             fn serialize<W: ::borsh::io::Write>(
@@ -356,13 +390,6 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
             ) -> ::core::result::Result<(), ::borsh::io::Error> {
                 match &self.#field_ident {
                     #(#borsh_serialize_arms,)*
-
-                    ::core::option::Option::None => {
-                        ::core::result::Result::Err(::borsh::io::Error::new(
-                            ::borsh::io::ErrorKind::InvalidData,
-                            "oneof field is None"
-                        ))
-                    }
                 }
             }
         }
@@ -383,16 +410,19 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
                         ));
                     }
                 };
+
                 ::core::result::Result::Ok(Self { #field_ident })
             }
         }
     }
 }
 
+///
 /// Render a single struct field.
 ///
 /// `local_names`: when `Some`, we are inside a submodule. Message types not in the set
 /// and borsh helper paths get `super::` prefixed.
+///
 pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenStream {
     let name = format_ident!("{}", f.name);
     let tag = f.tag;
@@ -575,10 +605,8 @@ pub fn render_field(f: &FieldIr, local_names: Option<&HashSet<&str>>) -> TokenSt
     }
 }
 
-///
 /// Returns `#[borsh(deserialize_with = "...", serialize_with = "...")]` for fixed-size byte fields
 /// (Pubkey and FixedBytes), or an empty TokenStream for all other field types.
-///
 fn fixed_bytes_borsh_attrs(
     label: &LabelIr,
     field_type: &FieldTypeIr,

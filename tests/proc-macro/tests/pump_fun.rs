@@ -24,7 +24,7 @@ async fn parse_sell_ix() {
 
     let sell = ixs
         .iter()
-        .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+        .find_map(|ix| match &ix.as_ref()?.instruction {
             pump_fun::instruction::Instruction::Sell(s) => Some(s),
             _ => None,
         })
@@ -107,7 +107,7 @@ async fn parse_buy_ix() {
 
     let buy = ixs
         .iter()
-        .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+        .find_map(|ix| match &ix.as_ref()?.instruction {
             pump_fun::instruction::Instruction::Buy(b) => Some(b),
             _ => None,
         })

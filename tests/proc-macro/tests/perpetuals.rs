@@ -19,7 +19,7 @@ async fn parse_custody_account() {
     let account = account_fixture!("7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz", &parser);
 
     let custody = match account.account {
-        Some(perpetuals::account::Account::Custody(c)) => c,
+        perpetuals::account::Account::Custody(c) => c,
         _ => panic!("Unexpected account state"),
     };
 
@@ -44,9 +44,9 @@ async fn parse_custody_account() {
                 109, 26, 94, 178, 172, 58, 205, 139, 127, 213, 214, 178, 67,
             ]),
             oracle_type: perpetuals::OracleType {
-                kind: Some(perpetuals::oracle_type::Kind::Pyth(
+                kind: perpetuals::oracle_type::Kind::Pyth(
                     perpetuals::OracleTypePyth {},
-                )),
+                ),
             },
             buffer: 50,
             max_price_age_sec: 5,
@@ -208,7 +208,7 @@ async fn parse_pool_account() {
     let account = account_fixture!("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq", &parser);
 
     let pool = match account.account {
-        Some(perpetuals::account::Account::Pool(pool)) => pool,
+        perpetuals::account::Account::Pool(pool) => pool,
         _ => panic!("Unexpected account state"),
     };
 
@@ -291,7 +291,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
     {
         let decrease = ixs
             .iter()
-            .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+            .find_map(|ix| match &ix.as_ref()?.instruction {
                 perpetuals::instruction::Instruction::DecreasePositionWithTpsl(s) => Some(s),
                 _ => None,
             })
@@ -371,7 +371,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
     {
         let close = ixs
             .iter()
-            .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+            .find_map(|ix| match &ix.as_ref()?.instruction {
                 perpetuals::instruction::Instruction::ClosePositionRequest2(s) => Some(s),
                 _ => None,
             })
@@ -448,7 +448,7 @@ async fn parse_borrow_from_custody_ix() {
 
     let borrow_ix = ixs
         .iter()
-        .find_map(|ix| match ix.as_ref()?.instruction.as_ref()? {
+        .find_map(|ix| match &ix.as_ref()?.instruction {
             perpetuals::instruction::Instruction::BorrowFromCustody(s) => Some(s),
             _ => None,
         })
