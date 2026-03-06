@@ -8,9 +8,46 @@ use quote::{format_ident, quote};
 ///
 /// Build the *account parser* for a program.
 ///
-/// Generates a wrapper struct with a non-Option oneof field. When the `proto`
-/// feature is enabled, a manual `prost::Message` impl is generated instead of
-/// using prost derives (which require `Option` for oneof fields).
+/// Generates a wrapper struct with a non-Option oneof field and a manual
+/// `prost::Message` impl when `proto` is enabled (prost derives require
+/// `Option` for oneof fields, so we bypass them).
+///
+/// Example output:
+///
+/// ```rust, ignore
+/// // --- wrapper struct + enum (identical shape for proto and non-proto) ---
+///
+/// #[derive(Clone, PartialEq)]          // + Debug when non-proto
+/// pub struct {ProgramName}Account {
+///     pub account: account::Account,
+/// }
+///
+/// pub mod account {
+///     #[derive(Clone, PartialEq, ::prost::Oneof)]  // or Clone, Debug, PartialEq
+///     pub enum Account {
+///         AccountA(super::AccountA),
+///         AccountB(super::AccountB),
+///         // ...
+///     }
+/// }
+///
+/// // --- proto only: manual Debug + prost::Message impls ---
+///
+/// impl Debug for {ProgramName}Account { ... }
+/// impl prost::Message for {ProgramName}Account { ... }
+///
+/// // --- try_unpack: discriminator-based deserialization ---
+///
+/// impl {ProgramName}Account {
+///     pub fn try_unpack(data: &[u8]) -> ParseResult<Self> { ... }
+/// }
+///
+/// // --- AccountParser + Parser impl + ProgramParser impl ---
+///
+/// pub struct AccountParser;
+/// impl Parser for AccountParser { ... }
+/// impl ProgramParser for AccountParser { ... }
+/// ```
 ///
 pub fn account_parser(
     program_name_camel: &CamelCaseString,

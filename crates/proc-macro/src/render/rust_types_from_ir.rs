@@ -12,7 +12,7 @@ use crate::intermediate_representation::{
 /// Generate a manual `prost::Message` impl for a oneof wrapper struct.
 ///
 /// The struct has a single non-Option field (`field_ident`) of type `mod_ident::oneof_ident`
-/// which derives `prost::Oneof`. We implement Message by delegating to the Oneof methods.
+/// which derives `prost::Oneof`. We implement Message by delegating to the Oneof methods (calling Oneof generated method using self.#field_ident).
 ///
 fn manual_prost_message_impl(
     parent_ident: &syn::Ident,
