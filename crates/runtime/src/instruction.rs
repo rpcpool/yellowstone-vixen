@@ -53,6 +53,10 @@ impl InstructionPipeline {
             }
         }
 
+        for pipe in &*self.0 {
+            pipe.handle_tx_end(txn);
+        }
+
         if let Some(h) = err {
             Err(PipelineErrors::AlreadyHandled(h))
         } else {

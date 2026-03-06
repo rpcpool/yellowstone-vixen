@@ -197,6 +197,11 @@ pub trait DynPipeline<T>: std::fmt::Debug + ParserId + GetPrefilter {
         &'h self,
         value: &'h T,
     ) -> Pin<Box<dyn Future<Output = Result<(), PipelineErrors>> + Send + 'h>>;
+
+    /// optional callback to end of transaction
+    fn handle_tx_end<'h>(&'h self, _txn: &'h TransactionUpdate) {
+        // optional
+    }
 }
 
 impl<T> DynPipeline<T> for std::convert::Infallible {
