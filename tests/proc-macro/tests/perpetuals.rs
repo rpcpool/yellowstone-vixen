@@ -374,10 +374,9 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
         let (close_accounts, close_args) = ixs
             .iter()
             .find_map(|ix| match &ix.as_ref()?.instruction {
-                perpetuals::instruction::Instruction::ClosePositionRequest2 {
-                    accounts,
-                    args,
-                } => Some((accounts, args)),
+                perpetuals::instruction::Instruction::ClosePositionRequest2 { accounts, args } => {
+                    Some((accounts, args))
+                },
                 _ => None,
             })
             .expect("no close position request 2 ix found");
