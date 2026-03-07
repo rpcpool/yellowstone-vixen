@@ -64,6 +64,125 @@ fn manual_prost_message_impl(
     }
 }
 
+///
+/// Generate a manual `prost::Oneof` impl for the `Instruction` enum with
+/// struct variants (`Swap { accounts, args }` instead of `Swap(Swap)`).
+///
+/// Each variant encodes/decodes as a nested message with `accounts` at tag 1
+/// and `args` at tag 2 — identical wire format to the wrapper struct approach.
+///
+fn manual_prost_oneof_impl(
+    oneof_ir: &OneofIr,
+    mod_ident: &syn::Ident,
+    oneof_ident: &syn::Ident,
+) -> TokenStream {
+    let encode_arms: Vec<TokenStream> = oneof_ir
+        .variants
+        .iter()
+        .map(|v| {
+            let v_ident = format_ident!("{}", v.variant_name);
+            let tag = v.tag;
+
+            quote! {
+                #mod_ident::#oneof_ident::#v_ident { accounts, args } => {
+                    let body_len =
+                        ::prost::encoding::message::encoded_len(1, accounts)
+                        + ::prost::encoding::message::encoded_len(2, args);
+
+                    ::prost::encoding::encode_key(
+                        #tag,
+                        ::prost::encoding::WireType::LengthDelimited,
+                        buf,
+                    );
+                    ::prost::encoding::encode_varint(body_len as u64, buf);
+                    ::prost::encoding::message::encode(1, accounts, buf);
+                    ::prost::encoding::message::encode(2, args, buf);
+                }
+            }
+        })
+        .collect();
+
+    let merge_arms: Vec<TokenStream> = oneof_ir
+        .variants
+        .iter()
+        .map(|v| {
+            let v_ident = format_ident!("{}", v.variant_name);
+            let msg_ident = format_ident!("{}", v.message_type);
+            let tag = v.tag;
+
+            quote! {
+                #tag => {
+                    let mut wrapper: #mod_ident::#msg_ident = match field.take() {
+                        ::core::option::Option::Some(
+                            #mod_ident::#oneof_ident::#v_ident { accounts, args }
+                        ) => #mod_ident::#msg_ident { accounts, args },
+                        _ => ::core::default::Default::default(),
+                    };
+                    ::prost::encoding::message::merge(wire_type, &mut wrapper, buf, ctx)?;
+                    *field = ::core::option::Option::Some(
+                        #mod_ident::#oneof_ident::#v_ident {
+                            accounts: wrapper.accounts,
+                            args: wrapper.args,
+                        }
+                    );
+                    ::core::result::Result::Ok(())
+                }
+            }
+        })
+        .collect();
+
+    let encoded_len_arms: Vec<TokenStream> = oneof_ir
+        .variants
+        .iter()
+        .map(|v| {
+            let v_ident = format_ident!("{}", v.variant_name);
+            let tag = v.tag;
+
+            quote! {
+                #mod_ident::#oneof_ident::#v_ident { accounts, args } => {
+                    let body_len =
+                        ::prost::encoding::message::encoded_len(1, accounts)
+                        + ::prost::encoding::message::encoded_len(2, args);
+
+                    ::prost::encoding::key_len(#tag)
+                        + ::prost::encoding::encoded_len_varint(body_len as u64)
+                        + body_len
+                }
+            }
+        })
+        .collect();
+
+    quote! {
+        impl #mod_ident::#oneof_ident {
+            pub fn encode(&self, buf: &mut impl ::prost::bytes::BufMut) {
+                match self {
+                    #(#encode_arms,)*
+                }
+            }
+
+            pub fn merge(
+                field: &mut ::core::option::Option<Self>,
+                tag: u32,
+                wire_type: ::prost::encoding::WireType,
+                buf: &mut impl ::prost::bytes::Buf,
+                ctx: ::prost::encoding::DecodeContext,
+            ) -> ::core::result::Result<(), ::prost::DecodeError> {
+                match tag {
+                    #(#merge_arms,)*
+                    _ => unreachable!(concat!("invalid ", stringify!(#oneof_ident), " tag: {}"), tag),
+                }
+            }
+
+            #[inline]
+            pub fn encoded_len(&self) -> usize {
+                match self {
+                    #(#encoded_len_arms,)*
+                }
+            }
+        }
+    }
+}
+
 pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::SchemaIr) -> TokenStream {
     let mut out = TokenStream::new();
 
@@ -167,37 +286,33 @@ fn render_instruction_dispatch(
     let oneof_ident = format_ident!("Instruction");
     let field_ident = format_ident!("{}", oneof_ir.field_name);
 
-    // Render instruction types inside the module
+    // Render instruction types inside the module (wrapper structs still exist
+    // for proto merge decoding and for users who want them).
     let module_types: Vec<TokenStream> = ix_types
         .iter()
         .map(|t| render_struct_type(t, Some(local_names)))
         .collect();
 
+    // Struct variants: `Swap { accounts: SwapAccounts, args: SwapArgs }`
     let variants = oneof_ir.variants.iter().map(|v| {
         let v_ident = format_ident!("{}", v.variant_name);
-        let msg_ident = format_ident!("{}", v.message_type);
-        let tag = v.tag;
+        let accounts_ident = format_ident!("{}Accounts", v.message_type);
+        let args_ident = format_ident!("{}Args", v.message_type);
 
-        if cfg!(feature = "proto") {
-            quote! {
-                #[prost(message, tag = #tag)]
-                #v_ident(#msg_ident)
-            }
-        } else {
-            quote! {
-                #v_ident(#msg_ident)
-            }
+        quote! {
+            #v_ident { accounts: #accounts_ident, args: #args_ident }
         }
     });
 
     let borsh_serialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
         let disc = i as u8;
         let v_ident = format_ident!("{}", v.variant_name);
+        let msg_ident = format_ident!("{}", v.message_type);
 
         quote! {
-            #mod_ident::#oneof_ident::#v_ident(v) => {
+            #mod_ident::#oneof_ident::#v_ident { accounts, args } => {
                 ::borsh::BorshSerialize::serialize(&#disc, writer)?;
-                ::borsh::BorshSerialize::serialize(v, writer)
+                ::borsh::BorshSerialize::serialize(&(#mod_ident::#msg_ident { accounts: accounts.clone(), args: args.clone() }), writer)
             }
         }
     });
@@ -205,37 +320,37 @@ fn render_instruction_dispatch(
     let borsh_deserialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
         let disc = i as u8;
         let v_ident = format_ident!("{}", v.variant_name);
+        let msg_ident = format_ident!("{}", v.message_type);
 
         quote! {
             #disc => {
-                let v = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
+                let v: #mod_ident::#msg_ident = ::borsh::BorshDeserialize::deserialize_reader(reader)?;
 
-                #mod_ident::#oneof_ident::#v_ident(v)
+                #mod_ident::#oneof_ident::#v_ident { accounts: v.accounts, args: v.args }
             }
         }
     });
 
-    let enum_derive = if cfg!(feature = "proto") {
-        quote! { #[derive(Clone, PartialEq, ::prost::Oneof)] }
-    } else {
-        quote! { #[derive(Clone, Debug, PartialEq)] }
-    };
-
     let proto_impls = if cfg!(feature = "proto") {
-        manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident)
+        let oneof_impl = manual_prost_oneof_impl(oneof_ir, &mod_ident, &oneof_ident);
+        let message_impl =
+            manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident);
+        quote! { #oneof_impl #message_impl }
     } else {
         quote! {}
     };
 
-    let debug_derive = if cfg!(feature = "proto") {
-        // Debug is provided by the manual impl above
+    // For the parent `Instructions` struct, Debug is manual in proto mode
+    // (provided by manual_prost_message_impl). For the `Instruction` enum
+    // we always derive Debug since struct variants don't use prost::Oneof.
+    let parent_debug_derive = if cfg!(feature = "proto") {
         quote! {}
     } else {
         quote! { Debug, }
     };
 
     quote! {
-        #[derive(Clone, #debug_derive PartialEq)]
+        #[derive(Clone, #parent_debug_derive PartialEq)]
         pub struct #parent_ident {
             pub #field_ident: #mod_ident::#oneof_ident,
         }
@@ -243,7 +358,7 @@ fn render_instruction_dispatch(
         pub mod #mod_ident {
             #(#module_types)*
 
-            #enum_derive
+            #[derive(Clone, Debug, PartialEq)]
             pub enum #oneof_ident {
                 #(#variants),*
             }

@@ -22,10 +22,10 @@ async fn parse_sell_ix() {
         &parser
     );
 
-    let sell = ixs
+    let (sell_accounts, sell_args) = ixs
         .iter()
         .find_map(|ix| match &ix.as_ref()?.instruction {
-            pump_fun::instruction::Instruction::Sell(s) => Some(s),
+            pump_fun::instruction::Instruction::Sell { accounts, args } => Some((accounts, args)),
             _ => None,
         })
         .expect("no Sell found");
@@ -93,7 +93,8 @@ async fn parse_sell_ix() {
         },
     };
 
-    assert_eq!(sell, &expected);
+    assert_eq!(sell_accounts, &expected.accounts);
+    assert_eq!(sell_args, &expected.args);
 }
 
 #[tokio::test]
@@ -105,10 +106,10 @@ async fn parse_buy_ix() {
         &parser
     );
 
-    let buy = ixs
+    let (buy_accounts, buy_args) = ixs
         .iter()
         .find_map(|ix| match &ix.as_ref()?.instruction {
-            pump_fun::instruction::Instruction::Buy(b) => Some(b),
+            pump_fun::instruction::Instruction::Buy { accounts, args } => Some((accounts, args)),
             _ => None,
         })
         .expect("no Buy found");
@@ -185,5 +186,6 @@ async fn parse_buy_ix() {
         },
     };
 
-    assert_eq!(buy, &expected);
+    assert_eq!(buy_accounts, &expected.accounts);
+    assert_eq!(buy_args, &expected.args);
 }

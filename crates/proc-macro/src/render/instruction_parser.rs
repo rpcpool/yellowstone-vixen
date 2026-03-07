@@ -213,12 +213,10 @@ fn extract_discriminator_info(
 ///     data: &[u8],
 /// ) -> ParseResult<Instructions> {
 ///     Ok(Instructions {
-///         instruction: Some(instruction::Instruction::SwapBaseIn(
-///             instruction::SwapBaseIn {
-///                 accounts: Some(instruction::SwapBaseInAccounts { ... }),
-///                 args: Some(<instruction::SwapBaseInArgs as BorshDeserialize>::try_from_slice(...)?),
-///             }
-///         )),
+///         instruction: instruction::Instruction::SwapBaseIn {
+///             accounts: instruction::SwapBaseInAccounts { ... },
+///             args: <instruction::SwapBaseInArgs as BorshDeserialize>::try_from_slice(...)?,
+///         },
 ///     })
 /// }
 /// ```
@@ -231,7 +229,6 @@ fn single_instruction_helper_fn(
     let ix_name_snake = crate::utils::to_snake_case(&instruction.name);
 
     let variant_ident = format_ident!("{}", ix_name_pascal);
-    let payload_ident = format_ident!("{}", ix_name_pascal);
     let accounts_ident = format_ident!("{}Accounts", ix_name_pascal);
     let args_ident = format_ident!("{}Args", ix_name_pascal);
     let fn_ident = format_ident!("parse_{}", ix_name_snake);
@@ -274,12 +271,10 @@ fn single_instruction_helper_fn(
             data: &[u8],
         ) -> ParseResult<#wrapper_ident> {
             Ok(#wrapper_ident {
-                instruction: instruction::Instruction::#variant_ident(
-                    instruction::#payload_ident {
-                        accounts: #accounts_value,
-                        #args_field
-                    }
-                ),
+                instruction: instruction::Instruction::#variant_ident {
+                    accounts: #accounts_value,
+                    #args_field
+                },
             })
         }
     })

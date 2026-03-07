@@ -287,10 +287,13 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
     );
 
     {
-        let decrease = ixs
+        let (decrease_accounts, decrease_args) = ixs
             .iter()
             .find_map(|ix| match &ix.as_ref()?.instruction {
-                perpetuals::instruction::Instruction::DecreasePositionWithTpsl(s) => Some(s),
+                perpetuals::instruction::Instruction::DecreasePositionWithTpsl {
+                    accounts,
+                    args,
+                } => Some((accounts, args)),
                 _ => None,
             })
             .expect("no decrease position ix found");
@@ -363,14 +366,18 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
             args: perpetuals::instruction::DecreasePositionWithTpslArgs {},
         };
 
-        assert_eq!(decrease, &expected);
+        assert_eq!(decrease_accounts, &expected.accounts);
+        assert_eq!(decrease_args, &expected.args);
     }
 
     {
-        let close = ixs
+        let (close_accounts, close_args) = ixs
             .iter()
             .find_map(|ix| match &ix.as_ref()?.instruction {
-                perpetuals::instruction::Instruction::ClosePositionRequest2(s) => Some(s),
+                perpetuals::instruction::Instruction::ClosePositionRequest2 {
+                    accounts,
+                    args,
+                } => Some((accounts, args)),
                 _ => None,
             })
             .expect("no close position request 2 ix found");
@@ -431,7 +438,8 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
             args: perpetuals::instruction::ClosePositionRequest2Args {},
         };
 
-        assert_eq!(close, &expected);
+        assert_eq!(close_accounts, &expected.accounts);
+        assert_eq!(close_args, &expected.args);
     }
 }
 
@@ -444,10 +452,12 @@ async fn parse_borrow_from_custody_ix() {
         &parser
     );
 
-    let borrow_ix = ixs
+    let (borrow_accounts, borrow_args) = ixs
         .iter()
         .find_map(|ix| match &ix.as_ref()?.instruction {
-            perpetuals::instruction::Instruction::BorrowFromCustody(s) => Some(s),
+            perpetuals::instruction::Instruction::BorrowFromCustody { accounts, args } => {
+                Some((accounts, args))
+            },
             _ => None,
         })
         .expect("no borrow from custody ix found");
@@ -552,5 +562,6 @@ async fn parse_borrow_from_custody_ix() {
         },
     };
 
-    assert_eq!(borrow_ix, &expected);
+    assert_eq!(borrow_accounts, &expected.accounts);
+    assert_eq!(borrow_args, &expected.args);
 }
