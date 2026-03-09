@@ -1,6 +1,7 @@
 //! Helpers for parsing transaction updates into instructions.
 
 use std::{collections::VecDeque, fmt::Debug, sync::Arc};
+use solana_signature::Signature;
 use tracing::info;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
@@ -469,7 +470,8 @@ impl<'a> Iterator for VisitAll<'a> {
                 let Some(ix) = d.back_mut()?.next() else {
                     for foo in d.iter() {
                         for bar in foo.as_slice() {
-                            info!("- returning from {:?}", bar.path);
+                            let sig = Signature::try_from(bar.shared.signature.as_slice()).unwrap();
+                            info!("- returning from {:?} - tx {}", bar.path, sig);
                         }
                     }
                     let popped = d.pop_back().unwrap_or_else(|| unreachable!());

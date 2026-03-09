@@ -13753,6 +13753,7 @@ dependencies = [
  "bs58",
  "clap 4.5.53",
  "serde",
+ "solana-signature 3.1.0",
  "thiserror 1.0.69",
  "tracing",
  "yellowstone-grpc-proto",
