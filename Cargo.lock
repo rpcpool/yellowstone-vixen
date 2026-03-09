@@ -13754,6 +13754,7 @@ dependencies = [
  "clap 4.5.53",
  "serde",
  "thiserror 1.0.69",
+ "tracing",
  "yellowstone-grpc-proto",
  "yellowstone-vixen-proto",
 ]

@@ -16,6 +16,7 @@ yellowstone-vixen-proto = { workspace = true, optional = true }
 borsh = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
+tracing = { workspace = true }
 
 [features]
 proto = ["dep:yellowstone-vixen-proto"]

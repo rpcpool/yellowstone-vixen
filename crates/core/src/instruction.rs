@@ -1,7 +1,7 @@
 //! Helpers for parsing transaction updates into instructions.
 
 use std::{collections::VecDeque, fmt::Debug, sync::Arc};
-
+use tracing::info;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     prelude::MessageHeader,
@@ -10,7 +10,6 @@ use yellowstone_grpc_proto::{
         Transaction, TransactionError, TransactionStatusMeta,
     },
 };
-
 use crate::{Pubkey, TransactionUpdate};
 
 /// Errors that can occur when parsing a transaction update into instructions.
@@ -468,7 +467,8 @@ impl<'a> Iterator for VisitAll<'a> {
             },
             VisitAllState::Started(d) => loop {
                 let Some(ix) = d.back_mut()?.next() else {
-                    let _ = d.pop_back().unwrap_or_else(|| unreachable!());
+                    let popped = d.pop_back().unwrap_or_else(|| unreachable!());
+                    info!("finished visiting instruction {}", popped.count());
                     continue;
                 };
                 d.push_back(ix.inner.iter());
