@@ -467,7 +467,11 @@ impl<'a> Iterator for VisitAll<'a> {
             },
             VisitAllState::Started(d) => loop {
                 let Some(ix) = d.back_mut()?.next() else {
-                    info!("finished visiting instruction {}", d.len());
+                    for foo in d.iter() {
+                        for bar in foo.as_slice() {
+                            info!("- returning from {:?}", bar.path);
+                        }
+                    }
                     let popped = d.pop_back().unwrap_or_else(|| unreachable!());
                     continue;
                 };
