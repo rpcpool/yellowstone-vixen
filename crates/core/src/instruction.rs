@@ -462,7 +462,7 @@ impl<'a> Iterator for VisitAll<'a> {
         match &mut self.0 {
             &mut VisitAllState::Init(i) => {
                 let mut d = VecDeque::new();
-                d.push_back((i.inner.iter(), Path::new_single(0))); // TODO check
+                d.push_back((i.inner.iter(), i.path.clone())); // TODO check
                 self.0 = VisitAllState::Started(d);
                 Some(i)
             },
@@ -476,7 +476,7 @@ impl<'a> Iterator for VisitAll<'a> {
                     info!("Finished visiting instruction at path {:?}", last_path);
                     continue;
                 };
-                d.push_back((ix.inner.iter(), last_path)); // TODO check
+                d.push_back((ix.inner.iter(), ix.path.clone())); // TODO check
                 break Some(ix);
             },
         }
