@@ -467,8 +467,8 @@ impl<'a> Iterator for VisitAll<'a> {
             },
             VisitAllState::Started(d) => loop {
                 let Some(ix) = d.back_mut()?.next() else {
+                    info!("finished visiting instruction {}", d.len());
                     let popped = d.pop_back().unwrap_or_else(|| unreachable!());
-                    info!("finished visiting instruction {}", popped.count());
                     continue;
                 };
                 d.push_back(ix.inner.iter());
