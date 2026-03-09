@@ -2,50 +2,52 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use codama_nodes::{
     CamelCaseString, DiscriminatorNode, NestedTypeNode, Number, TypeNode, ValueNode,
 };
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::LitStr;
 
 ///
 /// Build the *account parser* for a program.
 ///
-/// Generates a wrapper struct with a oneof field. When the `proto` feature is
-/// enabled, prost attributes are emitted directly; otherwise plain Rust types
-/// are generated.
+/// Generates a wrapper struct with a non-Option oneof field and a manual
+/// `prost::Message` impl when `proto` is enabled. prost derives require
+/// `Option` for oneof fields, so we bypass them by implementing `Message`
+/// manually.
 ///
-/// With `proto` feature:
+/// Example output:
+///
 /// ```rust, ignore
-/// #[derive(Clone, PartialEq, ::prost::Message)]
+/// // --- wrapper struct + enum (identical shape for proto and non-proto) ---
+///
+/// #[derive(Clone, PartialEq)]          // + Debug when non-proto
 /// pub struct {ProgramName}Account {
-///     #[prost(oneof = "account::Account", tags = "1, 2, 3")]
-///     pub account: Option<account::Account>,
+///     pub account: account::Account,
 /// }
 ///
 /// pub mod account {
-///     #[derive(Clone, PartialEq, ::prost::Oneof)]
-///     pub enum Account {
-///         #[prost(message, tag = 1)]
-///         AccountA(super::AccountA),
-///         #[prost(message, tag = 2)]
-///         AccountB(super::AccountB),
-///     }
-/// }
-/// ```
-///
-/// Without `proto` feature:
-/// ```rust, ignore
-/// #[derive(Clone, Debug, PartialEq)]
-/// pub struct {ProgramName}Account {
-///     pub account: Option<account::Account>,
-/// }
-///
-/// pub mod account {
-///     #[derive(Clone, Debug, PartialEq)]
+///     #[derive(Clone, PartialEq, ::prost::Oneof)]  // or Clone, Debug, PartialEq
 ///     pub enum Account {
 ///         AccountA(super::AccountA),
 ///         AccountB(super::AccountB),
+///         // ...
 ///     }
 /// }
+///
+/// // --- proto only: manual Debug + prost::Message impls ---
+///
+/// impl Debug for {ProgramName}Account { ... }
+/// impl prost::Message for {ProgramName}Account { ... }
+///
+/// // --- try_unpack: discriminator-based deserialization ---
+///
+/// impl {ProgramName}Account {
+///     pub fn try_unpack(data: &[u8]) -> ParseResult<Self> { ... }
+/// }
+///
+/// // --- AccountParser + Parser impl + ProgramParser impl ---
+///
+/// pub struct AccountParser;
+/// impl Parser for AccountParser { ... }
+/// impl ProgramParser for AccountParser { ... }
 /// ```
 ///
 pub fn account_parser(
@@ -58,22 +60,9 @@ pub fn account_parser(
 
     let account_mod_ident = format_ident!("account");
 
-    // prost oneof attribute requires a string literal like "account::Account"
-    let oneof_path_lit = LitStr::new("account::Account", Span::call_site());
-
     let parser_id = format!("{}::AccountParser", program_name);
 
     let parser_error_msg = format!("Unknown account for program {}", program_name);
-
-    // Generate tags list string for prost oneof attribute
-    let tags_lit = {
-        let tags_list = (1..=accounts.len())
-            .map(|t| t.to_string())
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        LitStr::new(&tags_list, Span::call_site())
-    };
 
     let oneof_variants = accounts.iter().enumerate().map(|(i, account)| {
         let tag = (i + 1) as u32;
@@ -124,7 +113,7 @@ pub fn account_parser(
                             match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[..]) {
                                 Ok(parsed) => {
                                     return Ok(#account_struct_ident {
-                                        account: Some(#account_mod_ident::Account::#account_ident(parsed))
+                                        account: #account_mod_ident::Account::#account_ident(parsed),
                                     });
                                 }
                                 Err(e) => {
@@ -202,7 +191,7 @@ pub fn account_parser(
                             match <#account_ident as ::borsh::BorshDeserialize>::deserialize(&mut &data[#end..]) {
                                 Ok(parsed) => {
                                     return Ok(#account_struct_ident {
-                                        account: Some(#account_mod_ident::Account::#account_ident(parsed))
+                                        account: #account_mod_ident::Account::#account_ident(parsed),
                                     });
                                 }
                                 Err(e) => {
@@ -240,10 +229,8 @@ pub fn account_parser(
         })
     });
 
-    let struct_and_mod = if accounts.is_empty() {
-        // When there are no accounts, prost cannot handle an empty `tags = ""` attribute,
-        // so we emit a plain struct with no prost oneof.
-        if cfg!(feature = "proto") {
+    let (struct_and_mod, proto_impls) = if accounts.is_empty() {
+        let empty_struct = if cfg!(feature = "proto") {
             quote! {
                 /// Wrapper struct for program accounts (no accounts defined).
                 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -255,42 +242,93 @@ pub fn account_parser(
                 #[derive(Clone, Debug, PartialEq)]
                 pub struct #account_struct_ident {}
             }
-        }
-    } else if cfg!(feature = "proto") {
-        quote! {
-            /// Wrapper struct for program accounts.
-            #[derive(Clone, PartialEq, ::prost::Message)]
-            pub struct #account_struct_ident {
-                #[prost(oneof = #oneof_path_lit, tags = #tags_lit)]
-                pub account: ::core::option::Option<#account_mod_ident::Account>,
-            }
+        };
 
-            pub mod #account_mod_ident {
-                #[derive(Clone, PartialEq, ::prost::Oneof)]
-                pub enum Account {
-                    #(#oneof_variants),*
-                }
-            }
-        }
+        (empty_struct, quote! {})
     } else {
-        quote! {
+        let enum_derive = if cfg!(feature = "proto") {
+            quote! { #[derive(Clone, PartialEq, ::prost::Oneof)] }
+        } else {
+            quote! { #[derive(Clone, Debug, PartialEq)] }
+        };
+
+        let debug_derive = if cfg!(feature = "proto") {
+            quote! {}
+        } else {
+            quote! { Debug, }
+        };
+
+        let s = quote! {
             /// Wrapper struct for program accounts.
-            #[derive(Clone, Debug, PartialEq)]
+            #[derive(Clone, #debug_derive PartialEq)]
             pub struct #account_struct_ident {
-                pub account: ::core::option::Option<#account_mod_ident::Account>,
+                pub account: #account_mod_ident::Account,
             }
 
             pub mod #account_mod_ident {
-                #[derive(Clone, Debug, PartialEq)]
+                #enum_derive
                 pub enum Account {
                     #(#oneof_variants),*
                 }
             }
-        }
+        };
+
+        let p = if cfg!(feature = "proto") {
+            let account_field = format_ident!("account");
+            let account_enum = format_ident!("Account");
+
+            quote! {
+                impl ::core::fmt::Debug for #account_struct_ident {
+                    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                        f.debug_struct(stringify!(#account_struct_ident))
+                            .field("account", &self.account)
+                            .finish()
+                    }
+                }
+
+                impl ::prost::Message for #account_struct_ident {
+                    fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
+                        self.#account_field.encode(buf);
+                    }
+
+                    fn merge_field(
+                        &mut self,
+                        tag: u32,
+                        wire_type: ::prost::encoding::WireType,
+                        buf: &mut impl ::prost::bytes::Buf,
+                        ctx: ::prost::encoding::DecodeContext,
+                    ) -> ::core::result::Result<(), ::prost::DecodeError> {
+                        // Oneof::merge() requires `&mut Option<Self>`, so we wrap our non-Option
+                        // field into Some, call merge, then unwrap back.
+                        let mut opt = ::core::option::Option::Some(self.#account_field.clone());
+
+                        #account_mod_ident::#account_enum::merge(&mut opt, tag, wire_type, buf, ctx)?;
+
+                        if let ::core::option::Option::Some(v) = opt {
+                            self.#account_field = v;
+                        }
+
+                        ::core::result::Result::Ok(())
+                    }
+
+                    fn encoded_len(&self) -> usize {
+                        self.#account_field.encoded_len()
+                    }
+
+                    fn clear(&mut self) {}
+                }
+            }
+        } else {
+            quote! {}
+        };
+
+        (s, p)
     };
 
     quote! {
         #struct_and_mod
+
+        #proto_impls
 
         impl #account_struct_ident {
             pub fn try_unpack(data: &[u8]) -> ParseResult<Self> {
@@ -308,6 +346,7 @@ pub fn account_parser(
                 #(#account_matches)*
 
                 println!("[try_unpack] pubkey={}, no discriminator matched, returning error", pubkey_str);
+
                 Err(ParseError::from(#parser_error_msg.to_owned()))
             }
         }
