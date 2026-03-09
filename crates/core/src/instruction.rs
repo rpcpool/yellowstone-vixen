@@ -444,6 +444,8 @@ pub trait HasInner {
     /// Returns the child nodes of this node.
     fn inner_iter(&self) -> std::slice::Iter<Self>
     where Self: Sized;
+
+    fn is_leaf(&self) -> bool;
 }
 
 pub trait DebugNode {
@@ -455,7 +457,9 @@ impl HasInner for InstructionUpdate {
     #[inline]
     fn inner_iter(&self) -> std::slice::Iter<Self> { self.inner.iter() }
 
-    // fn debug_node(&self) -> String;
+    #[inline]
+    fn is_leaf(&self) -> bool { self.inner.is_empty() }
+
 }
 
 impl DebugNode for InstructionUpdate {
@@ -503,15 +507,27 @@ impl<'a, T: HasInner + DebugNode> Iterator for VisitAll<'a, T> {
                 Some(i)
             },
             VisitAllState::Started(d) => loop {
-                let (last, last_ix) = d.back_mut()?;
+                let (last, invoking_node) = d.back_mut()?;
+                let invoking_node_is_leaf = invoking_node.is_leaf();
+                let invoking_node = invoking_node.debug_node();
                 // let _last_path = last.1.clone(); // same as popped
                 // let sig = last.3.clone();
                 // let Some(ix) = last.0.next() else {
                 let Some(ix) = last.next() else {
+                    if ! invoking_node_is_leaf {
+                        println!("Return from CPI calls to {:?}", invoking_node);
+                    }
                     let popped = d.pop_back().unwrap_or_else(|| unreachable!());
-                    if let Some((_, this_node,)) = d.back() {
+                    if let Some((_, this_node)) = d.back() {
                         // let this_path = this_node.1.clone();
-                        println!("Finished visiting instruction: {:?}", this_node.debug_node());
+                        if !popped.1.is_leaf() {
+                            // println!("Finished visiting instruction: {:?}", this_node.debug_node());
+                            // println!("Finished visiting instruction popped {:?}", popped.1.debug_node());
+                        } else {
+                            // println!("Finished visiting leaf instruction: {:?}", this_node.debug_node());
+                            // println!("Finished visiting leaf instruction popped {:?}", popped.1.debug_node());
+                        }
+
                         // if !popped.2 {
                         //     // not a leaf
                         //     info!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
