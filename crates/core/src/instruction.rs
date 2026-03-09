@@ -447,7 +447,7 @@ pub struct VisitAll<'a>(VisitAllState<'a>);
 #[derive(Debug)]
 enum VisitAllState<'a> {
     Init(&'a InstructionUpdate),
-    Started(VecDeque<(std::slice::Iter<'a, InstructionUpdate>, Path)>),
+    Started(VecDeque<(std::slice::Iter<'a, InstructionUpdate>, Path, Signature)>),
 }
 
 impl<'a> VisitAll<'a> {
@@ -461,8 +461,11 @@ impl<'a> Iterator for VisitAll<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.0 {
             &mut VisitAllState::Init(i) => {
+
+                let sig = Signature::try_from(i.shared.signature.as_slice()).unwrap();
+
                 let mut d = VecDeque::new();
-                d.push_back((i.inner.iter(), i.path.clone())); // TODO check
+                d.push_back((i.inner.iter(), i.path.clone(), sig)); // TODO check
                 self.0 = VisitAllState::Started(d);
                 Some(i)
             },
@@ -470,13 +473,13 @@ impl<'a> Iterator for VisitAll<'a> {
                 // need to keep the path for "d.back_mut()"
                 let last = d.back_mut()?;
                 let last_path = last.1.clone();
+                let sig = last.2.clone();
                 let Some(ix) = last.0.next() else {
-                    let last_path = d.back().map(|last| last.1.clone());
                     let _popped = d.pop_back().unwrap_or_else(|| unreachable!());
-                    info!("Finished visiting instruction at path {:?}", last_path);
+                    info!("Finished visiting instruction at path {:?} - tx {}", last_path, sig);
                     continue;
                 };
-                d.push_back((ix.inner.iter(), ix.path.clone())); // TODO check
+                d.push_back((ix.inner.iter(), ix.path.clone(), sig)); // TODO check
                 break Some(ix);
             },
         }
