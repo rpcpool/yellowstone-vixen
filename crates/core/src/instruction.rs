@@ -439,8 +439,13 @@ impl InstructionUpdate {
     pub fn visit_all(&self) -> VisitAll<'_, Self> { VisitAll::new(self) }
 }
 
+// #[derive(Debug)]
+// pub enum Foobar {
+//     InstructionUp(InstructionUpdate),
+// }
+
 /// Trait for tree nodes that have children of the same type.
-pub trait HasInner {
+pub trait Node {
     /// Returns the child nodes of this node.
     fn inner_iter(&self) -> std::slice::Iter<Self>
     where Self: Sized;
@@ -453,7 +458,7 @@ pub trait DebugNode {
     fn debug_node(&self) -> String;
 }
 
-impl HasInner for InstructionUpdate {
+impl Node for InstructionUpdate {
     #[inline]
     fn inner_iter(&self) -> std::slice::Iter<Self> { self.inner.iter() }
 
@@ -473,40 +478,40 @@ impl DebugNode for InstructionUpdate {
     }
 }
 
-/// A depth-first iterator over a tree of [`HasInner`] nodes.
+/// A depth-first iterator over a tree of [`Node`] nodes.
 ///
 /// Yields the root node first, then recursively visits all children.
 #[derive(Debug)]
 #[must_use = "This type does nothing unless iterated"]
-pub struct VisitAll<'a, T: HasInner + DebugNode>(VisitAllState<'a, T>);
+pub struct VisitAll<'a, T: Node + DebugNode>(VisitAllState<'a, T>);
 
 #[derive(Debug)]
-enum VisitAllState<'a, T: HasInner + DebugNode> {
+enum VisitAllState<'a, T: Node + DebugNode> {
     Init(&'a T),
     Started(VecDeque<(std::slice::Iter<'a, T>, &'a T)>),
 }
 
-impl<'a, T: HasInner + DebugNode> VisitAll<'a, T> {
+impl<'a, T: Node + DebugNode> VisitAll<'a, T> {
     #[inline]
     fn new(root: &'a T) -> Self { Self(VisitAllState::Init(root)) }
 }
 
-impl<'a, T: HasInner + DebugNode> Iterator for VisitAll<'a, T> {
+impl<'a, T: Node + DebugNode> Iterator for VisitAll<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.0 {
-            &mut VisitAllState::Init(i) => {
+            &mut VisitAllState::Init(ix) => {
 
                 // let sig = Signature::try_from(i.shared.signature.as_slice()).unwrap();
 
                 let mut d = VecDeque::new();
                 // d.push_back((i.inner.iter(), i.path.clone(), i.inner.is_empty(), sig)); // TODO check
-                d.push_back((i.inner_iter(), i));
+                d.push_back((ix.inner_iter(), ix));
                 self.0 = VisitAllState::Started(d);
-                Some(i)
-            },
-            VisitAllState::Started(d) => loop {
+                Some(ix)
+            }
+            VisitAllState::Started(d) => 'walk_up: loop {
                 let (last, invoking_node) = d.back_mut()?;
                 let invoking_node_is_leaf = invoking_node.is_leaf();
                 let invoking_node = invoking_node.debug_node();
@@ -514,28 +519,13 @@ impl<'a, T: HasInner + DebugNode> Iterator for VisitAll<'a, T> {
                 // let sig = last.3.clone();
                 // let Some(ix) = last.0.next() else {
                 let Some(ix) = last.next() else {
-                    if ! invoking_node_is_leaf {
+                    if !invoking_node_is_leaf {
                         println!("Return from CPI calls to {:?}", invoking_node);
                     }
-                    let popped = d.pop_back().unwrap_or_else(|| unreachable!());
-                    if let Some((_, this_node)) = d.back() {
-                        // let this_path = this_node.1.clone();
-                        if !popped.1.is_leaf() {
-                            // println!("Finished visiting instruction: {:?}", this_node.debug_node());
-                            // println!("Finished visiting instruction popped {:?}", popped.1.debug_node());
-                        } else {
-                            // println!("Finished visiting leaf instruction: {:?}", this_node.debug_node());
-                            // println!("Finished visiting leaf instruction popped {:?}", popped.1.debug_node());
-                        }
 
-                        // if !popped.2 {
-                        //     // not a leaf
-                        //     info!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
-                        //     println!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
-                        // }
-                    }
+                    let _ = d.pop_back().unwrap_or_else(|| unreachable!());
 
-                    continue;
+                    continue 'walk_up;
                 };
                 d.push_back((ix.inner_iter(), ix));
                 break Some(ix);
