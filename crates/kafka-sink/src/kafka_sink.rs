@@ -198,6 +198,7 @@ impl TransactionSlotSink {
             record_count,
             "Kafka: committed instruction slot"
         );
+
         Ok(())
     }
 }
