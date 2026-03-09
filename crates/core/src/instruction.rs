@@ -468,11 +468,14 @@ impl<'a> Iterator for VisitAll<'a> {
             },
             VisitAllState::Started(d) => loop {
                 let Some(ix) = d.back_mut()?.next() else {
-                    let popped = d.pop_back().unwrap_or_else(|| unreachable!());
-                    for bar in popped.as_slice() {
-                        let sig = Signature::try_from(bar.shared.signature.as_slice()).unwrap();
-                        info!("- returning from {:?} - tx {}", bar.path, sig);
+                    for foo in d.into_iter() {
+                        for bar in foo.into_iter().skip(1) {
+                            let sig = Signature::try_from(bar.shared.signature.as_slice()).unwrap();
+                            info!("- returning from {:?} - tx {}", bar.path, sig);
+                        }
                     }
+                    let popped = d.pop_back().unwrap_or_else(|| unreachable!());
+                    info!("- popped stack frame with {} instructions", popped.len());
                     continue;
                 };
                 d.push_back(ix.inner.iter());
