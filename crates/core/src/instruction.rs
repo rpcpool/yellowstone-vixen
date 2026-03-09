@@ -468,13 +468,15 @@ impl<'a> Iterator for VisitAll<'a> {
             },
             VisitAllState::Started(d) => loop {
                 // need to keep the path for "d.back_mut()"
-                let Some(ix) = d.back_mut()?.0.next() else {
+                let last = d.back_mut()?;
+                let last_path = last.1.clone();
+                let Some(ix) = last.0.next() else {
                     let last_path = d.back().map(|last| last.1.clone());
                     let _popped = d.pop_back().unwrap_or_else(|| unreachable!());
                     info!("Finished visiting instruction at path {:?}", last_path);
                     continue;
                 };
-                d.push_back((ix.inner.iter(), Path::new_single(0))); // TODO check
+                d.push_back((ix.inner.iter(), last_path)); // TODO check
                 break Some(ix);
             },
         }
