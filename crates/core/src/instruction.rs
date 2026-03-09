@@ -447,7 +447,8 @@ pub struct VisitAll<'a>(VisitAllState<'a>);
 #[derive(Debug)]
 enum VisitAllState<'a> {
     Init(&'a InstructionUpdate),
-    Started(VecDeque<(std::slice::Iter<'a, InstructionUpdate>, Path, Signature)>),
+    // ins, ix_path, is_leaf, tx sig
+    Started(VecDeque<(std::slice::Iter<'a, InstructionUpdate>, Path, bool, Signature)>),
 }
 
 impl<'a> VisitAll<'a> {
@@ -465,21 +466,29 @@ impl<'a> Iterator for VisitAll<'a> {
                 let sig = Signature::try_from(i.shared.signature.as_slice()).unwrap();
 
                 let mut d = VecDeque::new();
-                d.push_back((i.inner.iter(), i.path.clone(), sig)); // TODO check
+                d.push_back((i.inner.iter(), i.path.clone(), i.inner.is_empty(), sig)); // TODO check
                 self.0 = VisitAllState::Started(d);
                 Some(i)
             },
             VisitAllState::Started(d) => loop {
-                // need to keep the path for "d.back_mut()"
                 let last = d.back_mut()?;
-                let last_path = last.1.clone();
-                let sig = last.2.clone();
+                let _last_path = last.1.clone(); // same as popped
+                let sig = last.3.clone();
                 let Some(ix) = last.0.next() else {
-                    let _popped = d.pop_back().unwrap_or_else(|| unreachable!());
-                    info!("Finished visiting instruction at path {:?} - tx {}", last_path, sig);
+                    let popped = d.pop_back().unwrap_or_else(|| unreachable!());
+                    if let Some(this_node) = d.back() {
+                        let this_path = this_node.1.clone();
+                        if !popped.2 {
+                            // not a leaf
+                            info!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
+                            println!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
+                        }
+                    }
+
                     continue;
                 };
-                d.push_back((ix.inner.iter(), ix.path.clone(), sig)); // TODO check
+                d.push_back((ix.inner.iter(), ix.path.clone(), ix.inner.is_empty(), sig)); // TODO check
+                println!("Visiting instruction at path {:?} - tx {}", ix.path, sig);
                 break Some(ix);
             },
         }
