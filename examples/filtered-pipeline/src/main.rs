@@ -10,6 +10,7 @@
 use std::{path::PathBuf, str::FromStr};
 
 use clap::Parser;
+use solana_signature::Signature;
 use yellowstone_vixen::{
     self as vixen,
     filter_pipeline::FilterPipeline,
@@ -30,7 +31,10 @@ pub struct Logger;
 
 impl<V: std::fmt::Debug + Sync> vixen::Handler<V, InstructionUpdate> for Logger {
     async fn handle(&self, value: &V, input: &InstructionUpdate) -> vixen::HandlerResult<()> {
-        println!("ix {:?} - {value:?}", input.path);
+        // TODO
+        // println!("ix {:?} - {value:?}", input.path);
+        let sig = Signature::try_from(input.shared.signature.as_slice()).unwrap();
+        println!("ix {:?} tx {}", input.path, sig);
         Ok(())
     }
 }

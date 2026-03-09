@@ -491,6 +491,8 @@ pub enum Thing<'a, T: Node + DebugNode> {
     // instruction returned to consumer
     PhysicalNode(&'a T),
     // pseudo object representing return from CPI calls to a node
+    // TODO replace string which is only a placeholder
+    ReturnFromCpiCallsToNode(String),
 }
 
 impl<'a, T: Node + DebugNode> VisitAll<'a, T> {
@@ -521,13 +523,15 @@ impl<'a, T: Node + DebugNode> Iterator for VisitAll<'a, T> {
                 // let sig = last.3.clone();
                 // let Some(ix) = last.0.next() else {
                 let Some(ix) = last.next() else {
-                    if !invoking_node_is_leaf {
-                        println!("Return from CPI calls to {:?}", invoking_node);
-                    }
-
                     let _ = d.pop_back().unwrap_or_else(|| unreachable!());
 
-                    continue 'walk_up;
+                    if !invoking_node_is_leaf {
+                        // println!("Return from CPI calls to {:?}", invoking_node);
+                        break Some(Thing::ReturnFromCpiCallsToNode(invoking_node.clone()));
+                    } else {
+                        continue 'walk_up;
+                    }
+
                 };
                 d.push_back((ix.inner_iter(), ix));
                 break Some(Thing::PhysicalNode(ix));

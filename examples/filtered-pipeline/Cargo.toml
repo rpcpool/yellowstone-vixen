@@ -11,6 +11,8 @@ clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
 toml = { workspace = true }
 tracing = { workspace = true }
 rustls = { workspace = true }
+# FIXME rmove
+solana-signature = "^3.0.0"
 yellowstone-vixen = { workspace = true }
 yellowstone-vixen-spl-token-parser = { workspace = true }
 

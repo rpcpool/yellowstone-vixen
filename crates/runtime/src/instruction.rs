@@ -39,12 +39,19 @@ impl InstructionPipeline {
         let mut err = None;
         let ixs = InstructionUpdate::parse_from_txn(txn).map_err(PipelineErrors::parse)?;
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
-        for insn in ixs.iter().flat_map(|i| i.visit_all()) {
+        for thing in ixs.iter().flat_map(|i| i.visit_all()) {
             for pipe in &*self.0 {
 
                 // TODO
-                let Thing::PhysicalNode(insn) = insn else {
-                    continue;
+                let insn = match thing {
+                    Thing::ReturnFromCpiCallsToNode(ref debug_node) => {
+                        println!(
+                            "Returning from CPI nesting: {}",
+                            debug_node
+                        );
+                        continue;
+                    }
+                    Thing::PhysicalNode(insn) => insn,
                 };
 
                 let res = pipe.handle(insn).await;
@@ -110,10 +117,17 @@ impl SingleInstructionPipeline {
         let pipe = &self.0;
         let mut prev_depth: usize = 0;
 
-        for insn in ixs.iter().flat_map(|i| i.visit_all()) {
+        for thing in ixs.iter().flat_map(|i| i.visit_all()) {
             // TODO
-            let Thing::PhysicalNode(insn) = insn else {
-                continue;
+            let insn = match thing {
+                Thing::ReturnFromCpiCallsToNode(ref debug_node) => {
+                    println!(
+                        "Returning from CPI nesting: {}",
+                        debug_node
+                    );
+                    continue;
+                }
+                Thing::PhysicalNode(insn) => insn,
             };
 
             let depth = insn.path.len();
