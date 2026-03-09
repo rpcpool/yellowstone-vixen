@@ -1,7 +1,6 @@
 //! Helpers for parsing transaction updates into instructions.
 
 use std::{collections::VecDeque, fmt::Debug, sync::Arc};
-use solana_signature::Signature;
 use tracing::info;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
@@ -436,59 +435,73 @@ impl InstructionUpdate {
 
     /// Iterate over all inner instructions stored in this instruction.
     #[inline]
-    pub fn visit_all(&self) -> VisitAll<'_> { VisitAll::new(self) }
+    pub fn visit_all(&self) -> VisitAll<'_, Self> { VisitAll::new(self) }
 }
 
-/// An iterator over all inner instructions stored in an instruction update.
+/// Trait for tree nodes that have children of the same type.
+pub trait HasInner {
+    /// Returns the child nodes of this node.
+    fn inner(&self) -> &[Self]
+    where Self: Sized;
+}
+
+impl HasInner for InstructionUpdate {
+    #[inline]
+    fn inner(&self) -> &[Self] { &self.inner }
+}
+
+/// A depth-first iterator over a tree of [`HasInner`] nodes.
+///
+/// Yields the root node first, then recursively visits all children.
 #[derive(Debug)]
 #[must_use = "This type does nothing unless iterated"]
-pub struct VisitAll<'a>(VisitAllState<'a>);
+pub struct VisitAll<'a, T: HasInner>(VisitAllState<'a, T>);
 
 #[derive(Debug)]
-enum VisitAllState<'a> {
-    Init(&'a InstructionUpdate),
-    // ins, ix_path, is_leaf, tx sig
-    Started(VecDeque<(std::slice::Iter<'a, InstructionUpdate>, Path, bool, Signature)>),
+enum VisitAllState<'a, T: HasInner> {
+    Init(&'a T),
+    Started(VecDeque<std::slice::Iter<'a, T>>),
 }
 
-impl<'a> VisitAll<'a> {
+impl<'a, T: HasInner> VisitAll<'a, T> {
     #[inline]
-    fn new(ixs: &'a InstructionUpdate) -> Self { Self(VisitAllState::Init(ixs)) }
+    fn new(root: &'a T) -> Self { Self(VisitAllState::Init(root)) }
 }
 
-impl<'a> Iterator for VisitAll<'a> {
-    type Item = &'a InstructionUpdate;
+impl<'a, T: HasInner> Iterator for VisitAll<'a, T> {
+    type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.0 {
             &mut VisitAllState::Init(i) => {
 
-                let sig = Signature::try_from(i.shared.signature.as_slice()).unwrap();
+                // let sig = Signature::try_from(i.shared.signature.as_slice()).unwrap();
 
                 let mut d = VecDeque::new();
-                d.push_back((i.inner.iter(), i.path.clone(), i.inner.is_empty(), sig)); // TODO check
+                // d.push_back((i.inner.iter(), i.path.clone(), i.inner.is_empty(), sig)); // TODO check
+                d.push_back(i.inner().iter());
                 self.0 = VisitAllState::Started(d);
                 Some(i)
             },
             VisitAllState::Started(d) => loop {
-                let last = d.back_mut()?;
-                let _last_path = last.1.clone(); // same as popped
-                let sig = last.3.clone();
-                let Some(ix) = last.0.next() else {
+                // let last = d.back_mut()?;
+                // let _last_path = last.1.clone(); // same as popped
+                // let sig = last.3.clone();
+                // let Some(ix) = last.0.next() else {
+                let Some(ix) = d.back_mut()?.next() else {
                     let popped = d.pop_back().unwrap_or_else(|| unreachable!());
-                    if let Some(this_node) = d.back() {
-                        let this_path = this_node.1.clone();
-                        if !popped.2 {
-                            // not a leaf
-                            info!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
-                            println!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
-                        }
-                    }
+                    // if let Some(this_node) = d.back() {
+                    //     let this_path = this_node.1.clone();
+                    //     if !popped.2 {
+                    //         // not a leaf
+                    //         info!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
+                    //         println!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
+                    //     }
+                    // }
 
                     continue;
                 };
-                d.push_back((ix.inner.iter(), ix.path.clone(), ix.inner.is_empty(), sig)); // TODO check
-                println!("Visiting instruction at path {:?} - tx {}", ix.path, sig);
+                d.push_back(ix.inner().iter());
                 break Some(ix);
             },
         }
