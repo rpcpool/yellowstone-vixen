@@ -1,6 +1,7 @@
 //! Helpers for parsing transaction updates into instructions.
 
 use std::{collections::VecDeque, fmt::Debug, sync::Arc};
+use solana_signature::Signature;
 use tracing::info;
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
@@ -441,13 +442,31 @@ impl InstructionUpdate {
 /// Trait for tree nodes that have children of the same type.
 pub trait HasInner {
     /// Returns the child nodes of this node.
-    fn inner(&self) -> &[Self]
+    fn inner_iter(&self) -> std::slice::Iter<Self>
     where Self: Sized;
+}
+
+pub trait DebugNode {
+    /// Returns a string representation of this node for debugging purposes.
+    fn debug_node(&self) -> String;
 }
 
 impl HasInner for InstructionUpdate {
     #[inline]
-    fn inner(&self) -> &[Self] { &self.inner }
+    fn inner_iter(&self) -> std::slice::Iter<Self> { self.inner.iter() }
+
+    // fn debug_node(&self) -> String;
+}
+
+impl DebugNode for InstructionUpdate {
+    #[inline]
+    fn debug_node(&self) -> String {
+        let sig = Signature::try_from(self.shared.signature.as_slice()).unwrap();
+        format!(
+            "InstructionUpdate {:?}  tx {}",
+            self.path, sig
+        )
+    }
 }
 
 /// A depth-first iterator over a tree of [`HasInner`] nodes.
@@ -455,20 +474,20 @@ impl HasInner for InstructionUpdate {
 /// Yields the root node first, then recursively visits all children.
 #[derive(Debug)]
 #[must_use = "This type does nothing unless iterated"]
-pub struct VisitAll<'a, T: HasInner>(VisitAllState<'a, T>);
+pub struct VisitAll<'a, T: HasInner + DebugNode>(VisitAllState<'a, T>);
 
 #[derive(Debug)]
-enum VisitAllState<'a, T: HasInner> {
+enum VisitAllState<'a, T: HasInner + DebugNode> {
     Init(&'a T),
-    Started(VecDeque<std::slice::Iter<'a, T>>),
+    Started(VecDeque<(std::slice::Iter<'a, T>, &'a T)>),
 }
 
-impl<'a, T: HasInner> VisitAll<'a, T> {
+impl<'a, T: HasInner + DebugNode> VisitAll<'a, T> {
     #[inline]
     fn new(root: &'a T) -> Self { Self(VisitAllState::Init(root)) }
 }
 
-impl<'a, T: HasInner> Iterator for VisitAll<'a, T> {
+impl<'a, T: HasInner + DebugNode> Iterator for VisitAll<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -479,29 +498,30 @@ impl<'a, T: HasInner> Iterator for VisitAll<'a, T> {
 
                 let mut d = VecDeque::new();
                 // d.push_back((i.inner.iter(), i.path.clone(), i.inner.is_empty(), sig)); // TODO check
-                d.push_back(i.inner().iter());
+                d.push_back((i.inner_iter(), i));
                 self.0 = VisitAllState::Started(d);
                 Some(i)
             },
             VisitAllState::Started(d) => loop {
-                // let last = d.back_mut()?;
+                let (last, last_ix) = d.back_mut()?;
                 // let _last_path = last.1.clone(); // same as popped
                 // let sig = last.3.clone();
                 // let Some(ix) = last.0.next() else {
-                let Some(ix) = d.back_mut()?.next() else {
+                let Some(ix) = last.next() else {
                     let popped = d.pop_back().unwrap_or_else(|| unreachable!());
-                    // if let Some(this_node) = d.back() {
-                    //     let this_path = this_node.1.clone();
-                    //     if !popped.2 {
-                    //         // not a leaf
-                    //         info!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
-                    //         println!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
-                    //     }
-                    // }
+                    if let Some((_, this_node,)) = d.back() {
+                        // let this_path = this_node.1.clone();
+                        println!("Finished visiting instruction: {:?}", this_node.debug_node());
+                        // if !popped.2 {
+                        //     // not a leaf
+                        //     info!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
+                        //     println!("Finished visiting instruction at path {:?} this_path {:?} - tx {}", popped.1, this_path, sig);
+                        // }
+                    }
 
                     continue;
                 };
-                d.push_back(ix.inner().iter());
+                d.push_back((ix.inner_iter(), ix));
                 break Some(ix);
             },
         }
