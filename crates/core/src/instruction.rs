@@ -468,8 +468,9 @@ impl<'a> Iterator for VisitAll<'a> {
             },
             VisitAllState::Started(d) => loop {
                 let Some(ix) = d.back_mut()?.next() else {
+                    info!("- ");
                     for foo in d.into_iter() {
-                        for bar in foo.into_iter().skip(1) {
+                        for bar in foo.into_iter() {
                             let sig = Signature::try_from(bar.shared.signature.as_slice()).unwrap();
                             info!("- returning from {:?} - tx {}", bar.path, sig);
                         }
