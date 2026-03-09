@@ -439,11 +439,6 @@ impl InstructionUpdate {
     pub fn visit_all(&self) -> VisitAll<'_, Self> { VisitAll::new(self) }
 }
 
-// #[derive(Debug)]
-// pub enum Foobar {
-//     InstructionUp(InstructionUpdate),
-// }
-
 /// Trait for tree nodes that have children of the same type.
 pub trait Node {
     /// Returns the child nodes of this node.
@@ -491,13 +486,20 @@ enum VisitAllState<'a, T: Node + DebugNode> {
     Started(VecDeque<(std::slice::Iter<'a, T>, &'a T)>),
 }
 
+#[derive(Debug)]
+pub enum Thing<'a, T: Node + DebugNode> {
+    // instruction returned to consumer
+    PhysicalNode(&'a T),
+    // pseudo object representing return from CPI calls to a node
+}
+
 impl<'a, T: Node + DebugNode> VisitAll<'a, T> {
     #[inline]
     fn new(root: &'a T) -> Self { Self(VisitAllState::Init(root)) }
 }
 
 impl<'a, T: Node + DebugNode> Iterator for VisitAll<'a, T> {
-    type Item = &'a T;
+    type Item = Thing<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.0 {
@@ -509,7 +511,7 @@ impl<'a, T: Node + DebugNode> Iterator for VisitAll<'a, T> {
                 // d.push_back((i.inner.iter(), i.path.clone(), i.inner.is_empty(), sig)); // TODO check
                 d.push_back((ix.inner_iter(), ix));
                 self.0 = VisitAllState::Started(d);
-                Some(ix)
+                Some(Thing::PhysicalNode(ix))
             }
             VisitAllState::Started(d) => 'walk_up: loop {
                 let (last, invoking_node) = d.back_mut()?;
@@ -528,7 +530,7 @@ impl<'a, T: Node + DebugNode> Iterator for VisitAll<'a, T> {
                     continue 'walk_up;
                 };
                 d.push_back((ix.inner_iter(), ix));
-                break Some(ix);
+                break Some(Thing::PhysicalNode(ix));
             },
         }
     }

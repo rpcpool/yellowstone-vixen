@@ -5,7 +5,7 @@ use std::fmt::{self, Debug};
 
 use tracing::trace;
 use vixen_core::{instruction::InstructionUpdate, GetPrefilter, ParserId, TransactionUpdate};
-
+use vixen_core::instruction::Thing;
 use crate::handler::{BoxPipeline, DynPipeline, PipelineErrors};
 #[cfg(feature = "prometheus")]
 use crate::metrics;
@@ -41,6 +41,12 @@ impl InstructionPipeline {
         // TODO: how should sub-pipeline delegation be handled for instruction trees?
         for insn in ixs.iter().flat_map(|i| i.visit_all()) {
             for pipe in &*self.0 {
+
+                // TODO
+                let Thing::PhysicalNode(insn) = insn else {
+                    continue;
+                };
+
                 let res = pipe.handle(insn).await;
 
                 #[cfg(feature = "prometheus")]
@@ -105,6 +111,11 @@ impl SingleInstructionPipeline {
         let mut prev_depth: usize = 0;
 
         for insn in ixs.iter().flat_map(|i| i.visit_all()) {
+            // TODO
+            let Thing::PhysicalNode(insn) = insn else {
+                continue;
+            };
+
             let depth = insn.path.len();
 
             if depth < prev_depth {
