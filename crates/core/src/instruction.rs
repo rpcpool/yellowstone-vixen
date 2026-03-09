@@ -447,7 +447,7 @@ pub struct VisitAll<'a>(VisitAllState<'a>);
 #[derive(Debug)]
 enum VisitAllState<'a> {
     Init(&'a InstructionUpdate),
-    Started(VecDeque<std::slice::Iter<'a, InstructionUpdate>>),
+    Started(VecDeque<(std::slice::Iter<'a, InstructionUpdate>, Path)>),
 }
 
 impl<'a> VisitAll<'a> {
@@ -462,24 +462,19 @@ impl<'a> Iterator for VisitAll<'a> {
         match &mut self.0 {
             &mut VisitAllState::Init(i) => {
                 let mut d = VecDeque::new();
-                d.push_back(i.inner.iter());
+                d.push_back((i.inner.iter(), Path::new_single(0))); // TODO check
                 self.0 = VisitAllState::Started(d);
                 Some(i)
             },
             VisitAllState::Started(d) => loop {
-                let Some(ix) = d.back_mut()?.next() else {
-                    info!("- ");
-                    for foo in d.into_iter() {
-                        for bar in foo.into_iter() {
-                            let sig = Signature::try_from(bar.shared.signature.as_slice()).unwrap();
-                            info!("- returning from {:?} - tx {}", bar.path, sig);
-                        }
-                    }
-                    let popped = d.pop_back().unwrap_or_else(|| unreachable!());
-                    info!("- popped stack frame with {} instructions", popped.len());
+                // need to keep the path for "d.back_mut()"
+                let Some(ix) = d.back_mut()?.0.next() else {
+                    let last_path = d.back().map(|last| last.1.clone());
+                    let _popped = d.pop_back().unwrap_or_else(|| unreachable!());
+                    info!("Finished visiting instruction at path {:?}", last_path);
                     continue;
                 };
-                d.push_back(ix.inner.iter());
+                d.push_back((ix.inner.iter(), Path::new_single(0))); // TODO check
                 break Some(ix);
             },
         }
