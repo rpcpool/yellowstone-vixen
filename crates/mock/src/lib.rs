@@ -32,7 +32,8 @@ use solana_transaction_status::{
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
-    instruction::{split_logs_by_outer_ix, InstructionShared, InstructionUpdate},
+    instruction::{InstructionShared, InstructionUpdate},
+    log_messages::split_logs_by_outer_ix,
     KeyBytes, ProgramParser,
 };
 
