@@ -32,7 +32,7 @@ use solana_transaction_status::{
 };
 use yellowstone_grpc_proto::geyser::{SubscribeUpdateAccount, SubscribeUpdateAccountInfo};
 use yellowstone_vixen_core::{
-    instruction::{InstructionShared, InstructionUpdate},
+    instruction::{split_logs_by_outer_ix, InstructionShared, InstructionUpdate},
     KeyBytes, ProgramParser,
 };
 
@@ -256,47 +256,6 @@ fn try_from_ui_inner_ixs(
         }
     }
     Ok(filter_ixs(ixs, program_id))
-}
-
-///
-/// Split transaction logs by outer instruction index.
-///
-/// Returns a vec where entry `i` contains the log lines for outer instruction `i`
-/// (from its `Program ... invoke [1]` through its `Program ... success`/`failed`).
-///
-fn split_logs_by_outer_ix(logs: &[String]) -> Vec<Vec<String>> {
-    let mut result: Vec<Vec<String>> = Vec::new();
-    let mut current: Vec<String> = Vec::new();
-    let mut depth: u32 = 0;
-
-    for line in logs {
-        if line.starts_with("Program ") && line.contains(" invoke [1]") && depth == 0 {
-            // Start of a new outer instruction
-            if !current.is_empty() {
-                result.push(std::mem::take(&mut current));
-            }
-
-            depth = 1;
-
-            current.push(line.clone());
-        } else if depth > 0 {
-            if line.starts_with("Program ") && line.contains(" invoke [") {
-                depth += 1;
-            } else if line.starts_with("Program ")
-                && (line.ends_with(" success") || line.contains(" failed:"))
-            {
-                depth -= 1;
-            }
-
-            current.push(line.clone());
-        }
-    }
-
-    if !current.is_empty() {
-        result.push(current);
-    }
-
-    result
 }
 
 ///

@@ -573,6 +573,46 @@ fn find_invoke(logs: &[String], start: usize) -> Option<usize> {
         .map(|(i, _)| i)
 }
 
+///
+/// Split transaction logs by outer instruction index.
+///
+/// Returns a vec where entry `i` contains the log lines for outer instruction `i`
+/// (from its `Program ... invoke [1]` through its `Program ... success`/`failed`).
+///
+pub fn split_logs_by_outer_ix(logs: &[String]) -> Vec<Vec<String>> {
+    let mut result: Vec<Vec<String>> = Vec::new();
+    let mut current: Vec<String> = Vec::new();
+    let mut depth: u32 = 0;
+
+    for line in logs {
+        if line.starts_with("Program ") && line.contains(" invoke [1]") && depth == 0 {
+            if !current.is_empty() {
+                result.push(std::mem::take(&mut current));
+            }
+
+            depth = 1;
+
+            current.push(line.clone());
+        } else if depth > 0 {
+            if line.starts_with("Program ") && line.contains(" invoke [") {
+                depth += 1;
+            } else if line.starts_with("Program ")
+                && (line.ends_with(" success") || line.contains(" failed:"))
+            {
+                depth -= 1;
+            }
+
+            current.push(line.clone());
+        }
+    }
+
+    if !current.is_empty() {
+        result.push(current);
+    }
+
+    result
+}
+
 fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u32) -> Vec<Path> {
     if stack_heights.is_empty() {
         return Vec::new();
@@ -581,11 +621,9 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
     let mut paths: Vec<Path> = Vec::with_capacity(stack_heights.len());
 
     let mut stack: Vec<u32> = Vec::with_capacity(4);
-
     stack.push(outer_index);
     stack.push(0);
     paths.push(Path(stack.clone()));
-
     for (pos, ref sh_this) in stack_heights.iter().enumerate().skip(1) {
         let (Some(sh_this), Some(sh_parent)) = (sh_this, stack_heights[pos - 1]) else {
             // catch exceptional cases where stack height is missing
@@ -593,12 +631,9 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
             if let Some(top) = stack.last_mut() {
                 *top += 1;
             }
-
             paths.push(Path(stack.clone()));
-
             continue;
         };
-
         match sh_this.cmp(&sh_parent) {
             std::cmp::Ordering::Greater => {
                 // calling is always +1 stack height
@@ -607,7 +642,6 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
                     sh_parent + 1,
                     "invalid stack heights: {stack_heights:?}"
                 );
-
                 // descend in tree to child node
                 stack.push(0);
             },
@@ -622,7 +656,6 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
                 // returning from calls might skip multiple levels (not only one link above)
                 // ascend in tree to parent node
                 stack.truncate(*sh_this as usize);
-
                 // stack is actually never empty here
                 if let Some(top) = stack.last_mut() {
                     *top += 1;
@@ -638,7 +671,6 @@ fn derive_paths_from_stackheights(stack_heights: &[Option<u32>], outer_index: u3
         stack_heights.len(),
         "derived paths failed for {stack_heights:?}"
     );
-
     paths
 }
 
