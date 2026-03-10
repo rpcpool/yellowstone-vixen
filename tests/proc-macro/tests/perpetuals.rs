@@ -4,7 +4,7 @@ use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::{account_fixture, tx_fixture};
 use yellowstone_vixen_proc_macro::include_vixen_parser;
 
-include_vixen_parser!("idls/perp_idl.json");
+include_vixen_parser!("idls/perpetuals.json");
 
 #[test]
 fn check_protobuf_schema() {
@@ -563,4 +563,48 @@ async fn parse_borrow_from_custody_ix() {
 
     assert_eq!(borrow_accounts, &expected.accounts);
     assert_eq!(borrow_args, &expected.args);
+
+    // The same transaction also contains a CPI event instruction (borrowFromCustodyEvent).
+    {
+        let event_args = ixs
+            .iter()
+            .find_map(|ix| match &ix.as_ref()?.instruction {
+                perpetuals::instruction::Instruction::BorrowFromCustodyEvent {
+                    accounts: _,
+                    args,
+                } => Some(args),
+                _ => None,
+            })
+            .expect("no borrow from custody event ix found");
+
+        let expected_event_args = perpetuals::instruction::BorrowFromCustodyEventArgs {
+            owner: PublicKey::new(vec![
+                193, 141, 200, 224, 246, 201, 5, 150, 208, 94, 178, 61, 237, 45, 230, 117, 221,
+                127, 66, 219, 18, 153, 140, 155, 9, 12, 15, 17, 113, 249, 167, 29,
+            ]),
+            pool: PublicKey::new(vec![
+                62, 30, 36, 115, 199, 52, 6, 84, 235, 135, 41, 0, 53, 21, 28, 64, 43, 208, 227,
+                201, 124, 180, 36, 72, 134, 231, 32, 52, 179, 11, 77, 252,
+            ]),
+            position_key: PublicKey::new(vec![
+                10, 160, 117, 35, 217, 119, 94, 32, 82, 76, 97, 73, 104, 24, 124, 173, 193, 25, 42,
+                175, 214, 77, 58, 21, 186, 216, 174, 34, 147, 19, 160, 188,
+            ]),
+            position_mint: PublicKey::new(vec![
+                198, 250, 122, 243, 190, 219, 173, 58, 61, 101, 243, 106, 171, 201, 116, 49, 177,
+                187, 228, 194, 210, 246, 224, 228, 124, 166, 2, 3, 69, 47, 93, 97,
+            ]),
+            position_custody: PublicKey::new(vec![
+                222, 232, 11, 52, 19, 162, 211, 16, 128, 98, 107, 146, 108, 56, 175, 52, 190, 209,
+                134, 219, 54, 142, 151, 127, 58, 191, 75, 213, 69, 68, 154, 109,
+            ]),
+            size_custody_token: 8_463_144_037,
+            collateral_amount: 3_000_000_000_000,
+            collateral_amount_usd: 11_148_464_949_892,
+            margin_usd: 10_033_618_454_902,
+            update_time: 1_772_150_417,
+        };
+
+        assert_eq!(event_args, &expected_event_args);
+    }
 }
