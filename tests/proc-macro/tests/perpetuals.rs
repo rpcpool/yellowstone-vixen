@@ -279,10 +279,16 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                     position_request_ata: pubkey("2zazRXFzzDHUJF4UBuGcmp3wbUh7zuhpjEuEHG1APisc"),
                     position: pubkey("2RPcEvVpLwVVxAPYn89np27pTC6keUGQ1Yf77qa7i1ok"),
                     custody: pubkey("7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz"),
-                    custody_doves_price_account: pubkey("FYq2BWQ1V5P1WFBqr3qB2Kb5yHVvSv7upzKodgQE5zXh"),
+                    custody_doves_price_account: pubkey(
+                        "FYq2BWQ1V5P1WFBqr3qB2Kb5yHVvSv7upzKodgQE5zXh",
+                    ),
                     collateral_custody: pubkey("7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz"),
-                    collateral_custody_doves_price_account: pubkey("FYq2BWQ1V5P1WFBqr3qB2Kb5yHVvSv7upzKodgQE5zXh"),
-                    collateral_custody_token_account: pubkey("BUvduFTd2sWFagCunBPLupG8fBTJqweLw9DuhruNFSCm"),
+                    collateral_custody_doves_price_account: pubkey(
+                        "FYq2BWQ1V5P1WFBqr3qB2Kb5yHVvSv7upzKodgQE5zXh",
+                    ),
+                    collateral_custody_token_account: pubkey(
+                        "BUvduFTd2sWFagCunBPLupG8fBTJqweLw9DuhruNFSCm",
+                    ),
                     token_program: pubkey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
                     event_authority: pubkey("37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN"),
                     program: pubkey_bytes(&perpetuals::PROGRAM_ID),
@@ -349,7 +355,9 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                     mint: pubkey("So11111111111111111111111111111111111111112"),
                     token_program: pubkey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
                     system_program: pubkey("11111111111111111111111111111111"),
-                    associated_token_program: pubkey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                    associated_token_program: pubkey(
+                        "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+                    ),
                     event_authority: pubkey("37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN"),
                     program: pubkey_bytes(&perpetuals::PROGRAM_ID),
                     remaining_accounts: vec![],
@@ -402,7 +410,6 @@ async fn parse_borrow_from_custody_ix() {
             .then_some(ix)
         })
         .expect("no borrow from custody ix found");
-
 
     let expected = perpetuals::Instructions {
         instruction: perpetuals::instruction::Instruction::BorrowFromCustody {
