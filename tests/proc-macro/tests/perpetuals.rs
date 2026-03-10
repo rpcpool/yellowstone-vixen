@@ -1,5 +1,6 @@
 mod common;
 
+use common::{pubkey, pubkey_bytes};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::{account_fixture, tx_fixture};
 use yellowstone_vixen_proc_macro::include_vixen_parser;
@@ -24,25 +25,13 @@ async fn parse_custody_account() {
     };
 
     let expected = perpetuals::Custody {
-        pool: perpetuals::PublicKey::new(vec![
-            62, 30, 36, 115, 199, 52, 6, 84, 235, 135, 41, 0, 53, 21, 28, 64, 43, 208, 227, 201,
-            124, 180, 36, 72, 134, 231, 32, 52, 179, 11, 77, 252,
-        ]),
-        mint: perpetuals::PublicKey::new(vec![
-            6, 155, 136, 87, 254, 171, 129, 132, 251, 104, 127, 99, 70, 24, 192, 53, 218, 196, 57,
-            220, 26, 235, 59, 85, 152, 160, 240, 0, 0, 0, 0, 1,
-        ]),
-        token_account: perpetuals::PublicKey::new(vec![
-            155, 188, 50, 161, 141, 135, 28, 7, 53, 93, 210, 81, 97, 36, 21, 196, 32, 76, 171, 128,
-            29, 185, 238, 194, 146, 101, 3, 81, 177, 102, 210, 110,
-        ]),
+        pool: pubkey("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"),
+        mint: pubkey("So11111111111111111111111111111111111111112"),
+        token_account: pubkey("BUvduFTd2sWFagCunBPLupG8fBTJqweLw9DuhruNFSCm"),
         decimals: 9,
         is_stable: false,
         oracle: perpetuals::OracleParams {
-            oracle_account: perpetuals::PublicKey::new(vec![
-                96, 49, 71, 4, 52, 13, 237, 223, 55, 31, 212, 36, 114, 20, 143, 36, 142, 157, 26,
-                109, 26, 94, 178, 172, 58, 205, 139, 127, 213, 214, 178, 67,
-            ]),
+            oracle_account: pubkey("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"),
             oracle_type: perpetuals::OracleType {
                 kind: perpetuals::oracle_type::Kind::Pyth(perpetuals::OracleTypePyth {}),
             },
@@ -85,20 +74,14 @@ async fn parse_custody_account() {
         increase_position_bps: 6,
         decrease_position_bps: 6,
         max_position_size_usd: 10_000_000_000_000,
-        doves_oracle: perpetuals::PublicKey::new(vec![
-            31, 236, 44, 187, 11, 175, 112, 110, 143, 105, 186, 138, 53, 218, 38, 247, 99, 111, 71,
-            194, 119, 3, 29, 140, 62, 4, 86, 16, 146, 217, 76, 97,
-        ]),
+        doves_oracle: pubkey("39cWjvHrpHNz2SbXv6ME4NPhqBDBd4KsjUYv5JkHEAJU"),
         jump_rate_state: perpetuals::JumpRateState {
             min_rate_bps: 1000,
             max_rate_bps: 15000,
             target_rate_bps: 3500,
             target_utilization_rate: 800_000_000,
         },
-        doves_ag_oracle: perpetuals::PublicKey::new(vec![
-            216, 42, 235, 57, 188, 70, 146, 145, 46, 181, 242, 170, 224, 18, 127, 36, 173, 176,
-            246, 182, 107, 253, 118, 9, 80, 73, 48, 236, 108, 178, 99, 136,
-        ]),
+        doves_ag_oracle: pubkey("FYq2BWQ1V5P1WFBqr3qB2Kb5yHVvSv7upzKodgQE5zXh"),
         price_impact_buffer: perpetuals::PriceImpactBuffer {
             open_interest: vec![
                 0,
@@ -213,26 +196,11 @@ async fn parse_pool_account() {
     let expected = perpetuals::Pool {
         name: "Pool".to_string(),
         custodies: vec![
-            perpetuals::PublicKey::new(vec![
-                103, 89, 93, 216, 70, 192, 7, 242, 104, 150, 242, 174, 211, 27, 167, 181, 95, 209,
-                44, 204, 21, 142, 11, 0, 122, 157, 143, 232, 70, 182, 159, 233,
-            ]),
-            perpetuals::PublicKey::new(vec![
-                139, 170, 74, 72, 100, 34, 108, 192, 34, 72, 77, 200, 40, 30, 26, 22, 143, 92, 244,
-                232, 5, 63, 26, 229, 6, 109, 145, 106, 136, 185, 223, 159,
-            ]),
-            perpetuals::PublicKey::new(vec![
-                65, 77, 129, 72, 106, 241, 62, 110, 236, 158, 45, 91, 207, 69, 145, 50, 227, 164,
-                102, 71, 9, 182, 109, 56, 208, 100, 119, 145, 36, 198, 206, 62,
-            ]),
-            perpetuals::PublicKey::new(vec![
-                222, 232, 11, 52, 19, 162, 211, 16, 128, 98, 107, 146, 108, 56, 175, 52, 190, 209,
-                134, 219, 54, 142, 151, 127, 58, 191, 75, 213, 69, 68, 154, 109,
-            ]),
-            perpetuals::PublicKey::new(vec![
-                58, 87, 226, 203, 202, 208, 40, 131, 80, 35, 204, 171, 74, 216, 123, 210, 118, 78,
-                143, 193, 50, 214, 142, 152, 102, 9, 235, 19, 75, 215, 134, 249,
-            ]),
+            pubkey("7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz"),
+            pubkey("AQCGyheWPLeo6Qp9WpYS9m3Qj479t7R636N9ey1rEjEn"),
+            pubkey("5Pv3gM9JrFFH883SWAhvJC9RPYmo8UNxuFtv5bMMALkm"),
+            pubkey("G18jKKXQwBbrHeiK3C9MRXhkHsLHf7XgCSisykV46EZa"),
+            pubkey("4vkNeXiYEUizLdrpdPS1eC2mccyM4NUPRtERrk6ZETkk"),
         ],
         aum_usd: vec![42, 148, 219, 152, 238, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         limit: perpetuals::Limit {
@@ -287,158 +255,130 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
     );
 
     {
-        let (decrease_accounts, decrease_args) = ixs
+        let decrease_ix = ixs
             .iter()
-            .find_map(|ix| match &ix.as_ref()?.instruction {
-                perpetuals::instruction::Instruction::DecreasePositionWithTpsl {
-                    accounts,
-                    args,
-                } => Some((accounts, args)),
-                _ => None,
+            .find_map(|ix| {
+                let ix = ix.as_ref()?;
+                matches!(
+                    &ix.instruction,
+                    perpetuals::instruction::Instruction::DecreasePositionWithTpsl { .. }
+                )
+                .then_some(ix)
             })
             .expect("no decrease position ix found");
 
-        let expected = perpetuals::instruction::DecreasePositionWithTpsl {
-            accounts: perpetuals::instruction::DecreasePositionWithTpslAccounts {
-                keeper: perpetuals::PublicKey::new(vec![
-                    238, 103, 24, 154, 146, 36, 183, 11, 249, 126, 171, 22, 248, 91, 126, 66, 80,
-                    130, 214, 35, 46, 153, 237, 255, 229, 32, 219, 75, 135, 121, 46, 21,
-                ]),
-                owner: perpetuals::PublicKey::new(vec![
-                    138, 2, 154, 132, 201, 110, 60, 65, 124, 72, 228, 105, 180, 198, 154, 69, 177,
-                    138, 239, 252, 160, 169, 123, 64, 90, 105, 103, 236, 9, 62, 69, 162,
-                ]),
-                transfer_authority: perpetuals::PublicKey::new(vec![
-                    141, 38, 83, 12, 155, 36, 127, 146, 136, 234, 206, 55, 84, 75, 38, 56, 128,
-                    192, 44, 173, 4, 211, 33, 80, 237, 29, 1, 248, 251, 221, 35, 134,
-                ]),
-                perpetuals: perpetuals::PublicKey::new(vec![
-                    238, 151, 183, 0, 48, 24, 63, 163, 2, 12, 13, 6, 188, 207, 70, 162, 238, 235,
-                    177, 159, 189, 77, 24, 177, 204, 63, 21, 61, 126, 170, 228, 30,
-                ]),
-                pool: perpetuals::PublicKey::new(vec![
-                    62, 30, 36, 115, 199, 52, 6, 84, 235, 135, 41, 0, 53, 21, 28, 64, 43, 208, 227,
-                    201, 124, 180, 36, 72, 134, 231, 32, 52, 179, 11, 77, 252,
-                ]),
-                position_request: perpetuals::PublicKey::new(vec![
-                    233, 115, 77, 143, 129, 244, 145, 190, 189, 103, 5, 29, 76, 62, 201, 162, 249,
-                    94, 14, 84, 101, 136, 146, 56, 83, 158, 180, 120, 90, 69, 12, 176,
-                ]),
-                position_request_ata: perpetuals::PublicKey::new(vec![
-                    29, 156, 57, 200, 92, 59, 244, 71, 93, 107, 142, 243, 97, 105, 117, 15, 130,
-                    93, 162, 16, 233, 61, 59, 152, 138, 96, 254, 171, 26, 93, 233, 251,
-                ]),
-                position: perpetuals::PublicKey::new(vec![
-                    21, 27, 48, 86, 199, 205, 70, 175, 49, 243, 96, 1, 44, 35, 84, 21, 63, 30, 153,
-                    23, 190, 180, 203, 32, 246, 28, 255, 218, 234, 227, 11, 255,
-                ]),
-                custody: perpetuals::PublicKey::new(vec![
-                    103, 89, 93, 216, 70, 192, 7, 242, 104, 150, 242, 174, 211, 27, 167, 181, 95,
-                    209, 44, 204, 21, 142, 11, 0, 122, 157, 143, 232, 70, 182, 159, 233,
-                ]),
-                custody_doves_price_account: perpetuals::PublicKey::new(vec![
-                    216, 42, 235, 57, 188, 70, 146, 145, 46, 181, 242, 170, 224, 18, 127, 36, 173,
-                    176, 246, 182, 107, 253, 118, 9, 80, 73, 48, 236, 108, 178, 99, 136,
-                ]),
-                collateral_custody: perpetuals::PublicKey::new(vec![
-                    103, 89, 93, 216, 70, 192, 7, 242, 104, 150, 242, 174, 211, 27, 167, 181, 95,
-                    209, 44, 204, 21, 142, 11, 0, 122, 157, 143, 232, 70, 182, 159, 233,
-                ]),
-                collateral_custody_doves_price_account: perpetuals::PublicKey::new(vec![
-                    216, 42, 235, 57, 188, 70, 146, 145, 46, 181, 242, 170, 224, 18, 127, 36, 173,
-                    176, 246, 182, 107, 253, 118, 9, 80, 73, 48, 236, 108, 178, 99, 136,
-                ]),
-                collateral_custody_token_account: perpetuals::PublicKey::new(vec![
-                    155, 188, 50, 161, 141, 135, 28, 7, 53, 93, 210, 81, 97, 36, 21, 196, 32, 76,
-                    171, 128, 29, 185, 238, 194, 146, 101, 3, 81, 177, 102, 210, 110,
-                ]),
-                token_program: perpetuals::PublicKey::new(vec![
-                    6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172,
-                    28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
-                ]),
-                event_authority: perpetuals::PublicKey::new(vec![
-                    31, 110, 107, 244, 132, 55, 71, 222, 35, 151, 202, 112, 75, 230, 84, 146, 147,
-                    148, 134, 231, 7, 116, 227, 98, 240, 124, 71, 211, 219, 57, 210, 145,
-                ]),
-                program: perpetuals::PublicKey::new(perpetuals::PROGRAM_ID.to_vec()),
-                remaining_accounts: vec![],
+        let expected = perpetuals::Instructions {
+            instruction: perpetuals::instruction::Instruction::DecreasePositionWithTpsl {
+                accounts: perpetuals::instruction::DecreasePositionWithTpslAccounts {
+                    keeper: pubkey("H3dDE6K6uqBp5kBKctH6w8hzpV5eAmxUiqvcdHxuE9i4"),
+                    owner: pubkey("AHjZmPJ3swFKz6nVhoeV3Y2zB94rd2QFbAoEPvNo6DXX"),
+                    transfer_authority: pubkey("AVzP2GeRmqGphJsMxWoqjpUifPpCret7LqWhD8NWQK49"),
+                    perpetuals: pubkey("H4ND9aYttUVLFmNypZqLjZ52FYiGvdEB45GmwNoKEjTj"),
+                    pool: pubkey("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"),
+                    position_request: pubkey("GiHy9ixvdkzGQVoTVXkppg7FCMxx1gpwnB7Df9HEUuBM"),
+                    position_request_ata: pubkey("2zazRXFzzDHUJF4UBuGcmp3wbUh7zuhpjEuEHG1APisc"),
+                    position: pubkey("2RPcEvVpLwVVxAPYn89np27pTC6keUGQ1Yf77qa7i1ok"),
+                    custody: pubkey("7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz"),
+                    custody_doves_price_account: pubkey("FYq2BWQ1V5P1WFBqr3qB2Kb5yHVvSv7upzKodgQE5zXh"),
+                    collateral_custody: pubkey("7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz"),
+                    collateral_custody_doves_price_account: pubkey("FYq2BWQ1V5P1WFBqr3qB2Kb5yHVvSv7upzKodgQE5zXh"),
+                    collateral_custody_token_account: pubkey("BUvduFTd2sWFagCunBPLupG8fBTJqweLw9DuhruNFSCm"),
+                    token_program: pubkey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+                    event_authority: pubkey("37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN"),
+                    program: pubkey_bytes(&perpetuals::PROGRAM_ID),
+                    remaining_accounts: vec![],
+                },
+                args: perpetuals::instruction::DecreasePositionWithTpslArgs {},
             },
-            args: perpetuals::instruction::DecreasePositionWithTpslArgs {},
+            raw_logs: vec![
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu invoke [1]".into(),
+                "Program log: Instruction: DecreasePositionWithTpsl".into(),
+                "Program log: Check permissions".into(),
+                "Program log: doves ag price: 8464693189, publish time: 1770650409".into(),
+                "Program log: doves ag price: 8464693189, publish time: 1770650409".into(),
+                "Program log: Exit price: 84646931".into(),
+                "Program log: Trigger order price: 84650000".into(),
+                "Program log: has_profit: true, pnl_delta: 5832000".into(),
+                "Program log: Collected fee: 2323578".into(),
+                "Program log: Transfer tokens".into(),
+                "Program log: Amount out: 1012455751".into(),
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]".into(),
+                "Program log: Instruction: Transfer".into(),
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4736 of 134675 \
+                 compute units"
+                    .into(),
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success".into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu invoke [2]".into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu consumed 5134 of 123856 \
+                 compute units"
+                    .into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu consumed 104302 of 202306 \
+                 compute units"
+                    .into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".into(),
+            ],
         };
 
-        assert_eq!(decrease_accounts, &expected.accounts);
-        assert_eq!(decrease_args, &expected.args);
+        assert_eq!(decrease_ix, &expected);
     }
 
     {
-        let (close_accounts, close_args) = ixs
+        let close_ix = ixs
             .iter()
-            .find_map(|ix| match &ix.as_ref()?.instruction {
-                perpetuals::instruction::Instruction::ClosePositionRequest2 { accounts, args } => {
-                    Some((accounts, args))
-                },
-                _ => None,
+            .find_map(|ix| {
+                let ix = ix.as_ref()?;
+                matches!(
+                    &ix.instruction,
+                    perpetuals::instruction::Instruction::ClosePositionRequest2 { .. }
+                )
+                .then_some(ix)
             })
             .expect("no close position request 2 ix found");
 
-        let expected = perpetuals::instruction::ClosePositionRequest2 {
-            accounts: perpetuals::instruction::ClosePositionRequest2Accounts {
-                keeper: perpetuals::PublicKey::new(vec![
-                    238, 103, 24, 154, 146, 36, 183, 11, 249, 126, 171, 22, 248, 91, 126, 66, 80,
-                    130, 214, 35, 46, 153, 237, 255, 229, 32, 219, 75, 135, 121, 46, 21,
-                ]),
-                owner: perpetuals::PublicKey::new(vec![
-                    138, 2, 154, 132, 201, 110, 60, 65, 124, 72, 228, 105, 180, 198, 154, 69, 177,
-                    138, 239, 252, 160, 169, 123, 64, 90, 105, 103, 236, 9, 62, 69, 162,
-                ]),
-                owner_ata: perpetuals::PublicKey::new(vec![
-                    154, 83, 171, 15, 56, 48, 208, 249, 99, 113, 152, 52, 252, 22, 248, 73, 105,
-                    132, 234, 10, 31, 166, 147, 20, 195, 195, 240, 66, 213, 229, 199, 171,
-                ]),
-                pool: perpetuals::PublicKey::new(vec![
-                    62, 30, 36, 115, 199, 52, 6, 84, 235, 135, 41, 0, 53, 21, 28, 64, 43, 208, 227,
-                    201, 124, 180, 36, 72, 134, 231, 32, 52, 179, 11, 77, 252,
-                ]),
-                position_request: perpetuals::PublicKey::new(vec![
-                    233, 115, 77, 143, 129, 244, 145, 190, 189, 103, 5, 29, 76, 62, 201, 162, 249,
-                    94, 14, 84, 101, 136, 146, 56, 83, 158, 180, 120, 90, 69, 12, 176,
-                ]),
-                position_request_ata: perpetuals::PublicKey::new(vec![
-                    29, 156, 57, 200, 92, 59, 244, 71, 93, 107, 142, 243, 97, 105, 117, 15, 130,
-                    93, 162, 16, 233, 61, 59, 152, 138, 96, 254, 171, 26, 93, 233, 251,
-                ]),
-                position: perpetuals::PublicKey::new(vec![
-                    21, 27, 48, 86, 199, 205, 70, 175, 49, 243, 96, 1, 44, 35, 84, 21, 63, 30, 153,
-                    23, 190, 180, 203, 32, 246, 28, 255, 218, 234, 227, 11, 255,
-                ]),
-                mint: perpetuals::PublicKey::new(vec![
-                    6, 155, 136, 87, 254, 171, 129, 132, 251, 104, 127, 99, 70, 24, 192, 53, 218,
-                    196, 57, 220, 26, 235, 59, 85, 152, 160, 240, 0, 0, 0, 0, 1,
-                ]),
-                token_program: perpetuals::PublicKey::new(vec![
-                    6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172,
-                    28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
-                ]),
-                system_program: perpetuals::PublicKey::new(vec![
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0,
-                ]),
-                associated_token_program: perpetuals::PublicKey::new(vec![
-                    140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90,
-                    19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89,
-                ]),
-                event_authority: perpetuals::PublicKey::new(vec![
-                    31, 110, 107, 244, 132, 55, 71, 222, 35, 151, 202, 112, 75, 230, 84, 146, 147,
-                    148, 134, 231, 7, 116, 227, 98, 240, 124, 71, 211, 219, 57, 210, 145,
-                ]),
-                program: perpetuals::PublicKey::new(perpetuals::PROGRAM_ID.to_vec()),
-                remaining_accounts: vec![],
+        let expected = perpetuals::Instructions {
+            instruction: perpetuals::instruction::Instruction::ClosePositionRequest2 {
+                accounts: perpetuals::instruction::ClosePositionRequest2Accounts {
+                    keeper: pubkey("H3dDE6K6uqBp5kBKctH6w8hzpV5eAmxUiqvcdHxuE9i4"),
+                    owner: pubkey("AHjZmPJ3swFKz6nVhoeV3Y2zB94rd2QFbAoEPvNo6DXX"),
+                    owner_ata: pubkey("BPRnMmfxF7QYepU9ypvBMA4eXwbHGST79bUgKvoZ6Jsk"),
+                    pool: pubkey("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"),
+                    position_request: pubkey("GiHy9ixvdkzGQVoTVXkppg7FCMxx1gpwnB7Df9HEUuBM"),
+                    position_request_ata: pubkey("2zazRXFzzDHUJF4UBuGcmp3wbUh7zuhpjEuEHG1APisc"),
+                    position: pubkey("2RPcEvVpLwVVxAPYn89np27pTC6keUGQ1Yf77qa7i1ok"),
+                    mint: pubkey("So11111111111111111111111111111111111111112"),
+                    token_program: pubkey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+                    system_program: pubkey("11111111111111111111111111111111"),
+                    associated_token_program: pubkey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+                    event_authority: pubkey("37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN"),
+                    program: pubkey_bytes(&perpetuals::PROGRAM_ID),
+                    remaining_accounts: vec![],
+                },
+                args: perpetuals::instruction::ClosePositionRequest2Args {},
             },
-            args: perpetuals::instruction::ClosePositionRequest2Args {},
+            raw_logs: vec![
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu invoke [1]".into(),
+                "Program log: Instruction: ClosePositionRequest2".into(),
+                "Program log: Check permissions".into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu invoke [2]".into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu consumed 5134 of 70488 \
+                 compute units"
+                    .into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".into(),
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]".into(),
+                "Program log: Instruction: CloseAccount".into(),
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 3014 of 62491 \
+                 compute units"
+                    .into(),
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success".into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu consumed 41954 of 98004 \
+                 compute units"
+                    .into(),
+                "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".into(),
+            ],
         };
 
-        assert_eq!(close_accounts, &expected.accounts);
-        assert_eq!(close_args, &expected.args);
+        assert_eq!(close_ix, &expected);
     }
 }
 
@@ -451,116 +391,87 @@ async fn parse_borrow_from_custody_ix() {
         &parser
     );
 
-    let (borrow_accounts, borrow_args) = ixs
+    let borrow_ix = ixs
         .iter()
-        .find_map(|ix| match &ix.as_ref()?.instruction {
-            perpetuals::instruction::Instruction::BorrowFromCustody { accounts, args } => {
-                Some((accounts, args))
-            },
-            _ => None,
+        .find_map(|ix| {
+            let ix = ix.as_ref()?;
+            matches!(
+                &ix.instruction,
+                perpetuals::instruction::Instruction::BorrowFromCustody { .. }
+            )
+            .then_some(ix)
         })
         .expect("no borrow from custody ix found");
 
-    use yellowstone_vixen_core::PublicKey;
 
-    let expected = perpetuals::instruction::BorrowFromCustody {
-        accounts: perpetuals::instruction::BorrowFromCustodyAccounts {
-            owner: PublicKey::new(vec![
-                193, 141, 200, 224, 246, 201, 5, 150, 208, 94, 178, 61, 237, 45, 230, 117, 221,
-                127, 66, 219, 18, 153, 140, 155, 9, 12, 15, 17, 113, 249, 167, 29,
-            ]),
-            perpetuals: PublicKey::new(vec![
-                238, 151, 183, 0, 48, 24, 63, 163, 2, 12, 13, 6, 188, 207, 70, 162, 238, 235, 177,
-                159, 189, 77, 24, 177, 204, 63, 21, 61, 126, 170, 228, 30,
-            ]),
-            pool: PublicKey::new(vec![
-                62, 30, 36, 115, 199, 52, 6, 84, 235, 135, 41, 0, 53, 21, 28, 64, 43, 208, 227,
-                201, 124, 180, 36, 72, 134, 231, 32, 52, 179, 11, 77, 252,
-            ]),
-            custody: PublicKey::new(vec![
-                222, 232, 11, 52, 19, 162, 211, 16, 128, 98, 107, 146, 108, 56, 175, 52, 190, 209,
-                134, 219, 54, 142, 151, 127, 58, 191, 75, 213, 69, 68, 154, 109,
-            ]),
-            transfer_authority: PublicKey::new(vec![
-                141, 38, 83, 12, 155, 36, 127, 146, 136, 234, 206, 55, 84, 75, 38, 56, 128, 192,
-                44, 173, 4, 211, 33, 80, 237, 29, 1, 248, 251, 221, 35, 134,
-            ]),
-            borrow_position: PublicKey::new(vec![
-                10, 160, 117, 35, 217, 119, 94, 32, 82, 76, 97, 73, 104, 24, 124, 173, 193, 25, 42,
-                175, 214, 77, 58, 21, 186, 216, 174, 34, 147, 19, 160, 188,
-            ]),
-            custody_token_account: PublicKey::new(vec![
-                7, 174, 222, 70, 130, 196, 60, 168, 189, 35, 161, 245, 194, 169, 200, 148, 174,
-                246, 253, 87, 63, 45, 82, 20, 43, 171, 167, 194, 196, 86, 70, 241,
-            ]),
-            user_token_account: PublicKey::new(vec![
-                147, 87, 35, 84, 159, 192, 21, 171, 32, 132, 213, 96, 177, 150, 71, 166, 115, 202,
-                122, 55, 70, 4, 210, 126, 106, 102, 181, 28, 158, 43, 25, 180,
-            ]),
-            lp_token_mint: PublicKey::new(vec![
-                16, 118, 70, 156, 16, 65, 217, 233, 179, 159, 194, 237, 225, 19, 51, 151, 59, 62,
-                149, 115, 42, 68, 57, 32, 113, 147, 166, 28, 196, 16, 141, 67,
-            ]),
-            token_program: PublicKey::new(vec![
-                6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28,
-                180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
-            ]),
-            event_authority: PublicKey::new(vec![
-                31, 110, 107, 244, 132, 55, 71, 222, 35, 151, 202, 112, 75, 230, 84, 146, 147, 148,
-                134, 231, 7, 116, 227, 98, 240, 124, 71, 211, 219, 57, 210, 145,
-            ]),
-            program: PublicKey::new(vec![
-                5, 177, 243, 202, 241, 148, 98, 239, 135, 96, 240, 171, 222, 117, 205, 61, 158,
-                227, 27, 58, 50, 198, 32, 232, 148, 18, 46, 156, 155, 129, 69, 250,
-            ]),
-            remaining_accounts: vec![
-                PublicKey::new(vec![
-                    103, 89, 93, 216, 70, 192, 7, 242, 104, 150, 242, 174, 211, 27, 167, 181, 95,
-                    209, 44, 204, 21, 142, 11, 0, 122, 157, 143, 232, 70, 182, 159, 233,
-                ]),
-                PublicKey::new(vec![
-                    139, 170, 74, 72, 100, 34, 108, 192, 34, 72, 77, 200, 40, 30, 26, 22, 143, 92,
-                    244, 232, 5, 63, 26, 229, 6, 109, 145, 106, 136, 185, 223, 159,
-                ]),
-                PublicKey::new(vec![
-                    65, 77, 129, 72, 106, 241, 62, 110, 236, 158, 45, 91, 207, 69, 145, 50, 227,
-                    164, 102, 71, 9, 182, 109, 56, 208, 100, 119, 145, 36, 198, 206, 62,
-                ]),
-                PublicKey::new(vec![
-                    222, 232, 11, 52, 19, 162, 211, 16, 128, 98, 107, 146, 108, 56, 175, 52, 190,
-                    209, 134, 219, 54, 142, 151, 127, 58, 191, 75, 213, 69, 68, 154, 109,
-                ]),
-                PublicKey::new(vec![
-                    58, 87, 226, 203, 202, 208, 40, 131, 80, 35, 204, 171, 74, 216, 123, 210, 118,
-                    78, 143, 193, 50, 214, 142, 152, 102, 9, 235, 19, 75, 215, 134, 249,
-                ]),
-                PublicKey::new(vec![
-                    216, 42, 235, 57, 188, 70, 146, 145, 46, 181, 242, 170, 224, 18, 127, 36, 173,
-                    176, 246, 182, 107, 253, 118, 9, 80, 73, 48, 236, 108, 178, 99, 136,
-                ]),
-                PublicKey::new(vec![
-                    137, 116, 97, 3, 147, 40, 78, 117, 140, 2, 181, 4, 182, 212, 160, 110, 102, 27,
-                    143, 113, 202, 107, 86, 209, 96, 133, 161, 98, 37, 143, 145, 100,
-                ]),
-                PublicKey::new(vec![
-                    10, 94, 179, 70, 66, 54, 72, 77, 64, 8, 213, 215, 209, 243, 166, 61, 96, 115,
-                    62, 141, 88, 106, 109, 125, 75, 165, 76, 227, 23, 48, 183, 59,
-                ]),
-                PublicKey::new(vec![
-                    78, 218, 125, 88, 17, 150, 201, 61, 3, 86, 34, 155, 16, 119, 115, 97, 205, 50,
-                    105, 36, 150, 113, 51, 95, 56, 96, 94, 195, 58, 201, 132, 30,
-                ]),
-                PublicKey::new(vec![
-                    218, 40, 255, 246, 50, 152, 165, 14, 79, 147, 195, 1, 198, 238, 170, 100, 214,
-                    237, 61, 60, 80, 25, 129, 231, 40, 254, 0, 125, 174, 143, 186, 20,
-                ]),
-            ],
+    let expected = perpetuals::Instructions {
+        instruction: perpetuals::instruction::Instruction::BorrowFromCustody {
+            accounts: perpetuals::instruction::BorrowFromCustodyAccounts {
+                owner: pubkey("E2Z5ggFhABjC5tSZYouMgfgUpgNsvDpWrR6YTFt7D4YC"),
+                perpetuals: pubkey("H4ND9aYttUVLFmNypZqLjZ52FYiGvdEB45GmwNoKEjTj"),
+                pool: pubkey("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq"),
+                custody: pubkey("G18jKKXQwBbrHeiK3C9MRXhkHsLHf7XgCSisykV46EZa"),
+                transfer_authority: pubkey("AVzP2GeRmqGphJsMxWoqjpUifPpCret7LqWhD8NWQK49"),
+                borrow_position: pubkey("iUzDVme5Mc21GdULKK2JFuvjNWY4TaULF2kNGTcoXf9"),
+                custody_token_account: pubkey("WzWUoCmtVv7eqAbU3BfKPU3fhLP6CXR8NCJH78UK9VS"),
+                user_token_account: pubkey("Av9zpU3ZtdfYMHdW9ombpaarS9bQhsK4Rxvt6piUTkmH"),
+                lp_token_mint: pubkey("27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4"),
+                token_program: pubkey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+                event_authority: pubkey("37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN"),
+                program: pubkey("PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu"),
+                remaining_accounts: vec![
+                    pubkey("7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz"),
+                    pubkey("AQCGyheWPLeo6Qp9WpYS9m3Qj479t7R636N9ey1rEjEn"),
+                    pubkey("5Pv3gM9JrFFH883SWAhvJC9RPYmo8UNxuFtv5bMMALkm"),
+                    pubkey("G18jKKXQwBbrHeiK3C9MRXhkHsLHf7XgCSisykV46EZa"),
+                    pubkey("4vkNeXiYEUizLdrpdPS1eC2mccyM4NUPRtERrk6ZETkk"),
+                    pubkey("FYq2BWQ1V5P1WFBqr3qB2Kb5yHVvSv7upzKodgQE5zXh"),
+                    pubkey("AFZnHPzy4mvVCffrVwhewHbFc93uTHvDSFrVH7GtfXF1"),
+                    pubkey("hUqAT1KQ7eW1i6Csp9CXYtpPfSAvi835V7wKi5fRfmC"),
+                    pubkey("6Jp2xZUTWdDD2ZyUPRzeMdc6AFQ5K3pFgZxk2EijfjnM"),
+                    pubkey("Fgc93D641F8N2d1xLjQ4jmShuD3GE3BsCXA56KBQbF5u"),
+                ],
+            },
+            args: perpetuals::instruction::BorrowFromCustodyArgs {
+                amount: 8_463_144_037,
+            },
         },
-        args: perpetuals::instruction::BorrowFromCustodyArgs {
-            amount: 8_463_144_037,
-        },
+        raw_logs: vec![
+            "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu invoke [1]".into(),
+            "Program log: Instruction: BorrowFromCustody".into(),
+            "Program log: Borrow from custody at 1772150417".into(),
+            "Program log: doves ag price: 8585898945, publish time: 1772150415".into(),
+            "Program log: doves ag price: 202710309285, publish time: 1772150416".into(),
+            "Program log: doves ag price: 6746042743950, publish time: 1772150415".into(),
+            "Program log: doves ag price: 99988000, publish time: 1772150415".into(),
+            "Program log: doves ag price: 99993000, publish time: 1772150415".into(),
+            "Program log: doves ag price: 99988000, publish time: 1772150415".into(),
+            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]".into(),
+            "Program log: Instruction: Transfer".into(),
+            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4690 of 305138 compute \
+             units"
+                .into(),
+            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success".into(),
+            "Program log: new amount borrowed in usd: 6813955776162".into(),
+            "Program log: total borrow amount usd:6813955776162 collateral amount \
+             usd:11148464949892 maintainance margin usd: 10033618454902"
+                .into(),
+            "Program log: doves ag price: 8585898945, publish time: 1772150415".into(),
+            "Program log: doves ag price: 202710309285, publish time: 1772150416".into(),
+            "Program log: doves ag price: 6746042743950, publish time: 1772150415".into(),
+            "Program log: doves ag price: 99988000, publish time: 1772150415".into(),
+            "Program log: doves ag price: 99993000, publish time: 1772150415".into(),
+            "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu invoke [2]".into(),
+            "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu consumed 5134 of 253644 compute \
+             units"
+                .into(),
+            "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".into(),
+            "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu consumed 155036 of 393986 \
+             compute units"
+                .into(),
+            "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".into(),
+        ],
     };
 
-    assert_eq!(borrow_accounts, &expected.accounts);
-    assert_eq!(borrow_args, &expected.args);
+    assert_eq!(borrow_ix, &expected);
 }

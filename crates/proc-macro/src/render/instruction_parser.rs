@@ -275,6 +275,7 @@ fn single_instruction_helper_fn(
                     accounts: #accounts_value,
                     #args_field
                 },
+                raw_logs: vec![],
             })
         }
     })
@@ -527,7 +528,9 @@ pub fn instruction_parser(
                     return Err(ParseError::Filtered);
                 }
 
-                self.0.resolve(&ix_update.accounts, &ix_update.data)
+                let mut result = self.0.resolve(&ix_update.accounts, &ix_update.data)?;
+                result.raw_logs = ix_update.log_messages.clone();
+                Ok(result)
             }
         }
 
@@ -564,7 +567,9 @@ pub fn instruction_parser(
                     return Err(ParseError::Filtered);
                 }
 
-                resolve_instruction_default(&ix_update.accounts, &ix_update.data)
+                let mut result = resolve_instruction_default(&ix_update.accounts, &ix_update.data)?;
+                result.raw_logs = ix_update.log_messages.clone();
+                Ok(result)
             }
         }
 

@@ -135,6 +135,8 @@ pub struct SerializableInstructionUpdate {
     pub accounts: Vec<SerializablePubkey>,
     pub data: Vec<u8>,
     pub inner: Vec<SerializableInstructionUpdate>,
+    #[serde(default)]
+    pub log_messages: Vec<String>,
 }
 
 impl From<&InstructionUpdate> for SerializableInstructionUpdate {
@@ -149,6 +151,7 @@ impl From<&InstructionUpdate> for SerializableInstructionUpdate {
                 .collect(),
             data: value.data.clone(),
             inner: value.inner.iter().map(Into::into).collect(),
+            log_messages: value.log_messages.clone(),
         }
     }
 }
@@ -162,6 +165,7 @@ impl From<&SerializableInstructionUpdate> for InstructionUpdate {
             data: value.data.clone(),
             shared: Arc::new(InstructionShared::default()),
             inner: value.inner.iter().map(Into::into).collect(),
+            log_messages: value.log_messages.clone(),
             path: value
                 .ix_index
                 .iter()
@@ -214,6 +218,7 @@ fn try_from_ui_instructions(
             accounts: accounts_out,
             program,
             inner: Vec::new(),
+            log_messages: vec![],
         };
 
         ixs.push(ix);
@@ -243,6 +248,7 @@ fn try_from_ui_inner_ixs(
                 accounts: accounts_out,
                 program,
                 inner: Vec::new(),
+                log_messages: vec![],
             };
             ixs.push(ix);
         } else {
@@ -250,6 +256,68 @@ fn try_from_ui_inner_ixs(
         }
     }
     Ok(filter_ixs(ixs, program_id))
+}
+
+///
+/// Split transaction logs by outer instruction index.
+///
+/// Returns a vec where entry `i` contains the log lines for outer instruction `i`
+/// (from its `Program ... invoke [1]` through its `Program ... success`/`failed`).
+///
+fn split_logs_by_outer_ix(logs: &[String]) -> Vec<Vec<String>> {
+    let mut result: Vec<Vec<String>> = Vec::new();
+    let mut current: Vec<String> = Vec::new();
+    let mut depth: u32 = 0;
+
+    for line in logs {
+        if line.starts_with("Program ") && line.contains(" invoke [1]") && depth == 0 {
+            // Start of a new outer instruction
+            if !current.is_empty() {
+                result.push(std::mem::take(&mut current));
+            }
+
+            depth = 1;
+
+            current.push(line.clone());
+        } else if depth > 0 {
+            if line.starts_with("Program ") && line.contains(" invoke [") {
+                depth += 1;
+            } else if line.starts_with("Program ")
+                && (line.ends_with(" success") || line.contains(" failed:"))
+            {
+                depth -= 1;
+            }
+
+            current.push(line.clone());
+        }
+    }
+
+    if !current.is_empty() {
+        result.push(current);
+    }
+
+    result
+}
+
+///
+/// Assign per-outer-instruction logs to each serializable instruction.
+///
+/// Each instruction gets the full log range of its outer instruction (identified
+/// by `ix_index[0]`).
+///
+fn assign_logs_to_instructions(
+    logs: &[String],
+    instructions: &mut [SerializableInstructionUpdate],
+) {
+    let per_outer = split_logs_by_outer_ix(logs);
+
+    for ix in instructions.iter_mut() {
+        let outer_idx = ix.ix_index[0];
+
+        if let Some(ix_logs) = per_outer.get(outer_idx) {
+            ix.log_messages.clone_from(ix_logs);
+        }
+    }
 }
 
 fn filter_ixs(
@@ -265,7 +333,7 @@ fn filter_ixs(
 fn try_from_tx_meta<P: ProgramParser>(
     value: EncodedConfirmedTransactionWithStatusMeta,
     parser: &P,
-) -> Result<Vec<SerializableInstructionUpdate>, String> {
+) -> Result<SerializableTransactionFixture, String> {
     let EncodedConfirmedTransactionWithStatusMeta {
         transaction,
         slot: _,
@@ -277,6 +345,7 @@ fn try_from_tx_meta<P: ProgramParser>(
         version: _,
     } = transaction;
     let mut inner_ixs: Option<Vec<UiInnerInstructions>> = None;
+    let mut log_messages: Vec<String> = Vec::new();
 
     let mut account_keys: Vec<String> = Vec::new();
     let program_id = parser.program_id().to_string();
@@ -287,6 +356,10 @@ fn try_from_tx_meta<P: ProgramParser>(
 
             if let Some(meta) = meta {
                 inner_ixs = meta.inner_instructions.map(Some).flatten();
+
+                if let OptionSerializer::Some(logs) = meta.log_messages {
+                    log_messages = logs;
+                }
 
                 if let OptionSerializer::Some(loaded) = meta.loaded_addresses {
                     for address in loaded.writable {
@@ -304,25 +377,28 @@ fn try_from_tx_meta<P: ProgramParser>(
                 try_from_ui_instructions(&raw_message.instructions, &account_keys, &program_id)?;
 
             // filtering inner instructions by program id
-            if let Some(inner_ixs) = inner_ixs {
-                if inner_ixs.is_empty() {
-                    return Ok(program_filtered_ixs);
-                }
-
+            if let Some(inner_ixs) = inner_ixs
+                && !inner_ixs.is_empty()
+            {
                 for ixs in inner_ixs {
                     let inner_ixs = try_from_ui_inner_ixs(&ixs, &account_keys, &program_id)?;
-                    if inner_ixs.is_empty() {
-                        continue;
+
+                    if !inner_ixs.is_empty() {
+                        program_filtered_ixs.extend(inner_ixs);
                     }
-
-                    program_filtered_ixs.extend(inner_ixs);
                 }
-
-                return Ok(program_filtered_ixs);
             }
-        } else {
-            return Err("Invalid transaction encoding".into());
+
+            // Split logs per outer instruction and assign to each filtered instruction.
+            assign_logs_to_instructions(&log_messages, &mut program_filtered_ixs);
+
+            return Ok(SerializableTransactionFixture {
+                instructions: program_filtered_ixs,
+                log_messages,
+            });
         }
+
+        return Err("Invalid transaction encoding".into());
     }
 
     Err("Invalid transaction encoding".into())
@@ -344,10 +420,11 @@ macro_rules! account_fixture {
 macro_rules! tx_fixture {
     ($sig:expr, $parser:expr) => {
         match $crate::load_fixture($sig, $parser).await.unwrap() {
-            $crate::FixtureData::Instructions(ixs) => {
-                let futures = ixs.iter().map(|ix| {
+            $crate::FixtureData::Instructions(fixture) => {
+                let futures = fixture.instructions.iter().map(|ix| {
                     let parser = $parser.clone();
-                    async move { $crate::run_ix_parse!(parser, ix) }
+                    let logs = ix.log_messages.clone();
+                    async move { $crate::run_ix_parse!(parser, ix, logs) }
                 });
                 $crate::futures::future::join_all(futures).await
             },
@@ -364,15 +441,18 @@ macro_rules! run_account_parse {
 
 #[macro_export]
 macro_rules! run_ix_parse {
-    ($parser:expr, $ix:expr) => {
-        match $parser.parse(&$ix.into()).await {
+    ($parser:expr, $ix:expr, $logs:expr) => {{
+        let mut ix_update: ::yellowstone_vixen_core::instruction::InstructionUpdate = $ix.into();
+        ix_update.log_messages = $logs;
+
+        match $parser.parse(&ix_update).await {
             Ok(v) => Some(v),
 
             // Ignore filtered instructions, but panic on actual errors
             Err(yellowstone_vixen_core::ParseError::Filtered) => None,
             Err(e) => panic!("parse error: {e:?}"),
         }
-    };
+    }};
 }
 
 pub async fn load_fixture<P: ProgramParser>(
@@ -413,10 +493,21 @@ pub fn get_rpc_client() -> RpcClient {
     RpcClient::new(endpoint)
 }
 
+/// Serializable transaction fixture: instructions + log messages.
+///
+/// Backward-compatible: deserializing a plain JSON array (old format) yields
+/// instructions with empty log messages.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SerializableTransactionFixture {
+    pub instructions: Vec<SerializableInstructionUpdate>,
+    #[serde(default)]
+    pub log_messages: Vec<String>,
+}
+
 #[derive(Debug, Clone)]
 pub enum FixtureData {
     Account(SubscribeUpdateAccount),
-    Instructions(Vec<SerializableInstructionUpdate>),
+    Instructions(SerializableTransactionFixture),
 }
 
 async fn fetch_fixture<P: ProgramParser>(
@@ -534,8 +625,17 @@ pub fn read_account_fixture(data: &[u8]) -> Result<FixtureData, Box<dyn std::err
 }
 
 pub fn read_instructions_fixture(data: &[u8]) -> Result<FixtureData, Box<dyn std::error::Error>> {
-    let instructions: Vec<SerializableInstructionUpdate> = serde_json::from_slice(data)?;
-    Ok(FixtureData::Instructions(instructions))
+    // Try new format first (object with instructions + log_messages),
+    // fall back to old format (plain array of instructions).
+    let fixture: SerializableTransactionFixture =
+        serde_json::from_slice::<SerializableTransactionFixture>(data).or_else(|_| {
+            let instructions: Vec<SerializableInstructionUpdate> = serde_json::from_slice(data)?;
+            Ok::<_, serde_json::Error>(SerializableTransactionFixture {
+                instructions,
+                log_messages: vec![],
+            })
+        })?;
+    Ok(FixtureData::Instructions(fixture))
 }
 
 pub fn read_fixture(path: &Path) -> Result<FixtureData, Box<dyn std::error::Error>> {

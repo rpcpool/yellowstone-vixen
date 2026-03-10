@@ -1,5 +1,6 @@
 mod common;
 
+use common::{pubkey, pubkey_bytes};
 use yellowstone_vixen_core::Parser;
 use yellowstone_vixen_mock::tx_fixture;
 use yellowstone_vixen_proc_macro::include_vixen_parser;
@@ -22,79 +23,79 @@ async fn parse_sell_ix() {
         &parser
     );
 
-    let (sell_accounts, sell_args) = ixs
+    let sell_ix = ixs
         .iter()
-        .find_map(|ix| match &ix.as_ref()?.instruction {
-            pump_fun::instruction::Instruction::Sell { accounts, args } => Some((accounts, args)),
-            _ => None,
+        .find_map(|ix| {
+            let ix = ix.as_ref()?;
+            matches!(
+                &ix.instruction,
+                pump_fun::instruction::Instruction::Sell { .. }
+            )
+            .then_some(ix)
         })
         .expect("no Sell found");
 
-    let expected = pump_fun::instruction::Sell {
-        accounts: pump_fun::instruction::SellAccounts {
-            global: pump_fun::PublicKey::new(vec![
-                58, 134, 94, 105, 238, 15, 84, 128, 202, 188, 246, 99, 87, 228, 220, 47, 24, 213,
-                141, 69, 193, 234, 116, 137, 251, 55, 35, 217, 121, 60, 114, 166,
-            ]),
-            fee_recipient: pump_fun::PublicKey::new(vec![
-                74, 194, 248, 208, 221, 92, 188, 151, 227, 40, 156, 25, 124, 181, 6, 42, 84, 243,
-                217, 86, 185, 206, 110, 81, 21, 249, 101, 103, 170, 92, 179, 230,
-            ]),
-            mint: pump_fun::PublicKey::new(vec![
-                215, 201, 89, 192, 154, 187, 38, 53, 1, 42, 141, 252, 217, 33, 242, 162, 194, 168,
-                144, 9, 135, 136, 116, 202, 194, 233, 76, 113, 55, 136, 66, 127,
-            ]),
-            bonding_curve: pump_fun::PublicKey::new(vec![
-                131, 228, 123, 114, 9, 146, 113, 233, 203, 71, 155, 186, 248, 219, 228, 2, 80, 22,
-                241, 41, 176, 3, 111, 169, 24, 20, 225, 224, 112, 234, 204, 164,
-            ]),
-            associated_bonding_curve: pump_fun::PublicKey::new(vec![
-                172, 157, 181, 233, 173, 223, 182, 37, 63, 132, 237, 206, 154, 43, 250, 236, 193,
-                137, 226, 144, 121, 124, 192, 65, 203, 183, 231, 164, 223, 87, 126, 21,
-            ]),
-            associated_user: pump_fun::PublicKey::new(vec![
-                34, 89, 226, 159, 211, 161, 245, 174, 12, 62, 54, 74, 178, 87, 137, 246, 193, 210,
-                223, 126, 129, 108, 245, 202, 96, 66, 78, 98, 255, 166, 137, 209,
-            ]),
-            user: pump_fun::PublicKey::new(vec![
-                226, 100, 161, 198, 222, 202, 22, 250, 186, 79, 167, 102, 141, 191, 114, 19, 52,
-                160, 110, 148, 65, 40, 69, 83, 152, 179, 114, 230, 183, 144, 90, 28,
-            ]),
-            system_program: pump_fun::PublicKey::new(vec![
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0,
-            ]),
-            creator_vault: pump_fun::PublicKey::new(vec![
-                97, 62, 77, 62, 54, 62, 2, 47, 13, 217, 73, 201, 136, 141, 62, 156, 99, 250, 82,
-                203, 3, 133, 212, 123, 182, 216, 235, 52, 219, 78, 120, 185,
-            ]),
-            token_program: pump_fun::PublicKey::new(vec![
-                6, 221, 246, 225, 238, 117, 143, 222, 24, 66, 93, 188, 228, 108, 205, 218, 182, 26,
-                252, 77, 131, 185, 13, 39, 254, 189, 249, 40, 216, 161, 139, 252,
-            ]),
-            event_authority: pump_fun::PublicKey::new(vec![
-                172, 241, 54, 235, 1, 252, 28, 78, 136, 61, 35, 200, 181, 132, 74, 181, 154, 55,
-                246, 106, 221, 87, 197, 233, 172, 59, 83, 224, 89, 211, 92, 100,
-            ]),
-            program: pump_fun::PublicKey::new(pump_fun::PROGRAM_ID.to_vec()),
-            fee_config: pump_fun::PublicKey::new(vec![
-                111, 154, 180, 164, 241, 149, 141, 192, 169, 201, 76, 63, 183, 44, 7, 153, 88, 67,
-                237, 164, 133, 227, 162, 79, 16, 198, 147, 153, 248, 25, 148, 15,
-            ]),
-            fee_program: pump_fun::PublicKey::new(vec![
-                12, 53, 255, 169, 5, 90, 142, 86, 141, 168, 247, 188, 7, 86, 21, 39, 76, 241, 201,
-                44, 164, 31, 64, 0, 156, 81, 106, 164, 20, 194, 124, 112,
-            ]),
-            remaining_accounts: vec![],
+    let expected = pump_fun::Instructions {
+        instruction: pump_fun::instruction::Instruction::Sell {
+            accounts: pump_fun::instruction::SellAccounts {
+                global: pubkey("4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf"),
+                fee_recipient: pubkey("62qc2CNXwrYqQScmEdiZFFAnJR262PxWEuNQtxfafNgV"),
+                mint: pubkey("FXLjNRSQXuFM8fhKLEg2QeuUxs4Eu2hhc28tZhzrpump"),
+                bonding_curve: pubkey("9srUo8cgvHKkAZYNdjwgiYm8vK8PNRhBbzjh8RuWZtp3"),
+                associated_bonding_curve: pubkey("Ccpc35bJPjubzYbfkUbg7kK7Arkp4Q8so7ne6rLpAGXv"),
+                associated_user: pubkey("3K6Mgvd9jEvXRM7DTeNGjBZc2xi4QCqyg1mqVwaCWP76"),
+                user: pubkey("GEk94udrX63hAvNzNE1eC8zNvMDZ2cpV9xTgKuVP7kAw"),
+                system_program: pubkey("11111111111111111111111111111111"),
+                creator_vault: pubkey("7YbeWL1XuV6FCgYZbFSk7pcqk4UdM2G9YWuZKYHWmpfJ"),
+                token_program: pubkey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"),
+                event_authority: pubkey("Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1"),
+                program: pubkey_bytes(&pump_fun::PROGRAM_ID),
+                fee_config: pubkey("8Wf5TiAheLUqBrKXeYg2JtAFFMWtKdG2BSFgqUcPVwTt"),
+                fee_program: pubkey("pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ"),
+                remaining_accounts: vec![],
+            },
+            args: pump_fun::instruction::SellArgs {
+                amount: 3_878_351_170_692,
+                min_sol_output: 522_403_143,
+            },
         },
-        args: pump_fun::instruction::SellArgs {
-            amount: 3_878_351_170_692,
-            min_sol_output: 522_403_143,
-        },
+        raw_logs: vec![
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]".into(),
+            "Program log: Instruction: Sell".into(),
+            "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ invoke [2]".into(),
+            "Program log: Instruction: GetFees".into(),
+            "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ consumed 3136 of 57992 \
+             compute units"
+                .into(),
+            "Program return: pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ \
+             AAAAAAAAAABfAAAAAAAAAB4AAAAAAAAA"
+                .into(),
+            "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ success".into(),
+            "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb invoke [2]".into(),
+            "Program log: Instruction: TransferChecked".into(),
+            "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb consumed 2475 of 51092 \
+             compute units"
+                .into(),
+            "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb success".into(),
+            "Program data: vdt/007mYe7XyVnAmrsmNQEqjfzZIfKiwqiQCYeIdMrC6UxxN4hCf9DrkCUAAAAA\
+             hGy+/4YDAAAA4mShxt7KFvq6T6dmjb9yEzSgbpRBKEVTmLNy5reQWhyA9IlpAAAAABJjOsQQAAAA\
+             ZMje4I2WAQAStxbICQAAAGQwzJT8lwAASsL40N1cvJfjKJwZfLUGKlTz2Va5zm5RFfllZ6pcs+Zf\
+             AAAAAAAAAFtcWwAAAAAALUNGTC+hWGN5OXP1S7ZMJLKc62q0tXQFvA5WBZ2I/18eAAAAAAAAAMzZ\
+             HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAHNlbGwA"
+                .into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [2]".into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P consumed 2054 of 42010 \
+             compute units"
+                .into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success".into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P consumed 47690 of 86731 \
+             compute units"
+                .into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success".into(),
+        ],
     };
 
-    assert_eq!(sell_accounts, &expected.accounts);
-    assert_eq!(sell_args, &expected.args);
+    assert_eq!(sell_ix, &expected);
 }
 
 #[tokio::test]
@@ -106,86 +107,86 @@ async fn parse_buy_ix() {
         &parser
     );
 
-    let (buy_accounts, buy_args) = ixs
+    let buy_ix = ixs
         .iter()
-        .find_map(|ix| match &ix.as_ref()?.instruction {
-            pump_fun::instruction::Instruction::Buy { accounts, args } => Some((accounts, args)),
-            _ => None,
+        .find_map(|ix| {
+            let ix = ix.as_ref()?;
+            matches!(
+                &ix.instruction,
+                pump_fun::instruction::Instruction::Buy { .. }
+            )
+            .then_some(ix)
         })
         .expect("no Buy found");
 
-    let expected = pump_fun::instruction::Buy {
-        accounts: pump_fun::instruction::BuyAccounts {
-            global: pump_fun::PublicKey::new(vec![
-                58, 134, 94, 105, 238, 15, 84, 128, 202, 188, 246, 99, 87, 228, 220, 47, 24, 213,
-                141, 69, 193, 234, 116, 137, 251, 55, 35, 217, 121, 60, 114, 166,
-            ]),
-            fee_recipient: pump_fun::PublicKey::new(vec![
-                74, 194, 248, 208, 221, 92, 188, 151, 227, 40, 156, 25, 124, 181, 6, 42, 84, 243,
-                217, 86, 185, 206, 110, 81, 21, 249, 101, 103, 170, 92, 179, 230,
-            ]),
-            mint: pump_fun::PublicKey::new(vec![
-                157, 42, 204, 74, 124, 198, 216, 108, 144, 20, 143, 53, 84, 234, 28, 41, 82, 143,
-                205, 169, 155, 80, 210, 239, 4, 165, 242, 53, 65, 163, 123, 255,
-            ]),
-            bonding_curve: pump_fun::PublicKey::new(vec![
-                107, 57, 249, 146, 123, 146, 191, 126, 24, 32, 176, 93, 186, 163, 173, 203, 167,
-                12, 229, 233, 191, 63, 135, 60, 61, 95, 58, 212, 105, 113, 144, 221,
-            ]),
-            associated_bonding_curve: pump_fun::PublicKey::new(vec![
-                215, 120, 82, 246, 116, 188, 91, 227, 71, 173, 243, 173, 161, 111, 225, 254, 119,
-                20, 123, 69, 63, 61, 42, 101, 209, 233, 7, 46, 207, 140, 139, 53,
-            ]),
-            associated_user: pump_fun::PublicKey::new(vec![
-                230, 232, 110, 107, 206, 24, 214, 42, 192, 108, 254, 184, 102, 100, 118, 138, 245,
-                186, 92, 17, 245, 153, 136, 74, 83, 47, 206, 113, 79, 213, 36, 112,
-            ]),
-            user: pump_fun::PublicKey::new(vec![
-                182, 42, 67, 17, 230, 90, 164, 204, 87, 199, 69, 169, 208, 91, 167, 199, 234, 146,
-                243, 143, 76, 207, 123, 36, 174, 221, 188, 131, 81, 212, 11, 76,
-            ]),
-            system_program: pump_fun::PublicKey::new(vec![
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0,
-            ]),
-            token_program: pump_fun::PublicKey::new(vec![
-                6, 221, 246, 225, 238, 117, 143, 222, 24, 66, 93, 188, 228, 108, 205, 218, 182, 26,
-                252, 77, 131, 185, 13, 39, 254, 189, 249, 40, 216, 161, 139, 252,
-            ]),
-            creator_vault: pump_fun::PublicKey::new(vec![
-                153, 180, 126, 182, 24, 2, 112, 43, 223, 82, 72, 103, 48, 131, 97, 106, 226, 129,
-                201, 20, 58, 87, 171, 77, 19, 254, 150, 229, 6, 147, 114, 154,
-            ]),
-            event_authority: pump_fun::PublicKey::new(vec![
-                172, 241, 54, 235, 1, 252, 28, 78, 136, 61, 35, 200, 181, 132, 74, 181, 154, 55,
-                246, 106, 221, 87, 197, 233, 172, 59, 83, 224, 89, 211, 92, 100,
-            ]),
-            program: pump_fun::PublicKey::new(pump_fun::PROGRAM_ID.to_vec()),
-            global_volume_accumulator: pump_fun::PublicKey::new(vec![
-                250, 9, 17, 165, 72, 99, 65, 45, 99, 31, 78, 7, 135, 3, 41, 108, 3, 95, 13, 19, 51,
-                160, 217, 200, 131, 141, 115, 183, 16, 254, 110, 45,
-            ]),
-            user_volume_accumulator: pump_fun::PublicKey::new(vec![
-                236, 98, 197, 131, 152, 250, 163, 171, 7, 156, 141, 177, 238, 177, 235, 244, 123,
-                150, 31, 46, 113, 219, 127, 97, 49, 230, 18, 3, 217, 121, 62, 187,
-            ]),
-            fee_config: pump_fun::PublicKey::new(vec![
-                111, 154, 180, 164, 241, 149, 141, 192, 169, 201, 76, 63, 183, 44, 7, 153, 88, 67,
-                237, 164, 133, 227, 162, 79, 16, 198, 147, 153, 248, 25, 148, 15,
-            ]),
-            fee_program: pump_fun::PublicKey::new(vec![
-                12, 53, 255, 169, 5, 90, 142, 86, 141, 168, 247, 188, 7, 86, 21, 39, 76, 241, 201,
-                44, 164, 31, 64, 0, 156, 81, 106, 164, 20, 194, 124, 112,
-            ]),
-            remaining_accounts: vec![],
+    let expected = pump_fun::Instructions {
+        instruction: pump_fun::instruction::Instruction::Buy {
+            accounts: pump_fun::instruction::BuyAccounts {
+                global: pubkey("4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf"),
+                fee_recipient: pubkey("62qc2CNXwrYqQScmEdiZFFAnJR262PxWEuNQtxfafNgV"),
+                mint: pubkey("BaWrqmzh9nqUkZRKB9p9WNaM8xKRrmcW9ztgLJrWpump"),
+                bonding_curve: pubkey("8DZu2LNtTKph9iShWpWdFjHPFAqGkrafpSUyaFZrd6ip"),
+                associated_bonding_curve: pubkey("FW755HTHAZweRrzoyZWe6iQdHwtvh82Z6HKcymWCUwCQ"),
+                associated_user: pubkey("GYNLNMVdaw8CtrgsiJhrwG5vmTXhei8Kc768FqBEEEsq"),
+                user: pubkey("DG6aWRd9ft47v9MZxeoHrxaJfVfLcXRTwC4RZ23DkokX"),
+                system_program: pubkey("11111111111111111111111111111111"),
+                token_program: pubkey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"),
+                creator_vault: pubkey("BM11VKvie7n5CA6crAasQDeorhpvLJ3Ghu8BHkTpwRSq"),
+                event_authority: pubkey("Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1"),
+                program: pubkey_bytes(&pump_fun::PROGRAM_ID),
+                global_volume_accumulator: pubkey("Hq2wp8uJ9jCPsYgNHex8RtqdvMPfVGoYwjvF1ATiwn2Y"),
+                user_volume_accumulator: pubkey("Guka6uenDqtwCT8xmGpirKWeD5KU3r5L21qCSBVPHHPY"),
+                fee_config: pubkey("8Wf5TiAheLUqBrKXeYg2JtAFFMWtKdG2BSFgqUcPVwTt"),
+                fee_program: pubkey("pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ"),
+                remaining_accounts: vec![],
+            },
+            args: pump_fun::instruction::BuyArgs {
+                amount: 693_868_985_905,
+                max_sol_cost: 55_000_000,
+                track_volume: pump_fun::OptionBool { item_0: false },
+            },
         },
-        args: pump_fun::instruction::BuyArgs {
-            amount: 693_868_985_905,
-            max_sol_cost: 55_000_000,
-            track_volume: pump_fun::OptionBool { item_0: false },
-        },
+        raw_logs: vec![
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [1]".into(),
+            "Program log: Instruction: Buy".into(),
+            "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ invoke [2]".into(),
+            "Program log: Instruction: GetFees".into(),
+            "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ consumed 3136 of 136942 \
+             compute units"
+                .into(),
+            "Program return: pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ \
+             AAAAAAAAAABfAAAAAAAAAB4AAAAAAAAA"
+                .into(),
+            "Program pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ success".into(),
+            "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb invoke [2]".into(),
+            "Program log: Instruction: TransferChecked".into(),
+            "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb consumed 2475 of 130003 \
+             compute units"
+                .into(),
+            "Program TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb success".into(),
+            "Program 11111111111111111111111111111111 invoke [2]".into(),
+            "Program 11111111111111111111111111111111 success".into(),
+            "Program 11111111111111111111111111111111 invoke [2]".into(),
+            "Program 11111111111111111111111111111111 success".into(),
+            "Program 11111111111111111111111111111111 invoke [2]".into(),
+            "Program 11111111111111111111111111111111 success".into(),
+            "Program data: vdt/007mYe6dKsxKfMbYbJAUjzVU6hwpUo/NqZtQ0u8EpfI1QaN7/5i4+wIAAAAA\
+             MX7QjaEAAAABtipDEeZapMxXx0Wp0Funx+qS849Mz3skrt28g1HUC0yp9IlpAAAAAMnkpzkLAAAA\
+             LNhpoj9fAgDJOIQ9BAAAACxAV1auYAEASsL40N1cvJfjKJwZfLUGKlTz2Va5zm5RFfllZ6pcs+Zf\
+             AAAAAAAAAF9BBwAAAAAApZaRFOGWYW3wyoOUf3uyF/i/3KfhW/3tp0juGw55TDEeAAAAAAAAAIpK\
+             AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAGJ1eQA="
+                .into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P invoke [2]".into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P consumed 2054 of 114862 \
+             compute units"
+                .into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success".into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P consumed 68600 of 179974 \
+             compute units"
+                .into(),
+            "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success".into(),
+        ],
     };
 
-    assert_eq!(buy_accounts, &expected.accounts);
-    assert_eq!(buy_args, &expected.args);
+    assert_eq!(buy_ix, &expected);
 }

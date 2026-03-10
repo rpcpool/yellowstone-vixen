@@ -20,12 +20,20 @@ fn manual_prost_message_impl(
     field_ident: &syn::Ident,
     mod_ident: &syn::Ident,
     oneof_ident: &syn::Ident,
+    has_raw_logs: bool,
 ) -> TokenStream {
+    let extra_debug_field = if has_raw_logs {
+        quote! { .field("raw_logs", &self.raw_logs) }
+    } else {
+        quote! {}
+    };
+
     quote! {
         impl ::core::fmt::Debug for #parent_ident {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 f.debug_struct(stringify!(#parent_ident))
                     .field(stringify!(#field_ident), &self.#field_ident)
+                    #extra_debug_field
                     .finish()
             }
         }
@@ -334,7 +342,7 @@ fn render_instruction_dispatch(
     let proto_impls = if cfg!(feature = "proto") {
         let oneof_impl = manual_prost_oneof_impl(oneof_ir, &mod_ident, &oneof_ident);
         let message_impl =
-            manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident);
+            manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident, true);
         quote! { #oneof_impl #message_impl }
     } else {
         quote! {}
@@ -353,6 +361,7 @@ fn render_instruction_dispatch(
         #[derive(Clone, #parent_debug_derive PartialEq)]
         pub struct #parent_ident {
             pub #field_ident: #mod_ident::#oneof_ident,
+            pub raw_logs: Vec<String>,
         }
 
         pub mod #mod_ident {
@@ -394,7 +403,7 @@ fn render_instruction_dispatch(
                     }
                 };
 
-                ::core::result::Result::Ok(Self { #field_ident })
+                ::core::result::Result::Ok(Self { #field_ident, raw_logs: vec![] })
             }
         }
     }
@@ -461,7 +470,7 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
         let first_variant_msg = format_ident!("{}", first_variant.message_type);
 
         let message_impl =
-            manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident);
+            manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident, false);
 
         quote! {
             #message_impl
