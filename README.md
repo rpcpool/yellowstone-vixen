@@ -207,6 +207,7 @@ This applies to every `cargo` invocation inside this workspace. The file is giti
 
 - [**Mock Testing for Parsers**](./crates/mock/README.md): Load and replay devnet accounts or transactions offline.
 - [**Usage Examples**](./examples/): A variety of example projects that demonstrate how to use the features.
+- [**Coordinator Tap Example**](./examples/coordinator-tap/README.md): Run the same `CoordinatorSource` path Janus uses directly from this workspace.
 - [**Example Vixen Configuration**](./Vixen.example.toml): Starter TOML file for pipeline configuration.
 - [**Generate Parsers from IDL**](./docs/codama-parser-generation.md): Use Codama to automatically generate Vixen parsers from Anchor or custom IDL files.
 

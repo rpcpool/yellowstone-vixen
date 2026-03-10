@@ -9,7 +9,7 @@ use std::{path::PathBuf, time::Duration};
 use async_trait::async_trait;
 use futures_util::StreamExt;
 use tokio::sync::{mpsc::Sender, oneshot};
-use yellowstone_grpc_client::GeyserGrpcClient;
+use yellowstone_grpc_client::{GeyserGrpcClient, GeyserGrpcClientError, Interceptor};
 use yellowstone_grpc_proto::{
     geyser::{
         subscribe_update::UpdateOneof, SubscribeRequest, SubscribeRequestFilterBlocksMeta,
@@ -29,6 +29,89 @@ use crate::{fixtures::FixtureWriter, types::CoordinatorInput};
 const DEFAULT_STREAM_IDLE_WARN_SECS: u64 = 0;
 
 const fn default_stream_idle_warn_secs() -> u64 { DEFAULT_STREAM_IDLE_WARN_SECS }
+
+#[derive(Debug, serde::Deserialize, Default, PartialEq, Eq)]
+struct EndpointVersionInfo {
+    #[serde(default)]
+    version: EndpointVersion,
+    #[serde(default)]
+    extra: EndpointVersionExtra,
+}
+
+#[derive(Debug, serde::Deserialize, Default, PartialEq, Eq)]
+struct EndpointVersion {
+    #[serde(default)]
+    package: Option<String>,
+    #[serde(default)]
+    version: Option<String>,
+    #[serde(default)]
+    proto: Option<String>,
+    #[serde(default)]
+    proto_richat: Option<String>,
+    #[serde(default)]
+    solana: Option<String>,
+    #[serde(default)]
+    git: Option<String>,
+    #[serde(default)]
+    rustc: Option<String>,
+    #[serde(default)]
+    buildts: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize, Default, PartialEq, Eq)]
+struct EndpointVersionExtra {
+    #[serde(default)]
+    hostname: Option<String>,
+}
+
+fn parse_endpoint_version(raw_version: &str) -> Option<EndpointVersionInfo> {
+    serde_json::from_str(raw_version).ok()
+}
+
+async fn log_connected_endpoint<F: Interceptor>(
+    client: &mut GeyserGrpcClient<F>,
+    endpoint: &str,
+    source_label: &str,
+) {
+    match client.get_version().await {
+        Ok(response) => match parse_endpoint_version(&response.version) {
+            Some(version_info) => tracing::info!(
+                source_label,
+                endpoint = %endpoint,
+                endpoint_version_raw = %response.version,
+                endpoint_package = ?version_info.version.package.as_deref(),
+                endpoint_semver = ?version_info.version.version.as_deref(),
+                endpoint_proto = ?version_info.version.proto.as_deref(),
+                endpoint_proto_richat = ?version_info.version.proto_richat.as_deref(),
+                endpoint_solana = ?version_info.version.solana.as_deref(),
+                endpoint_git = ?version_info.version.git.as_deref(),
+                endpoint_rustc = ?version_info.version.rustc.as_deref(),
+                endpoint_buildts = ?version_info.version.buildts.as_deref(),
+                endpoint_hostname = ?version_info.extra.hostname.as_deref(),
+                "connected to gRPC endpoint"
+            ),
+            None => tracing::info!(
+                source_label,
+                endpoint = %endpoint,
+                endpoint_version_raw = %response.version,
+                "connected to gRPC endpoint"
+            ),
+        },
+        Err(GeyserGrpcClientError::TonicStatus(status)) => tracing::warn!(
+            source_label,
+            endpoint = %endpoint,
+            code = ?status.code(),
+            message = %status.message(),
+            "connected to gRPC endpoint but version probe failed"
+        ),
+        Err(error) => tracing::warn!(
+            source_label,
+            endpoint = %endpoint,
+            error = %error,
+            "connected to gRPC endpoint but version probe failed"
+        ),
+    }
+}
 
 /// Config for CoordinatorSource.
 ///
@@ -164,6 +247,8 @@ impl SourceTrait for CoordinatorSource {
             .connect()
             .await?;
 
+        log_connected_endpoint(&mut client, &config.endpoint, source_label).await;
+
         let subscribe_request = SubscribeRequest::from(self.filters.clone())
             .with_coordinator_subscriptions()
             .with_from_slot(config.from_slot)
@@ -171,6 +256,7 @@ impl SourceTrait for CoordinatorSource {
 
         tracing::info!(
             source_label,
+            endpoint = %config.endpoint,
             has_transactions = !subscribe_request.transactions.is_empty(),
             has_blocks_meta = !subscribe_request.blocks_meta.is_empty(),
             has_slots = !subscribe_request.slots.is_empty(),
@@ -186,7 +272,7 @@ impl SourceTrait for CoordinatorSource {
 
         let mut stream = std::pin::pin!(stream);
 
-        tracing::info!(source_label, "gRPC stream started");
+        tracing::info!(source_label, endpoint = %config.endpoint, "gRPC stream started");
 
         let idle_warn_secs = self.config.stream_idle_warn_secs;
         let stream_idle_timeout = Duration::from_secs(idle_warn_secs);
@@ -337,5 +423,30 @@ impl SourceTrait for CoordinatorSource {
         let _ = status_tx.send(exit_status);
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_endpoint_version;
+
+    #[test]
+    fn parses_richat_endpoint_version_response() {
+        let raw_version = r#"{"version":{"package":"richat","version":"1.2.3","proto":"geyser","proto_richat":"richat-v1","solana":"2.3.4","git":"abcdef","rustc":"rustc 1.90.0","buildts":"2026-03-10T08:44:49Z"},"extra":{"hostname":"richat-ae"}}"#;
+
+        let version_info = parse_endpoint_version(raw_version).expect("richat version response");
+
+        assert_eq!(version_info.version.package.as_deref(), Some("richat"));
+        assert_eq!(version_info.version.version.as_deref(), Some("1.2.3"));
+        assert_eq!(
+            version_info.version.proto_richat.as_deref(),
+            Some("richat-v1")
+        );
+        assert_eq!(version_info.extra.hostname.as_deref(), Some("richat-ae"));
+    }
+
+    #[test]
+    fn ignores_plain_string_endpoint_versions() {
+        assert!(parse_endpoint_version("yellowstone-grpc 11.0.0").is_none());
     }
 }

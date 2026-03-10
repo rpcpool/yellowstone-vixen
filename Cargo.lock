@@ -13802,6 +13802,7 @@ dependencies = [
  "futures-util",
  "prost 0.14.1",
  "serde",
+ "serde_json",
  "smallvec",
  "solana-clock 3.0.0",
  "solana-commitment-config",
@@ -13891,6 +13892,23 @@ dependencies = [
  "yellowstone-vixen-spl-token-extensions-parser",
  "yellowstone-vixen-spl-token-parser",
  "yellowstone-vixen-yellowstone-fumarole-source",
+]
+
+[[package]]
+name = "yellowstone-vixen-example-grpc-idle-client"
+version = "0.0.0"
+dependencies = [
+ "clap 4.5.53",
+ "futures-util",
+ "rustls 0.23.35",
+ "serde",
+ "tokio",
+ "toml 0.8.23",
+ "tracing",
+ "tracing-subscriber",
+ "yellowstone-grpc-client",
+ "yellowstone-grpc-proto",
+ "yellowstone-vixen-yellowstone-grpc-source",
 ]
 
 [[package]]

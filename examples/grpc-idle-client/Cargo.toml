@@ -1,0 +1,21 @@
+[package]
+name = "yellowstone-vixen-example-grpc-idle-client"
+description = "Minimal Yellowstone gRPC client for reproducing idle stream behavior"
+publish = false
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+clap = { workspace = true, features = ["derive", "cargo", "wrap_help"] }
+futures-util = { workspace = true }
+rustls = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal", "time"] }
+toml = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+yellowstone-grpc-client = { workspace = true }
+yellowstone-grpc-proto = { workspace = true }
+yellowstone-vixen-yellowstone-grpc-source = { workspace = true }
