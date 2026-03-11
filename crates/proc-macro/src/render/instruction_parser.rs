@@ -276,6 +276,7 @@ fn single_instruction_helper_fn(
                     #args_field
                 },
                 raw_logs: vec![],
+                anchor_log_events: vec![],
             })
         }
     })
@@ -390,6 +391,79 @@ fn collision_group_match_arm(instructions: &[&codama_nodes::InstructionNode]) ->
     }
 }
 
+/// An event instruction has no accounts and a field discriminator at offset > 0
+/// (typically offset 8 for Anchor events emitted via `emit!()`).
+fn is_event_instruction(ix: &codama_nodes::InstructionNode) -> bool {
+    if !ix.accounts.is_empty() {
+        return false;
+    }
+
+    // Must have a field discriminator (constant discriminators are not Anchor events).
+    let Some(discriminator) = ix.discriminators.first() else {
+        return false;
+    };
+
+    matches!(discriminator, DiscriminatorNode::Field(_))
+}
+
+///
+/// Generate a match arm for resolving a single event from "Program data:" bytes.
+///
+/// In "Program data:" payloads the discriminator is always at offset 0,
+/// regardless of the IDL offset (which describes the position within
+/// instruction data for self-CPI events).
+///
+fn event_resolve_arm(ix: &codama_nodes::InstructionNode) -> Option<TokenStream> {
+    let ix_name_pascal = crate::utils::to_pascal_case(&ix.name);
+    let variant_ident = format_ident!("{}", ix_name_pascal);
+    let args_ident = format_ident!("{}Args", ix_name_pascal);
+
+    let discriminator = ix.discriminators.first()?;
+
+    let DiscriminatorNode::Field(node) = discriminator else {
+        return None;
+    };
+
+    let field = ix.arguments.iter().find(|f| f.name == node.name)?;
+
+    let TypeNode::FixedSize(fixed_size_node) = &field.r#type else {
+        return None;
+    };
+
+    let disc_size = fixed_size_node.size;
+
+    let default_value = field.default_value.as_ref()?;
+
+    let InstructionInputValueNode::Bytes(bytes) = default_value else {
+        return None;
+    };
+
+    let discriminator_bytes = decode_discriminator_field_bytes(bytes);
+
+    // Filter out the discriminator argument from args to deserialize.
+    let has_args = ix.arguments.iter().any(|a| a.name != node.name);
+
+    let args_expr = if has_args {
+        quote! {
+            {
+                let mut slice: &[u8] = data.get(#disc_size..).unwrap_or(&[]);
+
+                <instruction::#args_ident as ::borsh::BorshDeserialize>::deserialize_reader(&mut slice).ok()?
+            }
+        }
+    } else {
+        quote! { instruction::#args_ident {} }
+    };
+
+    Some(quote! {
+        if data.get(0..#disc_size) == ::core::option::Option::Some(&[#(#discriminator_bytes),*]) {
+            return ::core::option::Option::Some(
+                AnchorLogEvent::#variant_ident(#args_expr)
+            );
+        }
+    })
+}
+
 pub fn instruction_parser(
     program_name_camel: &CamelCaseString,
     instructions: &[codama_nodes::InstructionNode],
@@ -431,6 +505,37 @@ pub fn instruction_parser(
         })
         .collect();
 
+    // 3. Event resolver: match arms for Anchor log events ("Program data:" payloads).
+    let event_arms: Vec<TokenStream> = instructions
+        .iter()
+        .filter(|ix| is_event_instruction(ix))
+        .filter_map(|ix| event_resolve_arm(ix))
+        .collect();
+
+    let resolve_event_fn = if event_arms.is_empty() {
+        quote! {
+            /// No Anchor log events in this program.
+            pub fn resolve_event(_data: &[u8]) -> ::core::option::Option<AnchorLogEvent> {
+                ::core::option::Option::None
+            }
+        }
+    } else {
+        quote! {
+            ///
+            /// Try to resolve an Anchor event from "Program data:" bytes.
+            ///
+            /// The input `data` is the base64-decoded payload from a
+            /// `"Program data: <base64>"` log line.  Returns `None` if no
+            /// known event discriminator matches.
+            ///
+            pub fn resolve_event(data: &[u8]) -> ::core::option::Option<AnchorLogEvent> {
+                #(#event_arms)*
+
+                ::core::option::Option::None
+            }
+        }
+    };
+
     quote! {
         //
         // Per-instruction parse helper functions.
@@ -456,6 +561,26 @@ pub fn instruction_parser(
             #(#match_arms)*
 
             Err(ParseError::Filtered)
+        }
+
+        #resolve_event_fn
+
+        /// Scan log messages for `"Program data: <base64>"` lines and resolve
+        /// any matching Anchor events.
+        pub fn resolve_events_from_logs(logs: &[String]) -> Vec<AnchorLogEvent> {
+            const PREFIX: &str = "Program data: ";
+
+            logs.iter()
+                .filter_map(|line| {
+                    let b64 = line.strip_prefix(PREFIX)?;
+
+                    use ::yellowstone_vixen_core::base64::{engine::general_purpose::STANDARD, Engine};
+
+                    let data = STANDARD.decode(b64).ok()?;
+
+                    resolve_event(&data)
+                })
+                .collect()
         }
 
         ///
@@ -555,6 +680,8 @@ pub fn instruction_parser(
                     result.raw_logs = ix_update.log_messages.clone();
                 }
 
+                result.anchor_log_events = resolve_events_from_logs(&ix_update.log_messages);
+
                 Ok(result)
             }
         }
@@ -610,6 +737,8 @@ pub fn instruction_parser(
                 if self.include_raw_logs {
                     result.raw_logs = ix_update.log_messages.clone();
                 }
+
+                result.anchor_log_events = resolve_events_from_logs(&ix_update.log_messages);
 
                 Ok(result)
             }

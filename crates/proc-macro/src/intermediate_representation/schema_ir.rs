@@ -92,6 +92,9 @@ pub enum ScalarIr {
 pub enum OneofKindIr {
     /// The top-level instruction dispatcher (e.g. PumpFun { oneof instruction { ... } })
     InstructionDispatch,
+    /// Anchor log events parsed from "Program data:" log lines.
+    /// Rendered as `AnchorLogEvent { oneof event { ... } }` — args-only, no accounts.
+    AnchorLogEventDispatch,
     /// A user-defined enum (e.g. OrderType { oneof kind { ... } })
     Enum,
 }

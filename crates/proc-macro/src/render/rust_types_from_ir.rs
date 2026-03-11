@@ -15,44 +15,103 @@ use crate::intermediate_representation::{
 /// which derives `prost::Oneof`. We implement Message by delegating to the Oneof methods
 /// (calling Oneof generated methods via `self.field_ident`).
 ///
+/// Extra proto tag assignments for the instruction dispatch message.
+///
+/// `None` for enum oneofs (no raw_logs / anchor_log_events).
+struct InstructionDispatchTags {
+    raw_logs: u32,
+    /// `None` when the program has no Anchor log events.
+    anchor_log_events: Option<u32>,
+}
+
 fn manual_prost_message_impl(
     parent_ident: &syn::Ident,
     field_ident: &syn::Ident,
     mod_ident: &syn::Ident,
     oneof_ident: &syn::Ident,
-    raw_logs_tag: Option<u32>,
+    extra_tags: Option<InstructionDispatchTags>,
 ) -> TokenStream {
-    let extra_debug_field = if raw_logs_tag.is_some() {
-        quote! { .field("raw_logs", &self.raw_logs) }
-    } else {
-        quote! {}
-    };
+    let is_instruction_dispatch = extra_tags.is_some();
 
-    let encode_raw_logs = if let Some(tag) = raw_logs_tag {
+    let extra_debug_fields = if is_instruction_dispatch {
         quote! {
-            ::prost::encoding::string::encode_repeated(#tag, &self.raw_logs, buf);
+            .field("raw_logs", &self.raw_logs)
+            .field("anchor_log_events", &self.anchor_log_events)
         }
     } else {
         quote! {}
     };
 
-    let merge_raw_logs = if let Some(tag) = raw_logs_tag {
+    let encode_extra = if let Some(ref tags) = extra_tags {
+        let raw_logs_tag = tags.raw_logs;
+
+        let encode_events = if let Some(events_tag) = tags.anchor_log_events {
+            quote! {
+                for event in &self.anchor_log_events {
+                    ::prost::encoding::message::encode(#events_tag, event, buf);
+                }
+            }
+        } else {
+            quote! {}
+        };
+
         quote! {
-            #tag => {
+            ::prost::encoding::string::encode_repeated(#raw_logs_tag, &self.raw_logs, buf);
+            #encode_events
+        }
+    } else {
+        quote! {}
+    };
+
+    let merge_extra = if let Some(ref tags) = extra_tags {
+        let raw_logs_tag = tags.raw_logs;
+
+        let merge_events = if let Some(events_tag) = tags.anchor_log_events {
+            quote! {
+                #events_tag => {
+                    let mut event = <AnchorLogEvent as ::core::default::Default>::default();
+
+                    ::prost::encoding::message::merge(wire_type, &mut event, buf, ctx)?;
+
+                    self.anchor_log_events.push(event);
+
+                    return ::core::result::Result::Ok(());
+                }
+            }
+        } else {
+            quote! {}
+        };
+
+        quote! {
+            #raw_logs_tag => {
                 ::prost::encoding::string::merge_repeated(
                     wire_type, &mut self.raw_logs, buf, ctx,
                 )?;
 
                 return ::core::result::Result::Ok(());
             }
+            #merge_events
         }
     } else {
         quote! {}
     };
 
-    let encoded_len_raw_logs = if let Some(tag) = raw_logs_tag {
+    let encoded_len_extra = if let Some(ref tags) = extra_tags {
+        let raw_logs_tag = tags.raw_logs;
+
+        let events_len = if let Some(events_tag) = tags.anchor_log_events {
+            quote! {
+                + self.anchor_log_events.iter().map(|event| {
+                    ::prost::encoding::message::encoded_len(#events_tag, event)
+                }).sum::<usize>()
+            }
+        } else {
+            quote! {}
+        };
+
         quote! {
-            + ::prost::encoding::string::encoded_len_repeated(#tag, &self.raw_logs)
+            + ::prost::encoding::string::encoded_len_repeated(#raw_logs_tag, &self.raw_logs)
+            #events_len
         }
     } else {
         quote! {}
@@ -63,7 +122,7 @@ fn manual_prost_message_impl(
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 f.debug_struct(stringify!(#parent_ident))
                     .field(stringify!(#field_ident), &self.#field_ident)
-                    #extra_debug_field
+                    #extra_debug_fields
                     .finish()
             }
         }
@@ -71,7 +130,7 @@ fn manual_prost_message_impl(
         impl ::prost::Message for #parent_ident {
             fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
                 self.#field_ident.encode(buf);
-                #encode_raw_logs
+                #encode_extra
             }
 
             fn merge_field(
@@ -82,7 +141,7 @@ fn manual_prost_message_impl(
                 ctx: ::prost::encoding::DecodeContext,
             ) -> ::core::result::Result<(), ::prost::DecodeError> {
                 match tag {
-                    #merge_raw_logs
+                    #merge_extra
 
                     _ => {}
                 }
@@ -102,7 +161,7 @@ fn manual_prost_message_impl(
 
             fn encoded_len(&self) -> usize {
                 self.#field_ident.encoded_len()
-                #encoded_len_raw_logs
+                #encoded_len_extra
             }
 
             fn clear(&mut self) {}
@@ -229,6 +288,123 @@ fn manual_prost_oneof_impl(
     }
 }
 
+///
+/// Generate `prost::Message` + `Default` for the `AnchorLogEvent` enum.
+///
+/// Each tuple variant wraps a single `*Args` struct. The proto encoding
+/// treats each variant as a oneof field (tag + length-delimited message).
+///
+fn manual_prost_event_message_impl(
+    event_oneof: &OneofIr,
+    mod_ident: &syn::Ident,
+    event_ident: &syn::Ident,
+) -> TokenStream {
+    let first_variant = &event_oneof.variants[0];
+    let first_v_ident = format_ident!("{}", first_variant.variant_name);
+    let first_msg_ident = format_ident!("{}", first_variant.message_type);
+
+    let encode_arms: Vec<TokenStream> = event_oneof
+        .variants
+        .iter()
+        .map(|v| {
+            let v_ident = format_ident!("{}", v.variant_name);
+            let tag = v.tag;
+
+            quote! {
+                #event_ident::#v_ident(args) => {
+                    ::prost::encoding::message::encode(#tag, args, buf);
+                }
+            }
+        })
+        .collect();
+
+    let merge_arms: Vec<TokenStream> = event_oneof
+        .variants
+        .iter()
+        .map(|v| {
+            let v_ident = format_ident!("{}", v.variant_name);
+            let msg_ident = format_ident!("{}", v.message_type);
+            let tag = v.tag;
+
+            quote! {
+                #tag => {
+                    let mut args = match self {
+                        #event_ident::#v_ident(a) => a.clone(),
+                        _ => <#mod_ident::#msg_ident as ::core::default::Default>::default(),
+                    };
+
+                    ::prost::encoding::message::merge(wire_type, &mut args, buf, ctx)?;
+
+                    *self = #event_ident::#v_ident(args);
+
+                    ::core::result::Result::Ok(())
+                }
+            }
+        })
+        .collect();
+
+    let encoded_len_arms: Vec<TokenStream> = event_oneof
+        .variants
+        .iter()
+        .map(|v| {
+            let v_ident = format_ident!("{}", v.variant_name);
+            let tag = v.tag;
+
+            quote! {
+                #event_ident::#v_ident(args) => {
+                    ::prost::encoding::message::encoded_len(#tag, args)
+                }
+            }
+        })
+        .collect();
+
+    quote! {
+        impl ::core::default::Default for #event_ident {
+            fn default() -> Self {
+                Self::#first_v_ident(
+                    <#mod_ident::#first_msg_ident as ::core::default::Default>::default(),
+                )
+            }
+        }
+
+        impl ::prost::Message for #event_ident {
+            fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
+                match self {
+                    #(#encode_arms,)*
+                }
+            }
+
+            fn merge_field(
+                &mut self,
+                tag: u32,
+                wire_type: ::prost::encoding::WireType,
+                buf: &mut impl ::prost::bytes::Buf,
+                ctx: ::prost::encoding::DecodeContext,
+            ) -> ::core::result::Result<(), ::prost::DecodeError> {
+                match tag {
+                    #(#merge_arms,)*
+                    _ => {
+                        ::prost::encoding::skip_field(
+                            wire_type, tag, buf, ctx,
+                        )
+                    }
+                }
+            }
+
+            fn encoded_len(&self) -> usize {
+                match self {
+                    #(#encoded_len_arms,)*
+                }
+            }
+
+            fn clear(&mut self) {
+                // Reset to default
+                *self = ::core::default::Default::default();
+            }
+        }
+    }
+}
+
 pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::SchemaIr) -> TokenStream {
     let mut out = TokenStream::new();
 
@@ -261,6 +437,12 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
         out.extend(render_struct_type(t, None));
     }
 
+    // Find the event oneof (if any) so it can be rendered inside the instruction module.
+    let event_oneof = schema_ir
+        .oneofs
+        .iter()
+        .find(|o| o.kind == OneofKindIr::AnchorLogEventDispatch);
+
     // Render oneof parent types + their modules/enums
     for oneof in &schema_ir.oneofs {
         match oneof.kind {
@@ -274,9 +456,13 @@ pub fn rust_types_from_ir(schema_ir: &crate::intermediate_representation::Schema
 
                 out.extend(render_instruction_dispatch(
                     oneof,
+                    event_oneof,
                     &ix_types,
                     &instruction_type_names,
                 ));
+            },
+            OneofKindIr::AnchorLogEventDispatch => {
+                // Rendered inside instruction module by render_instruction_dispatch
             },
             OneofKindIr::Enum => {
                 out.extend(render_enum_oneof(oneof));
@@ -324,13 +510,17 @@ fn render_struct_type(t: &TypeIr, local_names: Option<&HashSet<&str>>) -> TokenS
 ///
 fn render_instruction_dispatch(
     oneof_ir: &OneofIr,
+    event_oneof: Option<&OneofIr>,
     ix_types: &[&TypeIr],
     local_names: &HashSet<&str>,
 ) -> TokenStream {
     let parent_ident = format_ident!("{}", oneof_ir.parent_message); // "Instructions"
     let mod_ident = format_ident!("instruction");
     let oneof_ident = format_ident!("Instruction");
+    let event_enum_ident = format_ident!("AnchorLogEvent");
     let field_ident = format_ident!("{}", oneof_ir.field_name);
+
+    let has_events = event_oneof.is_some_and(|e| !e.variants.is_empty());
 
     // Render instruction types inside the module (wrapper structs still exist
     // for proto merge decoding and for users who want them).
@@ -349,6 +539,47 @@ fn render_instruction_dispatch(
             #v_ident { accounts: #accounts_ident, args: #args_ident }
         }
     });
+
+    // AnchorLogEvent enum + anchor_log_event module: rendered at top level (outside mod instruction)
+    let event_enum = if let Some(ev) = event_oneof {
+        let event_variants = ev.variants.iter().map(|v| {
+            let v_ident = format_ident!("{}", v.variant_name);
+            let msg_ident = format_ident!("{}", v.message_type);
+
+            quote! { #v_ident(#mod_ident::#msg_ident) }
+        });
+
+        // Type aliases without the Args suffix, accessible via anchor_log_event::TradeEvent etc.
+        let event_aliases: Vec<TokenStream> = ev
+            .variants
+            .iter()
+            .map(|v| {
+                let alias_ident = format_ident!("{}", v.variant_name);
+                let msg_ident = format_ident!("{}", v.message_type);
+
+                quote! { pub type #alias_ident = super::#mod_ident::#msg_ident; }
+            })
+            .collect();
+
+        let event_mod_ident = format_ident!("anchor_log_event");
+
+        quote! {
+            #[derive(Clone, Debug, PartialEq)]
+            pub enum #event_enum_ident {
+                #(#event_variants),*
+            }
+
+            pub mod #event_mod_ident {
+                #(#event_aliases)*
+            }
+        }
+    } else {
+        // No events: generate an empty (uninhabited) enum
+        quote! {
+            #[derive(Clone, Debug, PartialEq)]
+            pub enum #event_enum_ident {}
+        }
+    };
 
     let borsh_serialize_arms = oneof_ir.variants.iter().enumerate().map(|(i, v)| {
         let disc = i as u8;
@@ -380,16 +611,32 @@ fn render_instruction_dispatch(
     let proto_impls = if cfg!(feature = "proto") {
         let oneof_impl = manual_prost_oneof_impl(oneof_ir, &mod_ident, &oneof_ident);
 
-        let raw_logs_tag = oneof_ir.variants.iter().map(|v| v.tag).max().unwrap_or(0) + 1;
+        let max_tag = oneof_ir.variants.iter().map(|v| v.tag).max().unwrap_or(0);
+
+        let dispatch_tags = Some(InstructionDispatchTags {
+            raw_logs: max_tag + 1,
+            anchor_log_events: if has_events { Some(max_tag + 2) } else { None },
+        });
 
         let message_impl = manual_prost_message_impl(
             &parent_ident,
             &field_ident,
             &mod_ident,
             &oneof_ident,
-            Some(raw_logs_tag),
+            dispatch_tags,
         );
-        quote! { #oneof_impl #message_impl }
+
+        let event_message_impl = if let Some(ev) = event_oneof {
+            if !ev.variants.is_empty() {
+                manual_prost_event_message_impl(ev, &mod_ident, &event_enum_ident)
+            } else {
+                quote! {}
+            }
+        } else {
+            quote! {}
+        };
+
+        quote! { #oneof_impl #message_impl #event_message_impl }
     } else {
         quote! {}
     };
@@ -408,6 +655,7 @@ fn render_instruction_dispatch(
         pub struct #parent_ident {
             pub #field_ident: #mod_ident::#oneof_ident,
             pub raw_logs: Vec<String>,
+            pub anchor_log_events: Vec<#event_enum_ident>,
         }
 
         pub mod #mod_ident {
@@ -418,6 +666,8 @@ fn render_instruction_dispatch(
                 #(#variants),*
             }
         }
+
+        #event_enum
 
         #proto_impls
 
@@ -449,7 +699,7 @@ fn render_instruction_dispatch(
                     }
                 };
 
-                ::core::result::Result::Ok(Self { #field_ident, raw_logs: vec![] })
+                ::core::result::Result::Ok(Self { #field_ident, raw_logs: vec![], anchor_log_events: vec![] })
             }
         }
 

@@ -324,6 +324,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                     .into(),
                 "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".into(),
             ],
+            anchor_log_events: vec![],
         };
 
         assert_eq!(decrease_ix, &expected);
@@ -384,6 +385,7 @@ async fn parse_decrease_position_with_tpsl_and_close_position_request_2_ix() {
                     .into(),
                 "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".into(),
             ],
+            anchor_log_events: vec![],
         };
 
         assert_eq!(close_ix, &expected);
@@ -478,6 +480,7 @@ async fn parse_borrow_from_custody_ix() {
                 .into(),
             "Program PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu success".into(),
         ],
+        anchor_log_events: vec![],
     };
 
     assert_eq!(borrow_ix, &expected);

@@ -1,8 +1,8 @@
-use codama_nodes::InstructionNode;
+use codama_nodes::{DiscriminatorNode, InstructionNode};
 
 use crate::intermediate_representation::{
-    helpers::build_fields_ir, FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofVariantIr, ScalarIr,
-    SchemaIr, TypeIr, TypeKindIr,
+    helpers::build_fields_ir, FieldIr, FieldTypeIr, LabelIr, OneofIr, OneofKindIr,
+    OneofVariantIr, ScalarIr, SchemaIr, TypeIr, TypeKindIr,
 };
 
 ///
@@ -99,11 +99,39 @@ use crate::intermediate_representation::{
 /// This allows a single protobuf message to represent any instruction.
 ///
 pub fn build_instructions_schema(instructions: &[InstructionNode], ir: &mut SchemaIr) {
+    // All instructions (including events) get full Accounts + Args + wrapper types
+    // and go into the InstructionDispatch oneof. Events also appear as CPI
+    // instructions in some programs, so they must remain matchable.
     for ix in instructions {
         build_instruction_messages(ix, ir);
     }
 
     build_instruction_dispatch_oneof(instructions, ir);
+
+    // Additionally, build a separate AnchorLogEvent oneof for events parsed
+    // from "Program data:" log lines. This references the *Args types directly
+    // (no accounts wrapper).
+    let events: Vec<&InstructionNode> = instructions
+        .iter()
+        .filter(|ix| is_event_instruction(ix))
+        .collect();
+
+    build_event_dispatch_oneof(&events, ir);
+}
+
+/// An event instruction has no accounts and a field discriminator.
+/// These are Anchor events emitted via `emit!()` that appear as
+/// "Program data:" log lines.
+fn is_event_instruction(ix: &InstructionNode) -> bool {
+    if !ix.accounts.is_empty() {
+        return false;
+    }
+
+    let Some(discriminator) = ix.discriminators.first() else {
+        return false;
+    };
+
+    matches!(discriminator, DiscriminatorNode::Field(_))
 }
 
 ///
@@ -202,6 +230,34 @@ fn build_instruction_dispatch_oneof(instructions: &[InstructionNode], ir: &mut S
         parent_message: parent_name,
         field_name: "instruction".to_string(),
         variants,
-        kind: crate::intermediate_representation::OneofKindIr::InstructionDispatch,
+        kind: OneofKindIr::InstructionDispatch,
+    });
+}
+
+///
+/// Build the `AnchorLogEvent` message with a `oneof event { ... }` that dispatches
+/// to each event's Args type directly (no accounts).
+///
+fn build_event_dispatch_oneof(events: &[&InstructionNode], ir: &mut SchemaIr) {
+    let variants: Vec<OneofVariantIr> = events
+        .iter()
+        .enumerate()
+        .map(|(i, ix)| {
+            let ix_name = crate::utils::to_pascal_case(&ix.name);
+            let args_name = format!("{ix_name}Args");
+
+            OneofVariantIr {
+                tag: (i + 1) as u32,
+                variant_name: ix_name,
+                message_type: args_name,
+            }
+        })
+        .collect();
+
+    ir.oneofs.push(OneofIr {
+        parent_message: "AnchorLogEvent".to_string(),
+        field_name: "event".to_string(),
+        variants,
+        kind: OneofKindIr::AnchorLogEventDispatch,
     });
 }

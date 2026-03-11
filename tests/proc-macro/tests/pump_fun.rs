@@ -93,6 +93,7 @@ async fn parse_sell_ix() {
                 .into(),
             "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success".into(),
         ],
+        anchor_log_events: vec![],
     };
 
     assert_eq!(sell_ix, &expected);
@@ -186,6 +187,7 @@ async fn parse_buy_ix() {
                 .into(),
             "Program 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P success".into(),
         ],
+        anchor_log_events: vec![],
     };
 
     assert_eq!(buy_ix, &expected);

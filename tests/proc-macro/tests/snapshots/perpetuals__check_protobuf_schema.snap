@@ -2494,6 +2494,35 @@ message PerpetualsAccount {
     TokenLedger token_ledger = 8;
   }
 }
+message AnchorLogEvent {
+  oneof event {
+    CreatePositionRequestEventArgs create_position_request_event = 1;
+    InstantCreateTpslEventArgs instant_create_tpsl_event = 2;
+    InstantUpdateTpslEventArgs instant_update_tpsl_event = 3;
+    ClosePositionRequestEventArgs close_position_request_event = 4;
+    IncreasePositionEventArgs increase_position_event = 5;
+    IncreasePositionPreSwapEventArgs increase_position_pre_swap_event = 6;
+    DecreasePositionEventArgs decrease_position_event = 7;
+    DecreasePositionPostSwapEventArgs decrease_position_post_swap_event = 8;
+    LiquidateFullPositionEventArgs liquidate_full_position_event = 9;
+    PoolSwapEventArgs pool_swap_event = 10;
+    PoolSwapExactOutEventArgs pool_swap_exact_out_event = 11;
+    AddLiquidityEventArgs add_liquidity_event = 12;
+    RemoveLiquidityEventArgs remove_liquidity_event = 13;
+    InstantCreateLimitOrderEventArgs instant_create_limit_order_event = 14;
+    InstantIncreasePositionEventArgs instant_increase_position_event = 15;
+    InstantDecreasePositionEventArgs instant_decrease_position_event = 16;
+    DepositCollateralEventArgs deposit_collateral_event = 17;
+    WithdrawCollateralEventArgs withdraw_collateral_event = 18;
+    BorrowFromCustodyEventArgs borrow_from_custody_event = 19;
+    RepayToCustodyEventArgs repay_to_custody_event = 20;
+    LiquidateBorrowPositionEventArgs liquidate_borrow_position_event = 21;
+    RedeemStakeEventArgs redeem_stake_event = 22;
+    WithdrawStakeEventArgs withdraw_stake_event = 23;
+    DelegateStakeEventArgs delegate_stake_event = 24;
+    WithdrawFeesEventArgs withdraw_fees_event = 25;
+  }
+}
 message PriceImpactMechanism {
   oneof kind {
     PriceImpactMechanismTradeSize trade_size = 1;
@@ -2634,4 +2663,5 @@ message Instructions {
     WithdrawFeesEvent withdraw_fees_event = 84;
   }
   repeated string raw_logs = 85;
+  repeated AnchorLogEvent anchor_log_events = 86;
 }

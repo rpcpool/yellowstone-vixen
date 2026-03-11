@@ -96,16 +96,35 @@ pub fn proto_schema_string(
 
     let mut instruction_dispatch_index = None;
 
+    // Find the AnchorLogEvent oneof (if any) so InstructionDispatch can reference it.
+    let event_oneof = schema
+        .oneofs
+        .iter()
+        .find(|o| o.kind == OneofKindIr::AnchorLogEventDispatch);
+
+    // Render AnchorLogEvent message first (before Instructions, so proto ordering is clean).
+    if let Some(ev) = event_oneof {
+        if !ev.variants.is_empty() {
+            render_oneof_parent(&mut out, ev);
+            message_count += 1;
+        }
+    }
+
     for oneof in &schema.oneofs {
         if oneof.variants.is_empty() {
             continue;
         }
 
-        if oneof.kind == OneofKindIr::InstructionDispatch {
-            instruction_dispatch_index = Some(message_count);
+        match oneof.kind {
+            OneofKindIr::AnchorLogEventDispatch => continue, // already rendered above
+            OneofKindIr::InstructionDispatch => {
+                instruction_dispatch_index = Some(message_count);
+                render_instruction_dispatch_parent(&mut out, oneof, event_oneof);
+            },
+            OneofKindIr::Enum => {
+                render_oneof_parent(&mut out, oneof);
+            },
         }
-
-        render_oneof_parent(&mut out, oneof);
 
         message_count += 1;
     }
@@ -182,6 +201,31 @@ fn render_oneof_parent(out: &mut String, oneof: &OneofIr) {
     writeln!(out, "message {} {{", oneof.parent_message).unwrap();
     writeln!(out, "  oneof {} {{", oneof.field_name).unwrap();
 
+    for v in &oneof.variants {
+        let field_name = crate::utils::to_snake_case(&v.variant_name);
+
+        writeln!(out, "    {} {} = {};", v.message_type, field_name, v.tag).unwrap();
+    }
+
+    writeln!(out, "  }}").unwrap();
+    writeln!(out, "}}").unwrap();
+}
+
+///
+/// Render the `Instructions` message with its `oneof instruction`, plus the
+/// `raw_logs` and `anchor_log_events` fields.
+///
+/// When events exist, `anchor_log_events` references the `AnchorLogEvent`
+/// message. Otherwise the field is omitted from the proto schema.
+///
+fn render_instruction_dispatch_parent(
+    out: &mut String,
+    oneof: &OneofIr,
+    event_oneof: Option<&OneofIr>,
+) {
+    writeln!(out, "message {} {{", oneof.parent_message).unwrap();
+    writeln!(out, "  oneof {} {{", oneof.field_name).unwrap();
+
     let mut max_tag = 0u32;
 
     for v in &oneof.variants {
@@ -194,10 +238,21 @@ fn render_oneof_parent(out: &mut String, oneof: &OneofIr) {
 
     writeln!(out, "  }}").unwrap();
 
-    if oneof.kind == OneofKindIr::InstructionDispatch {
-        let raw_logs_tag = max_tag + 1;
+    let raw_logs_tag = max_tag + 1;
 
-        writeln!(out, "  repeated string raw_logs = {raw_logs_tag};").unwrap();
+    writeln!(out, "  repeated string raw_logs = {raw_logs_tag};").unwrap();
+
+    if let Some(ev) = event_oneof {
+        if !ev.variants.is_empty() {
+            let events_tag = max_tag + 2;
+
+            writeln!(
+                out,
+                "  repeated {} anchor_log_events = {events_tag};",
+                ev.parent_message
+            )
+            .unwrap();
+        }
     }
 
     writeln!(out, "}}").unwrap();

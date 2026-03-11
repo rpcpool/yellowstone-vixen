@@ -131,6 +131,7 @@ async fn parse_swap_base_in_with_custom_resolver() {
                 .into(),
             "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo success".into(),
         ],
+        anchor_log_events: vec![],
     };
 
     assert_eq!(swap_ix, &expected);

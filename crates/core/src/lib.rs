@@ -34,6 +34,7 @@ use yellowstone_grpc_proto::geyser::{
     SubscribeUpdateTransaction,
 };
 
+pub extern crate base64;
 pub extern crate bs58;
 
 #[cfg(feature = "proto")]
