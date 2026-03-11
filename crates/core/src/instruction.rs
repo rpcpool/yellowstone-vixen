@@ -522,6 +522,7 @@ impl<'a, T: Node + DebugNode> Iterator for VisitAll<'a, T> {
                 // let _last_path = last.1.clone(); // same as popped
                 // let sig = last.3.clone();
                 // let Some(ix) = last.0.next() else {
+
                 let Some(ix) = last.next() else {
                     let _ = d.pop_back().unwrap_or_else(|| unreachable!());
 
