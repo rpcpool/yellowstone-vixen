@@ -129,7 +129,7 @@ pub struct AccountKeys {
     pub dynamic_ro: Vec<Vec<u8>>,
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 /// 0-based indices representing the path to the instruction
 // typically one or two elements long, but can be 3+ levels deep
 // empty path makes no sense, but is allowed for completeness
