@@ -1205,4 +1205,5 @@ message Instructions {
     WithdrawLeftover withdraw_leftover = 25;
     WithdrawMigrationFee withdraw_migration_fee = 26;
   }
+  repeated string raw_logs = 27;
 }

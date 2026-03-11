@@ -20,10 +20,40 @@ fn manual_prost_message_impl(
     field_ident: &syn::Ident,
     mod_ident: &syn::Ident,
     oneof_ident: &syn::Ident,
-    has_raw_logs: bool,
+    raw_logs_tag: Option<u32>,
 ) -> TokenStream {
-    let extra_debug_field = if has_raw_logs {
+    let extra_debug_field = if raw_logs_tag.is_some() {
         quote! { .field("raw_logs", &self.raw_logs) }
+    } else {
+        quote! {}
+    };
+
+    let encode_raw_logs = if let Some(tag) = raw_logs_tag {
+        quote! {
+            ::prost::encoding::string::encode_repeated(#tag, &self.raw_logs, buf);
+        }
+    } else {
+        quote! {}
+    };
+
+    let merge_raw_logs = if let Some(tag) = raw_logs_tag {
+        quote! {
+            #tag => {
+                ::prost::encoding::string::merge_repeated(
+                    wire_type, &mut self.raw_logs, buf, ctx,
+                )?;
+
+                return ::core::result::Result::Ok(());
+            }
+        }
+    } else {
+        quote! {}
+    };
+
+    let encoded_len_raw_logs = if let Some(tag) = raw_logs_tag {
+        quote! {
+            + ::prost::encoding::string::encoded_len_repeated(#tag, &self.raw_logs)
+        }
     } else {
         quote! {}
     };
@@ -41,6 +71,7 @@ fn manual_prost_message_impl(
         impl ::prost::Message for #parent_ident {
             fn encode_raw(&self, buf: &mut impl ::prost::bytes::BufMut) {
                 self.#field_ident.encode(buf);
+                #encode_raw_logs
             }
 
             fn merge_field(
@@ -50,6 +81,12 @@ fn manual_prost_message_impl(
                 buf: &mut impl ::prost::bytes::Buf,
                 ctx: ::prost::encoding::DecodeContext,
             ) -> ::core::result::Result<(), ::prost::DecodeError> {
+                match tag {
+                    #merge_raw_logs
+
+                    _ => {}
+                }
+
                 // Oneof::merge() requires `&mut Option<Self>`, so we wrap our non-Option
                 // field into Some, call merge, then unwrap back.
                 let mut opt = ::core::option::Option::Some(self.#field_ident.clone());
@@ -65,6 +102,7 @@ fn manual_prost_message_impl(
 
             fn encoded_len(&self) -> usize {
                 self.#field_ident.encoded_len()
+                #encoded_len_raw_logs
             }
 
             fn clear(&mut self) {}
@@ -341,8 +379,16 @@ fn render_instruction_dispatch(
 
     let proto_impls = if cfg!(feature = "proto") {
         let oneof_impl = manual_prost_oneof_impl(oneof_ir, &mod_ident, &oneof_ident);
-        let message_impl =
-            manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident, true);
+
+        let raw_logs_tag = oneof_ir.variants.iter().map(|v| v.tag).max().unwrap_or(0) + 1;
+
+        let message_impl = manual_prost_message_impl(
+            &parent_ident,
+            &field_ident,
+            &mod_ident,
+            &oneof_ident,
+            Some(raw_logs_tag),
+        );
         quote! { #oneof_impl #message_impl }
     } else {
         quote! {}
@@ -470,7 +516,7 @@ fn render_enum_oneof(oneof_ir: &OneofIr) -> TokenStream {
         let first_variant_msg = format_ident!("{}", first_variant.message_type);
 
         let message_impl =
-            manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident, false);
+            manual_prost_message_impl(&parent_ident, &field_ident, &mod_ident, &oneof_ident, None);
 
         quote! {
             #message_impl

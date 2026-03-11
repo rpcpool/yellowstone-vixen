@@ -182,13 +182,24 @@ fn render_oneof_parent(out: &mut String, oneof: &OneofIr) {
     writeln!(out, "message {} {{", oneof.parent_message).unwrap();
     writeln!(out, "  oneof {} {{", oneof.field_name).unwrap();
 
+    let mut max_tag = 0u32;
+
     for v in &oneof.variants {
         let field_name = crate::utils::to_snake_case(&v.variant_name);
 
         writeln!(out, "    {} {} = {};", v.message_type, field_name, v.tag).unwrap();
+
+        max_tag = max_tag.max(v.tag);
     }
 
     writeln!(out, "  }}").unwrap();
+
+    if oneof.kind == OneofKindIr::InstructionDispatch {
+        let raw_logs_tag = max_tag + 1;
+
+        writeln!(out, "  repeated string raw_logs = {raw_logs_tag};").unwrap();
+    }
+
     writeln!(out, "}}").unwrap();
 }
 

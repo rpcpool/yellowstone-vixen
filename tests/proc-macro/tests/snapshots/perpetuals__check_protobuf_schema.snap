@@ -1981,4 +1981,5 @@ message Instructions {
     PartialLiquidateBorrowPosition partial_liquidate_borrow_position = 58;
     CloseBorrowPosition close_borrow_position = 59;
   }
+  repeated string raw_logs = 60;
 }

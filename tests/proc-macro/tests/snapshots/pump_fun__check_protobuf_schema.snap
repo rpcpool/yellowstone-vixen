@@ -804,4 +804,5 @@ message Instructions {
     ToggleMayhemMode toggle_mayhem_mode = 22;
     UpdateGlobalAuthority update_global_authority = 23;
   }
+  repeated string raw_logs = 24;
 }

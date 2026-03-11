@@ -40,4 +40,5 @@ message Instructions {
   oneof instruction {
     Fill fill = 1;
   }
+  repeated string raw_logs = 2;
 }
