@@ -92,7 +92,9 @@ async fn parse_swap_base_in_with_custom_resolver() {
                 serum_pc_vault_account: pubkey("5WGYajM1xtLy3QrLHGSX4YPwsso3jrjEsbU1VivUErzk"),
                 serum_vault_signer: pubkey("5WGYajM1xtLy3QrLHGSX4YPwsso3jrjEsbU1VivUErzk"),
                 user_source_token_account: pubkey("3xGDodLWEbjPde4JedHAuGSKbM2VbqgpzK76pHpinJhL"),
-                user_destination_token_account: pubkey("BZP7eTQqi4M7XXWci3rVcM3kJsTCHqdpBewLa6aCyZVu"),
+                user_destination_token_account: pubkey(
+                    "BZP7eTQqi4M7XXWci3rVcM3kJsTCHqdpBewLa6aCyZVu",
+                ),
                 user_source_owner: pubkey("CsVdJ8WH8Q9eHSTRpwtwN3TYApm24QnLKYUMNxJ3DaED"),
                 remaining_accounts: vec![],
             },
@@ -105,27 +107,27 @@ async fn parse_swap_base_in_with_custom_resolver() {
             "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo invoke [1]".into(),
             "Program log: Instruction: SwapRaydiumV4".into(),
             "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [2]".into(),
-            "Program log: ray_log: A6KoIfK+AAAAAAAAAAAAAAABAAAAAAAAADdfVHZYuQAAA7EJc2IAAAA\
-             QglcYrmszAeP+PAAAAAAA"
+            "Program log: ray_log: \
+             A6KoIfK+AAAAAAAAAAAAAAABAAAAAAAAADdfVHZYuQAAA7EJc2IAAAAQglcYrmszAeP+PAAAAAAA"
                 .into(),
             "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]".into(),
             "Program log: Instruction: Transfer".into(),
-            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4645 of 20988 \
-             compute units"
+            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4645 of 20988 compute \
+             units"
                 .into(),
             "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success".into(),
             "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]".into(),
             "Program log: Instruction: Transfer".into(),
-            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4645 of 13874 \
-             compute units"
+            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4645 of 13874 compute \
+             units"
                 .into(),
             "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success".into(),
-            "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 26537 of 35072 \
-             compute units"
+            "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 26537 of 35072 compute \
+             units"
                 .into(),
             "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 success".into(),
-            "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo consumed 46413 of 54550 \
-             compute units"
+            "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo consumed 46413 of 54550 compute \
+             units"
                 .into(),
             "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo success".into(),
         ],
@@ -165,30 +167,25 @@ async fn parse_swap_base_in_with_default_parser() {
         })
         .expect("default parser should resolve SwapBaseInCompact by account count");
 
-    assert_eq!(
-        swap_ix.raw_logs,
-        vec![
-            "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo invoke [1]",
-            "Program log: Instruction: SwapRaydiumV4",
-            "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [2]",
-            "Program log: ray_log: A6KoIfK+AAAAAAAAAAAAAAABAAAAAAAAADdfVHZYuQAAA7EJc2IAAAA\
-             QglcYrmszAeP+PAAAAAAA",
-            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
-            "Program log: Instruction: Transfer",
-            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4645 of 20988 \
-             compute units",
-            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
-            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
-            "Program log: Instruction: Transfer",
-            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4645 of 13874 \
-             compute units",
-            "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
-            "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 26537 of 35072 \
-             compute units",
-            "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 success",
-            "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo consumed 46413 of 54550 \
-             compute units",
-            "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo success",
-        ]
-    );
+    assert_eq!(swap_ix.raw_logs, vec![
+        "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo invoke [1]",
+        "Program log: Instruction: SwapRaydiumV4",
+        "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [2]",
+        "Program log: ray_log: \
+         A6KoIfK+AAAAAAAAAAAAAAABAAAAAAAAADdfVHZYuQAAA7EJc2IAAAAQglcYrmszAeP+PAAAAAAA",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program log: Instruction: Transfer",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4645 of 20988 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program log: Instruction: Transfer",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4645 of 13874 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 26537 of 35072 compute \
+         units",
+        "Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 success",
+        "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo consumed 46413 of 54550 compute \
+         units",
+        "Program BoobsBSMpFRBA91sNwKLYShRRQPH5GjoCH4NhLUt4yRo success",
+    ]);
 }

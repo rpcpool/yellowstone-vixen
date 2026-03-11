@@ -2,8 +2,6 @@
 
 use std::{collections::VecDeque, fmt::Debug, sync::Arc};
 
-use crate::log_messages::assign_log_messages;
-
 use yellowstone_grpc_proto::{
     geyser::SubscribeUpdateTransactionInfo,
     prelude::MessageHeader,
@@ -13,7 +11,7 @@ use yellowstone_grpc_proto::{
     },
 };
 
-use crate::{KeyBytes, TransactionUpdate};
+use crate::{log_messages::assign_log_messages, KeyBytes, TransactionUpdate};
 
 /// Errors that can occur when parsing a transaction update into instructions.
 #[derive(Debug, Clone, Copy, thiserror::Error)]
